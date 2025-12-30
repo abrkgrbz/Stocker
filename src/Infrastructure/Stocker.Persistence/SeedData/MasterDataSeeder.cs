@@ -926,34 +926,19 @@ public class MasterDataSeeder
 
         var templates = new List<EmailTemplate>();
 
-        // Email Verification Template (Turkish)
-        if (!existingKeys.Contains("email-verification"))
-        {
-            templates.Add(EmailTemplate.CreateSystem(
-                templateKey: "email-verification",
-                name: "Email Doğrulama",
-                subject: "{{ appName }} - Email Adresinizi Doğrulayın",
-                htmlBody: GetEmailVerificationTemplate(),
-                language: "tr",
-                category: EmailTemplateCategory.Authentication,
-                variables: "[\"userName\", \"verificationUrl\", \"appName\", \"email\", \"year\"]",
-                description: "Yeni kayıt sonrası email doğrulama maili",
-                sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"verificationUrl\":\"https://stoocker.app/verify\",\"appName\":\"Stoocker\",\"email\":\"ahmet@example.com\",\"year\":\"2024\"}"));
-        }
-
-        // Tenant Email Verification with Code (Turkish)
+        // Tenant Email Verification with Code (Turkish) - Main email verification
         if (!existingKeys.Contains("tenant-email-verification"))
         {
             templates.Add(EmailTemplate.CreateSystem(
                 templateKey: "tenant-email-verification",
                 name: "Tenant Email Doğrulama",
-                subject: "{{ appName }} - Email Doğrulama Kodunuz",
+                subject: "E-posta Doğrulama: Stoocker",
                 htmlBody: GetTenantEmailVerificationTemplate(),
                 language: "tr",
                 category: EmailTemplateCategory.Authentication,
-                variables: "[\"userName\", \"verificationCode\", \"verificationUrl\", \"appName\", \"email\", \"year\"]",
+                variables: "[\"userName\", \"verificationCode\", \"verificationUrl\", \"year\"]",
                 description: "Tenant kayıt sonrası 6 haneli doğrulama kodu ile email doğrulama",
-                sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"verificationCode\":\"123456\",\"verificationUrl\":\"https://stoocker.app/verify\",\"appName\":\"Stocker\",\"email\":\"ahmet@example.com\",\"year\":\"2024\"}"));
+                sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"verificationCode\":\"123456\",\"verificationUrl\":\"https://stoocker.app/verify\",\"year\":\"2024\"}"));
         }
 
         // Password Reset Template (Turkish)
@@ -962,13 +947,13 @@ public class MasterDataSeeder
             templates.Add(EmailTemplate.CreateSystem(
                 templateKey: "password-reset",
                 name: "Şifre Sıfırlama",
-                subject: "{{ appName }} - Şifre Sıfırlama Talebi",
+                subject: "Şifre Sıfırlama: Stoocker",
                 htmlBody: GetPasswordResetTemplate(),
                 language: "tr",
                 category: EmailTemplateCategory.Authentication,
-                variables: "[\"userName\", \"resetUrl\", \"appName\", \"email\", \"year\"]",
+                variables: "[\"userName\", \"resetUrl\", \"year\"]",
                 description: "Şifre sıfırlama talebi için gönderilen mail",
-                sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"resetUrl\":\"https://stoocker.app/reset\",\"appName\":\"Stoocker\",\"email\":\"ahmet@example.com\",\"year\":\"2024\"}"));
+                sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"resetUrl\":\"https://stoocker.app/reset\",\"year\":\"2024\"}"));
         }
 
         // Welcome Email Template (Turkish)
@@ -977,43 +962,103 @@ public class MasterDataSeeder
             templates.Add(EmailTemplate.CreateSystem(
                 templateKey: "welcome",
                 name: "Hoşgeldiniz",
-                subject: "{{ appName }} - Hoşgeldiniz!",
+                subject: "Hoş Geldiniz: Stoocker",
                 htmlBody: GetWelcomeTemplate(),
                 language: "tr",
                 category: EmailTemplateCategory.UserManagement,
-                variables: "[\"userName\", \"companyName\", \"loginUrl\", \"appName\", \"email\", \"year\"]",
+                variables: "[\"userName\", \"companyName\", \"loginUrl\", \"year\"]",
                 description: "Kayıt tamamlandıktan sonra gönderilen hoşgeldiniz maili",
-                sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"companyName\":\"ABC Ltd.\",\"loginUrl\":\"https://stoocker.app/login\",\"appName\":\"Stoocker\",\"email\":\"ahmet@example.com\",\"year\":\"2024\"}"));
+                sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"companyName\":\"ABC Ltd.\",\"loginUrl\":\"https://stoocker.app/login\",\"year\":\"2024\"}"));
         }
 
-        // Invitation Template (Turkish)
-        if (!existingKeys.Contains("invitation"))
-        {
-            templates.Add(EmailTemplate.CreateSystem(
-                templateKey: "invitation",
-                name: "Davet",
-                subject: "{{ inviterName }} sizi {{ companyName }} şirketine davet ediyor",
-                htmlBody: GetInvitationTemplate(),
-                language: "tr",
-                category: EmailTemplateCategory.UserManagement,
-                variables: "[\"inviterName\", \"companyName\", \"inviteUrl\", \"appName\", \"email\", \"year\"]",
-                description: "Şirkete davet maili",
-                sampleData: "{\"inviterName\":\"Mehmet Demir\",\"companyName\":\"ABC Ltd.\",\"inviteUrl\":\"https://stoocker.app/invite\",\"appName\":\"Stoocker\",\"email\":\"ahmet@example.com\",\"year\":\"2024\"}"));
-        }
-
-        // User Invitation Template (Turkish) - Most detailed
+        // User Invitation Template (Turkish)
         if (!existingKeys.Contains("user-invitation"))
         {
             templates.Add(EmailTemplate.CreateSystem(
                 templateKey: "user-invitation",
                 name: "Kullanıcı Daveti",
-                subject: "Stocker'a Davet Edildiniz - {{ companyName }}",
+                subject: "Davet: {{ appName }}",
                 htmlBody: GetUserInvitationTemplate(),
                 language: "tr",
                 category: EmailTemplateCategory.UserManagement,
-                variables: "[\"userName\", \"inviterName\", \"companyName\", \"activationUrl\", \"email\", \"userId\", \"tenantId\", \"appName\", \"expirationDays\", \"year\"]",
+                variables: "[\"userName\", \"inviterName\", \"companyName\", \"activationUrl\", \"email\", \"domain\", \"appName\", \"expirationDays\", \"year\"]",
                 description: "Admin tarafından oluşturulan kullanıcı için aktivasyon daveti",
-                sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"inviterName\":\"Mehmet Demir\",\"companyName\":\"ABC Ltd.\",\"activationUrl\":\"https://stoocker.app/setup-password\",\"email\":\"ahmet@example.com\",\"userId\":\"guid-here\",\"tenantId\":\"guid-here\",\"appName\":\"Stocker\",\"expirationDays\":7,\"year\":\"2024\"}"));
+                sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"inviterName\":\"Mehmet Demir\",\"companyName\":\"ABC Ltd.\",\"activationUrl\":\"https://stoocker.app/setup-password\",\"email\":\"ahmet@example.com\",\"domain\":\"abc.stoocker.app\",\"appName\":\"Stoocker\",\"expirationDays\":7,\"year\":\"2024\"}"));
+        }
+
+        // Trial Ending Template (Turkish)
+        if (!existingKeys.Contains("trial-ending"))
+        {
+            templates.Add(EmailTemplate.CreateSystem(
+                templateKey: "trial-ending",
+                name: "Deneme Süresi Bitiyor",
+                subject: "Deneme Süresi Hatırlatması",
+                htmlBody: GetTrialEndingTemplate(),
+                language: "tr",
+                category: EmailTemplateCategory.Notification,
+                variables: "[\"userName\", \"daysLeft\", \"upgradeUrl\", \"year\"]",
+                description: "Deneme süresi bitmeden önce gönderilen hatırlatma maili",
+                sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"daysLeft\":\"3\",\"upgradeUrl\":\"https://stoocker.app/upgrade\",\"year\":\"2024\"}"));
+        }
+
+        // Critical Stock Alert Template (Turkish)
+        if (!existingKeys.Contains("critical-stock"))
+        {
+            templates.Add(EmailTemplate.CreateSystem(
+                templateKey: "critical-stock",
+                name: "Kritik Stok Uyarısı",
+                subject: "Kritik Stok Uyarısı",
+                htmlBody: GetCriticalStockTemplate(),
+                language: "tr",
+                category: EmailTemplateCategory.Notification,
+                variables: "[\"productName\", \"skuCode\", \"currentStock\", \"minLimit\", \"inventoryUrl\", \"year\"]",
+                description: "Stok seviyesi kritik seviyenin altına düştüğünde gönderilen uyarı maili",
+                sampleData: "{\"productName\":\"iPhone 15 Pro\",\"skuCode\":\"IPH15PRO-256\",\"currentStock\":\"5\",\"minLimit\":\"10\",\"inventoryUrl\":\"https://stoocker.app/inventory\",\"year\":\"2024\"}"));
+        }
+
+        // Payment Receipt Template (Turkish)
+        if (!existingKeys.Contains("payment-receipt"))
+        {
+            templates.Add(EmailTemplate.CreateSystem(
+                templateKey: "payment-receipt",
+                name: "Ödeme Makbuzu",
+                subject: "Ödeme Makbuzu",
+                htmlBody: GetPaymentReceiptTemplate(),
+                language: "tr",
+                category: EmailTemplateCategory.Transaction,
+                variables: "[\"userName\", \"invoiceNumber\", \"planName\", \"billingPeriod\", \"amount\", \"taxAmount\", \"totalAmount\", \"invoicePdfUrl\", \"year\"]",
+                description: "Başarılı ödeme sonrası gönderilen makbuz maili",
+                sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"invoiceNumber\":\"INV-2024-0001\",\"planName\":\"Profesyonel\",\"billingPeriod\":\"Aylık\",\"amount\":\"999\",\"taxAmount\":\"199.80\",\"totalAmount\":\"1198.80\",\"invoicePdfUrl\":\"https://stoocker.app/invoice/123\",\"year\":\"2024\"}"));
+        }
+
+        // Payment Failed Template (Turkish)
+        if (!existingKeys.Contains("payment-failed"))
+        {
+            templates.Add(EmailTemplate.CreateSystem(
+                templateKey: "payment-failed",
+                name: "Ödeme Başarısız",
+                subject: "Ödeme Alınamadı",
+                htmlBody: GetPaymentFailedTemplate(),
+                language: "tr",
+                category: EmailTemplateCategory.Transaction,
+                variables: "[\"userName\", \"planName\", \"last4Digits\", \"billingUrl\", \"year\"]",
+                description: "Başarısız ödeme sonrası gönderilen uyarı maili",
+                sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"planName\":\"Profesyonel\",\"last4Digits\":\"4242\",\"billingUrl\":\"https://stoocker.app/billing\",\"year\":\"2024\"}"));
+        }
+
+        // New Task Assignment Template (Turkish)
+        if (!existingKeys.Contains("new-task"))
+        {
+            templates.Add(EmailTemplate.CreateSystem(
+                templateKey: "new-task",
+                name: "Yeni Görev Atandı",
+                subject: "Yeni Görev Atandı",
+                htmlBody: GetNewTaskTemplate(),
+                language: "tr",
+                category: EmailTemplateCategory.Notification,
+                variables: "[\"assignerName\", \"taskTitle\", \"dueDate\", \"priority\", \"taskUrl\", \"year\"]",
+                description: "Yeni görev atandığında gönderilen bildirim maili",
+                sampleData: "{\"assignerName\":\"Mehmet Demir\",\"taskTitle\":\"Stok Sayımı Yapılacak\",\"dueDate\":\"15 Ocak 2024\",\"priority\":\"Yüksek\",\"taskUrl\":\"https://stoocker.app/tasks/123\",\"year\":\"2024\"}"));
         }
 
         if (templates.Count > 0)
@@ -1027,307 +1072,708 @@ public class MasterDataSeeder
         }
     }
 
-    private static string GetEmailVerificationTemplate() => @"<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-        .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
-    </style>
-</head>
-<body>
-    <div class='container'>
-        <div class='header'>
-            <h1>Email Doğrulama</h1>
-        </div>
-        <div class='content'>
-            <p>Merhaba {{ userName }},</p>
-            <p>{{ appName }}'a hoşgeldiniz! Hesabınızı aktifleştirmek için lütfen aşağıdaki butona tıklayın:</p>
-            <div style='text-align: center;'>
-                <a href='{{ verificationUrl }}' class='button'>Email Adresimi Doğrula</a>
-            </div>
-            <p>Veya aşağıdaki linki tarayıcınıza kopyalayın:</p>
-            <p style='word-break: break-all; color: #667eea;'>{{ verificationUrl }}</p>
-            <p>Bu link 24 saat geçerlidir.</p>
-        </div>
-        <div class='footer'>
-            <p>© {{ year }} {{ appName }}. Tüm hakları saklıdır.</p>
-        </div>
-    </div>
-</body>
-</html>";
-
     private static string GetTenantEmailVerificationTemplate() => @"<!DOCTYPE html>
 <html>
 <head>
+    <meta charset=""utf-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>E-posta Doğrulama: Stoocker</title>
     <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-        .code-box { background: white; border: 2px dashed #667eea; padding: 20px; margin: 20px 0; text-align: center; border-radius: 8px; }
-        .code { font-size: 32px; font-weight: bold; color: #667eea; letter-spacing: 8px; font-family: monospace; }
-        .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
-        .note { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin: 15px 0; }
+        body { margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+        table { border-spacing: 0; border-collapse: collapse; }
+        td { padding: 0; }
+        img { border: 0; }
+        @media only screen and (max-width: 600px) {
+            .container { width: 100% !important; padding: 20px !important; }
+        }
     </style>
 </head>
-<body>
-    <div class='container'>
-        <div class='header'>
-            <h1>Email Doğrulama</h1>
-        </div>
-        <div class='content'>
-            <p>Merhaba {{ userName }},</p>
-            <p>{{ appName }}'a hoşgeldiniz! Hesabınızı aktifleştirmek için aşağıdaki <strong>6 haneli doğrulama kodunu</strong> girin:</p>
-            <div class='code-box'>
-                <div class='code'>{{ verificationCode }}</div>
-            </div>
-            <p style='text-align: center; color: #666;'>Bu kod <strong>24 saat</strong> geçerlidir.</p>
-            <div class='note'>
-                <strong>💡 İpucu:</strong> Kodu kayıt sayfasında açılan popup'a girebilirsiniz.
-            </div>
-            <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
-            <p style='font-size: 14px; color: #666;'><strong>Alternatif:</strong> Doğrudan link ile de doğrulayabilirsiniz:</p>
-            <div style='text-align: center;'>
-                <a href='{{ verificationUrl }}' class='button'>Email Adresimi Doğrula</a>
-            </div>
-            <p style='font-size: 12px; color: #999; text-align: center;'>{{ verificationUrl }}</p>
-        </div>
-        <div class='footer'>
-            <p>© {{ year }} {{ appName }}. Tüm hakları saklıdır.</p>
-        </div>
-    </div>
+<body style=""background-color: #f8fafc; margin: 0; padding: 40px 0;"">
+    <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""background-color: #f8fafc;"">
+        <tr>
+            <td align=""center"">
+                <table role=""presentation"" class=""container"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; width: 100%; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);"">
+                    <tr>
+                        <td align=""center"" style=""padding: 30px 40px 10px 40px; text-align: center; background-color: #ffffff;"">
+                            <img src=""https://stoocker.app/logo.png"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;"">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style=""padding: 20px 40px 40px 40px; text-align: left;"">
+                            <h1 style=""margin: 0 0 20px 0; font-size: 24px; font-weight: 600; color: #0f172a; text-align: center; letter-spacing: -0.5px; line-height: 1.3;"">
+                                E-posta adresinizi doğrulayın
+                            </h1>
+                            <p style=""margin: 0 0 24px 0; font-size: 15px; line-height: 1.6; color: #475569; text-align: center;"">
+                                Merhaba <strong>{{ userName }}</strong>,<br>
+                                Stoocker hesabınızın güvenliği için lütfen aşağıdaki doğrulama kodunu kullanın.
+                            </p>
+                            <div style=""background-color: #f1f5f9; border-radius: 8px; padding: 24px; margin-bottom: 24px; text-align: center;"">
+                                <span style=""font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 32px; font-weight: 700; color: #0f172a; letter-spacing: 8px; display: block;"">
+                                    {{ verificationCode }}
+                                </span>
+                            </div>
+                            <p style=""margin: 0 0 30px 0; font-size: 13px; color: #64748b; text-align: center;"">
+                                Bu kod <strong>24 saat</strong> boyunca geçerlidir.<br>Kodu kimseyle paylaşmayınız.
+                            </p>
+                            <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
+                                <tr>
+                                    <td style=""border-top: 1px solid #e2e8f0; padding-bottom: 30px;""></td>
+                                </tr>
+                            </table>
+                            <p style=""margin: 0 0 15px 0; font-size: 14px; color: #475569; text-align: center;"">
+                                Veya doğrudan aşağıdaki butona tıklayabilirsiniz:
+                            </p>
+                            <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
+                                <tr>
+                                    <td align=""center"">
+                                        <a href=""{{ verificationUrl }}"" target=""_blank"" style=""display: inline-block; background-color: #0f172a; color: #ffffff; padding: 14px 32px; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);"">
+                                            Hesabımı Doğrula
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style=""margin: 20px 0 0 0; font-size: 12px; color: #94a3b8; text-align: center; word-break: break-all;"">
+                                {{ verificationUrl }}
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+                <table role=""presentation"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; margin-top: 20px;"">
+                    <tr>
+                        <td align=""center"" style=""font-size: 12px; color: #94a3b8;"">
+                            &copy; {{ year }} Stoocker, Inc. Tüm hakları saklıdır.
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>";
 
     private static string GetPasswordResetTemplate() => @"<!DOCTYPE html>
 <html>
 <head>
+    <meta charset=""utf-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>Şifre Sıfırlama: Stoocker</title>
     <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-        .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+        body { margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+        table { border-spacing: 0; border-collapse: collapse; }
+        td { padding: 0; }
+        img { border: 0; }
+        @media only screen and (max-width: 600px) {
+            .container { width: 100% !important; padding: 20px !important; }
+        }
     </style>
 </head>
-<body>
-    <div class='container'>
-        <div class='header'>
-            <h1>Şifre Sıfırlama</h1>
-        </div>
-        <div class='content'>
-            <p>Merhaba {{ userName }},</p>
-            <p>Şifrenizi sıfırlamak için bir talepte bulundunuz. Aşağıdaki butona tıklayarak yeni şifrenizi oluşturabilirsiniz:</p>
-            <div style='text-align: center;'>
-                <a href='{{ resetUrl }}' class='button'>Şifremi Sıfırla</a>
-            </div>
-            <p>Bu link 1 saat geçerlidir.</p>
-            <p>Eğer bu talebi siz yapmadıysanız, bu emaili görmezden gelebilirsiniz.</p>
-        </div>
-        <div class='footer'>
-            <p>© {{ year }} {{ appName }}. Tüm hakları saklıdır.</p>
-        </div>
-    </div>
+<body style=""background-color: #f8fafc; margin: 0; padding: 40px 0;"">
+    <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""background-color: #f8fafc;"">
+        <tr>
+            <td align=""center"">
+                <table role=""presentation"" class=""container"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; width: 100%; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);"">
+                    <tr>
+                        <td align=""center"" style=""padding: 30px 40px 10px 40px; text-align: center; background-color: #ffffff;"">
+                            <img src=""https://stoocker.app/logo.png"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;"">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style=""padding: 20px 40px 40px 40px; text-align: left;"">
+                            <h1 style=""margin: 0 0 20px 0; font-size: 24px; font-weight: 600; color: #0f172a; text-align: center; letter-spacing: -0.5px; line-height: 1.3;"">
+                                Şifre sıfırlama talebi
+                            </h1>
+                            <p style=""margin: 0 0 24px 0; font-size: 15px; line-height: 1.6; color: #475569; text-align: center;"">
+                                Merhaba <strong>{{ userName }}</strong>,<br>
+                                Stoocker hesabınız için bir şifre sıfırlama talebi aldık. Şifrenizi yenilemek için aşağıdaki butonu kullanabilirsiniz.
+                            </p>
+                            <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
+                                <tr>
+                                    <td align=""center"">
+                                        <a href=""{{ resetUrl }}"" target=""_blank"" style=""display: inline-block; background-color: #0f172a; color: #ffffff; padding: 14px 32px; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);"">
+                                            Şifremi Sıfırla
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style=""margin: 24px 0 0 0; font-size: 13px; color: #64748b; text-align: center;"">
+                                Bu bağlantı güvenliğiniz için <strong>1 saat</strong> sonra geçerliliğini yitirecektir.
+                            </p>
+                            <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
+                                <tr>
+                                    <td style=""border-top: 1px solid #e2e8f0; padding-bottom: 24px; padding-top: 24px;""></td>
+                                </tr>
+                            </table>
+                            <p style=""margin: 0; font-size: 13px; line-height: 1.6; color: #94a3b8; text-align: center;"">
+                                <strong>Bu talebi siz yapmadınız mı?</strong><br>
+                                Endişelenmenize gerek yok. Bu e-postayı görmezden gelebilirsiniz, şifreniz değişmeyecektir.
+                            </p>
+                            <div style=""margin-top: 24px; padding-top: 20px; border-top: 1px dashed #e2e8f0; text-align: center;"">
+                                <p style=""margin: 0 0 10px 0; font-size: 12px; color: #64748b;"">Buton çalışmıyor mu? Linki tarayıcınıza yapıştırın:</p>
+                                <p style=""margin: 0; font-size: 11px; font-family: monospace; color: #64748b; word-break: break-all;"">
+                                    {{ resetUrl }}
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <table role=""presentation"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; margin-top: 20px;"">
+                    <tr>
+                        <td align=""center"" style=""font-size: 12px; color: #94a3b8;"">
+                            &copy; {{ year }} Stoocker, Inc. Tüm hakları saklıdır.
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>";
 
     private static string GetWelcomeTemplate() => @"<!DOCTYPE html>
 <html>
 <head>
+    <meta charset=""utf-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>Hoş Geldiniz: Stoocker</title>
     <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-        .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-        .features { margin: 20px 0; }
-        .feature { padding: 10px; background: white; margin: 10px 0; border-left: 3px solid #667eea; }
-        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+        body { margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+        table { border-spacing: 0; border-collapse: collapse; }
+        td { padding: 0; }
+        img { border: 0; }
+        @media only screen and (max-width: 600px) {
+            .container { width: 100% !important; padding: 20px !important; }
+        }
     </style>
 </head>
-<body>
-    <div class='container'>
-        <div class='header'>
-            <h1>{{ appName }}'a Hoşgeldiniz!</h1>
-        </div>
-        <div class='content'>
-            <p>Merhaba {{ userName }},</p>
-            <p><strong>{{ companyName }}</strong> hesabınız başarıyla oluşturuldu!</p>
-            <div class='features'>
-                <div class='feature'>✅ CRM - Müşteri ilişkilerini yönetin</div>
-                <div class='feature'>✅ Stok Takibi - Envanterinizi kontrol edin</div>
-                <div class='feature'>✅ Raporlama - Detaylı analizler alın</div>
-                <div class='feature'>✅ 7/24 Destek - Her zaman yanınızdayız</div>
-            </div>
-            <div style='text-align: center;'>
-                <a href='{{ loginUrl }}' class='button'>Hemen Başla</a>
-            </div>
-        </div>
-        <div class='footer'>
-            <p>© {{ year }} {{ appName }}. Tüm hakları saklıdır.</p>
-        </div>
-    </div>
-</body>
-</html>";
-
-    private static string GetInvitationTemplate() => @"<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-        .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
-    </style>
-</head>
-<body>
-    <div class='container'>
-        <div class='header'>
-            <h1>Davetlisiniz!</h1>
-        </div>
-        <div class='content'>
-            <p>Merhaba,</p>
-            <p><strong>{{ inviterName }}</strong> sizi <strong>{{ companyName }}</strong> şirketine davet ediyor.</p>
-            <p>Daveti kabul etmek için aşağıdaki butona tıklayın:</p>
-            <div style='text-align: center;'>
-                <a href='{{ inviteUrl }}' class='button'>Daveti Kabul Et</a>
-            </div>
-            <p>Veya aşağıdaki linki tarayıcınıza kopyalayın:</p>
-            <p style='word-break: break-all; color: #667eea;'>{{ inviteUrl }}</p>
-        </div>
-        <div class='footer'>
-            <p>© {{ year }} {{ appName }}. Tüm hakları saklıdır.</p>
-        </div>
-    </div>
+<body style=""background-color: #f8fafc; margin: 0; padding: 40px 0;"">
+    <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""background-color: #f8fafc;"">
+        <tr>
+            <td align=""center"">
+                <table role=""presentation"" class=""container"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; width: 100%; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);"">
+                    <tr>
+                        <td align=""center"" style=""padding: 30px 40px 10px 40px; text-align: center; background-color: #ffffff;"">
+                            <img src=""https://stoocker.app/logo.png"" width=""200"" height=""200"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;"">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style=""padding: 20px 40px 40px 40px; text-align: left;"">
+                            <h1 style=""margin: 0 0 20px 0; font-size: 24px; font-weight: 600; color: #0f172a; letter-spacing: -0.5px; line-height: 1.3;"">
+                                Hesabınız başarıyla oluşturuldu.
+                            </h1>
+                            <p style=""margin: 0 0 24px 0; font-size: 15px; line-height: 1.6; color: #475569;"">
+                                Merhaba <strong>{{ userName }}</strong>,<br><br>
+                                <strong>{{ companyName }}</strong> hesabınızın kurulumu tamamlandı. Artık Stoocker paneline erişebilir ve iş akışlarınızı yönetmeye başlayabilirsiniz.
+                            </p>
+                            <div style=""background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 30px;"">
+                                <p style=""margin: 0 0 15px 0; font-size: 12px; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px;"">ERİŞİM DETAYLARI</p>
+                                <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
+                                    <tr>
+                                        <td width=""20"" valign=""top"" style=""padding-bottom: 12px;"">
+                                            <span style=""font-size: 16px; color: #0f172a;"">&bull;</span>
+                                        </td>
+                                        <td style=""padding-bottom: 12px; font-size: 14px; color: #334155;"">
+                                            <strong style=""color: #0f172a;"">CRM Modülü:</strong> Müşteri ilişkileri ve satış süreçleri.
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td width=""20"" valign=""top"" style=""padding-bottom: 12px;"">
+                                            <span style=""font-size: 16px; color: #0f172a;"">&bull;</span>
+                                        </td>
+                                        <td style=""padding-bottom: 12px; font-size: 14px; color: #334155;"">
+                                            <strong style=""color: #0f172a;"">Stok & Envanter:</strong> Ürün giriş/çıkış ve depo takibi.
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td width=""20"" valign=""top"" style=""padding-bottom: 12px;"">
+                                            <span style=""font-size: 16px; color: #0f172a;"">&bull;</span>
+                                        </td>
+                                        <td style=""padding-bottom: 12px; font-size: 14px; color: #334155;"">
+                                            <strong style=""color: #0f172a;"">Finansal Raporlar:</strong> Gelir/gider analizleri.
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td width=""20"" valign=""top"" style=""padding-bottom: 0;"">
+                                            <span style=""font-size: 16px; color: #0f172a;"">&bull;</span>
+                                        </td>
+                                        <td style=""padding-bottom: 0; font-size: 14px; color: #334155;"">
+                                            <strong style=""color: #0f172a;"">Destek:</strong> 7/24 teknik yardım paneli.
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
+                                <tr>
+                                    <td align=""left"">
+                                        <a href=""{{ loginUrl }}"" target=""_blank"" style=""display: inline-block; background-color: #0f172a; color: #ffffff; padding: 14px 32px; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);"">
+                                            Panele Giriş Yap &rarr;
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style=""margin: 30px 0 0 0; font-size: 14px; line-height: 1.6; color: #475569;"">
+                                Sorularınız mı var? <a href=""https://stoocker.app/docs"" style=""color: #0f172a; text-decoration: underline;"">Dokümantasyonu inceleyin</a> veya bu e-postayı yanıtlayın.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+                <table role=""presentation"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; margin-top: 20px;"">
+                    <tr>
+                        <td align=""center"" style=""font-size: 12px; color: #94a3b8;"">
+                            &copy; {{ year }} Stoocker, Inc. Tüm hakları saklıdır.
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>";
 
     private static string GetUserInvitationTemplate() => @"<!DOCTYPE html>
-<html lang=""tr"">
+<html>
 <head>
-    <meta charset=""UTF-8"">
+    <meta charset=""utf-8"">
     <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-    <title>{{ appName }} - Davet</title>
-    <!--[if mso]>
-    <noscript>
-        <xml>
-            <o:OfficeDocumentSettings>
-                <o:PixelsPerInch>96</o:PixelsPerInch>
-            </o:OfficeDocumentSettings>
-        </xml>
-    </noscript>
-    <![endif]-->
+    <title>Davet: {{ appName }}</title>
+    <style>
+        body { margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+        table { border-spacing: 0; border-collapse: collapse; }
+        td { padding: 0; }
+        img { border: 0; }
+        @media only screen and (max-width: 600px) {
+            .container { width: 100% !important; padding: 20px !important; }
+            .content-table { width: 100% !important; border: none !important; }
+        }
+    </style>
 </head>
-<body style=""margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;"">
-    <table role=""presentation"" cellspacing=""0"" cellpadding=""0"" border=""0"" width=""100%"" style=""background-color: #f4f4f4;"">
+<body style=""background-color: #f8fafc; margin: 0; padding: 40px 0;"">
+    <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""background-color: #f8fafc;"">
         <tr>
-            <td style=""padding: 20px 0;"">
-                <table role=""presentation"" cellspacing=""0"" cellpadding=""0"" border=""0"" width=""600"" style=""margin: 0 auto; max-width: 600px;"">
-                    <!-- Logo -->
+            <td align=""center"">
+                <table role=""presentation"" class=""container"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; width: 100%; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);"">
                     <tr>
-                        <td style=""text-align: center; padding: 20px 0;"">
-                            <img src=""https://stoocker.app/logo.png"" alt=""{{ appName }}"" width=""120"" style=""display: block; margin: 0 auto;"">
+                        <td align=""center"" style=""padding: 30px 40px 10px 40px; text-align: center; background-color: #ffffff;"">
+                            <img src=""https://stoocker.app/logo.png"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;"">
                         </td>
                     </tr>
-                    <!-- Main Content -->
                     <tr>
-                        <td style=""background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"">
-                            <!-- Greeting -->
-                            <table role=""presentation"" cellspacing=""0"" cellpadding=""0"" border=""0"" width=""100%"">
+                        <td style=""padding: 40px 40px 20px 40px; text-align: left;"">
+                            <div style=""font-size: 20px; font-weight: 700; color: #0f172a; letter-spacing: -0.5px;"">
+                                {{ appName }}
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style=""padding: 0 40px 40px 40px; text-align: left;"">
+                            <h1 style=""margin: 0 0 20px 0; font-size: 24px; font-weight: 600; color: #0f172a; letter-spacing: -0.5px; line-height: 1.3;"">
+                                <span style=""color: #64748b;"">{{ inviterName }}</span> sizi <span style=""color: #0f172a;"">{{ companyName }}</span> ekibine davet etti.
+                            </h1>
+                            <p style=""margin: 0 0 24px 0; font-size: 15px; line-height: 1.6; color: #475569;"">
+                                Merhaba <strong>{{ userName }}</strong>,<br><br>
+                                İş akışlarını yönetmek ve ekiple işbirliği yapmak için Stoocker üzerinde bir hesap oluşturmanız istendi. Aşağıdaki detaylarla giriş yapabilirsiniz:
+                            </p>
+                            <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""background-color: #f1f5f9; border-radius: 8px; margin-bottom: 30px;"">
                                 <tr>
-                                    <td style=""padding: 40px 40px 20px 40px;"">
-                                        <p style=""margin: 0 0 15px 0; font-size: 16px; line-height: 1.5; color: #333333;"">
-                                            Merhaba <strong>{{ userName }}</strong>,
-                                        </p>
-                                        <p style=""margin: 0 0 20px 0; font-size: 16px; line-height: 1.5; color: #333333;"">
-                                            <strong style=""color: #6366f1;"">{{ inviterName }}</strong> sizi <strong style=""color: #6366f1;"">{{ companyName }}</strong> şirketinin {{ appName }} hesabına davet etti!
-                                        </p>
-                                    </td>
-                                </tr>
-                                <!-- Info Box -->
-                                <tr>
-                                    <td style=""padding: 0 40px;"">
-                                        <table role=""presentation"" cellspacing=""0"" cellpadding=""0"" border=""0"" width=""100%"" style=""background-color: #eff6ff; border-left: 4px solid #6366f1; border-radius: 0 6px 6px 0;"">
+                                    <td style=""padding: 20px;"">
+                                        <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
                                             <tr>
-                                                <td style=""padding: 15px 20px;"">
-                                                    <p style=""margin: 0 0 10px 0; font-size: 14px; font-weight: bold; color: #1e40af;"">📋 Hesap Bilgileriniz:</p>
-                                                    <p style=""margin: 0; font-size: 14px; color: #374151;"">
-                                                        • E-posta: <strong>{{ email }}</strong><br>
-                                                        • Şirket: <strong>{{ companyName }}</strong>
-                                                    </p>
-                                                </td>
+                                                <td style=""padding-bottom: 8px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;"">Şirket</td>
+                                                <td style=""padding-bottom: 8px; font-size: 14px; font-weight: 500; color: #0f172a; text-align: right;"">{{ companyName }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style=""padding-bottom: 8px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;"">Domain</td>
+                                                <td style=""padding-bottom: 8px; font-size: 14px; font-weight: 500; color: #0f172a; text-align: right; font-family: monospace;"">{{ domain }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style=""padding-bottom: 8px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;"">E-posta</td>
+                                                <td style=""padding-bottom: 8px; font-size: 14px; font-weight: 500; color: #0f172a; text-align: right;"">{{ email }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style=""font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;"">Rol</td>
+                                                <td style=""font-size: 14px; font-weight: 500; color: #0f172a; text-align: right;"">Ekip Üyesi</td>
                                             </tr>
                                         </table>
                                     </td>
                                 </tr>
-                                <!-- CTA -->
+                            </table>
+                            <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
                                 <tr>
-                                    <td style=""padding: 30px 40px; text-align: center;"">
-                                        <p style=""margin: 0 0 20px 0; font-size: 16px; color: #333333;"">
-                                            Hesabınızı aktifleştirmek ve şifrenizi belirlemek için aşağıdaki butona tıklayın:
-                                        </p>
-                                        <table role=""presentation"" cellspacing=""0"" cellpadding=""0"" border=""0"" style=""margin: 0 auto;"">
-                                            <tr>
-                                                <td style=""border-radius: 6px; background-color: #6366f1;"">
-                                                    <a href=""{{ activationUrl }}"" target=""_blank"" style=""display: inline-block; padding: 14px 32px; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 6px;"">Şifremi Belirle ve Hesabımı Aktifleştir</a>
-                                                </td>
-                                            </tr>
-                                        </table>
+                                    <td align=""left"">
+                                        <a href=""{{ activationUrl }}"" target=""_blank"" style=""display: inline-block; background-color: #0f172a; color: #ffffff; padding: 14px 32px; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);"">
+                                            Daveti Kabul Et ve Şifre Belirle &rarr;
+                                        </a>
                                     </td>
                                 </tr>
-                                <!-- Alternative Link -->
+                            </table>
+                            <p style=""margin: 20px 0 0 0; font-size: 13px; color: #94a3b8;"">
+                                Bu davet linki güvenlik nedeniyle <strong>{{ expirationDays }} gün</strong> içinde geçersiz olacaktır.
+                            </p>
+                            <div style=""margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;"">
+                                <p style=""margin: 0 0 10px 0; font-size: 12px; color: #64748b;"">Buton çalışmıyor mu? Linki tarayıcınıza yapıştırın:</p>
+                                <p style=""margin: 0; font-size: 11px; font-family: monospace; color: #64748b; word-break: break-all;"">
+                                    {{ activationUrl }}
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <table role=""presentation"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; margin-top: 20px;"">
+                    <tr>
+                        <td align=""center"" style=""font-size: 12px; color: #94a3b8;"">
+                            &copy; {{ year }} {{ appName }}, Inc. Tüm hakları saklıdır.<br>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>";
+
+    private static string GetTrialEndingTemplate() => @"<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=""utf-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>Deneme Süresi Hatırlatması</title>
+    <style>
+        body { margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        @media only screen and (max-width: 600px) { .container { width: 100% !important; padding: 20px !important; } }
+    </style>
+</head>
+<body style=""background-color: #f8fafc; margin: 0; padding: 40px 0;"">
+    <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
+        <tr>
+            <td align=""center"">
+                <table role=""presentation"" class=""container"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; width: 100%; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);"">
+                    <tr>
+                        <td align=""center"" style=""padding: 30px 40px 10px 40px;"">
+                            <img src=""https://stoocker.app/logo.png"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0;"">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style=""padding: 20px 40px 40px 40px; text-align: left;"">
+                            <h1 style=""margin: 0 0 20px 0; font-size: 20px; font-weight: 600; color: #0f172a; text-align: center;"">Deneme Süreniz Sona Eriyor</h1>
+                            <p style=""margin: 0 0 30px 0; font-size: 15px; line-height: 1.6; color: #475569; text-align: center;"">
+                                Sayın <strong>{{ userName }}</strong>,<br>
+                                Ücretsiz deneme sürenizin bitmesine <strong>{{ daysLeft }} gün</strong> kaldı. Kesintisiz erişim için planınızı şimdi yükseltin.
+                            </p>
+                            <div style=""background-color: #f1f5f9; border-radius: 8px; padding: 20px; margin-bottom: 30px;"">
+                                <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
+                                    <tr>
+                                        <td valign=""middle"">
+                                            <p style=""margin: 0 0 4px 0; font-size: 16px; font-weight: 600; color: #0f172a;"">Starter Plan</p>
+                                            <p style=""margin: 0; font-size: 13px; color: #64748b;"">Tüm özelliklere erişim devam etsin.</p>
+                                        </td>
+                                        <td valign=""middle"" style=""text-align: right;"">
+                                            <span style=""font-size: 18px; font-weight: 700; color: #0f172a;"">₺499</span><span style=""font-size: 13px; color: #64748b;"">/ay</span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
                                 <tr>
-                                    <td style=""padding: 0 40px 20px 40px;"">
-                                        <p style=""margin: 0 0 10px 0; font-size: 13px; color: #6b7280;"">Veya aşağıdaki linki tarayıcınıza kopyalayın:</p>
-                                        <p style=""margin: 0; font-size: 12px; color: #6366f1; word-break: break-all; background-color: #f3f4f6; padding: 12px; border-radius: 4px;"">
-                                            <a href=""{{ activationUrl }}"" style=""color: #6366f1; text-decoration: none;"">{{ activationUrl }}</a>
-                                        </p>
+                                    <td align=""center"">
+                                        <a href=""{{ upgradeUrl }}"" target=""_blank"" style=""display: inline-block; background-color: #0f172a; color: #ffffff; padding: 14px 32px; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 6px;"">
+                                            Planı Yükselt &rarr;
+                                        </a>
                                     </td>
                                 </tr>
-                                <!-- Warning Box -->
+                            </table>
+                            <p style=""margin: 24px 0 0 0; font-size: 13px; color: #64748b; text-align: center;"">
+                                Sorularınız varsa bizimle iletişime geçebilirsiniz.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+                <table role=""presentation"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; margin-top: 20px;"">
+                    <tr>
+                        <td align=""center"" style=""font-size: 12px; color: #94a3b8;"">&copy; {{ year }} Stoocker, Inc.</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>";
+
+    private static string GetCriticalStockTemplate() => @"<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=""utf-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>Kritik Stok Uyarısı</title>
+    <style>
+        body { margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        @media only screen and (max-width: 600px) { .container { width: 100% !important; padding: 20px !important; } }
+    </style>
+</head>
+<body style=""background-color: #f8fafc; margin: 0; padding: 40px 0;"">
+    <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
+        <tr>
+            <td align=""center"">
+                <table role=""presentation"" class=""container"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; width: 100%; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);"">
+                    <tr>
+                        <td align=""center"" style=""padding: 30px 40px 10px 40px; background-color: #ffffff;"">
+                            <img src=""https://stoocker.app/logo.png"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0;"">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style=""padding: 20px 40px 40px 40px; text-align: left;"">
+                            <h1 style=""margin: 0 0 20px 0; font-size: 20px; font-weight: 600; color: #b45309; text-align: center;"">⚠️ Kritik Stok Seviyesi</h1>
+                            <p style=""margin: 0 0 24px 0; font-size: 15px; line-height: 1.6; color: #475569; text-align: center;"">
+                                Aşağıdaki ürün için belirlediğiniz minimum stok seviyesinin altına düşüldü.
+                            </p>
+                            <div style=""background-color: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 20px; margin-bottom: 30px;"">
+                                <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
+                                    <tr>
+                                        <td width=""60"" valign=""middle"" style=""padding-right: 20px;"">
+                                            <div style=""width: 60px; height: 60px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; text-align: center; line-height: 60px; font-size: 24px;"">📦</div>
+                                        </td>
+                                        <td valign=""middle"">
+                                            <p style=""margin: 0 0 4px 0; font-size: 16px; font-weight: 700; color: #0f172a;"">{{ productName }}</p>
+                                            <p style=""margin: 0; font-size: 13px; color: #64748b;"">SKU: {{ skuCode }}</p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan=""2"" style=""padding-top: 15px;"">
+                                            <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
+                                                <tr>
+                                                    <td style=""font-size: 13px; color: #78350f;"">Mevcut Stok:</td>
+                                                    <td style=""font-size: 16px; font-weight: 700; color: #b45309; text-align: right;"">{{ currentStock }} Adet</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style=""font-size: 13px; color: #92400e;"">Minimum Limit:</td>
+                                                    <td style=""font-size: 13px; color: #92400e; text-align: right;"">{{ minLimit }} Adet</td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
                                 <tr>
-                                    <td style=""padding: 0 40px 30px 40px;"">
-                                        <table role=""presentation"" cellspacing=""0"" cellpadding=""0"" border=""0"" width=""100%"" style=""background-color: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 0 6px 6px 0;"">
-                                            <tr>
-                                                <td style=""padding: 15px 20px;"">
-                                                    <p style=""margin: 0; font-size: 14px; color: #92400e;"">
-                                                        <strong>⏰ Önemli:</strong> Bu link <strong>{{ expirationDays }} gün</strong> boyunca geçerlidir. Süre dolduktan sonra yöneticinizden yeni bir davet talep etmeniz gerekebilir.
-                                                    </p>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                                <!-- Note -->
-                                <tr>
-                                    <td style=""padding: 0 40px 40px 40px;"">
-                                        <p style=""margin: 0; font-size: 13px; color: #9ca3af;"">
-                                            Eğer bu daveti beklemiyorsanız, bu e-postayı görmezden gelebilirsiniz.
-                                        </p>
+                                    <td align=""center"">
+                                        <a href=""{{ inventoryUrl }}"" target=""_blank"" style=""display: inline-block; background-color: #0f172a; color: #ffffff; padding: 14px 32px; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 6px;"">
+                                            Stok Yönetimine Git
+                                        </a>
                                     </td>
                                 </tr>
                             </table>
                         </td>
                     </tr>
-                    <!-- Footer -->
+                </table>
+                <table role=""presentation"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; margin-top: 20px;"">
                     <tr>
-                        <td style=""padding: 30px 20px; text-align: center;"">
-                            <p style=""margin: 0 0 8px 0; font-size: 13px; color: #6b7280;"">
-                                © {{ year }} {{ appName }}. Tüm hakları saklıdır.
+                        <td align=""center"" style=""font-size: 12px; color: #94a3b8;"">&copy; {{ year }} Stoocker, Inc.</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>";
+
+    private static string GetPaymentReceiptTemplate() => @"<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=""utf-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>Ödeme Makbuzu</title>
+    <style>
+        body { margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        table { border-spacing: 0; border-collapse: collapse; }
+        td { padding: 0; }
+        @media only screen and (max-width: 600px) { .container { width: 100% !important; padding: 20px !important; } }
+    </style>
+</head>
+<body style=""background-color: #f8fafc; margin: 0; padding: 40px 0;"">
+    <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
+        <tr>
+            <td align=""center"">
+                <table role=""presentation"" class=""container"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; width: 100%; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);"">
+                    <tr>
+                        <td align=""center"" style=""padding: 30px 40px 10px 40px; background-color: #ffffff;"">
+                            <img src=""https://stoocker.app/logo.png"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0;"">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style=""padding: 20px 40px 40px 40px; text-align: left;"">
+                            <h1 style=""margin: 0 0 10px 0; font-size: 24px; font-weight: 600; color: #0f172a; text-align: center;"">Ödeme Alındı</h1>
+                            <p style=""margin: 0 0 30px 0; font-size: 14px; color: #64748b; text-align: center;"">Referans No: #{{ invoiceNumber }}</p>
+                            <p style=""margin: 0 0 24px 0; font-size: 15px; line-height: 1.6; color: #475569;"">
+                                Sayın <strong>{{ userName }}</strong>,<br>
+                                {{ planName }} aboneliğiniz için ödemeniz başarıyla alınmıştır. Teşekkür ederiz.
                             </p>
-                            <p style=""margin: 0; font-size: 12px; color: #9ca3af; background-color: #e5e7eb; display: inline-block; padding: 6px 12px; border-radius: 4px;"">
-                                Bu e-posta otomatik olarak gönderilmiştir, lütfen yanıtlamayınız.
+                            <div style=""background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0; margin-bottom: 30px;"">
+                                <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
+                                    <tr style=""background-color: #f1f5f9;"">
+                                        <td style=""padding: 12px 20px; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;"">Açıklama</td>
+                                        <td style=""padding: 12px 20px; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; text-align: right;"">Tutar</td>
+                                    </tr>
+                                    <tr>
+                                        <td style=""padding: 16px 20px; font-size: 14px; color: #0f172a; border-bottom: 1px solid #e2e8f0;"">
+                                            {{ planName }} ({{ billingPeriod }})
+                                        </td>
+                                        <td style=""padding: 16px 20px; font-size: 14px; color: #0f172a; border-bottom: 1px solid #e2e8f0; text-align: right;"">
+                                            {{ amount }} TL
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style=""padding: 12px 20px; font-size: 13px; color: #64748b; text-align: right;"">KDV (%20)</td>
+                                        <td style=""padding: 12px 20px; font-size: 13px; color: #64748b; text-align: right;"">{{ taxAmount }} TL</td>
+                                    </tr>
+                                    <tr>
+                                        <td style=""padding: 12px 20px; font-size: 16px; font-weight: 700; color: #0f172a; text-align: right;"">TOPLAM</td>
+                                        <td style=""padding: 12px 20px; font-size: 16px; font-weight: 700; color: #0f172a; text-align: right;"">{{ totalAmount }} TL</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
+                                <tr>
+                                    <td align=""center"">
+                                        <a href=""{{ invoicePdfUrl }}"" target=""_blank"" style=""display: inline-block; background-color: #0f172a; color: #ffffff; padding: 14px 32px; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 6px;"">
+                                            Faturayı İndir (PDF)
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+                <table role=""presentation"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; margin-top: 20px;"">
+                    <tr>
+                        <td align=""center"" style=""font-size: 12px; color: #94a3b8;"">&copy; {{ year }} Stoocker, Inc.</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>";
+
+    private static string GetPaymentFailedTemplate() => @"<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=""utf-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>Ödeme Alınamadı</title>
+    <style>
+        body { margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        @media only screen and (max-width: 600px) { .container { width: 100% !important; padding: 20px !important; } }
+    </style>
+</head>
+<body style=""background-color: #f8fafc; margin: 0; padding: 40px 0;"">
+    <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
+        <tr>
+            <td align=""center"">
+                <table role=""presentation"" class=""container"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; width: 100%; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);"">
+                    <tr>
+                        <td align=""center"" style=""padding: 30px 40px 10px 40px;"">
+                            <img src=""https://stoocker.app/logo.png"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0;"">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style=""padding: 20px 40px 40px 40px; text-align: left;"">
+                            <h1 style=""margin: 0 0 20px 0; font-size: 20px; font-weight: 600; color: #b91c1c; text-align: center;"">Ödeme İşlemi Başarısız</h1>
+                            <p style=""margin: 0 0 24px 0; font-size: 15px; line-height: 1.6; color: #475569; text-align: center;"">
+                                Sayın <strong>{{ userName }}</strong>,<br>
+                                <strong>{{ planName }}</strong> aboneliğinizin yenilenmesi sırasında <strong>•••• {{ last4Digits }}</strong> ile biten kartınızdan ödeme alınamadı.
+                            </p>
+                            <div style=""background-color: #fef2f2; border: 1px solid #fee2e2; border-radius: 8px; padding: 20px; margin-bottom: 30px; text-align: center;"">
+                                <p style=""margin: 0 0 5px 0; font-size: 14px; font-weight: 600; color: #7f1d1d;"">Hizmet kesintisi yaşamamanız için</p>
+                                <p style=""margin: 0; font-size: 13px; color: #991b1b;"">Lütfen ödeme bilgilerinizi güncelleyin veya bankanızla iletişime geçin.</p>
+                            </div>
+                            <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
+                                <tr>
+                                    <td align=""center"">
+                                        <a href=""{{ billingUrl }}"" target=""_blank"" style=""display: inline-block; background-color: #0f172a; color: #ffffff; padding: 14px 32px; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 6px;"">
+                                            Ödeme Yöntemini Güncelle
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style=""margin: 30px 0 0 0; font-size: 13px; color: #64748b; text-align: center;"">
+                                Bir hata olduğunu düşünüyorsanız, tekrar denemek için yukarıdaki butona tıklayabilirsiniz.
                             </p>
                         </td>
+                    </tr>
+                </table>
+                <table role=""presentation"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; margin-top: 20px;"">
+                    <tr>
+                        <td align=""center"" style=""font-size: 12px; color: #94a3b8;"">&copy; {{ year }} Stoocker, Inc.</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>";
+
+    private static string GetNewTaskTemplate() => @"<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=""utf-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>Yeni Görev Atandı</title>
+    <style>
+        body { margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        @media only screen and (max-width: 600px) { .container { width: 100% !important; padding: 20px !important; } }
+    </style>
+</head>
+<body style=""background-color: #f8fafc; margin: 0; padding: 40px 0;"">
+    <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
+        <tr>
+            <td align=""center"">
+                <table role=""presentation"" class=""container"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; width: 100%; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);"">
+                    <tr>
+                        <td align=""center"" style=""padding: 30px 40px 10px 40px;"">
+                            <img src=""https://stoocker.app/logo.png"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0;"">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style=""padding: 20px 40px 40px 40px; text-align: left;"">
+                            <h1 style=""margin: 0 0 20px 0; font-size: 20px; font-weight: 600; color: #0f172a; text-align: center;"">Size Yeni Bir Görev Atandı</h1>
+                            <p style=""margin: 0 0 24px 0; font-size: 15px; line-height: 1.6; color: #475569; text-align: center;"">
+                                <strong>{{ assignerName }}</strong> tarafından aşağıdaki görev için atandınız.
+                            </p>
+                            <div style=""background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; margin-bottom: 30px;"">
+                                <p style=""margin: 0 0 8px 0; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;"">GÖREV BAŞLIĞI</p>
+                                <p style=""margin: 0 0 20px 0; font-size: 16px; font-weight: 600; color: #0f172a;"">{{ taskTitle }}</p>
+                                <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
+                                    <tr>
+                                        <td style=""padding-bottom: 5px; width: 50%;"">
+                                            <p style=""margin: 0; font-size: 12px; color: #64748b;"">SON TARİH</p>
+                                        </td>
+                                        <td style=""padding-bottom: 5px; width: 50%;"">
+                                            <p style=""margin: 0; font-size: 12px; color: #64748b;"">ÖNCELİK</p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <p style=""margin: 0; font-size: 14px; font-weight: 500; color: #0f172a;"">{{ dueDate }}</p>
+                                        </td>
+                                        <td>
+                                            <span style=""background-color: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;"">{{ priority }}</span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <table role=""presentation"" width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">
+                                <tr>
+                                    <td align=""center"">
+                                        <a href=""{{ taskUrl }}"" target=""_blank"" style=""display: inline-block; background-color: #0f172a; color: #ffffff; padding: 14px 32px; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 6px;"">
+                                            Görevi Görüntüle
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+                <table role=""presentation"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; margin-top: 20px;"">
+                    <tr>
+                        <td align=""center"" style=""font-size: 12px; color: #94a3b8;"">&copy; {{ year }} Stoocker, Inc.</td>
                     </tr>
                 </table>
             </td>
