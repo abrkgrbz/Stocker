@@ -1130,7 +1130,7 @@ public class MasterDataSeeder
                 subject: "Yeni Cihaz Girişi Tespit Edildi",
                 htmlBody: GetNewDeviceLoginTemplate(),
                 language: "tr",
-                category: EmailTemplateCategory.Security,
+                category: EmailTemplateCategory.Authentication,
                 variables: "[\"deviceName\", \"browser\", \"location\", \"ipAddress\", \"loginTime\", \"securityUrl\", \"logoUrl\", \"year\"]",
                 description: "Yeni cihazdan giriş yapıldığında gönderilen güvenlik uyarısı",
                 sampleData: "{\"deviceName\":\"Windows PC\",\"browser\":\"Chrome 120\",\"location\":\"İstanbul, Türkiye\",\"ipAddress\":\"88.xxx.xxx.xxx\",\"loginTime\":\"15 Ocak 2024, 14:30\",\"securityUrl\":\"https://stoocker.app/security\",\"year\":\"2024\"}"));

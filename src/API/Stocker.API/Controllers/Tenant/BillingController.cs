@@ -5,13 +5,14 @@ using Stocker.API.Controllers.Base;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Services;
 
-namespace Stocker.API.Controllers.Master;
+namespace Stocker.API.Controllers.Tenant;
 
 /// <summary>
 /// Manages billing and subscription operations for tenants.
 /// Integrates with Lemon Squeezy for payment processing.
+/// This is a tenant-scoped controller - tenant resolution is handled by middleware.
 /// </summary>
-[Route("api/billing")]
+[Route("api/tenant/billing")]
 [Authorize]
 public class BillingController : ApiController
 {

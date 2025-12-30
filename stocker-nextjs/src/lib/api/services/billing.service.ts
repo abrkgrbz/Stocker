@@ -73,9 +73,10 @@ export interface ChangePlanRequest {
 
 /**
  * Billing Service - Manages subscription and billing operations
+ * Uses tenant-scoped endpoints (/api/tenant/billing) for proper tenant resolution
  */
 export class BillingService {
-  private readonly basePath = '/api/billing';
+  private readonly basePath = '/api/tenant/billing';
 
   /**
    * Get available subscription plans
