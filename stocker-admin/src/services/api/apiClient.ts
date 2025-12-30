@@ -67,6 +67,14 @@ class ApiClient {
       },
       // Ensure proper UTF-8 handling
       transformRequest: [(data, headers) => {
+        // Don't transform FormData - let browser handle multipart/form-data
+        if (data instanceof FormData) {
+          // Remove Content-Type header so browser can set it with boundary
+          if (headers) {
+            delete headers['Content-Type'];
+          }
+          return data;
+        }
         if (data && typeof data === 'object') {
           // Don't transform the data, just stringify it
           return JSON.stringify(data);
