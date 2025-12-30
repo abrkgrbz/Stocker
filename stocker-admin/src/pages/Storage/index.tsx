@@ -703,11 +703,14 @@ const StoragePage: React.FC = () => {
       key: 'actions',
       width: 150,
       render: (_, record) => (
-        <Space>
+        <Space onClick={(e) => e.stopPropagation()}>
           <Button
             type="link"
             icon={<FolderOpenOutlined />}
-            onClick={() => handleBucketSelect(record.name)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleBucketSelect(record.name);
+            }}
           >
             Aç
           </Button>
@@ -724,6 +727,7 @@ const StoragePage: React.FC = () => {
               danger
               icon={<DeleteOutlined />}
               loading={deletingBucket === record.name}
+              onClick={(e) => e.stopPropagation()}
             />
           </Popconfirm>
         </Space>
@@ -787,7 +791,10 @@ const StoragePage: React.FC = () => {
             <Button
               type="link"
               icon={<FolderOpenOutlined />}
-              onClick={() => handleFolderOpen(record.key)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleFolderOpen(record.key);
+              }}
             >
               Aç
             </Button>
@@ -797,50 +804,52 @@ const StoragePage: React.FC = () => {
         const isImage = record.contentType.startsWith('image/');
 
         return (
-          <Dropdown
-            menu={{
-              items: [
-                {
-                  key: 'download',
-                  icon: <DownloadOutlined />,
-                  label: 'İndir',
-                  onClick: () => handleDownload(record.key, record.name),
-                },
-                {
-                  key: 'copyUrl',
-                  icon: <LinkOutlined />,
-                  label: 'URL Kopyala',
-                  onClick: () => handleCopyUrl(record.key),
-                },
-                ...(isImage ? [{
-                  key: 'preview',
-                  icon: <EyeOutlined />,
-                  label: 'Önizle',
-                  onClick: () => handlePreviewImage(record.key),
-                }] : []),
-                { type: 'divider' as const },
-                {
-                  key: 'delete',
-                  icon: <DeleteOutlined />,
-                  label: 'Sil',
-                  danger: true,
-                  onClick: () => {
-                    Modal.confirm({
-                      title: 'Dosyayı Sil',
-                      content: `'${record.name}' dosyası silinecek. Emin misiniz?`,
-                      okText: 'Sil',
-                      okType: 'danger',
-                      cancelText: 'İptal',
-                      onOk: () => handleDeleteObject(record.key),
-                    });
+          <div onClick={(e) => e.stopPropagation()}>
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'download',
+                    icon: <DownloadOutlined />,
+                    label: 'İndir',
+                    onClick: () => handleDownload(record.key, record.name),
                   },
-                },
-              ],
-            }}
-            trigger={['click']}
-          >
-            <Button type="text" icon={<MoreOutlined />} />
-          </Dropdown>
+                  {
+                    key: 'copyUrl',
+                    icon: <LinkOutlined />,
+                    label: 'URL Kopyala',
+                    onClick: () => handleCopyUrl(record.key),
+                  },
+                  ...(isImage ? [{
+                    key: 'preview',
+                    icon: <EyeOutlined />,
+                    label: 'Önizle',
+                    onClick: () => handlePreviewImage(record.key),
+                  }] : []),
+                  { type: 'divider' as const },
+                  {
+                    key: 'delete',
+                    icon: <DeleteOutlined />,
+                    label: 'Sil',
+                    danger: true,
+                    onClick: () => {
+                      Modal.confirm({
+                        title: 'Dosyayı Sil',
+                        content: `'${record.name}' dosyası silinecek. Emin misiniz?`,
+                        okText: 'Sil',
+                        okType: 'danger',
+                        cancelText: 'İptal',
+                        onOk: () => handleDeleteObject(record.key),
+                      });
+                    },
+                  },
+                ],
+              }}
+              trigger={['click']}
+            >
+              <Button type="text" icon={<MoreOutlined />} />
+            </Dropdown>
+          </div>
         );
       },
     },
