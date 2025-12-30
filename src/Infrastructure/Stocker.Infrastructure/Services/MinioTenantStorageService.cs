@@ -811,8 +811,19 @@ public class MinioTenantStorageService : ITenantStorageService
             // Replace internal endpoint with public endpoint if configured
             if (!string.IsNullOrEmpty(_settings.PublicEndpoint))
             {
-                var internalEndpoint = _settings.Endpoint;
-                url = url.Replace(internalEndpoint, _settings.PublicEndpoint);
+                // Build the full internal URL pattern to replace (including protocol)
+                var useSSL = _settings.UseSSL;
+                var internalProtocol = useSSL ? "https://" : "http://";
+                var internalUrl = $"{internalProtocol}{_settings.Endpoint}";
+
+                // Determine public URL (add https:// if no protocol specified)
+                var publicEndpoint = _settings.PublicEndpoint;
+                if (!publicEndpoint.StartsWith("http://") && !publicEndpoint.StartsWith("https://"))
+                {
+                    publicEndpoint = $"https://{publicEndpoint}";
+                }
+
+                url = url.Replace(internalUrl, publicEndpoint);
             }
 
             return Result<string>.Success(url);
