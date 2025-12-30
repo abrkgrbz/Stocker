@@ -9,8 +9,8 @@ services:
     container_name: prometheus
     restart: unless-stopped
     volumes:
-      - ./config:/etc/prometheus:ro
       - prometheus_data:/prometheus
+      - prometheus_config:/etc/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -58,8 +58,53 @@ services:
       retries: 3
       start_period: 30s
 
+  # Init container to create prometheus config
+  prometheus-init:
+    image: busybox:latest
+    volumes:
+      - prometheus_config:/etc/prometheus
+    command: |
+      sh -c '
+      cat > /etc/prometheus/prometheus.yml << "PROMEOF"
+      global:
+        scrape_interval: 15s
+        evaluation_interval: 15s
+        external_labels:
+          environment: production
+          app: stocker
+
+      scrape_configs:
+        - job_name: stocker-api
+          scheme: https
+          tls_config:
+            insecure_skip_verify: true
+          static_configs:
+            - targets:
+                - api.stoocker.app
+              labels:
+                service: api
+                tier: backend
+          metrics_path: /metrics
+          scrape_interval: 15s
+          scrape_timeout: 10s
+
+        - job_name: prometheus
+          static_configs:
+            - targets:
+                - localhost:9090
+              labels:
+                service: prometheus
+                tier: monitoring
+      PROMEOF
+      echo "Prometheus config created successfully"
+      '
+    networks:
+      - coolify
+
 volumes:
   prometheus_data:
+    driver: local
+  prometheus_config:
     driver: local
 
 networks:
