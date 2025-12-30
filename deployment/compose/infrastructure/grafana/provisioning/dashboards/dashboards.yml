@@ -1,0 +1,17 @@
+# Grafana Dashboard Provisioning
+# Automatically loads dashboards from JSON files on startup
+
+apiVersion: 1
+
+providers:
+  - name: 'Stocker Dashboards'
+    orgId: 1
+    folder: 'Stocker'
+    folderUid: 'stocker'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/json
+      foldersFromFilesStructure: false

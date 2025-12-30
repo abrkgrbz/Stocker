@@ -8,6 +8,7 @@ using Stocker.API.Configuration;
 using Stocker.Infrastructure.Middleware.RateLimiting;
 using Stocker.Infrastructure.Middleware.Security;
 using Stocker.Infrastructure.Middleware.Correlation;
+using Prometheus;
 
 namespace Stocker.API.Extensions;
 
@@ -205,9 +206,9 @@ public static class ServiceExtensions
         // Health Checks (including RabbitMQ from MassTransit)
         services.AddHealthChecks();
 
-        // Add metrics (Prometheus format)
-        // Note: You'll need to add prometheus-net.AspNetCore NuGet package
-        // services.AddMetrics();
+        // Prometheus metrics - HTTP request metrics, custom metrics
+        // Endpoint: /metrics (Prometheus scrape endpoint)
+        Metrics.SuppressDefaultMetrics();
 
         return services;
     }

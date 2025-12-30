@@ -1,0 +1,43 @@
+# Grafana Datasources Provisioning
+# Automatically configures datasources on startup
+
+apiVersion: 1
+
+datasources:
+  # Prometheus - Primary metrics datasource
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      httpMethod: POST
+      manageAlerts: true
+      prometheusType: Prometheus
+      prometheusVersion: "2.40.0"
+
+  # Seq - Log aggregation (optional, if Seq plugin is installed)
+  # Note: Requires grafana-seq-datasource plugin
+  # - name: Seq
+  #   type: grafana-seq-datasource
+  #   access: proxy
+  #   url: http://seq:80
+  #   editable: false
+  #   jsonData:
+  #     apiKey: "${SEQ_API_KEY}"
+
+  # PostgreSQL - Direct database queries for business metrics
+  # - name: PostgreSQL
+  #   type: postgres
+  #   access: proxy
+  #   url: postgres:5432
+  #   database: stocker_master
+  #   user: ${POSTGRES_USER}
+  #   secureJsonData:
+  #     password: ${POSTGRES_PASSWORD}
+  #   jsonData:
+  #     sslmode: disable
+  #     maxOpenConns: 5
+  #     maxIdleConns: 2
+  #     connMaxLifetime: 14400

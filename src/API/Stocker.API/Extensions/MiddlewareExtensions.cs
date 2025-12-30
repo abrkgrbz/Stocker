@@ -10,6 +10,7 @@ using Stocker.Infrastructure.BackgroundJobs;
 using Stocker.Infrastructure.RateLimiting;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using System.Text.Json;
+using Prometheus;
 
 namespace Stocker.API.Extensions;
 
@@ -253,7 +254,15 @@ public static class MiddlewareExtensions
         .RequireCors(corsPolicy)
         .AllowAnonymous(); // Allow anonymous - setup happens before full auth
 
-        // 21. Health Check Endpoints
+        // 21. Prometheus Metrics Endpoint
+        // Expose metrics for Prometheus scraping
+        app.UseHttpMetrics(options =>
+        {
+            options.AddCustomLabel("app", context => "stocker-api");
+        });
+        app.MapMetrics("/metrics"); // Prometheus scrape endpoint
+
+        // 22. Health Check Endpoints
         // Main health endpoint for Docker/Kubernetes health checks
         app.MapHealthChecks("/health", new HealthCheckOptions
         {

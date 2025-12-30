@@ -20,6 +20,7 @@ using Stocker.SharedKernel.Settings;
 using Stocker.SignalR.Extensions;
 using Stocker.Modules.CRM.Infrastructure.BackgroundJobs;
 using Stocker.Persistence.Filters;
+using Prometheus;
 
 // ========================================
 // NPGSQL CONFIGURATION
