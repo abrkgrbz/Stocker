@@ -74,7 +74,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/tr';
 import Swal from 'sweetalert2';
-import { migrationService, TenantMigrationStatusDto, ScheduledMigrationDto, MigrationSettingsDto, MigrationScriptPreviewDto, ApplyMigrationResultDto } from '../../../services/api/migrationService';
+import { migrationService, TenantMigrationStatusDto, ScheduledMigrationDto, MigrationSettingsDto, MigrationScriptPreviewDto, ApplyMigrationResultDto, MasterMigrationStatusDto } from '../../../services/api/migrationService';
 
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
@@ -126,8 +126,14 @@ const TenantMigrations: React.FC = () => {
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
 
+  // Master migrations
+  const [masterMigrations, setMasterMigrations] = useState<MasterMigrationStatusDto | null>(null);
+  const [loadingMaster, setLoadingMaster] = useState(false);
+  const [applyingMaster, setApplyingMaster] = useState(false);
+
   useEffect(() => {
     loadMigrations();
+    loadMasterMigrations();
   }, []);
 
   // Auto-refresh effect
@@ -136,12 +142,103 @@ const TenantMigrations: React.FC = () => {
     if (autoRefresh) {
       interval = setInterval(() => {
         loadMigrations(true);
+        loadMasterMigrations(true);
       }, 30000); // 30 seconds
     }
     return () => {
       if (interval) clearInterval(interval);
     };
   }, [autoRefresh]);
+
+  const loadMasterMigrations = useCallback(async (silent = false) => {
+    if (!silent) setLoadingMaster(true);
+    try {
+      const data = await migrationService.getMasterPendingMigrations();
+      setMasterMigrations(data);
+    } catch (error: any) {
+      if (!silent) {
+        console.error('Master migrations yüklenemedi:', error);
+      }
+    } finally {
+      if (!silent) setLoadingMaster(false);
+    }
+  }, []);
+
+  const handleApplyMasterMigration = async () => {
+    if (!masterMigrations?.hasPendingMigrations) {
+      message.info('Uygulanacak Master migration yok');
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: '🗄️ Master Migration Uygula',
+      html: `
+        <div style="text-align: left; padding: 16px 0;">
+          <div style="background: linear-gradient(135deg, #f6ffed 0%, #b7eb8f 100%); padding: 16px; border-radius: 12px; margin-bottom: 16px;">
+            <div style="font-size: 16px; font-weight: 600; color: #237804; margin-bottom: 8px;">
+              ⚠️ Master Veritabanı
+            </div>
+            <div style="font-size: 14px; color: #389e0d;">
+              Master veritabanına migration uygulanacak. Bu işlem tüm sistemi etkileyebilir!
+            </div>
+          </div>
+          <div style="background: #fff; border: 1px solid #e8e8e8; padding: 12px; border-radius: 8px;">
+            <div style="font-size: 13px; color: #666; margin-bottom: 8px;">Bekleyen Migration'lar:</div>
+            <div style="max-height: 200px; overflow-y: auto;">
+              ${masterMigrations.pendingMigrations.map(m => `
+                <div style="padding: 6px 8px; background: #fafafa; border-radius: 4px; margin-bottom: 4px; font-family: monospace; font-size: 12px;">
+                  ${m}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#52c41a',
+      cancelButtonColor: '#d9d9d9',
+      confirmButtonText: '✅ Evet, Uygula',
+      cancelButtonText: 'İptal',
+      customClass: {
+        popup: 'swal2-popup-custom',
+        title: 'swal2-title-custom',
+        confirmButton: 'swal2-confirm-custom',
+        cancelButton: 'swal2-cancel-custom'
+      }
+    });
+
+    if (result.isConfirmed) {
+      setApplyingMaster(true);
+      try {
+        const response = await migrationService.applyMasterMigration();
+        if (response.success) {
+          await Swal.fire({
+            title: '✅ Master Migration Başarılı!',
+            html: `<div style="text-align: left;">${response.message}</div>`,
+            icon: 'success',
+            timer: 3000,
+            showConfirmButton: false
+          });
+          loadMasterMigrations();
+        } else {
+          Swal.fire({
+            title: '❌ Hata',
+            text: response.error || 'Migration uygulanamadı',
+            icon: 'error',
+          });
+        }
+      } catch (error: any) {
+        Swal.fire({
+          title: '❌ Hata',
+          text: error.message || 'Migration uygulanamadı',
+          icon: 'error',
+        });
+      } finally {
+        setApplyingMaster(false);
+      }
+    }
+  };
 
   const loadMigrations = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -1298,6 +1395,126 @@ Script-Migration`}
           </Card>
         </Col>
       </Row>
+
+      {/* Master Database Migration Card */}
+      <Card
+        title={
+          <Space>
+            <SafetyOutlined style={{ color: '#722ed1' }} />
+            <span>Master Veritabanı</span>
+            {masterMigrations?.hasPendingMigrations && (
+              <Badge count={masterMigrations.pendingMigrations.length} style={{ backgroundColor: '#722ed1' }} />
+            )}
+          </Space>
+        }
+        style={{ marginBottom: 24 }}
+        extra={
+          <Space>
+            <Tooltip title="Master migration'ları yenile">
+              <Button
+                icon={<ReloadOutlined spin={loadingMaster} />}
+                onClick={() => loadMasterMigrations()}
+                disabled={loadingMaster}
+              />
+            </Tooltip>
+            <Button
+              type="primary"
+              icon={applyingMaster ? <LoadingOutlined /> : <RocketOutlined />}
+              onClick={handleApplyMasterMigration}
+              disabled={!masterMigrations?.hasPendingMigrations || applyingMaster}
+              style={{ background: '#722ed1', borderColor: '#722ed1' }}
+            >
+              Master Migration Uygula
+            </Button>
+          </Space>
+        }
+      >
+        {loadingMaster ? (
+          <Skeleton active paragraph={{ rows: 2 }} />
+        ) : masterMigrations ? (
+          <Row gutter={[24, 16]}>
+            <Col xs={24} md={8}>
+              <Statistic
+                title="Bekleyen Migration"
+                value={masterMigrations.pendingMigrations.length}
+                prefix={<ClockCircleOutlined style={{ color: masterMigrations.hasPendingMigrations ? '#faad14' : '#52c41a' }} />}
+                valueStyle={{ color: masterMigrations.hasPendingMigrations ? '#faad14' : '#52c41a' }}
+              />
+            </Col>
+            <Col xs={24} md={8}>
+              <Statistic
+                title="Uygulanan Migration"
+                value={masterMigrations.appliedMigrations.length}
+                prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
+                valueStyle={{ color: '#52c41a' }}
+              />
+            </Col>
+            <Col xs={24} md={8}>
+              <Statistic
+                title="Son Kontrol"
+                value={dayjs(masterMigrations.checkedAt).format('HH:mm:ss')}
+                prefix={<HistoryOutlined />}
+              />
+            </Col>
+            {masterMigrations.hasPendingMigrations && (
+              <Col span={24}>
+                <Alert
+                  type="warning"
+                  showIcon
+                  icon={<ExclamationCircleOutlined />}
+                  message="Master Veritabanında Bekleyen Migration'lar Var"
+                  description={
+                    <div style={{ marginTop: 8 }}>
+                      <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
+                        Aşağıdaki migration'lar beklemede:
+                      </Text>
+                      <Space wrap>
+                        {masterMigrations.pendingMigrations.map((m, i) => (
+                          <Tag key={i} color="orange" style={{ fontFamily: 'monospace', fontSize: 11 }}>
+                            {m}
+                          </Tag>
+                        ))}
+                      </Space>
+                    </div>
+                  }
+                />
+              </Col>
+            )}
+            {!masterMigrations.hasPendingMigrations && (
+              <Col span={24}>
+                <Alert
+                  type="success"
+                  showIcon
+                  icon={<CheckCircleOutlined />}
+                  message="Master Veritabanı Güncel"
+                  description="Tüm master migration'lar uygulanmış durumda."
+                />
+              </Col>
+            )}
+            {masterMigrations.error && (
+              <Col span={24}>
+                <Alert
+                  type="error"
+                  showIcon
+                  icon={<CloseCircleOutlined />}
+                  message="Hata"
+                  description={masterMigrations.error}
+                />
+              </Col>
+            )}
+          </Row>
+        ) : (
+          <Empty description="Master migration bilgisi yüklenemedi" />
+        )}
+      </Card>
+
+      {/* Tenant Migrations Header */}
+      <Divider orientation="left" style={{ marginBottom: 16 }}>
+        <Space>
+          <BranchesOutlined style={{ color: '#1890ff' }} />
+          <span>Tenant Migration'ları</span>
+        </Space>
+      </Divider>
 
       {/* Main Tabs */}
       <Card bordered={false}>

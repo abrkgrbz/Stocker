@@ -43,6 +43,16 @@ public interface IMigrationService
     Task<List<TenantMigrationStatusDto>> GetPendingMigrationsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets pending migrations for master database
+    /// </summary>
+    Task<MasterMigrationStatusDto> GetMasterPendingMigrationsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Applies pending migrations to master database
+    /// </summary>
+    Task<ApplyMigrationResultDto> ApplyMasterMigrationAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Applies pending migrations to a specific tenant
     /// </summary>
     Task<ApplyMigrationResultDto> ApplyMigrationToTenantAsync(Guid tenantId, CancellationToken cancellationToken = default);

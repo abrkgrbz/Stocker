@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.API.Controllers.Base;
+using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Features.Migrations.Commands.ApplyMigration;
 using Stocker.Application.Features.Migrations.Commands.ApplyMigrationsToAllTenants;
 using Stocker.Application.Features.Migrations.Commands.CancelScheduledMigration;
@@ -26,11 +27,69 @@ public class MigrationController : ApiController
 {
     private readonly ISender _sender;
     private readonly ILogger<MigrationController> _logger;
+    private readonly IMigrationService _migrationService;
 
-    public MigrationController(ISender sender, ILogger<MigrationController> logger)
+    public MigrationController(ISender sender, ILogger<MigrationController> logger, IMigrationService migrationService)
     {
         _sender = sender;
         _logger = logger;
+        _migrationService = migrationService;
+    }
+
+    /// <summary>
+    /// Get pending migrations for master database
+    /// </summary>
+    [HttpGet("master/pending")]
+    public async Task<IActionResult> GetMasterPendingMigrations()
+    {
+        try
+        {
+            var result = await _migrationService.GetMasterPendingMigrationsAsync();
+
+            return Ok(new
+            {
+                success = true,
+                data = result
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting master pending migrations");
+            return StatusCode(503, new
+            {
+                message = "Master veritabanı migration bilgisi alınamadı",
+                error = ex.Message
+            });
+        }
+    }
+
+    /// <summary>
+    /// Apply migrations to master database
+    /// </summary>
+    [HttpPost("master/apply")]
+    public async Task<IActionResult> ApplyMasterMigration()
+    {
+        try
+        {
+            _logger.LogInformation("Applying master migrations...");
+
+            var result = await _migrationService.ApplyMasterMigrationAsync();
+
+            return Ok(new
+            {
+                success = result.Success,
+                data = result
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error applying master migrations");
+            return StatusCode(503, new
+            {
+                message = "Master migration uygulanamadı",
+                error = ex.Message
+            });
+        }
     }
 
     /// <summary>

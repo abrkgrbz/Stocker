@@ -96,9 +96,34 @@ export interface MigrationSettingsDto {
 }
 
 /**
+ * Master Database Migration Status
+ */
+export interface MasterMigrationStatusDto {
+  pendingMigrations: string[];
+  appliedMigrations: string[];
+  hasPendingMigrations: boolean;
+  error?: string;
+  checkedAt: string;
+}
+
+/**
  * Migration Service
  */
 class MigrationService {
+  /**
+   * Get pending migrations for master database
+   */
+  async getMasterPendingMigrations(): Promise<MasterMigrationStatusDto> {
+    return apiClient.get<MasterMigrationStatusDto>('/api/master/migrations/master/pending');
+  }
+
+  /**
+   * Apply migrations to master database
+   */
+  async applyMasterMigration(): Promise<ApplyMigrationResultDto> {
+    return apiClient.post<ApplyMigrationResultDto>('/api/master/migrations/master/apply');
+  }
+
   /**
    * Get pending migrations for all active tenants
    */

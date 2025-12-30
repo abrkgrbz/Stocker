@@ -480,6 +480,88 @@ public class DatabaseMigrationHostedService : IHostedService
 // Extension of MigrationService class - real implementations
 public partial class MigrationService
 {
+    public async Task<MasterMigrationStatusDto> GetMasterPendingMigrationsAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var masterDbContext = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+
+            var pendingMigrations = await masterDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+            var appliedMigrations = await masterDbContext.Database.GetAppliedMigrationsAsync(cancellationToken);
+
+            return new MasterMigrationStatusDto
+            {
+                PendingMigrations = pendingMigrations.ToList(),
+                AppliedMigrations = appliedMigrations.ToList(),
+                HasPendingMigrations = pendingMigrations.Any(),
+                CheckedAt = DateTime.UtcNow
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting master pending migrations");
+            return new MasterMigrationStatusDto
+            {
+                Error = ex.Message,
+                HasPendingMigrations = false,
+                CheckedAt = DateTime.UtcNow
+            };
+        }
+    }
+
+    public async Task<ApplyMigrationResultDto> ApplyMasterMigrationAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var masterDbContext = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+
+            var pendingMigrations = await masterDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+            var pendingList = pendingMigrations.ToList();
+
+            if (!pendingList.Any())
+            {
+                return new ApplyMigrationResultDto
+                {
+                    TenantId = Guid.Empty,
+                    TenantName = "Master",
+                    Success = true,
+                    Message = "Uygulanacak migration yok",
+                    AppliedMigrations = new List<string>()
+                };
+            }
+
+            _logger.LogInformation("Applying {Count} Master migrations: {Migrations}",
+                pendingList.Count, string.Join(", ", pendingList));
+
+            await masterDbContext.Database.MigrateAsync(cancellationToken);
+
+            _logger.LogInformation("Master migrations applied successfully");
+
+            return new ApplyMigrationResultDto
+            {
+                TenantId = Guid.Empty,
+                TenantName = "Master",
+                Success = true,
+                Message = $"{pendingList.Count} migration başarıyla uygulandı",
+                AppliedMigrations = pendingList
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error applying master migrations");
+            return new ApplyMigrationResultDto
+            {
+                TenantId = Guid.Empty,
+                TenantName = "Master",
+                Success = false,
+                Message = "Migration uygulanamadı",
+                Error = ex.Message
+            };
+        }
+    }
+
     public async Task<List<TenantMigrationStatusDto>> GetPendingMigrationsAsync(CancellationToken cancellationToken = default)
     {
         using var scope = _serviceProvider.CreateScope();
