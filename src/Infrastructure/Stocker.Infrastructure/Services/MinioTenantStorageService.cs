@@ -521,4 +521,482 @@ public class MinioTenantStorageService : ITenantStorageService
                 Error.Failure("Storage.DeleteBucket", $"Failed to delete bucket: {ex.Message}"));
         }
     }
+
+    // ==================== FILE BROWSER OPERATIONS ====================
+
+    /// <inheritdoc />
+    public async Task<Result<IEnumerable<StorageObjectInfo>>> ListObjectsAsync(
+        string bucketName,
+        string? prefix = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Check if bucket exists
+            var bucketExistsArgs = new BucketExistsArgs().WithBucket(bucketName);
+            bool exists = await _minioClient.BucketExistsAsync(bucketExistsArgs, cancellationToken);
+
+            if (!exists)
+            {
+                return Result<IEnumerable<StorageObjectInfo>>.Failure(
+                    Error.NotFound("Storage.BucketNotFound", $"Bucket not found: {bucketName}"));
+            }
+
+            var objects = new List<StorageObjectInfo>();
+            var folders = new HashSet<string>();
+
+            // Normalize prefix
+            var normalizedPrefix = string.IsNullOrEmpty(prefix) ? "" : prefix.TrimEnd('/') + "/";
+            if (normalizedPrefix == "/") normalizedPrefix = "";
+
+            var listObjectsArgs = new ListObjectsArgs()
+                .WithBucket(bucketName)
+                .WithPrefix(normalizedPrefix)
+                .WithRecursive(false);
+
+            await foreach (var item in _minioClient.ListObjectsEnumAsync(listObjectsArgs, cancellationToken))
+            {
+                var key = item.Key;
+                var name = key;
+
+                // Remove prefix from name for display
+                if (!string.IsNullOrEmpty(normalizedPrefix) && key.StartsWith(normalizedPrefix))
+                {
+                    name = key.Substring(normalizedPrefix.Length);
+                }
+
+                // Skip if name is empty (the prefix folder itself)
+                if (string.IsNullOrEmpty(name)) continue;
+
+                var isFolder = item.IsDir || key.EndsWith("/");
+
+                // For folders, remove trailing slash from name
+                if (isFolder)
+                {
+                    name = name.TrimEnd('/');
+                    if (folders.Contains(key)) continue;
+                    folders.Add(key);
+                }
+
+                objects.Add(new StorageObjectInfo(
+                    Name: name,
+                    Key: key,
+                    Size: (long)item.Size,
+                    LastModified: item.LastModifiedDateTime ?? DateTime.UtcNow,
+                    ContentType: isFolder ? "folder" : (item.ContentType ?? "application/octet-stream"),
+                    IsFolder: isFolder,
+                    ETag: item.ETag));
+            }
+
+            // Sort: folders first, then files, both alphabetically
+            var sorted = objects
+                .OrderByDescending(o => o.IsFolder)
+                .ThenBy(o => o.Name)
+                .ToList();
+
+            _logger.LogDebug(
+                "Listed {Count} objects in bucket {Bucket} with prefix {Prefix}",
+                sorted.Count, bucketName, prefix ?? "(root)");
+
+            return Result<IEnumerable<StorageObjectInfo>>.Success(sorted);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to list objects in bucket {Bucket}", bucketName);
+            return Result<IEnumerable<StorageObjectInfo>>.Failure(
+                Error.Failure("Storage.ListObjects", $"Failed to list objects: {ex.Message}"));
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<UploadResult>> UploadObjectAsync(
+        string bucketName,
+        string objectName,
+        Stream data,
+        string contentType,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Ensure bucket exists
+            var bucketExistsArgs = new BucketExistsArgs().WithBucket(bucketName);
+            bool exists = await _minioClient.BucketExistsAsync(bucketExistsArgs, cancellationToken);
+
+            if (!exists)
+            {
+                // Create bucket if it doesn't exist
+                var makeBucketArgs = new MakeBucketArgs()
+                    .WithBucket(bucketName)
+                    .WithLocation(_settings.Region);
+                await _minioClient.MakeBucketAsync(makeBucketArgs, cancellationToken);
+                _logger.LogInformation("Created bucket: {Bucket}", bucketName);
+            }
+
+            var size = data.Length;
+
+            var putObjectArgs = new PutObjectArgs()
+                .WithBucket(bucketName)
+                .WithObject(objectName)
+                .WithStreamData(data)
+                .WithObjectSize(size)
+                .WithContentType(contentType);
+
+            var response = await _minioClient.PutObjectAsync(putObjectArgs, cancellationToken);
+
+            // Generate URL
+            var url = await GeneratePublicUrlAsync(bucketName, objectName, cancellationToken);
+
+            _logger.LogInformation(
+                "Uploaded object to MinIO. Bucket: {Bucket}, Object: {Object}, Size: {Size} bytes",
+                bucketName, objectName, size);
+
+            return Result<UploadResult>.Success(new UploadResult(
+                BucketName: bucketName,
+                ObjectName: objectName,
+                ETag: response.Etag,
+                Size: size,
+                Url: url));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to upload object. Bucket: {Bucket}, Object: {Object}", bucketName, objectName);
+            return Result<UploadResult>.Failure(
+                Error.Failure("Storage.Upload", $"Failed to upload object: {ex.Message}"));
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<DownloadResult>> DownloadObjectAsync(
+        string bucketName,
+        string objectName,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Get object stat first
+            var statArgs = new StatObjectArgs()
+                .WithBucket(bucketName)
+                .WithObject(objectName);
+
+            var stat = await _minioClient.StatObjectAsync(statArgs, cancellationToken);
+
+            // Download object to memory stream
+            var memoryStream = new MemoryStream();
+
+            var getObjectArgs = new GetObjectArgs()
+                .WithBucket(bucketName)
+                .WithObject(objectName)
+                .WithCallbackStream(stream => stream.CopyTo(memoryStream));
+
+            await _minioClient.GetObjectAsync(getObjectArgs, cancellationToken);
+            memoryStream.Position = 0;
+
+            var fileName = Path.GetFileName(objectName);
+
+            _logger.LogDebug(
+                "Downloaded object from MinIO. Bucket: {Bucket}, Object: {Object}, Size: {Size} bytes",
+                bucketName, objectName, stat.Size);
+
+            return Result<DownloadResult>.Success(new DownloadResult(
+                Data: memoryStream,
+                ContentType: stat.ContentType ?? "application/octet-stream",
+                Size: stat.Size,
+                FileName: fileName));
+        }
+        catch (Minio.Exceptions.ObjectNotFoundException)
+        {
+            return Result<DownloadResult>.Failure(
+                Error.NotFound("Storage.ObjectNotFound", $"Object not found: {objectName}"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to download object. Bucket: {Bucket}, Object: {Object}", bucketName, objectName);
+            return Result<DownloadResult>.Failure(
+                Error.Failure("Storage.Download", $"Failed to download object: {ex.Message}"));
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> DeleteObjectAsync(
+        string bucketName,
+        string objectName,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var removeObjectArgs = new RemoveObjectArgs()
+                .WithBucket(bucketName)
+                .WithObject(objectName);
+
+            await _minioClient.RemoveObjectAsync(removeObjectArgs, cancellationToken);
+
+            _logger.LogInformation(
+                "Deleted object from MinIO. Bucket: {Bucket}, Object: {Object}",
+                bucketName, objectName);
+
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete object. Bucket: {Bucket}, Object: {Object}", bucketName, objectName);
+            return Result.Failure(
+                Error.Failure("Storage.DeleteObject", $"Failed to delete object: {ex.Message}"));
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<int>> DeleteObjectsAsync(
+        string bucketName,
+        IEnumerable<string> objectNames,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var objectsList = objectNames.ToList();
+            if (!objectsList.Any())
+            {
+                return Result<int>.Success(0);
+            }
+
+            var removeObjectsArgs = new RemoveObjectsArgs()
+                .WithBucket(bucketName)
+                .WithObjects(objectsList);
+
+            await _minioClient.RemoveObjectsAsync(removeObjectsArgs, cancellationToken);
+
+            _logger.LogInformation(
+                "Deleted {Count} objects from MinIO. Bucket: {Bucket}",
+                objectsList.Count, bucketName);
+
+            return Result<int>.Success(objectsList.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete objects. Bucket: {Bucket}", bucketName);
+            return Result<int>.Failure(
+                Error.Failure("Storage.DeleteObjects", $"Failed to delete objects: {ex.Message}"));
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<string>> GetPresignedUrlAsync(
+        string bucketName,
+        string objectName,
+        TimeSpan expiresIn,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var presignedGetObjectArgs = new PresignedGetObjectArgs()
+                .WithBucket(bucketName)
+                .WithObject(objectName)
+                .WithExpiry((int)expiresIn.TotalSeconds);
+
+            var url = await _minioClient.PresignedGetObjectAsync(presignedGetObjectArgs);
+
+            // Replace internal endpoint with public endpoint if configured
+            if (!string.IsNullOrEmpty(_settings.PublicEndpoint))
+            {
+                var internalEndpoint = _settings.Endpoint;
+                url = url.Replace(internalEndpoint, _settings.PublicEndpoint);
+            }
+
+            return Result<string>.Success(url);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to generate presigned URL. Bucket: {Bucket}, Object: {Object}", bucketName, objectName);
+            return Result<string>.Failure(
+                Error.Failure("Storage.PresignedUrl", $"Failed to generate presigned URL: {ex.Message}"));
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> CreateFolderAsync(
+        string bucketName,
+        string folderPath,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Ensure folder path ends with /
+            var folderKey = folderPath.TrimEnd('/') + "/";
+
+            // Create an empty object to represent the folder
+            using var emptyStream = new MemoryStream(Array.Empty<byte>());
+
+            var putObjectArgs = new PutObjectArgs()
+                .WithBucket(bucketName)
+                .WithObject(folderKey)
+                .WithStreamData(emptyStream)
+                .WithObjectSize(0)
+                .WithContentType("application/x-directory");
+
+            await _minioClient.PutObjectAsync(putObjectArgs, cancellationToken);
+
+            _logger.LogInformation(
+                "Created folder in MinIO. Bucket: {Bucket}, Folder: {Folder}",
+                bucketName, folderPath);
+
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create folder. Bucket: {Bucket}, Folder: {Folder}", bucketName, folderPath);
+            return Result.Failure(
+                Error.Failure("Storage.CreateFolder", $"Failed to create folder: {ex.Message}"));
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<bool>> ObjectExistsAsync(
+        string bucketName,
+        string objectName,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var statArgs = new StatObjectArgs()
+                .WithBucket(bucketName)
+                .WithObject(objectName);
+
+            await _minioClient.StatObjectAsync(statArgs, cancellationToken);
+            return Result<bool>.Success(true);
+        }
+        catch (Minio.Exceptions.ObjectNotFoundException)
+        {
+            return Result<bool>.Success(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to check object existence. Bucket: {Bucket}, Object: {Object}", bucketName, objectName);
+            return Result<bool>.Failure(
+                Error.Failure("Storage.ObjectExists", $"Failed to check object: {ex.Message}"));
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> CreateBucketAsync(
+        string bucketName,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Check if bucket already exists
+            var bucketExistsArgs = new BucketExistsArgs().WithBucket(bucketName);
+            bool exists = await _minioClient.BucketExistsAsync(bucketExistsArgs, cancellationToken);
+
+            if (exists)
+            {
+                return Result.Failure(
+                    Error.Conflict("Storage.BucketExists", $"Bucket already exists: {bucketName}"));
+            }
+
+            var makeBucketArgs = new MakeBucketArgs()
+                .WithBucket(bucketName)
+                .WithLocation(_settings.Region);
+
+            await _minioClient.MakeBucketAsync(makeBucketArgs, cancellationToken);
+
+            _logger.LogInformation("Created bucket: {Bucket}", bucketName);
+
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create bucket: {Bucket}", bucketName);
+            return Result.Failure(
+                Error.Failure("Storage.CreateBucket", $"Failed to create bucket: {ex.Message}"));
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<string?>> GetSystemAssetUrlAsync(
+        string assetName,
+        TimeSpan? expiresIn = null,
+        CancellationToken cancellationToken = default)
+    {
+        const string systemAssetsBucket = "system-assets";
+        var expiration = expiresIn ?? TimeSpan.FromDays(7);
+
+        try
+        {
+            // Check if system-assets bucket exists
+            var bucketExistsArgs = new BucketExistsArgs().WithBucket(systemAssetsBucket);
+            bool bucketExists = await _minioClient.BucketExistsAsync(bucketExistsArgs, cancellationToken);
+
+            if (!bucketExists)
+            {
+                _logger.LogDebug("System assets bucket does not exist");
+                return Result.Success<string?>(null);
+            }
+
+            // List objects to find the asset (could be logo.png, logo.svg, logo.jpg, etc.)
+            var objects = new List<string>();
+            var listArgs = new ListObjectsArgs()
+                .WithBucket(systemAssetsBucket)
+                .WithPrefix(assetName + ".")
+                .WithRecursive(false);
+
+            await foreach (var item in _minioClient.ListObjectsEnumAsync(listArgs, cancellationToken))
+            {
+                if (!item.IsDir)
+                {
+                    objects.Add(item.Key);
+                }
+            }
+
+            if (objects.Count == 0)
+            {
+                _logger.LogDebug("System asset not found: {AssetName}", assetName);
+                return Result.Success<string?>(null);
+            }
+
+            // Get the first matching asset
+            var objectName = objects[0];
+            var urlResult = await GetPresignedUrlAsync(systemAssetsBucket, objectName, expiration, cancellationToken);
+
+            if (!urlResult.IsSuccess)
+            {
+                return Result.Success<string?>(null);
+            }
+
+            return Result.Success<string?>(urlResult.Value);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get system asset URL: {AssetName}", assetName);
+            return Result.Failure<string?>(
+                Error.Failure("Storage.SystemAsset", $"Failed to get system asset: {ex.Message}"));
+        }
+    }
+
+    /// <summary>
+    /// Generates a public URL for an object
+    /// </summary>
+    private async Task<string> GeneratePublicUrlAsync(
+        string bucketName,
+        string objectName,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Use presigned URL with default expiration
+            var expirationHours = _settings.PresignedUrlExpirationHours > 0
+                ? _settings.PresignedUrlExpirationHours
+                : 24;
+
+            var result = await GetPresignedUrlAsync(
+                bucketName,
+                objectName,
+                TimeSpan.FromHours(expirationHours),
+                cancellationToken);
+
+            return result.IsSuccess ? result.Value : string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
 }

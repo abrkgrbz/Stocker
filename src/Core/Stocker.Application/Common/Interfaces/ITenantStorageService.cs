@@ -83,6 +83,127 @@ public interface ITenantStorageService
     Task<Result> DeleteBucketByNameAsync(
         string bucketName,
         CancellationToken cancellationToken = default);
+
+    // ==================== FILE BROWSER OPERATIONS ====================
+
+    /// <summary>
+    /// Lists objects (files and folders) in a bucket with optional prefix filtering
+    /// </summary>
+    /// <param name="bucketName">The bucket name</param>
+    /// <param name="prefix">Optional prefix to filter objects (folder path)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Result containing list of storage objects</returns>
+    Task<Result<IEnumerable<StorageObjectInfo>>> ListObjectsAsync(
+        string bucketName,
+        string? prefix = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Uploads a file to a bucket
+    /// </summary>
+    /// <param name="bucketName">The bucket name</param>
+    /// <param name="objectName">The object name (path in bucket)</param>
+    /// <param name="data">File data stream</param>
+    /// <param name="contentType">Content type of the file</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Result containing the upload result</returns>
+    Task<Result<UploadResult>> UploadObjectAsync(
+        string bucketName,
+        string objectName,
+        Stream data,
+        string contentType,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Downloads a file from a bucket
+    /// </summary>
+    /// <param name="bucketName">The bucket name</param>
+    /// <param name="objectName">The object name (path in bucket)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Result containing the file stream and metadata</returns>
+    Task<Result<DownloadResult>> DownloadObjectAsync(
+        string bucketName,
+        string objectName,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes an object from a bucket
+    /// </summary>
+    /// <param name="bucketName">The bucket name</param>
+    /// <param name="objectName">The object name (path in bucket)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    Task<Result> DeleteObjectAsync(
+        string bucketName,
+        string objectName,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes multiple objects from a bucket
+    /// </summary>
+    /// <param name="bucketName">The bucket name</param>
+    /// <param name="objectNames">List of object names to delete</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    Task<Result<int>> DeleteObjectsAsync(
+        string bucketName,
+        IEnumerable<string> objectNames,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a presigned URL for downloading an object
+    /// </summary>
+    /// <param name="bucketName">The bucket name</param>
+    /// <param name="objectName">The object name (path in bucket)</param>
+    /// <param name="expiresIn">URL expiration time</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Result containing the presigned URL</returns>
+    Task<Result<string>> GetPresignedUrlAsync(
+        string bucketName,
+        string objectName,
+        TimeSpan expiresIn,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates a folder (empty object with trailing slash)
+    /// </summary>
+    /// <param name="bucketName">The bucket name</param>
+    /// <param name="folderPath">The folder path (without trailing slash)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    Task<Result> CreateFolderAsync(
+        string bucketName,
+        string folderPath,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks if an object exists in a bucket
+    /// </summary>
+    /// <param name="bucketName">The bucket name</param>
+    /// <param name="objectName">The object name (path in bucket)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    Task<Result<bool>> ObjectExistsAsync(
+        string bucketName,
+        string objectName,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates a new bucket
+    /// </summary>
+    /// <param name="bucketName">The bucket name to create</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    Task<Result> CreateBucketAsync(
+        string bucketName,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the URL for a system asset (logo, favicon, email-banner)
+    /// </summary>
+    /// <param name="assetName">The asset name (e.g., "logo", "favicon", "email-banner")</param>
+    /// <param name="expiresIn">URL expiration time (default 7 days)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Result containing the presigned URL or null if asset doesn't exist</returns>
+    Task<Result<string?>> GetSystemAssetUrlAsync(
+        string assetName,
+        TimeSpan? expiresIn = null,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -105,3 +226,34 @@ public record BucketInfo(
     long UsedBytes,
     int ObjectCount,
     Guid? TenantId);
+
+/// <summary>
+/// Storage object information (file or folder)
+/// </summary>
+public record StorageObjectInfo(
+    string Name,
+    string Key,
+    long Size,
+    DateTime LastModified,
+    string ContentType,
+    bool IsFolder,
+    string? ETag = null);
+
+/// <summary>
+/// Upload operation result
+/// </summary>
+public record UploadResult(
+    string BucketName,
+    string ObjectName,
+    string ETag,
+    long Size,
+    string Url);
+
+/// <summary>
+/// Download operation result
+/// </summary>
+public record DownloadResult(
+    Stream Data,
+    string ContentType,
+    long Size,
+    string FileName);

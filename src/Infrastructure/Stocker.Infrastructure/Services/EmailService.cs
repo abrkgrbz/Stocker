@@ -20,17 +20,49 @@ public class EmailService : IEmailService
     private readonly ILogger<EmailService> _logger;
     private readonly IEmailTemplateRepository _templateRepository;
     private readonly ILiquidTemplateService _liquidTemplateService;
+    private readonly ITenantStorageService? _storageService;
+
+    // Fallback logo URL if no custom logo is uploaded
+    private const string DefaultLogoUrl = "https://stoocker.app/logo.png";
 
     public EmailService(
         IOptions<EmailSettings> emailSettings,
         ILogger<EmailService> logger,
         IEmailTemplateRepository templateRepository,
-        ILiquidTemplateService liquidTemplateService)
+        ILiquidTemplateService liquidTemplateService,
+        ITenantStorageService? storageService = null)
     {
         _emailSettings = emailSettings.Value;
         _logger = logger;
         _templateRepository = templateRepository ?? throw new ArgumentNullException(nameof(templateRepository));
         _liquidTemplateService = liquidTemplateService ?? throw new ArgumentNullException(nameof(liquidTemplateService));
+        _storageService = storageService;
+    }
+
+    /// <summary>
+    /// Gets the logo URL from system assets or returns default
+    /// </summary>
+    private async Task<string> GetLogoUrlAsync(CancellationToken cancellationToken = default)
+    {
+        if (_storageService == null)
+        {
+            return DefaultLogoUrl;
+        }
+
+        try
+        {
+            var result = await _storageService.GetSystemAssetUrlAsync("logo", TimeSpan.FromDays(7), cancellationToken);
+            if (result.IsSuccess && !string.IsNullOrEmpty(result.Value))
+            {
+                return result.Value;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to get logo URL from storage, using default");
+        }
+
+        return DefaultLogoUrl;
     }
 
     public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
@@ -119,6 +151,7 @@ public class EmailService : IEmailService
     public async Task SendEmailVerificationAsync(string email, string token, string userName, CancellationToken cancellationToken = default)
     {
         var verificationUrl = $"{_emailSettings.BaseUrl}/register/verify-email?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}";
+        var logoUrl = await GetLogoUrlAsync(cancellationToken);
 
         var templateData = new Dictionary<string, object>
         {
@@ -126,7 +159,8 @@ public class EmailService : IEmailService
             ["verificationUrl"] = verificationUrl,
             ["appName"] = "Stocker",
             ["email"] = email,
-            ["year"] = DateTime.UtcNow.Year
+            ["year"] = DateTime.UtcNow.Year,
+            ["logoUrl"] = logoUrl
         };
 
         var (subject, body) = await RenderTemplateAsync("email-verification", templateData, cancellationToken: cancellationToken);
@@ -143,6 +177,7 @@ public class EmailService : IEmailService
     public async Task SendTenantEmailVerificationAsync(string email, string code, string token, string userName, CancellationToken cancellationToken = default)
     {
         var verificationUrl = $"{_emailSettings.BaseUrl}/register/verify-email?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}";
+        var logoUrl = await GetLogoUrlAsync(cancellationToken);
 
         var templateData = new Dictionary<string, object>
         {
@@ -151,7 +186,8 @@ public class EmailService : IEmailService
             ["verificationUrl"] = verificationUrl,
             ["appName"] = "Stocker",
             ["email"] = email,
-            ["year"] = DateTime.UtcNow.Year
+            ["year"] = DateTime.UtcNow.Year,
+            ["logoUrl"] = logoUrl
         };
 
         var (subject, body) = await RenderTemplateAsync("tenant-email-verification", templateData, cancellationToken: cancellationToken);
@@ -168,6 +204,7 @@ public class EmailService : IEmailService
     public async Task SendPasswordResetAsync(string email, string token, string userName, CancellationToken cancellationToken = default)
     {
         var resetUrl = $"{_emailSettings.BaseUrl}/reset-password?token={Uri.EscapeDataString(token)}";
+        var logoUrl = await GetLogoUrlAsync(cancellationToken);
 
         var templateData = new Dictionary<string, object>
         {
@@ -175,7 +212,8 @@ public class EmailService : IEmailService
             ["resetUrl"] = resetUrl,
             ["appName"] = "Stocker",
             ["email"] = email,
-            ["year"] = DateTime.UtcNow.Year
+            ["year"] = DateTime.UtcNow.Year,
+            ["logoUrl"] = logoUrl
         };
 
         var (subject, body) = await RenderTemplateAsync("password-reset", templateData, cancellationToken: cancellationToken);
@@ -192,6 +230,7 @@ public class EmailService : IEmailService
     public async Task SendWelcomeEmailAsync(string email, string userName, string companyName, CancellationToken cancellationToken = default)
     {
         var loginUrl = $"{_emailSettings.BaseUrl}/login";
+        var logoUrl = await GetLogoUrlAsync(cancellationToken);
 
         var templateData = new Dictionary<string, object>
         {
@@ -200,7 +239,8 @@ public class EmailService : IEmailService
             ["loginUrl"] = loginUrl,
             ["appName"] = "Stocker",
             ["email"] = email,
-            ["year"] = DateTime.UtcNow.Year
+            ["year"] = DateTime.UtcNow.Year,
+            ["logoUrl"] = logoUrl
         };
 
         var (subject, body) = await RenderTemplateAsync("welcome", templateData, cancellationToken: cancellationToken);
@@ -217,6 +257,7 @@ public class EmailService : IEmailService
     public async Task SendInvitationEmailAsync(string email, string inviterName, string companyName, string inviteToken, CancellationToken cancellationToken = default)
     {
         var inviteUrl = $"{_emailSettings.BaseUrl}/accept-invite?token={Uri.EscapeDataString(inviteToken)}";
+        var logoUrl = await GetLogoUrlAsync(cancellationToken);
 
         var templateData = new Dictionary<string, object>
         {
@@ -225,7 +266,8 @@ public class EmailService : IEmailService
             ["inviteUrl"] = inviteUrl,
             ["appName"] = "Stocker",
             ["email"] = email,
-            ["year"] = DateTime.UtcNow.Year
+            ["year"] = DateTime.UtcNow.Year,
+            ["logoUrl"] = logoUrl
         };
 
         var (subject, body) = await RenderTemplateAsync("invitation", templateData, cancellationToken: cancellationToken);
@@ -251,6 +293,7 @@ public class EmailService : IEmailService
     {
         var encodedToken = Uri.EscapeDataString(activationToken);
         var activationUrl = $"{_emailSettings.BaseUrl}/setup-password?userId={userId}&tenantId={tenantId}&token={encodedToken}";
+        var logoUrl = await GetLogoUrlAsync(cancellationToken);
 
         var templateData = new Dictionary<string, object>
         {
@@ -263,7 +306,8 @@ public class EmailService : IEmailService
             ["tenantId"] = tenantId.ToString(),
             ["appName"] = "Stocker",
             ["expirationDays"] = 7,
-            ["year"] = DateTime.UtcNow.Year
+            ["year"] = DateTime.UtcNow.Year,
+            ["logoUrl"] = logoUrl
         };
 
         var (subject, body) = await RenderTemplateAsync("user-invitation", templateData, tenantId: tenantId, cancellationToken: cancellationToken);
@@ -408,7 +452,8 @@ public class DevelopmentEmailService : IEmailService
             ["verificationUrl"] = $"{_emailSettings.BaseUrl}/register/verify-email?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}",
             ["appName"] = "Stocker",
             ["email"] = email,
-            ["year"] = DateTime.UtcNow.Year
+            ["year"] = DateTime.UtcNow.Year,
+            ["logoUrl"] = "https://stoocker.app/logo.png"
         }, cancellationToken: cancellationToken);
 
         await SendAsync(new EmailMessage { To = email, Subject = subject, Body = body, IsHtml = true }, cancellationToken);
@@ -423,7 +468,8 @@ public class DevelopmentEmailService : IEmailService
             ["verificationUrl"] = $"{_emailSettings.BaseUrl}/register/verify-email?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}",
             ["appName"] = "Stocker",
             ["email"] = email,
-            ["year"] = DateTime.UtcNow.Year
+            ["year"] = DateTime.UtcNow.Year,
+            ["logoUrl"] = "https://stoocker.app/logo.png"
         }, cancellationToken: cancellationToken);
 
         await SendAsync(new EmailMessage { To = email, Subject = subject, Body = body, IsHtml = true }, cancellationToken);
@@ -437,7 +483,8 @@ public class DevelopmentEmailService : IEmailService
             ["resetUrl"] = $"{_emailSettings.BaseUrl}/reset-password?token={Uri.EscapeDataString(token)}",
             ["appName"] = "Stocker",
             ["email"] = email,
-            ["year"] = DateTime.UtcNow.Year
+            ["year"] = DateTime.UtcNow.Year,
+            ["logoUrl"] = "https://stoocker.app/logo.png"
         }, cancellationToken: cancellationToken);
 
         await SendAsync(new EmailMessage { To = email, Subject = subject, Body = body, IsHtml = true }, cancellationToken);
@@ -452,7 +499,8 @@ public class DevelopmentEmailService : IEmailService
             ["loginUrl"] = $"{_emailSettings.BaseUrl}/login",
             ["appName"] = "Stocker",
             ["email"] = email,
-            ["year"] = DateTime.UtcNow.Year
+            ["year"] = DateTime.UtcNow.Year,
+            ["logoUrl"] = "https://stoocker.app/logo.png"
         }, cancellationToken: cancellationToken);
 
         await SendAsync(new EmailMessage { To = email, Subject = subject, Body = body, IsHtml = true }, cancellationToken);
@@ -467,7 +515,8 @@ public class DevelopmentEmailService : IEmailService
             ["inviteUrl"] = $"{_emailSettings.BaseUrl}/accept-invite?token={Uri.EscapeDataString(inviteToken)}",
             ["appName"] = "Stocker",
             ["email"] = email,
-            ["year"] = DateTime.UtcNow.Year
+            ["year"] = DateTime.UtcNow.Year,
+            ["logoUrl"] = "https://stoocker.app/logo.png"
         }, cancellationToken: cancellationToken);
 
         await SendAsync(new EmailMessage { To = email, Subject = subject, Body = body, IsHtml = true }, cancellationToken);
@@ -494,7 +543,8 @@ public class DevelopmentEmailService : IEmailService
             ["tenantId"] = tenantId.ToString(),
             ["appName"] = "Stocker",
             ["expirationDays"] = 7,
-            ["year"] = DateTime.UtcNow.Year
+            ["year"] = DateTime.UtcNow.Year,
+            ["logoUrl"] = "https://stoocker.app/logo.png"
         }, tenantId: tenantId, cancellationToken: cancellationToken);
 
         await SendAsync(new EmailMessage { To = email, Subject = subject, Body = body, IsHtml = true }, cancellationToken);
