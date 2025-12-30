@@ -138,6 +138,7 @@ const StoragePage: React.FC = () => {
   const [newFolderName, setNewFolderName] = useState('');
   const [creatingFolder, setCreatingFolder] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('buckets');
   const [objectStats, setObjectStats] = useState({
     totalCount: 0,
     totalSize: 0,
@@ -209,8 +210,15 @@ const StoragePage: React.FC = () => {
       const systemBucketExists = bucketsResponse.data.some(b => b.name === SYSTEM_ASSETS_BUCKET);
 
       if (!systemBucketExists) {
-        // Create the system-assets bucket
-        await storageService.createBucket(SYSTEM_ASSETS_BUCKET);
+        // Create the system-assets bucket (ignore 409 if already exists)
+        try {
+          await storageService.createBucket(SYSTEM_ASSETS_BUCKET);
+        } catch (createError: any) {
+          // Ignore 409 Conflict - bucket already exists
+          if (createError.response?.status !== 409) {
+            console.log('System assets bucket creation error:', createError);
+          }
+        }
       }
 
       // List objects in system-assets bucket
@@ -467,6 +475,7 @@ const StoragePage: React.FC = () => {
     setCurrentPath('');
     setPathHistory([]);
     setSelectedObjectKeys([]);
+    setActiveTab('files'); // Switch to file browser tab
   };
 
   const handleFolderOpen = (folderKey: string) => {
@@ -905,7 +914,7 @@ const StoragePage: React.FC = () => {
         </Text>
       </div>
 
-      <Tabs defaultActiveKey="buckets">
+      <Tabs activeKey={activeTab} onChange={setActiveTab}>
         {/* Buckets Tab */}
         <TabPane tab={<span><DatabaseOutlined /> Bucket'lar</span>} key="buckets">
           {/* Stats Cards */}
