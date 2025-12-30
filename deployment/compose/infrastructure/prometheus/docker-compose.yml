@@ -21,30 +21,9 @@ services:
     networks:
       - coolify
     labels:
-      # Traefik configuration
-      - "traefik.enable=true"
-      - "traefik.docker.network=coolify"
-
-      # HTTPS Router
-      - "traefik.http.routers.prometheus-secure.rule=Host(`prometheus.stoocker.app`)"
-      - "traefik.http.routers.prometheus-secure.entrypoints=https"
-      - "traefik.http.routers.prometheus-secure.tls=true"
-      - "traefik.http.routers.prometheus-secure.tls.certresolver=cloudflare"
-      - "traefik.http.routers.prometheus-secure.tls.domains[0].main=stoocker.app"
-      - "traefik.http.routers.prometheus-secure.tls.domains[0].sans=*.stoocker.app"
-      - "traefik.http.routers.prometheus-secure.service=prometheus"
-      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
-
-      # Basic Auth middleware for security
-      - "traefik.http.routers.prometheus-secure.middlewares=prometheus-auth"
-      - "traefik.http.middlewares.prometheus-auth.basicauth.users=${PROMETHEUS_BASIC_AUTH}"
-
-      # HTTP Router (redirect to HTTPS)
-      - "traefik.http.routers.prometheus.rule=Host(`prometheus.stoocker.app`)"
-      - "traefik.http.routers.prometheus.entrypoints=http"
-      - "traefik.http.routers.prometheus.middlewares=prometheus-redirect"
-      - "traefik.http.middlewares.prometheus-redirect.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.prometheus-redirect.redirectscheme.permanent=true"
+      # Internal only - no external access via Traefik
+      # Grafana connects via internal Docker network (http://prometheus:9090)
+      - "traefik.enable=false"
 
       # Coolify labels
       - "coolify.managed=true"
