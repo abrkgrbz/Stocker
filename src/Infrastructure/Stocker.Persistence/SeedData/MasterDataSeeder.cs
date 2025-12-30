@@ -936,7 +936,7 @@ public class MasterDataSeeder
                 htmlBody: GetTenantEmailVerificationTemplate(),
                 language: "tr",
                 category: EmailTemplateCategory.Authentication,
-                variables: "[\"userName\", \"verificationCode\", \"verificationUrl\", \"year\"]",
+                variables: "[\"userName\", \"verificationCode\", \"verificationUrl\", \"logoUrl\", \"year\"]",
                 description: "Tenant kayıt sonrası 6 haneli doğrulama kodu ile email doğrulama",
                 sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"verificationCode\":\"123456\",\"verificationUrl\":\"https://stoocker.app/verify\",\"year\":\"2024\"}"));
         }
@@ -951,7 +951,7 @@ public class MasterDataSeeder
                 htmlBody: GetPasswordResetTemplate(),
                 language: "tr",
                 category: EmailTemplateCategory.Authentication,
-                variables: "[\"userName\", \"resetUrl\", \"year\"]",
+                variables: "[\"userName\", \"resetUrl\", \"logoUrl\", \"year\"]",
                 description: "Şifre sıfırlama talebi için gönderilen mail",
                 sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"resetUrl\":\"https://stoocker.app/reset\",\"year\":\"2024\"}"));
         }
@@ -966,7 +966,7 @@ public class MasterDataSeeder
                 htmlBody: GetWelcomeTemplate(),
                 language: "tr",
                 category: EmailTemplateCategory.UserManagement,
-                variables: "[\"userName\", \"companyName\", \"loginUrl\", \"year\"]",
+                variables: "[\"userName\", \"companyName\", \"loginUrl\", \"logoUrl\", \"year\"]",
                 description: "Kayıt tamamlandıktan sonra gönderilen hoşgeldiniz maili",
                 sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"companyName\":\"ABC Ltd.\",\"loginUrl\":\"https://stoocker.app/login\",\"year\":\"2024\"}"));
         }
@@ -981,7 +981,7 @@ public class MasterDataSeeder
                 htmlBody: GetUserInvitationTemplate(),
                 language: "tr",
                 category: EmailTemplateCategory.UserManagement,
-                variables: "[\"userName\", \"inviterName\", \"companyName\", \"activationUrl\", \"email\", \"domain\", \"appName\", \"expirationDays\", \"year\"]",
+                variables: "[\"userName\", \"inviterName\", \"companyName\", \"activationUrl\", \"email\", \"domain\", \"appName\", \"expirationDays\", \"logoUrl\", \"year\"]",
                 description: "Admin tarafından oluşturulan kullanıcı için aktivasyon daveti",
                 sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"inviterName\":\"Mehmet Demir\",\"companyName\":\"ABC Ltd.\",\"activationUrl\":\"https://stoocker.app/setup-password\",\"email\":\"ahmet@example.com\",\"domain\":\"abc.stoocker.app\",\"appName\":\"Stoocker\",\"expirationDays\":7,\"year\":\"2024\"}"));
         }
@@ -996,7 +996,7 @@ public class MasterDataSeeder
                 htmlBody: GetTrialEndingTemplate(),
                 language: "tr",
                 category: EmailTemplateCategory.Notification,
-                variables: "[\"userName\", \"daysLeft\", \"upgradeUrl\", \"year\"]",
+                variables: "[\"userName\", \"daysLeft\", \"upgradeUrl\", \"logoUrl\", \"year\"]",
                 description: "Deneme süresi bitmeden önce gönderilen hatırlatma maili",
                 sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"daysLeft\":\"3\",\"upgradeUrl\":\"https://stoocker.app/upgrade\",\"year\":\"2024\"}"));
         }
@@ -1011,7 +1011,7 @@ public class MasterDataSeeder
                 htmlBody: GetCriticalStockTemplate(),
                 language: "tr",
                 category: EmailTemplateCategory.Notification,
-                variables: "[\"productName\", \"skuCode\", \"currentStock\", \"minLimit\", \"inventoryUrl\", \"year\"]",
+                variables: "[\"productName\", \"skuCode\", \"currentStock\", \"minLimit\", \"inventoryUrl\", \"logoUrl\", \"year\"]",
                 description: "Stok seviyesi kritik seviyenin altına düştüğünde gönderilen uyarı maili",
                 sampleData: "{\"productName\":\"iPhone 15 Pro\",\"skuCode\":\"IPH15PRO-256\",\"currentStock\":\"5\",\"minLimit\":\"10\",\"inventoryUrl\":\"https://stoocker.app/inventory\",\"year\":\"2024\"}"));
         }
@@ -1026,7 +1026,7 @@ public class MasterDataSeeder
                 htmlBody: GetPaymentReceiptTemplate(),
                 language: "tr",
                 category: EmailTemplateCategory.Transaction,
-                variables: "[\"userName\", \"invoiceNumber\", \"planName\", \"billingPeriod\", \"amount\", \"taxAmount\", \"totalAmount\", \"invoicePdfUrl\", \"year\"]",
+                variables: "[\"userName\", \"invoiceNumber\", \"planName\", \"billingPeriod\", \"amount\", \"taxAmount\", \"totalAmount\", \"invoicePdfUrl\", \"logoUrl\", \"year\"]",
                 description: "Başarılı ödeme sonrası gönderilen makbuz maili",
                 sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"invoiceNumber\":\"INV-2024-0001\",\"planName\":\"Profesyonel\",\"billingPeriod\":\"Aylık\",\"amount\":\"999\",\"taxAmount\":\"199.80\",\"totalAmount\":\"1198.80\",\"invoicePdfUrl\":\"https://stoocker.app/invoice/123\",\"year\":\"2024\"}"));
         }
@@ -1041,7 +1041,7 @@ public class MasterDataSeeder
                 htmlBody: GetPaymentFailedTemplate(),
                 language: "tr",
                 category: EmailTemplateCategory.Transaction,
-                variables: "[\"userName\", \"planName\", \"last4Digits\", \"billingUrl\", \"year\"]",
+                variables: "[\"userName\", \"planName\", \"last4Digits\", \"billingUrl\", \"logoUrl\", \"year\"]",
                 description: "Başarısız ödeme sonrası gönderilen uyarı maili",
                 sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"planName\":\"Profesyonel\",\"last4Digits\":\"4242\",\"billingUrl\":\"https://stoocker.app/billing\",\"year\":\"2024\"}"));
         }
@@ -1056,7 +1056,7 @@ public class MasterDataSeeder
                 htmlBody: GetNewTaskTemplate(),
                 language: "tr",
                 category: EmailTemplateCategory.Notification,
-                variables: "[\"assignerName\", \"taskTitle\", \"dueDate\", \"priority\", \"taskUrl\", \"year\"]",
+                variables: "[\"assignerName\", \"taskTitle\", \"dueDate\", \"priority\", \"taskUrl\", \"logoUrl\", \"year\"]",
                 description: "Yeni görev atandığında gönderilen bildirim maili",
                 sampleData: "{\"assignerName\":\"Mehmet Demir\",\"taskTitle\":\"Stok Sayımı Yapılacak\",\"dueDate\":\"15 Ocak 2024\",\"priority\":\"Yüksek\",\"taskUrl\":\"https://stoocker.app/tasks/123\",\"year\":\"2024\"}"));
         }
@@ -1095,7 +1095,7 @@ public class MasterDataSeeder
                 <table role=""presentation"" class=""container"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; width: 100%; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);"">
                     <tr>
                         <td align=""center"" style=""padding: 30px 40px 10px 40px; text-align: center; background-color: #ffffff;"">
-                            <img src=""https://stoocker.app/logo.png"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;"">
+                            <img src=""{{ logoUrl }}"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;"">
                         </td>
                     </tr>
                     <tr>
@@ -1174,7 +1174,7 @@ public class MasterDataSeeder
                 <table role=""presentation"" class=""container"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; width: 100%; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);"">
                     <tr>
                         <td align=""center"" style=""padding: 30px 40px 10px 40px; text-align: center; background-color: #ffffff;"">
-                            <img src=""https://stoocker.app/logo.png"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;"">
+                            <img src=""{{ logoUrl }}"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;"">
                         </td>
                     </tr>
                     <tr>
@@ -1252,7 +1252,7 @@ public class MasterDataSeeder
                 <table role=""presentation"" class=""container"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; width: 100%; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);"">
                     <tr>
                         <td align=""center"" style=""padding: 30px 40px 10px 40px; text-align: center; background-color: #ffffff;"">
-                            <img src=""https://stoocker.app/logo.png"" width=""200"" height=""200"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;"">
+                            <img src=""{{ logoUrl }}"" width=""200"" height=""200"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;"">
                         </td>
                     </tr>
                     <tr>
@@ -1353,7 +1353,7 @@ public class MasterDataSeeder
                 <table role=""presentation"" class=""container"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; width: 100%; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);"">
                     <tr>
                         <td align=""center"" style=""padding: 30px 40px 10px 40px; text-align: center; background-color: #ffffff;"">
-                            <img src=""https://stoocker.app/logo.png"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;"">
+                            <img src=""{{ logoUrl }}"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;"">
                         </td>
                     </tr>
                     <tr>
@@ -1448,7 +1448,7 @@ public class MasterDataSeeder
                 <table role=""presentation"" class=""container"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; width: 100%; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);"">
                     <tr>
                         <td align=""center"" style=""padding: 30px 40px 10px 40px;"">
-                            <img src=""https://stoocker.app/logo.png"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0;"">
+                            <img src=""{{ logoUrl }}"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0;"">
                         </td>
                     </tr>
                     <tr>
@@ -1515,7 +1515,7 @@ public class MasterDataSeeder
                 <table role=""presentation"" class=""container"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; width: 100%; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);"">
                     <tr>
                         <td align=""center"" style=""padding: 30px 40px 10px 40px; background-color: #ffffff;"">
-                            <img src=""https://stoocker.app/logo.png"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0;"">
+                            <img src=""{{ logoUrl }}"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0;"">
                         </td>
                     </tr>
                     <tr>
@@ -1594,7 +1594,7 @@ public class MasterDataSeeder
                 <table role=""presentation"" class=""container"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; width: 100%; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);"">
                     <tr>
                         <td align=""center"" style=""padding: 30px 40px 10px 40px; background-color: #ffffff;"">
-                            <img src=""https://stoocker.app/logo.png"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0;"">
+                            <img src=""{{ logoUrl }}"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0;"">
                         </td>
                     </tr>
                     <tr>
@@ -1670,7 +1670,7 @@ public class MasterDataSeeder
                 <table role=""presentation"" class=""container"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; width: 100%; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);"">
                     <tr>
                         <td align=""center"" style=""padding: 30px 40px 10px 40px;"">
-                            <img src=""https://stoocker.app/logo.png"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0;"">
+                            <img src=""{{ logoUrl }}"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0;"">
                         </td>
                     </tr>
                     <tr>
@@ -1728,7 +1728,7 @@ public class MasterDataSeeder
                 <table role=""presentation"" class=""container"" width=""600"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width: 600px; width: 100%; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);"">
                     <tr>
                         <td align=""center"" style=""padding: 30px 40px 10px 40px;"">
-                            <img src=""https://stoocker.app/logo.png"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0;"">
+                            <img src=""{{ logoUrl }}"" width=""180"" height=""180"" alt=""STOOCKER"" style=""display: block; margin: 0 auto; border: 0;"">
                         </td>
                     </tr>
                     <tr>
