@@ -315,21 +315,23 @@ public class StorageController : MasterControllerBase
     [SwaggerResponse(200, "File uploaded successfully")]
     [SwaggerResponse(400, "No file provided")]
     [RequestSizeLimit(104857600)] // 100MB limit
+    [Consumes("multipart/form-data")]
     public async Task<IActionResult> UploadFile(
         string bucketName,
+        [FromForm] List<IFormFile> files,
         [FromQuery] string? path = null,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            if (Request.Form.Files.Count == 0)
+            if (files == null || files.Count == 0)
             {
                 return BadRequest(new { success = false, message = "No file provided" });
             }
 
             var results = new List<object>();
 
-            foreach (var file in Request.Form.Files)
+            foreach (var file in files)
             {
                 // Build object name with optional path prefix
                 var objectName = string.IsNullOrEmpty(path)
