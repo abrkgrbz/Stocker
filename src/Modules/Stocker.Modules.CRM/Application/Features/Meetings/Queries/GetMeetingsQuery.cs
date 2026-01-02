@@ -153,6 +153,6 @@ public class GetMeetingsQueryHandler : IRequestHandler<GetMeetingsQuery, PagedRe
             })
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<MeetingDto>(items, totalCount, request.Page, request.PageSize);
+        return new PagedResult<MeetingDto>(items, request.Page, request.PageSize, totalCount);
     }
 }

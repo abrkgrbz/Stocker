@@ -98,6 +98,6 @@ public class GetCompetitorsQueryHandler : IRequestHandler<GetCompetitorsQuery, P
             })
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<CompetitorDto>(items, totalCount, request.Page, request.PageSize);
+        return new PagedResult<CompetitorDto>(items, request.Page, request.PageSize, totalCount);
     }
 }

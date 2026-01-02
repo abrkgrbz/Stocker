@@ -126,6 +126,6 @@ public class GetProductInterestsQueryHandler : IRequestHandler<GetProductInteres
             })
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<ProductInterestDto>(items, totalCount, request.Page, request.PageSize);
+        return new PagedResult<ProductInterestDto>(items, request.Page, request.PageSize, totalCount);
     }
 }

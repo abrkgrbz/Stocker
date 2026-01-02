@@ -88,6 +88,6 @@ public class GetSalesTeamsQueryHandler : IRequestHandler<GetSalesTeamsQuery, Pag
             })
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<SalesTeamDto>(items, totalCount, request.Page, request.PageSize);
+        return new PagedResult<SalesTeamDto>(items, request.Page, request.PageSize, totalCount);
     }
 }

@@ -151,6 +151,6 @@ public class GetReferralsQueryHandler : IRequestHandler<GetReferralsQuery, Paged
             })
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<ReferralDto>(items, totalCount, request.Page, request.PageSize);
+        return new PagedResult<ReferralDto>(items, request.Page, request.PageSize, totalCount);
     }
 }

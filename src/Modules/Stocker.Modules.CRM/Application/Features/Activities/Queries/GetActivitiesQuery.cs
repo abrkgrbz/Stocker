@@ -112,6 +112,6 @@ public class GetActivitiesQueryHandler : IRequestHandler<GetActivitiesQuery, Pag
             Outcome = a.TaskOutcome
         }).ToList();
 
-        return new PagedResult<ActivityDto>(items, totalCount, request.Page, request.PageSize);
+        return new PagedResult<ActivityDto>(items, request.Page, request.PageSize, totalCount);
     }
 }

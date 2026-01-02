@@ -105,6 +105,6 @@ public class GetLeadsQueryHandler : IRequestHandler<GetLeadsQuery, PagedResult<L
             UpdatedAt = l.UpdatedAt
         }).ToList();
 
-        return new PagedResult<LeadDto>(items, totalCount, request.Page, request.PageSize);
+        return new PagedResult<LeadDto>(items, request.Page, request.PageSize, totalCount);
     }
 }
