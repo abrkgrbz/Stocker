@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.CRM.Domain.Repositories;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -36,22 +37,18 @@ public class DeleteCustomerCommandValidator : AbstractValidator<DeleteCustomerCo
 /// </summary>
 public class DeleteCustomerCommandHandler : IRequestHandler<DeleteCustomerCommand, Result>
 {
-    private readonly ICustomerRepository _customerRepository;
-    private readonly SharedKernel.Interfaces.IUnitOfWork _unitOfWork;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public DeleteCustomerCommandHandler(
-        ICustomerRepository customerRepository,
-        SharedKernel.Interfaces.IUnitOfWork unitOfWork)
+    public DeleteCustomerCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _customerRepository = customerRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(DeleteCustomerCommand request, CancellationToken cancellationToken)
     {
-        // Get the customer
-        var customer = await _customerRepository.GetByIdAsync(request.CustomerId, cancellationToken);
-        
+        // Get the customer using ICRMUnitOfWork to ensure same DbContext is used for both read and save
+        var customer = await _unitOfWork.Customers.GetByIdAsync(request.CustomerId, cancellationToken);
+
         if (customer == null)
         {
             return Result.Failure(
@@ -68,17 +65,17 @@ public class DeleteCustomerCommandHandler : IRequestHandler<DeleteCustomerComman
         // Check if customer has related data (deals, activities, etc.)
         // This would normally check for related entities
         // For now, we'll implement soft delete by default unless ForceDelete is true
-        
+
         if (request.ForceDelete)
         {
             // Hard delete - permanently remove from database
-            _customerRepository.Remove(customer);
+            _unitOfWork.Customers.Remove(customer);
         }
         else
         {
             // Soft delete - mark as inactive
             customer.Deactivate();
-            await _customerRepository.UpdateAsync(customer, cancellationToken);
+            await _unitOfWork.Customers.UpdateAsync(customer, cancellationToken);
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);

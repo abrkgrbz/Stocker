@@ -3,6 +3,7 @@ using MassTransit;
 using MediatR;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Repositories;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.Shared.Events.CRM;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
@@ -71,25 +72,22 @@ public class UpdateCustomerCommandValidator : AbstractValidator<UpdateCustomerCo
 /// </summary>
 public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerCommand, Result<CustomerDto>>
 {
-    private readonly ICustomerRepository _customerRepository;
-    private readonly SharedKernel.Interfaces.IUnitOfWork _unitOfWork;
+    private readonly ICRMUnitOfWork _unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint;
 
     public UpdateCustomerCommandHandler(
-        ICustomerRepository customerRepository,
-        SharedKernel.Interfaces.IUnitOfWork unitOfWork,
+        ICRMUnitOfWork unitOfWork,
         IPublishEndpoint publishEndpoint)
     {
-        _customerRepository = customerRepository;
         _unitOfWork = unitOfWork;
         _publishEndpoint = publishEndpoint;
     }
 
     public async Task<Result<CustomerDto>> Handle(UpdateCustomerCommand request, CancellationToken cancellationToken)
     {
-        // Get the customer
-        var customer = await _customerRepository.GetByIdAsync(request.CustomerId, cancellationToken);
-        
+        // Get the customer using ICRMUnitOfWork to ensure same DbContext is used for both read and save
+        var customer = await _unitOfWork.Customers.GetByIdAsync(request.CustomerId, cancellationToken);
+
         if (customer == null)
         {
             return Result<CustomerDto>.Failure(
@@ -106,7 +104,7 @@ public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerComman
         // Check if email is being changed and if it already exists
         if (customer.Email != request.CustomerData.Email)
         {
-            var emailExists = await _customerRepository.ExistsWithEmailAsync(
+            var emailExists = await _unitOfWork.Customers.ExistsWithEmailAsync(
                 request.CustomerData.Email,
                 request.CustomerId,
                 cancellationToken);
@@ -157,8 +155,8 @@ public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerComman
                 request.CustomerData.Description);
         }
 
-        // Save changes
-        await _customerRepository.UpdateAsync(customer, cancellationToken);
+        // Save changes - using ICRMUnitOfWork ensures repository and SaveChanges use same DbContext
+        await _unitOfWork.Customers.UpdateAsync(customer, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Publish integration event
