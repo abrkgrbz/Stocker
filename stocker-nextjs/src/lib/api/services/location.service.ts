@@ -13,7 +13,7 @@ import type {
  * Uses HybridCache on backend for optimal performance
  */
 class LocationService {
-  private readonly basePath = '/api/public/locations';
+  private readonly basePath = '/public/locations';
 
   // =====================================
   // COUNTRIES
