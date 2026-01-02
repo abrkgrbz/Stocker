@@ -19,6 +19,10 @@ public sealed class Package : AggregateRoot
     public bool IsPublic { get; private set; }
     public int TrialDays { get; private set; }
     public int DisplayOrder { get; private set; }
+
+    // LemonSqueezy integration
+    public string? LemonSqueezyProductId { get; private set; }
+    public string? LemonSqueezyVariantId { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
     public IReadOnlyList<PackageFeature> Features => _features.AsReadOnly();
@@ -111,6 +115,13 @@ public sealed class Package : AggregateRoot
     public void ChangeType(PackageType type)
     {
         Type = type;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetLemonSqueezyIds(string? productId, string? variantId)
+    {
+        LemonSqueezyProductId = productId;
+        LemonSqueezyVariantId = variantId;
         UpdatedAt = DateTime.UtcNow;
     }
 

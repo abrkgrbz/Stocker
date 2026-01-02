@@ -667,13 +667,13 @@ public class LemonSqueezyService : ILemonSqueezyService
             return;
         }
 
-        // Check if subscription already exists
+        // Check if LemonSqueezy subscription already exists
         var existing = await _masterContext.LemonSqueezySubscriptions
             .FirstOrDefaultAsync(s => s.LsSubscriptionId == data.Id, cancellationToken);
 
         if (existing != null)
         {
-            _logger.LogInformation("Subscription already exists: {SubscriptionId}", data.Id);
+            _logger.LogInformation("LemonSqueezy subscription already exists: {SubscriptionId}", data.Id);
             return;
         }
 
@@ -703,10 +703,118 @@ public class LemonSqueezyService : ILemonSqueezyService
             webhookEvent.Meta?.EventId ?? string.Empty);
 
         _masterContext.LemonSqueezySubscriptions.Add(lsSubscription);
+
+        // UPDATE MAIN SUBSCRIPTION - Find and update the tenant's subscription
+        await UpdateMainSubscriptionFromLemonSqueezyAsync(
+            tenantId,
+            attr.VariantId?.ToString(),
+            attr.ProductId?.ToString(),
+            attr.Status,
+            attr.TrialEndsAt,
+            attr.UnitPrice,
+            attr.UnitPriceCurrency ?? "TRY",
+            cancellationToken);
+
         await _masterContext.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Created LemonSqueezy subscription for tenant {TenantId}: {SubscriptionId}",
             tenantId, data.Id);
+    }
+
+    /// <summary>
+    /// Updates the main Subscription entity when a LemonSqueezy subscription is created or updated
+    /// </summary>
+    private async Task UpdateMainSubscriptionFromLemonSqueezyAsync(
+        Guid tenantId,
+        string? variantId,
+        string? productId,
+        string? status,
+        DateTime? trialEndsAt,
+        decimal? unitPrice,
+        string currency,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Find the tenant's current subscription
+            var subscription = await _masterContext.Subscriptions
+                .Include(s => s.Modules)
+                .FirstOrDefaultAsync(s => s.TenantId == tenantId, cancellationToken);
+
+            if (subscription == null)
+            {
+                _logger.LogWarning("No subscription found for tenant {TenantId} to update from LemonSqueezy", tenantId);
+                return;
+            }
+
+            // Find the package that matches the LemonSqueezy variant
+            Package? package = null;
+            if (!string.IsNullOrEmpty(variantId))
+            {
+                package = await _masterContext.Packages
+                    .Include(p => p.Modules)
+                    .FirstOrDefaultAsync(p => p.LemonSqueezyVariantId == variantId, cancellationToken);
+            }
+
+            // If no package found by variant, try by product ID
+            if (package == null && !string.IsNullOrEmpty(productId))
+            {
+                package = await _masterContext.Packages
+                    .Include(p => p.Modules)
+                    .FirstOrDefaultAsync(p => p.LemonSqueezyProductId == productId, cancellationToken);
+            }
+
+            if (package == null)
+            {
+                _logger.LogWarning("No package found matching LemonSqueezy variant {VariantId} or product {ProductId}. " +
+                    "Please configure LemonSqueezyVariantId on your packages.", variantId, productId);
+
+                // Still activate the subscription even without package mapping
+                if (status == "active" && subscription.Status == Domain.Master.Enums.SubscriptionStatus.Deneme)
+                {
+                    subscription.Activate();
+                    _logger.LogInformation("Activated subscription {SubscriptionId} for tenant {TenantId} (no package mapping)",
+                        subscription.Id, tenantId);
+                }
+                return;
+            }
+
+            // Update subscription with the new package
+            var newPrice = Domain.Common.ValueObjects.Money.Create(unitPrice ?? package.BasePrice.Amount, currency);
+
+            // Change to the purchased package
+            subscription.ChangePackage(package.Id, newPrice);
+            _logger.LogInformation("Changed subscription {SubscriptionId} to package {PackageId} ({PackageName})",
+                subscription.Id, package.Id, package.Name);
+
+            // Update modules based on package
+            subscription.ClearModules();
+            foreach (var packageModule in package.Modules.Where(m => m.IsIncluded))
+            {
+                subscription.AddModule(packageModule.ModuleCode, packageModule.ModuleName, packageModule.MaxEntities);
+            }
+            _logger.LogInformation("Updated subscription modules from package. Module count: {Count}",
+                package.Modules.Count(m => m.IsIncluded));
+
+            // Activate subscription if it was in trial and LemonSqueezy status is active
+            if (status == "active" && subscription.Status == Domain.Master.Enums.SubscriptionStatus.Deneme)
+            {
+                subscription.Activate();
+                _logger.LogInformation("Activated subscription {SubscriptionId} for tenant {TenantId}",
+                    subscription.Id, tenantId);
+            }
+            // Handle trial status from LemonSqueezy
+            else if (status == "on_trial" && trialEndsAt.HasValue)
+            {
+                _logger.LogInformation("Subscription {SubscriptionId} is on trial until {TrialEndDate}",
+                    subscription.Id, trialEndsAt.Value);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating main subscription for tenant {TenantId} from LemonSqueezy webhook", tenantId);
+            // Don't throw - we still want to save the LemonSqueezy subscription record
+        }
     }
 
     private async Task HandleSubscriptionUpdatedAsync(LsWebhookEvent webhookEvent, CancellationToken cancellationToken)
@@ -714,17 +822,17 @@ public class LemonSqueezyService : ILemonSqueezyService
         var data = webhookEvent.Data;
         if (data?.Attributes == null) return;
 
-        var subscription = await _masterContext.LemonSqueezySubscriptions
+        var lsSubscription = await _masterContext.LemonSqueezySubscriptions
             .FirstOrDefaultAsync(s => s.LsSubscriptionId == data.Id, cancellationToken);
 
-        if (subscription == null)
+        if (lsSubscription == null)
         {
-            _logger.LogWarning("Subscription not found for update: {SubscriptionId}", data.Id);
+            _logger.LogWarning("LemonSqueezy subscription not found for update: {SubscriptionId}", data.Id);
             return;
         }
 
         var attr = data.Attributes;
-        subscription.UpdateFromWebhook(
+        lsSubscription.UpdateFromWebhook(
             MapStatus(attr.Status),
             attr.StatusFormatted ?? string.Empty,
             attr.TrialEndsAt,
@@ -740,8 +848,19 @@ public class LemonSqueezyService : ILemonSqueezyService
             attr.Urls?.UpdatePaymentMethod,
             webhookEvent.Meta?.EventId ?? string.Empty);
 
+        // Also update the main subscription
+        await UpdateMainSubscriptionFromLemonSqueezyAsync(
+            lsSubscription.TenantId,
+            attr.VariantId?.ToString(),
+            attr.ProductId?.ToString(),
+            attr.Status,
+            attr.TrialEndsAt,
+            attr.UnitPrice,
+            attr.UnitPriceCurrency ?? "TRY",
+            cancellationToken);
+
         await _masterContext.SaveChangesAsync(cancellationToken);
-        _logger.LogInformation("Updated subscription: {SubscriptionId}", data.Id);
+        _logger.LogInformation("Updated LemonSqueezy subscription: {SubscriptionId}", data.Id);
     }
 
     private async Task HandleSubscriptionCancelledAsync(LsWebhookEvent webhookEvent, CancellationToken cancellationToken)
