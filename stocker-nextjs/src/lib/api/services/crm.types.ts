@@ -423,14 +423,12 @@ export interface OpportunityDto {
   updatedAt?: DateTime;
 }
 
+// Backend enum: Open=1, Won=2, Lost=3, OnHold=4
 export enum OpportunityStatus {
-  Prospecting = 'Prospecting',
-  Qualification = 'Qualification',
-  NeedsAnalysis = 'NeedsAnalysis',
-  Proposal = 'Proposal',
-  Negotiation = 'Negotiation',
-  ClosedWon = 'ClosedWon',
-  ClosedLost = 'ClosedLost'
+  Open = 'Open',
+  Won = 'Won',
+  Lost = 'Lost',
+  OnHold = 'OnHold'
 }
 
 export interface OpportunityProductDto {
@@ -474,14 +472,19 @@ export interface ForecastDto {
 
 export interface CreateOpportunityCommand {
   name: string;
-  customerId: Guid;
-  pipelineId: Guid;
-  stageId: Guid;
-  amount: number;
-  expectedCloseDate?: DateTime;
-  probability?: number;
   description?: string;
-  assignedToId?: Guid;
+  customerId: Guid;
+  amount: number;
+  currency?: string; // default: TRY
+  probability?: number;
+  expectedCloseDate: DateTime;
+  status: OpportunityStatus | string;
+  pipelineId?: Guid;
+  currentStageId?: Guid; // backend field name
+  competitorName?: string;
+  source?: string;
+  ownerId?: string;
+  score?: number;
 }
 
 export interface UpdateOpportunityCommand {

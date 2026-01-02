@@ -498,15 +498,15 @@ export class CRMService {
       email: data.email,
       phone: data.phone ? this.formatPhoneNumber(data.phone) : undefined,
       website: data.website,
-      industry: null,
+      industry: data.industry,
       address: data.address,
       city: data.city,
       state: data.state,
       country: data.country,
       postalCode: data.postalCode,
-      annualRevenue: null,
-      numberOfEmployees: null,
-      description: data.notes,
+      annualRevenue: data.annualRevenue,
+      numberOfEmployees: data.numberOfEmployees,
+      description: data.description,
     };
 
     logger.info('📤 Sending UpdateCustomerDto to CRM module', { metadata: { dto } });

@@ -15,10 +15,19 @@ export default function NewOpportunityPage() {
 
   const handleSubmit = async (values: any) => {
     try {
-      // Format the data for API
+      // Format the data for API - map frontend field names to backend expectations
       const formattedData = {
-        ...values,
-        expectedCloseDate: values.expectedCloseDate ? dayjs(values.expectedCloseDate).toISOString() : null,
+        name: values.name,
+        description: values.description,
+        customerId: values.customerId,
+        amount: values.amount,
+        currency: 'TRY', // default currency
+        probability: values.probability ?? 50,
+        expectedCloseDate: values.expectedCloseDate ? dayjs(values.expectedCloseDate).toISOString() : dayjs().add(30, 'day').toISOString(),
+        status: values.status ?? 'Open',
+        pipelineId: values.pipelineId || undefined,
+        currentStageId: values.stageId || undefined, // map stageId to currentStageId for backend
+        score: 0,
       };
       await createOpportunity.mutateAsync(formattedData);
       router.push('/crm/opportunities');

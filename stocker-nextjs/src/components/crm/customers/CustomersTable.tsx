@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Table, Tag, Dropdown, Button, Avatar, Space } from 'antd';
+import { Table, Tag, Dropdown, Button, Avatar, Space, Modal } from 'antd';
 import type { TableColumnsType } from 'antd';
 import {
   EllipsisHorizontalIcon,
@@ -11,6 +11,7 @@ import {
   BuildingStorefrontIcon,
   PhoneIcon,
   MapPinIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import type { Customer } from '@/lib/api/services/crm.service';
 import { formatCurrency } from '@/lib/crm/formatters';
@@ -26,6 +27,7 @@ interface CustomersTableProps {
   onPageChange: (page: number, size: number) => void;
   onEdit: (customer: Customer) => void;
   onView: (customerId: number) => void;
+  onDelete?: (customerId: string) => Promise<void>;
 }
 
 export function CustomersTable({
@@ -37,6 +39,7 @@ export function CustomersTable({
   onPageChange,
   onEdit,
   onView,
+  onDelete,
 }: CustomersTableProps) {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
@@ -169,6 +172,31 @@ export function CustomersTable({
                 label: 'Sil',
                 icon: <TrashIcon className="w-4 h-4" />,
                 danger: true,
+                onClick: (e) => {
+                  e.domEvent.stopPropagation();
+                  Modal.confirm({
+                    title: 'Müşteriyi Sil',
+                    icon: <ExclamationTriangleIcon className="w-6 h-6 text-red-500" />,
+                    content: (
+                      <div>
+                        <p className="text-slate-600">
+                          <strong>{record.companyName}</strong> müşterisini silmek istediğinize emin misiniz?
+                        </p>
+                        <p className="text-sm text-slate-500 mt-2">
+                          Bu işlem geri alınamaz.
+                        </p>
+                      </div>
+                    ),
+                    okText: 'Sil',
+                    okButtonProps: { danger: true },
+                    cancelText: 'İptal',
+                    onOk: async () => {
+                      if (onDelete) {
+                        await onDelete(String(record.id));
+                      }
+                    },
+                  });
+                },
               },
             ],
           }}

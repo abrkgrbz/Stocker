@@ -9,15 +9,12 @@ import dayjs from 'dayjs';
 
 const { TextArea } = Input;
 
-// Opportunity status options
+// Opportunity status options - synced with backend enum: Open=1, Won=2, Lost=3, OnHold=4
 const statusOptions = [
-  { value: 'Prospecting', label: 'Araştırma' },
-  { value: 'Qualification', label: 'Nitelendirme' },
-  { value: 'NeedsAnalysis', label: 'İhtiyaç Analizi' },
-  { value: 'Proposal', label: 'Teklif' },
-  { value: 'Negotiation', label: 'Müzakere' },
-  { value: 'ClosedWon', label: 'Kazanıldı' },
-  { value: 'ClosedLost', label: 'Kaybedildi' },
+  { value: 'Open', label: 'Açık' },
+  { value: 'Won', label: 'Kazanıldı' },
+  { value: 'Lost', label: 'Kaybedildi' },
+  { value: 'OnHold', label: 'Beklemede' },
 ];
 
 interface OpportunityFormProps {
@@ -57,7 +54,7 @@ export default function OpportunityForm({ form, initialValues, onFinish, loading
     } else {
       form.setFieldsValue({
         probability: 50,
-        status: 'Prospecting',
+        status: 'Open',
       });
     }
   }, [form, initialValues]);
@@ -116,7 +113,7 @@ export default function OpportunityForm({ form, initialValues, onFinish, loading
 
             {/* Status Selector */}
             <div className="flex-shrink-0">
-              <Form.Item name="status" className="mb-0" initialValue="Prospecting">
+              <Form.Item name="status" className="mb-0" initialValue="Open">
                 <Select
                   options={statusOptions}
                   className="w-40 [&_.ant-select-selector]:!bg-slate-100 [&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!rounded-lg"

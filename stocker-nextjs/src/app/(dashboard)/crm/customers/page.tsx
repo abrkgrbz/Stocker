@@ -13,9 +13,10 @@ import {
   UserGroupIcon,
   MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
-import { useCustomers } from '@/lib/api/hooks/useCRM';
+import { useCustomers, useDeleteCustomer } from '@/lib/api/hooks/useCRM';
 import type { Customer } from '@/lib/api/services/crm.service';
 import { CustomersStats, CustomersTable } from '@/components/crm/customers';
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import {
   PageContainer,
   ListPageHeader,
@@ -46,9 +47,20 @@ export default function CustomersPage() {
     pageSize,
     search: debouncedSearch || undefined,
   });
+  const deleteCustomer = useDeleteCustomer();
 
   const customers = data?.items || [];
   const totalCount = data?.totalCount || 0;
+
+  const handleDelete = async (customerId: string) => {
+    try {
+      await deleteCustomer.mutateAsync(customerId);
+      showSuccess('Müşteri başarıyla silindi!');
+    } catch (error) {
+      showApiError(error, 'Müşteri silinirken bir hata oluştu');
+      throw error; // Re-throw to keep modal open on error
+    }
+  };
 
   const handleCreate = () => {
     router.push('/crm/customers/new');
@@ -147,6 +159,7 @@ export default function CustomersPage() {
             }}
             onEdit={handleEdit}
             onView={handleView}
+            onDelete={handleDelete}
           />
         </DataTableWrapper>
       )}
