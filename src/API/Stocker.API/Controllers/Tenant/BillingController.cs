@@ -141,6 +141,7 @@ public class BillingController : ApiController
 
     /// <summary>
     /// Gets current subscription information for the tenant.
+    /// Returns both internal subscription and LemonSqueezy subscription if available.
     /// </summary>
     [HttpGet("subscription")]
     [ProducesResponseType(typeof(SubscriptionResponseDto), StatusCodes.Status200OK)]
@@ -153,21 +154,57 @@ public class BillingController : ApiController
             return BadRequest(new { success = false, error = "Tenant bilgisi bulunamadı" });
         }
 
+        // First, check internal subscription (always exists for registered tenants)
+        var subscription = await _masterContext.Subscriptions
+            .Include(s => s.Package)
+            .Include(s => s.Modules)
+            .FirstOrDefaultAsync(s => s.TenantId == tenantId.Value, cancellationToken);
+
+        if (subscription == null)
+        {
+            return NotFound(new { success = false, error = "Abonelik bulunamadı" });
+        }
+
+        // Check if there's a LemonSqueezy subscription (paid users)
         var lsSubscription = await _masterContext.LemonSqueezySubscriptions
             .FirstOrDefaultAsync(s => s.TenantId == tenantId.Value, cancellationToken);
 
-        if (lsSubscription == null)
+        // If user has LemonSqueezy subscription, get fresh data from API
+        if (lsSubscription != null)
         {
-            return NotFound(new { success = false, error = "Aktif abonelik bulunamadı" });
-        }
+            var result = await _lemonSqueezyService.GetSubscriptionAsync(
+                lsSubscription.LsSubscriptionId, cancellationToken);
 
-        // Get fresh data from Lemon Squeezy
-        var result = await _lemonSqueezyService.GetSubscriptionAsync(
-            lsSubscription.LsSubscriptionId, cancellationToken);
+            if (result.IsSuccess)
+            {
+                var info = result.Value;
+                return Ok(new SubscriptionResponseDto
+                {
+                    Success = true,
+                    Subscription = new SubscriptionDto
+                    {
+                        Id = info.Id,
+                        Status = info.Status,
+                        StatusFormatted = info.StatusFormatted,
+                        ProductName = info.ProductName,
+                        VariantName = info.VariantName,
+                        UnitPrice = info.UnitPrice,
+                        Currency = info.Currency,
+                        BillingInterval = info.BillingInterval,
+                        RenewsAt = info.RenewsAt,
+                        EndsAt = info.EndsAt,
+                        TrialEndsAt = info.TrialEndsAt,
+                        IsCancelled = lsSubscription.IsCancelled,
+                        IsPaused = lsSubscription.IsPaused,
+                        CardBrand = info.CardBrand,
+                        CardLastFour = info.CardLastFour,
+                        CustomerPortalUrl = info.Urls.CustomerPortal,
+                        UpdatePaymentMethodUrl = info.Urls.UpdatePaymentMethod
+                    }
+                });
+            }
 
-        if (!result.IsSuccess)
-        {
-            // Return cached data if API fails
+            // Return cached LemonSqueezy data if API fails
             return Ok(new SubscriptionResponseDto
             {
                 Success = true,
@@ -175,7 +212,7 @@ public class BillingController : ApiController
                 {
                     Id = lsSubscription.LsSubscriptionId,
                     Status = lsSubscription.Status.ToString(),
-                    ProductName = "", // From cached data
+                    ProductName = subscription.Package?.Name ?? "",
                     VariantName = "",
                     UnitPrice = lsSubscription.UnitPrice,
                     Currency = lsSubscription.Currency,
@@ -193,29 +230,52 @@ public class BillingController : ApiController
             });
         }
 
-        var info = result.Value;
+        // Return internal subscription info (trial users)
+        var billingInterval = subscription.BillingCycle switch
+        {
+            Domain.Master.Enums.BillingCycle.Aylik => "month",
+            Domain.Master.Enums.BillingCycle.UcAylik => "3 months",
+            Domain.Master.Enums.BillingCycle.AltiAylik => "6 months",
+            Domain.Master.Enums.BillingCycle.Yillik => "year",
+            _ => "month"
+        };
+
+        var statusFormatted = subscription.Status switch
+        {
+            Domain.Master.Enums.SubscriptionStatus.Deneme => "Deneme Sürümü",
+            Domain.Master.Enums.SubscriptionStatus.Aktif => "Aktif",
+            Domain.Master.Enums.SubscriptionStatus.Askida => "Askıda",
+            Domain.Master.Enums.SubscriptionStatus.IptalEdildi => "İptal Edildi",
+            Domain.Master.Enums.SubscriptionStatus.SuresiDoldu => "Süresi Doldu",
+            Domain.Master.Enums.SubscriptionStatus.OdemesiGecikti => "Ödemesi Gecikti",
+            Domain.Master.Enums.SubscriptionStatus.Beklemede => "Beklemede",
+            _ => subscription.Status.ToString()
+        };
+
         return Ok(new SubscriptionResponseDto
         {
             Success = true,
             Subscription = new SubscriptionDto
             {
-                Id = info.Id,
-                Status = info.Status,
-                StatusFormatted = info.StatusFormatted,
-                ProductName = info.ProductName,
-                VariantName = info.VariantName,
-                UnitPrice = info.UnitPrice,
-                Currency = info.Currency,
-                BillingInterval = info.BillingInterval,
-                RenewsAt = info.RenewsAt,
-                EndsAt = info.EndsAt,
-                TrialEndsAt = info.TrialEndsAt,
-                IsCancelled = lsSubscription.IsCancelled,
-                IsPaused = lsSubscription.IsPaused,
-                CardBrand = info.CardBrand,
-                CardLastFour = info.CardLastFour,
-                CustomerPortalUrl = info.Urls.CustomerPortal,
-                UpdatePaymentMethodUrl = info.Urls.UpdatePaymentMethod
+                Id = subscription.Id.ToString(),
+                Status = subscription.Status.ToString(),
+                StatusFormatted = statusFormatted,
+                ProductName = subscription.Package?.Name ?? "Özel Paket",
+                VariantName = "",
+                UnitPrice = (int)(subscription.Price?.Amount ?? 0),
+                Currency = subscription.Price?.Currency ?? "TRY",
+                BillingInterval = billingInterval,
+                RenewsAt = subscription.CurrentPeriodEnd,
+                EndsAt = subscription.Status == Domain.Master.Enums.SubscriptionStatus.IptalEdildi
+                    ? subscription.CancelledAt
+                    : null,
+                TrialEndsAt = subscription.TrialEndDate,
+                IsCancelled = subscription.Status == Domain.Master.Enums.SubscriptionStatus.IptalEdildi,
+                IsPaused = subscription.Status == Domain.Master.Enums.SubscriptionStatus.Askida,
+                CardBrand = null,
+                CardLastFour = null,
+                CustomerPortalUrl = null,
+                UpdatePaymentMethodUrl = null
             }
         });
     }
