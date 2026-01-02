@@ -828,12 +828,76 @@ public class LemonSqueezyService : ILemonSqueezyService
     private async Task HandlePaymentSuccessAsync(LsWebhookEvent webhookEvent, CancellationToken cancellationToken)
     {
         var data = webhookEvent.Data;
-        if (data == null) return;
+        if (data?.Attributes == null) return;
 
-        _logger.LogInformation("Payment successful for subscription: {SubscriptionId}", data.Id);
-        // Additional payment success handling can be added here
-        // For example: send email notification, update internal payment records, etc.
-        await Task.CompletedTask;
+        var attr = data.Attributes;
+        _logger.LogInformation("Payment successful for subscription: {SubscriptionId}, Amount: {Amount} {Currency}",
+            data.Id, attr.UnitPrice, attr.UnitPriceCurrency);
+
+        // Find the LemonSqueezy subscription to get TenantId
+        var lsSubscription = await _masterContext.LemonSqueezySubscriptions
+            .FirstOrDefaultAsync(s => s.LsSubscriptionId == data.Id, cancellationToken);
+
+        if (lsSubscription == null)
+        {
+            _logger.LogWarning("LemonSqueezy subscription not found for payment: {SubscriptionId}", data.Id);
+            return;
+        }
+
+        // Find the tenant's subscription in our system
+        var subscription = await _masterContext.Subscriptions
+            .FirstOrDefaultAsync(s => s.TenantId == lsSubscription.TenantId, cancellationToken);
+
+        if (subscription == null)
+        {
+            _logger.LogWarning("Subscription not found for tenant {TenantId}", lsSubscription.TenantId);
+            return;
+        }
+
+        // Activate subscription if it was in trial
+        if (subscription.Status == Domain.Master.Enums.SubscriptionStatus.Deneme)
+        {
+            subscription.Activate();
+            _logger.LogInformation("Trial subscription activated for tenant {TenantId}", lsSubscription.TenantId);
+        }
+
+        // Create Invoice
+        var currency = attr.UnitPriceCurrency ?? "TRY";
+        var amount = Domain.Common.ValueObjects.Money.Create(attr.UnitPrice / 100m, currency); // LemonSqueezy sends amount in cents
+        var taxRate = 20m; // KDV oranı %20
+
+        var invoice = Domain.Master.Entities.Invoice.Create(
+            tenantId: lsSubscription.TenantId,
+            subscriptionId: subscription.Id,
+            totalAmount: amount,
+            taxRate: taxRate,
+            issueDate: DateTime.UtcNow,
+            dueDate: DateTime.UtcNow.AddDays(30),
+            notes: $"LemonSqueezy Payment - {attr.ProductName ?? "Subscription"}"
+        );
+
+        // Add invoice item
+        invoice.AddItem(
+            description: $"{attr.ProductName ?? "Subscription"} - {attr.VariantName ?? "Monthly"}",
+            quantity: 1,
+            unitPrice: amount
+        );
+
+        // Send invoice and mark as paid
+        invoice.Send();
+        invoice.AddPayment(
+            method: Domain.Master.Enums.PaymentMethod.KrediKarti,
+            amount: invoice.TotalAmount,
+            transactionId: webhookEvent.Meta?.EventId ?? data.Id,
+            notes: $"LemonSqueezy payment - Card: {attr.CardBrand ?? "Unknown"} *{attr.CardLastFour ?? "****"}"
+        );
+
+        _masterContext.Invoices.Add(invoice);
+        await _masterContext.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation(
+            "Created Invoice {InvoiceNumber} and Payment for tenant {TenantId}, Amount: {Amount}",
+            invoice.InvoiceNumber, lsSubscription.TenantId, invoice.TotalAmount);
     }
 
     private async Task HandlePaymentFailedAsync(LsWebhookEvent webhookEvent, CancellationToken cancellationToken)

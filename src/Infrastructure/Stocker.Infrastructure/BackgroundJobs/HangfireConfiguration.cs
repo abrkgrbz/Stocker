@@ -98,6 +98,9 @@ public static class HangfireConfiguration
         // Tenant health check - runs every 15 minutes
         TenantHealthCheckJob.Schedule();
 
+        // Trial subscription check - runs daily at 09:00 UTC
+        TrialSubscriptionCheckJob.Schedule();
+
         // System monitoring metrics - runs every 15 seconds
         RecurringJob.AddOrUpdate<MonitoringMetricsJob>(
             "monitoring-metrics",

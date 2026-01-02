@@ -328,6 +328,57 @@ public class EmailService : IEmailService
         return Task.FromResult(_emailSettings.EnableEmail && !string.IsNullOrEmpty(_emailSettings.SmtpHost));
     }
 
+    public async Task SendTrialExpiringEmailAsync(string email, string companyName, int daysRemaining, CancellationToken cancellationToken = default)
+    {
+        var templateData = new Dictionary<string, object>
+        {
+            ["companyName"] = companyName,
+            ["daysRemaining"] = daysRemaining,
+            ["upgradeUrl"] = $"{_emailSettings.BaseUrl}/account/billing",
+            ["appName"] = "Stocker",
+            ["email"] = email,
+            ["year"] = DateTime.UtcNow.Year,
+            ["logoUrl"] = "https://stoocker.app/logo.png"
+        };
+
+        var (subject, body) = await RenderTemplateAsync("trial-expiring", templateData, cancellationToken: cancellationToken);
+
+        await SendAsync(new EmailMessage
+        {
+            To = email,
+            Subject = subject,
+            Body = body,
+            IsHtml = true
+        }, cancellationToken);
+
+        _logger.LogInformation("Trial expiring email sent to {Email} for company {CompanyName}, {Days} days remaining", email, companyName, daysRemaining);
+    }
+
+    public async Task SendTrialExpiredEmailAsync(string email, string companyName, CancellationToken cancellationToken = default)
+    {
+        var templateData = new Dictionary<string, object>
+        {
+            ["companyName"] = companyName,
+            ["upgradeUrl"] = $"{_emailSettings.BaseUrl}/account/billing",
+            ["appName"] = "Stocker",
+            ["email"] = email,
+            ["year"] = DateTime.UtcNow.Year,
+            ["logoUrl"] = "https://stoocker.app/logo.png"
+        };
+
+        var (subject, body) = await RenderTemplateAsync("trial-expired", templateData, cancellationToken: cancellationToken);
+
+        await SendAsync(new EmailMessage
+        {
+            To = email,
+            Subject = subject,
+            Body = body,
+            IsHtml = true
+        }, cancellationToken);
+
+        _logger.LogInformation("Trial expired email sent to {Email} for company {CompanyName}", email, companyName);
+    }
+
     /// <summary>
     /// Renders an email template from database using Liquid engine.
     /// Throws exception if template is not found (no hardcoded fallbacks).
@@ -553,6 +604,37 @@ public class DevelopmentEmailService : IEmailService
     public Task<bool> IsEmailServiceAvailable()
     {
         return Task.FromResult(true);
+    }
+
+    public async Task SendTrialExpiringEmailAsync(string email, string companyName, int daysRemaining, CancellationToken cancellationToken = default)
+    {
+        var (subject, body) = await RenderTemplateAsync("trial-expiring", new Dictionary<string, object>
+        {
+            ["companyName"] = companyName,
+            ["daysRemaining"] = daysRemaining,
+            ["upgradeUrl"] = $"{_emailSettings.BaseUrl}/account/billing",
+            ["appName"] = "Stocker",
+            ["email"] = email,
+            ["year"] = DateTime.UtcNow.Year,
+            ["logoUrl"] = "https://stoocker.app/logo.png"
+        }, cancellationToken: cancellationToken);
+
+        await SendAsync(new EmailMessage { To = email, Subject = subject, Body = body, IsHtml = true }, cancellationToken);
+    }
+
+    public async Task SendTrialExpiredEmailAsync(string email, string companyName, CancellationToken cancellationToken = default)
+    {
+        var (subject, body) = await RenderTemplateAsync("trial-expired", new Dictionary<string, object>
+        {
+            ["companyName"] = companyName,
+            ["upgradeUrl"] = $"{_emailSettings.BaseUrl}/account/billing",
+            ["appName"] = "Stocker",
+            ["email"] = email,
+            ["year"] = DateTime.UtcNow.Year,
+            ["logoUrl"] = "https://stoocker.app/logo.png"
+        }, cancellationToken: cancellationToken);
+
+        await SendAsync(new EmailMessage { To = email, Subject = subject, Body = body, IsHtml = true }, cancellationToken);
     }
 
     private async Task<(string Subject, string Body)> RenderTemplateAsync(

@@ -34,6 +34,24 @@ public interface IEmailService
         CancellationToken cancellationToken = default);
 
     Task<bool> IsEmailServiceAvailable();
+
+    // Trial subscription emails
+    /// <summary>
+    /// Sends a reminder email when trial subscription is about to expire.
+    /// </summary>
+    Task SendTrialExpiringEmailAsync(
+        string email,
+        string companyName,
+        int daysRemaining,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends an email when trial subscription has expired.
+    /// </summary>
+    Task SendTrialExpiredEmailAsync(
+        string email,
+        string companyName,
+        CancellationToken cancellationToken = default);
 }
 
 public class EmailMessage

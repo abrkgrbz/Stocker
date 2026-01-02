@@ -17,7 +17,8 @@ import {
     Phone,
     Lock,
     Fingerprint,
-    Moon
+    Moon,
+    CreditCard,
 } from 'lucide-react-native';
 import { authStorage, User as UserType, Tenant } from '@/lib/auth-store';
 import { AnimatedButton } from '@/components/ui/AnimatedButton';
@@ -197,6 +198,22 @@ export default function SettingsScreen() {
                         </Pressable>
                     </Animated.View>
                 )}
+
+                {/* Billing Section */}
+                <Animated.View entering={FadeInDown.duration(500).delay(175)}>
+                    <Text style={{ color: colors.text.tertiary }} className="text-xs font-bold uppercase mb-3 tracking-wider">Abonelik</Text>
+                    <View className="rounded-xl px-4 mb-6" style={{ backgroundColor: colors.surface.primary, borderWidth: 1, borderColor: colors.border.primary }}>
+                        <SettingItem
+                            icon={CreditCard}
+                            iconColor={colors.brand.primary}
+                            iconBgColor={colors.modules.purchaseLight}
+                            title="Abonelik & Faturalama"
+                            subtitle="Plan ve ödeme yönetimi"
+                            onPress={() => router.push('/(dashboard)/billing' as any)}
+                            isLast
+                        />
+                    </View>
+                </Animated.View>
 
                 {/* Account Settings */}
                 <Animated.View entering={FadeInDown.duration(500).delay(200)}>

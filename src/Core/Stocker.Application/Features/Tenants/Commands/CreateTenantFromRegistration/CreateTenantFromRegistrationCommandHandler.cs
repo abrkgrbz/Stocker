@@ -219,10 +219,6 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                 return Result<TenantDto>.Failure(Error.Conflict("Tenant.AlreadyExists", "Bu kod ile tenant zaten mevcut."));
             }
 
-            // NOTE: Package and Subscription are NOT created here during registration.
-            // They will be created in CompleteSetup when user selects their package in Setup Wizard.
-            // This allows users to freely choose/customize their package after registration.
-
             // Create email value object (needed for tenant creation)
             var emailResult = Email.Create(registration.ContactEmail.Value);
             if (emailResult.IsFailure)
@@ -288,12 +284,24 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                 _logger.LogWarning(progressEx, "Failed to send progress update for CreatingTenant step");
             }
 
-            // NOTE: Subscription is NOT created here during registration.
-            // It will be created in CompleteSetup when user selects their package in Setup Wizard.
-            _logger.LogInformation("📋 Tenant {TenantId} created. Subscription will be created during Setup Wizard.", tenant.Id);
+            // Create Trial Subscription for the tenant (14 days trial)
+            var trialEndDate = DateTime.UtcNow.AddDays(14);
+            var trialSubscription = Subscription.Create(
+                tenantId: tenant.Id,
+                packageId: null, // Trial - no package yet
+                billingCycle: BillingCycle.Aylik,
+                price: Money.Zero("TRY"),
+                startDate: DateTime.UtcNow,
+                trialEndDate: trialEndDate
+            );
 
-            // Add tenant to repository (subscription will be added in CompleteSetup)
+            _logger.LogInformation(
+                "📋 Trial Subscription created for Tenant {TenantId}. Trial ends at {TrialEndDate}",
+                tenant.Id, trialEndDate);
+
+            // Add tenant and subscription to repository
             await _unitOfWork.Repository<Domain.Master.Entities.Tenant>().AddAsync(tenant);
+            await _unitOfWork.Repository<Subscription>().AddAsync(trialSubscription);
 
             // Approve registration and link to tenant
             registration.Approve(approvedBy: "System", tenantId: tenant.Id);
@@ -557,7 +565,7 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                         tenantId = tenant.Id,
                         tenantName = tenant.Name,
                         registrationId = registration.Id,
-                        note = "Subscription will be created during Setup Wizard"
+                        note = "Trial subscription created (14 days)"
                     })
                 }, cancellationToken);
 
