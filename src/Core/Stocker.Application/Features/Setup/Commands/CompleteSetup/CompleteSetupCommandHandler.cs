@@ -243,14 +243,15 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                                 request.CustomPackage.SelectedAddOnCodes);
 
                             // Clear existing modules before adding new ones (in case of re-setup)
-                            if (subscription.Modules.Any())
+                            // Query directly from DB to ensure we have accurate data
+                            var existingModulesInDb = await _masterDbContext.SubscriptionModules
+                                .Where(m => m.SubscriptionId == subscription.Id)
+                                .ToListAsync(cancellationToken);
+
+                            if (existingModulesInDb.Any())
                             {
-                                _logger.LogInformation("Clearing {Count} existing modules from subscription", subscription.Modules.Count);
-                                // Remove modules from DbContext tracking as well
-                                foreach (var existingModule in subscription.Modules.ToList())
-                                {
-                                    _masterDbContext.SubscriptionModules.Remove(existingModule);
-                                }
+                                _logger.LogInformation("Clearing {Count} existing modules from subscription (from DB)", existingModulesInDb.Count);
+                                _masterDbContext.SubscriptionModules.RemoveRange(existingModulesInDb);
                                 subscription.ClearModules();
                             }
 
@@ -265,7 +266,9 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
 
                             foreach (var moduleDef in moduleDefinitions)
                             {
-                                subscription.AddModule(moduleDef.Code, moduleDef.Name, null);
+                                // Create module and add directly to DbContext for proper tracking
+                                var newModule = new SubscriptionModule(subscription.Id, moduleDef.Code, moduleDef.Name, null);
+                                await _masterDbContext.SubscriptionModules.AddAsync(newModule, cancellationToken);
                                 _logger.LogInformation("Added module {ModuleCode} ({ModuleName}) to subscription",
                                     moduleDef.Code, moduleDef.Name);
                             }
@@ -274,14 +277,15 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                         else if (package != null)
                         {
                             // Clear existing modules before adding new ones (in case of re-setup)
-                            if (subscription.Modules.Any())
+                            // Query directly from DB to ensure we have accurate data
+                            var existingModulesInDb = await _masterDbContext.SubscriptionModules
+                                .Where(m => m.SubscriptionId == subscription.Id)
+                                .ToListAsync(cancellationToken);
+
+                            if (existingModulesInDb.Any())
                             {
-                                _logger.LogInformation("Clearing {Count} existing modules from subscription for ready package", subscription.Modules.Count);
-                                // Remove modules from DbContext tracking as well
-                                foreach (var existingModule in subscription.Modules.ToList())
-                                {
-                                    _masterDbContext.SubscriptionModules.Remove(existingModule);
-                                }
+                                _logger.LogInformation("Clearing {Count} existing modules from subscription for ready package (from DB)", existingModulesInDb.Count);
+                                _masterDbContext.SubscriptionModules.RemoveRange(existingModulesInDb);
                                 subscription.ClearModules();
                             }
 
@@ -297,7 +301,9 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
 
                                 foreach (var module in includedModules)
                                 {
-                                    subscription.AddModule(module.ModuleCode, module.ModuleName, module.MaxEntities);
+                                    // Create module and add directly to DbContext for proper tracking
+                                    var newModule = new SubscriptionModule(subscription.Id, module.ModuleCode, module.ModuleName, module.MaxEntities);
+                                    await _masterDbContext.SubscriptionModules.AddAsync(newModule, cancellationToken);
                                     _logger.LogInformation("Added module {ModuleCode} ({ModuleName}) to subscription from package",
                                         module.ModuleCode, module.ModuleName);
                                 }
