@@ -183,20 +183,46 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                     // Check if subscription already exists for this tenant (created during registration)
                     // Note: During registration, subscription is created WITHOUT modules.
                     // Modules are only added here in CompleteSetup based on user's package selection.
-                    var existingSubscription = await _masterDbContext.Subscriptions
+
+                    // IMPORTANT: Use AsNoTracking first to check existence, then attach if needed
+                    // This prevents stale entity tracking issues between different DbContext usages
+                    var existingSubscriptionData = await _masterDbContext.Subscriptions
+                        .AsNoTracking()
                         .Include(s => s.Modules)
                         .FirstOrDefaultAsync(s => s.TenantId == request.TenantId, cancellationToken);
 
                     Domain.Master.Entities.Subscription subscription;
 
-                    if (existingSubscription != null)
+                    if (existingSubscriptionData != null)
                     {
                         // Update existing subscription (created during registration without modules)
                         _logger.LogInformation("Found existing subscription {SubscriptionId} for tenant {TenantId} with status {Status}, adding modules...",
-                            existingSubscription.Id, request.TenantId, existingSubscription.Status);
+                            existingSubscriptionData.Id, request.TenantId, existingSubscriptionData.Status);
 
-                        subscriptionId = existingSubscription.Id;
-                        subscription = existingSubscription;
+                        subscriptionId = existingSubscriptionData.Id;
+
+                        // Re-fetch with tracking to ensure we have a properly tracked entity
+                        // Clear any stale entries first
+                        var trackedEntry = _masterDbContext.ChangeTracker.Entries<Domain.Master.Entities.Subscription>()
+                            .FirstOrDefault(e => e.Entity.Id == existingSubscriptionData.Id);
+                        if (trackedEntry != null)
+                        {
+                            trackedEntry.State = EntityState.Detached;
+                        }
+
+                        // Also detach any tracked modules
+                        var trackedModules = _masterDbContext.ChangeTracker.Entries<SubscriptionModule>()
+                            .Where(e => e.Entity.SubscriptionId == existingSubscriptionData.Id)
+                            .ToList();
+                        foreach (var moduleEntry in trackedModules)
+                        {
+                            moduleEntry.State = EntityState.Detached;
+                        }
+
+                        // Now fetch with tracking
+                        subscription = await _masterDbContext.Subscriptions
+                            .Include(s => s.Modules)
+                            .FirstAsync(s => s.Id == existingSubscriptionData.Id, cancellationToken);
 
                         // Update package if different (only for pre-defined packages)
                         if (request.PackageId.HasValue && subscription.PackageId != request.PackageId.Value)
@@ -220,6 +246,11 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                             if (subscription.Modules.Any())
                             {
                                 _logger.LogInformation("Clearing {Count} existing modules from subscription", subscription.Modules.Count);
+                                // Remove modules from DbContext tracking as well
+                                foreach (var existingModule in subscription.Modules.ToList())
+                                {
+                                    _masterDbContext.SubscriptionModules.Remove(existingModule);
+                                }
                                 subscription.ClearModules();
                             }
 
@@ -246,6 +277,11 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                             if (subscription.Modules.Any())
                             {
                                 _logger.LogInformation("Clearing {Count} existing modules from subscription for ready package", subscription.Modules.Count);
+                                // Remove modules from DbContext tracking as well
+                                foreach (var existingModule in subscription.Modules.ToList())
+                                {
+                                    _masterDbContext.SubscriptionModules.Remove(existingModule);
+                                }
                                 subscription.ClearModules();
                             }
 
@@ -290,42 +326,23 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                                 subscriptionId, subscription.Status);
                         }
 
-                        // Save with retry logic for concurrency exceptions
-                        var maxRetries = 3;
-                        for (var attempt = 1; attempt <= maxRetries; attempt++)
+                        // Save changes - using try/catch for better error handling
+                        try
                         {
-                            try
-                            {
-                                await _masterDbContext.SaveChangesAsync(cancellationToken);
-                                _logger.LogInformation("Subscription updated with ID: {SubscriptionId}", subscriptionId);
-                                break;
-                            }
-                            catch (DbUpdateConcurrencyException ex) when (attempt < maxRetries)
-                            {
-                                _logger.LogWarning(ex,
-                                    "Concurrency exception on subscription save attempt {Attempt}/{MaxRetries}. Reloading entity...",
-                                    attempt, maxRetries);
+                            await _masterDbContext.SaveChangesAsync(cancellationToken);
+                            _logger.LogInformation("Subscription updated with ID: {SubscriptionId}", subscriptionId);
+                        }
+                        catch (DbUpdateConcurrencyException ex)
+                        {
+                            _logger.LogError(ex,
+                                "Concurrency exception while saving subscription {SubscriptionId}. Entries: {Entries}",
+                                subscriptionId,
+                                string.Join(", ", ex.Entries.Select(e => $"{e.Entity.GetType().Name}:{e.State}")));
 
-                                // Reload the entity from database to get the latest values
-                                foreach (var entry in ex.Entries)
-                                {
-                                    await entry.ReloadAsync(cancellationToken);
-                                }
-
-                                // Re-query the subscription with fresh data
-                                existingSubscription = await _masterDbContext.Subscriptions
-                                    .Include(s => s.Modules)
-                                    .FirstOrDefaultAsync(s => s.TenantId == request.TenantId, cancellationToken);
-
-                                if (existingSubscription == null)
-                                {
-                                    throw new InvalidOperationException(
-                                        $"Subscription for tenant {request.TenantId} was deleted during setup");
-                                }
-
-                                subscription = existingSubscription;
-                                subscriptionId = subscription.Id;
-                            }
+                            // Re-throw with more context
+                            throw new InvalidOperationException(
+                                $"Failed to save subscription {subscriptionId} due to concurrency conflict. " +
+                                "The subscription may have been modified by another process.", ex);
                         }
                     }
                     else
