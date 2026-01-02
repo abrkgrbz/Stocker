@@ -32,7 +32,8 @@ public class CustomerSegmentConfiguration : IEntityTypeConfiguration<CustomerSeg
             .HasColumnType("text");
 
         builder.Property(cs => cs.Color)
-            .IsRequired();
+            .IsRequired()
+            .HasMaxLength(20);  // Hex color string like #1890ff
 
         builder.Property(cs => cs.IsActive)
             .IsRequired();

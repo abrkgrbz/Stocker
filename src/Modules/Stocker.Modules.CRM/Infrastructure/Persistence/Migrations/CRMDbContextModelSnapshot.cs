@@ -1201,8 +1201,10 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Color")
-                        .HasColumnType("integer");
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uuid");
