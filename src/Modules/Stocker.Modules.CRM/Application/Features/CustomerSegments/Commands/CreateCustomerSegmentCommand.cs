@@ -14,7 +14,7 @@ public class CreateCustomerSegmentCommand : IRequest<Result<CustomerSegmentDto>>
     public string? Description { get; set; }
     public SegmentType Type { get; set; }
     public string? Criteria { get; set; }
-    public SegmentColor Color { get; set; }
+    public string Color { get; set; } = "#1890ff";  // Hex color string
     public Guid CreatedBy { get; set; }
 }
 
@@ -33,7 +33,8 @@ public class CreateCustomerSegmentCommandValidator : AbstractValidator<CreateCus
             .IsInEnum().WithMessage("Invalid segment type");
 
         RuleFor(x => x.Color)
-            .IsInEnum().WithMessage("Invalid segment color");
+            .NotEmpty().WithMessage("Segment color is required")
+            .Matches(@"^#[0-9A-Fa-f]{6}$").WithMessage("Color must be a valid hex color (e.g., #1890ff)");
 
         RuleFor(x => x.CreatedBy)
             .NotEmpty().WithMessage("Created by user ID is required");

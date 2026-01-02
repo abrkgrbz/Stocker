@@ -13,7 +13,7 @@ public class UpdateCustomerSegmentCommand : IRequest<Result<CustomerSegmentDto>>
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public SegmentColor Color { get; set; }
+    public string Color { get; set; } = "#1890ff";  // Hex color string
     public Guid ModifiedBy { get; set; }
 }
 
@@ -32,7 +32,8 @@ public class UpdateCustomerSegmentCommandValidator : AbstractValidator<UpdateCus
             .MaximumLength(1000).WithMessage("Description must not exceed 1000 characters");
 
         RuleFor(x => x.Color)
-            .IsInEnum().WithMessage("Invalid segment color");
+            .NotEmpty().WithMessage("Segment color is required")
+            .Matches(@"^#[0-9A-Fa-f]{6}$").WithMessage("Color must be a valid hex color (e.g., #1890ff)");
 
         RuleFor(x => x.ModifiedBy)
             .NotEmpty().WithMessage("Modified by user ID is required");

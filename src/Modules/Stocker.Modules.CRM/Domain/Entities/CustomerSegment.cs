@@ -12,7 +12,7 @@ public class CustomerSegment : TenantAggregateRoot
     public string? Description { get; private set; }
     public SegmentType Type { get; private set; }
     public string? Criteria { get; private set; }  // JSON for dynamic segments
-    public SegmentColor Color { get; private set; }
+    public string Color { get; private set; }  // Hex color string (e.g., "#1890ff")
     public bool IsActive { get; private set; }
     public int MemberCount { get; private set; }
     public Guid CreatedBy { get; private set; }
@@ -26,7 +26,7 @@ public class CustomerSegment : TenantAggregateRoot
         Guid tenantId,
         string name,
         SegmentType type,
-        SegmentColor color,
+        string color,
         Guid createdBy,
         string? description = null,
         string? criteria = null) : base(Guid.NewGuid(), tenantId)
@@ -47,7 +47,7 @@ public class CustomerSegment : TenantAggregateRoot
         CreatedBy = createdBy;
     }
 
-    public Result UpdateDetails(string name, string? description, SegmentColor color, Guid modifiedBy)
+    public Result UpdateDetails(string name, string? description, string color, Guid modifiedBy)
     {
         if (string.IsNullOrWhiteSpace(name))
             return Result.Failure(Error.Validation("CustomerSegment.Name", "Segment name cannot be empty"));

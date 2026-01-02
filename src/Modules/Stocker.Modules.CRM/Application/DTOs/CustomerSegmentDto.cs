@@ -10,7 +10,7 @@ public class CustomerSegmentDto
     public string? Description { get; set; }
     public SegmentType Type { get; set; }
     public string? Criteria { get; set; }
-    public SegmentColor Color { get; set; }
+    public string Color { get; set; } = "#1890ff";  // Hex color string
     public bool IsActive { get; set; }
     public int MemberCount { get; set; }
     public Guid CreatedBy { get; set; }
