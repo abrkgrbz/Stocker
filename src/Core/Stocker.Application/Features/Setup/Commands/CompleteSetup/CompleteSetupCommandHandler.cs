@@ -208,6 +208,10 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                         // The custom package details are stored separately via SetCustomPackageDetails
 
                         // Store custom package details and add modules if applicable
+                        // First, save any pending changes to ensure subscription entity is in sync
+                        await _masterDbContext.SaveChangesAsync(cancellationToken);
+
+                        // Now handle modules separately to avoid concurrency issues
                         if (request.CustomPackage != null)
                         {
                             subscription.SetCustomPackageDetails(
@@ -217,10 +221,14 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                                 request.CustomPackage.SelectedAddOnCodes);
 
                             // Clear existing modules before adding new ones (in case of re-setup)
-                            if (subscription.Modules.Any())
+                            // Delete directly from database to avoid tracking issues
+                            var existingModuleIds = subscription.Modules.Select(m => m.Id).ToList();
+                            if (existingModuleIds.Any())
                             {
-                                _logger.LogInformation("Clearing {Count} existing modules from subscription", subscription.Modules.Count);
-                                subscription.ClearModules();
+                                _logger.LogInformation("Removing {Count} existing modules from subscription", existingModuleIds.Count);
+                                await _masterDbContext.SubscriptionModules
+                                    .Where(m => existingModuleIds.Contains(m.Id))
+                                    .ExecuteDeleteAsync(cancellationToken);
                             }
 
                             // Add modules to subscription for custom packages
@@ -232,9 +240,12 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                             _logger.LogInformation("Found {Count} module definitions for codes: {Codes}",
                                 moduleDefinitions.Count, string.Join(", ", request.CustomPackage.SelectedModuleCodes));
 
+                            // Add modules directly to DbContext instead of through domain method
                             foreach (var moduleDef in moduleDefinitions)
                             {
-                                subscription.AddModule(moduleDef.Code, moduleDef.Name, null);
+                                var subscriptionModule = new Domain.Master.Entities.SubscriptionModule(
+                                    subscription.Id, moduleDef.Code, moduleDef.Name, null);
+                                await _masterDbContext.SubscriptionModules.AddAsync(subscriptionModule, cancellationToken);
                                 _logger.LogInformation("Added module {ModuleCode} ({ModuleName}) to subscription",
                                     moduleDef.Code, moduleDef.Name);
                             }
@@ -243,10 +254,14 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                         else if (package != null)
                         {
                             // Clear existing modules before adding new ones (in case of re-setup)
-                            if (subscription.Modules.Any())
+                            // Delete directly from database to avoid tracking issues
+                            var existingModuleIds = subscription.Modules.Select(m => m.Id).ToList();
+                            if (existingModuleIds.Any())
                             {
-                                _logger.LogInformation("Clearing {Count} existing modules from subscription for ready package", subscription.Modules.Count);
-                                subscription.ClearModules();
+                                _logger.LogInformation("Removing {Count} existing modules from subscription for ready package", existingModuleIds.Count);
+                                await _masterDbContext.SubscriptionModules
+                                    .Where(m => existingModuleIds.Contains(m.Id))
+                                    .ExecuteDeleteAsync(cancellationToken);
                             }
 
                             var packageWithModules = await _masterDbContext.Packages
@@ -259,9 +274,12 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                                 var includedModules = packageWithModules.Modules.Where(m => m.IsIncluded).ToList();
                                 _logger.LogInformation("Found {Count} modules in package {PackageId}", includedModules.Count, package.Id);
 
+                                // Add modules directly to DbContext instead of through domain method
                                 foreach (var module in includedModules)
                                 {
-                                    subscription.AddModule(module.ModuleCode, module.ModuleName, module.MaxEntities);
+                                    var subscriptionModule = new Domain.Master.Entities.SubscriptionModule(
+                                        subscription.Id, module.ModuleCode, module.ModuleName, module.MaxEntities);
+                                    await _masterDbContext.SubscriptionModules.AddAsync(subscriptionModule, cancellationToken);
                                     _logger.LogInformation("Added module {ModuleCode} ({ModuleName}) to subscription from package",
                                         module.ModuleCode, module.ModuleName);
                                 }
@@ -290,43 +308,9 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                                 subscriptionId, subscription.Status);
                         }
 
-                        // Save with retry logic for concurrency exceptions
-                        var maxRetries = 3;
-                        for (var attempt = 1; attempt <= maxRetries; attempt++)
-                        {
-                            try
-                            {
-                                await _masterDbContext.SaveChangesAsync(cancellationToken);
-                                _logger.LogInformation("Subscription updated with ID: {SubscriptionId}", subscriptionId);
-                                break;
-                            }
-                            catch (DbUpdateConcurrencyException ex) when (attempt < maxRetries)
-                            {
-                                _logger.LogWarning(ex,
-                                    "Concurrency exception on subscription save attempt {Attempt}/{MaxRetries}. Reloading entity...",
-                                    attempt, maxRetries);
-
-                                // Reload the entity from database to get the latest values
-                                foreach (var entry in ex.Entries)
-                                {
-                                    await entry.ReloadAsync(cancellationToken);
-                                }
-
-                                // Re-query the subscription with fresh data
-                                existingSubscription = await _masterDbContext.Subscriptions
-                                    .Include(s => s.Modules)
-                                    .FirstOrDefaultAsync(s => s.TenantId == request.TenantId, cancellationToken);
-
-                                if (existingSubscription == null)
-                                {
-                                    throw new InvalidOperationException(
-                                        $"Subscription for tenant {request.TenantId} was deleted during setup");
-                                }
-
-                                subscription = existingSubscription;
-                                subscriptionId = subscription.Id;
-                            }
-                        }
+                        // Save all changes including modules
+                        await _masterDbContext.SaveChangesAsync(cancellationToken);
+                        _logger.LogInformation("Subscription updated with ID: {SubscriptionId}", subscriptionId);
                     }
                     else
                     {

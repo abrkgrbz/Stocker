@@ -79,16 +79,24 @@ public class SubscriptionConfiguration : BaseEntityTypeConfiguration<Subscriptio
                 .HasColumnName("PriceCurrency");
         });
 
-        // Relationships
+        // Relationships - use backing field access for proper change tracking
         builder.HasMany(s => s.Modules)
             .WithOne()
             .HasForeignKey(m => m.SubscriptionId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // Configure backing field access for Modules collection
+        builder.Navigation(s => s.Modules)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
         builder.HasMany(s => s.Usages)
             .WithOne()
             .HasForeignKey(u => u.SubscriptionId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Configure backing field access for Usages collection
+        builder.Navigation(s => s.Usages)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         // Indexes
         builder.HasIndex(s => s.SubscriptionNumber)
