@@ -1,24 +1,12 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Form, Input, InputNumber, Select, Switch } from 'antd';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Form, Input, InputNumber, Switch } from 'antd';
 import { GlobeAltIcon } from '@heroicons/react/24/outline';
 import type { TerritoryDto } from '@/lib/api/services/crm.types';
 import { TerritoryType } from '@/lib/api/services/crm.types';
-
-const { TextArea } = Input;
-
-// Territory type options
-const territoryTypeOptions = [
-  { value: TerritoryType.Country, label: 'Ülke' },
-  { value: TerritoryType.Region, label: 'Bölge' },
-  { value: TerritoryType.City, label: 'Şehir' },
-  { value: TerritoryType.District, label: 'İlçe' },
-  { value: TerritoryType.PostalCode, label: 'Posta Kodu' },
-  { value: TerritoryType.Custom, label: 'Özel' },
-  { value: TerritoryType.Industry, label: 'Sektör' },
-  { value: TerritoryType.CustomerSegment, label: 'Müşteri Segmenti' },
-];
+import { CascadeLocationSelect } from '@/components/ui/CascadeLocationSelect';
+import type { SelectedLocation } from '@/lib/api/services/location.types';
 
 interface TerritoryFormProps {
   form: ReturnType<typeof Form.useForm>[0];
@@ -30,7 +18,9 @@ interface TerritoryFormProps {
 export default function TerritoryForm({ form, initialValues, onFinish, loading }: TerritoryFormProps) {
   const [territoryType, setTerritoryType] = useState<TerritoryType>(TerritoryType.Region);
   const [isActive, setIsActive] = useState(true);
+  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation>({});
 
+  // Initialize form with existing values
   useEffect(() => {
     if (initialValues) {
       form.setFieldsValue({
@@ -38,6 +28,18 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
       });
       setTerritoryType(initialValues.territoryType || TerritoryType.Region);
       setIsActive(initialValues.isActive ?? true);
+
+      // Set initial location from existing territory data
+      setSelectedLocation({
+        countryId: initialValues.countryId,
+        countryName: initialValues.country,
+        countryCode: initialValues.countryCode,
+        cityId: initialValues.cityId,
+        cityName: initialValues.city,
+        region: initialValues.region,
+        districtId: initialValues.districtId,
+        districtName: initialValues.district,
+      });
     } else {
       form.setFieldsValue({
         territoryType: TerritoryType.Region,
@@ -46,11 +48,45 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
     }
   }, [form, initialValues]);
 
+  // Handle location change from cascade dropdown
+  const handleLocationChange = useCallback((location: SelectedLocation) => {
+    setSelectedLocation(location);
+
+    // Update form values with GeoLocation IDs and display names
+    form.setFieldsValue({
+      countryId: location.countryId,
+      country: location.countryName,
+      countryCode: location.countryCode,
+      cityId: location.cityId,
+      city: location.cityName,
+      region: location.region,
+      districtId: location.districtId,
+      district: location.districtName,
+    });
+  }, [form]);
+
+  // Handle form submission - include location fields
+  const handleFinish = useCallback((values: any) => {
+    // Merge location data with form values
+    const submitData = {
+      ...values,
+      countryId: selectedLocation.countryId,
+      country: selectedLocation.countryName,
+      countryCode: selectedLocation.countryCode,
+      cityId: selectedLocation.cityId,
+      city: selectedLocation.cityName,
+      region: selectedLocation.region,
+      districtId: selectedLocation.districtId,
+      district: selectedLocation.districtName,
+    };
+    onFinish(submitData);
+  }, [selectedLocation, onFinish]);
+
   return (
     <Form
       form={form}
       layout="vertical"
-      onFinish={onFinish}
+      onFinish={handleFinish}
       disabled={loading}
       className="w-full"
       scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
@@ -199,49 +235,31 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
             </div>
           </div>
 
-          {/* ─────────────── COĞRAFİ BİLGİLER ─────────────── */}
+          {/* ─────────────── COĞRAFİ BİLGİLER (Cascade Dropdown) ─────────────── */}
           <div className="mb-8">
             <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Coğrafi Bilgiler
             </h3>
-            <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ülke</label>
-                <Form.Item name="country" className="mb-0">
-                  <Input
-                    placeholder="Türkiye"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
-              </div>
-              <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Bölge</label>
-                <Form.Item name="region" className="mb-0">
-                  <Input
-                    placeholder="Marmara"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
-              </div>
-              <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Şehir</label>
-                <Form.Item name="city" className="mb-0">
-                  <Input
-                    placeholder="İstanbul"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
-              </div>
-              <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">İlçe</label>
-                <Form.Item name="district" className="mb-0">
-                  <Input
-                    placeholder="Kadıköy"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
-              </div>
-            </div>
+
+            {/* Cascade Location Select Component */}
+            <CascadeLocationSelect
+              value={selectedLocation}
+              onChange={handleLocationChange}
+              showDistrict={true}
+              showRegion={true}
+              disabled={loading}
+              layout="grid"
+            />
+
+            {/* Hidden fields for form submission */}
+            <Form.Item name="countryId" hidden><Input /></Form.Item>
+            <Form.Item name="country" hidden><Input /></Form.Item>
+            <Form.Item name="countryCode" hidden><Input /></Form.Item>
+            <Form.Item name="cityId" hidden><Input /></Form.Item>
+            <Form.Item name="city" hidden><Input /></Form.Item>
+            <Form.Item name="region" hidden><Input /></Form.Item>
+            <Form.Item name="districtId" hidden><Input /></Form.Item>
+            <Form.Item name="district" hidden><Input /></Form.Item>
           </div>
 
           {/* ─────────────── SATIŞ HEDEFLERİ ─────────────── */}
@@ -265,7 +283,7 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Hedef Yılı</label>
                 <Form.Item name="targetYear" className="mb-0">
                   <InputNumber
-                    placeholder="2025"
+                    placeholder="2026"
                     className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     min={2020}
                     max={2100}

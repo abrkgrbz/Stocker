@@ -1350,7 +1350,12 @@ export interface TerritoryDto {
   hierarchyLevel: number;
   hierarchyPath?: string;
 
-  // Geographic
+  // Geographic - GeoLocation IDs (FK to Master DB)
+  countryId?: Guid;
+  cityId?: Guid;
+  districtId?: Guid;
+
+  // Geographic - Denormalized display fields
   country?: string;
   countryCode?: string;
   region?: string;
@@ -1390,12 +1395,20 @@ export interface CreateTerritoryCommand {
   description?: string;
   territoryType?: TerritoryType;
   parentTerritoryId?: Guid;
+
+  // GeoLocation IDs (for cascade dropdown)
+  countryId?: Guid;
+  cityId?: Guid;
+  districtId?: Guid;
+
+  // Denormalized display fields (auto-filled from dropdown selection)
   country?: string;
   countryCode?: string;
   region?: string;
   city?: string;
   district?: string;
   postalCodeRange?: string;
+
   salesTarget?: number;
   targetYear?: number;
   currency?: string;
@@ -1407,10 +1420,24 @@ export interface UpdateTerritoryCommand {
   code?: string;
   description?: string;
   territoryType?: TerritoryType;
+
+  // GeoLocation IDs (for cascade dropdown)
+  countryId?: Guid;
+  cityId?: Guid;
+  districtId?: Guid;
+
+  // Denormalized display fields
   country?: string;
+  countryCode?: string;
   region?: string;
   city?: string;
+  district?: string;
+  postalCodeRange?: string;
+
   salesTarget?: number;
+  targetYear?: number;
+  currency?: string;
+  isActive?: boolean;
 }
 
 // =====================================
