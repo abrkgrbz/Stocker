@@ -43,25 +43,53 @@ public class Customer : TenantAggregateRoot
     /// </summary>
     public string? Address { get; private set; }
 
+    #region GeoLocation IDs (FK to Master DB)
+
     /// <summary>
-    /// Gets the customer's city
+    /// Country ID (FK to Master.Countries)
+    /// </summary>
+    public Guid? CountryId { get; private set; }
+
+    /// <summary>
+    /// City ID (FK to Master.Cities)
+    /// </summary>
+    public Guid? CityId { get; private set; }
+
+    /// <summary>
+    /// District ID (FK to Master.Districts)
+    /// </summary>
+    public Guid? DistrictId { get; private set; }
+
+    #endregion
+
+    #region Denormalized Address Fields (for display/backward compatibility)
+
+    /// <summary>
+    /// Gets the customer's city name (denormalized)
     /// </summary>
     public string? City { get; private set; }
 
     /// <summary>
-    /// Gets the customer's state/province
+    /// Gets the customer's state/province/region (denormalized)
     /// </summary>
     public string? State { get; private set; }
 
     /// <summary>
-    /// Gets the customer's country
+    /// Gets the customer's country name (denormalized)
     /// </summary>
     public string? Country { get; private set; }
+
+    /// <summary>
+    /// Gets the customer's district name (denormalized)
+    /// </summary>
+    public string? District { get; private set; }
 
     /// <summary>
     /// Gets the customer's postal code
     /// </summary>
     public string? PostalCode { get; private set; }
+
+    #endregion
 
     /// <summary>
     /// Gets the customer's annual revenue
@@ -212,9 +240,37 @@ public class Customer : TenantAggregateRoot
     }
 
     /// <summary>
-    /// Updates the customer's address
+    /// Updates the customer's address with GeoLocation IDs (cascade dropdown support)
     /// </summary>
     public Result UpdateAddress(
+        string? address,
+        Guid? countryId,
+        Guid? cityId,
+        Guid? districtId,
+        string? country,
+        string? city,
+        string? district,
+        string? state,
+        string? postalCode)
+    {
+        Address = address;
+        CountryId = countryId;
+        CityId = cityId;
+        DistrictId = districtId;
+        Country = country;
+        City = city;
+        District = district;
+        State = state;
+        PostalCode = postalCode;
+        UpdatedAt = DateTime.UtcNow;
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Updates the customer's address (backward compatibility - string only)
+    /// </summary>
+    public Result UpdateAddressLegacy(
         string? address,
         string? city,
         string? state,

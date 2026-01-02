@@ -633,6 +633,13 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<string>("District")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("DistrictId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Email")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
@@ -1111,6 +1118,9 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<Guid?>("CityId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("CompanyName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -1122,6 +1132,9 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     b.Property<string>("Country")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("CountryId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1186,7 +1199,13 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId");
 
+                    b.HasIndex("TenantId", "CityId");
+
                     b.HasIndex("TenantId", "CompanyName");
+
+                    b.HasIndex("TenantId", "CountryId");
+
+                    b.HasIndex("TenantId", "DistrictId");
 
                     b.HasIndex("TenantId", "Email")
                         .IsUnique();

@@ -85,17 +85,4 @@ public class LemonSqueezyWebhookController : ApiController
         }
     }
 
-    /// <summary>
-    /// Test endpoint to verify webhook configuration.
-    /// </summary>
-    [HttpGet("test")]
-    public IActionResult TestWebhook()
-    {
-        return Ok(new
-        {
-            success = true,
-            message = "Lemon Squeezy webhook endpoint is active",
-            timestamp = DateTime.UtcNow
-        });
-    }
 }

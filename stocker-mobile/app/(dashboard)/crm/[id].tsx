@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     View,
     Text,
     ScrollView,
     Pressable,
     Linking,
-    Alert
+    Alert,
+    RefreshControl,
+    ActivityIndicator
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -25,71 +27,12 @@ import {
     ShoppingCart,
     Clock,
     ChevronRight,
-    Plus
+    Plus,
+    RefreshCw
 } from 'lucide-react-native';
 import { useTheme } from '@/lib/theme';
+import { useCustomer, useCustomerActivities } from '@/lib/api/hooks/useCRM';
 import type { Customer, Activity } from '@/lib/api/types/crm.types';
-
-// Mock data
-const MOCK_CUSTOMER: Customer = {
-    id: '1',
-    code: 'MUS-001',
-    name: 'Ahmet Yılmaz',
-    email: 'ahmet@ornek.com',
-    phone: '+90 532 123 4567',
-    company: 'ABC Teknoloji',
-    address: 'Atatürk Cad. No: 123',
-    city: 'İstanbul',
-    country: 'Türkiye',
-    type: 'company',
-    status: 'active',
-    tags: ['VIP', 'Teknoloji'],
-    notes: 'Önemli müşteri, hızlı teslimat tercih ediyor.',
-    totalRevenue: 125000,
-    totalOrders: 15,
-    lastActivityDate: '2024-12-28',
-    createdAt: '2024-01-15',
-    updatedAt: '2024-12-28'
-};
-
-const MOCK_ACTIVITIES: Activity[] = [
-    {
-        id: '1',
-        type: 'call',
-        title: 'Telefon görüşmesi yapıldı',
-        description: 'Yeni ürün tanıtımı için görüşme',
-        customerId: '1',
-        customerName: 'Ahmet Yılmaz',
-        completedAt: '2024-12-28T14:30:00',
-        createdBy: 'user1',
-        createdByName: 'Mehmet Kara',
-        createdAt: '2024-12-28T14:30:00'
-    },
-    {
-        id: '2',
-        type: 'meeting',
-        title: 'Toplantı planlandı',
-        description: 'Q1 2025 stratejisi görüşmesi',
-        customerId: '1',
-        customerName: 'Ahmet Yılmaz',
-        dueDate: '2025-01-10T10:00:00',
-        createdBy: 'user1',
-        createdByName: 'Mehmet Kara',
-        createdAt: '2024-12-27T09:00:00'
-    },
-    {
-        id: '3',
-        type: 'email',
-        title: 'Teklif gönderildi',
-        description: 'Yıllık bakım anlaşması teklifi',
-        customerId: '1',
-        customerName: 'Ahmet Yılmaz',
-        completedAt: '2024-12-25T11:00:00',
-        createdBy: 'user1',
-        createdByName: 'Mehmet Kara',
-        createdAt: '2024-12-25T11:00:00'
-    }
-];
 
 export default function CustomerDetailScreen() {
     const router = useRouter();
@@ -97,23 +40,39 @@ export default function CustomerDetailScreen() {
     const insets = useSafeAreaInsets();
     const { colors } = useTheme();
 
-    const customer = MOCK_CUSTOMER; // TODO: fetch by id
-    const activities = MOCK_ACTIVITIES;
+    // Fetch customer and activities from API
+    const {
+        data: customer,
+        isLoading,
+        isError,
+        refetch,
+        isRefetching
+    } = useCustomer(id || '');
+
+    const {
+        data: activities,
+        refetch: refetchActivities
+    } = useCustomerActivities(id || '');
+
+    const onRefresh = useCallback(() => {
+        refetch();
+        refetchActivities();
+    }, [refetch, refetchActivities]);
 
     const handleCall = () => {
-        if (customer.phone) {
+        if (customer?.phone) {
             Linking.openURL(`tel:${customer.phone}`);
         }
     };
 
     const handleEmail = () => {
-        if (customer.email) {
+        if (customer?.email) {
             Linking.openURL(`mailto:${customer.email}`);
         }
     };
 
     const handleWhatsApp = () => {
-        if (customer.phone) {
+        if (customer?.phone) {
             const phoneNumber = customer.phone.replace(/\s+/g, '').replace('+', '');
             Linking.openURL(`whatsapp://send?phone=${phoneNumber}`);
         }
@@ -223,7 +182,7 @@ export default function CustomerDetailScreen() {
                         Müşteri Detayı
                     </Text>
                     <Text style={{ color: colors.text.tertiary }} className="text-xs">
-                        {customer.code}
+                        {customer?.code || id}
                     </Text>
                 </View>
                 <Pressable
@@ -240,7 +199,56 @@ export default function CustomerDetailScreen() {
             <ScrollView
                 contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isRefetching}
+                        onRefresh={onRefresh}
+                        tintColor={colors.brand.primary}
+                    />
+                }
             >
+                {isLoading ? (
+                    <View className="items-center justify-center py-20">
+                        <ActivityIndicator size="large" color={colors.brand.primary} />
+                        <Text style={{ color: colors.text.secondary, fontSize: 14, marginTop: 12 }}>
+                            Müşteri yükleniyor...
+                        </Text>
+                    </View>
+                ) : isError || !customer ? (
+                    <View className="items-center justify-center py-20">
+                        <View
+                            style={{
+                                width: 64,
+                                height: 64,
+                                borderRadius: 16,
+                                backgroundColor: colors.semantic.errorLight,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginBottom: 16
+                            }}
+                        >
+                            <RefreshCw size={28} color={colors.semantic.error} />
+                        </View>
+                        <Text style={{ color: colors.text.primary, fontSize: 16, fontWeight: '600', marginBottom: 4 }}>
+                            Müşteri bulunamadı
+                        </Text>
+                        <Text style={{ color: colors.text.secondary, fontSize: 14, textAlign: 'center', marginBottom: 16 }}>
+                            Müşteri bilgileri yüklenemedi
+                        </Text>
+                        <Pressable
+                            onPress={onRefresh}
+                            style={{
+                                backgroundColor: colors.brand.primary,
+                                paddingHorizontal: 20,
+                                paddingVertical: 10,
+                                borderRadius: 8
+                            }}
+                        >
+                            <Text style={{ color: '#fff', fontWeight: '600' }}>Tekrar Dene</Text>
+                        </Pressable>
+                    </View>
+                ) : (
+                    <>
                 {/* Profile Section */}
                 <Animated.View
                     entering={FadeInDown.duration(400).delay(100)}
@@ -449,69 +457,71 @@ export default function CustomerDetailScreen() {
                 )}
 
                 {/* Recent Activities */}
-                <Animated.View entering={FadeInDown.duration(400).delay(300)} className="px-4 mt-6">
-                    <View className="flex-row items-center justify-between mb-3">
-                        <Text style={{ color: colors.text.tertiary }} className="text-xs font-bold uppercase tracking-wider">
-                            Son Aktiviteler
-                        </Text>
-                        <Pressable>
-                            <Text style={{ color: colors.brand.accent, fontSize: 13, fontWeight: '600' }}>
-                                Tümünü Gör
+                {activities && activities.length > 0 && (
+                    <Animated.View entering={FadeInDown.duration(400).delay(300)} className="px-4 mt-6">
+                        <View className="flex-row items-center justify-between mb-3">
+                            <Text style={{ color: colors.text.tertiary }} className="text-xs font-bold uppercase tracking-wider">
+                                Son Aktiviteler
                             </Text>
-                        </Pressable>
-                    </View>
-                    <View
-                        style={{
-                            backgroundColor: colors.surface.primary,
-                            borderRadius: 16,
-                            borderWidth: 1,
-                            borderColor: colors.border.primary,
-                            overflow: 'hidden'
-                        }}
-                    >
-                        {activities.map((activity, index) => {
-                            const Icon = getActivityIcon(activity.type);
-                            const iconColor = getActivityColor(activity.type);
-                            return (
-                                <View
-                                    key={activity.id}
-                                    className="flex-row items-start p-4"
-                                    style={index < activities.length - 1 ? {
-                                        borderBottomWidth: 1,
-                                        borderBottomColor: colors.border.primary
-                                    } : undefined}
-                                >
+                            <Pressable>
+                                <Text style={{ color: colors.brand.accent, fontSize: 13, fontWeight: '600' }}>
+                                    Tümünü Gör
+                                </Text>
+                            </Pressable>
+                        </View>
+                        <View
+                            style={{
+                                backgroundColor: colors.surface.primary,
+                                borderRadius: 16,
+                                borderWidth: 1,
+                                borderColor: colors.border.primary,
+                                overflow: 'hidden'
+                            }}
+                        >
+                            {activities.map((activity, index) => {
+                                const Icon = getActivityIcon(activity.type);
+                                const iconColor = getActivityColor(activity.type);
+                                return (
                                     <View
-                                        style={{
-                                            width: 36,
-                                            height: 36,
-                                            borderRadius: 10,
-                                            backgroundColor: iconColor + '20',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            marginRight: 12
-                                        }}
+                                        key={activity.id}
+                                        className="flex-row items-start p-4"
+                                        style={index < activities.length - 1 ? {
+                                            borderBottomWidth: 1,
+                                            borderBottomColor: colors.border.primary
+                                        } : undefined}
                                     >
-                                        <Icon size={16} color={iconColor} />
-                                    </View>
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={{ color: colors.text.primary, fontSize: 14, fontWeight: '500' }}>
-                                            {activity.title}
-                                        </Text>
-                                        {activity.description && (
-                                            <Text style={{ color: colors.text.secondary, fontSize: 13, marginTop: 2 }} numberOfLines={2}>
-                                                {activity.description}
+                                        <View
+                                            style={{
+                                                width: 36,
+                                                height: 36,
+                                                borderRadius: 10,
+                                                backgroundColor: iconColor + '20',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                marginRight: 12
+                                            }}
+                                        >
+                                            <Icon size={16} color={iconColor} />
+                                        </View>
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={{ color: colors.text.primary, fontSize: 14, fontWeight: '500' }}>
+                                                {activity.title}
                                             </Text>
-                                        )}
-                                        <Text style={{ color: colors.text.tertiary, fontSize: 12, marginTop: 4 }}>
-                                            {formatDate(activity.completedAt || activity.createdAt)}
-                                        </Text>
+                                            {activity.description && (
+                                                <Text style={{ color: colors.text.secondary, fontSize: 13, marginTop: 2 }} numberOfLines={2}>
+                                                    {activity.description}
+                                                </Text>
+                                            )}
+                                            <Text style={{ color: colors.text.tertiary, fontSize: 12, marginTop: 4 }}>
+                                                {formatDate(activity.completedAt || activity.createdAt)}
+                                            </Text>
+                                        </View>
                                     </View>
-                                </View>
-                            );
-                        })}
-                    </View>
-                </Animated.View>
+                                );
+                            })}
+                        </View>
+                    </Animated.View>
+                )}
 
                 {/* Add Activity Button */}
                 <Animated.View entering={FadeInDown.duration(400).delay(350)} className="px-4 mt-6">
@@ -531,6 +541,8 @@ export default function CustomerDetailScreen() {
                         </Text>
                     </Pressable>
                 </Animated.View>
+                    </>
+                )}
             </ScrollView>
         </SafeAreaView>
     );

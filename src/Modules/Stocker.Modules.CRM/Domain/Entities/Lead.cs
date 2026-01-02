@@ -373,8 +373,8 @@ public class Lead : TenantAggregateRoot
 
         var customer = customerResult.Value;
 
-        // Update customer with additional information
-        customer.UpdateAddress(Address, City, State, Country, PostalCode);
+        // Update customer with additional information (legacy - no GeoLocation IDs)
+        customer.UpdateAddressLegacy(Address, City, State, Country, PostalCode);
         customer.UpdateBusinessInfo(AnnualRevenue, NumberOfEmployees, Description);
 
         // Create primary contact from lead

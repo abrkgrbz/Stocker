@@ -17,8 +17,31 @@ class CRMService {
 
     // Customers
     async getCustomers(params?: CustomerListParams): Promise<CustomerListResponse> {
-        const response = await api.get<CustomerListResponse>(`${this.baseUrl}/customers`, { params });
-        return response.data;
+        // Use paged endpoint to get totalCount for dashboard metrics
+        const response = await api.get<{
+            items: Customer[];
+            pageNumber: number;
+            pageSize: number;
+            totalCount: number;
+            totalPages: number;
+        }>(`${this.baseUrl}/customers/paged`, {
+            params: {
+                pageNumber: params?.page || 1,
+                pageSize: params?.pageSize || 20,
+                searchTerm: params?.search,
+                sortBy: params?.sortBy,
+                sortDescending: params?.sortOrder === 'desc',
+            }
+        });
+
+        // Map backend response to mobile types
+        return {
+            items: response.data.items,
+            totalCount: response.data.totalCount,
+            page: response.data.pageNumber,
+            pageSize: response.data.pageSize,
+            totalPages: response.data.totalPages,
+        };
     }
 
     async getCustomer(id: string): Promise<Customer> {
@@ -42,8 +65,25 @@ class CRMService {
 
     // Deals
     async getDeals(params?: DealListParams): Promise<DealListResponse> {
-        const response = await api.get<DealListResponse>(`${this.baseUrl}/deals`, { params });
-        return response.data;
+        // Backend returns array, not paged response - we need to map it
+        const response = await api.get<Deal[]>(`${this.baseUrl}/deals`, {
+            params: {
+                search: params?.search,
+                status: params?.stage, // Map stage to status for backend
+                customerId: params?.customerId,
+                page: params?.page || 1,
+                pageSize: params?.pageSize || 20,
+            }
+        });
+
+        const items = response.data || [];
+        return {
+            items,
+            totalCount: items.length,
+            page: params?.page || 1,
+            pageSize: params?.pageSize || 20,
+            totalPages: 1,
+        };
     }
 
     async getDeal(id: string): Promise<Deal> {

@@ -61,8 +61,14 @@ export interface CustomerDto {
   website?: string;
   industry?: string;
   address?: string;
+  // GeoLocation IDs (FK to Master DB)
+  countryId?: Guid;
+  cityId?: Guid;
+  districtId?: Guid;
+  // Denormalized location names (for display/backward compatibility)
   city?: string;
   state?: string;
+  district?: string;
   country?: string;
   postalCode?: string;
   annualRevenue?: number;
@@ -99,8 +105,14 @@ export interface CreateCustomerDto {
   website?: string;
   industry?: string;
   address?: string;
+  // GeoLocation IDs (FK to Master DB)
+  countryId?: Guid;
+  cityId?: Guid;
+  districtId?: Guid;
+  // Denormalized location names (for display/backward compatibility)
   city?: string;
   state?: string;
+  district?: string;
   country?: string;
   postalCode?: string;
   annualRevenue?: number;

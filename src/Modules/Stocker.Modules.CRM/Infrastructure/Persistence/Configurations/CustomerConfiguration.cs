@@ -41,6 +41,13 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(c => c.Address)
             .HasMaxLength(500);
 
+        // GeoLocation FK fields (cross-database reference to Master.Countries/Cities/Districts)
+        // Note: These are NOT EF navigation properties since they reference Master DB
+        builder.Property(c => c.CountryId);
+        builder.Property(c => c.CityId);
+        builder.Property(c => c.DistrictId);
+
+        // Denormalized string fields for display and backward compatibility
         builder.Property(c => c.City)
             .HasMaxLength(100);
 
@@ -48,6 +55,9 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             .HasMaxLength(100);
 
         builder.Property(c => c.Country)
+            .HasMaxLength(100);
+
+        builder.Property(c => c.District)
             .HasMaxLength(100);
 
         builder.Property(c => c.PostalCode)
@@ -70,5 +80,10 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.HasIndex(c => new { c.TenantId, c.Email }).IsUnique();
         builder.HasIndex(c => new { c.TenantId, c.CompanyName });
         builder.HasIndex(c => new { c.TenantId, c.IsActive });
+
+        // GeoLocation indexes for filtering
+        builder.HasIndex(c => new { c.TenantId, c.CountryId });
+        builder.HasIndex(c => new { c.TenantId, c.CityId });
+        builder.HasIndex(c => new { c.TenantId, c.DistrictId });
     }
 }

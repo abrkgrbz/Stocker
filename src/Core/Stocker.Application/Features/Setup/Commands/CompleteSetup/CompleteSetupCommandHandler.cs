@@ -192,8 +192,8 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                     if (existingSubscription != null)
                     {
                         // Update existing subscription (created during registration without modules)
-                        _logger.LogInformation("Found existing subscription {SubscriptionId} for tenant {TenantId}, adding modules...",
-                            existingSubscription.Id, request.TenantId);
+                        _logger.LogInformation("Found existing subscription {SubscriptionId} for tenant {TenantId} with status {Status}, adding modules...",
+                            existingSubscription.Id, request.TenantId, existingSubscription.Status);
 
                         subscriptionId = existingSubscription.Id;
                         subscription = existingSubscription;
@@ -268,7 +268,9 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                             }
                         }
 
-                        // Start trial if subscription is pending
+                        // Start trial if subscription is pending or suspended
+                        // Note: If subscription is already in 'Deneme' status (created with trial during registration),
+                        // we don't need to call StartTrial again - it's already in trial state
                         if (subscription.Status == Domain.Master.Enums.SubscriptionStatus.Beklemede ||
                             subscription.Status == Domain.Master.Enums.SubscriptionStatus.Askida)
                         {
@@ -278,11 +280,53 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                             if (trialEndDate.HasValue)
                             {
                                 subscription.StartTrial(trialEndDate.Value);
+                                _logger.LogInformation("Started trial for subscription {SubscriptionId}, trial ends at {TrialEndDate}",
+                                    subscriptionId, trialEndDate.Value);
                             }
                         }
+                        else
+                        {
+                            _logger.LogInformation("Subscription {SubscriptionId} is already in {Status} status, skipping StartTrial",
+                                subscriptionId, subscription.Status);
+                        }
 
-                        await _masterDbContext.SaveChangesAsync(cancellationToken);
-                        _logger.LogInformation("Subscription updated with ID: {SubscriptionId}", subscriptionId);
+                        // Save with retry logic for concurrency exceptions
+                        var maxRetries = 3;
+                        for (var attempt = 1; attempt <= maxRetries; attempt++)
+                        {
+                            try
+                            {
+                                await _masterDbContext.SaveChangesAsync(cancellationToken);
+                                _logger.LogInformation("Subscription updated with ID: {SubscriptionId}", subscriptionId);
+                                break;
+                            }
+                            catch (DbUpdateConcurrencyException ex) when (attempt < maxRetries)
+                            {
+                                _logger.LogWarning(ex,
+                                    "Concurrency exception on subscription save attempt {Attempt}/{MaxRetries}. Reloading entity...",
+                                    attempt, maxRetries);
+
+                                // Reload the entity from database to get the latest values
+                                foreach (var entry in ex.Entries)
+                                {
+                                    await entry.ReloadAsync(cancellationToken);
+                                }
+
+                                // Re-query the subscription with fresh data
+                                existingSubscription = await _masterDbContext.Subscriptions
+                                    .Include(s => s.Modules)
+                                    .FirstOrDefaultAsync(s => s.TenantId == request.TenantId, cancellationToken);
+
+                                if (existingSubscription == null)
+                                {
+                                    throw new InvalidOperationException(
+                                        $"Subscription for tenant {request.TenantId} was deleted during setup");
+                                }
+
+                                subscription = existingSubscription;
+                                subscriptionId = subscription.Id;
+                            }
+                        }
                     }
                     else
                     {

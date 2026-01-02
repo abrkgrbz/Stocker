@@ -140,14 +140,21 @@ export interface Customer {
   phone: string | null;
   website: string | null;
   address: string | null;
+  // GeoLocation IDs (FK to Master DB)
+  countryId: string | null;
+  cityId: string | null;
+  districtId: string | null;
+  // Denormalized location names (for display/backward compatibility)
   city: string | null;
   state: string | null;
+  district: string | null;
   country: string | null;
   postalCode: string | null;
   customerType: 'Individual' | 'Corporate';
   status: 'Active' | 'Inactive' | 'Potential';
   creditLimit: number;
   taxId: string | null;
+  taxOffice: string | null;
   paymentTerms: string | null;
   notes: string | null;
   description: string | null;
@@ -372,13 +379,20 @@ export interface CreateCustomerDto {
   phone?: string;
   website?: string;
   address?: string;
+  // GeoLocation IDs (FK to Master DB)
+  countryId?: string;
+  cityId?: string;
+  districtId?: string;
+  // Denormalized location names (for display/backward compatibility)
   city?: string;
   state?: string;
+  district?: string;
   country?: string;
   postalCode?: string;
   customerType: 'Individual' | 'Corporate';
   creditLimit?: number;
   taxId?: string;
+  taxOffice?: string;
   paymentTerms?: string;
   notes?: string;
 }

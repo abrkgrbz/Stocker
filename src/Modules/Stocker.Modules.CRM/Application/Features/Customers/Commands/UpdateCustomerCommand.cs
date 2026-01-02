@@ -129,14 +129,14 @@ public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerComman
             return Result<CustomerDto>.Failure(updateResult.Error);
         }
 
-        // Update address information
+        // Update address information (legacy - no GeoLocation IDs)
         if (!string.IsNullOrEmpty(request.CustomerData.Address) ||
             !string.IsNullOrEmpty(request.CustomerData.City) ||
             !string.IsNullOrEmpty(request.CustomerData.State) ||
             !string.IsNullOrEmpty(request.CustomerData.Country) ||
             !string.IsNullOrEmpty(request.CustomerData.PostalCode))
         {
-            customer.UpdateAddress(
+            customer.UpdateAddressLegacy(
                 request.CustomerData.Address,
                 request.CustomerData.City,
                 request.CustomerData.State,
@@ -193,9 +193,13 @@ public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerComman
             Website = customer.Website,
             Industry = customer.Industry,
             Address = customer.Address,
-            City = customer.City,
-            State = customer.State,
+            CountryId = customer.CountryId,
+            CityId = customer.CityId,
+            DistrictId = customer.DistrictId,
             Country = customer.Country,
+            City = customer.City,
+            District = customer.District,
+            State = customer.State,
             PostalCode = customer.PostalCode,
             AnnualRevenue = customer.AnnualRevenue,
             NumberOfEmployees = customer.NumberOfEmployees,

@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     View,
     Text,
     ScrollView,
     Pressable,
     Alert,
-    RefreshControl
+    RefreshControl,
+    ActivityIndicator
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -28,88 +29,12 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     Plus,
-    Minus
+    Minus,
+    RefreshCw
 } from 'lucide-react-native';
 import { useTheme } from '@/lib/theme';
+import { useProduct, useProductStock, useStockMovements } from '@/lib/api/hooks/useInventory';
 import type { Product, StockMovement } from '@/lib/api/types/inventory.types';
-
-// Mock data
-const MOCK_PRODUCT: Product = {
-    id: '1',
-    sku: 'PRD-001',
-    barcode: '8691234567890',
-    name: 'Laptop Dell Inspiron 15',
-    description: '15.6" FHD, Intel Core i5, 8GB RAM, 256GB SSD',
-    categoryName: 'Bilgisayarlar',
-    brandName: 'Dell',
-    unitName: 'Adet',
-    price: 28500,
-    cost: 24000,
-    currency: 'TRY',
-    stockQuantity: 15,
-    minStockLevel: 5,
-    status: 'active',
-    createdAt: '2024-01-10',
-    updatedAt: '2024-12-28',
-    imageUrl: undefined
-};
-
-const MOCK_STOCK_LEVELS = [
-    { warehouseId: '1', warehouseName: 'Ana Depo', quantity: 10, minQuantity: 3 },
-    { warehouseId: '2', warehouseName: 'Mağaza', quantity: 3, minQuantity: 2 },
-    { warehouseId: '3', warehouseName: 'Şube Depo', quantity: 2, minQuantity: 1 }
-];
-
-const MOCK_MOVEMENTS: StockMovement[] = [
-    {
-        id: '1',
-        productId: '1',
-        type: 'in',
-        quantity: 5,
-        fromWarehouse: undefined,
-        toWarehouse: 'Ana Depo',
-        reason: 'Tedarikçi Alımı',
-        notes: 'Dell Türkiye siparişi',
-        createdAt: '2024-12-28T14:30:00',
-        createdBy: 'Ahmet Yılmaz'
-    },
-    {
-        id: '2',
-        productId: '1',
-        type: 'out',
-        quantity: 2,
-        fromWarehouse: 'Ana Depo',
-        toWarehouse: undefined,
-        reason: 'Satış',
-        notes: 'Sipariş #1234',
-        createdAt: '2024-12-27T10:15:00',
-        createdBy: 'Mehmet Demir'
-    },
-    {
-        id: '3',
-        productId: '1',
-        type: 'transfer',
-        quantity: 3,
-        fromWarehouse: 'Ana Depo',
-        toWarehouse: 'Mağaza',
-        reason: 'Transfer',
-        notes: 'Mağaza stoğu takviyesi',
-        createdAt: '2024-12-26T16:45:00',
-        createdBy: 'Ayşe Kaya'
-    },
-    {
-        id: '4',
-        productId: '1',
-        type: 'in',
-        quantity: 10,
-        fromWarehouse: undefined,
-        toWarehouse: 'Ana Depo',
-        reason: 'Tedarikçi Alımı',
-        notes: 'İlk stok girişi',
-        createdAt: '2024-01-10T09:00:00',
-        createdBy: 'Sistem'
-    }
-];
 
 export default function ProductDetailScreen() {
     const router = useRouter();
@@ -117,16 +42,34 @@ export default function ProductDetailScreen() {
     const insets = useSafeAreaInsets();
     const { colors } = useTheme();
 
-    const [refreshing, setRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState<'info' | 'stock' | 'movements'>('info');
 
-    // In real app, fetch product by id
-    const product = MOCK_PRODUCT;
+    // Fetch product, stock levels and movements from API
+    const {
+        data: product,
+        isLoading,
+        isError,
+        refetch,
+        isRefetching
+    } = useProduct(id || '');
 
-    const onRefresh = () => {
-        setRefreshing(true);
-        setTimeout(() => setRefreshing(false), 1000);
-    };
+    const {
+        data: stockLevels,
+        refetch: refetchStock
+    } = useProductStock(id || '');
+
+    const {
+        data: movementsData,
+        refetch: refetchMovements
+    } = useStockMovements({ productId: id });
+
+    const movements = movementsData?.items || [];
+
+    const onRefresh = useCallback(() => {
+        refetch();
+        refetchStock();
+        refetchMovements();
+    }, [refetch, refetchStock, refetchMovements]);
 
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('tr-TR', {
@@ -147,22 +90,25 @@ export default function ProductDetailScreen() {
     };
 
     const getStockStatusColor = () => {
+        if (!product) return colors.text.tertiary;
         if (product.stockQuantity === 0) return colors.semantic.error;
         if (product.stockQuantity <= (product.minStockLevel || 0)) return colors.semantic.warning;
         return colors.semantic.success;
     };
 
     const getStockStatusLabel = () => {
+        if (!product) return '';
         if (product.stockQuantity === 0) return 'Stok Yok';
         if (product.stockQuantity <= (product.minStockLevel || 0)) return 'Düşük Stok';
         return 'Stokta';
     };
 
-    const isLowStock = product.stockQuantity <= (product.minStockLevel || 0);
+    const isLowStock = product ? product.stockQuantity <= (product.minStockLevel || 0) : false;
     const stockColor = getStockStatusColor();
-    const profitMargin = ((product.price - (product.cost || 0)) / product.price * 100).toFixed(1);
+    const profitMargin = product ? ((product.price - (product.cost || 0)) / product.price * 100).toFixed(1) : '0';
 
     const handleDelete = () => {
+        if (!product) return;
         Alert.alert(
             'Ürünü Sil',
             `"${product.name}" ürününü silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
@@ -271,10 +217,10 @@ export default function ProductDetailScreen() {
                         </Pressable>
                         <View style={{ flex: 1 }}>
                             <Text style={{ color: colors.text.primary, fontSize: 18, fontWeight: '700' }} numberOfLines={1}>
-                                {product.name}
+                                {product?.name || 'Ürün Detayı'}
                             </Text>
                             <Text style={{ color: colors.text.tertiary, fontSize: 13 }}>
-                                SKU: {product.sku}
+                                SKU: {product?.sku || id}
                             </Text>
                         </View>
                     </View>
@@ -314,13 +260,55 @@ export default function ProductDetailScreen() {
             <ScrollView
                 refreshControl={
                     <RefreshControl
-                        refreshing={refreshing}
+                        refreshing={isRefetching}
                         onRefresh={onRefresh}
                         tintColor={colors.brand.primary}
                     />
                 }
                 contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
             >
+                {isLoading ? (
+                    <View className="items-center justify-center py-20">
+                        <ActivityIndicator size="large" color={colors.brand.primary} />
+                        <Text style={{ color: colors.text.secondary, fontSize: 14, marginTop: 12 }}>
+                            Ürün yükleniyor...
+                        </Text>
+                    </View>
+                ) : isError || !product ? (
+                    <View className="items-center justify-center py-20">
+                        <View
+                            style={{
+                                width: 64,
+                                height: 64,
+                                borderRadius: 16,
+                                backgroundColor: colors.semantic.errorLight,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginBottom: 16
+                            }}
+                        >
+                            <RefreshCw size={28} color={colors.semantic.error} />
+                        </View>
+                        <Text style={{ color: colors.text.primary, fontSize: 16, fontWeight: '600', marginBottom: 4 }}>
+                            Ürün bulunamadı
+                        </Text>
+                        <Text style={{ color: colors.text.secondary, fontSize: 14, textAlign: 'center', marginBottom: 16 }}>
+                            Ürün bilgileri yüklenemedi
+                        </Text>
+                        <Pressable
+                            onPress={onRefresh}
+                            style={{
+                                backgroundColor: colors.brand.primary,
+                                paddingHorizontal: 20,
+                                paddingVertical: 10,
+                                borderRadius: 8
+                            }}
+                        >
+                            <Text style={{ color: '#fff', fontWeight: '600' }}>Tekrar Dene</Text>
+                        </Pressable>
+                    </View>
+                ) : (
+                    <>
                 {/* Product Card */}
                 <Animated.View entering={FadeInDown.duration(400).delay(100)} className="p-4">
                     <View
@@ -490,8 +478,8 @@ export default function ProductDetailScreen() {
 
                     {activeTab === 'stock' && (
                         <View>
-                            {MOCK_STOCK_LEVELS.map((level, index) => {
-                                const isWarehouseLow = level.quantity <= level.minQuantity;
+                            {(stockLevels || []).map((level, index) => {
+                                const isWarehouseLow = level.quantity <= (level.minLevel || 0);
                                 return (
                                     <View
                                         key={level.warehouseId}
@@ -524,7 +512,7 @@ export default function ProductDetailScreen() {
                                                         {level.warehouseName}
                                                     </Text>
                                                     <Text style={{ color: colors.text.tertiary, fontSize: 12 }}>
-                                                        Min: {level.minQuantity} {product.unitName}
+                                                        Min: {level.minLevel || 0} {product.unitName}
                                                     </Text>
                                                 </View>
                                             </View>
@@ -551,7 +539,7 @@ export default function ProductDetailScreen() {
 
                     {activeTab === 'movements' && (
                         <View>
-                            {MOCK_MOVEMENTS.map((movement, index) => {
+                            {movements.map((movement, index) => {
                                 const isIn = movement.type === 'in';
                                 const isOut = movement.type === 'out';
                                 const isTransfer = movement.type === 'transfer';
@@ -638,6 +626,8 @@ export default function ProductDetailScreen() {
                         </View>
                     )}
                 </Animated.View>
+                    </>
+                )}
             </ScrollView>
         </SafeAreaView>
     );

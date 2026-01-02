@@ -20,10 +20,12 @@ import {
   Select,
   CurrencyInput,
   PhoneInput,
-  CitySelect,
-  DistrictSelect,
   TaxNumberInput,
 } from '@/components/primitives';
+
+// Location
+import { CascadeLocationSelect } from '@/components/ui/CascadeLocationSelect';
+import type { SelectedLocation } from '@/lib/api/services/location.types';
 
 // Patterns
 import { FormSection, FormField } from '@/components/patterns/forms/FormSection';
@@ -59,8 +61,13 @@ export interface CustomerFormData {
   phone: string;
   website: string;
   address: string;
+  // GeoLocation IDs (FK to Master DB)
+  countryId: string | null;
+  cityId: string | null;
+  districtId: string | null;
+  // Denormalized location names (for display/backward compatibility)
   city: string;
-  state: string;
+  state: string;  // district name mapped to state for legacy
   postalCode: string;
   country: string;
   taxId: string;
@@ -100,10 +107,15 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
     phone: '',
     website: '',
     address: '',
+    // GeoLocation IDs
+    countryId: null,
+    cityId: null,
+    districtId: null,
+    // Denormalized location names
     city: '',
     state: '',
     postalCode: '',
-    country: 'Türkiye',
+    country: '',
     taxId: '',
     taxOffice: '',
     creditLimit: 0,
@@ -129,10 +141,15 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
         phone: initialValues.phone || '',
         website: initialValues.website || '',
         address: initialValues.address || '',
+        // GeoLocation IDs from backend
+        countryId: initialValues.countryId || null,
+        cityId: initialValues.cityId || null,
+        districtId: initialValues.districtId || null,
+        // Denormalized location names
         city: initialValues.city || '',
-        state: initialValues.state || '',
+        state: initialValues.state || initialValues.district || '',
         postalCode: initialValues.postalCode || '',
-        country: initialValues.country || 'Türkiye',
+        country: initialValues.country || '',
         taxId: initialValues.taxId || '',
         taxOffice: initialValues.taxOffice || '',
         creditLimit: initialValues.creditLimit || 0,
@@ -155,12 +172,16 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
     }
   }, [errors]);
 
-  // City change handler (clears district)
-  const handleCityChange = useCallback((city: string | null) => {
+  // Location change handler for CascadeLocationSelect
+  const handleLocationChange = useCallback((location: SelectedLocation) => {
     setFormData((prev) => ({
       ...prev,
-      city: city || '',
-      state: '', // Reset district when city changes
+      countryId: location.countryId || null,
+      cityId: location.cityId || null,
+      districtId: location.districtId || null,
+      country: location.countryName || '',
+      city: location.cityName || '',
+      state: location.districtName || '',  // district maps to state for legacy
     }));
   }, []);
 
@@ -334,23 +355,21 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
               />
             </FormField>
 
-            <FormField label="Şehir" span={4}>
-              <CitySelect
-                value={formData.city || null}
-                onChange={(cityName) => handleCityChange(cityName)}
-                valueType="name"
-                showPlateCode={false}
+            {/* GeoLocation Cascade Select: Country → City → District */}
+            <FormField span={12}>
+              <CascadeLocationSelect
+                value={{
+                  countryId: formData.countryId || undefined,
+                  countryName: formData.country || undefined,
+                  cityId: formData.cityId || undefined,
+                  cityName: formData.city || undefined,
+                  districtId: formData.districtId || undefined,
+                  districtName: formData.state || undefined,
+                }}
+                onChange={handleLocationChange}
+                showDistrict={true}
                 disabled={loading}
-              />
-            </FormField>
-
-            <FormField label="İlçe" span={4}>
-              <DistrictSelect
-                cityCode={formData.city || null}
-                cityValueType="name"
-                value={formData.state || null}
-                onChange={(district) => handleChange('state', district || '')}
-                disabled={loading}
+                layout="grid"
               />
             </FormField>
 

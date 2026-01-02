@@ -14,9 +14,17 @@ public class CustomerDto
     public string? Website { get; set; }
     public string? Industry { get; set; }
     public string? Address { get; set; }
-    public string? City { get; set; }
-    public string? State { get; set; }
+
+    // GeoLocation IDs (FK to Master DB)
+    public Guid? CountryId { get; set; }
+    public Guid? CityId { get; set; }
+    public Guid? DistrictId { get; set; }
+
+    // Denormalized location names
     public string? Country { get; set; }
+    public string? City { get; set; }
+    public string? District { get; set; }
+    public string? State { get; set; }
     public string? PostalCode { get; set; }
     public decimal? AnnualRevenue { get; set; }
     public int? NumberOfEmployees { get; set; }
@@ -44,9 +52,17 @@ public class CreateCustomerDto
     public string? Website { get; set; }
     public string? Industry { get; set; }
     public string? Address { get; set; }
-    public string? City { get; set; }
-    public string? State { get; set; }
+
+    // GeoLocation IDs (FK to Master DB)
+    public Guid? CountryId { get; set; }
+    public Guid? CityId { get; set; }
+    public Guid? DistrictId { get; set; }
+
+    // Denormalized location names
     public string? Country { get; set; }
+    public string? City { get; set; }
+    public string? District { get; set; }
+    public string? State { get; set; }
     public string? PostalCode { get; set; }
     public decimal? AnnualRevenue { get; set; }
     public int? NumberOfEmployees { get; set; }
@@ -70,9 +86,17 @@ public class UpdateCustomerDto
     public string? Website { get; set; }
     public string? Industry { get; set; }
     public string? Address { get; set; }
-    public string? City { get; set; }
-    public string? State { get; set; }
+
+    // GeoLocation IDs (FK to Master DB)
+    public Guid? CountryId { get; set; }
+    public Guid? CityId { get; set; }
+    public Guid? DistrictId { get; set; }
+
+    // Denormalized location names
     public string? Country { get; set; }
+    public string? City { get; set; }
+    public string? District { get; set; }
+    public string? State { get; set; }
     public string? PostalCode { get; set; }
     public decimal? AnnualRevenue { get; set; }
     public int? NumberOfEmployees { get; set; }
