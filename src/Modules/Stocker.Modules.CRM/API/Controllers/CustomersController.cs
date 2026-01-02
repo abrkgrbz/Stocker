@@ -155,22 +155,30 @@ public class CustomersController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<CustomerDto>> UpdateCustomer(Guid id, UpdateCustomerDto dto)
     {
+        // Set TenantId from TenantResolutionMiddleware context
+        var tenantId = HttpContext.Items["TenantId"] as Guid?;
+        if (!tenantId.HasValue)
+        {
+            return BadRequest(new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation));
+        }
+
         var command = new UpdateCustomerCommand
         {
+            TenantId = tenantId.Value,
             CustomerId = id,
             CustomerData = dto
         };
-        
+
         var result = await _mediator.Send(command);
-        
+
         if (result.IsFailure)
         {
             if (result.Error.Type == ErrorType.NotFound)
                 return NotFound(result.Error);
-            
+
             return BadRequest(result.Error);
         }
-        
+
         return Ok(result.Value);
     }
 
@@ -183,22 +191,30 @@ public class CustomersController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteCustomer(Guid id)
     {
+        // Set TenantId from TenantResolutionMiddleware context
+        var tenantId = HttpContext.Items["TenantId"] as Guid?;
+        if (!tenantId.HasValue)
+        {
+            return BadRequest(new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation));
+        }
+
         var command = new DeleteCustomerCommand
         {
+            TenantId = tenantId.Value,
             CustomerId = id,
             ForceDelete = false // Soft delete by default
         };
-        
+
         var result = await _mediator.Send(command);
-        
+
         if (result.IsFailure)
         {
             if (result.Error.Type == ErrorType.NotFound)
                 return NotFound(result.Error);
-            
+
             return BadRequest(result.Error);
         }
-        
+
         return NoContent();
     }
 }
