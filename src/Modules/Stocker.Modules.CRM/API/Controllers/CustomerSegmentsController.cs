@@ -6,6 +6,7 @@ using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Application.Features.CustomerSegments.Commands;
 using Stocker.Modules.CRM.Application.Features.CustomerSegments.Queries;
 using Stocker.SharedKernel.Results;
+using System.Security.Claims;
 using System.Text;
 
 namespace Stocker.Modules.CRM.API.Controllers;
@@ -22,6 +23,13 @@ public class CustomerSegmentsController : ControllerBase
     public CustomerSegmentsController(IMediator mediator)
     {
         _mediator = mediator;
+    }
+
+    private Guid GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                       ?? User.FindFirst("sub")?.Value;
+        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
     }
 
     /// <summary>
@@ -107,6 +115,7 @@ public class CustomerSegmentsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<CustomerSegmentDto>> CreateSegment(CreateCustomerSegmentCommand command)
     {
+        command.CreatedBy = GetCurrentUserId();
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -128,6 +137,7 @@ public class CustomerSegmentsController : ControllerBase
         if (id != command.Id)
             return BadRequest("ID mismatch");
 
+        command.ModifiedBy = GetCurrentUserId();
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
