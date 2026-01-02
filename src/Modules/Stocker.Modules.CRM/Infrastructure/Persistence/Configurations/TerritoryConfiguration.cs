@@ -32,6 +32,13 @@ public class TerritoryConfiguration : IEntityTypeConfiguration<Territory>
         builder.Property(t => t.HierarchyPath)
             .HasMaxLength(500);
 
+        // GeoLocation FK fields (cross-database reference to Master.Countries/Cities/Districts)
+        // Note: These are NOT EF navigation properties since they reference Master DB
+        builder.Property(t => t.CountryId);
+        builder.Property(t => t.CityId);
+        builder.Property(t => t.DistrictId);
+
+        // Denormalized string fields for display and backward compatibility
         builder.Property(t => t.Country)
             .HasMaxLength(100);
 
@@ -90,6 +97,11 @@ public class TerritoryConfiguration : IEntityTypeConfiguration<Territory>
         builder.HasIndex(t => new { t.TenantId, t.IsActive });
         builder.HasIndex(t => new { t.TenantId, t.TerritoryType });
         builder.HasIndex(t => new { t.TenantId, t.ParentTerritoryId });
+
+        // GeoLocation indexes for filtering
+        builder.HasIndex(t => new { t.TenantId, t.CountryId });
+        builder.HasIndex(t => new { t.TenantId, t.CityId });
+        builder.HasIndex(t => new { t.TenantId, t.DistrictId });
     }
 }
 

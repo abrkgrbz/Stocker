@@ -170,7 +170,152 @@ public sealed class TenantNotification : Entity
             TargetType = NotificationTarget.AllUsers,
             IsGlobal = true
         };
-        
+
+        return notification;
+    }
+
+    /// <summary>
+    /// Stok kritik seviye uyarısı oluşturur
+    /// </summary>
+    public static TenantNotification CreateInventoryAlert(
+        string productName,
+        int currentStock,
+        int criticalLevel,
+        Guid productId,
+        string targetRole = "InventoryManager")
+    {
+        var notification = new TenantNotification(
+            $"⚠️ Kritik Stok Uyarısı: {productName}",
+            $"{productName} ürününün stok seviyesi kritik seviyenin altına düştü. Mevcut: {currentStock}, Kritik Seviye: {criticalLevel}",
+            NotificationType.Warning,
+            NotificationCategory.Inventory,
+            "System")
+        {
+            TargetType = NotificationTarget.Role,
+            TargetRole = targetRole,
+            IsGlobal = false,
+            Source = NotificationSource.AutomatedAlert
+        };
+
+        notification.SetSource(NotificationSource.AutomatedAlert, "Product", productId, "StockCritical");
+        notification.SetIcon("package-x", "#ef4444");
+        notification.SetPriority(NotificationPriority.High);
+        notification.SetAction($"/inventory/products/{productId}", "Ürünü Görüntüle");
+        notification.ConfigureDeliveryChannels(inApp: true, push: true, email: true);
+
+        return notification;
+    }
+
+    /// <summary>
+    /// Stok tükendi uyarısı oluşturur
+    /// </summary>
+    public static TenantNotification CreateOutOfStockAlert(
+        string productName,
+        Guid productId,
+        string targetRole = "InventoryManager")
+    {
+        var notification = new TenantNotification(
+            $"🚨 Stok Tükendi: {productName}",
+            $"{productName} ürününün stoğu tamamen tükendi. Acil sipariş gerekli.",
+            NotificationType.Error,
+            NotificationCategory.Inventory,
+            "System")
+        {
+            TargetType = NotificationTarget.Role,
+            TargetRole = targetRole,
+            IsGlobal = false,
+            Source = NotificationSource.AutomatedAlert
+        };
+
+        notification.SetSource(NotificationSource.AutomatedAlert, "Product", productId, "OutOfStock");
+        notification.SetIcon("package-x", "#dc2626");
+        notification.SetPriority(NotificationPriority.Critical);
+        notification.SetSeverity(NotificationSeverity.Critical);
+        notification.SetAction($"/inventory/products/{productId}", "Sipariş Ver");
+        notification.ConfigureDeliveryChannels(inApp: true, push: true, email: true, sms: true);
+        notification.RequireAcknowledgment();
+
+        return notification;
+    }
+
+    /// <summary>
+    /// Satış hedefi uyarısı oluşturur
+    /// </summary>
+    public static TenantNotification CreateSalesTargetAlert(
+        string targetName,
+        decimal currentAmount,
+        decimal targetAmount,
+        double percentageAchieved,
+        Guid? userId = null)
+    {
+        var notification = new TenantNotification(
+            $"📊 Satış Hedefi Durumu: {targetName}",
+            $"Hedefinize %{percentageAchieved:F1} ulaştınız. Mevcut: {currentAmount:C}, Hedef: {targetAmount:C}",
+            percentageAchieved >= 100 ? NotificationType.Success : NotificationType.Information,
+            NotificationCategory.Sales,
+            "System")
+        {
+            TargetType = userId.HasValue ? NotificationTarget.User : NotificationTarget.Role,
+            TargetUserId = userId,
+            TargetRole = userId.HasValue ? null : "SalesManager",
+            IsGlobal = false,
+            Source = NotificationSource.AutomatedAlert
+        };
+
+        notification.SetIcon(percentageAchieved >= 100 ? "trophy" : "target", percentageAchieved >= 100 ? "#22c55e" : "#3b82f6");
+        notification.SetAction("/sales/dashboard", "Satış Paneli");
+
+        return notification;
+    }
+
+    /// <summary>
+    /// Master admin tarafından gönderilen bildirim oluşturur
+    /// </summary>
+    public static TenantNotification CreateFromMasterNotification(
+        string title,
+        string message,
+        NotificationType type,
+        Guid masterNotificationId)
+    {
+        var notification = new TenantNotification(title, message, type, NotificationCategory.System, "MasterAdmin")
+        {
+            TargetType = NotificationTarget.AllUsers,
+            IsGlobal = true,
+            Source = NotificationSource.MasterAdmin
+        };
+
+        notification.SetSource(NotificationSource.MasterAdmin, "MasterNotification", masterNotificationId);
+        notification.SetIcon("megaphone", "#8b5cf6");
+        notification.SetPriority(NotificationPriority.High);
+        notification.ConfigureDeliveryChannels(inApp: true, push: true);
+
+        return notification;
+    }
+
+    /// <summary>
+    /// Tenant admin tarafından gönderilen bildirim oluşturur
+    /// </summary>
+    public static TenantNotification CreateTenantAdminNotification(
+        string title,
+        string message,
+        NotificationType type,
+        string createdBy,
+        NotificationTarget target = NotificationTarget.AllUsers,
+        string? targetRole = null,
+        Guid? targetUserId = null)
+    {
+        var notification = new TenantNotification(title, message, type, NotificationCategory.Business, createdBy)
+        {
+            TargetType = target,
+            TargetRole = targetRole,
+            TargetUserId = targetUserId,
+            IsGlobal = target == NotificationTarget.AllUsers,
+            Source = NotificationSource.TenantAdmin
+        };
+
+        notification.SetIcon("building-2", "#0ea5e9");
+        notification.ConfigureDeliveryChannels(inApp: true, push: true);
+
         return notification;
     }
     
@@ -436,7 +581,12 @@ public enum NotificationCategory
     Support = 6,
     Activity = 7,
     Integration = 8,
-    Report = 9
+    Report = 9,
+    Inventory = 10,        // Stok bildirimleri
+    Sales = 11,            // Satış bildirimleri
+    CRM = 12,              // Müşteri ilişkileri
+    HR = 13,               // İnsan kaynakları
+    Finance = 14           // Finans bildirimleri
 }
 
 public enum NotificationPriority
@@ -475,7 +625,11 @@ public enum NotificationSource
     Schedule = 4,
     Trigger = 5,
     Api = 6,
-    Webhook = 7
+    Webhook = 7,
+    MasterAdmin = 8,       // Master admin tarafından gönderilen
+    TenantAdmin = 9,       // Tenant yöneticisi tarafından gönderilen
+    AutomatedAlert = 10,   // Otomatik uyarılar (stok kritik vb.)
+    Workflow = 11          // İş akışı tetiklemeli
 }
 
 public enum NotificationStatus

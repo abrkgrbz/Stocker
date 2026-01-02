@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Stocker.Persistence.Contexts;
 
 #nullable disable
 
-namespace Stocker.Persistence.Migrations
+namespace Stocker.Persistence.Migrations.Master
 {
     [DbContext(typeof(MasterDbContext))]
-    partial class MasterDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260102111444_LocalDevSetup")]
+    partial class LocalDevSetup
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -558,214 +561,6 @@ namespace Stocker.Persistence.Migrations
                         .HasDatabaseName("IX_EmailTemplates_TemplateKey_Language_TenantId");
 
                     b.ToTable("EmailTemplates", "master");
-                });
-
-            modelBuilder.Entity("Stocker.Domain.Master.Entities.GeoLocation.City", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AreaCode")
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
-
-                    b.Property<Guid>("CountryId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("DisplayOrder")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
-
-                    b.Property<decimal?>("Latitude")
-                        .HasPrecision(10, 7)
-                        .HasColumnType("numeric(10,7)");
-
-                    b.Property<decimal?>("Longitude")
-                        .HasPrecision(10, 7)
-                        .HasColumnType("numeric(10,7)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("PlateCode")
-                        .IsRequired()
-                        .HasMaxLength(5)
-                        .HasColumnType("character varying(5)");
-
-                    b.Property<int?>("Population")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Region")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CountryId")
-                        .HasDatabaseName("IX_Cities_CountryId");
-
-                    b.HasIndex("IsActive")
-                        .HasDatabaseName("IX_Cities_IsActive");
-
-                    b.HasIndex("Name")
-                        .HasDatabaseName("IX_Cities_Name");
-
-                    b.HasIndex("PlateCode")
-                        .HasDatabaseName("IX_Cities_PlateCode");
-
-                    b.HasIndex("Region")
-                        .HasDatabaseName("IX_Cities_Region");
-
-                    b.HasIndex("CountryId", "Name")
-                        .HasDatabaseName("IX_Cities_CountryId_Name");
-
-                    b.HasIndex("CountryId", "PlateCode")
-                        .IsUnique()
-                        .HasDatabaseName("IX_Cities_CountryId_PlateCode");
-
-                    b.ToTable("Cities", "master");
-                });
-
-            modelBuilder.Entity("Stocker.Domain.Master.Entities.GeoLocation.Country", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("character varying(2)");
-
-                    b.Property<string>("Code3")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("character varying(3)");
-
-                    b.Property<string>("CurrencyCode")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("character varying(3)");
-
-                    b.Property<int>("DisplayOrder")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("NameEn")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("PhoneCode")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Code")
-                        .IsUnique()
-                        .HasDatabaseName("IX_Countries_Code");
-
-                    b.HasIndex("Code3")
-                        .IsUnique()
-                        .HasDatabaseName("IX_Countries_Code3");
-
-                    b.HasIndex("DisplayOrder")
-                        .HasDatabaseName("IX_Countries_DisplayOrder");
-
-                    b.HasIndex("IsActive")
-                        .HasDatabaseName("IX_Countries_IsActive");
-
-                    b.HasIndex("Name")
-                        .HasDatabaseName("IX_Countries_Name");
-
-                    b.ToTable("Countries", "master");
-                });
-
-            modelBuilder.Entity("Stocker.Domain.Master.Entities.GeoLocation.District", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CityId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("DisplayOrder")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
-
-                    b.Property<bool>("IsCentral")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
-                    b.Property<decimal?>("Latitude")
-                        .HasPrecision(10, 7)
-                        .HasColumnType("numeric(10,7)");
-
-                    b.Property<decimal?>("Longitude")
-                        .HasPrecision(10, 7)
-                        .HasColumnType("numeric(10,7)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<int?>("Population")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("PostalCode")
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CityId")
-                        .HasDatabaseName("IX_Districts_CityId");
-
-                    b.HasIndex("IsActive")
-                        .HasDatabaseName("IX_Districts_IsActive");
-
-                    b.HasIndex("IsCentral")
-                        .HasDatabaseName("IX_Districts_IsCentral");
-
-                    b.HasIndex("Name")
-                        .HasDatabaseName("IX_Districts_Name");
-
-                    b.HasIndex("PostalCode")
-                        .HasDatabaseName("IX_Districts_PostalCode");
-
-                    b.HasIndex("CityId", "Name")
-                        .IsUnique()
-                        .HasDatabaseName("IX_Districts_CityId_Name");
-
-                    b.ToTable("Districts", "master");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.Industry", b =>
@@ -3800,28 +3595,6 @@ namespace Stocker.Persistence.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("Stocker.Domain.Master.Entities.GeoLocation.City", b =>
-                {
-                    b.HasOne("Stocker.Domain.Master.Entities.GeoLocation.Country", "Country")
-                        .WithMany("Cities")
-                        .HasForeignKey("CountryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Country");
-                });
-
-            modelBuilder.Entity("Stocker.Domain.Master.Entities.GeoLocation.District", b =>
-                {
-                    b.HasOne("Stocker.Domain.Master.Entities.GeoLocation.City", "City")
-                        .WithMany("Districts")
-                        .HasForeignKey("CityId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("City");
-                });
-
             modelBuilder.Entity("Stocker.Domain.Master.Entities.IndustryRecommendedModule", b =>
                 {
                     b.HasOne("Stocker.Domain.Master.Entities.Industry", null)
@@ -4846,16 +4619,6 @@ namespace Stocker.Persistence.Migrations
             modelBuilder.Entity("Stocker.Domain.Master.Entities.AddOn", b =>
                 {
                     b.Navigation("Features");
-                });
-
-            modelBuilder.Entity("Stocker.Domain.Master.Entities.GeoLocation.City", b =>
-                {
-                    b.Navigation("Districts");
-                });
-
-            modelBuilder.Entity("Stocker.Domain.Master.Entities.GeoLocation.Country", b =>
-                {
-                    b.Navigation("Cities");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.Industry", b =>

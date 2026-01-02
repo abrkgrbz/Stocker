@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Stocker.Domain.Master.Entities;
+using Stocker.Domain.Master.Entities.GeoLocation;
 using Stocker.Domain.Entities.Settings;
 using Stocker.Domain.Entities.Migration;
 using Stocker.Domain.Migration.Entities;
@@ -63,6 +64,10 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
     public DbSet<UserLoginHistory> UserLoginHistories => Set<UserLoginHistory>();
     // UserTenant has been moved to Tenant DB
 
+    // Mobile Push Notifications
+    public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
+    public DbSet<MasterNotification> MasterNotifications => Set<MasterNotification>();
+
     // Security & Audit
     public DbSet<SecurityAuditLog> SecurityAuditLogs => Set<SecurityAuditLog>();
 
@@ -84,6 +89,11 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
     public DbSet<MigrationSession> MigrationSessions => Set<MigrationSession>();
     public DbSet<MigrationChunk> MigrationChunks => Set<MigrationChunk>();
     public DbSet<MigrationValidationResult> MigrationValidationResults => Set<MigrationValidationResult>();
+
+    // GeoLocation (Shared Reference Data)
+    public DbSet<Country> Countries => Set<Country>();
+    public DbSet<City> Cities => Set<City>();
+    public DbSet<District> Districts => Set<District>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

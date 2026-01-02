@@ -12,20 +12,25 @@ public static class CorsExtensions
     {
         services.AddCors(options =>
         {
-            // Development policy - Allow localhost origins
+            // Development policy - More permissive for local testing
             options.AddPolicy("Development", policy =>
             {
-                policy.WithOrigins(
-                        "http://localhost:3000",
-                        "http://localhost:3001",
-                        "http://localhost:5173",
-                        "http://localhost:7091",
-                        "https://localhost:7091",
-                        "http://127.0.0.1:3000",
-                        "http://127.0.0.1:5173",
-                        "http://127.0.0.1:7091",
-                        "https://127.0.0.1:7091"
-                      )
+                policy.SetIsOriginAllowed(origin =>
+                    {
+                        if (string.IsNullOrEmpty(origin))
+                            return false;
+
+                        try
+                        {
+                            var uri = new Uri(origin);
+                            // Allow localhost
+                            return uri.Host == "localhost" || uri.Host == "127.0.0.1";
+                        }
+                        catch
+                        {
+                            return false;
+                        }
+                    })
                       .AllowAnyMethod()
                       .WithHeaders(
                           "Content-Type", "Authorization", "Accept",

@@ -203,7 +203,7 @@ public static class MiddlewareExtensions
                                  HttpTransportType.LongPolling;
         })
         .RequireCors(corsPolicy)
-        .RequireAuthorization(); // ✅ Authentication required
+        .AllowAnonymous(); // Allow anonymous - used during registration
 
         // NotificationHub allows anonymous connections for tenant registration progress
         // Individual methods use [Authorize] or [AllowAnonymous] as needed

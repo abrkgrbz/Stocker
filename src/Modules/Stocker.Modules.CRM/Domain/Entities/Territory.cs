@@ -61,7 +61,22 @@ public class Territory : TenantEntity
     #region Coğrafi Bilgiler (Geographic Information)
 
     /// <summary>
-    /// Ülke / Country
+    /// Ülke ID (Master.Countries tablosuna referans) / Country ID (FK to Master.Countries)
+    /// </summary>
+    public Guid? CountryId { get; private set; }
+
+    /// <summary>
+    /// Şehir ID (Master.Cities tablosuna referans) / City ID (FK to Master.Cities)
+    /// </summary>
+    public Guid? CityId { get; private set; }
+
+    /// <summary>
+    /// İlçe ID (Master.Districts tablosuna referans) / District ID (FK to Master.Districts)
+    /// </summary>
+    public Guid? DistrictId { get; private set; }
+
+    /// <summary>
+    /// Ülke / Country (denormalized for display/backward compatibility)
     /// </summary>
     public string? Country { get; private set; }
 
@@ -76,12 +91,12 @@ public class Territory : TenantEntity
     public string? Region { get; private set; }
 
     /// <summary>
-    /// Şehir / City
+    /// Şehir / City (denormalized for display/backward compatibility)
     /// </summary>
     public string? City { get; private set; }
 
     /// <summary>
-    /// İlçe / District
+    /// İlçe / District (denormalized for display/backward compatibility)
     /// </summary>
     public string? District { get; private set; }
 
@@ -274,6 +289,49 @@ public class Territory : TenantEntity
         Region = region;
         City = city;
         District = district;
+    }
+
+    /// <summary>
+    /// GeoLocation ID'leri ile coğrafi bilgileri ayarla (Cascade Dropdown için)
+    /// Set geographic info with GeoLocation IDs (for Cascade Dropdown)
+    /// </summary>
+    public void SetGeoLocationIds(
+        Guid? countryId,
+        Guid? cityId,
+        Guid? districtId,
+        string? countryName = null,
+        string? cityName = null,
+        string? districtName = null,
+        string? region = null)
+    {
+        CountryId = countryId;
+        CityId = cityId;
+        DistrictId = districtId;
+
+        // Denormalized fields for display
+        Country = countryName;
+        City = cityName;
+        District = districtName;
+        Region = region;
+    }
+
+    public void SetCountryId(Guid? countryId, string? countryName = null)
+    {
+        CountryId = countryId;
+        Country = countryName;
+    }
+
+    public void SetCityId(Guid? cityId, string? cityName = null, string? region = null)
+    {
+        CityId = cityId;
+        City = cityName;
+        Region = region;
+    }
+
+    public void SetDistrictId(Guid? districtId, string? districtName = null)
+    {
+        DistrictId = districtId;
+        District = districtName;
     }
 
     public void SetPostalCodeRange(string range) => PostalCodeRange = range;

@@ -70,6 +70,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IBroadcastNotificationService>(sp => sp.GetRequiredService<NotificationService>());
         services.AddScoped<IGroupNotificationService>(sp => sp.GetRequiredService<NotificationService>());
         services.AddScoped<IRoleNotificationService>(sp => sp.GetRequiredService<NotificationService>());
+        // Register ITenantNotificationService from SignalR.Services.Interfaces namespace (used by BackupNotificationService)
+        services.AddScoped<Services.Interfaces.ITenantNotificationService>(sp => sp.GetRequiredService<NotificationService>());
 
         // Register tenant notification service for real-time notifications (from Application layer)
         services.AddScoped<Application.Interfaces.Notifications.ITenantNotificationService, SignalRTenantNotificationService>();
