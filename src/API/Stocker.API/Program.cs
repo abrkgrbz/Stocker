@@ -1,5 +1,7 @@
 using Hangfire;
 using MassTransit;
+using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Serilog;
 using Stocker.API.Configuration;
 using Stocker.API.Extensions;
@@ -262,6 +264,49 @@ var redisConnection = builder.Configuration.GetConnectionString("Redis");
 if (!string.IsNullOrEmpty(redisConnection))
 {
     builder.Services.AddSignalRRedis(redisConnection);
+}
+
+// ========================================
+// HYBRID CACHE (L1 Memory + L2 Redis)
+// ========================================
+// HybridCache provides two-tier caching:
+// - L1: In-process memory cache (fast, per-instance)
+// - L2: Distributed Redis cache (shared across instances)
+builder.Services.AddHybridCache(options =>
+{
+    // Default expiration for cached items
+    options.DefaultEntryOptions = new HybridCacheEntryOptions
+    {
+        // L1 (Memory) expiration - shorter for memory efficiency
+        LocalCacheExpiration = TimeSpan.FromMinutes(30),
+
+        // L2 (Redis) expiration - longer for reference data
+        Expiration = TimeSpan.FromHours(24)
+    };
+
+    // Maximum size per cached entry (10MB)
+    options.MaximumPayloadBytes = 10 * 1024 * 1024;
+
+    // Maximum number of entries in L1 cache
+    options.MaximumKeyLength = 1024;
+});
+
+// Configure Redis as L2 distributed cache (if connection string available)
+if (!string.IsNullOrEmpty(redisConnection))
+{
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisConnection;
+        options.InstanceName = "Stocker:";
+    });
+
+    Log.Information("HybridCache configured with Redis L2 backend");
+}
+else
+{
+    // Fallback to memory-only distributed cache for development
+    builder.Services.AddDistributedMemoryCache();
+    Log.Warning("HybridCache running in memory-only mode (no Redis configured)");
 }
 
 // Localization
