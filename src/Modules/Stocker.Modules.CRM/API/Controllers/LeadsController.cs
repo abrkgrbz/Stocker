@@ -1,4 +1,5 @@
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Results;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Modules.CRM.Application.DTOs;
@@ -69,16 +70,32 @@ public class LeadsController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// Create a new lead
+    /// </summary>
     [HttpPost]
     [ProducesResponseType(typeof(LeadDto), 201)]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
-    public async Task<ActionResult<LeadDto>> CreateLead(CreateLeadCommand command)
+    public async Task<ActionResult<LeadDto>> CreateLead([FromBody] CreateLeadDto dto)
     {
+        // Set TenantId from TenantResolutionMiddleware context
+        var tenantId = HttpContext.Items["TenantId"] as Guid?;
+        if (!tenantId.HasValue)
+        {
+            return BadRequest(new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation));
+        }
+
+        var command = new CreateLeadCommand
+        {
+            TenantId = tenantId.Value,
+            LeadData = dto
+        };
+
         var result = await _mediator.Send(command);
         if (result.IsFailure)
             return BadRequest(result.Error);
-        
+
         return CreatedAtAction(nameof(GetLead), new { id = result.Value.Id }, result.Value);
     }
 

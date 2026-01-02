@@ -440,8 +440,9 @@ export function useCreateLead() {
       logger.info('🎯 Hook received data', { metadata: { data } });
       logger.info('🎯 Data keys', { metadata: { keys: Object.keys(data) } });
 
-      // Backend expects data wrapped in LeadData property (CreateLeadDto)
-      // Form now uses correct field names matching backend DTO
+      // Pass form data directly to CRMService.createLead which handles the wrapping
+      // Form sends: firstName, lastName, email, phone, companyName, jobTitle, source, status, rating, score, description, notes
+      // CRMService.createLead wraps this in { LeadData: {...} } for backend CreateLeadCommand
       const leadData = {
         firstName: data.firstName,
         lastName: data.lastName,
@@ -450,10 +451,10 @@ export function useCreateLead() {
         companyName: data.companyName || null,
         jobTitle: data.jobTitle || null,
         source: data.source || null,
-        status: data.status || 0,  // Numeric enum: 0=New, 1=Contacted, 2=Working, 3=Qualified, 4=Unqualified, 5=Converted
-        rating: 0,  // Default to Unrated (0)
-        score: data.score || 0,  // Lead score (0-100)
-        description: data.description || null,
+        status: data.status || 'New',  // String enum: 'New', 'Contacted', 'Working', 'Qualified', 'Unqualified', 'Converted', 'Lost'
+        rating: data.rating || 'Warm',  // String enum: 'Unrated', 'Hot', 'Warm', 'Cold' - form defaults to Warm
+        score: data.score || 50,  // Lead score (0-100), form defaults to 50
+        description: data.description || data.notes || null,  // Support both field names
       };
 
       logger.info('🎯 Mapped leadData', { metadata: { leadData } });

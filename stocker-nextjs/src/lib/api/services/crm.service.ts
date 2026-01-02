@@ -548,9 +548,36 @@ export class CRMService {
 
   /**
    * Create new lead
+   * Backend expects: CreateLeadDto directly (controller wraps in command)
    */
   static async createLead(data: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>): Promise<Lead> {
-    return ApiService.post<Lead>(this.getPath('leads'), data);
+    // CRM module expects: CreateLeadDto directly (controller wraps in command)
+    const dto = {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      companyName: data.companyName || data.company,
+      phone: data.phone ? this.formatPhoneNumber(data.phone) : undefined,
+      mobilePhone: data.mobilePhone ? this.formatPhoneNumber(data.mobilePhone) : undefined,
+      jobTitle: data.jobTitle,
+      industry: data.industry,
+      source: data.source,
+      status: data.status || 'New',
+      rating: data.rating || 'Unrated',
+      address: data.address,
+      city: data.city,
+      state: data.state,
+      country: data.country,
+      postalCode: data.postalCode,
+      website: data.website,
+      annualRevenue: data.annualRevenue,
+      numberOfEmployees: data.numberOfEmployees,
+      description: data.description,
+      assignedToUserId: data.assignedToUserId,
+    };
+
+    logger.info('📤 Sending CreateLeadDto to CRM module', { metadata: { dto } });
+    return ApiService.post<Lead>(this.getPath('leads'), dto);
   }
 
   /**
