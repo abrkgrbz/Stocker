@@ -250,8 +250,22 @@ export default function BillingPage() {
     }
   };
 
+  // Check if user is on trial (no LemonSqueezy subscription yet)
+  const isTrialUser = subscription?.status?.toLowerCase() === 'deneme' ||
+                      subscription?.status?.toLowerCase() === 'trial' ||
+                      subscription?.status?.toLowerCase() === 'on_trial';
+
   // Handle open customer portal
   const handleOpenPortal = async () => {
+    // Trial users don't have LemonSqueezy portal access
+    if (isTrialUser) {
+      await showAlert.info(
+        'Deneme Sürümü',
+        'Müşteri portalı ücretli abonelik başladıktan sonra kullanılabilir olacaktır. Bir plan seçerek aboneliğinizi başlatabilirsiniz.'
+      );
+      return;
+    }
+
     try {
       setActionLoading('portal');
 
@@ -264,8 +278,10 @@ export default function BillingPage() {
       // Otherwise fetch from API
       const response = await billingService.getCustomerPortal();
 
-      if (response.success && response.data?.portalUrl) {
-        window.open(response.data.portalUrl, '_blank');
+      // Handle response - API returns { success, portalUrl } directly
+      const portalData = response as any;
+      if (portalData.success && (portalData.portalUrl || portalData.data?.portalUrl)) {
+        window.open(portalData.portalUrl || portalData.data?.portalUrl, '_blank');
       } else {
         await showAlert.error('Hata', 'Müşteri portalı açılamadı.');
       }
@@ -279,6 +295,15 @@ export default function BillingPage() {
 
   // Handle update payment method
   const handleUpdatePayment = async () => {
+    // Trial users don't have payment method yet
+    if (isTrialUser) {
+      await showAlert.info(
+        'Deneme Sürümü',
+        'Ödeme yöntemi eklemek için önce bir plan seçmeniz gerekmektedir.'
+      );
+      return;
+    }
+
     if (subscription?.updatePaymentMethodUrl) {
       window.open(subscription.updatePaymentMethodUrl, '_blank');
     } else {
