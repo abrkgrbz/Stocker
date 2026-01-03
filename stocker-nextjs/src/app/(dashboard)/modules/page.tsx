@@ -19,8 +19,10 @@ import {
   Settings,
   Check,
   ArrowRight,
+  Loader2,
 } from 'lucide-react';
 import { useActiveModules } from '@/lib/api/hooks/useUserModules';
+import { useToggleModule } from '@/lib/api/hooks/useTenantModules';
 
 // Module tier configuration
 const TIER_CONFIG = {
@@ -42,7 +44,7 @@ const TIER_CONFIG = {
 const MODULE_DEFINITIONS = [
   {
     id: 'crm',
-    code: 'crm',
+    code: 'CRM',
     name: 'CRM',
     description: 'Müşteri ilişkileri yönetimi ve satış fırsatları',
     icon: Users,
@@ -52,7 +54,7 @@ const MODULE_DEFINITIONS = [
   },
   {
     id: 'inventory',
-    code: 'inventory',
+    code: 'INVENTORY',
     name: 'Stok Yönetimi',
     description: 'Envanter takibi ve depo operasyonları',
     icon: Boxes,
@@ -62,7 +64,7 @@ const MODULE_DEFINITIONS = [
   },
   {
     id: 'sales',
-    code: 'sales',
+    code: 'SALES',
     name: 'Satış',
     description: 'Sipariş, fatura ve ödeme yönetimi',
     icon: ShoppingCart,
@@ -72,7 +74,7 @@ const MODULE_DEFINITIONS = [
   },
   {
     id: 'hr',
-    code: 'hr',
+    code: 'HR',
     name: 'İnsan Kaynakları',
     description: 'Personel yönetimi ve bordro işlemleri',
     icon: Briefcase,
@@ -82,7 +84,7 @@ const MODULE_DEFINITIONS = [
   },
   {
     id: 'purchase',
-    code: 'purchase',
+    code: 'PURCHASE',
     name: 'Satın Alma',
     description: 'Tedarik zinciri ve satın alma süreçleri',
     icon: Package,
@@ -92,7 +94,7 @@ const MODULE_DEFINITIONS = [
   },
   {
     id: 'analytics',
-    code: 'analytics',
+    code: 'REPORTS',
     name: 'Raporlama',
     description: 'İş zekası ve gelişmiş analitik',
     icon: BarChart3,
@@ -102,7 +104,7 @@ const MODULE_DEFINITIONS = [
   },
   {
     id: 'production',
-    code: 'production',
+    code: 'PROJECTS',
     name: 'Üretim',
     description: 'Üretim planlama ve kalite kontrol',
     icon: Settings,
@@ -115,14 +117,17 @@ const MODULE_DEFINITIONS = [
 export default function ModulesPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const { data: modulesData, isLoading } = useActiveModules();
+  const [togglingModule, setTogglingModule] = useState<string | null>(null);
+
+  const { data: modulesData, isLoading, refetch } = useActiveModules();
+  const toggleModuleMutation = useToggleModule();
 
   // Create a Set of active module codes
   const activeModuleCodes = useMemo(() => {
     const codes = new Set<string>();
     modulesData?.modules?.forEach(m => {
       if (m.isActive) {
-        codes.add(m.code.toLowerCase());
+        codes.add(m.code.toUpperCase());
       }
     });
     return codes;
@@ -132,7 +137,7 @@ export default function ModulesPage() {
   const modules = useMemo(() => {
     return MODULE_DEFINITIONS.map(mod => ({
       ...mod,
-      isActive: activeModuleCodes.has(mod.code.toLowerCase()),
+      isActive: activeModuleCodes.has(mod.code.toUpperCase()),
     }));
   }, [activeModuleCodes]);
 
@@ -155,15 +160,32 @@ export default function ModulesPage() {
     }
   };
 
-  const handleModuleActivate = (moduleId: string) => {
-    message.info('Modül aktivasyon özelliği yakında eklenecek');
+  const handleModuleActivate = async (moduleCode: string) => {
+    setTogglingModule(moduleCode);
+    try {
+      await toggleModuleMutation.mutateAsync({ moduleCode, enable: true });
+      message.success('Modül başarıyla etkinleştirildi');
+      refetch();
+    } catch (error) {
+      console.error('Module activation error:', error);
+      message.error('Modül etkinleştirilemedi. Lütfen tekrar deneyin.');
+    } finally {
+      setTogglingModule(null);
+    }
   };
 
-  const handleToggleModule = (moduleId: string, checked: boolean) => {
-    if (checked) {
-      message.info('Modül aktivasyon özelliği yakında eklenecek');
-    } else {
-      message.info('Modül deaktivasyonu yakında eklenecek');
+  const handleToggleModule = async (moduleCode: string, checked: boolean) => {
+    setTogglingModule(moduleCode);
+    try {
+      await toggleModuleMutation.mutateAsync({ moduleCode, enable: checked });
+      const action = checked ? 'etkinleştirildi' : 'devre dışı bırakıldı';
+      message.success(`Modül başarıyla ${action}`);
+      refetch();
+    } catch (error) {
+      console.error('Module toggle error:', error);
+      message.error('İşlem başarısız oldu. Lütfen tekrar deneyin.');
+    } finally {
+      setTogglingModule(null);
     }
   };
 
@@ -212,6 +234,7 @@ export default function ModulesPage() {
         {filteredModules.map((module) => {
           const Icon = module.icon;
           const tier = TIER_CONFIG[module.tier];
+          const isToggling = togglingModule === module.code;
 
           return (
             <div
@@ -222,6 +245,7 @@ export default function ModulesPage() {
                   ? 'border-slate-900 shadow-sm'
                   : 'border-slate-200 hover:border-slate-300'
                 }
+                ${isToggling ? 'opacity-70' : ''}
               `}
             >
               {/* Header */}
@@ -259,8 +283,10 @@ export default function ModulesPage() {
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={module.isActive}
-                    onChange={(checked) => handleToggleModule(module.id, checked)}
+                    onChange={(checked) => handleToggleModule(module.code, checked)}
                     size="small"
+                    disabled={isToggling}
+                    loading={isToggling}
                   />
                   <span className={`text-sm ${module.isActive ? 'text-slate-900 font-medium' : 'text-slate-500'}`}>
                     {module.isActive ? 'Aktif' : 'Pasif'}
@@ -277,10 +303,18 @@ export default function ModulesPage() {
                   </button>
                 ) : (
                   <button
-                    onClick={() => handleModuleActivate(module.id)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+                    onClick={() => handleModuleActivate(module.code)}
+                    disabled={isToggling}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
                   >
-                    Aktifleştir
+                    {isToggling ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        Yükleniyor...
+                      </>
+                    ) : (
+                      'Aktifleştir'
+                    )}
                   </button>
                 )}
               </div>
