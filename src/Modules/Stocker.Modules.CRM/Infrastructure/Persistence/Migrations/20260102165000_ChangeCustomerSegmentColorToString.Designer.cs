@@ -15,6 +15,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
     [Migration("20260102165000_ChangeCustomerSegmentColorToString")]
     partial class ChangeCustomerSegmentColorToString
     {
+        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
@@ -635,13 +636,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
-                    b.Property<string>("District")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<Guid?>("DistrictId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Email")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
@@ -1120,9 +1114,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<Guid?>("CityId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("CompanyName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -1134,9 +1125,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     b.Property<string>("Country")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
-
-                    b.Property<Guid?>("CountryId")
-                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1201,13 +1189,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.HasIndex("TenantId", "CityId");
-
                     b.HasIndex("TenantId", "CompanyName");
-
-                    b.HasIndex("TenantId", "CountryId");
-
-                    b.HasIndex("TenantId", "DistrictId");
 
                     b.HasIndex("TenantId", "Email")
                         .IsUnique();
@@ -1223,9 +1205,8 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uuid");
@@ -3945,9 +3926,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<Guid?>("CityId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -3960,9 +3938,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     b.Property<string>("CountryCode")
                         .HasMaxLength(3)
                         .HasColumnType("character varying(3)");
-
-                    b.Property<Guid?>("CountryId")
-                        .HasColumnType("uuid");
 
                     b.Property<string>("Currency")
                         .IsRequired()
@@ -3979,9 +3954,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     b.Property<string>("District")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
-
-                    b.Property<Guid?>("DistrictId")
-                        .HasColumnType("uuid");
 
                     b.Property<string>("GeoCoordinates")
                         .HasColumnType("text");
@@ -4054,14 +4026,8 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.HasIndex("TenantId", "CityId");
-
                     b.HasIndex("TenantId", "Code")
                         .IsUnique();
-
-                    b.HasIndex("TenantId", "CountryId");
-
-                    b.HasIndex("TenantId", "DistrictId");
 
                     b.HasIndex("TenantId", "IsActive");
 
