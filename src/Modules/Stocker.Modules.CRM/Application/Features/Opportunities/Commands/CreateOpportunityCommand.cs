@@ -105,10 +105,30 @@ public class CreateOpportunityCommandHandler : IRequestHandler<CreateOpportunity
                 .Include(p => p.Stages)
                 .FirstOrDefaultAsync(p => p.TenantId == tenantId && p.IsActive, cancellationToken);
 
+            // If no active pipeline exists, create a default Sales Pipeline
             if (defaultPipeline == null)
-                return Result<OpportunityDto>.Failure(Error.NotFound("Pipeline.NotFound", "No active pipeline found"));
+            {
+                defaultPipeline = new Domain.Entities.Pipeline(
+                    tenantId,
+                    "Sales Pipeline",
+                    PipelineType.Sales,
+                    "TRY");
 
-            var firstStage = defaultPipeline.Stages.OrderBy(s => s.DisplayOrder).FirstOrDefault();
+                defaultPipeline.SetAsDefault();
+
+                // Add default stages
+                defaultPipeline.AddStage("Yeni Fırsat", 10, 1);
+                defaultPipeline.AddStage("İletişime Geçildi", 20, 2);
+                defaultPipeline.AddStage("Teklif Verildi", 40, 3);
+                defaultPipeline.AddStage("Müzakere", 60, 4);
+                defaultPipeline.AddStage("Kazanıldı", 100, 5, isWon: true);
+                defaultPipeline.AddStage("Kaybedildi", 0, 6, isLost: true);
+
+                await _unitOfWork.Repository<Domain.Entities.Pipeline>().AddAsync(defaultPipeline, cancellationToken);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+
+            var firstStage = defaultPipeline.Stages.Where(s => !s.IsWon && !s.IsLost).OrderBy(s => s.DisplayOrder).FirstOrDefault();
             if (firstStage == null)
                 return Result<OpportunityDto>.Failure(Error.NotFound("Stage.NotFound", "Pipeline has no stages"));
 
