@@ -113,6 +113,45 @@ public class MeetingsController : ControllerBase
             : BadRequest(result.Error);
     }
 
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateMeeting(
+        Guid id,
+        [FromBody] UpdateMeetingRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (id != request.Id)
+            return BadRequest("Id mismatch");
+
+        var tenantId = GetTenantId();
+
+        var command = new UpdateMeetingCommand(
+            Id: id,
+            TenantId: tenantId,
+            Title: request.Title,
+            StartTime: request.StartTime,
+            EndTime: request.EndTime,
+            Description: request.Description,
+            MeetingType: request.MeetingType,
+            Priority: request.Priority,
+            IsAllDay: request.IsAllDay,
+            Timezone: request.Timezone,
+            LocationType: request.LocationType,
+            Location: request.Location,
+            MeetingRoom: request.MeetingRoom,
+            OnlineMeetingLink: request.OnlineMeetingLink,
+            OnlineMeetingPlatform: request.OnlineMeetingPlatform,
+            MeetingPassword: request.MeetingPassword,
+            DialInNumber: request.DialInNumber,
+            Agenda: request.Agenda,
+            Notes: request.Notes);
+
+        var result = await _mediator.Send(command, cancellationToken);
+
+        return result.IsSuccess
+            ? Ok()
+            : BadRequest(result.Error);
+    }
+
     // TODO: Add commands for the following specialized operations:
     // - AddAttendee, StartMeeting, CompleteMeeting, CancelMeeting
 
@@ -161,3 +200,23 @@ public record CompleteMeetingRequest(
 
 public record CancelMeetingRequest(
     string? CancellationReason = null);
+
+public record UpdateMeetingRequest(
+    Guid Id,
+    string Title,
+    DateTime StartTime,
+    DateTime EndTime,
+    MeetingType? MeetingType = null,
+    string? Description = null,
+    MeetingPriority? Priority = null,
+    bool? IsAllDay = null,
+    string? Timezone = null,
+    MeetingLocationType? LocationType = null,
+    string? Location = null,
+    string? MeetingRoom = null,
+    string? OnlineMeetingLink = null,
+    string? OnlineMeetingPlatform = null,
+    string? MeetingPassword = null,
+    string? DialInNumber = null,
+    string? Agenda = null,
+    string? Notes = null);

@@ -40,6 +40,7 @@ import type {
   MeetingDto,
   MeetingFilters,
   CreateMeetingCommand,
+  UpdateMeetingCommand,
   TerritoryDto,
   TerritoryFilters,
   CreateTerritoryCommand,
@@ -2000,6 +2001,22 @@ export function useCreateMeeting() {
     },
     onError: (error) => {
       showApiError(error, 'Toplantı oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateMeeting() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: Guid; data: UpdateMeetingCommand }) => CRMService.updateMeeting(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.meetings });
+      queryClient.invalidateQueries({ queryKey: crmKeys.meeting(variables.id) });
+      showSuccess('Toplantı güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Toplantı güncellenemedi');
     },
   });
 }

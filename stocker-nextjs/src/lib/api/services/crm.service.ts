@@ -132,7 +132,7 @@ import type {
 // =====================================
 
 export interface Customer {
-  id: number;
+  id: string; // Guid from backend
   companyName: string;
   customerName?: string; // Alias for companyName
   contactPerson: string | null;
@@ -150,8 +150,8 @@ export interface Customer {
   district: string | null;
   country: string | null;
   postalCode: string | null;
-  customerType: 'Individual' | 'Corporate';
-  status: 'Active' | 'Inactive' | 'Potential';
+  customerType: 'Individual' | 'Corporate' | 'Government' | 'NonProfit';
+  status: 'Active' | 'Inactive' | 'Prospect' | 'Suspended';
   creditLimit: number;
   taxId: string | null;
   taxOffice: string | null;
@@ -164,7 +164,7 @@ export interface Customer {
   annualRevenue: number | null;
   numberOfEmployees: number | null;
   isActive: boolean;
-  contacts?: any[]; // Contact array if backend provides it
+  contacts?: Contact[]; // Contact array if backend provides it
   createdAt: string;
   updatedAt: string;
 }
@@ -173,84 +173,131 @@ export interface Lead {
   id: string; // Guid from backend
   firstName: string;
   lastName: string;
-  fullName?: string;
+  fullName: string;
   email: string;
   phone: string | null;
-  mobilePhone?: string | null;
+  mobilePhone: string | null;
   companyName: string | null;
   company?: string | null; // Alias for companyName
   jobTitle: string | null;
-  industry?: string | null;
+  industry: string | null;
   source: string | null;
   status: 'New' | 'Contacted' | 'Working' | 'Qualified' | 'Unqualified' | 'Converted' | 'Lost';
   rating: 'Unrated' | 'Cold' | 'Warm' | 'Hot';
-  address?: string | null;
-  city?: string | null;
-  state?: string | null;
-  country?: string | null;
-  postalCode?: string | null;
-  website?: string | null;
-  annualRevenue?: number | null;
-  numberOfEmployees?: number | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  postalCode: string | null;
+  website: string | null;
+  annualRevenue: number | null;
+  numberOfEmployees: number | null;
   description: string | null;
-  assignedToUserId?: string | null;
-  convertedDate?: string | null;
-  convertedToCustomerId?: string | null;
+  assignedToUserId: string | null;
+  assignedToName: string | null; // Added - backend has this field
+  convertedDate: string | null;
+  convertedToCustomerId: string | null;
   isConverted: boolean;
   score: number;
   createdAt: string;
-  updatedAt: string;
+  updatedAt: string | null;
+  // Related data from backend
+  activities?: Activity[];
+  notes?: Note[];
 }
 
 export interface Deal {
   id: string; // Guid from backend
   title: string;
-  customerId: string; // Guid from backend
-  customerName?: string;
-  pipelineId: string; // Guid from backend
-  pipelineName?: string;
-  stageId: string; // Guid from backend
-  stageName?: string;
-  amount: number;
-  probability: number;
-  expectedCloseDate: string | null;
-  actualCloseDate: string | null;
-  status: 'Open' | 'Won' | 'Lost';
-  priority?: 'Low' | 'Medium' | 'High';
   description: string | null;
-  assignedToId?: number;
-  assignedToName?: string;
+  customerId: string; // Guid from backend
+  customerName: string;
+  amount: number;
+  currency: string; // Default: TRY
+  status: 'Open' | 'Won' | 'Lost';
+  priority: 'Low' | 'Medium' | 'High';
+  pipelineId: string | null;
+  pipelineName: string | null;
+  stageId: string | null;
+  stageName: string | null;
+  expectedCloseDate: string;
+  actualCloseDate: string | null;
+  probability: number;
+  lostReason: string | null;
+  wonDetails: string | null;
+  competitorName: string | null;
+  source: string | null;
+  ownerId: string | null;
+  ownerName: string | null;
+  weightedAmount?: number; // Computed: amount * (probability / 100)
+  // Related data from backend
+  products?: DealProduct[];
+  activities?: Activity[];
+  notes?: Note[];
   createdAt: string;
-  updatedAt: string;
+  updatedAt: string | null;
+}
+
+export interface DealProduct {
+  id: string;
+  dealId: number;
+  productId: number;
+  productName: string;
+  productCode: string | null;
+  description: string | null;
+  quantity: number;
+  unitPrice: number;
+  currency: string;
+  discountPercent: number;
+  discountAmount: number;
+  totalPrice: number;
+  tax: number;
+  taxAmount: number;
+  sortOrder: number;
+  isRecurring: boolean;
+  recurringPeriod: string | null;
+  recurringCycles: number | null;
 }
 
 export interface Activity {
-  id: number;
-  title: string;
-  subject?: string | null; // Email subject or activity title
-  type: 'Call' | 'Email' | 'Meeting' | 'Task' | 'Note';
+  id: string; // Guid from backend
+  subject: string; // Activity title/subject
+  title?: string; // Alias for subject (frontend compatibility)
   description: string | null;
-  startTime: string;
-  endTime: string | null;
-  scheduledAt?: string; // Scheduled date/time
-  status: 'Scheduled' | 'Completed' | 'Cancelled';
-  priority?: 'Low' | 'Medium' | 'High';
-  customerId: number | null;
-  customerName?: string | null;
-  leadId: number | null;
-  leadName?: string | null;
-  contactId?: number | null;
-  contactName?: string | null;
-  opportunityId?: number | null;
-  opportunityName?: string | null;
-  dealId: number | null;
-  dealTitle?: string | null;
+  type: 'Call' | 'Email' | 'Meeting' | 'Task' | 'Note' | 'Demo' | 'Follow-up';
+  status: 'Scheduled' | 'InProgress' | 'Completed' | 'Cancelled' | 'Pending';
+  priority: 'Low' | 'Medium' | 'High';
+  scheduledAt: string | null;
+  dueAt: string | null;
+  completedAt: string | null;
+  duration: string | null; // TimeSpan as ISO 8601 duration string
+  location: string | null;
+  // Related entity IDs (all Guid/string)
+  leadId: string | null;
+  leadName: string | null;
+  customerId: string | null;
+  customerName: string | null;
+  contactId: string | null;
+  contactName: string | null;
+  opportunityId: string | null;
+  opportunityName: string | null;
+  dealId: string | null;
+  dealTitle: string | null;
+  // Owner and assignment
   ownerId: number;
-  ownerName?: string | null;
-  assignedToId?: string | null;
-  assignedToName?: string | null;
-  relatedToName?: string | null;
+  ownerName: string | null;
+  assignedToUserId: string | null;
+  assignedToName: string | null;
+  // Additional fields
+  outcome: string | null;
+  notes: string | null;
+  isOverdue: boolean;
   createdAt: string;
+  updatedAt: string | null;
+  // Frontend compatibility aliases
+  startTime?: string; // Alias for scheduledAt
+  endTime?: string | null; // Computed from dueAt + duration
+  relatedToName?: string | null;
 }
 
 export interface Pipeline {
@@ -366,8 +413,8 @@ export interface CustomerFilters {
   pageNumber?: number;
   pageSize?: number;
   search?: string;
-  customerType?: 'Individual' | 'Corporate';
-  status?: 'Active' | 'Inactive' | 'Potential';
+  customerType?: 'Individual' | 'Corporate' | 'Government' | 'NonProfit';
+  status?: 'Active' | 'Inactive' | 'Prospect' | 'Suspended';
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }
@@ -1815,6 +1862,13 @@ export class CRMService {
   }
 
   /**
+   * Update meeting
+   */
+  static async updateMeeting(id: Guid, data: UpdateMeetingCommand): Promise<void> {
+    return ApiService.put<void>(this.getPath(`meetings/${id}`), data);
+  }
+
+  /**
    * Delete meeting
    */
   static async deleteMeeting(id: Guid): Promise<void> {
@@ -2182,6 +2236,40 @@ export interface UpdateContactCommand {
   department?: string;
   isPrimary?: boolean;
   notes?: string;
+}
+
+// =====================================
+// NOTE TYPES
+// =====================================
+
+export interface Note {
+  id: string;
+  content: string;
+  leadId: string | null;
+  customerId: string | null;
+  contactId: string | null;
+  opportunityId: string | null;
+  dealId: string | null;
+  isPinned: boolean;
+  createdById: string | null;
+  createdByName: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface CreateNoteCommand {
+  content: string;
+  leadId?: string;
+  customerId?: string;
+  contactId?: string;
+  opportunityId?: string;
+  dealId?: string;
+  isPinned?: boolean;
+}
+
+export interface UpdateNoteCommand {
+  content: string;
+  isPinned?: boolean;
 }
 
 export default CRMService;
