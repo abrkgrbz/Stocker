@@ -29,6 +29,12 @@ public class MeetingsController : ControllerBase
         return Guid.Parse(tenantIdClaim ?? throw new UnauthorizedAccessException("Tenant ID not found"));
     }
 
+    private int GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst("sub")?.Value ?? User.FindFirst("UserId")?.Value;
+        return int.TryParse(userIdClaim, out var userId) ? userId : 0;
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetMeetings(
         [FromQuery] DateTime? fromDate = null,
@@ -70,25 +76,35 @@ public class MeetingsController : ControllerBase
         CancellationToken cancellationToken = default)
     {
         var tenantId = GetTenantId();
+        var organizerId = request.OrganizerId ?? GetCurrentUserId();
+
         var command = new CreateMeetingCommand(
-            tenantId,
-            request.Title,
-            request.StartTime,
-            request.EndTime,
-            request.OrganizerId,
-            request.MeetingType,
-            request.Description,
-            MeetingPriority.Normal,
-            false,
-            null,
-            MeetingLocationType.InPerson,
-            request.Location,
-            request.MeetingRoom,
-            request.OnlineMeetingLink,
-            request.OnlinePlatform,
-            null,
-            null,
-            request.CustomerId);
+            TenantId: tenantId,
+            Title: request.Title,
+            StartTime: request.StartTime,
+            EndTime: request.EndTime,
+            OrganizerId: organizerId,
+            MeetingType: request.MeetingType,
+            Description: request.Description,
+            Priority: request.Priority,
+            IsAllDay: false,
+            Timezone: null,
+            LocationType: request.LocationType,
+            Location: request.Location,
+            MeetingRoom: request.MeetingRoom,
+            OnlineMeetingLink: request.OnlineMeetingLink,
+            OnlineMeetingPlatform: request.OnlineMeetingPlatform,
+            MeetingPassword: null,
+            DialInNumber: null,
+            CustomerId: request.CustomerId,
+            ContactId: request.ContactId,
+            LeadId: request.LeadId,
+            OpportunityId: request.OpportunityId,
+            DealId: request.DealId,
+            CampaignId: null,
+            OrganizerName: null,
+            OrganizerEmail: null,
+            Agenda: request.Agenda);
 
         var result = await _mediator.Send(command, cancellationToken);
 
@@ -117,14 +133,21 @@ public record CreateMeetingRequest(
     string Title,
     DateTime StartTime,
     DateTime EndTime,
-    int OrganizerId,
     MeetingType MeetingType = MeetingType.General,
-    Guid? CustomerId = null,
+    string? Description = null,
+    MeetingPriority Priority = MeetingPriority.Normal,
+    MeetingLocationType LocationType = MeetingLocationType.InPerson,
     string? Location = null,
     string? MeetingRoom = null,
     string? OnlineMeetingLink = null,
-    string? OnlinePlatform = null,
-    string? Description = null);
+    string? OnlineMeetingPlatform = null,
+    Guid? CustomerId = null,
+    Guid? ContactId = null,
+    Guid? LeadId = null,
+    Guid? OpportunityId = null,
+    Guid? DealId = null,
+    string? Agenda = null,
+    int? OrganizerId = null);
 
 public record AddAttendeeRequest(
     string Email,

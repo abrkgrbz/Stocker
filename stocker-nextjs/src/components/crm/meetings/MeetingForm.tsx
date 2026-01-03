@@ -312,7 +312,7 @@ export default function MeetingForm({ form, initialValues, onFinish, loading }: 
               <div className="grid grid-cols-12 gap-4">
                 <div className="col-span-6">
                   <label className="block text-sm font-medium text-slate-600 mb-1.5">Platform</label>
-                  <Form.Item name="onlinePlatform" className="mb-0">
+                  <Form.Item name="onlineMeetingPlatform" className="mb-0">
                     <Select
                       placeholder="Platform seçin"
                       options={onlinePlatformOptions}
