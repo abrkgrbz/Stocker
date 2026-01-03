@@ -57,21 +57,34 @@ public static class GeoLocationSeed
 
         if (cityCount == 0)
         {
-            allCities = new List<City>();
+            try
+            {
+                allCities = new List<City>();
 
-            // Turkish Cities (81 provinces with detailed data)
-            var turkishCities = GetTurkishCities(turkeyId);
-            allCities.AddRange(turkishCities);
-            logger?.LogInformation("GeoLocationSeed: Generated {Count} Turkish cities", turkishCities.Count);
+                // Turkish Cities (81 provinces with detailed data)
+                var turkishCities = GetTurkishCities(turkeyId);
+                allCities.AddRange(turkishCities);
+                logger?.LogInformation("GeoLocationSeed: Generated {Count} Turkish cities", turkishCities.Count);
 
-            // International Cities/States
-            var internationalCities = GetInternationalCities(countries);
-            allCities.AddRange(internationalCities);
-            logger?.LogInformation("GeoLocationSeed: Generated {Count} international cities", internationalCities.Count);
+                // International Cities/States
+                var internationalCities = GetInternationalCities(countries);
+                allCities.AddRange(internationalCities);
+                logger?.LogInformation("GeoLocationSeed: Generated {Count} international cities", internationalCities.Count);
 
-            await context.Cities.AddRangeAsync(allCities);
-            await context.SaveChangesAsync();
-            logger?.LogInformation("GeoLocationSeed: Seeded {Count} total cities", allCities.Count);
+                await context.Cities.AddRangeAsync(allCities);
+                logger?.LogInformation("GeoLocationSeed: Added cities to context, saving...");
+                await context.SaveChangesAsync();
+                logger?.LogInformation("GeoLocationSeed: Seeded {Count} total cities", allCities.Count);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "GeoLocationSeed: Error seeding cities: {Message}", ex.Message);
+                if (ex.InnerException != null)
+                {
+                    logger?.LogError("GeoLocationSeed: Inner exception: {InnerMessage}", ex.InnerException.Message);
+                }
+                throw;
+            }
         }
         else
         {
