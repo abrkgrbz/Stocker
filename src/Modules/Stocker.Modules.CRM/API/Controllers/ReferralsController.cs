@@ -69,18 +69,28 @@ public class ReferralsController : ControllerBase
     {
         var tenantId = GetTenantId();
         var command = new CreateReferralCommand(
-            tenantId,
-            request.ReferralCode,
-            request.ReferrerName,
-            request.ReferredName,
-            request.ReferralType ?? ReferralType.Customer,
-            request.ReferrerCustomerId,
-            null,
-            null,
-            null,
-            request.ReferredEmail,
-            request.ReferredPhone,
-            request.ReferredCompany);
+            TenantId: tenantId,
+            ReferrerName: request.ReferrerName,
+            ReferredName: request.ReferredName,
+            ReferralCode: request.ReferralCode,
+            ReferralType: request.ReferralType ?? ReferralType.Customer,
+            ReferrerCustomerId: request.ReferrerCustomerId,
+            ReferrerContactId: request.ReferrerContactId,
+            ReferrerEmail: request.ReferrerEmail,
+            ReferrerPhone: request.ReferrerPhone,
+            ReferredEmail: request.ReferredEmail,
+            ReferredPhone: request.ReferredPhone,
+            ReferredCompany: request.ReferredCompany,
+            ReferrerReward: request.ReferrerReward,
+            ReferredReward: request.ReferredReward,
+            RewardType: request.RewardType,
+            Currency: request.Currency ?? "TRY",
+            ExpiryDate: request.ExpiryDate,
+            CampaignId: request.CampaignId,
+            ProgramName: request.ProgramName,
+            ReferralMessage: request.ReferralMessage,
+            InternalNotes: request.InternalNotes,
+            AssignedToUserId: request.AssignedToUserId);
 
         var result = await _mediator.Send(command, cancellationToken);
 
@@ -107,14 +117,27 @@ public class ReferralsController : ControllerBase
 }
 
 public record CreateReferralRequest(
-    string ReferralCode,
     string ReferrerName,
     string ReferredName,
+    string? ReferralCode = null,
+    ReferralType? ReferralType = null,
     Guid? ReferrerCustomerId = null,
+    Guid? ReferrerContactId = null,
+    string? ReferrerEmail = null,
+    string? ReferrerPhone = null,
     string? ReferredEmail = null,
     string? ReferredPhone = null,
     string? ReferredCompany = null,
-    ReferralType? ReferralType = null);
+    decimal? ReferrerReward = null,
+    decimal? ReferredReward = null,
+    RewardType? RewardType = null,
+    string? Currency = null,
+    DateTime? ExpiryDate = null,
+    Guid? CampaignId = null,
+    string? ProgramName = null,
+    string? ReferralMessage = null,
+    string? InternalNotes = null,
+    int? AssignedToUserId = null);
 
 public record MarkAsConvertedRequest(decimal? ConversionValue = null);
 
