@@ -27,88 +27,8 @@ import {
 import { useTheme } from '@/lib/theme';
 import type { Asset, AssetStatus } from '@/lib/api/types/hr.types';
 
-// Mock data
-const MOCK_ASSETS: Asset[] = [
-    {
-        id: '1',
-        assetNumber: 'ZMT-001',
-        name: 'MacBook Pro 14"',
-        description: 'M3 Pro, 18GB RAM, 512GB SSD',
-        categoryId: '1',
-        categoryName: 'Bilgisayar',
-        status: 'assigned',
-        assignedToId: '1',
-        assignedToName: 'Ahmet Yılmaz',
-        assignedDate: '2024-01-15',
-        serialNumber: 'C02FX1XXXXX',
-        purchaseDate: '2023-12-01',
-        purchasePrice: 85000,
-        warrantyExpiry: '2025-12-01',
-        createdAt: '2023-12-01'
-    },
-    {
-        id: '2',
-        assetNumber: 'ZMT-002',
-        name: 'iPhone 15 Pro',
-        description: '256GB, Natural Titanium',
-        categoryId: '2',
-        categoryName: 'Telefon',
-        status: 'assigned',
-        assignedToId: '2',
-        assignedToName: 'Ayşe Demir',
-        assignedDate: '2024-02-20',
-        serialNumber: 'DNPXXXXXXXXXXX',
-        purchaseDate: '2024-02-15',
-        purchasePrice: 65000,
-        warrantyExpiry: '2026-02-15',
-        createdAt: '2024-02-15'
-    },
-    {
-        id: '3',
-        assetNumber: 'ZMT-003',
-        name: 'Dell Monitor 27"',
-        description: '4K UltraSharp U2723QE',
-        categoryId: '3',
-        categoryName: 'Monitör',
-        status: 'available',
-        serialNumber: 'CN0XXXXXXXXX',
-        purchaseDate: '2024-03-10',
-        purchasePrice: 15000,
-        warrantyExpiry: '2027-03-10',
-        createdAt: '2024-03-10'
-    },
-    {
-        id: '4',
-        assetNumber: 'ZMT-004',
-        name: 'Şirket Aracı - Ford Focus',
-        description: '2023 Model, Beyaz',
-        categoryId: '4',
-        categoryName: 'Araç',
-        status: 'assigned',
-        assignedToId: '3',
-        assignedToName: 'Mehmet Kaya',
-        assignedDate: '2024-01-01',
-        serialNumber: '34ABC123',
-        purchaseDate: '2023-06-15',
-        purchasePrice: 850000,
-        createdAt: '2023-06-15'
-    },
-    {
-        id: '5',
-        assetNumber: 'ZMT-005',
-        name: 'ThinkPad X1 Carbon',
-        description: 'Gen 11, i7, 16GB RAM',
-        categoryId: '1',
-        categoryName: 'Bilgisayar',
-        status: 'maintenance',
-        serialNumber: 'PF3XXXXXX',
-        purchaseDate: '2023-08-20',
-        purchasePrice: 55000,
-        warrantyExpiry: '2025-08-20',
-        notes: 'Ekran tamiri için serviste',
-        createdAt: '2023-08-20'
-    }
-];
+// TODO: Replace with useAssets hook when API is available
+// Assets API endpoint henüz backend'de mevcut değil
 
 const STATUS_CONFIG: Record<AssetStatus, { label: string; color: string; bgColor: string }> = {
     available: { label: 'Müsait', color: '#22c55e', bgColor: '#dcfce7' },
@@ -134,11 +54,12 @@ export default function AssetsScreen() {
     const [selectedStatus, setSelectedStatus] = useState<AssetStatus | 'all'>('all');
     const [refreshing, setRefreshing] = useState(false);
 
-    // TODO: Replace with real API hook when available
-    // const { data: assetsResponse, isLoading, isError, refetch, isRefetching } = useAssets({ ... });
+    // TODO: Replace with useAssets hook when API is available
+    // const { data: assetsResponse, isLoading, isError, refetch, isRefetching } = useAssets({ status: selectedStatus });
     const isLoading = false;
     const isError = false;
     const isRefetching = refreshing;
+    const assets: Asset[] = []; // Boş array - API bağlandığında assetsResponse?.items kullanılacak
 
     const statusFilters: { key: AssetStatus | 'all'; label: string }[] = [
         { key: 'all', label: 'Tümü' },
@@ -147,19 +68,19 @@ export default function AssetsScreen() {
         { key: 'maintenance', label: 'Bakımda' }
     ];
 
-    const assets = MOCK_ASSETS.filter(asset => {
-        return selectedStatus === 'all' || asset.status === selectedStatus;
-    });
-
     const filteredAssets = useMemo(() => {
-        if (!searchQuery) return assets;
-        return assets.filter(asset => {
+        let filtered = assets;
+        if (selectedStatus !== 'all') {
+            filtered = filtered.filter(asset => asset.status === selectedStatus);
+        }
+        if (!searchQuery) return filtered;
+        return filtered.filter(asset => {
             const matchesSearch = asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 asset.assetNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (asset.assignedToName?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
             return matchesSearch;
         });
-    }, [assets, searchQuery]);
+    }, [assets, searchQuery, selectedStatus]);
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);

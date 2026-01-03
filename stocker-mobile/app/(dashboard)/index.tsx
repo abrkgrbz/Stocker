@@ -13,11 +13,7 @@ import {
     Search,
     ShoppingCart,
     Briefcase,
-    Calendar,
-    Target,
-    AlertTriangle,
-    CheckCircle2,
-    type LucideIcon
+    Clock
 } from 'lucide-react-native';
 import { authStorage, User, Tenant } from '@/lib/auth-store';
 import { useTheme } from '@/lib/theme';
@@ -26,23 +22,6 @@ import { useNotifications } from '@/lib/notifications';
 import { useCustomers, useDeals } from '@/lib/api/hooks/useCRM';
 import { useLowStockProducts } from '@/lib/api/hooks/useInventory';
 import { useSalesStats, useOrders, useRecentOrders } from '@/lib/api/hooks/useSales';
-
-interface Activity {
-    id: number;
-    title: string;
-    time: string;
-    type: string;
-    icon: LucideIcon;
-    iconColor: string;
-    iconBgColor: string;
-}
-
-const MOCK_ACTIVITIES: Activity[] = [
-    { id: 1, title: 'TechCorp ile Toplantı', time: '10:00', type: 'Toplantı', icon: Calendar, iconColor: '#2563eb', iconBgColor: '#dbeafe' },
-    { id: 2, title: 'Yeni Lead: Global Lojistik', time: '11:30', type: 'Lead', icon: Target, iconColor: '#7c3aed', iconBgColor: '#ede9fe' },
-    { id: 3, title: 'Stok Kritik: A-001 Ürünü', time: '14:00', type: 'Uyarı', icon: AlertTriangle, iconColor: '#d97706', iconBgColor: '#fef3c7' },
-    { id: 4, title: 'Sipariş #1234 Onaylandı', time: '15:30', type: 'Sipariş', icon: CheckCircle2, iconColor: '#059669', iconBgColor: '#d1fae5' },
-];
 
 const QUICK_ACTIONS = [
     { id: 'customers', title: 'Müşteriler', icon: Users, route: '/(dashboard)/crm', color: '#2563eb', bgColor: '#dbeafe' },
@@ -279,50 +258,64 @@ export default function DashboardScreen() {
                     </View>
                 </Animated.View>
 
-                {/* Recent Activity */}
+                {/* Recent Orders */}
                 <Animated.View entering={FadeInDown.duration(500).delay(300)}>
                     <View className="flex-row items-center justify-between mb-3">
-                        <Text style={{ color: colors.text.tertiary }} className="text-xs font-bold uppercase tracking-wider">Son Aktiviteler</Text>
-                        <Pressable>
+                        <Text style={{ color: colors.text.tertiary }} className="text-xs font-bold uppercase tracking-wider">Son Siparişler</Text>
+                        <Pressable onPress={() => router.push('/(dashboard)/sales' as any)}>
                             <Text style={{ color: colors.brand.primary, fontSize: 12, fontWeight: '500' }}>Tümünü Gör</Text>
                         </Pressable>
                     </View>
                     <View style={{ backgroundColor: colors.surface.primary, borderRadius: 12, borderWidth: 1, borderColor: colors.border.primary, overflow: 'hidden' }}>
-                        {MOCK_ACTIVITIES.map((activity, index) => (
-                            <Animated.View
-                                key={activity.id}
-                                entering={FadeInUp.duration(400).delay(350 + index * 50)}
-                            >
-                                <Pressable
-                                    style={{
-                                        padding: 16,
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        borderBottomWidth: index < MOCK_ACTIVITIES.length - 1 ? 1 : 0,
-                                        borderBottomColor: colors.border.primary
-                                    }}
+                        {recentOrdersData && recentOrdersData.length > 0 ? (
+                            recentOrdersData.map((order, index) => (
+                                <Animated.View
+                                    key={order.id}
+                                    entering={FadeInUp.duration(400).delay(350 + index * 50)}
                                 >
-                                    <View
+                                    <Pressable
+                                        onPress={() => router.push(`/(dashboard)/sales/order/${order.id}` as any)}
                                         style={{
-                                            width: 40,
-                                            height: 40,
-                                            borderRadius: 12,
-                                            backgroundColor: activity.iconBgColor,
+                                            padding: 16,
+                                            flexDirection: 'row',
                                             alignItems: 'center',
-                                            justifyContent: 'center',
-                                            marginRight: 12
+                                            borderBottomWidth: index < recentOrdersData.length - 1 ? 1 : 0,
+                                            borderBottomColor: colors.border.primary
                                         }}
                                     >
-                                        <activity.icon size={20} color={activity.iconColor} />
-                                    </View>
-                                    <View className="flex-1">
-                                        <Text style={{ color: colors.text.primary, fontWeight: '500' }}>{activity.title}</Text>
-                                        <Text style={{ color: colors.text.tertiary, fontSize: 12 }}>{activity.type} • {activity.time}</Text>
-                                    </View>
-                                    <ChevronRight size={16} color={colors.text.tertiary} />
-                                </Pressable>
-                            </Animated.View>
-                        ))}
+                                        <View
+                                            style={{
+                                                width: 40,
+                                                height: 40,
+                                                borderRadius: 12,
+                                                backgroundColor: colors.modules.salesLight,
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                marginRight: 12
+                                            }}
+                                        >
+                                            <ShoppingCart size={20} color={colors.modules.sales} />
+                                        </View>
+                                        <View className="flex-1">
+                                            <Text style={{ color: colors.text.primary, fontWeight: '500' }}>
+                                                {order.orderNumber || `Sipariş #${order.id.slice(-6)}`}
+                                            </Text>
+                                            <Text style={{ color: colors.text.tertiary, fontSize: 12 }}>
+                                                {order.customerName || 'Müşteri'} • {formatCurrency(order.totalAmount || 0)}
+                                            </Text>
+                                        </View>
+                                        <ChevronRight size={16} color={colors.text.tertiary} />
+                                    </Pressable>
+                                </Animated.View>
+                            ))
+                        ) : (
+                            <View style={{ padding: 24, alignItems: 'center' }}>
+                                <Clock size={32} color={colors.text.tertiary} />
+                                <Text style={{ color: colors.text.tertiary, fontSize: 14, marginTop: 8 }}>
+                                    Henüz sipariş yok
+                                </Text>
+                            </View>
+                        )}
                     </View>
                 </Animated.View>
 
