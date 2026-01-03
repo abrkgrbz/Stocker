@@ -822,16 +822,70 @@ public class LemonSqueezyService : ILemonSqueezyService
         var data = webhookEvent.Data;
         if (data?.Attributes == null) return;
 
+        var attr = data.Attributes;
         var lsSubscription = await _masterContext.LemonSqueezySubscriptions
             .FirstOrDefaultAsync(s => s.LsSubscriptionId == data.Id, cancellationToken);
 
         if (lsSubscription == null)
         {
-            _logger.LogWarning("LemonSqueezy subscription not found for update: {SubscriptionId}", data.Id);
+            // Subscription not found - this can happen if subscription_created was missed
+            // Try to create it from subscription_updated event
+            _logger.LogWarning("LemonSqueezy subscription not found for update: {SubscriptionId}. Creating from update event.", data.Id);
+
+            // Extract tenant ID from custom data in meta
+            var tenantIdStr = webhookEvent.Meta?.CustomData?.TenantId;
+            if (!Guid.TryParse(tenantIdStr, out var tenantId))
+            {
+                _logger.LogWarning("Invalid or missing tenant_id in subscription_updated custom data");
+                return;
+            }
+
+            // Create new subscription record
+            lsSubscription = new LemonSqueezySubscription(
+                tenantId,
+                data.Id,
+                attr.OrderId?.ToString() ?? string.Empty,
+                attr.CustomerId?.ToString() ?? string.Empty,
+                attr.ProductId?.ToString() ?? string.Empty,
+                attr.ProductName ?? string.Empty,
+                attr.VariantId?.ToString() ?? string.Empty,
+                attr.VariantName ?? string.Empty,
+                attr.UserName ?? string.Empty,
+                attr.UserEmail ?? string.Empty,
+                MapStatus(attr.Status),
+                attr.StatusFormatted ?? string.Empty,
+                attr.TrialEndsAt,
+                attr.RenewsAt,
+                attr.EndsAt,
+                attr.CardBrand,
+                attr.CardLastFour,
+                attr.UnitPrice,
+                attr.UnitPriceCurrency ?? "TRY",
+                "month",
+                1,
+                attr.Urls?.CustomerPortal,
+                attr.Urls?.UpdatePaymentMethod,
+                webhookEvent.Meta?.EventId ?? string.Empty);
+
+            await _masterContext.LemonSqueezySubscriptions.AddAsync(lsSubscription, cancellationToken);
+            _logger.LogInformation("Created LemonSqueezy subscription from update event: {SubscriptionId} for tenant {TenantId}",
+                data.Id, tenantId);
+
+            // Update main subscription
+            await UpdateMainSubscriptionFromLemonSqueezyAsync(
+                tenantId,
+                attr.VariantId?.ToString(),
+                attr.ProductId?.ToString(),
+                attr.Status,
+                attr.TrialEndsAt,
+                attr.UnitPrice,
+                attr.UnitPriceCurrency ?? "TRY",
+                cancellationToken);
+
+            await _masterContext.SaveChangesAsync(cancellationToken);
             return;
         }
 
-        var attr = data.Attributes;
         lsSubscription.UpdateFromWebhook(
             MapStatus(attr.Status),
             attr.StatusFormatted ?? string.Empty,
