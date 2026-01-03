@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Form, Input, InputNumber, Select } from 'antd';
 import { UserIcon } from '@heroicons/react/24/outline';
 import type { Lead } from '@/lib/api/services/crm.service';
 import { FormPhoneInput } from '@/components/ui/InternationalPhoneInput';
+import { CascadeLocationSelect } from '@/components/ui/CascadeLocationSelect';
+import type { SelectedLocation } from '@/lib/api/services/location.types';
 
 const { TextArea } = Input;
 
@@ -46,6 +48,7 @@ interface LeadFormProps {
 
 export default function LeadForm({ form, initialValues, onFinish, loading }: LeadFormProps) {
   const [rating, setRating] = useState<string>('Warm');
+  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation>({});
 
   useEffect(() => {
     if (initialValues) {
@@ -54,6 +57,8 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
         status: initialValues.status ?? 'New',
       });
       setRating(initialValues.rating || 'Warm');
+      // Initialize location from existing data (text-based matching not supported, user needs to reselect)
+      // For now we just show the text values in hidden fields
     } else {
       form.setFieldsValue({
         status: 'New',
@@ -63,11 +68,33 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
     }
   }, [form, initialValues]);
 
+  // Handle location change from cascade dropdown
+  const handleLocationChange = useCallback((location: SelectedLocation) => {
+    setSelectedLocation(location);
+    // Update form values with text names for backend (backend expects string fields)
+    form.setFieldsValue({
+      country: location.countryName || '',
+      city: location.cityName || '',
+      state: location.districtName || location.region || '', // Use district or region as state
+    });
+  }, [form]);
+
+  const handleFormFinish = (values: any) => {
+    // Ensure location text values are included
+    const submitData = {
+      ...values,
+      country: selectedLocation.countryName || values.country || '',
+      city: selectedLocation.cityName || values.city || '',
+      state: selectedLocation.districtName || selectedLocation.region || values.state || '',
+    };
+    onFinish(submitData);
+  };
+
   return (
     <Form
       form={form}
       layout="vertical"
-      onFinish={onFinish}
+      onFinish={handleFormFinish}
       disabled={loading}
       className="w-full"
       scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
@@ -277,39 +304,31 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Adres Bilgileri
             </h3>
-            <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-12">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Adres</label>
+
+            {/* Cascade Location Select */}
+            <CascadeLocationSelect
+              value={selectedLocation}
+              onChange={handleLocationChange}
+              showDistrict={true}
+              showRegion={true}
+              disabled={loading}
+              layout="grid"
+              countryLabel="Ülke"
+              cityLabel="Şehir"
+              districtLabel="İlçe"
+            />
+
+            {/* Hidden fields for form submission */}
+            <Form.Item name="country" hidden><Input /></Form.Item>
+            <Form.Item name="city" hidden><Input /></Form.Item>
+            <Form.Item name="state" hidden><Input /></Form.Item>
+
+            <div className="grid grid-cols-12 gap-4 mt-4">
+              <div className="col-span-9">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Adres Detayı</label>
                 <Form.Item name="address" className="mb-0">
                   <Input
-                    placeholder="Sokak, Mahalle, Bina No"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
-              </div>
-              <div className="col-span-3">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Şehir</label>
-                <Form.Item name="city" className="mb-0">
-                  <Input
-                    placeholder="İstanbul"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
-              </div>
-              <div className="col-span-3">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">İl/Eyalet</label>
-                <Form.Item name="state" className="mb-0">
-                  <Input
-                    placeholder="Kadıköy"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
-              </div>
-              <div className="col-span-3">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ülke</label>
-                <Form.Item name="country" className="mb-0">
-                  <Input
-                    placeholder="Türkiye"
+                    placeholder="Sokak, Mahalle, Bina No, Daire"
                     className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
