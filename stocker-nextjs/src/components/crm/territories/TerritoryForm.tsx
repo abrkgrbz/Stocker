@@ -25,6 +25,8 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
     if (initialValues) {
       form.setFieldsValue({
         ...initialValues,
+        // Ensure targetYear has current year as default if salesTarget exists but no year
+        targetYear: initialValues.targetYear || (initialValues.salesTarget ? new Date().getFullYear() : undefined),
       });
       setTerritoryType(initialValues.territoryType || TerritoryType.Region);
       setIsActive(initialValues.isActive ?? true);
@@ -44,6 +46,7 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
       form.setFieldsValue({
         territoryType: TerritoryType.Region,
         isActive: true,
+        targetYear: new Date().getFullYear(), // Default to current year for new territories
       });
     }
   }, [form, initialValues]);
@@ -67,9 +70,13 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
 
   // Handle form submission - include location fields
   const handleFinish = useCallback((values: any) => {
+    // Ensure targetYear is set if salesTarget is provided (required by backend)
+    const targetYear = values.targetYear || (values.salesTarget ? new Date().getFullYear() : undefined);
+
     // Merge location data with form values
     const submitData = {
       ...values,
+      targetYear, // Ensure targetYear is sent with salesTarget
       countryId: selectedLocation.countryId,
       country: selectedLocation.countryName,
       countryCode: selectedLocation.countryCode,

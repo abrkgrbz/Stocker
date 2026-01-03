@@ -17,7 +17,12 @@ public class TerritoryDto
     public int HierarchyLevel { get; set; }
     public string? HierarchyPath { get; set; }
 
-    // Geographic
+    // Geographic - GeoLocation IDs (FK to Master DB)
+    public Guid? CountryId { get; set; }
+    public Guid? CityId { get; set; }
+    public Guid? DistrictId { get; set; }
+
+    // Geographic - Denormalized display fields
     public string? Country { get; set; }
     public string? CountryCode { get; set; }
     public string? Region { get; set; }

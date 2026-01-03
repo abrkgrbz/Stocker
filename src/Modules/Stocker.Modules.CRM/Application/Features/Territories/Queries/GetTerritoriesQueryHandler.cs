@@ -36,6 +36,11 @@ public class GetTerritoriesQueryHandler : IRequestHandler<GetTerritoriesQuery, R
             ParentTerritoryId = entity.ParentTerritoryId,
             HierarchyLevel = entity.HierarchyLevel,
             HierarchyPath = entity.HierarchyPath,
+            // GeoLocation IDs
+            CountryId = entity.CountryId,
+            CityId = entity.CityId,
+            DistrictId = entity.DistrictId,
+            // Denormalized display fields
             Country = entity.Country,
             CountryCode = entity.CountryCode,
             Region = entity.Region,
