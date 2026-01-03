@@ -6,9 +6,9 @@ namespace Stocker.Modules.CRM.Application.Features.Referrals.Commands;
 
 public record CreateReferralCommand(
     Guid TenantId,
-    string ReferralCode,
     string ReferrerName,
     string ReferredName,
+    string? ReferralCode = null,
     ReferralType ReferralType = ReferralType.Customer,
     Guid? ReferrerCustomerId = null,
     Guid? ReferrerContactId = null,

@@ -2028,6 +2028,9 @@ export interface CreateReferralCommand {
   referrerReward?: number;
   referredReward?: number;
   rewardType?: ReferralRewardType;
+  currency?: string;
+  internalNotes?: string;
+  assignedToUserId?: number;
 }
 
 export interface UpdateReferralCommand {
