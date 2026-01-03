@@ -49,7 +49,7 @@ public class MasterDataSeeder
         }
 
         await SystemSettingsSeed.SeedAsync(_context);
-        await GeoLocationSeed.SeedAsync(_context);
+        await GeoLocationSeed.SeedAsync(_context, _logger);
         await _context.SaveChangesAsync();
     }
 

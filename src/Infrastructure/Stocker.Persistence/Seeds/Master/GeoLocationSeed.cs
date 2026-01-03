@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Stocker.Domain.Master.Entities.GeoLocation;
 using Stocker.Persistence.Contexts;
 
@@ -11,54 +12,95 @@ namespace Stocker.Persistence.Seeds.Master;
 public static class GeoLocationSeed
 {
     // Fixed GUIDs for consistency across environments
-    private static readonly Guid TurkeyId = new("00000000-0000-0000-0001-000000000225");
+    // TR = T(84) * 100 + R(82) = 8482
+    private static readonly Guid TurkeyId = new("00000000-0000-0000-0001-000000008482");
 
-    public static async Task SeedAsync(MasterDbContext context)
+    public static async Task SeedAsync(MasterDbContext context, ILogger? logger = null)
     {
         List<Country> countries;
+        Guid turkeyId;
 
         // Seed Countries if not exist
-        if (!await context.Countries.AnyAsync())
+        var countryCount = await context.Countries.CountAsync();
+        logger?.LogInformation("GeoLocationSeed: Countries count = {Count}", countryCount);
+
+        if (countryCount == 0)
         {
             countries = GetAllCountries();
             await context.Countries.AddRangeAsync(countries);
             await context.SaveChangesAsync();
+            logger?.LogInformation("GeoLocationSeed: Seeded {Count} countries", countries.Count);
+            turkeyId = TurkeyId;
         }
         else
         {
             // Load existing countries for city seeding
             countries = await context.Countries.ToListAsync();
+            logger?.LogInformation("GeoLocationSeed: Loaded {Count} existing countries", countries.Count);
+
+            // Get Turkey's actual ID from database
+            var turkey = countries.FirstOrDefault(c => c.Code == "TR");
+            if (turkey == null)
+            {
+                logger?.LogWarning("GeoLocationSeed: Turkey not found in countries!");
+                return;
+            }
+            turkeyId = turkey.Id;
+            logger?.LogInformation("GeoLocationSeed: Turkey ID from DB = {TurkeyId}", turkeyId);
         }
 
         List<City> allCities;
 
         // Seed Cities if not exist
-        if (!await context.Cities.AnyAsync())
+        var cityCount = await context.Cities.CountAsync();
+        logger?.LogInformation("GeoLocationSeed: Cities count = {Count}", cityCount);
+
+        if (cityCount == 0)
         {
             allCities = new List<City>();
 
             // Turkish Cities (81 provinces with detailed data)
-            allCities.AddRange(GetTurkishCities(TurkeyId));
+            var turkishCities = GetTurkishCities(turkeyId);
+            allCities.AddRange(turkishCities);
+            logger?.LogInformation("GeoLocationSeed: Generated {Count} Turkish cities", turkishCities.Count);
 
             // International Cities/States
-            allCities.AddRange(GetInternationalCities(countries));
+            var internationalCities = GetInternationalCities(countries);
+            allCities.AddRange(internationalCities);
+            logger?.LogInformation("GeoLocationSeed: Generated {Count} international cities", internationalCities.Count);
 
             await context.Cities.AddRangeAsync(allCities);
             await context.SaveChangesAsync();
+            logger?.LogInformation("GeoLocationSeed: Seeded {Count} total cities", allCities.Count);
         }
         else
         {
             // Load existing cities for district seeding
             allCities = await context.Cities.ToListAsync();
+            logger?.LogInformation("GeoLocationSeed: Loaded {Count} existing cities", allCities.Count);
         }
 
         // Seed Districts if not exist
-        if (!await context.Districts.AnyAsync())
+        var districtCount = await context.Districts.CountAsync();
+        logger?.LogInformation("GeoLocationSeed: Districts count = {Count}", districtCount);
+
+        if (districtCount == 0)
         {
-            var turkishCities = allCities.Where(c => c.CountryId == TurkeyId).ToList();
-            var districts = GetTurkishDistricts(turkishCities);
+            var turkishCitiesForDistricts = allCities.Where(c => c.CountryId == turkeyId).ToList();
+            logger?.LogInformation("GeoLocationSeed: Found {Count} Turkish cities for district seeding", turkishCitiesForDistricts.Count);
+
+            if (turkishCitiesForDistricts.Count == 0)
+            {
+                logger?.LogWarning("GeoLocationSeed: No Turkish cities found for districts! TurkeyId = {TurkeyId}", turkeyId);
+                return;
+            }
+
+            var districts = GetTurkishDistricts(turkishCitiesForDistricts);
+            logger?.LogInformation("GeoLocationSeed: Generated {Count} districts", districts.Count);
+
             await context.Districts.AddRangeAsync(districts);
             await context.SaveChangesAsync();
+            logger?.LogInformation("GeoLocationSeed: Seeded {Count} districts", districts.Count);
         }
     }
 
