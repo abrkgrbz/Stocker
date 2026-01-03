@@ -2,7 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Entities;
-using Stocker.Modules.CRM.Domain.Repositories;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -76,21 +76,17 @@ public class CreateLeadCommandValidator : AbstractValidator<CreateLeadCommand>
 /// </summary>
 public class CreateLeadCommandHandler : IRequestHandler<CreateLeadCommand, Result<LeadDto>>
 {
-    private readonly ILeadRepository _leadRepository;
-    private readonly SharedKernel.Interfaces.IUnitOfWork _unitOfWork;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public CreateLeadCommandHandler(
-        ILeadRepository leadRepository,
-        SharedKernel.Interfaces.IUnitOfWork unitOfWork)
+    public CreateLeadCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _leadRepository = leadRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<LeadDto>> Handle(CreateLeadCommand request, CancellationToken cancellationToken)
     {
         // Check if lead with same email already exists
-        var emailExists = await _leadRepository.ExistsWithEmailAsync(
+        var emailExists = await _unitOfWork.Leads.ExistsWithEmailAsync(
             request.LeadData.Email,
             null,
             cancellationToken);
@@ -160,8 +156,8 @@ public class CreateLeadCommandHandler : IRequestHandler<CreateLeadCommand, Resul
             lead.AssignTo(request.LeadData.AssignedToUserId.Value);
         }
 
-        // Save to repository
-        await _leadRepository.AddAsync(lead, cancellationToken);
+        // Save to repository - using the same UnitOfWork ensures same DbContext
+        await _unitOfWork.Leads.AddAsync(lead, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Map to DTO
