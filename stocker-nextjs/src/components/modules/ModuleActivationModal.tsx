@@ -3,22 +3,21 @@
 /**
  * Module Activation Modal
  * Displays module details, pricing, and activation options
- * Modern, clean design following Linear/Stripe patterns
+ * Uses project's Headless UI Modal primitive
  */
 
 import React, { useMemo, useState } from 'react';
-import { Modal, Spin, Tag, Radio, Button, message } from 'antd';
+import { Modal } from '@/components/primitives/overlay/Modal';
 import {
-  Check,
-  Sparkles,
-  Zap,
-  Crown,
-  AlertCircle,
-  ArrowRight,
-  Clock,
-  CreditCard,
-  Gift,
-} from 'lucide-react';
+  CheckIcon,
+  ExclamationTriangleIcon,
+  SparklesIcon,
+  ClockIcon,
+  CreditCardIcon,
+  GiftIcon,
+  ArrowRightIcon,
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/cn';
 import { useModuleDefinition, useModulePrice } from '@/lib/api/hooks/useModulePricing';
 import { useToggleModule } from '@/lib/api/hooks/useTenantModules';
 
@@ -32,30 +31,22 @@ interface ModuleActivationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-  isIncludedInPackage?: boolean; // If included in current subscription package
+  isIncludedInPackage?: boolean;
 }
 
 type BillingCycle = 'monthly' | 'quarterly' | 'semiannual' | 'annual';
+type ActivationType = 'trial' | 'paid';
 
 // =====================================
-// HELPER COMPONENTS
+// BILLING CYCLE OPTIONS
 // =====================================
 
-const PriceBadge = ({ discount }: { discount: number }) => {
-  if (discount === 0) return null;
-  return (
-    <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-full">
-      %{discount} indirim
-    </span>
-  );
-};
-
-const FeatureItem = ({ feature }: { feature: string }) => (
-  <li className="flex items-start gap-2 text-sm text-slate-600">
-    <Check className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-    <span>{feature}</span>
-  </li>
-);
+const BILLING_OPTIONS: { value: BillingCycle; label: string; popular?: boolean }[] = [
+  { value: 'monthly', label: 'Aylık' },
+  { value: 'quarterly', label: '3 Aylık' },
+  { value: 'semiannual', label: '6 Aylık' },
+  { value: 'annual', label: 'Yıllık', popular: true },
+];
 
 // =====================================
 // MAIN COMPONENT
@@ -71,7 +62,7 @@ export default function ModuleActivationModal({
 }: ModuleActivationModalProps) {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
   const [isActivating, setIsActivating] = useState(false);
-  const [activationType, setActivationType] = useState<'paid' | 'trial'>('paid');
+  const [activationType, setActivationType] = useState<ActivationType>('trial');
 
   // Fetch module definition with pricing
   const { data: moduleInfo, isLoading: isLoadingModule } = useModuleDefinition(moduleCode);
@@ -84,7 +75,7 @@ export default function ModuleActivationModal({
 
   // Calculate displayed price based on billing cycle
   const displayedPrice = useMemo(() => {
-    if (!priceInfo) return { price: 0, originalPrice: 0, discount: 0 };
+    if (!priceInfo) return { price: 0, originalPrice: 0, discount: 0, perMonth: 0 };
 
     switch (billingCycle) {
       case 'quarterly':
@@ -128,37 +119,30 @@ export default function ModuleActivationModal({
     }).format(amount);
   };
 
+  // Get discount text for billing cycle
+  const getDiscountText = (cycle: BillingCycle) => {
+    if (!priceInfo) return '';
+    switch (cycle) {
+      case 'quarterly':
+        return `%${priceInfo.quarterlyDiscount || 10} indirim`;
+      case 'semiannual':
+        return `%${priceInfo.semiAnnualDiscount || 15} indirim`;
+      case 'annual':
+        return `%${priceInfo.annualDiscount || 20} indirim`;
+      default:
+        return formatCurrency(priceInfo.monthlyTotal);
+    }
+  };
+
   // Handle activation
   const handleActivate = async () => {
     setIsActivating(true);
     try {
-      if (isIncludedInPackage || activationType === 'trial') {
-        // Direct activation (included in package or trial)
-        await toggleModuleMutation.mutateAsync({ moduleCode, enable: true });
-        message.success(
-          activationType === 'trial'
-            ? `${moduleName} modülü 14 günlük deneme süresiyle aktifleştirildi`
-            : `${moduleName} modülü başarıyla aktifleştirildi`
-        );
-        onSuccess?.();
-        onClose();
-      } else {
-        // Redirect to payment (LemonSqueezy or internal checkout)
-        // For now, show a message - this will be connected to LemonSqueezy
-        message.info('Ödeme sayfasına yönlendiriliyorsunuz...');
-
-        // TODO: Implement LemonSqueezy checkout
-        // window.location.href = `https://stoocker.lemonsqueezy.com/checkout/buy/${moduleInfo?.lemonSqueezyVariantId}`;
-
-        // For demo, activate directly
-        await toggleModuleMutation.mutateAsync({ moduleCode, enable: true });
-        message.success(`${moduleName} modülü başarıyla aktifleştirildi`);
-        onSuccess?.();
-        onClose();
-      }
+      await toggleModuleMutation.mutateAsync({ moduleCode, enable: true });
+      onSuccess?.();
+      onClose();
     } catch (error) {
       console.error('Activation error:', error);
-      message.error('Modül aktifleştirilemedi. Lütfen tekrar deneyin.');
     } finally {
       setIsActivating(false);
     }
@@ -167,56 +151,56 @@ export default function ModuleActivationModal({
   // Loading state
   const isLoading = isLoadingModule || isLoadingPrice;
 
-  // Tier icon based on module category/tier
-  const TierIcon = moduleInfo?.isCore ? Zap : moduleInfo?.category === 'premium' ? Crown : Sparkles;
+  // Get button text
+  const getButtonText = () => {
+    if (isIncludedInPackage) return 'Modülü Aktifleştir';
+    if (activationType === 'trial') return 'Denemeyi Başlat';
+    return 'Satın Al';
+  };
 
   return (
     <Modal
       open={isOpen}
-      onCancel={onClose}
-      footer={null}
-      width={560}
-      centered
-      className="module-activation-modal"
-      styles={{
-        body: { padding: 0 },
-        content: { borderRadius: 16, overflow: 'hidden' },
-      }}
+      onClose={onClose}
+      size="lg"
+      showClose={true}
     >
       {isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <Spin size="large" />
+        <div className="flex items-center justify-center py-16">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+            <span className="text-sm text-slate-500">Yükleniyor...</span>
+          </div>
         </div>
       ) : (
-        <div>
+        <div className="-m-4">
           {/* Header */}
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 px-6 py-8 text-white">
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <TierIcon className="w-5 h-5 text-amber-400" />
-                  <Tag color="gold" className="text-xs border-0">
-                    {moduleInfo?.category || 'Standard'}
-                  </Tag>
-                </div>
-                <h2 className="text-2xl font-bold mb-1">{moduleInfo?.name || moduleName}</h2>
-                <p className="text-slate-300 text-sm">{moduleInfo?.description}</p>
-              </div>
+          <div className="bg-slate-900 px-6 py-6 text-white">
+            <div className="flex items-center gap-2 mb-3">
+              <SparklesIcon className="w-5 h-5 text-amber-400" />
+              <span className="text-xs font-medium text-amber-400 uppercase tracking-wide">
+                {moduleInfo?.category || 'Standard'}
+              </span>
             </div>
+            <h2 className="text-xl font-semibold mb-1">{moduleInfo?.name || moduleName}</h2>
+            <p className="text-slate-400 text-sm">{moduleInfo?.description}</p>
 
             {/* Price Display */}
-            {!isIncludedInPackage && (
-              <div className="mt-6 bg-white/10 rounded-xl p-4">
+            {!isIncludedInPackage && priceInfo && (
+              <div className="mt-5 bg-white/10 rounded-lg p-4">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold">{formatCurrency(displayedPrice.perMonth || 0)}</span>
-                  <span className="text-slate-300 text-sm">/ ay</span>
+                  <span className="text-2xl font-bold">{formatCurrency(displayedPrice.perMonth)}</span>
+                  <span className="text-slate-400 text-sm">/ ay</span>
                   {displayedPrice.discount > 0 && (
-                    <PriceBadge discount={displayedPrice.discount} />
+                    <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-emerald-500/20 text-emerald-300 rounded-full">
+                      %{displayedPrice.discount} indirim
+                    </span>
                   )}
                 </div>
                 {billingCycle !== 'monthly' && (
                   <p className="text-slate-400 text-xs mt-1">
-                    {formatCurrency(displayedPrice.price)} toplam ({billingCycle === 'quarterly' ? '3 ay' : billingCycle === 'semiannual' ? '6 ay' : '12 ay'})
+                    {formatCurrency(displayedPrice.price)} toplam (
+                    {billingCycle === 'quarterly' ? '3 ay' : billingCycle === 'semiannual' ? '6 ay' : '12 ay'})
                   </p>
                 )}
               </div>
@@ -224,29 +208,43 @@ export default function ModuleActivationModal({
 
             {/* Included in Package Badge */}
             {isIncludedInPackage && (
-              <div className="mt-6 bg-emerald-500/20 border border-emerald-400/30 rounded-xl p-4 flex items-center gap-3">
-                <Gift className="w-5 h-5 text-emerald-400" />
+              <div className="mt-5 bg-emerald-500/20 border border-emerald-500/30 rounded-lg p-4 flex items-center gap-3">
+                <GiftIcon className="w-5 h-5 text-emerald-400" />
                 <div>
                   <p className="font-medium text-emerald-100">Paketinize Dahil</p>
-                  <p className="text-emerald-200/70 text-xs">Bu modül mevcut aboneliğinize dahildir</p>
+                  <p className="text-emerald-300/70 text-xs">Bu modül mevcut aboneliğinize dahildir</p>
                 </div>
               </div>
             )}
           </div>
 
           {/* Content */}
-          <div className="px-6 py-6">
+          <div className="px-6 py-5">
             {/* Features */}
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-slate-900 mb-3">Dahil Olan Özellikler</h3>
+            <div className="mb-5">
+              <h3 className="text-sm font-medium text-slate-900 mb-3">Dahil Olan Özellikler</h3>
               <ul className="space-y-2">
-                {moduleInfo?.features?.map((feature, idx) => (
-                  <FeatureItem key={idx} feature={feature.featureName} />
-                )) || (
+                {moduleInfo?.features?.length ? (
+                  moduleInfo.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm text-slate-600">
+                      <CheckIcon className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                      <span>{feature.featureName}</span>
+                    </li>
+                  ))
+                ) : (
                   <>
-                    <FeatureItem feature="Temel modül özellikleri" />
-                    <FeatureItem feature="Raporlama ve analitik" />
-                    <FeatureItem feature="API erişimi" />
+                    <li className="flex items-start gap-2 text-sm text-slate-600">
+                      <CheckIcon className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                      <span>Temel modül özellikleri</span>
+                    </li>
+                    <li className="flex items-start gap-2 text-sm text-slate-600">
+                      <CheckIcon className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                      <span>Raporlama ve analitik</span>
+                    </li>
+                    <li className="flex items-start gap-2 text-sm text-slate-600">
+                      <CheckIcon className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                      <span>API erişimi</span>
+                    </li>
                   </>
                 )}
               </ul>
@@ -254,12 +252,12 @@ export default function ModuleActivationModal({
 
             {/* Dependencies Warning */}
             {moduleInfo?.dependencies && moduleInfo.dependencies.length > 0 && (
-              <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="mb-5 bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                  <ExclamationTriangleIcon className="w-5 h-5 text-amber-500 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-amber-800">Bağımlı Modüller</p>
-                    <p className="text-xs text-amber-600 mt-1">
+                    <p className="text-xs text-amber-600 mt-0.5">
                       Bu modül için şu modüller de gereklidir: {moduleInfo.dependencies.join(', ')}
                     </p>
                   </div>
@@ -267,83 +265,101 @@ export default function ModuleActivationModal({
               </div>
             )}
 
-            {/* Billing Cycle Selection (only if not included in package) */}
+            {/* Billing Cycle Selection */}
             {!isIncludedInPackage && (
-              <div className="mb-6">
-                <h3 className="text-sm font-semibold text-slate-900 mb-3">Ödeme Dönemi</h3>
-                <Radio.Group
-                  value={billingCycle}
-                  onChange={(e) => setBillingCycle(e.target.value)}
-                  className="w-full"
-                >
-                  <div className="grid grid-cols-2 gap-2">
-                    <Radio.Button value="monthly" className="h-auto py-2 px-3 text-center">
-                      <div className="text-sm font-medium">Aylık</div>
-                      <div className="text-xs text-slate-500">{formatCurrency(priceInfo?.monthlyTotal || 0)}</div>
-                    </Radio.Button>
-                    <Radio.Button value="quarterly" className="h-auto py-2 px-3 text-center">
-                      <div className="text-sm font-medium">3 Aylık</div>
-                      <div className="text-xs text-slate-500">%{priceInfo?.quarterlyDiscount || 10} indirim</div>
-                    </Radio.Button>
-                    <Radio.Button value="semiannual" className="h-auto py-2 px-3 text-center">
-                      <div className="text-sm font-medium">6 Aylık</div>
-                      <div className="text-xs text-slate-500">%{priceInfo?.semiAnnualDiscount || 15} indirim</div>
-                    </Radio.Button>
-                    <Radio.Button value="annual" className="h-auto py-2 px-3 text-center relative">
-                      <div className="absolute -top-2 -right-2 px-1.5 py-0.5 bg-emerald-500 text-white text-[10px] font-medium rounded-full">
-                        Popüler
+              <div className="mb-5">
+                <h3 className="text-sm font-medium text-slate-900 mb-3">Ödeme Dönemi</h3>
+                <div className="grid grid-cols-4 gap-2">
+                  {BILLING_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setBillingCycle(option.value)}
+                      className={cn(
+                        'relative py-2 px-3 rounded-lg border text-center transition-all',
+                        billingCycle === option.value
+                          ? 'border-slate-900 bg-slate-900 text-white'
+                          : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                      )}
+                    >
+                      {option.popular && (
+                        <span className="absolute -top-2 -right-1 px-1.5 py-0.5 bg-emerald-500 text-white text-[10px] font-medium rounded-full">
+                          Popüler
+                        </span>
+                      )}
+                      <div className="text-sm font-medium">{option.label}</div>
+                      <div className={cn(
+                        'text-xs mt-0.5',
+                        billingCycle === option.value ? 'text-slate-300' : 'text-slate-500'
+                      )}>
+                        {getDiscountText(option.value)}
                       </div>
-                      <div className="text-sm font-medium">Yıllık</div>
-                      <div className="text-xs text-slate-500">%{priceInfo?.annualDiscount || 20} indirim</div>
-                    </Radio.Button>
-                  </div>
-                </Radio.Group>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* Activation Type Selection (only if not included in package) */}
+            {/* Activation Type Selection */}
             {!isIncludedInPackage && (
-              <div className="mb-6">
-                <Radio.Group
-                  value={activationType}
-                  onChange={(e) => setActivationType(e.target.value)}
-                  className="w-full"
+              <div className="space-y-2">
+                {/* Trial Option */}
+                <button
+                  type="button"
+                  onClick={() => setActivationType('trial')}
+                  className={cn(
+                    'w-full flex items-center gap-3 p-4 border rounded-lg text-left transition-all',
+                    activationType === 'trial'
+                      ? 'border-slate-900 bg-slate-50'
+                      : 'border-slate-200 hover:border-slate-300'
+                  )}
                 >
-                  <div className="space-y-2">
-                    <label
-                      className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${
-                        activationType === 'trial'
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <Radio value="trial" />
-                      <Clock className="w-5 h-5 text-blue-500" />
-                      <div className="flex-1">
-                        <p className="font-medium text-slate-900">14 Gün Ücretsiz Dene</p>
-                        <p className="text-xs text-slate-500">Kredi kartı gerekmez</p>
-                      </div>
-                      <Tag color="blue">Ücretsiz</Tag>
-                    </label>
-                    <label
-                      className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${
-                        activationType === 'paid'
-                          ? 'border-emerald-500 bg-emerald-50'
-                          : 'border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <Radio value="paid" />
-                      <CreditCard className="w-5 h-5 text-emerald-500" />
-                      <div className="flex-1">
-                        <p className="font-medium text-slate-900">Hemen Satın Al</p>
-                        <p className="text-xs text-slate-500">Tam erişim, sınırsız kullanım</p>
-                      </div>
-                      <span className="font-semibold text-emerald-600">
-                        {formatCurrency(displayedPrice.perMonth || 0)}/ay
-                      </span>
-                    </label>
+                  <div className={cn(
+                    'w-4 h-4 rounded-full border-2 flex items-center justify-center',
+                    activationType === 'trial' ? 'border-slate-900' : 'border-slate-300'
+                  )}>
+                    {activationType === 'trial' && (
+                      <div className="w-2 h-2 rounded-full bg-slate-900" />
+                    )}
                   </div>
-                </Radio.Group>
+                  <ClockIcon className="w-5 h-5 text-slate-500" />
+                  <div className="flex-1">
+                    <p className="font-medium text-slate-900">14 Gün Ücretsiz Dene</p>
+                    <p className="text-xs text-slate-500">Kredi kartı gerekmez</p>
+                  </div>
+                  <span className="px-2 py-1 text-xs font-medium bg-slate-100 text-slate-600 rounded">
+                    Ücretsiz
+                  </span>
+                </button>
+
+                {/* Paid Option */}
+                <button
+                  type="button"
+                  onClick={() => setActivationType('paid')}
+                  className={cn(
+                    'w-full flex items-center gap-3 p-4 border rounded-lg text-left transition-all',
+                    activationType === 'paid'
+                      ? 'border-slate-900 bg-slate-50'
+                      : 'border-slate-200 hover:border-slate-300'
+                  )}
+                >
+                  <div className={cn(
+                    'w-4 h-4 rounded-full border-2 flex items-center justify-center',
+                    activationType === 'paid' ? 'border-slate-900' : 'border-slate-300'
+                  )}>
+                    {activationType === 'paid' && (
+                      <div className="w-2 h-2 rounded-full bg-slate-900" />
+                    )}
+                  </div>
+                  <CreditCardIcon className="w-5 h-5 text-slate-500" />
+                  <div className="flex-1">
+                    <p className="font-medium text-slate-900">Hemen Satın Al</p>
+                    <p className="text-xs text-slate-500">Tam erişim, sınırsız kullanım</p>
+                  </div>
+                  <span className="font-semibold text-slate-900">
+                    {formatCurrency(displayedPrice.perMonth)}/ay
+                  </span>
+                </button>
               </div>
             )}
           </div>
@@ -351,26 +367,37 @@ export default function ModuleActivationModal({
           {/* Footer */}
           <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
             <button
+              type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
             >
               Vazgeç
             </button>
-            <Button
-              type="primary"
-              size="large"
+            <button
+              type="button"
               onClick={handleActivate}
-              loading={isActivating}
-              className="bg-slate-900 hover:bg-slate-800 border-0 h-11 px-6 rounded-lg font-medium"
-              icon={<ArrowRight className="w-4 h-4" />}
-              iconPosition="end"
+              disabled={isActivating}
+              className={cn(
+                'inline-flex items-center gap-2 px-5 py-2.5 rounded-lg',
+                'text-sm font-medium text-white',
+                'bg-slate-900 hover:bg-slate-800',
+                'focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2',
+                'transition-colors',
+                isActivating && 'opacity-50 cursor-not-allowed'
+              )}
             >
-              {isIncludedInPackage
-                ? 'Modülü Aktifleştir'
-                : activationType === 'trial'
-                ? 'Denemeyi Başlat'
-                : 'Satın Al'}
-            </Button>
+              {isActivating ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  İşleniyor...
+                </>
+              ) : (
+                <>
+                  {getButtonText()}
+                  <ArrowRightIcon className="w-4 h-4" />
+                </>
+              )}
+            </button>
           </div>
         </div>
       )}
