@@ -4,16 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { Form, Input, Select, DatePicker } from 'antd';
 import { PhoneIcon } from '@heroicons/react/24/outline';
 import type { CallLogDto } from '@/lib/api/services/crm.types';
-import { CallDirection, CallType, CallOutcome } from '@/lib/api/services/crm.types';
+import { CallDirection, CallType } from '@/lib/api/services/crm.types';
 import { useCustomers } from '@/lib/api/hooks/useCRM';
 
 const { TextArea } = Input;
-
-// Call direction options
-const directionOptions = [
-  { value: CallDirection.Inbound, label: 'Gelen' },
-  { value: CallDirection.Outbound, label: 'Giden' },
-];
 
 // Call type options
 const callTypeOptions = [
@@ -24,24 +18,6 @@ const callTypeOptions = [
   { value: CallType.Campaign, label: 'Kampanya' },
   { value: CallType.Conference, label: 'Konferans' },
   { value: CallType.Callback, label: 'Geri Arama' },
-];
-
-// Call outcome options
-const outcomeOptions = [
-  { value: CallOutcome.Successful, label: 'Başarılı' },
-  { value: CallOutcome.NoAnswer, label: 'Cevapsız' },
-  { value: CallOutcome.Busy, label: 'Meşgul' },
-  { value: CallOutcome.LeftVoicemail, label: 'Sesli Mesaj Bırakıldı' },
-  { value: CallOutcome.WrongNumber, label: 'Yanlış Numara' },
-  { value: CallOutcome.CallbackRequested, label: 'Geri Arama İstendi' },
-  { value: CallOutcome.NotInterested, label: 'İlgilenmedi' },
-  { value: CallOutcome.InformationProvided, label: 'Bilgi Verildi' },
-  { value: CallOutcome.AppointmentScheduled, label: 'Randevu Alındı' },
-  { value: CallOutcome.SaleMade, label: 'Satış Yapıldı' },
-  { value: CallOutcome.ComplaintReceived, label: 'Şikayet Alındı' },
-  { value: CallOutcome.IssueResolved, label: 'Sorun Çözüldü' },
-  { value: CallOutcome.Abandoned, label: 'İptal Edildi' },
-  { value: CallOutcome.Transferred, label: 'Transfer Edildi' },
 ];
 
 interface CallLogFormProps {
@@ -159,6 +135,19 @@ export default function CallLogForm({ form, initialValues, onFinish, loading }: 
             </h3>
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Arama Numarası <span className="text-red-500">*</span></label>
+                <Form.Item
+                  name="callNumber"
+                  rules={[{ required: true, message: 'Arama numarası zorunludur' }]}
+                  className="mb-0"
+                >
+                  <Input
+                    placeholder="CALL-001"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Aranan Numara <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="calledNumber"
@@ -180,7 +169,18 @@ export default function CallLogForm({ form, initialValues, onFinish, loading }: 
                   />
                 </Form.Item>
               </div>
-              <div className="col-span-12">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Başlangıç Zamanı</label>
+                <Form.Item name="startTime" className="mb-0">
+                  <DatePicker
+                    showTime
+                    format="DD/MM/YYYY HH:mm"
+                    placeholder="Arama başlangıç zamanı"
+                    className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Müşteri</label>
                 <Form.Item name="customerId" className="mb-0">
                   <Select
@@ -190,64 +190,6 @@ export default function CallLogForm({ form, initialValues, onFinish, loading }: 
                     optionFilterProp="label"
                     options={customers.map(c => ({ value: c.id, label: c.companyName }))}
                     className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
-              </div>
-            </div>
-          </div>
-
-          {/* ─────────────── SONUÇ BİLGİLERİ ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Sonuç Bilgileri
-            </h3>
-            <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sonuç</label>
-                <Form.Item name="outcome" className="mb-0">
-                  <Select
-                    placeholder="Sonuç seçin"
-                    options={outcomeOptions}
-                    allowClear
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
-              </div>
-              <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sonuç Açıklaması</label>
-                <Form.Item name="outcomeDescription" className="mb-0">
-                  <Input
-                    placeholder="—"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
-              </div>
-            </div>
-          </div>
-
-          {/* ─────────────── TAKİP BİLGİLERİ ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Takip Bilgileri
-            </h3>
-            <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Takip Tarihi</label>
-                <Form.Item name="followUpDate" className="mb-0">
-                  <DatePicker
-                    placeholder="Tarih seçin"
-                    showTime
-                    format="DD/MM/YYYY HH:mm"
-                    className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
-                  />
-                </Form.Item>
-              </div>
-              <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Takip Notu</label>
-                <Form.Item name="followUpNote" className="mb-0">
-                  <Input
-                    placeholder="—"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
               </div>

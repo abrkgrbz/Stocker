@@ -6,6 +6,7 @@ import { Form } from 'antd';
 import { CrmFormPageLayout } from '@/components/crm/shared';
 import { CallLogForm } from '@/components/crm/call-logs';
 import { useCreateCallLog } from '@/lib/api/hooks/useCRM';
+import dayjs from 'dayjs';
 
 export default function NewCallLogPage() {
   const router = useRouter();
@@ -14,7 +15,11 @@ export default function NewCallLogPage() {
 
   const handleSubmit = async (values: any) => {
     try {
-      await createCallLog.mutateAsync(values);
+      const payload = {
+        ...values,
+        startTime: values.startTime ? dayjs(values.startTime).toISOString() : undefined,
+      };
+      await createCallLog.mutateAsync(payload);
       router.push('/crm/call-logs');
     } catch (error) {
       // Error handled by hook

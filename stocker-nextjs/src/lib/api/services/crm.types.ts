@@ -1123,15 +1123,18 @@ export interface CallLogDto {
 }
 
 export interface CreateCallLogCommand {
+  callNumber: string; // Required by backend
   direction: CallDirection;
   callerNumber: string;
   calledNumber: string;
+  startTime?: DateTime;
   callType?: CallType;
   customerId?: Guid;
   contactId?: Guid;
   leadId?: Guid;
   opportunityId?: Guid;
   agentUserId?: number;
+  agentName?: string;
   notes?: string;
 }
 
