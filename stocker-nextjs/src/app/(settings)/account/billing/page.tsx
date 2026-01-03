@@ -770,6 +770,40 @@ export default function BillingPage() {
                     {!isCurrentPlan && (
                       <button
                         onClick={async () => {
+                          // Trial users need to go through checkout, not change-plan
+                          if (isTrialUser) {
+                            const confirmed = await showAlert.confirm(
+                              'Abonelik Başlat',
+                              `${plan.productName} - ${plan.variantName} planına abone olmak istediğinizden emin misiniz?`
+                            );
+
+                            if (!confirmed) return;
+
+                            try {
+                              setActionLoading(`checkout-${plan.variantId}`);
+                              const response = await billingService.createCheckout({
+                                variantId: plan.variantId,
+                                successUrl: `${window.location.origin}/account/billing?success=true`,
+                                cancelUrl: `${window.location.origin}/account/billing?cancelled=true`,
+                              });
+
+                              // Handle response - API returns { success, checkoutUrl } directly
+                              const checkoutData = response as any;
+                              if (checkoutData.success && (checkoutData.checkoutUrl || checkoutData.data?.checkoutUrl)) {
+                                window.location.href = checkoutData.checkoutUrl || checkoutData.data?.checkoutUrl;
+                              } else {
+                                await showAlert.error('Hata', 'Ödeme sayfası açılamadı.');
+                              }
+                            } catch (err) {
+                              console.error('Checkout error:', err);
+                              await showAlert.error('Hata', 'Bir hata oluştu.');
+                            } finally {
+                              setActionLoading(null);
+                            }
+                            return;
+                          }
+
+                          // Paid users can change plan
                           const confirmed = await showAlert.confirm(
                             'Plan Değiştir',
                             `${plan.productName} - ${plan.variantName} planına geçmek istediğinizden emin misiniz?`
@@ -781,11 +815,13 @@ export default function BillingPage() {
                             setActionLoading(`change-${plan.variantId}`);
                             const response = await billingService.changePlan({ newVariantId: plan.variantId });
 
-                            if (response.success) {
+                            // Handle response format
+                            const changeData = response as any;
+                            if (changeData.success) {
                               showSuccess('Plan başarıyla değiştirildi.');
                               await fetchData();
                             } else {
-                              await showAlert.error('Hata', response.message || 'Plan değiştirilemedi.');
+                              await showAlert.error('Hata', changeData.message || changeData.error || 'Plan değiştirilemedi.');
                             }
                           } catch (err) {
                             console.error('Change plan error:', err);
@@ -794,13 +830,13 @@ export default function BillingPage() {
                             setActionLoading(null);
                           }
                         }}
-                        disabled={actionLoading === `change-${plan.variantId}`}
+                        disabled={actionLoading === `change-${plan.variantId}` || actionLoading === `checkout-${plan.variantId}`}
                         className="mt-3 w-full px-3 py-1.5 text-xs font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
                       >
-                        {actionLoading === `change-${plan.variantId}` ? (
+                        {(actionLoading === `change-${plan.variantId}` || actionLoading === `checkout-${plan.variantId}`) ? (
                           <Loader2 className="w-3 h-3 animate-spin" />
                         ) : (
-                          'Bu Plana Geç'
+                          isTrialUser ? 'Abone Ol' : 'Bu Plana Geç'
                         )}
                       </button>
                     )}
