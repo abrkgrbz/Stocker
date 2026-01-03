@@ -868,7 +868,8 @@ public static class GeoLocationSeed
     private static Guid GenerateCityGuid(string plateCode)
     {
         var paddedCode = plateCode.PadLeft(4, '0');
-        return new Guid($"00000000-0000-0000-0002-0000000{paddedCode}");
+        // Last segment must be exactly 12 characters: 00000000 + 4-digit plate = 12
+        return new Guid($"00000000-0000-0000-0002-00000000{paddedCode}");
     }
 
     /// <summary>
