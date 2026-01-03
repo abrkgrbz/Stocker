@@ -93,6 +93,29 @@ export default function TerritoryDetailPage() {
 
   const { data: territory, isLoading, error } = useTerritory(territoryId);
 
+  // Generate mock monthly performance data for sparkline (simulated trend)
+  // IMPORTANT: useMemo must be called before any conditional returns (React hooks rules)
+  const sparklineData = useMemo(() => {
+    if (!territory?.totalSales && !territory?.salesTarget) return [];
+    const totalSales = territory.totalSales || 0;
+    // Generate 6 months of simulated progressive data
+    const baseValue = totalSales * 0.1;
+    return [
+      baseValue,
+      baseValue * 1.5,
+      baseValue * 2.2,
+      baseValue * 3.1,
+      baseValue * 4.5,
+      totalSales,
+    ];
+  }, [territory?.totalSales, territory?.salesTarget]);
+
+  // Calculate sales performance percentage
+  const salesPerformance = useMemo(() => {
+    if (!territory?.salesTarget || !territory?.totalSales) return 0;
+    return Math.min(Math.round((territory.totalSales / territory.salesTarget) * 100), 100);
+  }, [territory?.salesTarget, territory?.totalSales]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center items-center">
@@ -120,28 +143,6 @@ export default function TerritoryDetailPage() {
       maximumFractionDigits: 0,
     }).format(value);
   };
-
-  // Generate mock monthly performance data for sparkline (simulated trend)
-  const sparklineData = useMemo(() => {
-    if (!territory.totalSales && !territory.salesTarget) return [];
-    const totalSales = territory.totalSales || 0;
-    const target = territory.salesTarget || totalSales * 1.2;
-    // Generate 6 months of simulated progressive data
-    const baseValue = totalSales * 0.1;
-    return [
-      baseValue,
-      baseValue * 1.5,
-      baseValue * 2.2,
-      baseValue * 3.1,
-      baseValue * 4.5,
-      totalSales,
-    ];
-  }, [territory.totalSales, territory.salesTarget]);
-
-  // Calculate sales performance percentage
-  const salesPerformance = territory.salesTarget && territory.totalSales
-    ? Math.min(Math.round((territory.totalSales / territory.salesTarget) * 100), 100)
-    : 0;
 
   return (
     <div className="min-h-screen bg-slate-50">
