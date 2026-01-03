@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Stocker.API.Controllers.Base;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Services;
+using Stocker.Domain.Master.Entities;
 
 namespace Stocker.API.Controllers.Tenant;
 
@@ -294,8 +295,11 @@ public class BillingController : ApiController
             return BadRequest(new { success = false, error = "Tenant bilgisi bulunamadı" });
         }
 
+        // IsActive is a computed property, use Status directly for EF Core query
         var lsSubscription = await _masterContext.LemonSqueezySubscriptions
-            .FirstOrDefaultAsync(s => s.TenantId == tenantId.Value && s.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(s => s.TenantId == tenantId.Value &&
+                (s.Status == LemonSqueezyStatus.Active || s.Status == LemonSqueezyStatus.OnTrial),
+                cancellationToken);
 
         if (lsSubscription == null)
         {
@@ -328,8 +332,11 @@ public class BillingController : ApiController
             return BadRequest(new { success = false, error = "Tenant bilgisi bulunamadı" });
         }
 
+        // IsActive is a computed property, use Status directly for EF Core query
         var lsSubscription = await _masterContext.LemonSqueezySubscriptions
-            .FirstOrDefaultAsync(s => s.TenantId == tenantId.Value && s.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(s => s.TenantId == tenantId.Value &&
+                (s.Status == LemonSqueezyStatus.Active || s.Status == LemonSqueezyStatus.OnTrial),
+                cancellationToken);
 
         if (lsSubscription == null)
         {
@@ -362,8 +369,10 @@ public class BillingController : ApiController
             return BadRequest(new { success = false, error = "Tenant bilgisi bulunamadı" });
         }
 
+        // IsPaused is a computed property, use Status directly for EF Core query
         var lsSubscription = await _masterContext.LemonSqueezySubscriptions
-            .FirstOrDefaultAsync(s => s.TenantId == tenantId.Value && s.IsPaused, cancellationToken);
+            .FirstOrDefaultAsync(s => s.TenantId == tenantId.Value &&
+                s.Status == LemonSqueezyStatus.Paused, cancellationToken);
 
         if (lsSubscription == null)
         {
@@ -398,12 +407,20 @@ public class BillingController : ApiController
             return BadRequest(new { success = false, error = "Tenant bilgisi bulunamadı" });
         }
 
+        // IsActive is a computed property, use Status directly for EF Core query
         var lsSubscription = await _masterContext.LemonSqueezySubscriptions
-            .FirstOrDefaultAsync(s => s.TenantId == tenantId.Value && s.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(s => s.TenantId == tenantId.Value &&
+                (s.Status == LemonSqueezyStatus.Active || s.Status == LemonSqueezyStatus.OnTrial),
+                cancellationToken);
 
         if (lsSubscription == null)
         {
-            return NotFound(new { success = false, error = "Aktif abonelik bulunamadı" });
+            // For trial users without LemonSqueezy subscription, redirect to checkout
+            return BadRequest(new {
+                success = false,
+                error = "Plan değiştirmek için önce ücretli bir abonelik başlatmanız gerekmektedir.",
+                requiresCheckout = true
+            });
         }
 
         var updateRequest = new UpdateSubscriptionRequest
