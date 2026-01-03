@@ -65,7 +65,7 @@ public class CreateReferralCommandHandler : IRequestHandler<CreateReferralComman
             referral.SetAssignedTo(request.AssignedToUserId.Value);
 
         // Save to repository - using the same UnitOfWork ensures same DbContext
-        await _unitOfWork.Referrals.AddAsync(referral, cancellationToken);
+        await _unitOfWork.Referrals.CreateAsync(referral, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<Guid>.Success(referral.Id);
