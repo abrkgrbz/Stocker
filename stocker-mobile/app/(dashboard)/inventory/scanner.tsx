@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Pressable, StyleSheet, Alert, Vibration } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Alert, Vibration, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
@@ -16,65 +16,8 @@ import {
     ScanLine
 } from 'lucide-react-native';
 import { useTheme } from '@/lib/theme';
+import { inventoryService } from '@/lib/api/services/inventory.service';
 import type { Product } from '@/lib/api/types/inventory.types';
-
-// Mock product database for barcode lookup
-const MOCK_PRODUCTS: Record<string, Product> = {
-    '8691234567890': {
-        id: '1',
-        sku: 'PRD-001',
-        barcode: '8691234567890',
-        name: 'Laptop Dell Inspiron 15',
-        description: '15.6" FHD, Intel Core i5, 8GB RAM, 256GB SSD',
-        categoryName: 'Bilgisayarlar',
-        brandName: 'Dell',
-        unitName: 'Adet',
-        price: 28500,
-        cost: 24000,
-        currency: 'TRY',
-        stockQuantity: 15,
-        minStockLevel: 5,
-        status: 'active',
-        createdAt: '2024-01-10',
-        updatedAt: '2024-12-28'
-    },
-    '8691234567891': {
-        id: '2',
-        sku: 'PRD-002',
-        barcode: '8691234567891',
-        name: 'iPhone 15 Pro',
-        description: '256GB, Natural Titanium',
-        categoryName: 'Telefonlar',
-        brandName: 'Apple',
-        unitName: 'Adet',
-        price: 75000,
-        cost: 68000,
-        currency: 'TRY',
-        stockQuantity: 3,
-        minStockLevel: 10,
-        status: 'active',
-        createdAt: '2024-02-15',
-        updatedAt: '2024-12-29'
-    },
-    '8691234567892': {
-        id: '3',
-        sku: 'PRD-003',
-        barcode: '8691234567892',
-        name: 'Samsung Galaxy Tab S9',
-        description: '11" AMOLED, 128GB',
-        categoryName: 'Tabletler',
-        brandName: 'Samsung',
-        unitName: 'Adet',
-        price: 22000,
-        cost: 18500,
-        currency: 'TRY',
-        stockQuantity: 0,
-        minStockLevel: 5,
-        status: 'out_of_stock',
-        createdAt: '2024-03-20',
-        updatedAt: '2024-12-20'
-    },
-};
 
 export default function BarcodeScannerScreen() {
     const router = useRouter();
@@ -82,6 +25,7 @@ export default function BarcodeScannerScreen() {
     const [permission, requestPermission] = useCameraPermissions();
     const [torch, setTorch] = useState(false);
     const [scanned, setScanned] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
     const [scannedProduct, setScannedProduct] = useState<Product | null>(null);
     const [quantity, setQuantity] = useState(1);
     const lastScannedRef = useRef<string>('');
@@ -95,42 +39,53 @@ export default function BarcodeScannerScreen() {
         };
     }, []);
 
-    const handleBarCodeScanned = (result: BarcodeScanningResult) => {
+    const handleBarCodeScanned = async (result: BarcodeScanningResult) => {
         const { data } = result;
 
         // Prevent duplicate scans
-        if (scanned || data === lastScannedRef.current) return;
+        if (scanned || isSearching || data === lastScannedRef.current) return;
 
         lastScannedRef.current = data;
         setScanned(true);
+        setIsSearching(true);
 
         // Haptic feedback
         Vibration.vibrate(100);
 
-        // Look up product
-        const product = MOCK_PRODUCTS[data];
+        try {
+            // Look up product from API
+            const scanResult = await inventoryService.getProductByBarcode(data);
 
-        if (product) {
-            setScannedProduct(product);
-            setQuantity(1);
-        } else {
-            Alert.alert(
-                'Ürün Bulunamadı',
-                `Barkod: ${data}\n\nBu barkod sistemde kayıtlı değil. Yeni ürün eklemek ister misiniz?`,
-                [
-                    { text: 'İptal', onPress: resetScanner },
-                    {
-                        text: 'Yeni Ürün Ekle',
-                        onPress: () => {
-                            resetScanner();
-                            router.push({
-                                pathname: '/(dashboard)/inventory/add' as any,
-                                params: { barcode: data }
-                            });
+            if (scanResult.found && scanResult.product) {
+                setScannedProduct(scanResult.product);
+                setQuantity(1);
+            } else {
+                Alert.alert(
+                    'Ürün Bulunamadı',
+                    `Barkod: ${data}\n\nBu barkod sistemde kayıtlı değil. Yeni ürün eklemek ister misiniz?`,
+                    [
+                        { text: 'İptal', onPress: resetScanner },
+                        {
+                            text: 'Yeni Ürün Ekle',
+                            onPress: () => {
+                                resetScanner();
+                                router.push({
+                                    pathname: '/(dashboard)/inventory/add' as any,
+                                    params: { barcode: data }
+                                });
+                            }
                         }
-                    }
-                ]
+                    ]
+                );
+            }
+        } catch (error) {
+            Alert.alert(
+                'Hata',
+                'Ürün aranırken bir hata oluştu. Lütfen tekrar deneyin.',
+                [{ text: 'Tamam', onPress: resetScanner }]
             );
+        } finally {
+            setIsSearching(false);
         }
     };
 
@@ -303,38 +258,49 @@ export default function BarcodeScannerScreen() {
                 {/* Scan Area Frame */}
                 {!scannedProduct && (
                     <View className="flex-1 items-center justify-center">
-                        <View
-                            style={{
-                                width: 280,
-                                height: 180,
-                                borderWidth: 2,
-                                borderColor: colors.brand.primary,
-                                borderRadius: 16,
-                                position: 'relative'
-                            }}
-                        >
-                            {/* Corner decorations */}
-                            <View style={{ position: 'absolute', top: -2, left: -2, width: 30, height: 30, borderTopWidth: 4, borderLeftWidth: 4, borderColor: colors.brand.primary, borderTopLeftRadius: 16 }} />
-                            <View style={{ position: 'absolute', top: -2, right: -2, width: 30, height: 30, borderTopWidth: 4, borderRightWidth: 4, borderColor: colors.brand.primary, borderTopRightRadius: 16 }} />
-                            <View style={{ position: 'absolute', bottom: -2, left: -2, width: 30, height: 30, borderBottomWidth: 4, borderLeftWidth: 4, borderColor: colors.brand.primary, borderBottomLeftRadius: 16 }} />
-                            <View style={{ position: 'absolute', bottom: -2, right: -2, width: 30, height: 30, borderBottomWidth: 4, borderRightWidth: 4, borderColor: colors.brand.primary, borderBottomRightRadius: 16 }} />
+                        {isSearching ? (
+                            <View style={{ alignItems: 'center' }}>
+                                <ActivityIndicator size="large" color={colors.brand.primary} />
+                                <Text style={{ color: '#fff', fontSize: 14, marginTop: 16, textAlign: 'center' }}>
+                                    Ürün aranıyor...
+                                </Text>
+                            </View>
+                        ) : (
+                            <>
+                                <View
+                                    style={{
+                                        width: 280,
+                                        height: 180,
+                                        borderWidth: 2,
+                                        borderColor: colors.brand.primary,
+                                        borderRadius: 16,
+                                        position: 'relative'
+                                    }}
+                                >
+                                    {/* Corner decorations */}
+                                    <View style={{ position: 'absolute', top: -2, left: -2, width: 30, height: 30, borderTopWidth: 4, borderLeftWidth: 4, borderColor: colors.brand.primary, borderTopLeftRadius: 16 }} />
+                                    <View style={{ position: 'absolute', top: -2, right: -2, width: 30, height: 30, borderTopWidth: 4, borderRightWidth: 4, borderColor: colors.brand.primary, borderTopRightRadius: 16 }} />
+                                    <View style={{ position: 'absolute', bottom: -2, left: -2, width: 30, height: 30, borderBottomWidth: 4, borderLeftWidth: 4, borderColor: colors.brand.primary, borderBottomLeftRadius: 16 }} />
+                                    <View style={{ position: 'absolute', bottom: -2, right: -2, width: 30, height: 30, borderBottomWidth: 4, borderRightWidth: 4, borderColor: colors.brand.primary, borderBottomRightRadius: 16 }} />
 
-                            {/* Scan line animation would go here */}
-                            <View
-                                style={{
-                                    position: 'absolute',
-                                    top: '50%',
-                                    left: 20,
-                                    right: 20,
-                                    height: 2,
-                                    backgroundColor: colors.brand.primary,
-                                    opacity: 0.8
-                                }}
-                            />
-                        </View>
-                        <Text style={{ color: '#fff', fontSize: 14, marginTop: 16, textAlign: 'center' }}>
-                            Barkodu çerçeve içine hizalayın
-                        </Text>
+                                    {/* Scan line animation would go here */}
+                                    <View
+                                        style={{
+                                            position: 'absolute',
+                                            top: '50%',
+                                            left: 20,
+                                            right: 20,
+                                            height: 2,
+                                            backgroundColor: colors.brand.primary,
+                                            opacity: 0.8
+                                        }}
+                                    />
+                                </View>
+                                <Text style={{ color: '#fff', fontSize: 14, marginTop: 16, textAlign: 'center' }}>
+                                    Barkodu çerçeve içine hizalayın
+                                </Text>
+                            </>
+                        )}
                     </View>
                 )}
 

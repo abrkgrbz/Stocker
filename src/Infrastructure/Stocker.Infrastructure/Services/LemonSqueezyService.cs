@@ -659,11 +659,12 @@ public class LemonSqueezyService : ILemonSqueezyService
 
         var attr = data.Attributes;
 
-        // Extract tenant ID from custom data
-        var tenantIdStr = attr.CustomData?.TenantId;
+        // Extract tenant ID from custom data (in meta, not attributes)
+        var tenantIdStr = webhookEvent.Meta?.CustomData?.TenantId;
         if (!Guid.TryParse(tenantIdStr, out var tenantId))
         {
-            _logger.LogWarning("Invalid or missing tenant_id in subscription custom data");
+            _logger.LogWarning("Invalid or missing tenant_id in subscription custom data. Meta: {Meta}",
+                webhookEvent.Meta != null ? "exists" : "null");
             return;
         }
 
