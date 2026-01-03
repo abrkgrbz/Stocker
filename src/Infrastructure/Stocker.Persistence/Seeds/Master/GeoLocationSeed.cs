@@ -15,31 +15,51 @@ public static class GeoLocationSeed
 
     public static async Task SeedAsync(MasterDbContext context)
     {
-        if (await context.Countries.AnyAsync())
-            return;
+        List<Country> countries;
 
-        // Seed all world countries
-        var countries = GetAllCountries();
-        await context.Countries.AddRangeAsync(countries);
-        await context.SaveChangesAsync();
+        // Seed Countries if not exist
+        if (!await context.Countries.AnyAsync())
+        {
+            countries = GetAllCountries();
+            await context.Countries.AddRangeAsync(countries);
+            await context.SaveChangesAsync();
+        }
+        else
+        {
+            // Load existing countries for city seeding
+            countries = await context.Countries.ToListAsync();
+        }
 
-        // Seed cities for all countries
-        var allCities = new List<City>();
+        List<City> allCities;
 
-        // Turkish Cities (81 provinces with detailed data)
-        allCities.AddRange(GetTurkishCities(TurkeyId));
+        // Seed Cities if not exist
+        if (!await context.Cities.AnyAsync())
+        {
+            allCities = new List<City>();
 
-        // International Cities/States
-        allCities.AddRange(GetInternationalCities(countries));
+            // Turkish Cities (81 provinces with detailed data)
+            allCities.AddRange(GetTurkishCities(TurkeyId));
 
-        await context.Cities.AddRangeAsync(allCities);
-        await context.SaveChangesAsync();
+            // International Cities/States
+            allCities.AddRange(GetInternationalCities(countries));
 
-        // Seed Districts for major Turkish cities
-        var turkishCities = allCities.Where(c => c.CountryId == TurkeyId).ToList();
-        var districts = GetTurkishDistricts(turkishCities);
-        await context.Districts.AddRangeAsync(districts);
-        await context.SaveChangesAsync();
+            await context.Cities.AddRangeAsync(allCities);
+            await context.SaveChangesAsync();
+        }
+        else
+        {
+            // Load existing cities for district seeding
+            allCities = await context.Cities.ToListAsync();
+        }
+
+        // Seed Districts if not exist
+        if (!await context.Districts.AnyAsync())
+        {
+            var turkishCities = allCities.Where(c => c.CountryId == TurkeyId).ToList();
+            var districts = GetTurkishDistricts(turkishCities);
+            await context.Districts.AddRangeAsync(districts);
+            await context.SaveChangesAsync();
+        }
     }
 
     /// <summary>
