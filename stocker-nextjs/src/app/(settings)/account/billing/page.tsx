@@ -111,13 +111,15 @@ const StatusBadge = ({ status, isPaused, isCancelled }: { status: string; isPaus
   const statusMap: Record<string, { bg: string; text: string; label: string }> = {
     active: { bg: 'bg-emerald-50', text: 'text-emerald-600', label: 'Aktif' },
     on_trial: { bg: 'bg-blue-50', text: 'text-blue-600', label: 'Deneme' },
+    deneme: { bg: 'bg-blue-50', text: 'text-blue-600', label: 'Deneme' },
+    trial: { bg: 'bg-blue-50', text: 'text-blue-600', label: 'Deneme' },
     past_due: { bg: 'bg-amber-50', text: 'text-amber-600', label: 'Ödeme Bekliyor' },
     unpaid: { bg: 'bg-red-50', text: 'text-red-600', label: 'Ödenmedi' },
     cancelled: { bg: 'bg-slate-50', text: 'text-slate-600', label: 'İptal Edildi' },
     expired: { bg: 'bg-slate-50', text: 'text-slate-600', label: 'Süresi Doldu' },
   };
 
-  const statusStyle = statusMap[status.toLowerCase()] || statusMap.active;
+  const statusStyle = statusMap[status.toLowerCase()] || { bg: 'bg-blue-50', text: 'text-blue-600', label: status };
 
   return (
     <span className={`px-2 py-0.5 text-xs font-medium ${statusStyle.bg} ${statusStyle.text} rounded-full`}>
@@ -145,12 +147,16 @@ export default function BillingPage() {
         billingService.getPlans(),
       ]);
 
-      if (subscriptionRes.success && subscriptionRes.data?.subscription) {
-        setSubscription(subscriptionRes.data.subscription);
+      // Handle subscription response - API returns { success, subscription } directly
+      const subData = subscriptionRes as any;
+      if (subData.success && (subData.subscription || subData.data?.subscription)) {
+        setSubscription(subData.subscription || subData.data?.subscription);
       }
 
-      if (plansRes.success && plansRes.data?.plans) {
-        setPlans(plansRes.data.plans);
+      // Handle plans response - API returns { success, plans } directly
+      const plansData = plansRes as any;
+      if (plansData.success && (plansData.plans || plansData.data?.plans)) {
+        setPlans(plansData.plans || plansData.data?.plans);
       }
     } catch (err) {
       console.error('Failed to fetch billing data:', err);
