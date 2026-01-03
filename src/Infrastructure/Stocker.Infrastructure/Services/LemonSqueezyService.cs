@@ -841,18 +841,16 @@ public class LemonSqueezyService : ILemonSqueezyService
                 return;
             }
 
-            // Create new subscription record
-            lsSubscription = new LemonSqueezySubscription(
+            // Create new subscription record using factory method
+            lsSubscription = LemonSqueezySubscription.Create(
                 tenantId,
                 data.Id,
-                attr.OrderId?.ToString() ?? string.Empty,
                 attr.CustomerId?.ToString() ?? string.Empty,
                 attr.ProductId?.ToString() ?? string.Empty,
-                attr.ProductName ?? string.Empty,
-                attr.VariantId?.ToString() ?? string.Empty,
-                attr.VariantName ?? string.Empty,
-                attr.UserName ?? string.Empty,
-                attr.UserEmail ?? string.Empty,
+                attr.VariantId?.ToString() ?? string.Empty);
+
+            // Update with full webhook data
+            lsSubscription.UpdateFromWebhook(
                 MapStatus(attr.Status),
                 attr.StatusFormatted ?? string.Empty,
                 attr.TrialEndsAt,
@@ -867,6 +865,11 @@ public class LemonSqueezyService : ILemonSqueezyService
                 attr.Urls?.CustomerPortal,
                 attr.Urls?.UpdatePaymentMethod,
                 webhookEvent.Meta?.EventId ?? string.Empty);
+
+            // Set additional info
+            lsSubscription.SetProductInfo(attr.ProductName, attr.VariantName);
+            if (!string.IsNullOrEmpty(attr.UserEmail))
+                lsSubscription.SetCustomerEmail(attr.UserEmail);
 
             await _masterContext.LemonSqueezySubscriptions.AddAsync(lsSubscription, cancellationToken);
             _logger.LogInformation("Created LemonSqueezy subscription from update event: {SubscriptionId} for tenant {TenantId}",
