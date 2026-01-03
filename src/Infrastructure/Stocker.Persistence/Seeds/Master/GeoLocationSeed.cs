@@ -797,58 +797,272 @@ public static class GeoLocationSeed
     private static List<District> GetTurkishDistricts(List<City> cities)
     {
         var districts = new List<District>();
+        var cityDict = cities.ToDictionary(c => c.PlateCode, c => c.Id);
 
-        // İstanbul districts (39 districts)
-        var istanbul = cities.First(c => c.PlateCode == "34");
-        var istanbulDistricts = new[] { ("Adalar", false), ("Arnavutköy", false), ("Ataşehir", false), ("Avcılar", false), ("Bağcılar", false), ("Bahçelievler", false), ("Bakırköy", false), ("Başakşehir", false), ("Bayrampaşa", false), ("Beşiktaş", false), ("Beykoz", false), ("Beylikdüzü", false), ("Beyoğlu", false), ("Büyükçekmece", false), ("Çatalca", false), ("Çekmeköy", false), ("Esenler", false), ("Esenyurt", false), ("Eyüpsultan", false), ("Fatih", true), ("Gaziosmanpaşa", false), ("Güngören", false), ("Kadıköy", false), ("Kağıthane", false), ("Kartal", false), ("Küçükçekmece", false), ("Maltepe", false), ("Pendik", false), ("Sancaktepe", false), ("Sarıyer", false), ("Silivri", false), ("Sultanbeyli", false), ("Sultangazi", false), ("Şile", false), ("Şişli", false), ("Tuzla", false), ("Ümraniye", false), ("Üsküdar", false), ("Zeytinburnu", false) };
-        districts.AddRange(istanbulDistricts.Select((d, i) => District.CreateWithId(GenerateDistrictGuid("34", i + 1), istanbul.Id, d.Item1, null, d.Item2, i + 1)));
+        // All 81 provinces with their districts (973 total districts)
+        // Format: PlateCode -> List of (DistrictName, IsCentralDistrict)
+        var allDistricts = new Dictionary<string, (string Name, bool IsCenter)[]>
+        {
+            // 01 - Adana (15 districts)
+            ["01"] = new[] { ("Aladağ", false), ("Ceyhan", false), ("Çukurova", false), ("Feke", false), ("İmamoğlu", false), ("Karaisalı", false), ("Karataş", false), ("Kozan", false), ("Pozantı", false), ("Saimbeyli", false), ("Sarıçam", false), ("Seyhan", true), ("Tufanbeyli", false), ("Yumurtalık", false), ("Yüreğir", false) },
 
-        // Ankara districts (25 districts)
-        var ankara = cities.First(c => c.PlateCode == "06");
-        var ankaraDistricts = new[] { ("Akyurt", false), ("Altındağ", false), ("Ayaş", false), ("Balâ", false), ("Beypazarı", false), ("Çamlıdere", false), ("Çankaya", true), ("Çubuk", false), ("Elmadağ", false), ("Etimesgut", false), ("Evren", false), ("Gölbaşı", false), ("Güdül", false), ("Haymana", false), ("Kahramankazan", false), ("Kalecik", false), ("Keçiören", false), ("Kızılcahamam", false), ("Mamak", false), ("Nallıhan", false), ("Polatlı", false), ("Pursaklar", false), ("Sincan", false), ("Şereflikoçhisar", false), ("Yenimahalle", false) };
-        districts.AddRange(ankaraDistricts.Select((d, i) => District.CreateWithId(GenerateDistrictGuid("06", i + 1), ankara.Id, d.Item1, null, d.Item2, i + 1)));
+            // 02 - Adıyaman (9 districts)
+            ["02"] = new[] { ("Besni", false), ("Çelikhan", false), ("Gerger", false), ("Gölbaşı", false), ("Kahta", false), ("Merkez", true), ("Samsat", false), ("Sincik", false), ("Tut", false) },
 
-        // İzmir districts (30 districts)
-        var izmir = cities.First(c => c.PlateCode == "35");
-        var izmirDistricts = new[] { ("Aliağa", false), ("Balçova", false), ("Bayındır", false), ("Bayraklı", false), ("Bergama", false), ("Beydağ", false), ("Bornova", false), ("Buca", false), ("Çeşme", false), ("Çiğli", false), ("Dikili", false), ("Foça", false), ("Gaziemir", false), ("Güzelbahçe", false), ("Karabağlar", false), ("Karaburun", false), ("Karşıyaka", false), ("Kemalpaşa", false), ("Kınık", false), ("Kiraz", false), ("Konak", true), ("Menderes", false), ("Menemen", false), ("Narlıdere", false), ("Ödemiş", false), ("Seferihisar", false), ("Selçuk", false), ("Tire", false), ("Torbalı", false), ("Urla", false) };
-        districts.AddRange(izmirDistricts.Select((d, i) => District.CreateWithId(GenerateDistrictGuid("35", i + 1), izmir.Id, d.Item1, null, d.Item2, i + 1)));
+            // 03 - Afyonkarahisar (18 districts)
+            ["03"] = new[] { ("Başmakçı", false), ("Bayat", false), ("Bolvadin", false), ("Çay", false), ("Çobanlar", false), ("Dazkırı", false), ("Dinar", false), ("Emirdağ", false), ("Evciler", false), ("Hocalar", false), ("İhsaniye", false), ("İscehisar", false), ("Kızılören", false), ("Merkez", true), ("Sandıklı", false), ("Sinanpaşa", false), ("Sultandağı", false), ("Şuhut", false) },
 
-        // Bursa districts (17 districts)
-        var bursa = cities.First(c => c.PlateCode == "16");
-        var bursaDistricts = new[] { ("Büyükorhan", false), ("Gemlik", false), ("Gürsu", false), ("Harmancık", false), ("İnegöl", false), ("İznik", false), ("Karacabey", false), ("Keles", false), ("Kestel", false), ("Mudanya", false), ("Mustafakemalpaşa", false), ("Nilüfer", false), ("Orhaneli", false), ("Orhangazi", false), ("Osmangazi", true), ("Yenişehir", false), ("Yıldırım", false) };
-        districts.AddRange(bursaDistricts.Select((d, i) => District.CreateWithId(GenerateDistrictGuid("16", i + 1), bursa.Id, d.Item1, null, d.Item2, i + 1)));
+            // 04 - Ağrı (8 districts)
+            ["04"] = new[] { ("Diyadin", false), ("Doğubayazıt", false), ("Eleşkirt", false), ("Hamur", false), ("Merkez", true), ("Patnos", false), ("Taşlıçay", false), ("Tutak", false) },
 
-        // Antalya districts (19 districts)
-        var antalya = cities.First(c => c.PlateCode == "07");
-        var antalyaDistricts = new[] { ("Akseki", false), ("Aksu", false), ("Alanya", false), ("Demre", false), ("Döşemealtı", false), ("Elmalı", false), ("Finike", false), ("Gazipaşa", false), ("Gündoğmuş", false), ("İbradı", false), ("Kaş", false), ("Kemer", false), ("Kepez", false), ("Konyaaltı", false), ("Korkuteli", false), ("Kumluca", false), ("Manavgat", false), ("Muratpaşa", true), ("Serik", false) };
-        districts.AddRange(antalyaDistricts.Select((d, i) => District.CreateWithId(GenerateDistrictGuid("07", i + 1), antalya.Id, d.Item1, null, d.Item2, i + 1)));
+            // 05 - Amasya (7 districts)
+            ["05"] = new[] { ("Göynücek", false), ("Gümüşhacıköy", false), ("Hamamözü", false), ("Merkez", true), ("Merzifon", false), ("Suluova", false), ("Taşova", false) },
 
-        // Additional major cities with their districts...
-        // Konya, Adana, Gaziantep, Kocaeli, Mersin, Kayseri, Eskişehir, Diyarbakır, Samsun, Denizli, Şanlıurfa, Trabzon
+            // 06 - Ankara (25 districts)
+            ["06"] = new[] { ("Akyurt", false), ("Altındağ", false), ("Ayaş", false), ("Balâ", false), ("Beypazarı", false), ("Çamlıdere", false), ("Çankaya", true), ("Çubuk", false), ("Elmadağ", false), ("Etimesgut", false), ("Evren", false), ("Gölbaşı", false), ("Güdül", false), ("Haymana", false), ("Kahramankazan", false), ("Kalecik", false), ("Keçiören", false), ("Kızılcahamam", false), ("Mamak", false), ("Nallıhan", false), ("Polatlı", false), ("Pursaklar", false), ("Sincan", false), ("Şereflikoçhisar", false), ("Yenimahalle", false) },
 
-        var konya = cities.First(c => c.PlateCode == "42");
-        var konyaDistricts = new[] { ("Ahırlı", false), ("Akören", false), ("Akşehir", false), ("Altınekin", false), ("Beyşehir", false), ("Bozkır", false), ("Cihanbeyli", false), ("Çeltik", false), ("Çumra", false), ("Derbent", false), ("Derebucak", false), ("Doğanhisar", false), ("Emirgazi", false), ("Ereğli", false), ("Güneysınır", false), ("Hadim", false), ("Halkapınar", false), ("Hüyük", false), ("Ilgın", false), ("Kadınhanı", false), ("Karapınar", false), ("Karatay", true), ("Kulu", false), ("Meram", false), ("Sarayönü", false), ("Selçuklu", false), ("Seydişehir", false), ("Taşkent", false), ("Tuzlukçu", false), ("Yalıhüyük", false), ("Yunak", false) };
-        districts.AddRange(konyaDistricts.Select((d, i) => District.CreateWithId(GenerateDistrictGuid("42", i + 1), konya.Id, d.Item1, null, d.Item2, i + 1)));
+            // 07 - Antalya (19 districts)
+            ["07"] = new[] { ("Akseki", false), ("Aksu", false), ("Alanya", false), ("Demre", false), ("Döşemealtı", false), ("Elmalı", false), ("Finike", false), ("Gazipaşa", false), ("Gündoğmuş", false), ("İbradı", false), ("Kaş", false), ("Kemer", false), ("Kepez", false), ("Konyaaltı", false), ("Korkuteli", false), ("Kumluca", false), ("Manavgat", false), ("Muratpaşa", true), ("Serik", false) },
 
-        var adana = cities.First(c => c.PlateCode == "01");
-        var adanaDistricts = new[] { ("Aladağ", false), ("Ceyhan", false), ("Çukurova", false), ("Feke", false), ("İmamoğlu", false), ("Karaisalı", false), ("Karataş", false), ("Kozan", false), ("Pozantı", false), ("Saimbeyli", false), ("Sarıçam", false), ("Seyhan", true), ("Tufanbeyli", false), ("Yumurtalık", false), ("Yüreğir", false) };
-        districts.AddRange(adanaDistricts.Select((d, i) => District.CreateWithId(GenerateDistrictGuid("01", i + 1), adana.Id, d.Item1, null, d.Item2, i + 1)));
+            // 08 - Artvin (8 districts)
+            ["08"] = new[] { ("Ardanuç", false), ("Arhavi", false), ("Borçka", false), ("Hopa", false), ("Merkez", true), ("Murgul", false), ("Şavşat", false), ("Yusufeli", false) },
 
-        var gaziantep = cities.First(c => c.PlateCode == "27");
-        var gaziantepDistricts = new[] { ("Araban", false), ("İslahiye", false), ("Karkamış", false), ("Nizip", false), ("Nurdağı", false), ("Oğuzeli", false), ("Şahinbey", true), ("Şehitkamil", false), ("Yavuzeli", false) };
-        districts.AddRange(gaziantepDistricts.Select((d, i) => District.CreateWithId(GenerateDistrictGuid("27", i + 1), gaziantep.Id, d.Item1, null, d.Item2, i + 1)));
+            // 09 - Aydın (17 districts)
+            ["09"] = new[] { ("Bozdoğan", false), ("Buharkent", false), ("Çine", false), ("Didim", false), ("Efeler", true), ("Germencik", false), ("İncirliova", false), ("Karacasu", false), ("Karpuzlu", false), ("Koçarlı", false), ("Köşk", false), ("Kuşadası", false), ("Kuyucak", false), ("Nazilli", false), ("Söke", false), ("Sultanhisar", false), ("Yenipazar", false) },
 
-        var kocaeli = cities.First(c => c.PlateCode == "41");
-        var kocaeliDistricts = new[] { ("Başiskele", false), ("Çayırova", false), ("Darıca", false), ("Derince", false), ("Dilovası", false), ("Gebze", false), ("Gölcük", false), ("İzmit", true), ("Kandıra", false), ("Karamürsel", false), ("Kartepe", false), ("Körfez", false) };
-        districts.AddRange(kocaeliDistricts.Select((d, i) => District.CreateWithId(GenerateDistrictGuid("41", i + 1), kocaeli.Id, d.Item1, null, d.Item2, i + 1)));
+            // 10 - Balıkesir (20 districts)
+            ["10"] = new[] { ("Altıeylül", true), ("Ayvalık", false), ("Balya", false), ("Bandırma", false), ("Bigadiç", false), ("Burhaniye", false), ("Dursunbey", false), ("Edremit", false), ("Erdek", false), ("Gömeç", false), ("Gönen", false), ("Havran", false), ("İvrindi", false), ("Karesi", false), ("Kepsut", false), ("Manyas", false), ("Marmara", false), ("Savaştepe", false), ("Sındırgı", false), ("Susurluk", false) },
 
-        var mersin = cities.First(c => c.PlateCode == "33");
-        var mersinDistricts = new[] { ("Akdeniz", true), ("Anamur", false), ("Aydıncık", false), ("Bozyazı", false), ("Çamlıyayla", false), ("Erdemli", false), ("Gülnar", false), ("Mezitli", false), ("Mut", false), ("Silifke", false), ("Tarsus", false), ("Toroslar", false), ("Yenişehir", false) };
-        districts.AddRange(mersinDistricts.Select((d, i) => District.CreateWithId(GenerateDistrictGuid("33", i + 1), mersin.Id, d.Item1, null, d.Item2, i + 1)));
+            // 11 - Bilecik (8 districts)
+            ["11"] = new[] { ("Bozüyük", false), ("Gölpazarı", false), ("İnhisar", false), ("Merkez", true), ("Osmaneli", false), ("Pazaryeri", false), ("Söğüt", false), ("Yenipazar", false) },
 
-        var kayseri = cities.First(c => c.PlateCode == "38");
-        var kayseriDistricts = new[] { ("Akkışla", false), ("Bünyan", false), ("Develi", false), ("Felahiye", false), ("Hacılar", false), ("İncesu", false), ("Kocasinan", true), ("Melikgazi", false), ("Özvatan", false), ("Pınarbaşı", false), ("Sarıoğlan", false), ("Sarız", false), ("Talas", false), ("Tomarza", false), ("Yahyalı", false), ("Yeşilhisar", false) };
-        districts.AddRange(kayseriDistricts.Select((d, i) => District.CreateWithId(GenerateDistrictGuid("38", i + 1), kayseri.Id, d.Item1, null, d.Item2, i + 1)));
+            // 12 - Bingöl (8 districts)
+            ["12"] = new[] { ("Adaklı", false), ("Genç", false), ("Karlıova", false), ("Kiğı", false), ("Merkez", true), ("Solhan", false), ("Yayladere", false), ("Yedisu", false) },
+
+            // 13 - Bitlis (7 districts)
+            ["13"] = new[] { ("Adilcevaz", false), ("Ahlat", false), ("Güroymak", false), ("Hizan", false), ("Merkez", true), ("Mutki", false), ("Tatvan", false) },
+
+            // 14 - Bolu (9 districts)
+            ["14"] = new[] { ("Dörtdivan", false), ("Gerede", false), ("Göynük", false), ("Kıbrıscık", false), ("Mengen", false), ("Merkez", true), ("Mudurnu", false), ("Seben", false), ("Yeniçağa", false) },
+
+            // 15 - Burdur (11 districts)
+            ["15"] = new[] { ("Ağlasun", false), ("Altınyayla", false), ("Bucak", false), ("Çavdır", false), ("Çeltikçi", false), ("Gölhisar", false), ("Karamanlı", false), ("Kemer", false), ("Merkez", true), ("Tefenni", false), ("Yeşilova", false) },
+
+            // 16 - Bursa (17 districts)
+            ["16"] = new[] { ("Büyükorhan", false), ("Gemlik", false), ("Gürsu", false), ("Harmancık", false), ("İnegöl", false), ("İznik", false), ("Karacabey", false), ("Keles", false), ("Kestel", false), ("Mudanya", false), ("Mustafakemalpaşa", false), ("Nilüfer", false), ("Orhaneli", false), ("Orhangazi", false), ("Osmangazi", true), ("Yenişehir", false), ("Yıldırım", false) },
+
+            // 17 - Çanakkale (12 districts)
+            ["17"] = new[] { ("Ayvacık", false), ("Bayramiç", false), ("Biga", false), ("Bozcaada", false), ("Çan", false), ("Eceabat", false), ("Ezine", false), ("Gelibolu", false), ("Gökçeada", false), ("Lapseki", false), ("Merkez", true), ("Yenice", false) },
+
+            // 18 - Çankırı (12 districts)
+            ["18"] = new[] { ("Atkaracalar", false), ("Bayramören", false), ("Çerkeş", false), ("Eldivan", false), ("Ilgaz", false), ("Kızılırmak", false), ("Korgun", false), ("Kurşunlu", false), ("Merkez", true), ("Orta", false), ("Şabanözü", false), ("Yapraklı", false) },
+
+            // 19 - Çorum (14 districts)
+            ["19"] = new[] { ("Alaca", false), ("Bayat", false), ("Boğazkale", false), ("Dodurga", false), ("İskilip", false), ("Kargı", false), ("Laçin", false), ("Mecitözü", false), ("Merkez", true), ("Oğuzlar", false), ("Ortaköy", false), ("Osmancık", false), ("Sungurlu", false), ("Uğurludağ", false) },
+
+            // 20 - Denizli (19 districts)
+            ["20"] = new[] { ("Acıpayam", false), ("Babadağ", false), ("Baklan", false), ("Bekilli", false), ("Beyağaç", false), ("Bozkurt", false), ("Buldan", false), ("Çal", false), ("Çameli", false), ("Çardak", false), ("Çivril", false), ("Güney", false), ("Honaz", false), ("Kale", false), ("Merkezefendi", true), ("Pamukkale", false), ("Sarayköy", false), ("Serinhisar", false), ("Tavas", false) },
+
+            // 21 - Diyarbakır (17 districts)
+            ["21"] = new[] { ("Bağlar", false), ("Bismil", false), ("Çermik", false), ("Çınar", false), ("Çüngüş", false), ("Dicle", false), ("Eğil", false), ("Ergani", false), ("Hani", false), ("Hazro", false), ("Kayapınar", false), ("Kocaköy", false), ("Kulp", false), ("Lice", false), ("Silvan", false), ("Sur", true), ("Yenişehir", false) },
+
+            // 22 - Edirne (9 districts)
+            ["22"] = new[] { ("Enez", false), ("Havsa", false), ("İpsala", false), ("Keşan", false), ("Lalapaşa", false), ("Meriç", false), ("Merkez", true), ("Süloğlu", false), ("Uzunköprü", false) },
+
+            // 23 - Elazığ (11 districts)
+            ["23"] = new[] { ("Ağın", false), ("Alacakaya", false), ("Arıcak", false), ("Baskil", false), ("Karakoçan", false), ("Keban", false), ("Kovancılar", false), ("Maden", false), ("Merkez", true), ("Palu", false), ("Sivrice", false) },
+
+            // 24 - Erzincan (9 districts)
+            ["24"] = new[] { ("Çayırlı", false), ("İliç", false), ("Kemah", false), ("Kemaliye", false), ("Merkez", true), ("Otlukbeli", false), ("Refahiye", false), ("Tercan", false), ("Üzümlü", false) },
+
+            // 25 - Erzurum (20 districts)
+            ["25"] = new[] { ("Aşkale", false), ("Aziziye", false), ("Çat", false), ("Hınıs", false), ("Horasan", false), ("İspir", false), ("Karaçoban", false), ("Karayazı", false), ("Köprüköy", false), ("Narman", false), ("Oltu", false), ("Olur", false), ("Palandöken", false), ("Pasinler", false), ("Pazaryolu", false), ("Şenkaya", false), ("Tekman", false), ("Tortum", false), ("Uzundere", false), ("Yakutiye", true) },
+
+            // 26 - Eskişehir (14 districts)
+            ["26"] = new[] { ("Alpu", false), ("Beylikova", false), ("Çifteler", false), ("Günyüzü", false), ("Han", false), ("İnönü", false), ("Mahmudiye", false), ("Mihalgazi", false), ("Mihalıççık", false), ("Odunpazarı", true), ("Sarıcakaya", false), ("Seyitgazi", false), ("Sivrihisar", false), ("Tepebaşı", false) },
+
+            // 27 - Gaziantep (9 districts)
+            ["27"] = new[] { ("Araban", false), ("İslahiye", false), ("Karkamış", false), ("Nizip", false), ("Nurdağı", false), ("Oğuzeli", false), ("Şahinbey", true), ("Şehitkamil", false), ("Yavuzeli", false) },
+
+            // 28 - Giresun (16 districts)
+            ["28"] = new[] { ("Alucra", false), ("Bulancak", false), ("Çamoluk", false), ("Çanakçı", false), ("Dereli", false), ("Doğankent", false), ("Espiye", false), ("Eynesil", false), ("Görele", false), ("Güce", false), ("Keşap", false), ("Merkez", true), ("Piraziz", false), ("Şebinkarahisar", false), ("Tirebolu", false), ("Yağlıdere", false) },
+
+            // 29 - Gümüşhane (6 districts)
+            ["29"] = new[] { ("Kelkit", false), ("Köse", false), ("Kürtün", false), ("Merkez", true), ("Şiran", false), ("Torul", false) },
+
+            // 30 - Hakkâri (4 districts)
+            ["30"] = new[] { ("Çukurca", false), ("Derecik", false), ("Merkez", true), ("Yüksekova", false) },
+
+            // 31 - Hatay (15 districts)
+            ["31"] = new[] { ("Altınözü", false), ("Antakya", true), ("Arsuz", false), ("Belen", false), ("Defne", false), ("Dörtyol", false), ("Erzin", false), ("Hassa", false), ("İskenderun", false), ("Kırıkhan", false), ("Kumlu", false), ("Payas", false), ("Reyhanlı", false), ("Samandağ", false), ("Yayladağı", false) },
+
+            // 32 - Isparta (13 districts)
+            ["32"] = new[] { ("Aksu", false), ("Atabey", false), ("Eğirdir", false), ("Gelendost", false), ("Gönen", false), ("Keçiborlu", false), ("Merkez", true), ("Senirkent", false), ("Sütçüler", false), ("Şarkikaraağaç", false), ("Uluborlu", false), ("Yalvaç", false), ("Yenişarbademli", false) },
+
+            // 33 - Mersin (13 districts)
+            ["33"] = new[] { ("Akdeniz", true), ("Anamur", false), ("Aydıncık", false), ("Bozyazı", false), ("Çamlıyayla", false), ("Erdemli", false), ("Gülnar", false), ("Mezitli", false), ("Mut", false), ("Silifke", false), ("Tarsus", false), ("Toroslar", false), ("Yenişehir", false) },
+
+            // 34 - İstanbul (39 districts)
+            ["34"] = new[] { ("Adalar", false), ("Arnavutköy", false), ("Ataşehir", false), ("Avcılar", false), ("Bağcılar", false), ("Bahçelievler", false), ("Bakırköy", false), ("Başakşehir", false), ("Bayrampaşa", false), ("Beşiktaş", false), ("Beykoz", false), ("Beylikdüzü", false), ("Beyoğlu", false), ("Büyükçekmece", false), ("Çatalca", false), ("Çekmeköy", false), ("Esenler", false), ("Esenyurt", false), ("Eyüpsultan", false), ("Fatih", true), ("Gaziosmanpaşa", false), ("Güngören", false), ("Kadıköy", false), ("Kağıthane", false), ("Kartal", false), ("Küçükçekmece", false), ("Maltepe", false), ("Pendik", false), ("Sancaktepe", false), ("Sarıyer", false), ("Silivri", false), ("Sultanbeyli", false), ("Sultangazi", false), ("Şile", false), ("Şişli", false), ("Tuzla", false), ("Ümraniye", false), ("Üsküdar", false), ("Zeytinburnu", false) },
+
+            // 35 - İzmir (30 districts)
+            ["35"] = new[] { ("Aliağa", false), ("Balçova", false), ("Bayındır", false), ("Bayraklı", false), ("Bergama", false), ("Beydağ", false), ("Bornova", false), ("Buca", false), ("Çeşme", false), ("Çiğli", false), ("Dikili", false), ("Foça", false), ("Gaziemir", false), ("Güzelbahçe", false), ("Karabağlar", false), ("Karaburun", false), ("Karşıyaka", false), ("Kemalpaşa", false), ("Kınık", false), ("Kiraz", false), ("Konak", true), ("Menderes", false), ("Menemen", false), ("Narlıdere", false), ("Ödemiş", false), ("Seferihisar", false), ("Selçuk", false), ("Tire", false), ("Torbalı", false), ("Urla", false) },
+
+            // 36 - Kars (8 districts)
+            ["36"] = new[] { ("Akyaka", false), ("Arpaçay", false), ("Digor", false), ("Kağızman", false), ("Merkez", true), ("Sarıkamış", false), ("Selim", false), ("Susuz", false) },
+
+            // 37 - Kastamonu (20 districts)
+            ["37"] = new[] { ("Abana", false), ("Ağlı", false), ("Araç", false), ("Azdavay", false), ("Bozkurt", false), ("Cide", false), ("Çatalzeytin", false), ("Daday", false), ("Devrekani", false), ("Doğanyurt", false), ("Hanönü", false), ("İhsangazi", false), ("İnebolu", false), ("Küre", false), ("Merkez", true), ("Pınarbaşı", false), ("Seydiler", false), ("Şenpazar", false), ("Taşköprü", false), ("Tosya", false) },
+
+            // 38 - Kayseri (16 districts)
+            ["38"] = new[] { ("Akkışla", false), ("Bünyan", false), ("Develi", false), ("Felahiye", false), ("Hacılar", false), ("İncesu", false), ("Kocasinan", true), ("Melikgazi", false), ("Özvatan", false), ("Pınarbaşı", false), ("Sarıoğlan", false), ("Sarız", false), ("Talas", false), ("Tomarza", false), ("Yahyalı", false), ("Yeşilhisar", false) },
+
+            // 39 - Kırklareli (8 districts)
+            ["39"] = new[] { ("Babaeski", false), ("Demirköy", false), ("Kofçaz", false), ("Lüleburgaz", false), ("Merkez", true), ("Pehlivanköy", false), ("Pınarhisar", false), ("Vize", false) },
+
+            // 40 - Kırşehir (7 districts)
+            ["40"] = new[] { ("Akçakent", false), ("Akpınar", false), ("Boztepe", false), ("Çiçekdağı", false), ("Kaman", false), ("Merkez", true), ("Mucur", false) },
+
+            // 41 - Kocaeli (12 districts)
+            ["41"] = new[] { ("Başiskele", false), ("Çayırova", false), ("Darıca", false), ("Derince", false), ("Dilovası", false), ("Gebze", false), ("Gölcük", false), ("İzmit", true), ("Kandıra", false), ("Karamürsel", false), ("Kartepe", false), ("Körfez", false) },
+
+            // 42 - Konya (31 districts)
+            ["42"] = new[] { ("Ahırlı", false), ("Akören", false), ("Akşehir", false), ("Altınekin", false), ("Beyşehir", false), ("Bozkır", false), ("Cihanbeyli", false), ("Çeltik", false), ("Çumra", false), ("Derbent", false), ("Derebucak", false), ("Doğanhisar", false), ("Emirgazi", false), ("Ereğli", false), ("Güneysınır", false), ("Hadim", false), ("Halkapınar", false), ("Hüyük", false), ("Ilgın", false), ("Kadınhanı", false), ("Karapınar", false), ("Karatay", true), ("Kulu", false), ("Meram", false), ("Sarayönü", false), ("Selçuklu", false), ("Seydişehir", false), ("Taşkent", false), ("Tuzlukçu", false), ("Yalıhüyük", false), ("Yunak", false) },
+
+            // 43 - Kütahya (13 districts)
+            ["43"] = new[] { ("Altıntaş", false), ("Aslanapa", false), ("Çavdarhisar", false), ("Domaniç", false), ("Dumlupınar", false), ("Emet", false), ("Gediz", false), ("Hisarcık", false), ("Merkez", true), ("Pazarlar", false), ("Şaphane", false), ("Simav", false), ("Tavşanlı", false) },
+
+            // 44 - Malatya (13 districts)
+            ["44"] = new[] { ("Akçadağ", false), ("Arapgir", false), ("Arguvan", false), ("Battalgazi", true), ("Darende", false), ("Doğanşehir", false), ("Doğanyol", false), ("Hekimhan", false), ("Kale", false), ("Kuluncak", false), ("Pütürge", false), ("Yazıhan", false), ("Yeşilyurt", false) },
+
+            // 45 - Manisa (17 districts)
+            ["45"] = new[] { ("Ahmetli", false), ("Akhisar", false), ("Alaşehir", false), ("Demirci", false), ("Gölmarmara", false), ("Gördes", false), ("Kırkağaç", false), ("Köprübaşı", false), ("Kula", false), ("Salihli", false), ("Sarıgöl", false), ("Saruhanlı", false), ("Selendi", false), ("Soma", false), ("Şehzadeler", true), ("Turgutlu", false), ("Yunusemre", false) },
+
+            // 46 - Kahramanmaraş (11 districts)
+            ["46"] = new[] { ("Afşin", false), ("Andırın", false), ("Çağlayancerit", false), ("Dulkadiroğlu", true), ("Ekinözü", false), ("Elbistan", false), ("Göksun", false), ("Nurhak", false), ("Onikişubat", false), ("Pazarcık", false), ("Türkoğlu", false) },
+
+            // 47 - Mardin (10 districts)
+            ["47"] = new[] { ("Artuklu", true), ("Dargeçit", false), ("Derik", false), ("Kızıltepe", false), ("Mazıdağı", false), ("Midyat", false), ("Nusaybin", false), ("Ömerli", false), ("Savur", false), ("Yeşilli", false) },
+
+            // 48 - Muğla (13 districts)
+            ["48"] = new[] { ("Bodrum", false), ("Dalaman", false), ("Datça", false), ("Fethiye", false), ("Kavaklıdere", false), ("Köyceğiz", false), ("Marmaris", false), ("Menteşe", true), ("Milas", false), ("Ortaca", false), ("Seydikemer", false), ("Ula", false), ("Yatağan", false) },
+
+            // 49 - Muş (6 districts)
+            ["49"] = new[] { ("Bulanık", false), ("Hasköy", false), ("Korkut", false), ("Malazgirt", false), ("Merkez", true), ("Varto", false) },
+
+            // 50 - Nevşehir (8 districts)
+            ["50"] = new[] { ("Acıgöl", false), ("Avanos", false), ("Derinkuyu", false), ("Gülşehir", false), ("Hacıbektaş", false), ("Kozaklı", false), ("Merkez", true), ("Ürgüp", false) },
+
+            // 51 - Niğde (6 districts)
+            ["51"] = new[] { ("Altunhisar", false), ("Bor", false), ("Çamardı", false), ("Çiftlik", false), ("Merkez", true), ("Ulukışla", false) },
+
+            // 52 - Ordu (19 districts)
+            ["52"] = new[] { ("Akkuş", false), ("Altınordu", true), ("Aybastı", false), ("Çamaş", false), ("Çatalpınar", false), ("Çaybaşı", false), ("Fatsa", false), ("Gölköy", false), ("Gülyalı", false), ("Gürgentepe", false), ("İkizce", false), ("Kabadüz", false), ("Kabataş", false), ("Korgan", false), ("Kumru", false), ("Mesudiye", false), ("Perşembe", false), ("Ulubey", false), ("Ünye", false) },
+
+            // 53 - Rize (12 districts)
+            ["53"] = new[] { ("Ardeşen", false), ("Çamlıhemşin", false), ("Çayeli", false), ("Derepazarı", false), ("Fındıklı", false), ("Güneysu", false), ("Hemşin", false), ("İkizdere", false), ("İyidere", false), ("Kalkandere", false), ("Merkez", true), ("Pazar", false) },
+
+            // 54 - Sakarya (16 districts)
+            ["54"] = new[] { ("Adapazarı", true), ("Akyazı", false), ("Arifiye", false), ("Erenler", false), ("Ferizli", false), ("Geyve", false), ("Hendek", false), ("Karapürçek", false), ("Karasu", false), ("Kaynarca", false), ("Kocaali", false), ("Pamukova", false), ("Sapanca", false), ("Serdivan", false), ("Söğütlü", false), ("Taraklı", false) },
+
+            // 55 - Samsun (17 districts)
+            ["55"] = new[] { ("Alaçam", false), ("Asarcık", false), ("Atakum", false), ("Ayvacık", false), ("Bafra", false), ("Canik", false), ("Çarşamba", false), ("Havza", false), ("İlkadım", true), ("Kavak", false), ("Ladik", false), ("Ondokuzmayıs", false), ("Salıpazarı", false), ("Tekkeköy", false), ("Terme", false), ("Vezirköprü", false), ("Yakakent", false) },
+
+            // 56 - Siirt (7 districts)
+            ["56"] = new[] { ("Baykan", false), ("Eruh", false), ("Kurtalan", false), ("Merkez", true), ("Pervari", false), ("Şirvan", false), ("Tillo", false) },
+
+            // 57 - Sinop (9 districts)
+            ["57"] = new[] { ("Ayancık", false), ("Boyabat", false), ("Dikmen", false), ("Durağan", false), ("Erfelek", false), ("Gerze", false), ("Merkez", true), ("Saraydüzü", false), ("Türkeli", false) },
+
+            // 58 - Sivas (17 districts)
+            ["58"] = new[] { ("Akıncılar", false), ("Altınyayla", false), ("Divriği", false), ("Doğanşar", false), ("Gemerek", false), ("Gölova", false), ("Gürün", false), ("Hafik", false), ("İmranlı", false), ("Kangal", false), ("Koyulhisar", false), ("Merkez", true), ("Suşehri", false), ("Şarkışla", false), ("Ulaş", false), ("Yıldızeli", false), ("Zara", false) },
+
+            // 59 - Tekirdağ (11 districts)
+            ["59"] = new[] { ("Çerkezköy", false), ("Çorlu", false), ("Ergene", false), ("Hayrabolu", false), ("Kapaklı", false), ("Malkara", false), ("Marmaraereğlisi", false), ("Muratlı", false), ("Saray", false), ("Süleymanpaşa", true), ("Şarköy", false) },
+
+            // 60 - Tokat (12 districts)
+            ["60"] = new[] { ("Almus", false), ("Artova", false), ("Başçiftlik", false), ("Erbaa", false), ("Merkez", true), ("Niksar", false), ("Pazar", false), ("Reşadiye", false), ("Sulusaray", false), ("Turhal", false), ("Yeşilyurt", false), ("Zile", false) },
+
+            // 61 - Trabzon (18 districts)
+            ["61"] = new[] { ("Akçaabat", false), ("Araklı", false), ("Arsin", false), ("Beşikdüzü", false), ("Çarşıbaşı", false), ("Çaykara", false), ("Dernekpazarı", false), ("Düzköy", false), ("Hayrat", false), ("Köprübaşı", false), ("Maçka", false), ("Of", false), ("Ortahisar", true), ("Sürmene", false), ("Şalpazarı", false), ("Tonya", false), ("Vakfıkebir", false), ("Yomra", false) },
+
+            // 62 - Tunceli (8 districts)
+            ["62"] = new[] { ("Çemişgezek", false), ("Hozat", false), ("Mazgirt", false), ("Merkez", true), ("Nazımiye", false), ("Ovacık", false), ("Pertek", false), ("Pülümür", false) },
+
+            // 63 - Şanlıurfa (13 districts)
+            ["63"] = new[] { ("Akçakale", false), ("Birecik", false), ("Bozova", false), ("Ceylanpınar", false), ("Eyyübiye", true), ("Halfeti", false), ("Haliliye", false), ("Harran", false), ("Hilvan", false), ("Karaköprü", false), ("Siverek", false), ("Suruç", false), ("Viranşehir", false) },
+
+            // 64 - Uşak (6 districts)
+            ["64"] = new[] { ("Banaz", false), ("Eşme", false), ("Karahallı", false), ("Merkez", true), ("Sivaslı", false), ("Ulubey", false) },
+
+            // 65 - Van (13 districts)
+            ["65"] = new[] { ("Bahçesaray", false), ("Başkale", false), ("Çaldıran", false), ("Çatak", false), ("Edremit", false), ("Erciş", false), ("Gevaş", false), ("Gürpınar", false), ("İpekyolu", true), ("Muradiye", false), ("Özalp", false), ("Saray", false), ("Tuşba", false) },
+
+            // 66 - Yozgat (14 districts)
+            ["66"] = new[] { ("Akdağmadeni", false), ("Aydıncık", false), ("Boğazlıyan", false), ("Çandır", false), ("Çayıralan", false), ("Çekerek", false), ("Kadışehri", false), ("Merkez", true), ("Saraykent", false), ("Sarıkaya", false), ("Sorgun", false), ("Şefaatli", false), ("Yenifakılı", false), ("Yerköy", false) },
+
+            // 67 - Zonguldak (8 districts)
+            ["67"] = new[] { ("Alaplı", false), ("Çaycuma", false), ("Devrek", false), ("Gökçebey", false), ("Kilimli", false), ("Kozlu", false), ("Merkez", true), ("Ereğli", false) },
+
+            // 68 - Aksaray (8 districts)
+            ["68"] = new[] { ("Ağaçören", false), ("Eskil", false), ("Gülağaç", false), ("Güzelyurt", false), ("Merkez", true), ("Ortaköy", false), ("Sarıyahşi", false), ("Sultanhanı", false) },
+
+            // 69 - Bayburt (3 districts)
+            ["69"] = new[] { ("Aydıntepe", false), ("Demirözü", false), ("Merkez", true) },
+
+            // 70 - Karaman (6 districts)
+            ["70"] = new[] { ("Ayrancı", false), ("Başyayla", false), ("Ermenek", false), ("Kazımkarabekir", false), ("Merkez", true), ("Sarıveliler", false) },
+
+            // 71 - Kırıkkale (9 districts)
+            ["71"] = new[] { ("Bahşili", false), ("Balışeyh", false), ("Çelebi", false), ("Delice", false), ("Karakeçili", false), ("Keskin", false), ("Merkez", true), ("Sulakyurt", false), ("Yahşihan", false) },
+
+            // 72 - Batman (6 districts)
+            ["72"] = new[] { ("Beşiri", false), ("Gercüş", false), ("Hasankeyf", false), ("Kozluk", false), ("Merkez", true), ("Sason", false) },
+
+            // 73 - Şırnak (7 districts)
+            ["73"] = new[] { ("Beytüşşebap", false), ("Cizre", false), ("Güçlükonak", false), ("İdil", false), ("Merkez", true), ("Silopi", false), ("Uludere", false) },
+
+            // 74 - Bartın (4 districts)
+            ["74"] = new[] { ("Amasra", false), ("Kurucaşile", false), ("Merkez", true), ("Ulus", false) },
+
+            // 75 - Ardahan (6 districts)
+            ["75"] = new[] { ("Çıldır", false), ("Damal", false), ("Göle", false), ("Hanak", false), ("Merkez", true), ("Posof", false) },
+
+            // 76 - Iğdır (4 districts)
+            ["76"] = new[] { ("Aralık", false), ("Karakoyunlu", false), ("Merkez", true), ("Tuzluca", false) },
+
+            // 77 - Yalova (6 districts)
+            ["77"] = new[] { ("Altınova", false), ("Armutlu", false), ("Çınarcık", false), ("Çiftlikköy", false), ("Merkez", true), ("Termal", false) },
+
+            // 78 - Karabük (6 districts)
+            ["78"] = new[] { ("Eflani", false), ("Eskipazar", false), ("Merkez", true), ("Ovacık", false), ("Safranbolu", false), ("Yenice", false) },
+
+            // 79 - Kilis (4 districts)
+            ["79"] = new[] { ("Elbeyli", false), ("Merkez", true), ("Musabeyli", false), ("Polateli", false) },
+
+            // 80 - Osmaniye (7 districts)
+            ["80"] = new[] { ("Bahçe", false), ("Düziçi", false), ("Hasanbeyli", false), ("Kadirli", false), ("Merkez", true), ("Sumbas", false), ("Toprakkale", false) },
+
+            // 81 - Düzce (8 districts)
+            ["81"] = new[] { ("Akçakoca", false), ("Cumayeri", false), ("Çilimli", false), ("Gölyaka", false), ("Gümüşova", false), ("Kaynaşlı", false), ("Merkez", true), ("Yığılca", false) }
+        };
+
+        // Generate districts for all cities
+        foreach (var cityEntry in allDistricts)
+        {
+            if (cityDict.TryGetValue(cityEntry.Key, out var cityId))
+            {
+                var cityDistricts = cityEntry.Value;
+                districts.AddRange(cityDistricts.Select((d, i) =>
+                    District.CreateWithId(
+                        GenerateDistrictGuid(cityEntry.Key, i + 1),
+                        cityId,
+                        d.Name,
+                        null,
+                        d.IsCenter,
+                        i + 1)));
+            }
+        }
 
         return districts;
     }
