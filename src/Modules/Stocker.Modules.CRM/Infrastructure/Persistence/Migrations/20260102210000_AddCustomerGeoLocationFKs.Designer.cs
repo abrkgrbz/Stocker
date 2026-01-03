@@ -1181,6 +1181,10 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<Guid?>("DistrictId")
+                        .HasColumnType("uuid");
+
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
