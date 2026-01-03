@@ -17,6 +17,26 @@ const statusOptions = [
   { value: 'OnHold', label: 'Beklemede' },
 ];
 
+// Currency options
+const currencyOptions = [
+  { value: 'TRY', label: '₺ TRY' },
+  { value: 'USD', label: '$ USD' },
+  { value: 'EUR', label: '€ EUR' },
+  { value: 'GBP', label: '£ GBP' },
+];
+
+// Source options
+const sourceOptions = [
+  { value: 'Website', label: 'Web Sitesi' },
+  { value: 'Referral', label: 'Referans' },
+  { value: 'SocialMedia', label: 'Sosyal Medya' },
+  { value: 'Email', label: 'E-posta' },
+  { value: 'ColdCall', label: 'Soğuk Arama' },
+  { value: 'Event', label: 'Etkinlik' },
+  { value: 'Partner', label: 'İş Ortağı' },
+  { value: 'Other', label: 'Diğer' },
+];
+
 interface OpportunityFormProps {
   form: ReturnType<typeof Form.useForm>[0];
   initialValues?: OpportunityDto;
@@ -28,6 +48,7 @@ export default function OpportunityForm({ form, initialValues, onFinish, loading
   const [probability, setProbability] = useState(50);
   const [selectedPipeline, setSelectedPipeline] = useState<string | null>(null);
   const [amount, setAmount] = useState(0);
+  const [opportunityStatus, setOpportunityStatus] = useState<string>('Open');
 
   // Fetch customers and pipelines
   const { data: customersData, isLoading: customersLoading } = useCustomers();
@@ -45,9 +66,11 @@ export default function OpportunityForm({ form, initialValues, onFinish, loading
       form.setFieldsValue({
         ...initialValues,
         expectedCloseDate: initialValues.expectedCloseDate ? dayjs(initialValues.expectedCloseDate) : null,
+        currentStageId: initialValues.currentStageId,
       });
       setProbability(initialValues.probability || 50);
       setAmount(initialValues.amount || 0);
+      setOpportunityStatus(initialValues.status || 'Open');
       if (initialValues.pipelineId) {
         setSelectedPipeline(initialValues.pipelineId);
       }
@@ -55,6 +78,7 @@ export default function OpportunityForm({ form, initialValues, onFinish, loading
       form.setFieldsValue({
         probability: 50,
         status: 'Open',
+        currency: 'TRY',
       });
     }
   }, [form, initialValues]);
@@ -116,6 +140,7 @@ export default function OpportunityForm({ form, initialValues, onFinish, loading
               <Form.Item name="status" className="mb-0" initialValue="Open">
                 <Select
                   options={statusOptions}
+                  onChange={(val) => setOpportunityStatus(val)}
                   className="w-40 [&_.ant-select-selector]:!bg-slate-100 [&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!rounded-lg"
                 />
               </Form.Item>
@@ -134,8 +159,8 @@ export default function OpportunityForm({ form, initialValues, onFinish, loading
               Finansal Bilgiler
             </h3>
             <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Tutar (₺) <span className="text-red-500">*</span></label>
+              <div className="col-span-3">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Tutar <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="amount"
                   rules={[{ required: true, message: 'Tutar zorunludur' }]}
@@ -148,6 +173,15 @@ export default function OpportunityForm({ form, initialValues, onFinish, loading
                     parser={(value) => value?.replace(/,/g, '') as any}
                     placeholder="0"
                     onChange={(val) => setAmount(val || 0)}
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Para Birimi</label>
+                <Form.Item name="currency" className="mb-0" initialValue="TRY">
+                  <Select
+                    options={currencyOptions}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
@@ -166,10 +200,10 @@ export default function OpportunityForm({ form, initialValues, onFinish, loading
                   />
                 </Form.Item>
               </div>
-              <div className="col-span-4">
+              <div className="col-span-3">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Beklenen Değer</label>
                 <div className="h-[32px] flex items-center px-3 rounded-md text-sm font-semibold bg-green-50 text-green-700">
-                  ₺{expectedValue.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                  {expectedValue.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
                 </div>
               </div>
             </div>
@@ -233,7 +267,7 @@ export default function OpportunityForm({ form, initialValues, onFinish, loading
                     allowClear
                     onChange={(val) => {
                       setSelectedPipeline(val);
-                      form.setFieldValue('stageId', undefined);
+                      form.setFieldValue('currentStageId', undefined);
                     }}
                     options={(pipelines as any[]).map((p: any) => ({
                       label: `${p.name} (${p.stages?.length || 0} aşama)`,
@@ -245,7 +279,7 @@ export default function OpportunityForm({ form, initialValues, onFinish, loading
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Aşama</label>
-                <Form.Item name="stageId" className="mb-0">
+                <Form.Item name="currentStageId" className="mb-0">
                   <Select
                     placeholder={selectedPipeline ? 'Aşama seçin' : 'Önce pipeline seçin'}
                     allowClear
@@ -265,6 +299,56 @@ export default function OpportunityForm({ form, initialValues, onFinish, loading
               </div>
             </div>
           </div>
+
+          {/* ─────────────── EK BİLGİLER ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Ek Bilgiler
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Kaynak</label>
+                <Form.Item name="source" className="mb-0">
+                  <Select
+                    placeholder="Kaynak seçin"
+                    allowClear
+                    options={sourceOptions}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Rakip Firma</label>
+                <Form.Item name="competitorName" className="mb-0">
+                  <Input
+                    placeholder="Rakip firma adı"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── SONUÇ BİLGİLERİ (LOST) ─────────────── */}
+          {opportunityStatus === 'Lost' && (
+            <div className="mb-8">
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                Kayıp Bilgileri
+              </h3>
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-12">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Kayıp Nedeni</label>
+                  <Form.Item name="lostReason" className="mb-0">
+                    <TextArea
+                      placeholder="Fırsatın neden kaybedildiğini açıklayın..."
+                      rows={3}
+                      className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ─────────────── NOTLAR ─────────────── */}
           <div>

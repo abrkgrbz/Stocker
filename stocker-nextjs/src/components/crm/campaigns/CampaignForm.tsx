@@ -43,6 +43,11 @@ export default function CampaignForm({ form, initialValues, onFinish, loading }:
   const [budgetedCost, setBudgetedCost] = useState<number>(0);
   const [expectedRevenue, setExpectedRevenue] = useState<number>(0);
   const [targetLeads, setTargetLeads] = useState<number>(0);
+  const [actualCost, setActualCost] = useState<number>(0);
+  const [actualRevenue, setActualRevenue] = useState<number>(0);
+  const [actualLeads, setActualLeads] = useState<number>(0);
+  const [convertedLeads, setConvertedLeads] = useState<number>(0);
+  const [campaignStatus, setCampaignStatus] = useState<string>('Planned');
 
   useEffect(() => {
     if (initialValues) {
@@ -57,6 +62,11 @@ export default function CampaignForm({ form, initialValues, onFinish, loading }:
       setBudgetedCost(initialValues.budgetedCost || 0);
       setExpectedRevenue(initialValues.expectedRevenue || 0);
       setTargetLeads(initialValues.targetLeads || 0);
+      setActualCost(initialValues.actualCost || 0);
+      setActualRevenue(initialValues.actualRevenue || 0);
+      setActualLeads(initialValues.actualLeads || 0);
+      setConvertedLeads(initialValues.convertedLeads || 0);
+      setCampaignStatus(initialValues.status || 'Planned');
     } else {
       form.setFieldsValue({
         status: 'Planned',
@@ -64,6 +74,10 @@ export default function CampaignForm({ form, initialValues, onFinish, loading }:
         budgetedCost: 0,
         expectedRevenue: 0,
         targetLeads: 0,
+        actualCost: 0,
+        actualRevenue: 0,
+        actualLeads: 0,
+        convertedLeads: 0,
       });
     }
   }, [form, initialValues]);
@@ -72,6 +86,14 @@ export default function CampaignForm({ form, initialValues, onFinish, loading }:
   const expectedProfit = expectedRevenue - budgetedCost;
   const roi = budgetedCost > 0 ? ((expectedProfit / budgetedCost) * 100) : 0;
   const costPerLead = targetLeads > 0 ? (budgetedCost / targetLeads) : 0;
+
+  // Actual metrics
+  const actualProfit = actualRevenue - actualCost;
+  const actualRoi = actualCost > 0 ? ((actualProfit / actualCost) * 100) : 0;
+  const conversionRate = actualLeads > 0 ? ((convertedLeads / actualLeads) * 100) : 0;
+
+  // Check if campaign is in progress or completed to show actual fields
+  const showActualFields = ['InProgress', 'Completed', 'OnHold', 'Aborted'].includes(campaignStatus);
 
   const handleFormFinish = (values: any) => {
     if (values.dateRange) {
@@ -278,12 +300,94 @@ export default function CampaignForm({ form, initialValues, onFinish, loading }:
                   <Select
                     placeholder="Seçin"
                     options={campaignStatusOptions}
+                    onChange={(val) => setCampaignStatus(val)}
                     className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
             </div>
           </div>
+
+          {/* ─────────────── GERÇEKLEŞEN DEĞERLER ─────────────── */}
+          {showActualFields && (
+            <div className="mb-8">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                Gerçekleşen Değerler
+              </h3>
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-3">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Gerçekleşen Maliyet (₺)</label>
+                  <Form.Item name="actualCost" className="mb-0">
+                    <InputNumber
+                      className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                      min={0}
+                      placeholder="0"
+                      formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                      parser={(value) => Number(value?.replace(/,/g, '') || 0) as any}
+                      onChange={(val) => setActualCost(val || 0)}
+                    />
+                  </Form.Item>
+                </div>
+                <div className="col-span-3">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Gerçekleşen Gelir (₺)</label>
+                  <Form.Item name="actualRevenue" className="mb-0">
+                    <InputNumber
+                      className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                      min={0}
+                      placeholder="0"
+                      formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                      parser={(value) => Number(value?.replace(/,/g, '') || 0) as any}
+                      onChange={(val) => setActualRevenue(val || 0)}
+                    />
+                  </Form.Item>
+                </div>
+                <div className="col-span-3">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Gerçekleşen Kar</label>
+                  <div className={`h-[32px] flex items-center px-3 rounded-md text-sm font-semibold ${
+                    actualProfit >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                  }`}>
+                    ₺{actualProfit.toLocaleString('tr-TR')}
+                    {actualCost > 0 && (
+                      <span className="ml-2 text-xs font-normal">
+                        (ROI: %{actualRoi.toFixed(1)})
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="col-span-3">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Dönüşüm Oranı</label>
+                  <div className={`h-[32px] flex items-center px-3 rounded-md text-sm font-semibold ${
+                    conversionRate >= 10 ? 'bg-green-50 text-green-700' : conversionRate >= 5 ? 'bg-yellow-50 text-yellow-700' : 'bg-slate-50 text-slate-700'
+                  }`}>
+                    %{conversionRate.toFixed(1)}
+                  </div>
+                </div>
+                <div className="col-span-4">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Gerçekleşen Lead Sayısı</label>
+                  <Form.Item name="actualLeads" className="mb-0">
+                    <InputNumber
+                      className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                      min={0}
+                      placeholder="0"
+                      onChange={(val) => setActualLeads(val || 0)}
+                    />
+                  </Form.Item>
+                </div>
+                <div className="col-span-4">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Dönüşen Lead Sayısı</label>
+                  <Form.Item name="convertedLeads" className="mb-0">
+                    <InputNumber
+                      className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                      min={0}
+                      max={actualLeads || undefined}
+                      placeholder="0"
+                      onChange={(val) => setConvertedLeads(val || 0)}
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ─────────────── NOTLAR ─────────────── */}
           <div>

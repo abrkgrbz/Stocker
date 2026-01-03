@@ -1,12 +1,20 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Form, Input, InputNumber, Switch } from 'antd';
+import { Form, Input, InputNumber, Switch, Select } from 'antd';
 import { GlobeAltIcon } from '@heroicons/react/24/outline';
 import type { TerritoryDto } from '@/lib/api/services/crm.types';
 import { TerritoryType } from '@/lib/api/services/crm.types';
 import { CascadeLocationSelect } from '@/components/ui/CascadeLocationSelect';
 import type { SelectedLocation } from '@/lib/api/services/location.types';
+
+// Currency options
+const currencyOptions = [
+  { value: 'TRY', label: '₺ TRY' },
+  { value: 'USD', label: '$ USD' },
+  { value: 'EUR', label: '€ EUR' },
+  { value: 'GBP', label: '£ GBP' },
+];
 
 interface TerritoryFormProps {
   form: ReturnType<typeof Form.useForm>[0];
@@ -46,7 +54,8 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
       form.setFieldsValue({
         territoryType: TerritoryType.Region,
         isActive: true,
-        targetYear: new Date().getFullYear(), // Default to current year for new territories
+        targetYear: new Date().getFullYear(),
+        currency: 'TRY',
       });
     }
   }, [form, initialValues]);
@@ -275,8 +284,8 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
               Satış Hedefleri
             </h3>
             <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Satış Hedefi (₺)</label>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Satış Hedefi</label>
                 <Form.Item name="salesTarget" className="mb-0">
                   <InputNumber
                     placeholder="1.000.000"
@@ -286,7 +295,16 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
                   />
                 </Form.Item>
               </div>
-              <div className="col-span-6">
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Para Birimi</label>
+                <Form.Item name="currency" className="mb-0" initialValue="TRY">
+                  <Select
+                    options={currencyOptions}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-3">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Hedef Yılı</label>
                 <Form.Item name="targetYear" className="mb-0">
                   <InputNumber
@@ -294,6 +312,18 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
                     className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     min={2020}
                     max={2100}
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-3">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Potansiyel Değer</label>
+                <Form.Item name="potentialValue" className="mb-0">
+                  <InputNumber
+                    placeholder="0"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={(value) => value?.replace(/,/g, '') as any}
+                    min={0}
                   />
                 </Form.Item>
               </div>

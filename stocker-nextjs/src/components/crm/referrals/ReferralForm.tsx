@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Form, Input, InputNumber, Select } from 'antd';
+import { Form, Input, InputNumber, Select, DatePicker } from 'antd';
 import { ShareIcon, UserIcon } from '@heroicons/react/24/outline';
 import type { ReferralDto } from '@/lib/api/services/crm.types';
 import { ReferralType, ReferralStatus, ReferralRewardType } from '@/lib/api/services/crm.types';
 import { useCustomers } from '@/lib/api/hooks/useCRM';
 import { FormPhoneInput } from '@/components/ui/InternationalPhoneInput';
+import dayjs from 'dayjs';
 
 const { TextArea } = Input;
 
@@ -41,6 +42,14 @@ const statusOptions = [
   { value: ReferralStatus.Expired, label: 'Süresi Doldu' },
 ];
 
+// Currency options
+const currencyOptions = [
+  { value: 'TRY', label: '₺ TRY' },
+  { value: 'USD', label: '$ USD' },
+  { value: 'EUR', label: '€ EUR' },
+  { value: 'GBP', label: '£ GBP' },
+];
+
 interface ReferralFormProps {
   form: ReturnType<typeof Form.useForm>[0];
   initialValues?: ReferralDto;
@@ -57,6 +66,7 @@ export default function ReferralForm({ form, initialValues, onFinish, loading }:
     if (initialValues) {
       form.setFieldsValue({
         ...initialValues,
+        expiryDate: initialValues.expiryDate ? dayjs(initialValues.expiryDate) : undefined,
       });
       setReferralType(initialValues.referralType || ReferralType.Customer);
     } else {
@@ -64,15 +74,23 @@ export default function ReferralForm({ form, initialValues, onFinish, loading }:
         referralType: ReferralType.Customer,
         status: ReferralStatus.New,
         rewardType: ReferralRewardType.Points,
+        currency: 'TRY',
       });
     }
   }, [form, initialValues]);
+
+  const handleFormFinish = (values: any) => {
+    if (values.expiryDate) {
+      values.expiryDate = values.expiryDate.format('YYYY-MM-DD');
+    }
+    onFinish(values);
+  };
 
   return (
     <Form
       form={form}
       layout="vertical"
-      onFinish={onFinish}
+      onFinish={handleFormFinish}
       disabled={loading}
       className="w-full"
       scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
@@ -254,7 +272,7 @@ export default function ReferralForm({ form, initialValues, onFinish, loading }:
               Ödül Bilgileri
             </h3>
             <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-4">
+              <div className="col-span-3">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Ödül Tipi</label>
                 <Form.Item name="rewardType" className="mb-0" initialValue={ReferralRewardType.Points}>
                   <Select
@@ -264,7 +282,7 @@ export default function ReferralForm({ form, initialValues, onFinish, loading }:
                   />
                 </Form.Item>
               </div>
-              <div className="col-span-4">
+              <div className="col-span-3">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Referrer Ödülü</label>
                 <Form.Item name="referrerReward" className="mb-0">
                   <InputNumber
@@ -274,13 +292,23 @@ export default function ReferralForm({ form, initialValues, onFinish, loading }:
                   />
                 </Form.Item>
               </div>
-              <div className="col-span-4">
+              <div className="col-span-3">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Referred Ödülü</label>
                 <Form.Item name="referredReward" className="mb-0">
                   <InputNumber
                     placeholder="50"
                     className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     min={0}
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-3">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Para Birimi</label>
+                <Form.Item name="currency" className="mb-0" initialValue="TRY">
+                  <Select
+                    placeholder="Seçin"
+                    options={currencyOptions}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
@@ -299,6 +327,16 @@ export default function ReferralForm({ form, initialValues, onFinish, loading }:
                   <Select
                     options={statusOptions}
                     className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Son Geçerlilik Tarihi</label>
+                <Form.Item name="expiryDate" className="mb-0">
+                  <DatePicker
+                    format="DD/MM/YYYY"
+                    placeholder="Tarih seçin"
+                    className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
                   />
                 </Form.Item>
               </div>

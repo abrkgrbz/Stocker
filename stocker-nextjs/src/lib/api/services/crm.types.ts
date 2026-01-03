@@ -417,20 +417,33 @@ export interface CampaignStatisticsDto {
 export interface OpportunityDto {
   id: Guid;
   name: string;
-  customerId: Guid;
-  customerName?: string;
-  pipelineId: Guid;
-  pipelineName?: string;
-  stageId: Guid;
-  stageName?: string;
-  amount: number;
-  probability: number; // 0-100
-  expectedCloseDate?: DateTime;
-  actualCloseDate?: DateTime;
-  status: OpportunityStatus;
   description?: string;
-  assignedToId?: Guid;
-  assignedToName?: string;
+  customerId: Guid;
+  customerName: string;
+  amount: number;
+  currency: string; // Default: TRY
+  probability: number; // 0-100
+  expectedCloseDate: DateTime;
+  status: OpportunityStatus;
+  pipelineId?: Guid;
+  pipelineName?: string;
+  currentStageId?: Guid;
+  currentStageName?: string;
+  // Aliases for frontend compatibility
+  stageId?: Guid;
+  stageName?: string;
+  // Additional fields
+  lostReason?: string;
+  competitorName?: string;
+  source?: string;
+  ownerId?: string;
+  ownerName?: string;
+  score: number;
+  weightedAmount?: number; // Computed: amount * (probability / 100)
+  // Related data
+  products?: OpportunityProductDto[];
+  recentActivities?: ActivityDto[];
+  notes?: NoteDto[];
   createdAt: DateTime;
   updatedAt?: DateTime;
 }
@@ -445,13 +458,18 @@ export enum OpportunityStatus {
 
 export interface OpportunityProductDto {
   id: Guid;
-  opportunityId: Guid;
-  productId: Guid;
-  productName?: string;
+  opportunityId: number;
+  productId: number;
+  productName: string;
+  productCode?: string;
+  description?: string;
   quantity: number;
   unitPrice: number;
-  discount: number;
+  currency: string;
+  discountPercent: number;
+  discountAmount: number;
   totalPrice: number;
+  sortOrder: number;
 }
 
 export interface PipelineReportDto {
@@ -648,6 +666,9 @@ export interface BulkImportCampaignMembersCommand {
 // CUSTOMER SEGMENT MEMBERS
 // =====================================
 
+// Reason why a customer was added to a segment
+export type SegmentMembershipReason = 'Manual' | 'AutoCriteria' | 'Import';
+
 export interface CustomerSegmentMemberDto {
   id: Guid;
   segmentId: Guid;
@@ -655,7 +676,7 @@ export interface CustomerSegmentMemberDto {
   customerName?: string;
   customerEmail?: string;
   addedAt: DateTime;
-  addedBy?: Guid;
+  reason: SegmentMembershipReason;
 }
 
 export interface AddSegmentMemberCommand {

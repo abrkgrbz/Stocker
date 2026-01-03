@@ -24,6 +24,14 @@ const communicationChannelOptions = [
   { value: 'Other', label: 'Diğer' },
 ];
 
+// Currency options
+const currencyOptions = [
+  { value: 'TRY', label: '₺ TRY' },
+  { value: 'USD', label: '$ USD' },
+  { value: 'EUR', label: '€ EUR' },
+  { value: 'GBP', label: '£ GBP' },
+];
+
 interface SalesTeamFormProps {
   form: ReturnType<typeof Form.useForm>[0];
   initialValues?: SalesTeamDto;
@@ -185,8 +193,8 @@ export default function SalesTeamForm({ form, initialValues, onFinish, loading }
               Satış Hedefleri
             </h3>
             <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Satış Hedefi (₺)</label>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Satış Hedefi</label>
                 <Form.Item name="salesTarget" className="mb-0">
                   <InputNumber
                     placeholder="500.000"
@@ -196,7 +204,17 @@ export default function SalesTeamForm({ form, initialValues, onFinish, loading }
                   />
                 </Form.Item>
               </div>
-              <div className="col-span-6">
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Para Birimi</label>
+                <Form.Item name="currency" className="mb-0" initialValue="TRY">
+                  <Select
+                    placeholder="Para birimi"
+                    options={currencyOptions}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Hedef Periyodu</label>
                 <Form.Item name="targetPeriod" className="mb-0" initialValue="Monthly">
                   <Select

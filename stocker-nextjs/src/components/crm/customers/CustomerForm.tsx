@@ -21,6 +21,7 @@ import {
   CurrencyInput,
   PhoneInput,
   TaxNumberInput,
+  NumberInput,
 } from '@/components/primitives';
 
 // Location
@@ -49,6 +50,24 @@ const paymentTermsOptions = [
   { value: '90 Days', label: '90 Gün' },
 ];
 
+const industryOptions = [
+  { value: 'Technology', label: 'Teknoloji' },
+  { value: 'Finance', label: 'Finans' },
+  { value: 'Healthcare', label: 'Sağlık' },
+  { value: 'Manufacturing', label: 'Üretim' },
+  { value: 'Retail', label: 'Perakende' },
+  { value: 'Education', label: 'Eğitim' },
+  { value: 'Construction', label: 'İnşaat' },
+  { value: 'Transportation', label: 'Ulaşım' },
+  { value: 'Agriculture', label: 'Tarım' },
+  { value: 'Energy', label: 'Enerji' },
+  { value: 'RealEstate', label: 'Gayrimenkul' },
+  { value: 'Hospitality', label: 'Turizm/Otelcilik' },
+  { value: 'Media', label: 'Medya' },
+  { value: 'Telecommunications', label: 'Telekomünikasyon' },
+  { value: 'Other', label: 'Diğer' },
+];
+
 // =====================================
 // TYPES
 // =====================================
@@ -60,6 +79,10 @@ export interface CustomerFormData {
   email: string;
   phone: string;
   website: string;
+  industry: string;
+  annualRevenue: number | null;
+  numberOfEmployees: number | null;
+  description: string;
   address: string;
   // GeoLocation IDs (FK to Master DB)
   countryId: string | null;
@@ -106,6 +129,10 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
     email: '',
     phone: '',
     website: '',
+    industry: '',
+    annualRevenue: null,
+    numberOfEmployees: null,
+    description: '',
     address: '',
     // GeoLocation IDs
     countryId: null,
@@ -140,6 +167,10 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
         email: initialValues.email || '',
         phone: initialValues.phone || '',
         website: initialValues.website || '',
+        industry: initialValues.industry || '',
+        annualRevenue: initialValues.annualRevenue ?? null,
+        numberOfEmployees: initialValues.numberOfEmployees ?? null,
+        description: initialValues.description || '',
         address: initialValues.address || '',
         // GeoLocation IDs from backend
         countryId: initialValues.countryId || null,
@@ -337,6 +368,47 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
                 value={formData.website}
                 onChange={(e) => handleChange('website', e.target.value)}
                 placeholder="https://"
+                disabled={loading}
+              />
+            </FormField>
+          </FormSection>
+
+          {/* ─────────────── İŞLETME BİLGİLERİ ─────────────── */}
+          <FormSection title="İşletme Bilgileri">
+            <FormField label="Sektör" span={4}>
+              <Select
+                value={formData.industry || null}
+                onChange={(value) => handleChange('industry', value || '')}
+                options={industryOptions}
+                placeholder="Seçin"
+                disabled={loading}
+              />
+            </FormField>
+
+            <FormField label="Yıllık Gelir" span={4}>
+              <CurrencyInput
+                value={formData.annualRevenue ?? undefined}
+                onChange={(value) => handleChange('annualRevenue', value ?? null)}
+                disabled={loading}
+              />
+            </FormField>
+
+            <FormField label="Çalışan Sayısı" span={4}>
+              <NumberInput
+                value={formData.numberOfEmployees ?? undefined}
+                onChange={(value) => handleChange('numberOfEmployees', value ?? null)}
+                placeholder="0"
+                min={0}
+                disabled={loading}
+              />
+            </FormField>
+
+            <FormField label="Açıklama" span={12}>
+              <Textarea
+                value={formData.description}
+                onChange={(e) => handleChange('description', e.target.value)}
+                placeholder="Müşteri/Şirket hakkında genel bilgi..."
+                rows={2}
                 disabled={loading}
               />
             </FormField>

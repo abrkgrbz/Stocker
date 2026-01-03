@@ -24,6 +24,26 @@ const priorityOptions = [
   { value: 'Urgent', label: 'Acil' },
 ];
 
+// Currency options
+const currencyOptions = [
+  { value: 'TRY', label: '₺ TRY' },
+  { value: 'USD', label: '$ USD' },
+  { value: 'EUR', label: '€ EUR' },
+  { value: 'GBP', label: '£ GBP' },
+];
+
+// Source options
+const sourceOptions = [
+  { value: 'Website', label: 'Web Sitesi' },
+  { value: 'Referral', label: 'Referans' },
+  { value: 'SocialMedia', label: 'Sosyal Medya' },
+  { value: 'Email', label: 'E-posta' },
+  { value: 'ColdCall', label: 'Soğuk Arama' },
+  { value: 'Event', label: 'Etkinlik' },
+  { value: 'Partner', label: 'İş Ortağı' },
+  { value: 'Other', label: 'Diğer' },
+];
+
 interface DealFormProps {
   form: ReturnType<typeof Form.useForm>[0];
   initialValues?: Deal;
@@ -33,6 +53,7 @@ interface DealFormProps {
 
 export default function DealForm({ form, initialValues, onFinish, loading }: DealFormProps) {
   const [selectedPipeline, setSelectedPipeline] = useState<string | null>(null);
+  const [dealStatus, setDealStatus] = useState<string>('Open');
 
   // Fetch data
   const { data: customersData, isLoading: customersLoading } = useCustomers();
@@ -51,6 +72,7 @@ export default function DealForm({ form, initialValues, onFinish, loading }: Dea
         expectedCloseDate: initialValues.expectedCloseDate ? dayjs(initialValues.expectedCloseDate) : null,
       });
       setSelectedPipeline(initialValues.pipelineId || null);
+      setDealStatus(initialValues.status || 'Open');
     } else {
       const defaultPipeline = pipelines.find((p) => p.isDefault) || pipelines[0];
       if (defaultPipeline) {
@@ -61,6 +83,7 @@ export default function DealForm({ form, initialValues, onFinish, loading }: Dea
           status: 'Open',
           probability: 50,
           priority: 'Medium',
+          currency: 'TRY',
         });
       }
     }
@@ -137,6 +160,7 @@ export default function DealForm({ form, initialValues, onFinish, loading }: Dea
               <Form.Item name="status" className="mb-0" initialValue="Open">
                 <Select
                   options={statusOptions}
+                  onChange={(val) => setDealStatus(val)}
                   className="w-32 [&_.ant-select-selector]:!bg-slate-100 [&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!rounded-lg"
                 />
               </Form.Item>
@@ -210,8 +234,8 @@ export default function DealForm({ form, initialValues, onFinish, loading }: Dea
               Finansal Bilgiler
             </h3>
             <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Tutar (₺) <span className="text-red-500">*</span></label>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Tutar <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="amount"
                   rules={[{ required: true, message: 'Tutar zorunludur' }]}
@@ -226,7 +250,16 @@ export default function DealForm({ form, initialValues, onFinish, loading }: Dea
                   />
                 </Form.Item>
               </div>
-              <div className="col-span-6">
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Para Birimi</label>
+                <Form.Item name="currency" className="mb-0" initialValue="TRY">
+                  <Select
+                    options={currencyOptions}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-3">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Olasılık (%) <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="probability"
@@ -240,6 +273,17 @@ export default function DealForm({ form, initialValues, onFinish, loading }: Dea
                     className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     placeholder="50"
                     addonAfter="%"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-3">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Kaynak</label>
+                <Form.Item name="source" className="mb-0">
+                  <Select
+                    placeholder="Seçin"
+                    allowClear
+                    options={sourceOptions}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
@@ -328,6 +372,59 @@ export default function DealForm({ form, initialValues, onFinish, loading }: Dea
               </div>
             </div>
           </div>
+
+          {/* ─────────────── RAKİP BİLGİLERİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Rekabet Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Rakip Firma</label>
+                <Form.Item name="competitorName" className="mb-0">
+                  <Input
+                    placeholder="Rakip firma adı"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── SONUÇ BİLGİLERİ (LOST/WON) ─────────────── */}
+          {(dealStatus === 'Lost' || dealStatus === 'Won') && (
+            <div className="mb-8">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                {dealStatus === 'Lost' ? 'Kayıp Bilgileri' : 'Kazanma Bilgileri'}
+              </h3>
+              <div className="grid grid-cols-12 gap-4">
+                {dealStatus === 'Lost' && (
+                  <div className="col-span-12">
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">Kayıp Nedeni</label>
+                    <Form.Item name="lostReason" className="mb-0">
+                      <TextArea
+                        placeholder="Fırsatın neden kaybedildiğini açıklayın..."
+                        rows={3}
+                        className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                      />
+                    </Form.Item>
+                  </div>
+                )}
+                {dealStatus === 'Won' && (
+                  <div className="col-span-12">
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">Kazanma Detayları</label>
+                    <Form.Item name="wonDetails" className="mb-0">
+                      <TextArea
+                        placeholder="Fırsatın nasıl kazanıldığını açıklayın..."
+                        rows={3}
+                        className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                      />
+                    </Form.Item>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* ─────────────── NOTLAR ─────────────── */}
           <div>

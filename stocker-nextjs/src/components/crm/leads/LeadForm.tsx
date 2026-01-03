@@ -178,10 +178,25 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
                   />
                 </Form.Item>
               </div>
-              <div className="col-span-6">
+              <div className="col-span-3">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Telefon</label>
                 <Form.Item name="phone" className="mb-0">
                   <FormPhoneInput defaultCountry="TR" />
+                </Form.Item>
+              </div>
+              <div className="col-span-3">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Cep Telefonu</label>
+                <Form.Item name="mobilePhone" className="mb-0">
+                  <FormPhoneInput defaultCountry="TR" />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Web Sitesi</label>
+                <Form.Item name="website" className="mb-0">
+                  <Input
+                    placeholder="https://www.firma.com"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
                 </Form.Item>
               </div>
             </div>
@@ -202,11 +217,108 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
                   />
                 </Form.Item>
               </div>
-              <div className="col-span-6">
+              <div className="col-span-3">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Pozisyon</label>
                 <Form.Item name="jobTitle" className="mb-0">
                   <Input
                     placeholder="Satın Alma Müdürü"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-3">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sektör</label>
+                <Form.Item name="industry" className="mb-0">
+                  <Select
+                    placeholder="Seçin"
+                    allowClear
+                    options={[
+                      { value: 'Technology', label: 'Teknoloji' },
+                      { value: 'Finance', label: 'Finans' },
+                      { value: 'Healthcare', label: 'Sağlık' },
+                      { value: 'Manufacturing', label: 'Üretim' },
+                      { value: 'Retail', label: 'Perakende' },
+                      { value: 'Education', label: 'Eğitim' },
+                      { value: 'RealEstate', label: 'Gayrimenkul' },
+                      { value: 'Transportation', label: 'Taşımacılık' },
+                      { value: 'Other', label: 'Diğer' },
+                    ]}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Yıllık Gelir (₺)</label>
+                <Form.Item name="annualRevenue" className="mb-0">
+                  <InputNumber
+                    min={0}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={(value) => value?.replace(/,/g, '') as any}
+                    placeholder="0"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Çalışan Sayısı</label>
+                <Form.Item name="numberOfEmployees" className="mb-0">
+                  <InputNumber
+                    min={0}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                    placeholder="0"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── ADRES BİLGİLERİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Adres Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Adres</label>
+                <Form.Item name="address" className="mb-0">
+                  <Input
+                    placeholder="Sokak, Mahalle, Bina No"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-3">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Şehir</label>
+                <Form.Item name="city" className="mb-0">
+                  <Input
+                    placeholder="İstanbul"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-3">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">İl/Eyalet</label>
+                <Form.Item name="state" className="mb-0">
+                  <Input
+                    placeholder="Kadıköy"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-3">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ülke</label>
+                <Form.Item name="country" className="mb-0">
+                  <Input
+                    placeholder="Türkiye"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-3">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Posta Kodu</label>
+                <Form.Item name="postalCode" className="mb-0">
+                  <Input
+                    placeholder="34000"
                     className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>

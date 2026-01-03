@@ -33,6 +33,14 @@ const pipelineTypeOptions = [
   { value: 'Custom', label: 'Özel' },
 ];
 
+// Currency options
+const currencyOptions = [
+  { value: 'TRY', label: '₺ TRY' },
+  { value: 'USD', label: '$ USD' },
+  { value: 'EUR', label: '€ EUR' },
+  { value: 'GBP', label: '£ GBP' },
+];
+
 // Default stages for new pipelines
 const DEFAULT_STAGES = [
   { name: 'Yeni Fırsat', probability: 10, color: '#1890ff', isWon: false, isLost: false },
@@ -62,6 +70,8 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
         type: 'Deal',
         isActive: true,
         isDefault: false,
+        displayOrder: 1,
+        currency: 'TRY',
         stages: DEFAULT_STAGES,
       });
     }
@@ -153,18 +163,37 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
         ═══════════════════════════════════════════════════════════════ */}
         <div className="px-8 py-6">
 
-          {/* ─────────────── DURUM AYARLARI ─────────────── */}
+          {/* ─────────────── AYARLAR ─────────────── */}
           <div className="mb-8">
             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Durum Ayarları
+              Pipeline Ayarları
             </h3>
             <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-6">
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="col-span-3">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sıralama</label>
+                <Form.Item name="displayOrder" className="mb-0" initialValue={1}>
+                  <InputNumber
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
+                    min={1}
+                    placeholder="1"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-3">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Para Birimi</label>
+                <Form.Item name="currency" className="mb-0" initialValue="TRY">
+                  <Select
+                    options={currencyOptions}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-3">
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200 h-full">
                   <div>
                     <div className="text-sm font-medium text-slate-700">Durum</div>
                     <div className="text-xs text-slate-500 mt-0.5">
-                      {isActive ? 'Pipeline aktif' : 'Pipeline pasif'}
+                      {isActive ? 'Aktif' : 'Pasif'}
                     </div>
                   </div>
                   <Form.Item name="isActive" valuePropName="checked" noStyle initialValue={true}>
@@ -180,12 +209,12 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
                   </Form.Item>
                 </div>
               </div>
-              <div className="col-span-6">
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="col-span-3">
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200 h-full">
                   <div>
                     <div className="text-sm font-medium text-slate-700">Varsayılan</div>
                     <div className="text-xs text-slate-500 mt-0.5">
-                      Yeni kayıtlarda kullanılsın
+                      Yeni kayıtlarda
                     </div>
                   </div>
                   <Form.Item name="isDefault" valuePropName="checked" noStyle initialValue={false}>
@@ -253,7 +282,7 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
                         </div>
 
                         <div className="grid grid-cols-12 gap-3">
-                          <div className="col-span-5">
+                          <div className="col-span-4">
                             <Form.Item
                               {...field}
                               name={[field.name, 'name']}
@@ -266,7 +295,7 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
                               />
                             </Form.Item>
                           </div>
-                          <div className="col-span-3">
+                          <div className="col-span-2">
                             <Form.Item
                               {...field}
                               name={[field.name, 'probability']}
@@ -282,7 +311,7 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
                               />
                             </Form.Item>
                           </div>
-                          <div className="col-span-4">
+                          <div className="col-span-3">
                             <Form.Item
                               {...field}
                               name={[field.name, 'color']}
@@ -299,6 +328,20 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
                                   </Select.Option>
                                 ))}
                               </Select>
+                            </Form.Item>
+                          </div>
+                          <div className="col-span-3">
+                            <Form.Item
+                              {...field}
+                              name={[field.name, 'rottenDays']}
+                              className="mb-0"
+                            >
+                              <InputNumber
+                                placeholder="Bekleme (gün)"
+                                min={1}
+                                className="!w-full [&.ant-input-number]:!bg-white [&.ant-input-number]:!border-slate-300"
+                                addonAfter="gün"
+                              />
                             </Form.Item>
                           </div>
                         </div>
