@@ -20,9 +20,11 @@ import {
   Check,
   ArrowRight,
   Loader2,
+  Sparkles,
 } from 'lucide-react';
 import { useActiveModules } from '@/lib/api/hooks/useUserModules';
 import { useToggleModule } from '@/lib/api/hooks/useTenantModules';
+import ModuleActivationModal from '@/components/modules/ModuleActivationModal';
 
 // Module tier configuration
 const TIER_CONFIG = {
@@ -118,6 +120,11 @@ export default function ModulesPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [togglingModule, setTogglingModule] = useState<string | null>(null);
+  const [activationModal, setActivationModal] = useState<{
+    isOpen: boolean;
+    moduleCode: string;
+    moduleName: string;
+  }>({ isOpen: false, moduleCode: '', moduleName: '' });
 
   const { data: modulesData, isLoading, refetch } = useActiveModules();
   const toggleModuleMutation = useToggleModule();
@@ -160,18 +167,23 @@ export default function ModulesPage() {
     }
   };
 
-  const handleModuleActivate = async (moduleCode: string) => {
-    setTogglingModule(moduleCode);
-    try {
-      await toggleModuleMutation.mutateAsync({ moduleCode, enable: true });
-      message.success('Modül başarıyla etkinleştirildi');
-      refetch();
-    } catch (error) {
-      console.error('Module activation error:', error);
-      message.error('Modül etkinleştirilemedi. Lütfen tekrar deneyin.');
-    } finally {
-      setTogglingModule(null);
-    }
+  // Open activation modal with pricing info
+  const openActivationModal = (moduleCode: string, moduleName: string) => {
+    setActivationModal({
+      isOpen: true,
+      moduleCode,
+      moduleName,
+    });
+  };
+
+  // Close activation modal
+  const closeActivationModal = () => {
+    setActivationModal({ isOpen: false, moduleCode: '', moduleName: '' });
+  };
+
+  // Handle successful activation from modal
+  const handleActivationSuccess = () => {
+    refetch();
   };
 
   const handleToggleModule = async (moduleCode: string, checked: boolean) => {
@@ -303,18 +315,11 @@ export default function ModulesPage() {
                   </button>
                 ) : (
                   <button
-                    onClick={() => handleModuleActivate(module.code)}
-                    disabled={isToggling}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+                    onClick={() => openActivationModal(module.code, module.name)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
                   >
-                    {isToggling ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        Yükleniyor...
-                      </>
-                    ) : (
-                      'Aktifleştir'
-                    )}
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Aktifleştir
                   </button>
                 )}
               </div>
@@ -337,6 +342,15 @@ export default function ModulesPage() {
           </p>
         </div>
       )}
+
+      {/* Module Activation Modal */}
+      <ModuleActivationModal
+        moduleCode={activationModal.moduleCode}
+        moduleName={activationModal.moduleName}
+        isOpen={activationModal.isOpen}
+        onClose={closeActivationModal}
+        onSuccess={handleActivationSuccess}
+      />
     </div>
   );
 }
