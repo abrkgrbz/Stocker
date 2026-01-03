@@ -440,21 +440,37 @@ export function useCreateLead() {
       logger.info('🎯 Hook received data', { metadata: { data } });
       logger.info('🎯 Data keys', { metadata: { keys: Object.keys(data) } });
 
-      // Pass form data directly to CRMService.createLead which handles the wrapping
-      // Form sends: firstName, lastName, email, phone, companyName, jobTitle, source, status, rating, score, description, notes
-      // CRMService.createLead wraps this in { LeadData: {...} } for backend CreateLeadCommand
+      // Pass form data directly to CRMService.createLead which handles the DTO mapping
+      // Form sends all Lead fields including contact, company, address, and lead-specific info
+      // CRMService.createLead maps this to CreateLeadDto for backend
       const leadData = {
+        // Required fields
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
+        // Contact info
         phone: data.phone || null,
+        mobilePhone: data.mobilePhone || null,
+        website: data.website || null,
+        // Company info
         companyName: data.companyName || null,
         jobTitle: data.jobTitle || null,
+        industry: data.industry || null,
+        annualRevenue: data.annualRevenue || null,
+        numberOfEmployees: data.numberOfEmployees || null,
+        // Address info
+        address: data.address || null,
+        city: data.city || null,
+        state: data.state || null,
+        country: data.country || null,
+        postalCode: data.postalCode || null,
+        // Lead info
         source: data.source || null,
         status: data.status || 'New',  // String enum: 'New', 'Contacted', 'Working', 'Qualified', 'Unqualified', 'Converted', 'Lost'
         rating: data.rating || 'Warm',  // String enum: 'Unrated', 'Hot', 'Warm', 'Cold' - form defaults to Warm
         score: data.score || 50,  // Lead score (0-100), form defaults to 50
         description: data.description || data.notes || null,  // Support both field names
+        assignedToUserId: data.assignedToUserId || null,
       };
 
       logger.info('🎯 Mapped leadData', { metadata: { leadData } });
