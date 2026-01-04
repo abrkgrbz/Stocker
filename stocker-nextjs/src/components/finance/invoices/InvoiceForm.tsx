@@ -76,7 +76,10 @@ const InvoiceForm = forwardRef<InvoiceFormRef, InvoiceFormProps>(
             : item
         ));
       } else {
+        const lineTotal = (product.unitPrice || 0) * 1.2;
         const newItem: InvoiceItemDto = {
+          id: 0,  // Temporary ID for new items
+          invoiceId: 0,  // Will be set on save
           productCode: product.code || product.sku || '',
           productName: product.name,
           description: product.description || '',
@@ -87,7 +90,9 @@ const InvoiceForm = forwardRef<InvoiceFormRef, InvoiceFormProps>(
           discountAmount: 0,
           kdvRate: 20,
           kdvAmount: (product.unitPrice || 0) * 0.2,
-          lineTotal: (product.unitPrice || 0) * 1.2,
+          lineTotal: lineTotal,
+          totalAmount: lineTotal,
+          sortOrder: items.length,
         };
         setItems([...items, newItem]);
       }
@@ -100,7 +105,7 @@ const InvoiceForm = forwardRef<InvoiceFormRef, InvoiceFormProps>(
 
       // Recalculate line totals
       const subtotal = item.quantity * item.unitPrice;
-      const discountAmount = subtotal * (item.discountRate / 100);
+      const discountAmount = subtotal * ((item.discountRate ?? 0) / 100);
       const afterDiscount = subtotal - discountAmount;
       const kdvAmount = afterDiscount * (item.kdvRate / 100);
       const lineTotal = afterDiscount + kdvAmount;

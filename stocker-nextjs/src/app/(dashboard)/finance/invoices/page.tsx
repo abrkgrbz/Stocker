@@ -167,16 +167,18 @@ export default function InvoicesPage() {
             />
           </div>
           <Select
-            value={invoiceType || ''}
-            onChange={(e) => setInvoiceType(e.target.value || undefined)}
+            value={invoiceType || null}
+            onChange={(value) => setInvoiceType(value || undefined)}
             options={invoiceTypeOptions}
             placeholder="Fatura Türü"
+            clearable
           />
           <Select
-            value={status || ''}
-            onChange={(e) => setStatus(e.target.value || undefined)}
+            value={status || null}
+            onChange={(value) => setStatus(value || undefined)}
             options={statusOptions}
             placeholder="Durum"
+            clearable
           />
         </div>
       </div>

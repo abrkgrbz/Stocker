@@ -327,8 +327,12 @@ export interface InvoiceDto {
   // Related Entities
   customerId?: Guid;
   customerName?: string;
+  customerTaxNumber?: string;
+  customerTaxOffice?: string;
+  customerAddress?: string;
   supplierId?: Guid;
   supplierName?: string;
+  vendorName?: string;  // alias for supplierName
 
   // Dates
   invoiceDate: DateTime;
@@ -388,11 +392,13 @@ export interface InvoiceItemDto {
   productCode?: string;
   description?: string;
   quantity: number;
+  unit?: string;
   unitPrice: number;
   discountRate?: number;
   discountAmount: number;
   kdvRate: KdvRate;
   kdvAmount: number;
+  lineTotal?: number;
   totalAmount: number;
   sortOrder: number;
 }
@@ -407,9 +413,11 @@ export interface InvoiceSummaryDto {
   status: InvoiceStatus;
   customerName?: string;
   supplierName?: string;
+  vendorName?: string;
   invoiceDate: DateTime;
   dueDate: DateTime;
   totalAmount: number;
+  paidAmount?: number;
   remainingAmount: number;
   currency: string;
   isOverdue: boolean;
@@ -509,6 +517,7 @@ export interface CurrentAccountDto {
 
   // Tax Info (Turkey)
   taxId?: string;              // Vergi No
+  taxNumber?: string;          // Vergi No (alias)
   taxOffice?: string;          // Vergi Dairesi
 
   // Balance Information
@@ -529,7 +538,11 @@ export interface CurrentAccountDto {
 
   // Payment Terms
   defaultPaymentTermDays: number;
+  paymentTermDays?: number;    // alias
   defaultPaymentMethod?: PaymentMethod;
+
+  // Notes
+  notes?: string;
 
   // Statistics
   totalInvoices: number;
@@ -550,9 +563,13 @@ export interface CurrentAccountSummaryDto {
   accountCode: string;
   accountName: string;
   accountType: CurrentAccountType;
+  accountTypeName?: string;
+  customerName?: string;
+  vendorName?: string;
   balance: number;
   currency: string;
   creditLimit: number;
+  isActive: boolean;
   isBlocked: boolean;
   unpaidInvoices: number;
 }
@@ -671,11 +688,14 @@ export interface ExpenseDto {
 
   // Dates
   expenseDate: DateTime;
+  dueDate?: DateTime;
   paymentDate?: DateTime;
 
   // Payment
   paymentMethod?: PaymentMethod;
   isPaid: boolean;
+  bankAccountId?: number;
+  bankAccountName?: string;
 
   // References
   supplierId?: Guid;
@@ -715,12 +735,14 @@ export interface ExpenseSummaryDto {
   id: number;
   expenseNumber: string;
   category: ExpenseCategory;
+  categoryName?: string;
   status: ExpenseStatus;
   description: string;
   amount: number;
   currency: string;
   expenseDate: DateTime;
   supplierName?: string;
+  vendorName?: string;
   isPaid: boolean;
 }
 
@@ -756,6 +778,8 @@ export interface CreateExpenseDto {
   exchangeRate?: number;
   kdvRate?: KdvRate;
   expenseDate: DateTime;
+  dueDate?: DateTime;
+  paymentDate?: DateTime;
   paymentMethod?: PaymentMethod;
   supplierId?: Guid;
   invoiceNumber?: string;
@@ -927,6 +951,7 @@ export interface BankAccountDto {
   bankCode?: string;
   branchName?: string;
   branchCode?: string;
+  swiftCode?: string;
   accountType: BankAccountType;
   status: BankAccountStatus;
   currency: string;
@@ -942,10 +967,14 @@ export interface BankAccountDto {
   // Interest & Fees
   interestRate?: number;
   overdraftLimit?: number;
+  creditLimit?: number;
 
   // Contact
   contactPerson?: string;
   contactPhone?: string;
+
+  // Description
+  description?: string;
 
   // Status
   isDefault: boolean;
@@ -963,6 +992,8 @@ export interface BankAccountDto {
 export interface BankAccountSummaryDto {
   id: number;
   accountName: string;
+  accountNumber?: string;
+  iban?: string;
   bankName: string;
   accountType: BankAccountType;
   currency: string;
@@ -1936,6 +1967,8 @@ export interface FinanceDashboardStatsDto {
   totalRevenue: number;
   totalExpenses: number;
   netIncome: number;
+  monthlyRevenue?: number;
+  monthlyExpenses?: number;
 
   // Receivables & Payables
   totalReceivables: number;

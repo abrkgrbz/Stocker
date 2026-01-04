@@ -14,7 +14,7 @@ export function CurrentAccountsStats({ currentAccounts, totalCount, loading = fa
   const totalReceivables = currentAccounts.reduce((sum, ca) => sum + (ca.balance > 0 ? ca.balance : 0), 0);
   const totalPayables = currentAccounts.reduce((sum, ca) => sum + (ca.balance < 0 ? Math.abs(ca.balance) : 0), 0);
   const customerAccounts = currentAccounts.filter((ca) => ca.accountType === 'Customer').length;
-  const vendorAccounts = currentAccounts.filter((ca) => ca.accountType === 'Vendor').length;
+  const vendorAccounts = currentAccounts.filter((ca) => ca.accountType === 'Supplier').length;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(amount);

@@ -33,6 +33,7 @@ const DEV_MOCK_MODULES: UserModulesResponse = {
     { code: 'sales', name: 'Sales', isActive: true },
     { code: 'purchase', name: 'Purchase', isActive: true },
     { code: 'hr', name: 'HR', isActive: true },
+    { code: 'finance', name: 'Finance', isActive: true },
   ],
 };
 

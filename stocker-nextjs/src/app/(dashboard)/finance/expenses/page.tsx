@@ -172,16 +172,18 @@ export default function ExpensesPage() {
             />
           </div>
           <Select
-            value={category || ''}
-            onChange={(e) => setCategory(e.target.value || undefined)}
+            value={category || null}
+            onChange={(value) => setCategory(value || undefined)}
             options={categoryOptions}
             placeholder="Kategori"
+            clearable
           />
           <Select
-            value={status || ''}
-            onChange={(e) => setStatus(e.target.value || undefined)}
+            value={status || null}
+            onChange={(value) => setStatus(value || undefined)}
             options={statusOptions}
             placeholder="Durum"
+            clearable
           />
         </div>
       </div>

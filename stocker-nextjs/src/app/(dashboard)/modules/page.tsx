@@ -21,6 +21,7 @@ import {
   ArrowRight,
   Loader2,
   Sparkles,
+  Wallet,
 } from 'lucide-react';
 import { useActiveModules } from '@/lib/api/hooks/useUserModules';
 import { useToggleModule } from '@/lib/api/hooks/useTenantModules';
@@ -93,6 +94,16 @@ const MODULE_DEFINITIONS = [
     path: '/purchase',
     tier: 'standard' as const,
     features: ['Tedarikçiler', 'Satın Alma Siparişleri', 'Mal Kabul', 'Ödemeler'],
+  },
+  {
+    id: 'finance',
+    code: 'FINANCE',
+    name: 'Finans',
+    description: 'Muhasebe, nakit akışı ve finansal yönetim',
+    icon: Wallet,
+    path: '/finance',
+    tier: 'premium' as const,
+    features: ['Hesap Planı', 'Fatura Yönetimi', 'Nakit Akışı', 'Banka İşlemleri'],
   },
   {
     id: 'analytics',

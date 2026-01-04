@@ -87,7 +87,7 @@ export default function InvoiceDetailPage() {
       okButtonProps: { danger: true },
       onOk: async () => {
         try {
-          await cancelInvoice.mutateAsync(invoiceId);
+          await cancelInvoice.mutateAsync({ id: invoiceId });
           showSuccess('Fatura iptal edildi');
         } catch (error) {
           showApiError(error, 'Fatura iptal edilemedi');

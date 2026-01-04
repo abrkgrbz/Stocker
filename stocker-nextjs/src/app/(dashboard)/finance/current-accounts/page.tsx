@@ -154,10 +154,11 @@ export default function CurrentAccountsPage() {
             />
           </div>
           <Select
-            value={accountType || ''}
-            onChange={(e) => setAccountType(e.target.value || undefined)}
+            value={accountType || null}
+            onChange={(value) => setAccountType(value || undefined)}
             options={accountTypeOptions}
             placeholder="Hesap Türü"
+            clearable
           />
         </div>
       </div>

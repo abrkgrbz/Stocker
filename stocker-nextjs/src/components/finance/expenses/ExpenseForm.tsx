@@ -99,7 +99,6 @@ const ExpenseForm = forwardRef<ExpenseFormRef, ExpenseFormProps>(
           category: 'Other',
           currency: 'TRY',
           kdvRate: 20,
-          expenseDate: dayjs(),
           isPaid: false,
           ...initialValues,
           expenseDate: initialValues?.expenseDate ? dayjs(initialValues.expenseDate) : dayjs(),

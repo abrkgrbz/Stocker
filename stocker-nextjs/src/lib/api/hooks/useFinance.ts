@@ -664,6 +664,9 @@ export function useReceivePayment() {
   });
 }
 
+// Alias for backward compatibility
+export const useRecordInvoicePayment = useReceivePayment;
+
 export function useMakePayment() {
   const queryClient = useQueryClient();
 
@@ -1639,6 +1642,9 @@ export function useFinanceDashboardStats(startDate?: DateTime, endDate?: DateTim
     ...queryOptions.realtime(),
   });
 }
+
+// Alias for backward compatibility
+export const useFinanceDashboard = useFinanceDashboardStats;
 
 export function useCashFlowReport(startDate: DateTime, endDate: DateTime) {
   return useQuery<CashFlowReportDto>({
