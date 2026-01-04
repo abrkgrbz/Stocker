@@ -259,15 +259,19 @@ export const confirmAction = async (
   return result.isConfirmed;
 };
 
+
 /**
  * Info alert for general information
+ * Supports HTML content when message contains HTML tags
  */
 export const showInfo = (title: string, message: string) => {
+  const isHtml = /<[a-z][\s\S]*>/i.test(message);
+
   return Swal.fire({
     ...baseSwalConfig,
     icon: 'info',
     title,
-    text: message,
+    ...(isHtml ? { html: message } : { text: message }),
     confirmButtonText: 'Tamam',
     confirmButtonColor: COLORS.slate[900],
     iconColor: COLORS.info.main,
