@@ -26,6 +26,7 @@ import {
   Boxes,
   TrendingUp,
   Command,
+  Wallet,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -96,6 +97,16 @@ const MODULE_CONFIGS = [
     iconColor: 'text-purple-600',
     path: '/purchase',
     moduleCode: 'purchase',
+  },
+  {
+    id: 'finance',
+    title: 'Finans',
+    description: 'Muhasebe, fatura ve ödeme yönetimi',
+    icon: Wallet,
+    iconBg: 'bg-green-50',
+    iconColor: 'text-green-600',
+    path: '/finance',
+    moduleCode: 'finance',
   },
   {
     id: 'dashboards',

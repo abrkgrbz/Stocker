@@ -246,6 +246,36 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       '/purchase/price-lists': '/purchase/price-lists',
       '/purchase/returns': '/purchase/returns',
       '/purchase/reports': '/purchase/reports',
+      // Finance Module
+      '/finance/invoices': '/finance/invoices',
+      '/finance/current-accounts': '/finance/current-accounts',
+      '/finance/current-account-transactions': '/finance/current-account-transactions',
+      '/finance/bank-accounts': '/finance/bank-accounts',
+      '/finance/bank-transactions': '/finance/bank-transactions',
+      '/finance/cash-accounts': '/finance/cash-accounts',
+      '/finance/cash-transactions': '/finance/cash-transactions',
+      '/finance/payments': '/finance/payments',
+      '/finance/collections': '/finance/collections',
+      '/finance/payment-plans': '/finance/payment-plans',
+      '/finance/checks': '/finance/checks',
+      '/finance/promissory-notes': '/finance/promissory-notes',
+      '/finance/expenses': '/finance/expenses',
+      '/finance/expense-categories': '/finance/expense-categories',
+      '/finance/cost-centers': '/finance/cost-centers',
+      '/finance/currencies': '/finance/currencies',
+      '/finance/exchange-rates': '/finance/exchange-rates',
+      '/finance/fixed-assets': '/finance/fixed-assets',
+      '/finance/depreciation': '/finance/depreciation',
+      '/finance/budgets': '/finance/budgets',
+      '/finance/budget-items': '/finance/budget-items',
+      '/finance/chart-of-accounts': '/finance/chart-of-accounts',
+      '/finance/journal-entries': '/finance/journal-entries',
+      '/finance/accounting-periods': '/finance/accounting-periods',
+      '/finance/tax-rates': '/finance/tax-rates',
+      '/finance/withholding-taxes': '/finance/withholding-taxes',
+      '/finance/reports': '/finance/reports',
+      '/finance/aging-reports': '/finance/aging-reports',
+      '/finance/cash-flow': '/finance/cash-flow',
     };
 
     for (const [prefix, key] of Object.entries(routeMappings)) {
@@ -288,6 +318,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     '/inventory': 'inventory',
     '/sales': 'sales',
     '/purchase': 'purchase',
+    '/finance': 'finance',
   };
 
   // Paths that are always allowed (no module required)
@@ -1060,6 +1091,41 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                           <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: 500, fontSize: 14, color: '#333' }}>Yeni Satın Alma</div>
                             <div style={{ fontSize: 12, color: '#999' }}>Satın Alma</div>
+                          </div>
+                        </div>
+                      )}
+                      {/* Finance Items */}
+                      {activeModuleCodes.has('finance') && (
+                        <div
+                          onClick={() => { router.push('/finance/invoices/new'); setQuickCreateOpen(false); }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 12,
+                            padding: '10px 12px',
+                            borderRadius: 8,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <div style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 8,
+                            background: '#059669',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#fff',
+                            fontSize: 14,
+                          }}>
+                            <DocumentTextIcon className="w-4 h-4" />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 500, fontSize: 14, color: '#333' }}>Yeni Fatura</div>
+                            <div style={{ fontSize: 12, color: '#999' }}>Finans</div>
                           </div>
                         </div>
                       )}

@@ -66,6 +66,12 @@ import {
   ClipboardDocumentListIcon,
   DocumentMagnifyingGlassIcon,
   HeartIcon,
+  BanknotesIcon,
+  CreditCardIcon,
+  ReceiptPercentIcon,
+  ScaleIcon,
+  BuildingLibraryIcon,
+  ReceiptRefundIcon,
 } from '@heroicons/react/24/outline';
 import { colors } from '@/theme/colors';
 
@@ -76,7 +82,7 @@ import { colors } from '@/theme/colors';
 /**
  * All available module keys in the system
  */
-export type ModuleKey = 'crm' | 'inventory' | 'sales' | 'purchase' | 'hr' | 'settings' | 'communication' | 'modules';
+export type ModuleKey = 'crm' | 'inventory' | 'sales' | 'purchase' | 'hr' | 'finance' | 'settings' | 'communication' | 'modules';
 
 // Define the structure for module menu items
 export interface MenuItem {
@@ -572,6 +578,131 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
       },
     ],
   },
+  finance: {
+    title: 'Finans',
+    icon: <BanknotesIcon className="w-4 h-4" />,
+    color: colors.semantic.success.dark, // Green for finance
+    moduleCode: 'finance',
+    description: 'Finansal yönetim ve muhasebe',
+    items: [
+      { key: '/finance', icon: <ChartBarSquareIcon className="w-4 h-4" />, label: 'Dashboard' },
+      {
+        key: 'finance-invoices',
+        icon: <DocumentTextIcon className="w-4 h-4" />,
+        label: 'Faturalar',
+        children: [
+          { key: '/finance/invoices', icon: <DocumentTextIcon className="w-4 h-4" />, label: 'Tüm Faturalar' },
+          { key: '/finance/invoices/sales', icon: <DocumentTextIcon className="w-4 h-4" />, label: 'Satış Faturaları' },
+          { key: '/finance/invoices/purchase', icon: <DocumentTextIcon className="w-4 h-4" />, label: 'Alış Faturaları' },
+        ],
+      },
+      {
+        key: 'finance-accounts',
+        icon: <ScaleIcon className="w-4 h-4" />,
+        label: 'Cari Hesaplar',
+        children: [
+          { key: '/finance/current-accounts', icon: <ScaleIcon className="w-4 h-4" />, label: 'Cari Hesaplar' },
+          { key: '/finance/current-account-transactions', icon: <ArrowsRightLeftIcon className="w-4 h-4" />, label: 'Cari Hareketler' },
+        ],
+      },
+      {
+        key: 'finance-banking',
+        icon: <BuildingLibraryIcon className="w-4 h-4" />,
+        label: 'Banka & Kasa',
+        children: [
+          { key: '/finance/bank-accounts', icon: <BuildingLibraryIcon className="w-4 h-4" />, label: 'Banka Hesapları' },
+          { key: '/finance/bank-transactions', icon: <ArrowsRightLeftIcon className="w-4 h-4" />, label: 'Banka Hareketleri' },
+          { key: '/finance/cash-accounts', icon: <WalletIcon className="w-4 h-4" />, label: 'Kasa Hesapları' },
+          { key: '/finance/cash-transactions', icon: <ArrowsRightLeftIcon className="w-4 h-4" />, label: 'Kasa Hareketleri' },
+        ],
+      },
+      {
+        key: 'finance-payments',
+        icon: <CreditCardIcon className="w-4 h-4" />,
+        label: 'Ödeme & Tahsilat',
+        children: [
+          { key: '/finance/payments', icon: <CreditCardIcon className="w-4 h-4" />, label: 'Ödemeler' },
+          { key: '/finance/collections', icon: <ReceiptRefundIcon className="w-4 h-4" />, label: 'Tahsilatlar' },
+          { key: '/finance/payment-plans', icon: <CalendarDaysIcon className="w-4 h-4" />, label: 'Ödeme Planları' },
+        ],
+      },
+      {
+        key: 'finance-instruments',
+        icon: <DocumentCheckIcon className="w-4 h-4" />,
+        label: 'Ticari Belgeler',
+        children: [
+          { key: '/finance/checks', icon: <DocumentCheckIcon className="w-4 h-4" />, label: 'Çekler' },
+          { key: '/finance/promissory-notes', icon: <DocumentIcon className="w-4 h-4" />, label: 'Senetler' },
+        ],
+      },
+      {
+        key: 'finance-expenses',
+        icon: <ReceiptPercentIcon className="w-4 h-4" />,
+        label: 'Giderler',
+        children: [
+          { key: '/finance/expenses', icon: <ReceiptPercentIcon className="w-4 h-4" />, label: 'Gider Kayıtları' },
+          { key: '/finance/expense-categories', icon: <TagIcon className="w-4 h-4" />, label: 'Gider Kategorileri' },
+          { key: '/finance/cost-centers', icon: <ViewColumnsIcon className="w-4 h-4" />, label: 'Maliyet Merkezleri' },
+        ],
+      },
+      {
+        key: 'finance-forex',
+        icon: <CurrencyDollarIcon className="w-4 h-4" />,
+        label: 'Döviz',
+        children: [
+          { key: '/finance/currencies', icon: <CurrencyDollarIcon className="w-4 h-4" />, label: 'Para Birimleri' },
+          { key: '/finance/exchange-rates', icon: <ArrowsRightLeftIcon className="w-4 h-4" />, label: 'Döviz Kurları' },
+        ],
+      },
+      {
+        key: 'finance-assets',
+        icon: <BuildingOfficeIcon className="w-4 h-4" />,
+        label: 'Duran Varlıklar',
+        children: [
+          { key: '/finance/fixed-assets', icon: <BuildingOfficeIcon className="w-4 h-4" />, label: 'Duran Varlıklar' },
+          { key: '/finance/depreciation', icon: <PresentationChartLineIcon className="w-4 h-4" />, label: 'Amortisman' },
+        ],
+      },
+      {
+        key: 'finance-budgeting',
+        icon: <CalculatorIcon className="w-4 h-4" />,
+        label: 'Bütçe',
+        children: [
+          { key: '/finance/budgets', icon: <CalculatorIcon className="w-4 h-4" />, label: 'Bütçeler' },
+          { key: '/finance/budget-items', icon: <ClipboardDocumentListIcon className="w-4 h-4" />, label: 'Bütçe Kalemleri' },
+        ],
+      },
+      {
+        key: 'finance-accounting',
+        icon: <BookOpenIcon className="w-4 h-4" />,
+        label: 'Muhasebe',
+        children: [
+          { key: '/finance/chart-of-accounts', icon: <BookOpenIcon className="w-4 h-4" />, label: 'Hesap Planı' },
+          { key: '/finance/journal-entries', icon: <ClipboardDocumentCheckIcon className="w-4 h-4" />, label: 'Yevmiye Fişleri' },
+          { key: '/finance/accounting-periods', icon: <CalendarIcon className="w-4 h-4" />, label: 'Hesap Dönemleri' },
+        ],
+      },
+      {
+        key: 'finance-taxes',
+        icon: <ReceiptPercentIcon className="w-4 h-4" />,
+        label: 'Vergiler',
+        children: [
+          { key: '/finance/tax-rates', icon: <ReceiptPercentIcon className="w-4 h-4" />, label: 'Vergi Oranları' },
+          { key: '/finance/withholding-taxes', icon: <DocumentTextIcon className="w-4 h-4" />, label: 'Stopajlar' },
+        ],
+      },
+      {
+        key: 'finance-reports',
+        icon: <ChartBarIcon className="w-4 h-4" />,
+        label: 'Raporlar',
+        children: [
+          { key: '/finance/reports', icon: <ChartBarIcon className="w-4 h-4" />, label: 'Finansal Raporlar' },
+          { key: '/finance/aging-reports', icon: <ClockIcon className="w-4 h-4" />, label: 'Yaşlandırma Raporları' },
+          { key: '/finance/cash-flow', icon: <PresentationChartLineIcon className="w-4 h-4" />, label: 'Nakit Akışı' },
+        ],
+      },
+    ],
+  },
   modules: {
     title: 'Modüller',
     icon: <Squares2X2Icon className="w-4 h-4" />,
@@ -599,6 +730,7 @@ export function getCurrentModule(pathname: string): ModuleKey | null {
   if (pathname.startsWith('/sales')) return 'sales';
   if (pathname.startsWith('/purchase')) return 'purchase';
   if (pathname.startsWith('/hr')) return 'hr';
+  if (pathname.startsWith('/finance')) return 'finance';
   if (pathname.startsWith('/settings')) return 'settings';
   if (pathname.startsWith('/notifications') || pathname.startsWith('/reminders')) return 'communication';
   if (pathname.startsWith('/modules')) return 'modules';
