@@ -13,7 +13,8 @@ import { Input, Tag, Tooltip, Checkbox, Dropdown, MenuProps } from 'antd';
 import {
   DndContext,
   DragOverlay,
-  closestCenter,
+  closestCorners,
+  rectIntersection,
   KeyboardSensor,
   MouseSensor,
   TouchSensor,
@@ -24,6 +25,8 @@ import {
   DragOverEvent,
   useDroppable,
   useDraggable,
+  pointerWithin,
+  CollisionDetection,
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import {
@@ -709,10 +712,27 @@ export default function DealsPage() {
   const activeDeal = activeDealId ? deals.find((d) => d.id === activeDealId) : null;
 
   // Kanban View with Drag & Drop
+  // Custom collision detection that works better with columns
+  const customCollisionDetection: CollisionDetection = useCallback((args) => {
+    // First, check if pointer is within any droppable
+    const pointerCollisions = pointerWithin(args);
+    if (pointerCollisions.length > 0) {
+      // Filter to only stage droppables (not deal cards)
+      const stageCollisions = pointerCollisions.filter(
+        (collision) => stages.some((s) => s.id === collision.id)
+      );
+      if (stageCollisions.length > 0) {
+        return stageCollisions;
+      }
+    }
+    // Fallback to rect intersection
+    return rectIntersection(args);
+  }, [stages]);
+
   const KanbanView = () => (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={customCollisionDetection}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
