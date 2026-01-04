@@ -34,13 +34,18 @@ import {
     type SortOption,
     type SortValue
 } from '@/components/ui';
-import type { Deal, DealStage } from '@/lib/api/types/crm.types';
+import type { Opportunity, UIOpportunityStage } from '@/lib/api/types/crm.types';
+import { UI_TO_BACKEND_STAGE, BACKEND_TO_UI_STAGE } from '@/lib/api/types/crm.types';
+
+// Use UIOpportunityStage for UI and DealStage alias for backward compatibility
+type DealStage = UIOpportunityStage;
+type Deal = Opportunity & { title: string; value: number; stage: UIOpportunityStage };
 
 const SORT_OPTIONS: SortOption[] = [
-    { key: 'value', label: 'Değer', icon: <DollarSign size={18} color="#64748b" /> },
+    { key: 'amount', label: 'Değer', icon: <DollarSign size={18} color="#64748b" /> },
     { key: 'probability', label: 'Olasılık', icon: <Target size={18} color="#64748b" /> },
     { key: 'expectedCloseDate', label: 'Kapanış Tarihi', icon: <Calendar size={18} color="#64748b" /> },
-    { key: 'title', label: 'Başlık', icon: <TrendingUp size={18} color="#64748b" /> },
+    { key: 'name', label: 'Başlık', icon: <TrendingUp size={18} color="#64748b" /> },
 ];
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -70,7 +75,7 @@ export default function DealsScreen() {
         refetch,
         isRefetching
     } = useDeals({
-        stage: selectedStage !== 'all' ? selectedStage : undefined,
+        status: selectedStage !== 'all' ? UI_TO_BACKEND_STAGE[selectedStage] : undefined,
         pageSize: 100
     });
 
@@ -79,7 +84,13 @@ export default function DealsScreen() {
         isLoading: isLoadingStats
     } = usePipelineStats();
 
-    const deals = dealsResponse?.items || [];
+    // Transform backend Opportunity to UI Deal format
+    const deals: Deal[] = (dealsResponse?.items || []).map((opp) => ({
+        ...opp,
+        title: opp.name,
+        value: opp.amount,
+        stage: BACKEND_TO_UI_STAGE[opp.status],
+    }));
 
     const onRefresh = useCallback(() => {
         refetch();
@@ -109,6 +120,7 @@ export default function DealsScreen() {
             result.sort((a, b) => {
                 let comparison = 0;
                 switch (sortValue.key) {
+                    case 'amount':
                     case 'value':
                         comparison = a.value - b.value;
                         break;
@@ -118,6 +130,7 @@ export default function DealsScreen() {
                     case 'expectedCloseDate':
                         comparison = new Date(a.expectedCloseDate || 0).getTime() - new Date(b.expectedCloseDate || 0).getTime();
                         break;
+                    case 'name':
                     case 'title':
                         comparison = a.title.localeCompare(b.title);
                         break;
@@ -294,7 +307,7 @@ export default function DealsScreen() {
                         <View style={{ flex: 1 }}>
                             <Text style={{ color: '#fff', opacity: 0.8, fontSize: 12 }}>Aktif Fırsatlar</Text>
                             <Text style={{ color: '#fff', fontSize: 20, fontWeight: '700' }}>
-                                {pipelineStats.totalDeals}
+                                {pipelineStats.totalOpportunities}
                             </Text>
                         </View>
                         <View style={{ flex: 1 }}>

@@ -31,7 +31,10 @@ import {
 import { useTheme } from '@/lib/theme';
 import { useCreateDeal, useCustomers } from '@/lib/api/hooks/useCRM';
 import { useToast } from '@/components/ui';
-import type { DealStage, Customer } from '@/lib/api/types/crm.types';
+import type { UIOpportunityStage, Customer } from '@/lib/api/types/crm.types';
+import { UI_TO_BACKEND_STAGE } from '@/lib/api/types/crm.types';
+
+type DealStage = UIOpportunityStage;
 
 const DEAL_STAGES: { value: DealStage; label: string; color: string }[] = [
     { value: 'lead', label: 'Potansiyel', color: '#64748b' },
@@ -95,11 +98,11 @@ export default function NewDealScreen() {
 
         createDeal(
             {
-                title: formData.title.trim(),
+                name: formData.title.trim(),
                 customerId: formData.customerId,
-                value: parseFloat(formData.value),
+                amount: parseFloat(formData.value),
                 currency: formData.currency,
-                stage: formData.stage,
+                status: UI_TO_BACKEND_STAGE[formData.stage],
                 probability: formData.probability,
                 expectedCloseDate: formData.expectedCloseDate || undefined,
                 notes: formData.notes.trim() || undefined,

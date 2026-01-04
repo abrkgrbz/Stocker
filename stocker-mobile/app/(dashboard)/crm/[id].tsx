@@ -99,20 +99,20 @@ export default function CustomerDetailScreen() {
 
     const getActivityIcon = (type: Activity['type']) => {
         switch (type) {
-            case 'call': return Phone;
-            case 'email': return Mail;
-            case 'meeting': return Calendar;
-            case 'task': return Clock;
+            case 'Call': return Phone;
+            case 'Email': return Mail;
+            case 'Meeting': return Calendar;
+            case 'Task': return Clock;
             default: return MessageCircle;
         }
     };
 
     const getActivityColor = (type: Activity['type']) => {
         switch (type) {
-            case 'call': return colors.semantic.success;
-            case 'email': return colors.semantic.info;
-            case 'meeting': return colors.modules.purchase;
-            case 'task': return colors.semantic.warning;
+            case 'Call': return colors.semantic.success;
+            case 'Email': return colors.semantic.info;
+            case 'Meeting': return colors.modules.purchase;
+            case 'Task': return colors.semantic.warning;
             default: return colors.text.tertiary;
         }
     };
@@ -508,7 +508,7 @@ export default function CustomerDetailScreen() {
                                         </View>
                                         <View style={{ flex: 1 }}>
                                             <Text style={{ color: colors.text.primary, fontSize: 14, fontWeight: '500' }}>
-                                                {activity.title}
+                                                {activity.subject}
                                             </Text>
                                             {activity.description && (
                                                 <Text style={{ color: colors.text.secondary, fontSize: 13, marginTop: 2 }} numberOfLines={2}>

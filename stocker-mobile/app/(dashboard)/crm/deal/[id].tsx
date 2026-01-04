@@ -33,7 +33,10 @@ import {
 import { useTheme } from '@/lib/theme';
 import { useDeal, useUpdateDeal, useUpdateDealStage, useDeleteDeal } from '@/lib/api/hooks/useCRM';
 import { useToast } from '@/components/ui';
-import type { DealStage } from '@/lib/api/types/crm.types';
+import type { UIOpportunityStage, Opportunity } from '@/lib/api/types/crm.types';
+import { UI_TO_BACKEND_STAGE, BACKEND_TO_UI_STAGE } from '@/lib/api/types/crm.types';
+
+type DealStage = UIOpportunityStage;
 
 const DEAL_STAGES: { value: DealStage; label: string; color: string; icon: any }[] = [
     { value: 'lead', label: 'Potansiyel', color: '#64748b', icon: Target },
@@ -70,11 +73,17 @@ export default function DealDetailScreen() {
         notes: '',
     });
 
+    // Helper to get UI-friendly deal data
+    const getDealTitle = () => deal?.name || '';
+    const getDealValue = () => deal?.amount || 0;
+    const getDealStage = (): DealStage => deal ? BACKEND_TO_UI_STAGE[deal.status] : 'lead';
+    const getDealCustomerName = () => deal?.customerName || '';
+
     useEffect(() => {
         if (deal) {
             setFormData({
-                title: deal.title,
-                value: deal.value.toString(),
+                title: deal.name,
+                value: deal.amount.toString(),
                 probability: deal.probability,
                 expectedCloseDate: deal.expectedCloseDate || '',
                 notes: deal.notes || '',
@@ -113,8 +122,8 @@ export default function DealDetailScreen() {
             {
                 id: id!,
                 data: {
-                    title: formData.title.trim(),
-                    value: parseFloat(formData.value),
+                    name: formData.title.trim(),
+                    amount: parseFloat(formData.value),
                     probability: formData.probability,
                     expectedCloseDate: formData.expectedCloseDate || undefined,
                     notes: formData.notes.trim() || undefined,
@@ -135,7 +144,7 @@ export default function DealDetailScreen() {
 
     const handleStageChange = (stage: DealStage) => {
         updateStage(
-            { id: id!, stage },
+            { id: id!, stage: UI_TO_BACKEND_STAGE[stage] },
             {
                 onSuccess: () => {
                     toast.success('Başarılı', 'Aşama güncellendi');
@@ -209,7 +218,8 @@ export default function DealDetailScreen() {
         );
     }
 
-    const stageConfig = DEAL_STAGES.find(s => s.value === deal.stage) || DEAL_STAGES[0];
+    const uiStage = getDealStage();
+    const stageConfig = DEAL_STAGES.find(s => s.value === uiStage) || DEAL_STAGES[0];
     const StageIcon = stageConfig.icon;
 
     return (
@@ -236,10 +246,10 @@ export default function DealDetailScreen() {
                             </Pressable>
                             <View style={{ flex: 1 }}>
                                 <Text style={{ color: colors.text.primary, fontSize: 18, fontWeight: '700' }} numberOfLines={1}>
-                                    {deal.title}
+                                    {getDealTitle()}
                                 </Text>
                                 <Text style={{ color: colors.text.tertiary, fontSize: 13 }}>
-                                    {deal.customerName}
+                                    {getDealCustomerName()}
                                 </Text>
                             </View>
                         </View>
@@ -360,7 +370,7 @@ export default function DealDetailScreen() {
                                     />
                                 ) : (
                                     <Text style={{ color: colors.text.primary, fontSize: 20, fontWeight: '700' }}>
-                                        {formatCurrency(deal.value)}
+                                        {formatCurrency(getDealValue())}
                                     </Text>
                                 )}
                             </View>
@@ -464,7 +474,7 @@ export default function DealDetailScreen() {
                                         }}
                                     />
                                 ) : (
-                                    <Text style={{ color: colors.text.primary, fontSize: 15 }}>{deal.title}</Text>
+                                    <Text style={{ color: colors.text.primary, fontSize: 15 }}>{getDealTitle()}</Text>
                                 )}
                             </View>
 
@@ -474,7 +484,7 @@ export default function DealDetailScreen() {
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                     <Building2 size={16} color={colors.text.secondary} />
                                     <Text style={{ color: colors.text.primary, fontSize: 15, marginLeft: 8 }}>
-                                        {deal.customerName}
+                                        {getDealCustomerName()}
                                     </Text>
                                 </View>
                             </View>
@@ -615,7 +625,7 @@ export default function DealDetailScreen() {
                         <View style={{ padding: 16 }}>
                             {DEAL_STAGES.map((stage) => {
                                 const Icon = stage.icon;
-                                const isSelected = deal.stage === stage.value;
+                                const isSelected = uiStage === stage.value;
                                 return (
                                     <Pressable
                                         key={stage.value}

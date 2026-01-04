@@ -56,7 +56,7 @@ export default function DashboardScreen() {
 
     // Fetch API data
     const { data: customersData, isLoading: customersLoading, refetch: refetchCustomers, isRefetching: customersRefetching } = useCustomers({ pageSize: 1 });
-    const { data: dealsData, refetch: refetchDeals, isRefetching: dealsRefetching } = useDeals({ stage: 'won' as any, pageSize: 1 });
+    const { data: dealsData, refetch: refetchDeals, isRefetching: dealsRefetching } = useDeals({ status: 'ClosedWon', pageSize: 1 });
     const { data: lowStockData, refetch: refetchLowStock, isRefetching: lowStockRefetching } = useLowStockProducts();
     const { data: salesStats, refetch: refetchSalesStats, isRefetching: salesRefetching } = useSalesStats();
     const { data: pendingOrdersData, refetch: refetchPendingOrders } = useOrders({ status: 'pending', pageSize: 1 });
@@ -540,7 +540,7 @@ export default function DashboardScreen() {
                                             </View>
                                             <View className="flex-1">
                                                 <Text style={{ color: colors.text.primary, fontWeight: '500' }} numberOfLines={1}>
-                                                    {activity.title || activity.type}
+                                                    {activity.subject || activity.type}
                                                 </Text>
                                                 <Text style={{ color: colors.text.tertiary, fontSize: 12 }} numberOfLines={1}>
                                                     {activity.customerName} • {formatDate(activity.createdAt)}

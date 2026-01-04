@@ -24,14 +24,29 @@ import {
 } from 'lucide-react-native';
 import { useTheme } from '@/lib/theme';
 import { useActivities } from '@/lib/api/hooks/useCRM';
-import type { Activity, ActivityType } from '@/lib/api/types/crm.types';
+import type { Activity, UIActivityType } from '@/lib/api/types/crm.types';
+import { UI_TO_BACKEND_ACTIVITY_TYPE } from '@/lib/api/types/crm.types';
 
-const ACTIVITY_CONFIG: Record<ActivityType, { label: string; color: string; icon: any }> = {
+const ACTIVITY_CONFIG: Record<UIActivityType, { label: string; color: string; icon: any }> = {
     call: { label: 'Arama', color: '#22c55e', icon: Phone },
     email: { label: 'E-posta', color: '#3b82f6', icon: Mail },
     meeting: { label: 'Toplantı', color: '#8b5cf6', icon: Calendar },
     task: { label: 'Görev', color: '#f59e0b', icon: CheckSquare },
     note: { label: 'Not', color: '#64748b', icon: FileText },
+    other: { label: 'Diğer', color: '#94a3b8', icon: FileText },
+};
+
+// Map backend ActivityType to UI ActivityType
+const mapActivityType = (type: string): UIActivityType => {
+    const mapping: Record<string, UIActivityType> = {
+        Call: 'call',
+        Email: 'email',
+        Meeting: 'meeting',
+        Task: 'task',
+        Note: 'note',
+        Other: 'other',
+    };
+    return mapping[type] || 'other';
 };
 
 export default function ActivitiesScreen() {
@@ -39,7 +54,7 @@ export default function ActivitiesScreen() {
     const insets = useSafeAreaInsets();
     const { colors } = useTheme();
 
-    const [selectedType, setSelectedType] = useState<ActivityType | 'all'>('all');
+    const [selectedType, setSelectedType] = useState<UIActivityType | 'all'>('all');
 
     const {
         data: activitiesResponse,
@@ -48,7 +63,7 @@ export default function ActivitiesScreen() {
         refetch,
         isRefetching
     } = useActivities({
-        type: selectedType !== 'all' ? selectedType : undefined,
+        type: selectedType !== 'all' ? UI_TO_BACKEND_ACTIVITY_TYPE[selectedType] : undefined,
         pageSize: 100
     });
 
@@ -96,7 +111,7 @@ export default function ActivitiesScreen() {
         };
     };
 
-    const TypeFilter = ({ type, label }: { type: ActivityType | 'all'; label: string }) => {
+    const TypeFilter = ({ type, label }: { type: UIActivityType | 'all'; label: string }) => {
         const isSelected = selectedType === type;
         const config = type !== 'all' ? ACTIVITY_CONFIG[type] : null;
 
@@ -138,7 +153,8 @@ export default function ActivitiesScreen() {
     };
 
     const ActivityCard = ({ activity, index }: { activity: Activity; index: number }) => {
-        const config = ACTIVITY_CONFIG[activity.type];
+        const uiType = mapActivityType(activity.type);
+        const config = ACTIVITY_CONFIG[uiType];
         const ActivityIcon = config.icon;
         const dueInfo = formatDueDate(activity.dueDate);
 
@@ -173,7 +189,7 @@ export default function ActivitiesScreen() {
                         </View>
                         <View style={{ flex: 1 }}>
                             <Text style={{ color: colors.text.primary, fontSize: 15, fontWeight: '600', marginBottom: 2 }}>
-                                {activity.title}
+                                {activity.subject}
                             </Text>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 <User size={12} color={colors.text.tertiary} />
@@ -249,10 +265,10 @@ export default function ActivitiesScreen() {
     // Stats
     const stats = {
         total: activities.length,
-        calls: activities.filter(a => a.type === 'call').length,
-        emails: activities.filter(a => a.type === 'email').length,
-        meetings: activities.filter(a => a.type === 'meeting').length,
-        tasks: activities.filter(a => a.type === 'task').length,
+        calls: activities.filter(a => a.type === 'Call').length,
+        emails: activities.filter(a => a.type === 'Email').length,
+        meetings: activities.filter(a => a.type === 'Meeting').length,
+        tasks: activities.filter(a => a.type === 'Task').length,
     };
 
     return (
