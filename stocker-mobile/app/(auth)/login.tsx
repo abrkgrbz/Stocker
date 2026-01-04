@@ -133,19 +133,18 @@ function AnimatedInput({
         }
     }, [autoFocus]);
 
-    const animatedContainerStyle = useAnimatedStyle(() => ({
-        borderColor: interpolateColor(
-            focusAnim.value,
-            [0, 1],
-            ['transparent', '#6366f1']
-        ),
-        borderWidth: 1.5,
-        // Shadow when focused
-        shadowColor: '#6366f1',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: withTiming(isFocused ? 0.15 : 0, { duration: 200 }),
-        shadowRadius: 8,
-    }));
+    const animatedContainerStyle = useAnimatedStyle(() => {
+        'worklet';
+        return {
+            borderColor: interpolateColor(
+                focusAnim.value,
+                [0, 1],
+                ['transparent', '#6366f1']
+            ),
+            borderWidth: 1.5,
+            // Shadow removed to prevent jitter - using border only
+        };
+    });
 
     return (
         <Animated.View
