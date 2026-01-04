@@ -542,14 +542,11 @@ export default function DealsPage() {
           newStageId: newStageId,
         });
         showUpdateSuccess('fırsat', `"${newStage.name}" aşamasına taşındı`);
-        await refetch();
       } catch (error: any) {
-        const apiError = error.response?.data;
-        const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Aşama değiştirilemedi';
-        showError(errorMessage);
+        // Error handling is done in the hook with rollback
       }
     },
-    [deals, stages, moveDealStage, refetch]
+    [deals, stages, moveDealStage]
   );
 
   // Filter deals based on search

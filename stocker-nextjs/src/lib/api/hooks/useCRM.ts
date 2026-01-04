@@ -5,7 +5,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CRMService, type Activity } from '../services/crm.service';
+import { CRMService, type Activity, type Deal } from '../services/crm.service';
 import { showSuccess, showError, showInfo, showApiError } from '@/lib/utils/notifications';
 import { queryOptions } from '../query-options';
 import type {
@@ -749,12 +749,38 @@ export function useMoveDealStage() {
   return useMutation({
     mutationFn: ({ id, newStageId, notes }: { id: Guid; newStageId: Guid; notes?: string }) =>
       CRMService.moveDealStage(id, newStageId, notes),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: crmKeys.deals });
-      showSuccess('Deal aşamaya taşındı');
+    onMutate: async ({ id, newStageId }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: crmKeys.deals });
+
+      // Snapshot the previous value
+      const previousDeals = queryClient.getQueryData(crmKeys.deals);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(crmKeys.deals, (old: Deal[] | { items: Deal[] } | undefined) => {
+        if (!old) return old;
+
+        const deals = Array.isArray(old) ? old : old.items;
+        const updatedDeals = deals.map((deal: Deal) =>
+          deal.id === id ? { ...deal, stageId: newStageId } : deal
+        );
+
+        return Array.isArray(old) ? updatedDeals : { ...old, items: updatedDeals };
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousDeals };
     },
-    onError: (error) => {
-      showApiError(error,'Taşıma başarısız');
+    onError: (error, _variables, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousDeals) {
+        queryClient.setQueryData(crmKeys.deals, context.previousDeals);
+      }
+      showApiError(error, 'Taşıma başarısız');
+    },
+    onSettled: () => {
+      // Always refetch after error or success to ensure sync with server
+      queryClient.invalidateQueries({ queryKey: crmKeys.deals });
     },
   });
 }
