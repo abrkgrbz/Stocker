@@ -66,6 +66,9 @@ export default function ReferralForm({ form, initialValues, onFinish, loading }:
     if (initialValues) {
       form.setFieldsValue({
         ...initialValues,
+        referralDate: initialValues.referralDate ? dayjs(initialValues.referralDate) : undefined,
+        contactedDate: initialValues.contactedDate ? dayjs(initialValues.contactedDate) : undefined,
+        conversionDate: initialValues.conversionDate ? dayjs(initialValues.conversionDate) : undefined,
         expiryDate: initialValues.expiryDate ? dayjs(initialValues.expiryDate) : undefined,
       });
       setReferralType(initialValues.referralType || ReferralType.Customer);
@@ -75,11 +78,21 @@ export default function ReferralForm({ form, initialValues, onFinish, loading }:
         status: ReferralStatus.New,
         rewardType: ReferralRewardType.Points,
         currency: 'TRY',
+        referralDate: dayjs(),
       });
     }
   }, [form, initialValues]);
 
   const handleFormFinish = (values: any) => {
+    if (values.referralDate) {
+      values.referralDate = values.referralDate.toISOString();
+    }
+    if (values.contactedDate) {
+      values.contactedDate = values.contactedDate.toISOString();
+    }
+    if (values.conversionDate) {
+      values.conversionDate = values.conversionDate.toISOString();
+    }
     if (values.expiryDate) {
       values.expiryDate = values.expiryDate.format('YYYY-MM-DD');
     }
@@ -315,10 +328,10 @@ export default function ReferralForm({ form, initialValues, onFinish, loading }:
             </div>
           </div>
 
-          {/* ─────────────── DURUM ─────────────── */}
+          {/* ─────────────── DURUM VE TARİHLER ─────────────── */}
           <div className="mb-8">
             <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Durum
+              Durum ve Tarihler
             </h3>
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-6">
@@ -327,6 +340,43 @@ export default function ReferralForm({ form, initialValues, onFinish, loading }:
                   <Select
                     options={statusOptions}
                     className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Referans Tarihi <span className="text-red-500">*</span></label>
+                <Form.Item
+                  name="referralDate"
+                  rules={[{ required: true, message: 'Referans tarihi zorunludur' }]}
+                  className="mb-0"
+                >
+                  <DatePicker
+                    showTime
+                    format="DD/MM/YYYY HH:mm"
+                    placeholder="Tarih ve saat seçin"
+                    className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">İletişim Tarihi</label>
+                <Form.Item name="contactedDate" className="mb-0">
+                  <DatePicker
+                    showTime
+                    format="DD/MM/YYYY HH:mm"
+                    placeholder="İletişime geçilme tarihi"
+                    className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Dönüşüm Tarihi</label>
+                <Form.Item name="conversionDate" className="mb-0">
+                  <DatePicker
+                    showTime
+                    format="DD/MM/YYYY HH:mm"
+                    placeholder="Müşteriye dönüşüm tarihi"
+                    className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
                   />
                 </Form.Item>
               </div>

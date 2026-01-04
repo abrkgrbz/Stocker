@@ -21,22 +21,22 @@ const sourceOptions = [
   { value: 'Other', label: 'Diğer' },
 ];
 
-// Lead status options
+// Lead status options - Backend LeadStatus enum ile senkronize
 const statusOptions = [
   { value: 'New', label: 'Yeni' },
   { value: 'Contacted', label: 'İletişime Geçildi' },
-  { value: 'Working', label: 'Çalışılıyor' },
   { value: 'Qualified', label: 'Nitelikli' },
   { value: 'Unqualified', label: 'Niteliksiz' },
   { value: 'Converted', label: 'Dönüştürüldü' },
   { value: 'Lost', label: 'Kayıp' },
 ];
 
-// Lead rating options
+// Lead rating options - Backend LeadRating enum ile senkronize
 const ratingOptions = [
-  { value: 'Hot', label: 'Sıcak' },
-  { value: 'Warm', label: 'Ilık' },
+  { value: 'Unrated', label: 'Değerlendirilmedi' },
   { value: 'Cold', label: 'Soğuk' },
+  { value: 'Warm', label: 'Ilık' },
+  { value: 'Hot', label: 'Sıcak' },
 ];
 
 interface LeadFormProps {

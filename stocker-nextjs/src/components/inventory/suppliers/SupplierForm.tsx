@@ -22,13 +22,16 @@ interface SupplierFormProps {
 
 export default function SupplierForm({ form, initialValues, onFinish, loading }: SupplierFormProps) {
   const [isActive, setIsActive] = useState(true);
-  const [isPreferred, setIsPreferred] = useState(false);
 
   useEffect(() => {
     if (initialValues) {
       form.setFieldsValue(initialValues);
       setIsActive(initialValues.isActive ?? true);
-      setIsPreferred(initialValues.isPreferred ?? false);
+    } else {
+      form.setFieldsValue({
+        paymentTerm: 30,
+        creditLimit: 0,
+      });
     }
   }, [form, initialValues]);
 
@@ -74,9 +77,9 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
               </Form.Item>
             </div>
 
-            {/* Status Toggles */}
-            <div className="flex-shrink-0 flex items-center gap-3">
-              <div className="flex items-center gap-2 bg-slate-100 px-3 py-2 rounded-lg">
+            {/* Status Toggle */}
+            <div className="flex-shrink-0">
+              <div className="flex items-center gap-3 bg-slate-100 px-4 py-2 rounded-lg">
                 <span className="text-sm font-medium text-slate-600">
                   {isActive ? 'Aktif' : 'Pasif'}
                 </span>
@@ -86,20 +89,6 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
                     onChange={(val) => {
                       setIsActive(val);
                       form.setFieldValue('isActive', val);
-                    }}
-                  />
-                </Form.Item>
-              </div>
-              <div className="flex items-center gap-2 bg-slate-100 px-3 py-2 rounded-lg">
-                <span className="text-sm font-medium text-slate-600">
-                  {isPreferred ? 'Tercih' : 'Standart'}
-                </span>
-                <Form.Item name="isPreferred" valuePropName="checked" noStyle initialValue={false}>
-                  <Switch
-                    checked={isPreferred}
-                    onChange={(val) => {
-                      setIsPreferred(val);
-                      form.setFieldValue('isPreferred', val);
                     }}
                   />
                 </Form.Item>
@@ -305,7 +294,7 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Vade (Gün)</label>
-                <Form.Item name="paymentTermDays" className="mb-0">
+                <Form.Item name="paymentTerm" className="mb-0" initialValue={30}>
                   <InputNumber
                     placeholder="30"
                     min={0}

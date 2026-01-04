@@ -35,10 +35,12 @@ import { FormSection, FormField } from '@/components/patterns/forms/FormSection'
 // OPTIONS
 // =====================================
 
+// Backend CustomerStatus enum ile senkronize
 const statusOptions = [
   { value: 'Active', label: 'Aktif' },
   { value: 'Inactive', label: 'Pasif' },
-  { value: 'Potential', label: 'Potansiyel' },
+  { value: 'Prospect', label: 'Potansiyel' },
+  { value: 'Suspended', label: 'Askıya Alınmış' },
 ];
 
 const paymentTermsOptions = [

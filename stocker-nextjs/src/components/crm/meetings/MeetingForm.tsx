@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Form, Input, Select, DatePicker } from 'antd';
 import { CalendarIcon, VideoCameraIcon } from '@heroicons/react/24/outline';
 import type { MeetingDto } from '@/lib/api/services/crm.types';
-import { MeetingType, MeetingPriority, MeetingLocationType } from '@/lib/api/services/crm.types';
+import { MeetingType, MeetingPriority, MeetingLocationType, MeetingStatus } from '@/lib/api/services/crm.types';
 import { useCustomers } from '@/lib/api/hooks/useCRM';
 
 const { TextArea } = Input;
@@ -44,6 +44,15 @@ const locationTypeOptions = [
   { value: MeetingLocationType.Online, label: 'Online' },
   { value: MeetingLocationType.Hybrid, label: 'Hibrit' },
   { value: MeetingLocationType.Phone, label: 'Telefon' },
+];
+
+// Meeting status options - Backend MeetingStatus enum ile senkronize
+const meetingStatusOptions = [
+  { value: MeetingStatus.Scheduled, label: 'Planlandı' },
+  { value: MeetingStatus.Confirmed, label: 'Onaylandı' },
+  { value: MeetingStatus.InProgress, label: 'Devam Ediyor' },
+  { value: MeetingStatus.Completed, label: 'Tamamlandı' },
+  { value: MeetingStatus.Cancelled, label: 'İptal Edildi' },
 ];
 
 // Online platform options
@@ -215,6 +224,15 @@ export default function MeetingForm({ form, initialValues, onFinish, loading }: 
                   <Select
                     options={locationTypeOptions}
                     onChange={(val) => setLocationType(val as MeetingLocationType)}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Durum</label>
+                <Form.Item name="status" className="mb-0" initialValue={MeetingStatus.Scheduled}>
+                  <Select
+                    options={meetingStatusOptions}
                     className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>

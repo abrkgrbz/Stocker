@@ -666,6 +666,12 @@ export interface BulkImportCampaignMembersCommand {
 // CUSTOMER SEGMENT MEMBERS
 // =====================================
 
+// Segment type - Backend SegmentType enum ile senkronize
+export enum SegmentType {
+  Static = 'Static',
+  Dynamic = 'Dynamic',
+}
+
 // Reason why a customer was added to a segment
 export type SegmentMembershipReason = 'Manual' | 'AutoCriteria' | 'Import';
 

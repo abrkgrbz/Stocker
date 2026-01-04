@@ -279,6 +279,7 @@ export interface CategoryDto {
   description?: string;
   parentCategoryId?: number;
   parentCategoryName?: string;
+  imageUrl?: string;
   displayOrder: number;
   isActive: boolean;
   createdAt: DateTime;
@@ -292,14 +293,16 @@ export interface CreateCategoryDto {
   name: string;
   description?: string;
   parentCategoryId?: number;
-  displayOrder: number;
+  imageUrl?: string;
+  displayOrder?: number;
 }
 
 export interface UpdateCategoryDto {
   name: string;
   description?: string;
   parentCategoryId?: number;
-  displayOrder: number;
+  imageUrl?: string;
+  displayOrder?: number;
 }
 
 export interface CategoryTreeDto {
@@ -361,9 +364,14 @@ export interface UnitDto {
   code: string;
   name: string;
   symbol?: string;
+  description?: string;
+  isBaseUnit: boolean;
   baseUnitId?: number;
   baseUnitName?: string;
   conversionFactor: number;
+  allowDecimals: boolean;
+  decimalPlaces: number;
+  displayOrder: number;
   isActive: boolean;
   createdAt: DateTime;
   updatedAt?: DateTime;
@@ -374,15 +382,23 @@ export interface CreateUnitDto {
   code: string;
   name: string;
   symbol?: string;
+  description?: string;
   baseUnitId?: number;
   conversionFactor?: number;
+  allowDecimals?: boolean;
+  decimalPlaces?: number;
+  displayOrder?: number;
 }
 
 export interface UpdateUnitDto {
   name: string;
   symbol?: string;
+  description?: string;
   baseUnitId?: number;
   conversionFactor: number;
+  allowDecimals?: boolean;
+  decimalPlaces?: number;
+  displayOrder?: number;
 }
 
 export interface UnitListDto {
@@ -646,9 +662,8 @@ export interface SupplierDto {
   contactPerson?: string;
   contactPhone?: string;
   contactEmail?: string;
-  paymentTermDays?: number;
+  paymentTerm: number;
   creditLimit: number;
-  isPreferred: boolean;
   isActive: boolean;
   createdAt: DateTime;
   updatedAt?: DateTime;
@@ -673,9 +688,8 @@ export interface CreateSupplierDto {
   contactPerson?: string;
   contactPhone?: string;
   contactEmail?: string;
-  paymentTermDays?: number;
-  creditLimit: number;
-  isPreferred: boolean;
+  paymentTerm?: number;
+  creditLimit?: number;
 }
 
 export interface UpdateSupplierDto {
@@ -694,9 +708,8 @@ export interface UpdateSupplierDto {
   contactPerson?: string;
   contactPhone?: string;
   contactEmail?: string;
-  paymentTermDays?: number;
-  creditLimit: number;
-  isPreferred: boolean;
+  paymentTerm?: number;
+  creditLimit?: number;
 }
 
 export interface SupplierListDto {
@@ -705,7 +718,6 @@ export interface SupplierListDto {
   name: string;
   phone?: string;
   city?: string;
-  isPreferred: boolean;
   isActive: boolean;
   productCount: number;
 }
@@ -1278,7 +1290,6 @@ export interface SupplierFilterDto {
   search?: string;
   city?: string;
   isActive?: boolean;
-  isPreferred?: boolean;
   pageNumber?: number;
   pageSize?: number;
 }
@@ -3387,4 +3398,1023 @@ export interface InventoryHealthScoreDto {
   healthTrend: string;
   improvementAreas: string[];
   potentialSavings: number;
+}
+
+// =====================================
+// WAREHOUSE ZONE
+// =====================================
+
+export enum ZoneType {
+  General = 1,
+  ColdStorage = 2,
+  Freezer = 3,
+  DryStorage = 4,
+  Hazardous = 5,
+  Quarantine = 6,
+  Returns = 7,
+  Picking = 8,
+  Shipping = 9,
+  Receiving = 10,
+  CrossDocking = 11,
+  HighValue = 12,
+  Bulk = 13,
+  Other = 99,
+}
+
+export interface WarehouseZoneDto {
+  id: number;
+  warehouseId: number;
+  warehouseName?: string;
+  code: string;
+  name: string;
+  description?: string;
+  zoneType: ZoneType;
+  isActive: boolean;
+  // Temperature Control
+  isTemperatureControlled: boolean;
+  minTemperature?: number;
+  maxTemperature?: number;
+  targetTemperature?: number;
+  requiresTemperatureMonitoring: boolean;
+  // Humidity Control
+  isHumidityControlled: boolean;
+  minHumidity?: number;
+  maxHumidity?: number;
+  // Safety and Hazard
+  isHazardous: boolean;
+  hazardClass?: string;
+  unNumber?: string;
+  requiresSpecialAccess: boolean;
+  accessLevel?: number;
+  // Capacity
+  totalArea?: number;
+  usableArea?: number;
+  maxPalletCapacity?: number;
+  maxHeight?: number;
+  maxWeightPerArea?: number;
+  // Operations
+  priority: number;
+  isDefaultPickingZone: boolean;
+  isDefaultPutawayZone: boolean;
+  isQuarantineZone: boolean;
+  isReturnsZone: boolean;
+  locationCount: number;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+}
+
+export interface CreateWarehouseZoneDto {
+  warehouseId: number;
+  code: string;
+  name: string;
+  description?: string;
+  zoneType: ZoneType;
+  // Temperature Control
+  isTemperatureControlled?: boolean;
+  minTemperature?: number;
+  maxTemperature?: number;
+  targetTemperature?: number;
+  requiresTemperatureMonitoring?: boolean;
+  // Humidity Control
+  isHumidityControlled?: boolean;
+  minHumidity?: number;
+  maxHumidity?: number;
+  // Safety and Hazard
+  isHazardous?: boolean;
+  hazardClass?: string;
+  unNumber?: string;
+  requiresSpecialAccess?: boolean;
+  accessLevel?: number;
+  // Capacity
+  totalArea?: number;
+  usableArea?: number;
+  maxPalletCapacity?: number;
+  maxHeight?: number;
+  maxWeightPerArea?: number;
+  // Operations
+  priority?: number;
+  isDefaultPickingZone?: boolean;
+  isDefaultPutawayZone?: boolean;
+  isQuarantineZone?: boolean;
+  isReturnsZone?: boolean;
+}
+
+export interface UpdateWarehouseZoneDto {
+  name: string;
+  description?: string;
+  zoneType: ZoneType;
+  isTemperatureControlled?: boolean;
+  minTemperature?: number;
+  maxTemperature?: number;
+  targetTemperature?: number;
+  requiresTemperatureMonitoring?: boolean;
+  isHumidityControlled?: boolean;
+  minHumidity?: number;
+  maxHumidity?: number;
+  isHazardous?: boolean;
+  hazardClass?: string;
+  unNumber?: string;
+  requiresSpecialAccess?: boolean;
+  accessLevel?: number;
+  totalArea?: number;
+  usableArea?: number;
+  maxPalletCapacity?: number;
+  maxHeight?: number;
+  maxWeightPerArea?: number;
+  priority?: number;
+  isDefaultPickingZone?: boolean;
+  isDefaultPutawayZone?: boolean;
+  isQuarantineZone?: boolean;
+  isReturnsZone?: boolean;
+}
+
+// =====================================
+// LOT BATCH
+// =====================================
+
+export enum LotBatchStatus {
+  Pending = 0,
+  Received = 1,
+  Approved = 2,
+  Quarantined = 3,
+  Rejected = 4,
+  Exhausted = 5,
+}
+
+export interface LotBatchDto {
+  id: number;
+  lotNumber: string;
+  productId: number;
+  productName?: string;
+  productCode?: string;
+  supplierId?: number;
+  supplierName?: string;
+  status: LotBatchStatus;
+  manufacturedDate?: DateTime;
+  expiryDate?: DateTime;
+  receivedDate?: DateTime;
+  initialQuantity: number;
+  currentQuantity: number;
+  reservedQuantity: number;
+  availableQuantity: number;
+  supplierLotNumber?: string;
+  purchaseOrderId?: string;
+  certificateNumber?: string;
+  notes?: string;
+  isQuarantined: boolean;
+  quarantinedDate?: DateTime;
+  quarantineReason?: string;
+  inspectedByUserId?: number;
+  inspectedDate?: DateTime;
+  inspectionNotes?: string;
+  daysUntilExpiry?: number;
+  remainingShelfLifePercentage?: number;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+}
+
+export interface CreateLotBatchDto {
+  lotNumber: string;
+  productId: number;
+  supplierId?: number;
+  initialQuantity: number;
+  manufacturedDate?: DateTime;
+  expiryDate?: DateTime;
+  supplierLotNumber?: string;
+  purchaseOrderId?: string;
+  certificateNumber?: string;
+  notes?: string;
+}
+
+export interface UpdateLotBatchDto {
+  supplierId?: number;
+  manufacturedDate?: DateTime;
+  expiryDate?: DateTime;
+  supplierLotNumber?: string;
+  purchaseOrderId?: string;
+  certificateNumber?: string;
+  notes?: string;
+}
+
+// =====================================
+// PRODUCT VARIANT
+// =====================================
+
+export interface ProductVariantDto {
+  id: number;
+  productId: number;
+  productName?: string;
+  sku: string;
+  barcode?: string;
+  variantName: string;
+  price?: number;
+  costPrice?: number;
+  compareAtPrice?: number;
+  currency?: string;
+  weight?: number;
+  weightUnit?: string;
+  dimensions?: string;
+  imageUrl?: string;
+  isDefault: boolean;
+  isActive: boolean;
+  trackInventory: boolean;
+  allowBackorder: boolean;
+  lowStockThreshold: number;
+  displayOrder: number;
+  options: ProductVariantOptionDto[];
+  totalStock: number;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+}
+
+export interface ProductVariantOptionDto {
+  id: number;
+  productVariantId: number;
+  productAttributeId: number;
+  productAttributeName?: string;
+  productAttributeOptionId?: number;
+  value: string;
+  displayOrder: number;
+}
+
+export interface CreateProductVariantDto {
+  productId: number;
+  sku: string;
+  barcode?: string;
+  variantName: string;
+  price?: number;
+  costPrice?: number;
+  compareAtPrice?: number;
+  currency?: string;
+  weight?: number;
+  weightUnit?: string;
+  dimensions?: string;
+  imageUrl?: string;
+  isDefault?: boolean;
+  trackInventory?: boolean;
+  allowBackorder?: boolean;
+  lowStockThreshold?: number;
+  displayOrder?: number;
+  options?: CreateProductVariantOptionDto[];
+}
+
+export interface CreateProductVariantOptionDto {
+  productAttributeId: number;
+  productAttributeOptionId?: number;
+  value: string;
+  displayOrder?: number;
+}
+
+export interface UpdateProductVariantDto {
+  sku: string;
+  barcode?: string;
+  variantName: string;
+  price?: number;
+  costPrice?: number;
+  compareAtPrice?: number;
+  currency?: string;
+  weight?: number;
+  weightUnit?: string;
+  dimensions?: string;
+  imageUrl?: string;
+  isDefault?: boolean;
+  trackInventory?: boolean;
+  allowBackorder?: boolean;
+  lowStockThreshold?: number;
+  displayOrder?: number;
+}
+
+// =====================================
+// INVENTORY ADJUSTMENT
+// =====================================
+
+export enum AdjustmentType {
+  Increase = 1,
+  Decrease = 2,
+  Correction = 3,
+  Scrap = 4,
+  InternalTransfer = 5,
+}
+
+export enum AdjustmentReason {
+  StockCountVariance = 1,
+  Damage = 2,
+  Loss = 3,
+  Theft = 4,
+  ProductionScrap = 5,
+  Expired = 6,
+  QualityRejection = 7,
+  CustomerReturn = 8,
+  SupplierReturn = 9,
+  SystemCorrection = 10,
+  OpeningStock = 11,
+  Other = 99,
+}
+
+export enum AdjustmentStatus {
+  Draft = 0,
+  PendingApproval = 1,
+  Approved = 2,
+  Rejected = 3,
+  Processed = 4,
+  Cancelled = 5,
+}
+
+export interface InventoryAdjustmentDto {
+  id: number;
+  adjustmentNumber: string;
+  adjustmentDate: DateTime;
+  adjustmentType: AdjustmentType;
+  reason: AdjustmentReason;
+  description?: string;
+  warehouseId: number;
+  warehouseName?: string;
+  locationId?: number;
+  locationName?: string;
+  stockCountId?: number;
+  referenceNumber?: string;
+  referenceType?: string;
+  totalCostImpact: number;
+  currency: string;
+  status: AdjustmentStatus;
+  approvedBy?: string;
+  approvedDate?: DateTime;
+  rejectionReason?: string;
+  internalNotes?: string;
+  accountingNotes?: string;
+  items: InventoryAdjustmentItemDto[];
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+}
+
+export interface InventoryAdjustmentItemDto {
+  id: number;
+  inventoryAdjustmentId: number;
+  productId: number;
+  productName?: string;
+  productCode?: string;
+  systemQuantity: number;
+  actualQuantity: number;
+  varianceQuantity: number;
+  unitCost: number;
+  costImpact: number;
+  lotNumber?: string;
+  serialNumber?: string;
+  expiryDate?: DateTime;
+  reasonCode?: string;
+  notes?: string;
+}
+
+export interface CreateInventoryAdjustmentDto {
+  adjustmentNumber?: string;
+  adjustmentDate?: DateTime;
+  adjustmentType: AdjustmentType;
+  reason: AdjustmentReason;
+  description?: string;
+  warehouseId: number;
+  locationId?: number;
+  stockCountId?: number;
+  referenceNumber?: string;
+  referenceType?: string;
+  internalNotes?: string;
+  accountingNotes?: string;
+  items: CreateInventoryAdjustmentItemDto[];
+}
+
+export interface CreateInventoryAdjustmentItemDto {
+  productId: number;
+  systemQuantity: number;
+  actualQuantity: number;
+  unitCost: number;
+  lotNumber?: string;
+  serialNumber?: string;
+  expiryDate?: DateTime;
+  reasonCode?: string;
+  notes?: string;
+}
+
+// =====================================
+// SERIAL NUMBER (Extended)
+// =====================================
+
+export interface UpdateSerialNumberDto {
+  warehouseId?: number;
+  locationId?: number;
+  manufacturedDate?: DateTime;
+  batchNumber?: string;
+  supplierSerial?: string;
+  notes?: string;
+}
+
+// =====================================
+// REORDER RULE (Extended)
+// =====================================
+
+export interface UpdateReorderRuleDto {
+  name: string;
+  description?: string;
+  productId?: number;
+  categoryId?: number;
+  warehouseId?: number;
+  supplierId?: number;
+  triggerBelowQuantity?: number;
+  triggerBelowDaysOfStock?: number;
+  triggerOnForecast: boolean;
+  forecastLeadTimeDays?: number;
+  fixedReorderQuantity?: number;
+  reorderUpToQuantity?: number;
+  useEconomicOrderQuantity: boolean;
+  minimumOrderQuantity?: number;
+  maximumOrderQuantity?: number;
+  roundToPackSize: boolean;
+  packSize?: number;
+  isScheduled: boolean;
+  cronExpression?: string;
+  requiresApproval: boolean;
+  approverUserId?: number;
+  priority?: number;
+}
+
+// =====================================
+// CYCLE COUNT
+// =====================================
+
+export enum CycleCountType {
+  Standard = 1,
+  AbcBased = 2,
+  ZoneBased = 3,
+  CategoryBased = 4,
+  Random = 5,
+  MovementBased = 6,
+}
+
+export enum CycleCountStatus {
+  Planned = 0,
+  InProgress = 1,
+  Completed = 2,
+  Approved = 3,
+  Processed = 4,
+  Cancelled = 5,
+}
+
+export enum RecurrenceFrequency {
+  Daily = 1,
+  Weekly = 2,
+  BiWeekly = 3,
+  Monthly = 4,
+  Quarterly = 5,
+  SemiAnnually = 6,
+  Annually = 7,
+}
+
+export interface CycleCountItemDto {
+  id: number;
+  cycleCountId: number;
+  productId: number;
+  productName?: string;
+  productCode?: string;
+  locationId?: number;
+  locationName?: string;
+  lotNumber?: string;
+  systemQuantity: number;
+  countedQuantity?: number;
+  varianceQuantity: number;
+  variancePercent: number;
+  isCounted: boolean;
+  hasVariance: boolean;
+  unitCost?: number;
+  varianceValue?: number;
+  countedDate?: DateTime;
+  countedBy?: string;
+  notes?: string;
+  countAttempts: number;
+}
+
+export interface CycleCountDto {
+  id: number;
+  planNumber: string;
+  planName: string;
+  description?: string;
+  countType: CycleCountType;
+  status: CycleCountStatus;
+  scheduledStartDate: DateTime;
+  scheduledEndDate: DateTime;
+  actualStartDate?: DateTime;
+  actualEndDate?: DateTime;
+  frequency?: RecurrenceFrequency;
+  nextScheduledDate?: DateTime;
+  warehouseId: number;
+  warehouseName?: string;
+  zoneId?: number;
+  zoneName?: string;
+  categoryId?: number;
+  categoryName?: string;
+  abcClassFilter?: AbcClass;
+  onlyNegativeStocks: boolean;
+  onlyZeroStocks: boolean;
+  daysSinceLastMovement?: number;
+  totalItems: number;
+  countedItems: number;
+  itemsWithVariance: number;
+  progressPercent: number;
+  accuracyPercent?: number;
+  quantityTolerancePercent: number;
+  valueTolerance?: number;
+  blockAutoApproveOnToleranceExceeded: boolean;
+  assignedTo?: string;
+  assignedUserId?: string;
+  approvedBy?: string;
+  approvedDate?: DateTime;
+  planningNotes?: string;
+  countNotes?: string;
+  items: CycleCountItemDto[];
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+}
+
+export interface CreateCycleCountDto {
+  planNumber: string;
+  planName: string;
+  description?: string;
+  countType: CycleCountType;
+  warehouseId: number;
+  scheduledStartDate: DateTime;
+  scheduledEndDate: DateTime;
+  frequency?: RecurrenceFrequency;
+  zoneId?: number;
+  categoryId?: number;
+  abcClassFilter?: AbcClass;
+  onlyNegativeStocks?: boolean;
+  onlyZeroStocks?: boolean;
+  daysSinceLastMovement?: number;
+  quantityTolerancePercent?: number;
+  valueTolerance?: number;
+  blockAutoApproveOnToleranceExceeded?: boolean;
+  assignedTo?: string;
+  assignedUserId?: string;
+  planningNotes?: string;
+}
+
+export interface UpdateCycleCountDto {
+  planName: string;
+  description?: string;
+  scheduledStartDate: DateTime;
+  scheduledEndDate: DateTime;
+  frequency?: RecurrenceFrequency;
+  zoneId?: number;
+  categoryId?: number;
+  abcClassFilter?: AbcClass;
+  onlyNegativeStocks?: boolean;
+  onlyZeroStocks?: boolean;
+  daysSinceLastMovement?: number;
+  quantityTolerancePercent?: number;
+  valueTolerance?: number;
+  blockAutoApproveOnToleranceExceeded?: boolean;
+  assignedTo?: string;
+  assignedUserId?: string;
+  planningNotes?: string;
+}
+
+// =====================================
+// PACKAGING TYPE
+// =====================================
+
+export enum PackagingCategory {
+  Box = 1,
+  Carton = 2,
+  Pallet = 3,
+  Crate = 4,
+  Bag = 5,
+  Drum = 6,
+  Container = 7,
+  Bottle = 8,
+  Jar = 9,
+  Tube = 10,
+  Pouch = 11,
+  Roll = 12,
+  Other = 99,
+}
+
+export interface PackagingTypeDto {
+  id: number;
+  code: string;
+  name: string;
+  description?: string;
+  category: PackagingCategory;
+  isActive: boolean;
+  // Dimensions
+  length?: number;
+  width?: number;
+  height?: number;
+  volume?: number;
+  // Weight
+  emptyWeight?: number;
+  maxWeightCapacity?: number;
+  // Capacity
+  defaultQuantity?: number;
+  maxQuantity?: number;
+  stackableCount?: number;
+  isStackable: boolean;
+  // Logistics
+  unitsPerPallet?: number;
+  unitsPerPalletLayer?: number;
+  barcodePrefix?: string;
+  defaultBarcodeType?: BarcodeType;
+  // Material
+  materialType?: string;
+  isRecyclable: boolean;
+  isReturnable: boolean;
+  depositAmount?: number;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+}
+
+export interface CreatePackagingTypeDto {
+  code: string;
+  name: string;
+  description?: string;
+  category: PackagingCategory;
+  length?: number;
+  width?: number;
+  height?: number;
+  emptyWeight?: number;
+  maxWeightCapacity?: number;
+  defaultQuantity?: number;
+  maxQuantity?: number;
+  stackableCount?: number;
+  isStackable?: boolean;
+  unitsPerPallet?: number;
+  unitsPerPalletLayer?: number;
+  barcodePrefix?: string;
+  defaultBarcodeType?: BarcodeType;
+  materialType?: string;
+  isRecyclable?: boolean;
+  isReturnable?: boolean;
+  depositAmount?: number;
+}
+
+export interface UpdatePackagingTypeDto {
+  name: string;
+  description?: string;
+  category: PackagingCategory;
+  length?: number;
+  width?: number;
+  height?: number;
+  emptyWeight?: number;
+  maxWeightCapacity?: number;
+  defaultQuantity?: number;
+  maxQuantity?: number;
+  stackableCount?: number;
+  isStackable?: boolean;
+  unitsPerPallet?: number;
+  unitsPerPalletLayer?: number;
+  barcodePrefix?: string;
+  defaultBarcodeType?: BarcodeType;
+  materialType?: string;
+  isRecyclable?: boolean;
+  isReturnable?: boolean;
+  depositAmount?: number;
+}
+
+// =====================================
+// BARCODE DEFINITION
+// =====================================
+
+export enum BarcodeType {
+  EAN13 = 1,
+  EAN8 = 2,
+  UPCA = 3,
+  UPCE = 4,
+  Code128 = 5,
+  Code39 = 6,
+  QRCode = 7,
+  DataMatrix = 8,
+  PDF417 = 9,
+  ITF14 = 10,
+  GS1_128 = 11,
+  Internal = 99,
+}
+
+export interface BarcodeDefinitionDto {
+  id: number;
+  productId: number;
+  productName?: string;
+  productCode?: string;
+  productVariantId?: number;
+  barcode: string;
+  barcodeType: BarcodeType;
+  isPrimary: boolean;
+  isActive: boolean;
+  unitId?: number;
+  unitName?: string;
+  quantityPerUnit: number;
+  packagingTypeId?: number;
+  packagingTypeName?: string;
+  isManufacturerBarcode: boolean;
+  manufacturerCode?: string;
+  gtin?: string;
+  description?: string;
+  validFrom?: DateTime;
+  validUntil?: DateTime;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+}
+
+export interface CreateBarcodeDefinitionDto {
+  productId: number;
+  productVariantId?: number;
+  barcode: string;
+  barcodeType: BarcodeType;
+  isPrimary?: boolean;
+  unitId?: number;
+  quantityPerUnit?: number;
+  packagingTypeId?: number;
+  isManufacturerBarcode?: boolean;
+  manufacturerCode?: string;
+  gtin?: string;
+  description?: string;
+  validFrom?: DateTime;
+  validUntil?: DateTime;
+}
+
+export interface UpdateBarcodeDefinitionDto {
+  barcodeType: BarcodeType;
+  isPrimary?: boolean;
+  unitId?: number;
+  quantityPerUnit?: number;
+  packagingTypeId?: number;
+  isManufacturerBarcode?: boolean;
+  manufacturerCode?: string;
+  gtin?: string;
+  description?: string;
+  validFrom?: DateTime;
+  validUntil?: DateTime;
+}
+
+// =====================================
+// SHELF LIFE
+// =====================================
+
+export enum ShelfLifeType {
+  ExpiryDate = 1,
+  BestBefore = 2,
+  ManufacturingDateBased = 3,
+  AfterOpening = 4,
+  AfterFirstUse = 5,
+}
+
+export enum ShelfLifeRuleType {
+  Days = 1,
+  Percentage = 2,
+  Both = 3,
+}
+
+export enum ExpiryAction {
+  None = 0,
+  AlertOnly = 1,
+  BlockSales = 2,
+  Quarantine = 3,
+  Scrap = 4,
+  DiscountSale = 5,
+}
+
+export interface ShelfLifeDto {
+  id: number;
+  productId: number;
+  productName?: string;
+  productCode?: string;
+  shelfLifeType: ShelfLifeType;
+  totalShelfLifeDays: number;
+  isActive: boolean;
+  // Receiving Rules
+  minReceivingShelfLifeDays: number;
+  minReceivingShelfLifePercent?: number;
+  receivingRuleType: ShelfLifeRuleType;
+  // Sales Rules
+  minSalesShelfLifeDays: number;
+  minSalesShelfLifePercent?: number;
+  salesRuleType: ShelfLifeRuleType;
+  // Alert Rules
+  alertThresholdDays: number;
+  alertThresholdPercent?: number;
+  criticalThresholdDays: number;
+  criticalThresholdPercent?: number;
+  // Customer Rules
+  hasCustomerSpecificRules: boolean;
+  defaultCustomerMinShelfLifeDays?: number;
+  // Action Rules
+  expiryAction: ExpiryAction;
+  autoQuarantineOnExpiry: boolean;
+  autoScrapOnExpiry: boolean;
+  daysBeforeQuarantineAlert?: number;
+  // Storage
+  requiresSpecialStorage: boolean;
+  storageConditions?: string;
+  requiredZoneType?: ZoneType;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+}
+
+export interface CreateShelfLifeDto {
+  productId: number;
+  shelfLifeType: ShelfLifeType;
+  totalShelfLifeDays: number;
+  minReceivingShelfLifeDays?: number;
+  minReceivingShelfLifePercent?: number;
+  receivingRuleType?: ShelfLifeRuleType;
+  minSalesShelfLifeDays?: number;
+  minSalesShelfLifePercent?: number;
+  salesRuleType?: ShelfLifeRuleType;
+  alertThresholdDays?: number;
+  alertThresholdPercent?: number;
+  criticalThresholdDays?: number;
+  criticalThresholdPercent?: number;
+  hasCustomerSpecificRules?: boolean;
+  defaultCustomerMinShelfLifeDays?: number;
+  expiryAction?: ExpiryAction;
+  autoQuarantineOnExpiry?: boolean;
+  autoScrapOnExpiry?: boolean;
+  daysBeforeQuarantineAlert?: number;
+  requiresSpecialStorage?: boolean;
+  storageConditions?: string;
+  requiredZoneType?: ZoneType;
+}
+
+export interface UpdateShelfLifeDto {
+  shelfLifeType: ShelfLifeType;
+  totalShelfLifeDays: number;
+  minReceivingShelfLifeDays?: number;
+  minReceivingShelfLifePercent?: number;
+  receivingRuleType?: ShelfLifeRuleType;
+  minSalesShelfLifeDays?: number;
+  minSalesShelfLifePercent?: number;
+  salesRuleType?: ShelfLifeRuleType;
+  alertThresholdDays?: number;
+  alertThresholdPercent?: number;
+  criticalThresholdDays?: number;
+  criticalThresholdPercent?: number;
+  hasCustomerSpecificRules?: boolean;
+  defaultCustomerMinShelfLifeDays?: number;
+  expiryAction?: ExpiryAction;
+  autoQuarantineOnExpiry?: boolean;
+  autoScrapOnExpiry?: boolean;
+  daysBeforeQuarantineAlert?: number;
+  requiresSpecialStorage?: boolean;
+  storageConditions?: string;
+  requiredZoneType?: ZoneType;
+}
+
+// =====================================
+// QUALITY CONTROL
+// =====================================
+
+export enum QualityControlType {
+  IncomingInspection = 1,
+  OutgoingInspection = 2,
+  InProcessInspection = 3,
+  FinalInspection = 4,
+  PeriodicInspection = 5,
+  CustomerComplaint = 6,
+  ReturnInspection = 7,
+}
+
+export enum QualityControlStatus {
+  Pending = 0,
+  InProgress = 1,
+  Completed = 2,
+  Cancelled = 3,
+}
+
+export enum QualityControlResult {
+  Pending = 0,
+  Passed = 1,
+  Failed = 2,
+  PartialPass = 3,
+  ConditionalPass = 4,
+}
+
+export enum QualityAction {
+  None = 0,
+  Accept = 1,
+  Reject = 2,
+  PartialAccept = 3,
+  AcceptWithDeviation = 4,
+  Rework = 5,
+  ReturnToSupplier = 6,
+  Scrap = 7,
+  Quarantine = 8,
+}
+
+export enum RejectionCategory {
+  VisualDefect = 1,
+  DimensionalDeviation = 2,
+  FunctionalFailure = 3,
+  MaterialDefect = 4,
+  PackagingDamage = 5,
+  Contamination = 6,
+  DocumentationMissing = 7,
+  ExpiryDate = 8,
+  Other = 99,
+}
+
+export interface QualityControlItemDto {
+  id: number;
+  qualityControlId: number;
+  checkName: string;
+  specification?: string;
+  acceptanceCriteria?: string;
+  measuredValue?: string;
+  isPassed?: boolean;
+  notes?: string;
+  sortOrder: number;
+}
+
+export interface QualityControlAttachmentDto {
+  id: number;
+  qualityControlId: number;
+  fileName: string;
+  filePath: string;
+  description?: string;
+  fileType?: string;
+  fileSize?: number;
+}
+
+export interface QualityControlDto {
+  id: number;
+  qcNumber: string;
+  qcType: QualityControlType;
+  inspectionDate: DateTime;
+  status: QualityControlStatus;
+  productId: number;
+  productName?: string;
+  productCode?: string;
+  lotNumber?: string;
+  supplierId?: number;
+  supplierName?: string;
+  purchaseOrderId?: number;
+  purchaseOrderNumber?: string;
+  warehouseId?: number;
+  warehouseName?: string;
+  inspectedQuantity: number;
+  acceptedQuantity: number;
+  rejectedQuantity: number;
+  sampleQuantity?: number;
+  unit: string;
+  result: QualityControlResult;
+  qualityScore?: number;
+  qualityGrade?: string;
+  rejectionReason?: string;
+  rejectionCategory?: RejectionCategory;
+  inspectorName?: string;
+  inspectorUserId?: string;
+  inspectionDurationMinutes?: number;
+  inspectionLocation?: string;
+  inspectionStandard?: string;
+  recommendedAction: QualityAction;
+  appliedAction?: QualityAction;
+  actionDescription?: string;
+  actionDate?: DateTime;
+  inspectionNotes?: string;
+  internalNotes?: string;
+  supplierNotification?: string;
+  items: QualityControlItemDto[];
+  attachments: QualityControlAttachmentDto[];
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+}
+
+export interface CreateQualityControlDto {
+  qcNumber?: string;
+  qcType: QualityControlType;
+  productId: number;
+  inspectedQuantity: number;
+  unit: string;
+  lotNumber?: string;
+  supplierId?: number;
+  purchaseOrderNumber?: string;
+  warehouseId?: number;
+  sampleQuantity?: number;
+  inspectionLocation?: string;
+  inspectionStandard?: string;
+  inspectionNotes?: string;
+  items?: CreateQualityControlItemDto[];
+}
+
+export interface CreateQualityControlItemDto {
+  checkName: string;
+  specification?: string;
+  acceptanceCriteria?: string;
+  sortOrder?: number;
+}
+
+export interface UpdateQualityControlDto {
+  lotNumber?: string;
+  supplierId?: number;
+  purchaseOrderNumber?: string;
+  warehouseId?: number;
+  sampleQuantity?: number;
+  inspectionLocation?: string;
+  inspectionStandard?: string;
+  inspectionNotes?: string;
+  internalNotes?: string;
 }

@@ -29,12 +29,15 @@ interface TransferFormProps {
   loading?: boolean;
 }
 
+// Backend TransferType enum ile senkronize
 const transferTypes = [
   { value: TransferType.Standard, label: 'Standart' },
   { value: TransferType.Urgent, label: 'Acil' },
   { value: TransferType.Replenishment, label: 'Takviye' },
   { value: TransferType.Return, label: 'İade' },
   { value: TransferType.Internal, label: 'Dahili' },
+  { value: TransferType.CrossDock, label: 'Cross-Dock' },
+  { value: TransferType.Consolidation, label: 'Konsolidasyon' },
 ];
 
 export default function TransferForm({ form, initialValues, onFinish, loading }: TransferFormProps) {

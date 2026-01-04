@@ -147,15 +147,25 @@ export default function CategoryForm({ form, initialValues, onFinish, loading }:
             </div>
           </div>
 
-          {/* ─────────────── SIRALAMA ─────────────── */}
+          {/* ─────────────── GÖRSEL VE SIRALAMA ─────────────── */}
           <div className="mb-8">
             <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Sıralama
+              Görsel ve Sıralama
             </h3>
             <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-6">
+              <div className="col-span-8">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Görsel URL</label>
+                <Form.Item name="imageUrl" className="mb-0">
+                  <Input
+                    placeholder="https://example.com/category-image.jpg"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+                <p className="text-xs text-slate-400 mt-1">Kategori için görsel URL adresi</p>
+              </div>
+              <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Görüntüleme Sırası</label>
-                <Form.Item name="displayOrder" className="mb-0">
+                <Form.Item name="displayOrder" className="mb-0" initialValue={0}>
                   <InputNumber
                     placeholder="0"
                     min={0}

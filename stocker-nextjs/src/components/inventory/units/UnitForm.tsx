@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Input, InputNumber, Select, Switch, Alert } from 'antd';
 import { HashtagIcon } from '@heroicons/react/24/outline';
+
+const { TextArea } = Input;
 import { useUnits } from '@/lib/api/hooks/useInventory';
 import type { UnitDto } from '@/lib/api/services/inventory.types';
 
@@ -16,6 +18,7 @@ interface UnitFormProps {
 export default function UnitForm({ form, initialValues, onFinish, loading }: UnitFormProps) {
   const [isActive, setIsActive] = useState(true);
   const [hasBaseUnit, setHasBaseUnit] = useState(false);
+  const [allowDecimals, setAllowDecimals] = useState(false);
 
   const { data: units = [] } = useUnits(true);
 
@@ -33,9 +36,13 @@ export default function UnitForm({ form, initialValues, onFinish, loading }: Uni
       form.setFieldsValue(initialValues);
       setIsActive(initialValues.isActive ?? true);
       setHasBaseUnit(!!initialValues.baseUnitId);
+      setAllowDecimals(initialValues.allowDecimals ?? false);
     } else {
       form.setFieldsValue({
         conversionFactor: 1,
+        displayOrder: 0,
+        allowDecimals: false,
+        decimalPlaces: 0,
       });
     }
   }, [form, initialValues]);
@@ -113,7 +120,7 @@ export default function UnitForm({ form, initialValues, onFinish, loading }: Uni
               Temel Bilgiler
             </h3>
             <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-6">
+              <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Birim Kodu <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="code"
@@ -127,12 +134,70 @@ export default function UnitForm({ form, initialValues, onFinish, loading }: Uni
                   />
                 </Form.Item>
               </div>
-              <div className="col-span-6">
+              <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Sembol</label>
                 <Form.Item name="symbol" className="mb-0">
                   <Input
                     placeholder="kg"
                     className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sıralama</label>
+                <Form.Item name="displayOrder" className="mb-0" initialValue={0}>
+                  <InputNumber
+                    placeholder="0"
+                    min={0}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-12">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Açıklama</label>
+                <Form.Item name="description" className="mb-0">
+                  <TextArea
+                    placeholder="Birim hakkında açıklama..."
+                    rows={2}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── ONDALIK AYARLARI ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Ondalık Ayarları
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <div className="flex items-center gap-3 bg-slate-50 px-4 py-3 rounded-lg border border-slate-200">
+                  <span className="text-sm font-medium text-slate-600">Ondalık Kullan</span>
+                  <Form.Item name="allowDecimals" valuePropName="checked" noStyle initialValue={false}>
+                    <Switch
+                      checked={allowDecimals}
+                      onChange={(val) => {
+                        setAllowDecimals(val);
+                        form.setFieldValue('allowDecimals', val);
+                        if (!val) {
+                          form.setFieldValue('decimalPlaces', 0);
+                        }
+                      }}
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ondalık Basamak</label>
+                <Form.Item name="decimalPlaces" className="mb-0" initialValue={0}>
+                  <InputNumber
+                    placeholder="0"
+                    min={0}
+                    max={6}
+                    disabled={!allowDecimals}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                   />
                 </Form.Item>
               </div>

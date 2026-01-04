@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Form, Input, Switch, ColorPicker, Segmented } from 'antd';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import type { CustomerSegment } from '@/lib/api/services/crm.service';
+import { SegmentType } from '@/lib/api/services/crm.types';
 import { RuleBuilder } from './RuleBuilder';
 
 const { TextArea } = Input;
@@ -29,18 +30,18 @@ interface SegmentFormProps {
 
 export default function SegmentForm({ form, initialValues, onFinish, loading }: SegmentFormProps) {
   const [isActive, setIsActive] = useState(true);
-  const [segmentType, setSegmentType] = useState<'Static' | 'Dynamic'>('Static');
+  const [segmentType, setSegmentType] = useState<SegmentType>(SegmentType.Static);
   const [selectedColor, setSelectedColor] = useState('#1890ff');
 
   useEffect(() => {
     if (initialValues) {
       form.setFieldsValue(initialValues);
       setIsActive(initialValues.isActive ?? true);
-      setSegmentType((initialValues.type as 'Static' | 'Dynamic') || 'Static');
+      setSegmentType((initialValues.type as SegmentType) || SegmentType.Static);
       setSelectedColor((initialValues as any).color || '#1890ff');
     } else {
       form.setFieldsValue({
-        type: 'Static',
+        type: SegmentType.Static,
         isActive: true,
         color: '#1890ff',
       });
@@ -106,15 +107,15 @@ export default function SegmentForm({ form, initialValues, onFinish, loading }: 
 
             {/* Type Selector */}
             <div className="flex-shrink-0">
-              <Form.Item name="type" className="mb-0" initialValue="Static">
+              <Form.Item name="type" className="mb-0" initialValue={SegmentType.Static}>
                 <Segmented
                   options={[
-                    { value: 'Static', label: 'Statik' },
-                    { value: 'Dynamic', label: 'Dinamik' },
+                    { value: SegmentType.Static, label: 'Statik' },
+                    { value: SegmentType.Dynamic, label: 'Dinamik' },
                   ]}
                   value={segmentType}
                   onChange={(val) => {
-                    setSegmentType(val as 'Static' | 'Dynamic');
+                    setSegmentType(val as SegmentType);
                     form.setFieldValue('type', val);
                   }}
                   className="!bg-slate-100"
@@ -185,7 +186,7 @@ export default function SegmentForm({ form, initialValues, onFinish, loading }: 
               Segment Kriterleri
             </h3>
 
-            {segmentType === 'Dynamic' ? (
+            {segmentType === SegmentType.Dynamic ? (
               <>
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
                   <h4 className="font-medium text-blue-900 mb-1">Dinamik Segment</h4>
@@ -196,7 +197,7 @@ export default function SegmentForm({ form, initialValues, onFinish, loading }: 
 
                 <Form.Item
                   name="criteria"
-                  rules={[{ required: segmentType === 'Dynamic', message: 'Dinamik segment için kriter zorunludur' }]}
+                  rules={[{ required: segmentType === SegmentType.Dynamic, message: 'Dinamik segment için kriter zorunludur' }]}
                 >
                   <RuleBuilder />
                 </Form.Item>
@@ -219,7 +220,7 @@ export default function SegmentForm({ form, initialValues, onFinish, loading }: 
           </div>
 
           {/* ─────────────── BİLGİ NOTU ─────────────── */}
-          {segmentType === 'Dynamic' && (
+          {segmentType === SegmentType.Dynamic && (
             <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
               <h4 className="font-medium text-amber-900 mb-1">Güncelleme Bilgisi</h4>
               <p className="text-sm text-amber-800">

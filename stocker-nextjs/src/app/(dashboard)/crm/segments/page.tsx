@@ -197,9 +197,10 @@ export default function CustomerSegmentsPage() {
       width: 120,
       align: 'center',
       render: (count) => (
-        <Tag icon={<UserIcon className="w-4 h-4" />} color="blue">
-          {count || 0}
-        </Tag>
+        <div className="flex items-center justify-center gap-1.5">
+          <UserIcon className="w-4 h-4 text-blue-500" />
+          <span className="font-medium text-slate-700">{count || 0}</span>
+        </div>
       ),
     },
     {

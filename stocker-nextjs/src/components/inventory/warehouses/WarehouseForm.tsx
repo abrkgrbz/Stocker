@@ -111,7 +111,7 @@ export default function WarehouseForm({ form, initialValues, onFinish, loading }
               Temel Bilgiler
             </h3>
             <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-6">
+              <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Depo Kodu <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="code"
@@ -125,9 +125,19 @@ export default function WarehouseForm({ form, initialValues, onFinish, loading }
                   />
                 </Form.Item>
               </div>
-              <div className="col-span-6">
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Şube ID</label>
+                <Form.Item name="branchId" className="mb-0">
+                  <InputNumber
+                    placeholder="Şube ID (opsiyonel)"
+                    min={1}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Toplam Alan (m²)</label>
-                <Form.Item name="totalArea" className="mb-0">
+                <Form.Item name="totalArea" className="mb-0" initialValue={0}>
                   <InputNumber
                     placeholder="0"
                     min={0}
@@ -142,7 +152,7 @@ export default function WarehouseForm({ form, initialValues, onFinish, loading }
                   <div className="text-sm text-slate-700">
                     {isDefault ? 'Bu depo varsayılan olarak seçilecek' : 'Varsayılan depo değil'}
                   </div>
-                  <Form.Item name="isDefault" valuePropName="checked" noStyle>
+                  <Form.Item name="isDefault" valuePropName="checked" noStyle initialValue={false}>
                     <Switch
                       checked={isDefault}
                       onChange={(val) => {

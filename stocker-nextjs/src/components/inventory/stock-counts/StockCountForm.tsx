@@ -30,6 +30,7 @@ interface StockCountFormProps {
   loading?: boolean;
 }
 
+// Backend StockCountType enum ile senkronize
 const countTypes = [
   { value: StockCountType.Full, label: 'Tam' },
   { value: StockCountType.Cycle, label: 'Döngüsel' },
@@ -37,6 +38,8 @@ const countTypes = [
   { value: StockCountType.Annual, label: 'Yıllık' },
   { value: StockCountType.Category, label: 'Kategori' },
   { value: StockCountType.Location, label: 'Lokasyon' },
+  { value: StockCountType.ABC, label: 'ABC Sınıflandırma' },
+  { value: StockCountType.Perpetual, label: 'Sürekli' },
 ];
 
 export default function StockCountForm({ form, initialValues, onFinish, loading }: StockCountFormProps) {
