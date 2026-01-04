@@ -19,7 +19,6 @@ import {
   Squares2X2Icon,
   TrophyIcon,
   UserIcon,
-  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
   showUpdateSuccess,
@@ -238,15 +237,10 @@ export default function DealsPage() {
           </div>
         )}
 
-        {/* Status Message for Closed Deals */}
+        {/* Status Message for Won Deals */}
         {isWon && (
           <div className="text-center text-emerald-600 font-medium text-xs pt-2 flex items-center justify-center gap-1">
             <TrophyIcon className="w-3 h-3" /> Başarıyla tamamlandı!
-          </div>
-        )}
-        {isLost && (
-          <div className="text-center text-red-600 font-medium text-xs pt-2 flex items-center justify-center gap-1">
-            <XCircleIcon className="w-3 h-3" /> Kaybedildi
           </div>
         )}
       </div>
