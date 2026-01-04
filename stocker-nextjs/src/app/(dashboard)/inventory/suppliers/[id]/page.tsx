@@ -88,7 +88,7 @@ export default function SupplierDetailPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-semibold text-gray-900 m-0">{supplier.name}</h1>
-                  {supplier.isPreferred && (
+                  {supplier.isActive && (
                     <Tag color="gold" icon={<StarIcon className="w-4 h-4" />}>
                       Tercih Edilen
                     </Tag>
@@ -121,7 +121,7 @@ export default function SupplierDetailPage() {
           <Card size="small">
             <Statistic
               title="Ödeme Vadesi"
-              value={supplier.paymentTermDays || 0}
+              value={supplier.paymentTerm || 0}
               suffix="gün"
               valueStyle={{ color: '#6366f1' }}
             />
@@ -168,7 +168,7 @@ export default function SupplierDetailPage() {
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Tercih Durumu">
-                {supplier.isPreferred ? (
+                {supplier.isActive ? (
                   <Tag color="gold" icon={<StarIcon className="w-4 h-4" />}>
                     Tercih Edilen
                   </Tag>
@@ -283,7 +283,7 @@ export default function SupplierDetailPage() {
             <div className="space-y-4">
               <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                 <Text type="secondary">Ödeme Vadesi</Text>
-                <Text strong>{supplier.paymentTermDays || 0} gün</Text>
+                <Text strong>{supplier.paymentTerm || 0} gün</Text>
               </div>
               <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                 <Text type="secondary">Kredi Limiti</Text>

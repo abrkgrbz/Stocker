@@ -21,6 +21,9 @@ import {
 import { showSuccess, showError, showInfo, showApiError } from '@/lib/utils/notifications';
 import { queryOptions } from '../query-options';
 import type {
+  PagedResult,
+  SupplierListDto,
+  SupplierDto,
   CreateSupplierDto,
   UpdateSupplierDto,
   SupplierQueryParams,
@@ -57,6 +60,36 @@ import type {
   CreateApprovalWorkflowDto,
   UpdateApprovalWorkflowDto,
   ApprovalWorkflowQueryParams,
+  GoodsReceiptDto,
+  GoodsReceiptListDto,
+  SupplierProductDto,
+  SupplierContactDto,
+  PurchaseRequestListDto,
+  PurchaseOrderListDto,
+  PurchaseInvoiceListDto,
+  PurchaseReturnListDto,
+  SupplierPaymentListDto,
+  QuotationListDto,
+  PriceListListDto,
+  PurchaseBudgetListDto,
+  SupplierEvaluationListDto,
+  SupplierEvaluationHistoryDto,
+  ApprovalWorkflowListDto,
+  ApprovalWorkflowDto,
+  GoodsReceiptSummaryDto,
+  PurchaseInvoiceSummaryDto,
+  PurchaseReturnSummaryDto,
+  PurchaseRequestSummaryDto,
+  PurchaseOrderSummaryDto,
+  PurchaseRequestDto,
+  PurchaseOrderDto,
+  PurchaseInvoiceDto,
+  PurchaseReturnDto,
+  SupplierPaymentDto,
+  QuotationDto,
+  PriceListDto,
+  PurchaseBudgetDto,
+  SupplierEvaluationDto,
 } from '../services/purchase.types';
 
 // =====================================
@@ -127,7 +160,8 @@ export const purchaseKeys = {
 // =====================================
 
 export function useSuppliers(params?: SupplierQueryParams) {
-  return useQuery({
+  return useQuery<PagedResult<SupplierListDto>>({
+
     queryKey: [...purchaseKeys.suppliers, params],
     queryFn: () => SupplierService.getAll(params),
     ...queryOptions.list(),
@@ -135,7 +169,7 @@ export function useSuppliers(params?: SupplierQueryParams) {
 }
 
 export function useSupplier(id: string) {
-  return useQuery({
+  return useQuery<SupplierDto>({
     queryKey: purchaseKeys.supplier(id),
     queryFn: () => SupplierService.getById(id),
     ...queryOptions.detail({ enabled: !!id }),
@@ -143,7 +177,7 @@ export function useSupplier(id: string) {
 }
 
 export function useSupplierProducts(id: string) {
-  return useQuery({
+  return useQuery<SupplierProductDto[]>({
     queryKey: purchaseKeys.supplierProducts(id),
     queryFn: () => SupplierService.getProducts(id),
     ...queryOptions.list({ enabled: !!id }),
@@ -151,7 +185,7 @@ export function useSupplierProducts(id: string) {
 }
 
 export function useSupplierContacts(id: string) {
-  return useQuery({
+  return useQuery<SupplierContactDto[]>({
     queryKey: purchaseKeys.supplierContacts(id),
     queryFn: () => SupplierService.getContacts(id),
     ...queryOptions.list({ enabled: !!id }),
@@ -309,7 +343,7 @@ export function useRemoveSupplierContact() {
 // =====================================
 
 export function usePurchaseRequests(params?: PurchaseRequestQueryParams) {
-  return useQuery({
+  return useQuery<PagedResult<PurchaseRequestListDto>>({
     queryKey: [...purchaseKeys.requests, params],
     queryFn: () => PurchaseRequestService.getAll(params),
     ...queryOptions.list(),
@@ -317,7 +351,7 @@ export function usePurchaseRequests(params?: PurchaseRequestQueryParams) {
 }
 
 export function usePurchaseRequest(id: string) {
-  return useQuery({
+  return useQuery<PurchaseRequestDto>({
     queryKey: purchaseKeys.request(id),
     queryFn: () => PurchaseRequestService.getById(id),
     ...queryOptions.detail({ enabled: !!id }),
@@ -458,7 +492,7 @@ export function useConvertRequestToOrder() {
 
 // Get purchase request summary
 export function usePurchaseRequestSummary() {
-  return useQuery({
+  return useQuery<PurchaseRequestSummaryDto>({
     queryKey: [...purchaseKeys.requests, 'summary'],
     queryFn: () => PurchaseRequestService.getSummary(),
     ...queryOptions.realtime(),
@@ -470,7 +504,7 @@ export function usePurchaseRequestSummary() {
 // =====================================
 
 export function usePurchaseOrders(params?: PurchaseOrderQueryParams) {
-  return useQuery({
+  return useQuery<PagedResult<PurchaseOrderListDto>>({
     queryKey: [...purchaseKeys.orders, params],
     queryFn: () => PurchaseOrderService.getAll(params),
     ...queryOptions.list(),
@@ -478,7 +512,7 @@ export function usePurchaseOrders(params?: PurchaseOrderQueryParams) {
 }
 
 export function usePurchaseOrder(id: string) {
-  return useQuery({
+  return useQuery<PurchaseOrderDto>({
     queryKey: purchaseKeys.order(id),
     queryFn: () => PurchaseOrderService.getById(id),
     ...queryOptions.detail({ enabled: !!id }),
@@ -716,7 +750,7 @@ export function useRemovePurchaseOrderItem() {
 // =====================================
 
 export function useGoodsReceipts(params?: GoodsReceiptQueryParams) {
-  return useQuery({
+  return useQuery<PagedResult<GoodsReceiptListDto>>({
     queryKey: [...purchaseKeys.goodsReceipts, params],
     queryFn: () => GoodsReceiptService.getAll(params),
     ...queryOptions.list(),
@@ -724,7 +758,7 @@ export function useGoodsReceipts(params?: GoodsReceiptQueryParams) {
 }
 
 export function useGoodsReceipt(id: string) {
-  return useQuery({
+  return useQuery<GoodsReceiptDto>({
     queryKey: purchaseKeys.goodsReceipt(id),
     queryFn: () => GoodsReceiptService.getById(id),
     ...queryOptions.detail({ enabled: !!id }),
@@ -898,7 +932,7 @@ export function useRemoveGoodsReceiptItem() {
 // =====================================
 
 export function usePurchaseInvoices(params?: PurchaseInvoiceQueryParams) {
-  return useQuery({
+  return useQuery<PagedResult<PurchaseInvoiceListDto>>({
     queryKey: [...purchaseKeys.invoices, params],
     queryFn: () => PurchaseInvoiceService.getAll(params),
     ...queryOptions.list(),
@@ -906,7 +940,7 @@ export function usePurchaseInvoices(params?: PurchaseInvoiceQueryParams) {
 }
 
 export function usePurchaseInvoice(id: string) {
-  return useQuery({
+  return useQuery<PurchaseInvoiceDto>({
     queryKey: purchaseKeys.invoice(id),
     queryFn: () => PurchaseInvoiceService.getById(id),
     ...queryOptions.detail({ enabled: !!id }),
@@ -1114,7 +1148,7 @@ export function useRemovePurchaseInvoiceItem() {
 // =====================================
 
 export function usePurchaseReturns(params?: PurchaseReturnQueryParams) {
-  return useQuery({
+  return useQuery<PagedResult<PurchaseReturnListDto>>({
     queryKey: [...purchaseKeys.returns, params],
     queryFn: () => PurchaseReturnService.getAll(params),
     ...queryOptions.list(),
@@ -1122,7 +1156,7 @@ export function usePurchaseReturns(params?: PurchaseReturnQueryParams) {
 }
 
 export function usePurchaseReturn(id: string) {
-  return useQuery({
+  return useQuery<PurchaseReturnDto>({
     queryKey: purchaseKeys.return(id),
     queryFn: () => PurchaseReturnService.getById(id),
     ...queryOptions.detail({ enabled: !!id }),
@@ -1346,7 +1380,7 @@ export function useRemovePurchaseReturnItem() {
 // =====================================
 
 export function useSupplierPayments(params?: SupplierPaymentQueryParams) {
-  return useQuery({
+  return useQuery<PagedResult<SupplierPaymentListDto>>({
     queryKey: [...purchaseKeys.payments, params],
     queryFn: () => SupplierPaymentService.getAll(params),
     ...queryOptions.list(),
@@ -1354,7 +1388,7 @@ export function useSupplierPayments(params?: SupplierPaymentQueryParams) {
 }
 
 export function useSupplierPayment(id: string) {
-  return useQuery({
+  return useQuery<SupplierPaymentDto>({
     queryKey: purchaseKeys.payment(id),
     queryFn: () => SupplierPaymentService.getById(id),
     ...queryOptions.detail({ enabled: !!id }),
@@ -1606,7 +1640,7 @@ export function useSupplierSummary() {
 }
 
 export function usePurchaseOrderSummary() {
-  return useQuery({
+  return useQuery<PurchaseOrderSummaryDto>({
     queryKey: [...purchaseKeys.orders, 'summary'],
     queryFn: () => PurchaseOrderService.getSummary(),
     staleTime: 60000,
@@ -1614,7 +1648,7 @@ export function usePurchaseOrderSummary() {
 }
 
 export function useGoodsReceiptSummary() {
-  return useQuery({
+  return useQuery<GoodsReceiptSummaryDto>({
     queryKey: [...purchaseKeys.goodsReceipts, 'summary'],
     queryFn: () => GoodsReceiptService.getSummary(),
     staleTime: 60000,
@@ -1622,7 +1656,7 @@ export function useGoodsReceiptSummary() {
 }
 
 export function usePurchaseInvoiceSummary() {
-  return useQuery({
+  return useQuery<PurchaseInvoiceSummaryDto>({
     queryKey: [...purchaseKeys.invoices, 'summary'],
     queryFn: () => PurchaseInvoiceService.getSummary(),
     staleTime: 60000,
@@ -1630,7 +1664,7 @@ export function usePurchaseInvoiceSummary() {
 }
 
 export function usePurchaseReturnSummary() {
-  return useQuery({
+  return useQuery<PurchaseReturnSummaryDto>({
     queryKey: [...purchaseKeys.returns, 'summary'],
     queryFn: () => PurchaseReturnService.getSummary(),
     staleTime: 60000,
@@ -1723,7 +1757,7 @@ export function useProcessPurchaseRefund() {
 // =====================================
 
 export function useQuotations(params?: QuotationQueryParams) {
-  return useQuery({
+  return useQuery<PagedResult<QuotationListDto>>({
     queryKey: [...purchaseKeys.quotations, params],
     queryFn: () => QuotationService.getAll(params),
     staleTime: 30000,
@@ -1731,7 +1765,7 @@ export function useQuotations(params?: QuotationQueryParams) {
 }
 
 export function useQuotation(id: string) {
-  return useQuery({
+  return useQuery<QuotationDto>({
     queryKey: purchaseKeys.quotation(id),
     queryFn: () => QuotationService.getById(id),
     enabled: !!id,
@@ -1874,7 +1908,7 @@ export function useCancelQuotation() {
 // =====================================
 
 export function usePriceLists(params?: PriceListQueryParams) {
-  return useQuery({
+  return useQuery<PagedResult<PriceListListDto>>({
     queryKey: [...purchaseKeys.priceLists, params],
     queryFn: () => PriceListService.getAll(params),
     staleTime: 30000,
@@ -1882,7 +1916,7 @@ export function usePriceLists(params?: PriceListQueryParams) {
 }
 
 export function usePriceList(id: string) {
-  return useQuery({
+  return useQuery<PriceListDto>({
     queryKey: purchaseKeys.priceList(id),
     queryFn: () => PriceListService.getById(id),
     enabled: !!id,
@@ -1973,7 +2007,7 @@ export function useDeactivatePriceList() {
 // =====================================
 
 export function usePurchaseBudgets(params?: PurchaseBudgetQueryParams) {
-  return useQuery({
+  return useQuery<PagedResult<PurchaseBudgetListDto>>({
     queryKey: [...purchaseKeys.budgets, params],
     queryFn: () => PurchaseBudgetService.getAll(params),
     staleTime: 30000,
@@ -1981,7 +2015,7 @@ export function usePurchaseBudgets(params?: PurchaseBudgetQueryParams) {
 }
 
 export function usePurchaseBudget(id: string) {
-  return useQuery({
+  return useQuery<PurchaseBudgetDto>({
     queryKey: purchaseKeys.budget(id),
     queryFn: () => PurchaseBudgetService.getById(id),
     enabled: !!id,
@@ -2139,7 +2173,7 @@ export function useClosePurchaseBudget() {
 // =====================================
 
 export function useSupplierEvaluations(params?: SupplierEvaluationQueryParams) {
-  return useQuery({
+  return useQuery<PagedResult<SupplierEvaluationListDto>>({
     queryKey: [...purchaseKeys.evaluations, params],
     queryFn: () => SupplierEvaluationService.getAll(params),
     staleTime: 30000,
@@ -2147,7 +2181,7 @@ export function useSupplierEvaluations(params?: SupplierEvaluationQueryParams) {
 }
 
 export function useSupplierEvaluation(id: string) {
-  return useQuery({
+  return useQuery<SupplierEvaluationDto>({
     queryKey: purchaseKeys.evaluation(id),
     queryFn: () => SupplierEvaluationService.getById(id),
     enabled: !!id,
@@ -2155,7 +2189,7 @@ export function useSupplierEvaluation(id: string) {
 }
 
 export function useSupplierEvaluationHistory(supplierId: string) {
-  return useQuery({
+  return useQuery<SupplierEvaluationDto[]>({
     queryKey: purchaseKeys.supplierEvaluationHistory(supplierId),
     queryFn: () => SupplierEvaluationService.getSupplierHistory(supplierId),
     enabled: !!supplierId,
@@ -2272,7 +2306,7 @@ export function useRejectSupplierEvaluation() {
 // =====================================
 
 export function useApprovalWorkflows(params?: ApprovalWorkflowQueryParams) {
-  return useQuery({
+  return useQuery<PagedResult<ApprovalWorkflowListDto>>({
     queryKey: [...purchaseKeys.workflows, params],
     queryFn: () => ApprovalWorkflowService.getAll(params),
     staleTime: 30000,
@@ -2280,7 +2314,7 @@ export function useApprovalWorkflows(params?: ApprovalWorkflowQueryParams) {
 }
 
 export function useApprovalWorkflow(id: string) {
-  return useQuery({
+  return useQuery<ApprovalWorkflowDto>({
     queryKey: purchaseKeys.workflow(id),
     queryFn: () => ApprovalWorkflowService.getById(id),
     enabled: !!id,

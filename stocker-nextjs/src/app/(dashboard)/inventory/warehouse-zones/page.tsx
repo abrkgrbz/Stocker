@@ -19,6 +19,7 @@ import {
   useDeleteWarehouseZone,
 } from '@/lib/api/hooks/useInventory';
 import type { WarehouseZoneDto, CreateWarehouseZoneDto, UpdateWarehouseZoneDto } from '@/lib/api/services/inventory.types';
+import { ZoneType } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import { PageContainer, ListPageHeader, Card } from '@/components/patterns';
 import { showError, confirmAction } from '@/lib/utils/sweetalert';
@@ -50,9 +51,12 @@ export default function WarehouseZonesPage() {
       code: zone.code,
       name: zone.name,
       description: zone.description,
-      capacity: zone.capacity,
-      temperature: zone.temperature,
-      humidity: zone.humidity,
+      zoneType: zone.zoneType,
+      totalArea: zone.totalArea,
+      minTemperature: zone.minTemperature,
+      maxTemperature: zone.maxTemperature,
+      minHumidity: zone.minHumidity,
+      maxHumidity: zone.maxHumidity,
     });
     setEditModalOpen(true);
   };
@@ -81,9 +85,12 @@ export default function WarehouseZonesPage() {
         code: values.code,
         name: values.name,
         description: values.description,
-        capacity: values.capacity,
-        temperature: values.temperature,
-        humidity: values.humidity,
+        zoneType: values.zoneType || ZoneType.General,
+        totalArea: values.totalArea,
+        minTemperature: values.minTemperature,
+        maxTemperature: values.maxTemperature,
+        minHumidity: values.minHumidity,
+        maxHumidity: values.maxHumidity,
       };
       await createZone.mutateAsync(data);
       setCreateModalOpen(false);
@@ -98,14 +105,15 @@ export default function WarehouseZonesPage() {
     try {
       const values = await form.validateFields();
       const data: UpdateWarehouseZoneDto = {
-        code: values.code,
         name: values.name,
         description: values.description,
-        capacity: values.capacity,
-        temperature: values.temperature,
-        humidity: values.humidity,
+        zoneType: values.zoneType || ZoneType.General,
+        minTemperature: values.minTemperature,
+        maxTemperature: values.maxTemperature,
+        minHumidity: values.minHumidity,
+        maxHumidity: values.maxHumidity,
       };
-      await updateZone.mutateAsync({ id: selectedZone.id, data });
+      await updateZone.mutateAsync({ id: selectedZone.id, dto: data });
       setEditModalOpen(false);
       setSelectedZone(null);
       form.resetFields();

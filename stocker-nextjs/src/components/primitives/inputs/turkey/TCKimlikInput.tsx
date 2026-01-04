@@ -15,7 +15,7 @@ import React, { forwardRef, useState, useCallback } from 'react';
 import { cn } from '@/lib/cn';
 
 export interface TCKimlikInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value'> {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value' | 'size'> {
   /** Current value */
   value?: string;
   /** Change handler */

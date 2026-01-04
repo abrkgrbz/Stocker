@@ -26,7 +26,7 @@ import { SignalRProvider } from '@/lib/signalr/signalr-context';
 import { NotificationCenter } from '@/features/notifications/components';
 import { useNotificationHub } from '@/lib/signalr/notification-hub';
 import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
-import { useOnboarding } from '@/lib/hooks/use-onboarding';
+import { useOnboarding, type OnboardingFormData } from '@/lib/hooks/use-onboarding';
 import { useActiveModules } from '@/lib/api/hooks/useUserModules';
 import { message } from 'antd';
 import GlobalSearch from '@/components/common/GlobalSearch';
@@ -85,7 +85,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     completeOnboarding
   } = useOnboarding();
 
-  const handleOnboardingComplete = async (data: Record<string, unknown>): Promise<{ tenantId?: string; success?: boolean }> => {
+  const handleOnboardingComplete = async (data: OnboardingFormData): Promise<{ tenantId?: string; success?: boolean }> => {
     try {
       logger.debug('Onboarding data being sent', { component: 'DashboardLayout', metadata: { data } });
       const result = await completeOnboarding(data);
@@ -417,7 +417,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           <Menu
             mode="inline"
             selectedKeys={getSelectedKeys}
-            items={moduleConfig.items}
+            items={moduleConfig.items as any}
             onClick={({ key }) => {
               handleMenuClick(key);
               setMobileMenuOpen(false);

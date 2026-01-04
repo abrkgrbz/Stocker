@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Form, Input, InputNumber, Switch, Select, DatePicker } from 'antd';
 import { CubeIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline';
 import type { ProductBundleDto } from '@/lib/api/services/inventory.types';
+import { BundlePricingType, BundleType } from '@/lib/api/services/inventory.types';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
@@ -16,20 +17,18 @@ interface ProductBundleFormProps {
 }
 
 const bundleTypeOptions = [
-  { value: 1, label: 'Sabit Paket' },
-  { value: 2, label: 'Yapılandırılabilir Paket' },
-  { value: 3, label: 'Kit' },
-  { value: 4, label: 'Çoklu Paket' },
-  { value: 5, label: 'Kombo' },
+  { value: BundleType.Fixed, label: 'Sabit Paket' },
+  { value: BundleType.Configurable, label: 'Yapılandırılabilir Paket' },
+  { value: BundleType.Kit, label: 'Kit' },
+  { value: BundleType.Package, label: 'Çoklu Paket' },
+  { value: BundleType.Combo, label: 'Kombo' },
 ];
 
 const pricingTypeOptions = [
-  { value: 1, label: 'Kalem Toplamı' },
-  { value: 2, label: 'Sabit Fiyat' },
-  { value: 3, label: 'Yüzde İndirim' },
-  { value: 4, label: 'Sabit İndirim' },
-  { value: 5, label: 'En Ucuz Bedava' },
-  { value: 6, label: 'X Al Y Öde' },
+  { value: BundlePricingType.DynamicSum, label: 'Kalem Toplamı' },
+  { value: BundlePricingType.FixedPrice, label: 'Sabit Fiyat' },
+  { value: BundlePricingType.PercentageDiscount, label: 'Yüzde İndirim' },
+  { value: BundlePricingType.DiscountedSum, label: 'Sabit İndirim' },
 ];
 
 const currencyOptions = [
@@ -40,7 +39,7 @@ const currencyOptions = [
 
 export default function ProductBundleForm({ form, initialValues, onFinish, loading }: ProductBundleFormProps) {
   const [isActive, setIsActive] = useState(true);
-  const [pricingType, setPricingType] = useState(1);
+  const [pricingType, setPricingType] = useState<BundlePricingType>(BundlePricingType.DynamicSum);
 
   useEffect(() => {
     if (initialValues) {
@@ -50,11 +49,11 @@ export default function ProductBundleForm({ form, initialValues, onFinish, loadi
         validTo: initialValues.validTo ? dayjs(initialValues.validTo) : null,
       });
       setIsActive(initialValues.isActive ?? true);
-      setPricingType(initialValues.pricingType ?? 1);
+      setPricingType(initialValues.pricingType ?? BundlePricingType.DynamicSum);
     } else {
       form.setFieldsValue({
-        bundleType: 1,
-        pricingType: 1,
+        bundleType: BundleType.Fixed,
+        pricingType: BundlePricingType.DynamicSum,
         requireAllItems: true,
         displayOrder: 0,
         currency: 'TRY',
@@ -62,9 +61,9 @@ export default function ProductBundleForm({ form, initialValues, onFinish, loadi
     }
   }, [form, initialValues]);
 
-  const showFixedPrice = pricingType === 2;
-  const showDiscountPercentage = pricingType === 3 || pricingType === 5;
-  const showDiscountAmount = pricingType === 4;
+  const showFixedPrice = pricingType === BundlePricingType.FixedPrice;
+  const showDiscountPercentage = pricingType === BundlePricingType.PercentageDiscount;
+  const showDiscountAmount = pricingType === BundlePricingType.DiscountedSum;
 
   return (
     <Form

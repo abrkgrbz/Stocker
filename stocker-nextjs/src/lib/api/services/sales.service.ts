@@ -230,6 +230,15 @@ export interface Quotation {
   createdAt: string;
   updatedAt?: string;
   items: QuotationItem[];
+  // UI aliases for backwards compatibility
+  validUntil?: string; // alias for expirationDate
+  contactEmail?: string; // alias for customerEmail
+  contactPhone?: string; // alias for customerPhone
+  taxAmount?: number; // alias for vatAmount
+  taxTotal?: number; // alias for vatAmount
+  grandTotal?: number; // alias for totalAmount
+  approvedAt?: string; // alias for approvedDate
+  sentAt?: string; // alias for sentDate
 }
 
 /**
@@ -464,6 +473,7 @@ export interface PaymentListItem {
 
 /**
  * Backend: DiscountDto (DiscountDto.cs:5-35)
+ * Extended with UI-required fields
  */
 export interface Discount {
   id: string;
@@ -494,10 +504,21 @@ export interface Discount {
   createdAt: string;
   updatedAt?: string;
   isValid: boolean; // C#: IsValid (added)
+  // UI-required fields (aliases/computed)
+  percentage?: number; // alias for value when type=Percentage
+  amount?: number; // alias for value when type=FixedAmount
+  minimumAmount?: number; // alias for minimumOrderAmount
+  maximumDiscount?: number; // alias for maximumDiscountAmount
+  maxUsageCount?: number; // alias for usageLimit
+  maxUsagePerCustomer?: number;
+  firstOrderOnly?: boolean;
+  canCombine?: boolean; // alias for isStackable
+  totalDiscountGiven?: number;
 }
 
 /**
  * Backend: DiscountListDto (DiscountDto.cs:37-51)
+ * Extended with UI-required fields
  */
 export interface DiscountListItem {
   id: string;
@@ -512,10 +533,15 @@ export interface DiscountListItem {
   usageCount: number;
   usageLimit?: number;
   isValid: boolean; // C#: IsValid (added)
+  // UI-required fields
+  percentage?: number;
+  amount?: number;
+  maxUsageCount?: number;
 }
 
 /**
  * Backend: CreateDiscountDto (DiscountDto.cs:53-76)
+ * Extended with UI-required fields
  */
 export interface CreateDiscountDto {
   code: string;
@@ -539,10 +565,21 @@ export interface CreateDiscountDto {
   applicableCustomerGroupIds?: string[];
   excludedProductIds?: string[];
   excludedCategoryIds?: string[];
+  // UI-required fields (aliases)
+  percentage?: number;
+  amount?: number;
+  minimumAmount?: number;
+  maximumDiscount?: number;
+  maxUsageCount?: number;
+  maxUsagePerCustomer?: number;
+  firstOrderOnly?: boolean;
+  canCombine?: boolean;
+  isActive?: boolean;
 }
 
 /**
  * Backend: UpdateDiscountDto (DiscountDto.cs:78-91)
+ * Extended with UI-required fields
  */
 export interface UpdateDiscountDto {
   name: string;
@@ -556,6 +593,19 @@ export interface UpdateDiscountDto {
   usageLimit?: number;
   isStackable?: boolean;
   priority?: number;
+  // UI-required fields
+  code?: string;
+  type?: DiscountType;
+  valueType?: DiscountValueType;
+  percentage?: number;
+  amount?: number;
+  minimumAmount?: number;
+  maximumDiscount?: number;
+  maxUsageCount?: number;
+  maxUsagePerCustomer?: number;
+  firstOrderOnly?: boolean;
+  canCombine?: boolean;
+  isActive?: boolean;
 }
 
 /**
@@ -744,6 +794,7 @@ export interface CommissionTier {
 
 /**
  * Backend: CommissionPlanDto (CommissionDto.cs:5-30)
+ * Extended with UI-required fields
  */
 export interface CommissionPlan {
   id: string;
@@ -769,6 +820,10 @@ export interface CommissionPlan {
   createdAt: string;
   updatedAt?: string;
   tiers: CommissionTier[];
+  // UI-required fields (aliases)
+  fixedAmount?: number;
+  minimumSalesAmount?: number; // alias for minimumSaleAmount
+  maximumCommission?: number; // alias for maximumCommissionAmount
 }
 
 /**
@@ -789,6 +844,7 @@ export interface CommissionPlanListItem {
 
 /**
  * Backend: CreateCommissionPlanDto (CommissionDto.cs:58-78)
+ * Extended with UI-required fields
  */
 export interface CreateCommissionPlanDto {
   name: string;
@@ -809,6 +865,9 @@ export interface CreateCommissionPlanDto {
   minimumSaleAmount?: number;
   maximumCommissionAmount?: number;
   tiers?: CreateCommissionTierDto[];
+  // UI-required fields
+  fixedAmount?: number;
+  isActive?: boolean;
 }
 
 /**
@@ -825,6 +884,7 @@ export interface CreateCommissionTierDto {
 
 /**
  * Backend: UpdateCommissionPlanDto (CommissionDto.cs:90-102)
+ * Extended with UI-required fields
  */
 export interface UpdateCommissionPlanDto {
   name: string;
@@ -837,10 +897,17 @@ export interface UpdateCommissionPlanDto {
   calculateOnProfit?: boolean;
   minimumSaleAmount?: number;
   maximumCommissionAmount?: number;
+  // UI-required fields
+  type?: CommissionType;
+  fixedAmount?: number;
+  minimumSalesAmount?: number;
+  maximumCommission?: number;
+  isActive?: boolean;
 }
 
 /**
  * Backend: SalesCommissionDto (CommissionDto.cs:104-124)
+ * Extended with UI-required fields
  */
 export interface SalesCommission {
   id: string;
@@ -861,10 +928,23 @@ export interface SalesCommission {
   paymentReference?: string;
   notes?: string;
   createdAt: string;
+  // UI-required fields (mapped from backend or computed)
+  referenceNumber?: string;
+  planName?: string;
+  orderId?: string;
+  orderNumber?: string;
+  orderAmount?: number;
+  customerName?: string;
+  orderDate?: string;
+  paidAt?: string; // alias for paidDate
+  approvedAt?: string; // alias for approvedDate
+  rejectedAt?: string;
+  rejectionReason?: string;
 }
 
 /**
  * Backend: SalesCommissionListDto (CommissionDto.cs:126-137)
+ * Extended with UI-required fields
  */
 export interface SalesCommissionListItem {
   id: string;
@@ -876,10 +956,13 @@ export interface SalesCommissionListItem {
   status: string;
   calculatedDate: string;
   paidDate?: string;
+  // UI-required fields
+  orderId?: string;
 }
 
 /**
  * Backend: CommissionSummaryDto (CommissionDto.cs:149-160)
+ * Extended with UI-required fields
  */
 export interface CommissionSummary {
   salesPersonId: string;
@@ -891,6 +974,10 @@ export interface CommissionSummary {
   paidCommission: number;
   orderCount: number;
   lastSaleDate?: string;
+  // UI-required fields
+  pendingCount?: number;
+  approvedCount?: number;
+  paidAmount?: number;
 }
 
 /**
@@ -992,6 +1079,15 @@ export interface SalesReturn {
   createdAt: string;
   updatedAt?: string;
   items: SalesReturnItem[];
+  // UI aliases for backwards compatibility
+  currency?: string; // UI field (default TRY)
+  orderId?: string; // alias for salesOrderId
+  orderNumber?: string; // alias for salesOrderNumber
+  submittedAt?: string; // alias for createdAt
+  receivedAt?: string; // alias for processedDate
+  completedAt?: string; // alias for refundDate
+  refundedAt?: string; // alias for refundDate
+  approvedAt?: string; // alias for approvedDate
 }
 
 /**
@@ -1010,6 +1106,9 @@ export interface SalesReturnListItem {
   refundAmount: number;
   itemCount: number;
   createdAt: string;
+  // UI aliases
+  orderId?: string; // UI field
+  currency?: string; // UI field
 }
 
 /**
@@ -1052,12 +1151,15 @@ export interface CreateSalesReturnDto {
   restockWarehouseId?: string;
   notes?: string;
   items: CreateSalesReturnItemDto[];
+  // UI fields
+  returnDate?: string;
 }
 
 /**
  * Backend: CreateSalesReturnItemDto (SalesReturnDto.cs:93-106)
  */
 export interface CreateSalesReturnItemDto {
+  quantity?: number;
   salesOrderItemId: string;
   productId: string;
   productName: string;
@@ -1069,17 +1171,21 @@ export interface CreateSalesReturnItemDto {
   condition?: SalesReturnItemCondition;
   conditionNotes?: string;
   unit?: string;
+  reason?: string; // UI field for item-level reason
 }
 
 /**
  * Backend: UpdateSalesReturnDto (SalesReturnDto.cs:108-114)
  */
 export interface UpdateSalesReturnDto {
+  reason?: string;
+  returnDate?: string; // UI field
   reasonDetails?: string;
   refundMethod?: RefundMethod;
   restockItems?: boolean;
   restockWarehouseId?: string;
   notes?: string;
+  items?: CreateSalesReturnItemDto[]; // UI field for editing items
 }
 
 /**
@@ -1168,6 +1274,10 @@ export interface SalesOrder {
   createdAt: string;
   updatedAt?: string;
   items: SalesOrderItem[];
+  // UI-required fields
+  approvedAt?: string; // alias for approvedDate
+  cancelledAt?: string;
+  cancelledReason?: string; // alias for cancellationReason
 }
 
 /**
@@ -1779,8 +1889,8 @@ export class SalesService {
   /**
    * Get sales person commission summary
    */
-  static async getSalesPersonCommissionSummary(salesPersonId: string, fromDate?: string, toDate?: string): Promise<SalesPersonCommissionSummary> {
-    return ApiService.get<SalesPersonCommissionSummary>(`/sales/commissions/summary/salesperson/${salesPersonId}`, {
+  static async getSalesPersonCommissionSummary(salesPersonId: string, fromDate?: string, toDate?: string): Promise<CommissionSummary> {
+    return ApiService.get<CommissionSummary>(`/sales/commissions/summary/salesperson/${salesPersonId}`, {
       params: { fromDate, toDate },
     });
   }
@@ -2069,6 +2179,18 @@ export class SalesService {
     return ApiService.post<CustomerContractDto>(`/sales/customercontracts/${id}/commitments`, data);
   }
 
+  static async removePriceAgreement(contractId: string, agreementId: string): Promise<void> {
+    return ApiService.delete<void>(`/sales/customercontracts/${contractId}/price-agreements/${agreementId}`);
+  }
+
+  static async removePaymentTerm(contractId: string, termId: string): Promise<void> {
+    return ApiService.delete<void>(`/sales/customercontracts/${contractId}/payment-terms/${termId}`);
+  }
+
+  static async removeCommitment(contractId: string, commitmentId: string): Promise<void> {
+    return ApiService.delete<void>(`/sales/customercontracts/${contractId}/commitments/${commitmentId}`);
+  }
+
   // =====================================
   // SALES TERRITORIES
   // =====================================
@@ -2149,6 +2271,22 @@ export class SalesService {
     return ApiService.delete<SalesTerritoryDto>(`/sales/territories/${id}/postal-codes/${postalCodeId}`);
   }
 
+  static async removeSalesRep(territoryId: string, repId: string): Promise<void> {
+    return ApiService.delete<void>(`/sales/territories/${territoryId}/reps/${repId}`);
+  }
+
+  static async assignCustomerToTerritory(territoryId: string, customerId: string): Promise<void> {
+    return ApiService.post<void>(`/sales/territories/${territoryId}/customers/${customerId}`);
+  }
+
+  static async removeCustomerFromTerritory(territoryId: string, customerId: string): Promise<void> {
+    return ApiService.delete<void>(`/sales/territories/${territoryId}/customers/${customerId}`);
+  }
+
+  static async setQuota(territoryId: string, data: { year: number; month: number; amount: number }): Promise<void> {
+    return ApiService.post<void>(`/sales/territories/${territoryId}/quota`, data);
+  }
+
   // =====================================
   // SHIPMENTS
   // =====================================
@@ -2225,6 +2363,22 @@ export class SalesService {
     return ApiService.post<ShipmentDto>(`/sales/shipments/${id}/cancel`, { reason });
   }
 
+
+  static async startPreparing(id: string): Promise<ShipmentDto> {
+    return ApiService.post<ShipmentDto>(`/sales/shipments/${id}/start-preparing`, {});
+  }
+
+  static async markInTransit(id: string): Promise<ShipmentDto> {
+    return ApiService.post<ShipmentDto>(`/sales/shipments/${id}/in-transit`, {});
+  }
+
+  static async markOutForDelivery(id: string): Promise<ShipmentDto> {
+    return ApiService.post<ShipmentDto>(`/sales/shipments/${id}/out-for-delivery`, {});
+  }
+
+  static async markFailed(id: string, reason: string): Promise<ShipmentDto> {
+    return ApiService.post<ShipmentDto>(`/sales/shipments/${id}/failed`, { reason });
+  }
   static async addShipmentItem(id: string, data: AddShipmentItemCommand): Promise<ShipmentDto> {
     return ApiService.post<ShipmentDto>(`/sales/shipments/${id}/items`, data);
   }
@@ -2684,6 +2838,7 @@ export interface CreateCustomerContractCommand {
 }
 
 export interface UpdateCustomerContractCommand {
+  id?: string; // passed but not used by backend
   priceListId?: string;
   generalDiscountPercentage?: number;
   autoRenewal?: boolean;
@@ -2694,17 +2849,20 @@ export interface UpdateCustomerContractCommand {
 }
 
 export interface TerminateContractCommand {
+  id?: string;
   terminationType: TerminationType;
   reason: string;
 }
 
 export interface UpdateCreditLimitCommand {
+  id?: string;
   amount: number;
   currency: string;
   notes?: string;
 }
 
 export interface ConfigureSLACommand {
+  id?: string;
   serviceLevel: ServiceLevelAgreement;
   responseTimeHours?: number;
   resolutionTimeHours?: number;
@@ -2713,6 +2871,7 @@ export interface ConfigureSLACommand {
 }
 
 export interface AddPriceAgreementCommand {
+  contractId?: string;
   productId: string;
   productCode: string;
   productName: string;
@@ -2723,6 +2882,7 @@ export interface AddPriceAgreementCommand {
 }
 
 export interface AddPaymentTermCommand {
+  contractId?: string;
   termType: PaymentTermType;
   dueDays: number;
   discountPercentage?: number;
@@ -2732,6 +2892,7 @@ export interface AddPaymentTermCommand {
 }
 
 export interface AddCommitmentCommand {
+  contractId?: string;
   commitmentType: CommitmentTypeContract;
   period: CommitmentPeriod;
   targetAmount?: number;
@@ -2854,6 +3015,7 @@ export interface CreateSalesTerritoryCommand {
 }
 
 export interface UpdateSalesTerritoryCommand {
+  id?: string;
   name?: string;
   description?: string;
   country?: string;
@@ -2872,6 +3034,7 @@ export interface UpdateSalesTerritoryCommand {
 }
 
 export interface AssignSalesRepCommand {
+  territoryId?: string;
   salesRepresentativeId: string;
   salesRepresentativeName: string;
   role: TerritoryAssignmentRole;
@@ -3038,6 +3201,7 @@ export interface CreateShipmentItemCommand {
 }
 
 export interface UpdateShipmentCommand {
+  id?: string;
   shipmentType?: ShipmentType;
   priority?: ShipmentPriority;
   carrierId?: string;
@@ -3051,6 +3215,7 @@ export interface UpdateShipmentCommand {
 }
 
 export interface ShipShipmentCommand {
+  id?: string;
   trackingNumber?: string;
   trackingUrl?: string;
   carrierService?: string;
@@ -3058,6 +3223,7 @@ export interface ShipShipmentCommand {
 }
 
 export interface DeliverShipmentCommand {
+  id?: string;
   actualDeliveryDate?: string;
   receivedBy?: string;
   signature?: string;
@@ -3065,6 +3231,7 @@ export interface DeliverShipmentCommand {
 }
 
 export interface AddShipmentItemCommand {
+  shipmentId?: string;
   salesOrderItemId: string;
   productId: string;
   productCode: string;
@@ -3075,11 +3242,14 @@ export interface AddShipmentItemCommand {
 }
 
 export interface UpdateShipmentItemCommand {
+  shipmentId?: string;
+  itemId?: string;
   quantity?: number;
   weight?: number;
 }
 
 export interface UpdateTrackingCommand {
+  id?: string;
   trackingNumber?: string;
   trackingUrl?: string;
   carrierService?: string;
@@ -3098,13 +3268,7 @@ export type AdvancePaymentStatus =
   | 'Refunded'
   | 'Cancelled';
 
-export type PaymentMethod =
-  | 'Cash'
-  | 'CreditCard'
-  | 'DebitCard'
-  | 'BankTransfer'
-  | 'Check'
-  | 'Other';
+// PaymentMethod type already defined at top of file (line 118)
 
 export interface AdvancePaymentDto {
   id: string;

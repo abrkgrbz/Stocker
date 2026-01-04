@@ -23,7 +23,7 @@ interface NotificationCategory {
   id: string;
   label: string;
   description: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   iconBg: string;
   iconColor: string;
   email: boolean;

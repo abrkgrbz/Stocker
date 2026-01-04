@@ -1,5 +1,7 @@
 'use client';
 
+import { type OnboardingFormData as ImportedOnboardingFormData } from '@/lib/hooks/use-onboarding';
+
 import React, { useState } from 'react';
 import { Modal, Steps, Button, Form, Input, Select, Typography, Space, Card, message } from 'antd';
 import {
@@ -22,10 +24,10 @@ interface OnboardingModalProps {
     totalSteps: number;
     progressPercentage: number;
   };
-  onComplete: (data: OnboardingData) => Promise<{ tenantId?: string; success?: boolean }>;
+  onComplete: (data: ImportedOnboardingFormData) => Promise<{ tenantId?: string; success?: boolean }>;
 }
 
-interface OnboardingData {
+interface OnboardingFormData {
   sector?: string;
   companyName: string;
   companyCode: string;
@@ -96,7 +98,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
-  const [formData, setFormData] = useState<Partial<OnboardingData>>({});
+  const [formData, setFormData] = useState<Partial<OnboardingFormData>>({});
 
   // Setup progress modal state
   const [showProgressModal, setShowProgressModal] = useState(false);
@@ -148,7 +150,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
       // Paket seçimi required
       try {
         const values = await form.validateFields(['packageId']);
-        const finalData = { ...formData, ...values } as OnboardingData;
+        const finalData = { ...formData, ...values } as OnboardingFormData;
         setLoading(true);
 
         // Call onComplete and get tenantId for progress tracking

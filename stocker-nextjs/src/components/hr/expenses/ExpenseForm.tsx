@@ -5,7 +5,7 @@ import { Form, Select, DatePicker, InputNumber, Input, Switch } from 'antd';
 import { WalletIcon } from '@heroicons/react/24/outline';
 import { useEmployees } from '@/lib/api/hooks/useHR';
 import type { ExpenseDto } from '@/lib/api/services/hr.types';
-import { ExpenseType } from '@/lib/api/services/hr.types';
+import { ExpenseType, ExpenseStatus } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
@@ -225,11 +225,11 @@ export default function ExpenseForm({ form, initialValues, onFinish, loading }: 
                 </div>
                 <div className="col-span-6">
                   <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
-                    <div className={`text-lg font-semibold ${initialValues.status === 'Approved' ? 'text-green-600' : initialValues.status === 'Rejected' ? 'text-red-600' : 'text-amber-600'}`}>
-                      {initialValues.status === 'Pending' && 'Beklemede'}
-                      {initialValues.status === 'Approved' && 'Onaylandı'}
-                      {initialValues.status === 'Rejected' && 'Reddedildi'}
-                      {initialValues.status === 'Paid' && 'Ödendi'}
+                    <div className={`text-lg font-semibold ${initialValues.status === ExpenseStatus.Approved ? 'text-green-600' : initialValues.status === ExpenseStatus.Rejected ? 'text-red-600' : 'text-amber-600'}`}>
+                      {initialValues.status === ExpenseStatus.Pending && 'Beklemede'}
+                      {initialValues.status === ExpenseStatus.Approved && 'Onaylandı'}
+                      {initialValues.status === ExpenseStatus.Rejected && 'Reddedildi'}
+                      {initialValues.status === ExpenseStatus.Paid && 'Ödendi'}
                     </div>
                     <div className="text-xs text-slate-500 mt-1">Durum</div>
                   </div>

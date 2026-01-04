@@ -335,17 +335,18 @@ export default function DeliveryNotesPage() {
             />
           </div>
           <Select
-            placeholder="Durum"
-            value={statusFilter === 'All' ? '' : statusFilter}
-            onChange={(e) => setStatusFilter((e.target.value as DeliveryStatus) || 'All')}
+            placeholder="Tüm Durumlar"
+            value={statusFilter === 'All' ? null : statusFilter}
+            onChange={(val) => setStatusFilter((val as DeliveryStatus) || 'All')}
             className="w-40"
-          >
-            <option value="">Tümü</option>
-            <option value="Preparing">Hazırlanıyor</option>
-            <option value="InTransit">Yolda</option>
-            <option value="Delivered">Teslim Edildi</option>
-            <option value="Returned">İade Edildi</option>
-          </Select>
+            clearable
+            options={[
+              { value: 'Preparing', label: 'Hazırlanıyor' },
+              { value: 'InTransit', label: 'Yolda' },
+              { value: 'Delivered', label: 'Teslim Edildi' },
+              { value: 'Returned', label: 'İade Edildi' },
+            ]}
+          />
         </div>
       </Card>
 

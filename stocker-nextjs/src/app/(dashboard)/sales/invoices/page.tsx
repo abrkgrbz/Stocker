@@ -637,7 +637,6 @@ export default function InvoicesPage() {
           <Input
             placeholder="Fatura ara..."
             prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
-            allowClear
             style={{ maxWidth: 300 }}
             onChange={(e) => setFilters((prev) => ({ ...prev, searchTerm: e.target.value, page: 1 }))}
             className="h-10"
@@ -645,18 +644,18 @@ export default function InvoicesPage() {
           <Select
             placeholder="Durum seçin"
             options={statusOptions}
-            value={filters.status}
-            onChange={(value) => setFilters((prev) => ({ ...prev, status: value, page: 1 }))}
-            style={{ width: 160 }}
-            allowClear
+            value={filters.status ?? null}
+            onChange={(value) => setFilters((prev) => ({ ...prev, status: value ?? undefined, page: 1 }))}
+            clearable
+            className="w-40"
           />
           <Select
             placeholder="Tip seçin"
             options={typeOptions}
-            value={filters.type}
-            onChange={(value) => setFilters((prev) => ({ ...prev, type: value, page: 1 }))}
-            style={{ width: 140 }}
-            allowClear
+            value={filters.type ?? null}
+            onChange={(value) => setFilters((prev) => ({ ...prev, type: value ?? undefined, page: 1 }))}
+            clearable
+            className="w-36"
           />
           <RangePicker
             placeholder={['Başlangıç', 'Bitiş']}

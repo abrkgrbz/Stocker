@@ -17,7 +17,7 @@
 import React, { forwardRef } from 'react';
 import { cn } from '@/lib/cn';
 
-export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
+export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'prefix'> {
   /** Visual variant */
   variant?: 'default' | 'borderless' | 'filled';
   /** Size variant */

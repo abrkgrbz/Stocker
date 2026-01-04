@@ -183,7 +183,7 @@ export default function CommissionDetailPage() {
                 </a>
               </Descriptions.Item>
               <Descriptions.Item label="Sipariş Tutarı">
-                {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(commission.orderAmount)}
+                {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(commission.orderAmount ?? 0)}
               </Descriptions.Item>
               <Descriptions.Item label="Müşteri">{commission.customerName}</Descriptions.Item>
               <Descriptions.Item label="Sipariş Tarihi">

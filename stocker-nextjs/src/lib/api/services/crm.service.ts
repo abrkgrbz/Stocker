@@ -74,6 +74,7 @@ import type {
   // Meetings
   MeetingDto,
   CreateMeetingCommand,
+  UpdateMeetingCommand,
   MeetingFilters,
   MeetingType,
   MeetingStatus,
@@ -449,7 +450,12 @@ export interface CreateCustomerDto {
   notes?: string;
 }
 
-export interface UpdateCustomerDto extends Partial<CreateCustomerDto> {}
+export interface UpdateCustomerDto extends Partial<CreateCustomerDto> {
+  industry?: string;
+  annualRevenue?: number;
+  numberOfEmployees?: number;
+  description?: string;
+}
 
 // =====================================
 // CRM API SERVICE

@@ -585,7 +585,7 @@ export default function SecurityPage() {
                 <div className="flex items-center justify-center gap-2">
                   <code className="text-sm font-mono text-slate-900">{setupData.data.secret}</code>
                   <button
-                    onClick={() => copyToClipboard(setupData.data.secret, 'secret')}
+                    onClick={() => copyToClipboard(setupData.data?.secret ?? '', 'secret')}
                     className="p-1 hover:bg-slate-200 rounded transition-colors"
                   >
                     {copiedCode === 'secret' ? (
@@ -680,7 +680,7 @@ export default function SecurityPage() {
             </div>
 
             <button
-              onClick={() => copyToClipboard(setupData.data.backupCodes.join('\n'), 'all-codes')}
+              onClick={() => copyToClipboard(setupData.data?.backupCodes?.join('\n') ?? '', 'all-codes')}
               className="w-full py-2 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
             >
               {copiedCode === 'all-codes' ? (

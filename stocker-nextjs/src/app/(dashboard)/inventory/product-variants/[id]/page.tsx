@@ -112,7 +112,7 @@ export default function ProductVariantDetailPage() {
               {variant.imageUrl ? (
                 <img
                   src={variant.imageUrl}
-                  alt={variant.name}
+                  alt={variant.variantName}
                   className="w-11 h-11 rounded-xl object-cover border-2 border-slate-200"
                 />
               ) : (
@@ -122,7 +122,7 @@ export default function ProductVariantDetailPage() {
               )}
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-semibold text-slate-900 m-0">{variant.name}</h1>
+                  <h1 className="text-xl font-semibold text-slate-900 m-0">{variant.variantName}</h1>
                   <Tag
                     icon={variant.isActive ? <CheckCircleIcon className="w-3 h-3" /> : <XCircleIcon className="w-3 h-3" />}
                     className={`border-0 ${
@@ -253,7 +253,7 @@ export default function ProductVariantDetailPage() {
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Varyant Adı</p>
-                  <p className="text-sm font-medium text-slate-900">{variant.name}</p>
+                  <p className="text-sm font-medium text-slate-900">{variant.variantName}</p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-400 mb-1">SKU</p>
@@ -346,7 +346,7 @@ export default function ProductVariantDetailPage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-slate-900 m-0">{variant.productName}</p>
-                  <p className="text-xs text-slate-500 m-0">{variant.productCode}</p>
+                  <p className="text-xs text-slate-500 m-0">{variant.productName}</p>
                 </div>
                 <div className="flex items-center gap-2 text-blue-600">
                   <span className="text-sm">Ürüne Git</span>
@@ -457,7 +457,7 @@ export default function ProductVariantDetailPage() {
                 </p>
                 <img
                   src={variant.imageUrl}
-                  alt={variant.name}
+                  alt={variant.variantName}
                   className="w-full rounded-lg"
                   style={{ maxHeight: 300, objectFit: 'cover' }}
                 />
@@ -480,7 +480,7 @@ export default function ProductVariantDetailPage() {
         okButtonProps={{ danger: true, loading: deleteVariant.isPending }}
       >
         <p className="text-slate-700">
-          <strong>{variant.name}</strong> varyantını silmek istediğinize emin misiniz?
+          <strong>{variant.variantName}</strong> varyantını silmek istediğinize emin misiniz?
         </p>
         <p className="text-slate-500 text-sm">SKU: {variant.sku}</p>
         <p className="text-slate-500 text-sm">Bu işlem geri alınamaz.</p>

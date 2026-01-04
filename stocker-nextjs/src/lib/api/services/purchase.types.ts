@@ -1213,6 +1213,8 @@ export interface SupplierPaymentSummaryDto {
   paymentsByStatus: Record<string, number>;
   amountByMethod: Record<string, number>;
   amountBySupplier: Record<string, number>;
+  // UI-required alias
+  pendingPayments?: number;
 }
 
 // =====================================

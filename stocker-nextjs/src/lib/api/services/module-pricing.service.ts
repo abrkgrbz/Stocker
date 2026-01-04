@@ -94,7 +94,7 @@ export const ModulePricingService = {
     const response = await apiClient.get<{ success: boolean; data: ModuleDefinitionDto[] }>(
       '/api/public/modules'
     );
-    return response.data.data;
+    return response.data?.data ?? [];
   },
 
   /**
@@ -105,6 +105,9 @@ export const ModulePricingService = {
       '/api/public/calculate-price',
       request
     );
+    if (!response.data?.data) {
+      throw new Error('Invalid response from pricing API');
+    }
     return response.data.data;
   },
 

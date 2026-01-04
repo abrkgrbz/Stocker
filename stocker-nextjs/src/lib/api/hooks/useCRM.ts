@@ -68,7 +68,6 @@ import type {
   // Email
   SendTestEmailCommand,
 } from '../services/crm.types';
-import type { Activity, Lead, Deal, Customer } from '../services/crm.service';
 
 import logger from '../../utils/logger';
 // =====================================

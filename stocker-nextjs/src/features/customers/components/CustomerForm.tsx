@@ -56,7 +56,7 @@ export interface CustomerFormData {
 }
 
 export interface CustomerFormProps {
-  form: ReturnType<typeof Form.useForm>[0];
+  form: ReturnType<typeof Form.useForm<CustomerFormData>>[0];
   initialValues?: Partial<CustomerFormData>;
   onFinish: (data: CustomerFormData) => void;
   loading?: boolean;

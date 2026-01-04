@@ -1415,6 +1415,7 @@ export interface LotBatchListDto {
   isQuarantined: boolean;
   isExpired: boolean;
   daysUntilExpiry?: number;
+  remainingShelfLifePercentage?: number;
 }
 
 export interface LotBatchDto {
@@ -1656,7 +1657,7 @@ export interface CreateProductVariantDto {
 export interface UpdateProductVariantDto {
   sku: string;
   barcode?: string;
-  name: string;
+  variantName: string;
   price?: number;
   priceCurrency?: string;
   costPrice?: number;
@@ -3533,38 +3534,6 @@ export interface UpdateWarehouseZoneDto {
 // =====================================
 
 
-export interface LotBatchDto {
-  id: number;
-  lotNumber: string;
-  productId: number;
-  productName?: string;
-  productCode?: string;
-  supplierId?: number;
-  supplierName?: string;
-  status: LotBatchStatus;
-  manufacturedDate?: DateTime;
-  expiryDate?: DateTime;
-  receivedDate?: DateTime;
-  initialQuantity: number;
-  currentQuantity: number;
-  reservedQuantity: number;
-  availableQuantity: number;
-  supplierLotNumber?: string;
-  purchaseOrderId?: string;
-  certificateNumber?: string;
-  notes?: string;
-  isQuarantined: boolean;
-  quarantinedDate?: DateTime;
-  quarantineReason?: string;
-  inspectedByUserId?: number;
-  inspectedDate?: DateTime;
-  inspectionNotes?: string;
-  daysUntilExpiry?: number;
-  remainingShelfLifePercentage?: number;
-  createdAt: DateTime;
-  updatedAt?: DateTime;
-}
-
 export interface CreateLotBatchDto {
   lotNumber: string;
   productId: number;
@@ -3590,92 +3559,6 @@ export interface UpdateLotBatchDto {
 
 // =====================================
 // PRODUCT VARIANT
-// =====================================
-
-export interface ProductVariantDto {
-  id: number;
-  productId: number;
-  productName?: string;
-  sku: string;
-  barcode?: string;
-  variantName: string;
-  price?: number;
-  costPrice?: number;
-  compareAtPrice?: number;
-  currency?: string;
-  weight?: number;
-  weightUnit?: string;
-  dimensions?: string;
-  imageUrl?: string;
-  isDefault: boolean;
-  isActive: boolean;
-  trackInventory: boolean;
-  allowBackorder: boolean;
-  lowStockThreshold: number;
-  displayOrder: number;
-  options: ProductVariantOptionDto[];
-  totalStock: number;
-  createdAt: DateTime;
-  updatedAt?: DateTime;
-}
-
-export interface ProductVariantOptionDto {
-  id: number;
-  productVariantId: number;
-  productAttributeId: number;
-  productAttributeName?: string;
-  productAttributeOptionId?: number;
-  value: string;
-  displayOrder: number;
-}
-
-export interface CreateProductVariantDto {
-  productId: number;
-  sku: string;
-  barcode?: string;
-  variantName: string;
-  price?: number;
-  costPrice?: number;
-  compareAtPrice?: number;
-  currency?: string;
-  weight?: number;
-  weightUnit?: string;
-  dimensions?: string;
-  imageUrl?: string;
-  isDefault?: boolean;
-  trackInventory?: boolean;
-  allowBackorder?: boolean;
-  lowStockThreshold?: number;
-  displayOrder?: number;
-  options?: CreateProductVariantOptionDto[];
-}
-
-export interface CreateProductVariantOptionDto {
-  productAttributeId: number;
-  productAttributeOptionId?: number;
-  value: string;
-  displayOrder?: number;
-}
-
-export interface UpdateProductVariantDto {
-  sku: string;
-  barcode?: string;
-  variantName: string;
-  price?: number;
-  costPrice?: number;
-  compareAtPrice?: number;
-  currency?: string;
-  weight?: number;
-  weightUnit?: string;
-  dimensions?: string;
-  imageUrl?: string;
-  isDefault?: boolean;
-  trackInventory?: boolean;
-  allowBackorder?: boolean;
-  lowStockThreshold?: number;
-  displayOrder?: number;
-}
-
 // =====================================
 // INVENTORY ADJUSTMENT
 // =====================================
@@ -4409,4 +4292,33 @@ export interface UpdateQualityControlDto {
   inspectionStandard?: string;
   inspectionNotes?: string;
   internalNotes?: string;
+}
+
+// =====================================
+// TYPE ALIASES (for backwards compatibility)
+// =====================================
+
+// Alias for LowStockAlertDto
+export type LowStockProductDto = LowStockAlertDto;
+
+// Alias for ExpiringStockDto (already named correctly)
+
+// Alias for InventoryTurnoverDto
+export type InventoryTurnoverReportDto = InventoryTurnoverDto;
+
+// Alias for TotalInventoryValueResponse
+export type TotalInventoryValueDto = TotalInventoryValueResponse;
+
+// Alias for ProductCostingSummaryDto
+export type ProductCostingMethodDto = ProductCostingSummaryDto;
+
+// PagedList type for pagination
+export interface PagedList<T> {
+  items: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
 }

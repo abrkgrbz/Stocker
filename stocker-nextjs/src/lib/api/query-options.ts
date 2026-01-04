@@ -4,8 +4,6 @@
  * Optimized to prevent 429 (Too Many Requests) errors
  */
 
-import type { UseQueryOptions } from '@tanstack/react-query';
-
 /**
  * Query Categories with different caching strategies
  */
@@ -15,6 +13,29 @@ export type QueryCategory =
   | 'static' // Rarely changing data (settings, roles, etc.)
   | 'realtime' // Data that needs frequent updates (notifications, etc.)
   | 'search'; // Search results (short cache)
+
+/**
+ * Query options override type
+ */
+export interface QueryOptionsOverride {
+  enabled?: boolean;
+  staleTime?: number;
+  gcTime?: number;
+}
+
+/**
+ * Query options result type - compatible with useQuery spread
+ */
+export interface QueryOptionsResult {
+  staleTime: number;
+  gcTime: number;
+  refetchOnWindowFocus: false;
+  refetchOnReconnect: false;
+  refetchOnMount: false;
+  retry: false;
+  networkMode: 'offlineFirst';
+  enabled?: boolean;
+}
 
 /**
  * Caching configuration per category
@@ -49,20 +70,17 @@ const CACHE_CONFIG: Record<
  * Base query options that all queries should use
  */
 const BASE_QUERY_OPTIONS = {
-  refetchOnWindowFocus: false,
-  refetchOnReconnect: false,
-  refetchOnMount: false,
-  retry: false, // API client handles retries with exponential backoff
+  refetchOnWindowFocus: false as const,
+  refetchOnReconnect: false as const,
+  refetchOnMount: false as const,
+  retry: false as const,
   networkMode: 'offlineFirst' as const,
 };
 
 /**
  * Create optimized query options for a specific category
  */
-export function createQueryOptions<TData = unknown>(
-  category: QueryCategory,
-  overrides?: Partial<UseQueryOptions<TData>>
-): Partial<UseQueryOptions<TData>> {
+export function createQueryOptions(category: QueryCategory, overrides?: QueryOptionsOverride): QueryOptionsResult {
   const config = CACHE_CONFIG[category];
 
   return {
@@ -70,7 +88,7 @@ export function createQueryOptions<TData = unknown>(
     staleTime: config.staleTime,
     gcTime: config.gcTime,
     ...overrides,
-  } as Partial<UseQueryOptions<TData>>;
+  };
 }
 
 /**
@@ -82,36 +100,31 @@ export const queryOptions = {
    * - 2 min stale time to prevent excessive refetching
    * - No refetch on mount if data exists
    */
-  list: <TData = unknown>(
-    overrides?: Partial<UseQueryOptions<TData>>
-  ): Partial<UseQueryOptions<TData>> => createQueryOptions('list', overrides),
+  list: (overrides?: QueryOptionsOverride): QueryOptionsResult =>
+    createQueryOptions('list', overrides),
 
   /**
    * For detail pages (customer detail, order detail, etc.)
    * - 3 min stale time
    * - Longer cache for better back navigation
    */
-  detail: <TData = unknown>(
-    overrides?: Partial<UseQueryOptions<TData>>
-  ): Partial<UseQueryOptions<TData>> => createQueryOptions('detail', overrides),
+  detail: (overrides?: QueryOptionsOverride): QueryOptionsResult =>
+    createQueryOptions('detail', overrides),
 
   /**
    * For static/configuration data (roles, settings, departments, etc.)
    * - 10 min stale time (rarely changes)
    * - Long cache time
    */
-  static: <TData = unknown>(
-    overrides?: Partial<UseQueryOptions<TData>>
-  ): Partial<UseQueryOptions<TData>> => createQueryOptions('static', overrides),
+  static: (overrides?: QueryOptionsOverride): QueryOptionsResult =>
+    createQueryOptions('static', overrides),
 
   /**
    * For real-time data (notifications, dashboard stats, etc.)
    * - 30 sec stale time
    * - Short cache
    */
-  realtime: <TData = unknown>(
-    overrides?: Partial<UseQueryOptions<TData>>
-  ): Partial<UseQueryOptions<TData>> =>
+  realtime: (overrides?: QueryOptionsOverride): QueryOptionsResult =>
     createQueryOptions('realtime', overrides),
 
   /**
@@ -119,34 +132,22 @@ export const queryOptions = {
    * - 1 min stale time
    * - Moderate cache
    */
-  search: <TData = unknown>(
-    overrides?: Partial<UseQueryOptions<TData>>
-  ): Partial<UseQueryOptions<TData>> => createQueryOptions('search', overrides),
+  search: (overrides?: QueryOptionsOverride): QueryOptionsResult =>
+    createQueryOptions('search', overrides),
 
   /**
    * For infinite/paginated queries
    * - Same as list but with specific settings for pagination
    */
-  paginated: <TData = unknown>(
-    overrides?: Partial<UseQueryOptions<TData>>
-  ): Partial<UseQueryOptions<TData>> =>
-    createQueryOptions('list', {
-      refetchOnMount: false, // Important for pagination
-      ...overrides,
-    }),
+  paginated: (overrides?: QueryOptionsOverride): QueryOptionsResult =>
+    createQueryOptions('list', overrides),
 
   /**
    * For dependent queries (queries that depend on other data)
    * - Shorter stale time since they often need fresh parent data
    */
-  dependent: <TData = unknown>(
-    enabled: boolean,
-    overrides?: Partial<UseQueryOptions<TData>>
-  ): Partial<UseQueryOptions<TData>> =>
-    createQueryOptions('detail', {
-      enabled,
-      ...overrides,
-    }),
+  dependent: (enabled: boolean): QueryOptionsResult =>
+    createQueryOptions('detail', { enabled }),
 };
 
 /**

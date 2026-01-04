@@ -5,6 +5,7 @@ import { Form, Input, Select, DatePicker } from 'antd';
 import { HashtagIcon } from '@heroicons/react/24/outline';
 import { useProducts, useWarehouses } from '@/lib/api/hooks/useInventory';
 import type { SerialNumberDto } from '@/lib/api/services/inventory.types';
+import { SerialNumberStatus } from '@/lib/api/services/inventory.types';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
@@ -17,15 +18,15 @@ interface SerialNumberFormProps {
 }
 
 const statusOptions = [
-  { value: 0, label: 'Kullanılabilir' },
-  { value: 1, label: 'Stokta' },
-  { value: 2, label: 'Rezerve' },
-  { value: 3, label: 'Satıldı' },
-  { value: 4, label: 'İade Edildi' },
-  { value: 5, label: 'Arızalı' },
-  { value: 6, label: 'Tamir Bekliyor' },
-  { value: 7, label: 'Hurda' },
-  { value: 8, label: 'Kayıp' },
+  { value: SerialNumberStatus.Available, label: 'Kullanılabilir' },
+  { value: SerialNumberStatus.InStock, label: 'Stokta' },
+  { value: SerialNumberStatus.Reserved, label: 'Rezerve' },
+  { value: SerialNumberStatus.Sold, label: 'Satıldı' },
+  { value: SerialNumberStatus.Returned, label: 'İade Edildi' },
+  { value: SerialNumberStatus.Defective, label: 'Arızalı' },
+  { value: SerialNumberStatus.InRepair, label: 'Tamir Bekliyor' },
+  { value: SerialNumberStatus.Scrapped, label: 'Hurda' },
+  { value: SerialNumberStatus.Lost, label: 'Kayıp' },
 ];
 
 export default function SerialNumberForm({ form, initialValues, onFinish, loading }: SerialNumberFormProps) {

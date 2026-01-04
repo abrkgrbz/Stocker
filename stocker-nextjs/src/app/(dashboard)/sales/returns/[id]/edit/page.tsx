@@ -43,8 +43,10 @@ interface ReturnItem {
   orderItemId: string;
   productId: string;
   productName?: string;
+  orderedQuantity: number;
   quantity: number;
   unitPrice: number;
+  vatRate: number;
   lineTotal: number;
 }
 
@@ -70,12 +72,14 @@ export default function EditSalesReturnPage() {
         returnData.items.map((item: any) => ({
           key: item.id,
           id: item.id,
-          orderItemId: item.orderItemId,
+          orderItemId: item.orderItemId || item.salesOrderItemId,
           productId: item.productId,
           productName: item.productName,
+          orderedQuantity: item.quantityOrdered ?? item.quantity,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
-          lineTotal: item.lineTotal,
+          vatRate: item.vatRate ?? 18,
+          lineTotal: item.lineTotal ?? (item.quantity * item.unitPrice),
         }))
       );
     }
@@ -113,11 +117,14 @@ export default function EditSalesReturnPage() {
       reason: values.reason,
       notes: values.notes,
       items: items.map((item) => ({
-        id: item.id,
-        orderItemId: item.orderItemId,
+        salesOrderItemId: item.orderItemId,
         productId: item.productId,
+        productName: item.productName || '',
         quantity: item.quantity,
+        quantityOrdered: item.orderedQuantity,
+        quantityReturned: item.quantity,
         unitPrice: item.unitPrice,
+        vatRate: item.vatRate,
       })),
     };
 

@@ -122,7 +122,7 @@ export const AuditLogsService = {
     const url = `/api/tenant/AuditLogs${queryString ? `?${queryString}` : ''}`;
 
     const response = await apiClient.get<ApiResponseWrapper<AuditLogsResponse>>(url);
-    return (response as ApiResponseWrapper<AuditLogsResponse>).data || response as AuditLogsResponse;
+    return (response as unknown as ApiResponseWrapper<AuditLogsResponse>).data || response as unknown as AuditLogsResponse;
   },
 
   /**
@@ -133,7 +133,7 @@ export const AuditLogsService = {
     const response = await apiClient.get<ApiResponseWrapper<AuditLogDetail>>(
       `/api/tenant/AuditLogs/${id}`
     );
-    return (response as ApiResponseWrapper<AuditLogDetail>).data || response as AuditLogDetail;
+    return (response as unknown as ApiResponseWrapper<AuditLogDetail>).data || response as unknown as AuditLogDetail;
   },
 
   /**
@@ -149,7 +149,7 @@ export const AuditLogsService = {
     const url = `/api/tenant/AuditLogs/statistics${queryString ? `?${queryString}` : ''}`;
 
     const response = await apiClient.get<ApiResponseWrapper<AuditLogStatistics>>(url);
-    return (response as ApiResponseWrapper<AuditLogStatistics>).data || response as AuditLogStatistics;
+    return (response as unknown as ApiResponseWrapper<AuditLogStatistics>).data || response as unknown as AuditLogStatistics;
   },
 
   /**

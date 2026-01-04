@@ -373,26 +373,30 @@ export default function BackOrdersPage() {
             />
           </div>
           <Select
-            value={statusFilter === 'All' ? '' : statusFilter}
-            onChange={(e) => setStatusFilter((e.target.value as BackOrderStatus) || 'All')}
+            value={statusFilter === 'All' ? null : statusFilter}
+            onChange={(val) => setStatusFilter((val as BackOrderStatus) || 'All')}
             className="w-44"
-          >
-            <option value="">Tüm Durumlar</option>
-            <option value="Waiting">Stok Bekleniyor</option>
-            <option value="PartiallyAvailable">Kısmen Mevcut</option>
-            <option value="ReadyToShip">Gönderime Hazır</option>
-            <option value="Cancelled">İptal Edildi</option>
-          </Select>
+            placeholder="Tüm Durumlar"
+            clearable
+            options={[
+              { value: 'Waiting', label: 'Stok Bekleniyor' },
+              { value: 'PartiallyAvailable', label: 'Kısmen Mevcut' },
+              { value: 'ReadyToShip', label: 'Gönderime Hazır' },
+              { value: 'Cancelled', label: 'İptal Edildi' },
+            ]}
+          />
           <Select
-            value={priorityFilter === 'All' ? '' : priorityFilter}
-            onChange={(e) => setPriorityFilter((e.target.value as BackOrderPriority) || 'All')}
+            value={priorityFilter === 'All' ? null : priorityFilter}
+            onChange={(val) => setPriorityFilter((val as BackOrderPriority) || 'All')}
             className="w-36"
-          >
-            <option value="">Tüm Öncelikler</option>
-            <option value="Critical">Kritik</option>
-            <option value="High">Yüksek</option>
-            <option value="Normal">Normal</option>
-          </Select>
+            placeholder="Tüm Öncelikler"
+            clearable
+            options={[
+              { value: 'Critical', label: 'Kritik' },
+              { value: 'High', label: 'Yüksek' },
+              { value: 'Normal', label: 'Normal' },
+            ]}
+          />
         </div>
       </Card>
 

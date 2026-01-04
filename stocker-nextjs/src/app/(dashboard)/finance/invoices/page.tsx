@@ -1,0 +1,211 @@
+'use client';
+
+/**
+ * Invoices List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  PlusIcon,
+  ArrowPathIcon,
+  DocumentTextIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon,
+} from '@heroicons/react/24/outline';
+import { useInvoices, useDeleteInvoice } from '@/lib/api/hooks/useFinance';
+import type { InvoiceSummaryDto, InvoiceFilterDto } from '@/lib/api/services/finance.types';
+import { InvoicesStats, InvoicesTable } from '@/components/finance/invoices';
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
+import {
+  PageContainer,
+  ListPageHeader,
+  DataTableWrapper,
+  Card,
+} from '@/components/patterns';
+import { Input, Alert, Spinner, Select } from '@/components/primitives';
+
+export default function InvoicesPage() {
+  const router = useRouter();
+  const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [invoiceType, setInvoiceType] = useState<string | undefined>(undefined);
+  const [status, setStatus] = useState<string | undefined>(undefined);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText]);
+
+  // Build filter
+  const filters: InvoiceFilterDto = {
+    pageNumber: currentPage,
+    pageSize,
+    searchTerm: debouncedSearch || undefined,
+    invoiceType: invoiceType as any,
+    status: status as any,
+  };
+
+  // Fetch invoices from API
+  const { data, isLoading, error, refetch } = useInvoices(filters);
+  const deleteInvoice = useDeleteInvoice();
+
+  const invoices = data?.items || [];
+  const totalCount = data?.totalCount || 0;
+
+  const handleDelete = async (invoiceId: number) => {
+    try {
+      await deleteInvoice.mutateAsync(invoiceId);
+      showSuccess('Fatura başarıyla silindi!');
+    } catch (error) {
+      showApiError(error, 'Fatura silinirken bir hata oluştu');
+      throw error;
+    }
+  };
+
+  const handleCreate = () => {
+    router.push('/finance/invoices/new');
+  };
+
+  const handleEdit = (invoice: InvoiceSummaryDto) => {
+    router.push(`/finance/invoices/${invoice.id}/edit`);
+  };
+
+  const handleView = (invoiceId: number) => {
+    router.push(`/finance/invoices/${invoiceId}`);
+  };
+
+  const invoiceTypeOptions = [
+    { value: '', label: 'Tüm Türler' },
+    { value: 'Sales', label: 'Satış Faturası' },
+    { value: 'Purchase', label: 'Alış Faturası' },
+    { value: 'Return', label: 'İade Faturası' },
+    { value: 'Proforma', label: 'Proforma Fatura' },
+  ];
+
+  const statusOptions = [
+    { value: '', label: 'Tüm Durumlar' },
+    { value: 'Draft', label: 'Taslak' },
+    { value: 'Pending', label: 'Beklemede' },
+    { value: 'Approved', label: 'Onaylandı' },
+    { value: 'Paid', label: 'Ödendi' },
+    { value: 'PartiallyPaid', label: 'Kısmi Ödeme' },
+    { value: 'Overdue', label: 'Vadesi Geçti' },
+    { value: 'Cancelled', label: 'İptal' },
+  ];
+
+  return (
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <InvoicesStats invoices={invoices} totalCount={totalCount} loading={isLoading} />
+      </div>
+
+      {/* Header */}
+      <ListPageHeader
+        icon={<DocumentTextIcon className="w-5 h-5" />}
+        iconColor="#3b82f6"
+        title="Faturalar"
+        description="Satış ve alış faturalarınızı yönetin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Fatura Ekle',
+          onClick: handleCreate,
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      />
+
+      {/* Error Alert */}
+      {error && (
+        <Alert
+          variant="error"
+          title="Faturalar yüklenemedi"
+          message={
+            error instanceof Error
+              ? error.message
+              : 'Faturalar getirilirken bir hata oluştu. Lütfen tekrar deneyin.'
+          }
+          closable
+          action={
+            <button
+              onClick={() => refetch()}
+              className="px-3 py-1 text-xs font-medium text-red-700 bg-red-50 rounded-md hover:bg-red-100 transition-colors"
+            >
+              Tekrar Dene
+            </button>
+          }
+          className="mb-6"
+        />
+      )}
+
+      {/* Search & Filters */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="md:col-span-2">
+            <Input
+              placeholder="Fatura ara... (fatura no, müşteri, tedarikçi)"
+              prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              size="lg"
+            />
+          </div>
+          <Select
+            value={invoiceType || ''}
+            onChange={(e) => setInvoiceType(e.target.value || undefined)}
+            options={invoiceTypeOptions}
+            placeholder="Fatura Türü"
+          />
+          <Select
+            value={status || ''}
+            onChange={(e) => setStatus(e.target.value || undefined)}
+            options={statusOptions}
+            placeholder="Durum"
+          />
+        </div>
+      </div>
+
+      {/* Invoices Table */}
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spinner size="lg" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <InvoicesTable
+            invoices={invoices}
+            loading={isLoading}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalCount={totalCount}
+            onPageChange={(page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            }}
+            onEdit={handleEdit}
+            onView={handleView}
+            onDelete={handleDelete}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
+  );
+}

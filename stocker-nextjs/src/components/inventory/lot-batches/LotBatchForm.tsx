@@ -5,6 +5,7 @@ import { Form, Input, InputNumber, Select, DatePicker } from 'antd';
 import { ArchiveBoxIcon } from '@heroicons/react/24/outline';
 import { useProducts, useSuppliers } from '@/lib/api/hooks/useInventory';
 import type { LotBatchDto } from '@/lib/api/services/inventory.types';
+import { LotBatchStatus } from '@/lib/api/services/inventory.types';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
@@ -17,12 +18,12 @@ interface LotBatchFormProps {
 }
 
 const statusOptions = [
-  { value: 0, label: 'Bekliyor' },
-  { value: 1, label: 'Alındı' },
-  { value: 2, label: 'Onaylandı' },
-  { value: 3, label: 'Karantinada' },
-  { value: 4, label: 'Reddedildi' },
-  { value: 5, label: 'Tükendi' },
+  { value: LotBatchStatus.Pending, label: 'Bekliyor' },
+  { value: LotBatchStatus.Received, label: 'Alındı' },
+  { value: LotBatchStatus.Approved, label: 'Onaylandı' },
+  { value: LotBatchStatus.Quarantined, label: 'Karantinada' },
+  { value: LotBatchStatus.Rejected, label: 'Reddedildi' },
+  { value: LotBatchStatus.Exhausted, label: 'Tükendi' },
 ];
 
 export default function LotBatchForm({ form, initialValues, onFinish, loading }: LotBatchFormProps) {

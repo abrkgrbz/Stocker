@@ -83,7 +83,7 @@ export default function EditSupplierPage() {
                   <h1 className="text-xl font-semibold text-gray-900 m-0">
                     {supplier.name}
                   </h1>
-                  {supplier.isPreferred && (
+                  {supplier.isActive && (
                     <Tag color="gold" icon={<StarIcon className="w-4 h-4" />}>Tercih Edilen</Tag>
                   )}
                   <Tag

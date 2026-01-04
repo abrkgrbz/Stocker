@@ -77,12 +77,11 @@ export default function ContractDetailPage() {
   const handleRenew = () => {
     Modal.confirm({
       title: 'Sözleşmeyi Yenile',
-      content: 'Bu sözleşmeyi 1 yıl uzatmak istediğinizden emin misiniz?',
+      content: 'Bu sözleşmeyi 12 ay uzatmak istediğinizden emin misiniz?',
       okText: 'Yenile',
       cancelText: 'Vazgeç',
       onOk: async () => {
-        const newEndDate = dayjs(contract?.endDate).add(1, 'year').toISOString();
-        await renewMutation.mutateAsync({ id, newEndDate });
+        await renewMutation.mutateAsync({ id, extensionMonths: 12 });
       },
     });
   };

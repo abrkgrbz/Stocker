@@ -158,6 +158,9 @@ import type {
   JobPostingDto,
   CreateJobPostingDto,
   UpdateJobPostingDto,
+  // Tree and Summary types
+  DepartmentTreeDto,
+  DailyAttendanceSummaryDto,
 } from '../services/hr.types';
 
 // =====================================
@@ -490,7 +493,7 @@ export function useDepartment(id: number) {
 }
 
 export function useDepartmentTree() {
-  return useQuery<DepartmentDto[]>({
+  return useQuery<DepartmentTreeDto[]>({
     queryKey: hrKeys.departmentTree,
     queryFn: () => HRService.getDepartmentTree(),
     ...queryOptions.static(),
@@ -882,7 +885,7 @@ export function useAttendanceById(id: number) {
 }
 
 export function useDailyAttendance(date: string, departmentId?: number) {
-  return useQuery<AttendanceDto[]>({
+  return useQuery<DailyAttendanceSummaryDto>({
     queryKey: hrKeys.attendanceDaily(date, departmentId),
     queryFn: () => HRService.getDailyAttendance(date, departmentId),
     staleTime: 60000,

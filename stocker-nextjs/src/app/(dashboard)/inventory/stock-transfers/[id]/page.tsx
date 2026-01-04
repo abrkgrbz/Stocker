@@ -757,14 +757,14 @@ export default function StockTransferDetailPage() {
                     {dayjs(transfer.createdAt).format('DD/MM/YYYY HH:mm')}
                   </span>
                 </div>
-                {transfer.updatedAt && (
+                {transfer.createdAt && (
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
                       <CalendarIcon className="w-4 h-4 text-slate-400" />
                       <span className="text-sm text-slate-500">Güncelleme</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">
-                      {dayjs(transfer.updatedAt).format('DD/MM/YYYY HH:mm')}
+                      {dayjs(transfer.createdAt).format('DD/MM/YYYY HH:mm')}
                     </span>
                   </div>
                 )}
@@ -778,13 +778,13 @@ export default function StockTransferDetailPage() {
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
                 Referans Belge
               </p>
-              {transfer.referenceNumber ? (
+              {transfer.transferNumber ? (
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
                     <DocumentTextIcon className="w-5 h-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-slate-900">{transfer.referenceNumber}</p>
+                    <p className="text-sm font-medium text-slate-900">{transfer.transferNumber}</p>
                     <p className="text-xs text-slate-500">Referans No</p>
                   </div>
                 </div>

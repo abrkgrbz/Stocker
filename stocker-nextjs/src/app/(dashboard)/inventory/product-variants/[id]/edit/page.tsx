@@ -42,7 +42,7 @@ export default function EditProductVariantPage() {
   useEffect(() => {
     if (variant) {
       form.setFieldsValue({
-        name: variant.name,
+        name: variant.variantName,
         sku: variant.sku,
         barcode: variant.barcode,
         price: variant.price,
@@ -64,7 +64,7 @@ export default function EditProductVariantPage() {
       const data: UpdateProductVariantDto = {
         sku: values.sku,
         barcode: values.barcode,
-        name: values.name,
+        variantName: values.variantName,
         price: values.price,
         priceCurrency: values.priceCurrency || 'TRY',
         costPrice: values.costPrice,
@@ -130,7 +130,7 @@ export default function EditProductVariantPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-semibold text-gray-900 m-0">
-                    {variant.name}
+                    {variant.variantName}
                   </h1>
                   <Tag
                     icon={variant.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
@@ -182,7 +182,7 @@ export default function EditProductVariantPage() {
                   </div>
                   <div className="flex-1">
                     <div className="font-medium">{variant.productName}</div>
-                    <Text type="secondary">{variant.productCode}</Text>
+                    <Text type="secondary">{variant.productName}</Text>
                   </div>
                   <Button
                     type="link"

@@ -91,7 +91,7 @@ Card.displayName = 'Card';
 // CARD HEADER
 // =====================================
 
-export interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface CardHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
   /** Title text */
   title?: React.ReactNode;
   /** Subtitle text */
@@ -206,17 +206,24 @@ export interface StatCardProps {
     value: number | string;
     type: 'increase' | 'decrease' | 'neutral';
   };
+  /** Trend indicator (alternative to change) */
+  trend?: {
+    value: number;
+    isPositive: boolean;
+  };
   /** Icon */
   icon?: React.ReactNode;
+  /** Icon color class (e.g., 'text-blue-500') */
+  iconColor?: string;
   /** Additional class names */
   className?: string;
 }
 
-export function StatCard({ label, value, change, icon, className }: StatCardProps) {
+export function StatCard({ label, value, change, trend, icon, iconColor, className }: StatCardProps) {
   return (
     <Card className={cn('flex items-start gap-4', className)}>
       {icon && (
-        <div className="p-2 rounded-lg bg-slate-100 text-slate-600">{icon}</div>
+        <div className={cn('p-2 rounded-lg bg-slate-100', iconColor || 'text-slate-600')}>{icon}</div>
       )}
       <div className="flex-1 min-w-0">
         <p className="text-sm text-slate-500 truncate">{label}</p>
@@ -233,6 +240,17 @@ export function StatCard({ label, value, change, icon, className }: StatCardProp
             {change.type === 'increase' && '↑ '}
             {change.type === 'decrease' && '↓ '}
             {change.value}
+          </p>
+        )}
+        {trend && (
+          <p
+            className={cn(
+              'mt-1 text-sm',
+              trend.isPositive ? 'text-green-600' : 'text-red-600'
+            )}
+          >
+            {trend.isPositive ? '↑ ' : '↓ '}
+            {Math.abs(trend.value).toFixed(1)}%
           </p>
         )}
       </div>

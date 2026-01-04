@@ -13,7 +13,7 @@ import React, { forwardRef, useState, useCallback } from 'react';
 import { cn } from '@/lib/cn';
 
 export interface IBANInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value'> {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value' | 'size'> {
   /** Current value (unformatted) */
   value?: string;
   /** Change handler (receives unformatted value) */

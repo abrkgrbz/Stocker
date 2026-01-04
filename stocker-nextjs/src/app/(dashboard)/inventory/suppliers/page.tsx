@@ -75,7 +75,7 @@ export default function SuppliersPage() {
   // Calculate stats
   const totalSuppliers = suppliers.length;
   const activeSuppliers = suppliers.filter((s) => s.isActive).length;
-  const preferredSuppliers = suppliers.filter((s) => s.isPreferred).length;
+  const preferredSuppliers = suppliers.filter((s) => s.isActive).length;
   const totalProducts = suppliers.reduce((sum, s) => sum + (s.productCount || 0), 0);
 
   const columns: ColumnsType<SupplierDto> = [
@@ -88,14 +88,14 @@ export default function SuppliersPage() {
         <div className="flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: record.isPreferred ? '#f59e0b15' : '#10b98115' }}
+            style={{ backgroundColor: record.isActive ? '#f59e0b15' : '#10b98115' }}
           >
-            <BuildingStorefrontIcon className="w-4 h-4" style={{ color: record.isPreferred ? '#f59e0b' : '#10b981' }} />
+            <BuildingStorefrontIcon className="w-4 h-4" style={{ color: record.isActive ? '#f59e0b' : '#10b981' }} />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-slate-900">{name}</span>
-              {record.isPreferred && (
+              {record.isActive && (
                 <StarIcon className="w-3 h-3 text-amber-500" />
               )}
             </div>
@@ -153,7 +153,7 @@ export default function SuppliersPage() {
         { text: 'Tercih Edilen', value: true },
         { text: 'Standart', value: false },
       ],
-      onFilter: (value, record) => record.isPreferred === value,
+      onFilter: (value, record) => record.isActive === value,
       render: (isPreferred: boolean) => (
         isPreferred ? (
           <Tag color="gold" icon={<StarIcon className="w-4 h-4" />}>Tercih Edilen</Tag>

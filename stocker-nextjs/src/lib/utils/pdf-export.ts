@@ -292,7 +292,7 @@ export async function generateSalesOrderPDF(
   doc.text('Musteri Bilgileri:', margin, y);
   doc.setFont('helvetica', 'normal');
   y += 6;
-  doc.text(order.customerName, margin, y);
+  doc.text(order.customerName || '', margin, y);
   y += 5;
   if (order.customerEmail) {
     doc.text(`E-posta: ${order.customerEmail}`, margin, y);
@@ -395,7 +395,7 @@ export async function generateSalesOrderPDF(
     colX += colWidths[4];
     doc.text(formatCurrency(item.vatAmount, order.currency), colX, y);
     colX += colWidths[5];
-    doc.text(formatCurrency(item.lineTotalWithVat, order.currency), colX, y);
+    doc.text(formatCurrency(item.lineTotal, order.currency), colX, y);
 
     y += rowHeight + 3;
   });
@@ -420,13 +420,13 @@ export async function generateSalesOrderPDF(
   }
 
   doc.text('KDV Toplami:', totalsX, y);
-  doc.text(formatCurrency(order.taxTotal, order.currency), pageWidth - margin, y, { align: 'right' });
+  doc.text(formatCurrency(order.vatAmount, order.currency), pageWidth - margin, y, { align: 'right' });
   y += 6;
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.text('Genel Toplam:', totalsX, y);
-  doc.text(formatCurrency(order.grandTotal, order.currency), pageWidth - margin, y, { align: 'right' });
+  doc.text(formatCurrency(order.totalAmount, order.currency), pageWidth - margin, y, { align: 'right' });
 
   // Notes
   if (order.notes) {

@@ -25,6 +25,8 @@ export const userModulesKeys = {
 const DEV_MOCK_MODULES: UserModulesResponse = {
   tenantId: 'dev-tenant-id',
   packageName: 'Dev Package',
+  packageType: 'Enterprise',
+  subscriptionStatus: 'Active',
   modules: [
     { code: 'crm', name: 'CRM', isActive: true },
     { code: 'inventory', name: 'Inventory', isActive: true },

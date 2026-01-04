@@ -13,7 +13,7 @@ using Stocker.Infrastructure.RateLimiting;
 using Stocker.Persistence.Extensions;
 using Stocker.Modules.CRM;
 using Stocker.Modules.Sales;
-using Stocker.Modules.Finance.Infrastructure;
+using Stocker.Modules.Finance;
 using Stocker.Modules.Inventory;
 using Stocker.Modules.HR;
 using Stocker.Modules.Purchase;
@@ -225,7 +225,7 @@ if (enabledModules.GetValue<bool>("Sales"))
 if (enabledModules.GetValue<bool>("Finance"))
 {
     Log.Information("Loading Finance Module...");
-    builder.Services.AddFinanceInfrastructure(builder.Configuration);
+    builder.Services.AddFinanceModule(builder.Configuration);
 }
 
 // Inventory Module

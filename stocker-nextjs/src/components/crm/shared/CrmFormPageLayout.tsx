@@ -78,7 +78,7 @@ export function CrmFormPageLayout({
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-red-800 mb-2">{errorMessage}</h3>
           <p className="text-red-600 mb-4">{errorDescription}</p>
-          <Button variant="outline" onClick={() => router.push(cancelPath)}>
+          <Button variant="secondary" onClick={() => router.push(cancelPath)}>
             Geri Dön
           </Button>
         </div>
@@ -117,7 +117,7 @@ export function CrmFormPageLayout({
           </div>
           <div className="flex items-center gap-3">
             {extraActions}
-            <Button variant="outline" onClick={() => router.push(cancelPath)}>
+            <Button variant="secondary" onClick={() => router.push(cancelPath)}>
               Vazgeç
             </Button>
             <Button

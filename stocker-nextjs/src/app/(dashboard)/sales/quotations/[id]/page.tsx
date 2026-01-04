@@ -267,13 +267,13 @@ export default function QuotationDetailPage() {
                       </strong>
                     </Table.Summary.Cell>
                   </Table.Summary.Row>
-                  {(quotation.taxAmount ?? quotation.taxTotal) > 0 && (
+                  {((quotation.taxAmount ?? quotation.taxTotal) ?? 0) > 0 && (
                     <Table.Summary.Row>
                       <Table.Summary.Cell index={0} colSpan={5} align="right">
                         KDV:
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={1} align="right">
-                        {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: quotation.currency }).format(quotation.taxAmount ?? quotation.taxTotal)}
+                        {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: quotation.currency }).format((quotation.taxAmount ?? quotation.taxTotal) ?? 0)}
                       </Table.Summary.Cell>
                     </Table.Summary.Row>
                   )}
@@ -283,7 +283,7 @@ export default function QuotationDetailPage() {
                     </Table.Summary.Cell>
                     <Table.Summary.Cell index={1} align="right">
                       <strong style={{ fontSize: 16, color: '#1890ff' }}>
-                        {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: quotation.currency }).format(quotation.grandTotal)}
+                        {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: quotation.currency }).format(quotation.grandTotal ?? 0)}
                       </strong>
                     </Table.Summary.Cell>
                   </Table.Summary.Row>

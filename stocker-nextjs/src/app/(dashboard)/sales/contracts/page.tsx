@@ -205,13 +205,13 @@ export default function ContractsPage() {
             placeholder="Durum"
             options={statusOptions}
             value={(filters.status as ContractStatus) || null}
-            onChange={(value) => setFilters((prev) => ({ ...prev, status: value || undefined }))}
+            onChange={(value) => setFilters((prev) => ({ ...prev, status: (value as ContractStatus) || undefined }))}
           />
           <Select
             placeholder="Tür"
             options={typeOptions}
             value={(filters.contractType as ContractType) || null}
-            onChange={(value) => setFilters((prev) => ({ ...prev, contractType: value || undefined }))}
+            onChange={(value) => setFilters((prev) => ({ ...prev, contractType: (value as ContractType) || undefined }))}
           />
         </div>
       </div>

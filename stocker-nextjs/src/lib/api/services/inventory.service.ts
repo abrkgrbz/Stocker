@@ -2232,7 +2232,7 @@ export class InventoryService {
   /**
    * Lookup barcode
    */
-  static async lookupBarcode(barcode: string): Promise<BarcodeDefinitionDto | null> {
+  static async lookupBarcodeDefinition(barcode: string): Promise<BarcodeDefinitionDto | null> {
     return ApiService.get<BarcodeDefinitionDto | null>(this.getPath(`barcode-definitions/lookup/${barcode}`));
   }
 

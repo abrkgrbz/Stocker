@@ -90,11 +90,11 @@ export default function ReorderRulesPage() {
       triggerBelowDaysOfStock: rule.triggerBelowDaysOfStock,
       triggerOnForecast: rule.triggerOnForecast,
       forecastLeadTimeDays: rule.forecastLeadTimeDays,
-      reorderQuantity: rule.reorderQuantity,
+      fixedReorderQuantity: rule.fixedReorderQuantity,
       reorderUpToQuantity: rule.reorderUpToQuantity,
-      useDynamicQuantity: rule.useDynamicQuantity,
-      minReorderQuantity: rule.minReorderQuantity,
-      maxReorderQuantity: rule.maxReorderQuantity,
+      useEconomicOrderQuantity: rule.useEconomicOrderQuantity,
+      minimumOrderQuantity: rule.minimumOrderQuantity,
+      maximumOrderQuantity: rule.maximumOrderQuantity,
       requiresApproval: rule.requiresApproval,
     });
     setEditModalOpen(true);
@@ -170,12 +170,14 @@ export default function ReorderRulesPage() {
         triggerBelowDaysOfStock: values.triggerBelowDaysOfStock,
         triggerOnForecast: values.triggerOnForecast || false,
         forecastLeadTimeDays: values.forecastLeadTimeDays,
-        reorderQuantity: values.reorderQuantity,
+        fixedReorderQuantity: values.fixedReorderQuantity,
         reorderUpToQuantity: values.reorderUpToQuantity,
-        useDynamicQuantity: values.useDynamicQuantity || false,
-        minReorderQuantity: values.minReorderQuantity,
-        maxReorderQuantity: values.maxReorderQuantity,
+        useEconomicOrderQuantity: values.useEconomicOrderQuantity || false,
+        minimumOrderQuantity: values.minimumOrderQuantity,
+        maximumOrderQuantity: values.maximumOrderQuantity,
         requiresApproval: values.requiresApproval || false,
+        roundToPackSize: false,
+        isScheduled: false,
       };
       await createRule.mutateAsync(data);
       setCreateModalOpen(false);
@@ -200,12 +202,14 @@ export default function ReorderRulesPage() {
         triggerBelowDaysOfStock: values.triggerBelowDaysOfStock,
         triggerOnForecast: values.triggerOnForecast || false,
         forecastLeadTimeDays: values.forecastLeadTimeDays,
-        reorderQuantity: values.reorderQuantity,
+        fixedReorderQuantity: values.fixedReorderQuantity,
         reorderUpToQuantity: values.reorderUpToQuantity,
-        useDynamicQuantity: values.useDynamicQuantity || false,
-        minReorderQuantity: values.minReorderQuantity,
-        maxReorderQuantity: values.maxReorderQuantity,
+        useEconomicOrderQuantity: values.useEconomicOrderQuantity || false,
+        minimumOrderQuantity: values.minimumOrderQuantity,
+        maximumOrderQuantity: values.maximumOrderQuantity,
         requiresApproval: values.requiresApproval || false,
+        roundToPackSize: false,
+        isScheduled: false,
       };
       await updateRule.mutateAsync({ id: selectedRule.id, dto: data });
       setEditModalOpen(false);
@@ -270,16 +274,16 @@ export default function ReorderRulesPage() {
       width: 150,
       render: (_, record) => (
         <div className="text-sm">
-          {record.useDynamicQuantity ? (
+          {record.useEconomicOrderQuantity ? (
             <div>
               <Tag color="purple">Dinamik</Tag>
               <div className="text-xs text-slate-500 mt-1">
-                {record.minReorderQuantity} - {record.maxReorderQuantity}
+                {record.minimumOrderQuantity} - {record.maximumOrderQuantity}
               </div>
             </div>
           ) : (
             <div>
-              {record.reorderQuantity && <div>{record.reorderQuantity} adet</div>}
+              {record.fixedReorderQuantity && <div>{record.fixedReorderQuantity} adet</div>}
               {record.reorderUpToQuantity && (
                 <div className="text-xs text-slate-500">
                   Hedef: {record.reorderUpToQuantity}

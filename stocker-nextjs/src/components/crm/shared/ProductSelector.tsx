@@ -182,7 +182,7 @@ export function ProductSelector({
         <Popconfirm
           title="Ürünü kaldır"
           description="Bu ürünü listeden kaldırmak istediğinizden emin misiniz?"
-          onConfirm={() => handleRemoveProduct(record.productId)}
+          onConfirm={() => handleRemoveProduct(String(record.productId))}
           okText="Kaldır"
           cancelText="İptal"
           okButtonProps={{ danger: true }}

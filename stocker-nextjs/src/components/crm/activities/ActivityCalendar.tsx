@@ -53,6 +53,18 @@ const activityConfig: Record<
     bgColor: '#fafafa',
     borderColor: '#d9d9d9',
   },
+  Demo: {
+    icon: <UserGroupIcon className="w-4 h-4" />,
+    color: '#722ed1',
+    bgColor: '#f9f0ff',
+    borderColor: '#722ed1',
+  },
+  'Follow-up': {
+    icon: <ClockIcon className="w-4 h-4" />,
+    color: '#eb2f96',
+    bgColor: '#fff0f6',
+    borderColor: '#eb2f96',
+  },
 };
 
 interface ActivityCalendarProps {

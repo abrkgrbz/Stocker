@@ -276,8 +276,8 @@ export default function SalesOrderDetailPage() {
           </div>
         </Space>
         <Space>
-          <Tag color={statusColors[order.status]} style={{ fontSize: 14, padding: '4px 12px' }}>
-            {statusLabels[order.status]}
+          <Tag color={statusColors[order.status as SalesOrderStatus]} style={{ fontSize: 14, padding: '4px 12px' }}>
+            {statusLabels[order.status as SalesOrderStatus]}
           </Tag>
           {order.status === 'Draft' && (
             <>
@@ -380,7 +380,7 @@ export default function SalesOrderDetailPage() {
               <Descriptions.Item label="Satış Temsilcisi">{order.salesPersonName || '-'}</Descriptions.Item>
               <Descriptions.Item label="Para Birimi">{order.currency}</Descriptions.Item>
               <Descriptions.Item label="Durum">
-                <Tag color={statusColors[order.status]}>{statusLabels[order.status]}</Tag>
+                <Tag color={statusColors[order.status as SalesOrderStatus]}>{statusLabels[order.status as SalesOrderStatus]}</Tag>
               </Descriptions.Item>
             </Descriptions>
           </Card>

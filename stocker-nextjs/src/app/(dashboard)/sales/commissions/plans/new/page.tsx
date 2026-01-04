@@ -43,10 +43,11 @@ export default function NewCommissionPlanPage() {
       name: values.name,
       description: values.description,
       type: values.type,
+      calculationType: values.calculationType || 'Percentage',
       baseRate: values.baseRate,
       fixedAmount: values.type === 'FixedAmount' ? values.fixedAmount : undefined,
-      minimumSalesAmount: values.minimumSalesAmount,
-      maximumCommission: values.maximumCommission,
+      minimumSaleAmount: values.minimumSaleAmount,
+      maximumCommissionAmount: values.maximumCommissionAmount,
       isActive: values.isActive ?? true,
     };
 

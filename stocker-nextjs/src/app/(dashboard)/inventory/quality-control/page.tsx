@@ -20,18 +20,18 @@ import {
   useApproveQualityControl,
   useRejectQualityControl,
 } from '@/lib/api/hooks/useInventory';
-import type { QualityControlDto, QualityControlStatus, CreateQualityControlDto } from '@/lib/api/services/inventory.types';
+import type { QualityControlDto, CreateQualityControlDto } from '@/lib/api/services/inventory.types';
+import { QualityControlStatus, QualityControlType } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { PageContainer, ListPageHeader, Card } from '@/components/patterns';
 import { confirmAction } from '@/lib/utils/sweetalert';
 
 const statusConfig: Record<QualityControlStatus, { color: string; label: string }> = {
-  Pending: { color: 'gold', label: 'Beklemede' },
-  InProgress: { color: 'blue', label: 'Devam Ediyor' },
-  Passed: { color: 'green', label: 'Başarılı' },
-  Failed: { color: 'red', label: 'Başarısız' },
-  OnHold: { color: 'orange', label: 'Bekletiliyor' },
+  [QualityControlStatus.Pending]: { color: 'gold', label: 'Beklemede' },
+  [QualityControlStatus.InProgress]: { color: 'blue', label: 'Devam Ediyor' },
+  [QualityControlStatus.Completed]: { color: 'green', label: 'Tamamlandı' },
+  [QualityControlStatus.Cancelled]: { color: 'red', label: 'İptal' },
 };
 
 export default function QualityControlPage() {
@@ -52,11 +52,11 @@ export default function QualityControlPage() {
   // Stats
   const stats = useMemo(() => {
     const total = qualityControls.length;
-    const pending = qualityControls.filter(q => q.status === 'Pending').length;
-    const inProgress = qualityControls.filter(q => q.status === 'InProgress').length;
-    const passed = qualityControls.filter(q => q.status === 'Passed').length;
-    const failed = qualityControls.filter(q => q.status === 'Failed').length;
-    return { total, pending, inProgress, passed, failed };
+    const pending = qualityControls.filter(q => q.status === QualityControlStatus.Pending).length;
+    const inProgress = qualityControls.filter(q => q.status === QualityControlStatus.InProgress).length;
+    const completed = qualityControls.filter(q => q.status === QualityControlStatus.Completed).length;
+    const cancelled = qualityControls.filter(q => q.status === QualityControlStatus.Cancelled).length;
+    return { total, pending, inProgress, completed, cancelled };
   }, [qualityControls]);
 
   // Handlers
@@ -105,10 +105,12 @@ export default function QualityControlPage() {
       const values = await form.validateFields();
       const data: CreateQualityControlDto = {
         productId: values.productId,
-        lotBatchId: values.lotBatchId,
-        inspectionType: values.inspectionType,
-        sampleSize: values.sampleSize,
-        notes: values.notes,
+        qcType: values.qcType || QualityControlType.IncomingInspection,
+        inspectedQuantity: values.inspectedQuantity || 1,
+        unit: values.unit || 'Adet',
+        lotNumber: values.lotNumber,
+        sampleQuantity: values.sampleSize,
+        inspectionNotes: values.notes,
       };
       await createQC.mutateAsync(data);
       setCreateModalOpen(false);
@@ -122,8 +124,8 @@ export default function QualityControlPage() {
   const columns: ColumnsType<QualityControlDto> = [
     {
       title: 'Kontrol No',
-      dataIndex: 'controlNumber',
-      key: 'controlNumber',
+      dataIndex: 'qcNumber',
+      key: 'qcNumber',
       width: 130,
       render: (text: string) => <span className="font-mono font-semibold text-slate-900">{text}</span>,
     },
@@ -184,7 +186,7 @@ export default function QualityControlPage() {
           },
         ];
 
-        if (record.status === 'Pending' || record.status === 'InProgress') {
+        if (record.status === QualityControlStatus.Pending || record.status === QualityControlStatus.InProgress) {
           items.push(
             {
               key: 'approve',
@@ -249,11 +251,11 @@ export default function QualityControlPage() {
           <div className="text-xs text-slate-500">Devam Ediyor</div>
         </Card>
         <Card className="p-4">
-          <div className="text-2xl font-bold text-green-600">{stats.passed}</div>
+          <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
           <div className="text-xs text-slate-500">Başarılı</div>
         </Card>
         <Card className="p-4">
-          <div className="text-2xl font-bold text-red-600">{stats.failed}</div>
+          <div className="text-2xl font-bold text-red-600">{stats.cancelled}</div>
           <div className="text-xs text-slate-500">Başarısız</div>
         </Card>
       </div>
@@ -356,7 +358,7 @@ export default function QualityControlPage() {
 
       {/* Detail Modal */}
       <Modal
-        title={`Kalite Kontrol Detayı: ${selectedQC?.controlNumber || ''}`}
+        title={`Kalite Kontrol Detayı: ${selectedQC?.qcNumber || ''}`}
         open={detailModalOpen}
         onCancel={() => {
           setDetailModalOpen(false);
@@ -374,7 +376,7 @@ export default function QualityControlPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs text-slate-500 uppercase">Kontrol No</p>
-                <p className="font-semibold">{selectedQC.controlNumber}</p>
+                <p className="font-semibold">{selectedQC.qcNumber}</p>
               </div>
               <div>
                 <p className="text-xs text-slate-500 uppercase">Durum</p>
@@ -404,10 +406,10 @@ export default function QualityControlPage() {
                 <p>{selectedQC.inspectorName || '-'}</p>
               </div>
             </div>
-            {selectedQC.notes && (
+            {selectedQC.inspectionNotes && (
               <div>
                 <p className="text-xs text-slate-500 uppercase">Notlar</p>
-                <p className="text-slate-700">{selectedQC.notes}</p>
+                <p className="text-slate-700">{selectedQC.inspectionNotes}</p>
               </div>
             )}
           </div>

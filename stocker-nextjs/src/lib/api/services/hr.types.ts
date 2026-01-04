@@ -1182,6 +1182,8 @@ export interface ExpenseDto {
   payrollId?: number;
   notes?: string;
   createdAt: string;
+  // UI field
+  isReimbursable?: boolean;
 }
 
 export interface CreateExpenseDto {

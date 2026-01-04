@@ -14,7 +14,7 @@ interface WizardData {
   requiresOnboarding: boolean;
 }
 
-interface OnboardingFormData {
+export interface OnboardingFormData {
   sector?: string;
   companyName: string;
   companyCode: string;

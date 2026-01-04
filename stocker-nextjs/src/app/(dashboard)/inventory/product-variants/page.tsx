@@ -52,7 +52,7 @@ export default function ProductVariantsPage() {
   const filteredVariants = allVariants.filter((v) => {
     const matchesSearch =
       !searchText ||
-      v.name?.toLowerCase().includes(searchText.toLowerCase()) ||
+      v.variantName?.toLowerCase().includes(searchText.toLowerCase()) ||
       v.sku?.toLowerCase().includes(searchText.toLowerCase()) ||
       v.barcode?.toLowerCase().includes(searchText.toLowerCase());
 
@@ -88,7 +88,7 @@ export default function ProductVariantsPage() {
             style={{ backgroundColor: '#f0f0f0' }}
           />
           <div>
-            <div className="font-medium">{record.name}</div>
+            <div className="font-medium">{record.variantName}</div>
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <QrCodeIcon className="w-3 h-3" />
               <span>{record.sku}</span>
@@ -111,7 +111,7 @@ export default function ProductVariantsPage() {
         <div>
           <div className="font-medium">{record.productName}</div>
           <Text type="secondary" className="text-xs">
-            {record.productCode}
+            {record.productName}
           </Text>
         </div>
       ),
@@ -327,7 +327,7 @@ export default function ProductVariantsPage() {
         okButtonProps={{ danger: true, loading: deleteVariant.isPending }}
       >
         <p>
-          <strong>{variantToDelete?.name}</strong> varyantını silmek istediğinize emin misiniz?
+          <strong>{variantToDelete?.variantName}</strong> varyantını silmek istediğinize emin misiniz?
         </p>
         <p className="text-gray-500 text-sm">
           SKU: {variantToDelete?.sku}

@@ -44,7 +44,6 @@ import type {
   SalesCommissionListItem,
   GetSalesCommissionsParams,
   CommissionSummary,
-  SalesPersonCommissionSummary,
   CalculateCommissionDto,
   // Sales Returns
   SalesReturn,
@@ -1166,7 +1165,7 @@ export function useCommissionSummary(fromDate?: string, toDate?: string) {
  * Hook to fetch sales person commission summary
  */
 export function useSalesPersonCommissionSummary(salesPersonId: string, fromDate?: string, toDate?: string) {
-  return useQuery<SalesPersonCommissionSummary>({
+  return useQuery<CommissionSummary>({
     queryKey: salesKeys.salesPersonCommissionSummary(salesPersonId, fromDate, toDate),
     queryFn: () => SalesService.getSalesPersonCommissionSummary(salesPersonId, fromDate, toDate),
     enabled: !!salesPersonId,
@@ -1699,7 +1698,7 @@ export function useCustomerContracts(params?: CustomerContractQueryParams) {
 export function useCustomerContract(id: string) {
   return useQuery<CustomerContractDto>({
     queryKey: salesKeys.customerContract(id),
-    queryFn: () => SalesService.getCustomerContractById(id),
+    queryFn: () => SalesService.getCustomerContract(id),
     ...queryOptions.detail({ enabled: !!id }),
   });
 }
@@ -1719,10 +1718,10 @@ export function useCustomerContractByNumber(contractNumber: string) {
 /**
  * Hook to fetch customer contracts by customer ID
  */
-export function useCustomerContractsByCustomer(customerId: string, page: number = 1, pageSize: number = 20) {
-  return useQuery<PagedResult<CustomerContractListDto>>({
-    queryKey: [...salesKeys.customerContractsByCustomer(customerId), page, pageSize],
-    queryFn: () => SalesService.getCustomerContractsByCustomer(customerId, page, pageSize),
+export function useCustomerContractsByCustomer(customerId: string) {
+  return useQuery<CustomerContractListDto[]>({
+    queryKey: salesKeys.customerContractsByCustomer(customerId),
+    queryFn: () => SalesService.getCustomerContractsByCustomer(customerId),
     enabled: !!customerId,
     staleTime: 30 * 1000,
   });
@@ -1866,8 +1865,8 @@ export function useRenewCustomerContract() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, newEndDate }: { id: string; newEndDate: string }) =>
-      SalesService.renewContract(id, newEndDate),
+    mutationFn: ({ id, extensionMonths }: { id: string; extensionMonths?: number }) =>
+      SalesService.renewContract(id, extensionMonths),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: salesKeys.customerContract(id) });
       queryClient.invalidateQueries({ queryKey: salesKeys.customerContracts });
@@ -2052,7 +2051,7 @@ export function useSalesTerritories(params?: SalesTerritoryQueryParams) {
 export function useSalesTerritory(id: string) {
   return useQuery<SalesTerritoryDto>({
     queryKey: salesKeys.salesTerritory(id),
-    queryFn: () => SalesService.getSalesTerritoryById(id),
+    queryFn: () => SalesService.getSalesTerritory(id),
     ...queryOptions.detail({ enabled: !!id }),
   });
 }
@@ -2237,10 +2236,10 @@ export function useAssignCustomerToTerritory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Omit<AssignCustomerToTerritoryCommand, 'territoryId'> }) =>
-      SalesService.assignCustomerToTerritory(id, { ...data, territoryId: id }),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: salesKeys.salesTerritory(id) });
+    mutationFn: ({ territoryId, customerId }: { territoryId: string; customerId: string }) =>
+      SalesService.assignCustomerToTerritory(territoryId, customerId),
+    onSuccess: (_, { territoryId }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.salesTerritory(territoryId) });
       showSuccess('Müşteri bölgeye atandı');
     },
     onError: (error) => {
@@ -2275,8 +2274,8 @@ export function useSetTerritoryQuota() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, amount, currency, period }: { id: string; amount: number; currency: string; period: string }) =>
-      SalesService.setQuota(id, amount, currency, period),
+    mutationFn: ({ id, year, month, amount }: { id: string; year: number; month: number; amount: number }) =>
+      SalesService.setQuota(id, { year, month, amount }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: salesKeys.salesTerritory(id) });
       showSuccess('Bölge kotası belirlendi');
@@ -2308,7 +2307,7 @@ export function useShipments(params?: ShipmentQueryParams) {
 export function useShipment(id: string) {
   return useQuery<ShipmentDto>({
     queryKey: salesKeys.shipment(id),
-    queryFn: () => SalesService.getShipmentById(id),
+    queryFn: () => SalesService.getShipment(id),
     ...queryOptions.detail({ enabled: !!id }),
   });
 }
@@ -2340,10 +2339,10 @@ export function useShipmentsByOrder(orderId: string) {
 /**
  * Hook to fetch shipments by customer ID
  */
-export function useShipmentsByCustomer(customerId: string, page: number = 1, pageSize: number = 20) {
-  return useQuery<PagedResult<ShipmentListDto>>({
-    queryKey: [...salesKeys.shipmentsByCustomer(customerId), page, pageSize],
-    queryFn: () => SalesService.getShipmentsByCustomer(customerId, page, pageSize),
+export function useShipmentsByCustomer(customerId: string) {
+  return useQuery<ShipmentListDto[]>({
+    queryKey: salesKeys.shipmentsByCustomer(customerId),
+    queryFn: () => SalesService.getShipmentsByCustomer(customerId),
     enabled: !!customerId,
     staleTime: 30 * 1000,
   });
@@ -2649,7 +2648,7 @@ export function useReturnShipment() {
 
   return useMutation({
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-      SalesService.returnShipment(id, reason),
+      SalesService.cancelShipment(id, reason),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: salesKeys.shipment(id) });
       queryClient.invalidateQueries({ queryKey: salesKeys.shipments });
@@ -2726,7 +2725,7 @@ export function useUpdateShipmentTracking() {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Omit<UpdateTrackingCommand, 'id'> }) =>
-      SalesService.updateTracking(id, { ...data, id }),
+      SalesService.updateTrackingInfo(id, { ...data, id }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: salesKeys.shipment(id) });
       showSuccess('Takip bilgisi güncellendi');

@@ -43,8 +43,10 @@ interface ReturnItem {
   productId: string;
   productName?: string;
   maxQuantity: number;
+  orderedQuantity: number;
   quantity: number;
   unitPrice: number;
+  vatRate: number;
   lineTotal: number;
 }
 
@@ -88,8 +90,10 @@ export default function NewSalesReturnPage() {
       productId: returnableItem.productId,
       productName: returnableItem.productName,
       maxQuantity: returnableItem.returnableQuantity,
+      orderedQuantity: returnableItem.orderedQuantity ?? returnableItem.returnableQuantity,
       quantity: returnableItem.returnableQuantity,
       unitPrice: returnableItem.unitPrice,
+      vatRate: returnableItem.vatRate ?? 18,
       lineTotal: returnableItem.returnableQuantity * returnableItem.unitPrice,
     };
     setItems([...items, newItem]);
@@ -125,6 +129,7 @@ export default function NewSalesReturnPage() {
 
     const dto: CreateSalesReturnDto = {
       salesOrderId: values.orderId,
+      type: values.type || 'Return',
       returnDate: values.returnDate.toISOString(),
       reason: values.reason,
       notes: values.notes,
@@ -135,7 +140,10 @@ export default function NewSalesReturnPage() {
         productName: item.productName || '',
         unit: 'Adet',
         quantity: item.quantity,
+        quantityOrdered: item.orderedQuantity || item.quantity,
+        quantityReturned: item.quantity,
         unitPrice: item.unitPrice,
+        vatRate: item.vatRate || 18,
         reason: values.reason,
       })),
     };

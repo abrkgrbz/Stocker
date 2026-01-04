@@ -96,7 +96,7 @@ export default function EditProductAttributePage() {
             value: opt.value,
             colorCode: opt.colorCode,
             displayOrder: opt.displayOrder,
-            isDefault: opt.isDefault,
+            isDefault: false, // Backend DTO doesn't have isDefault field
           }))
         );
       }

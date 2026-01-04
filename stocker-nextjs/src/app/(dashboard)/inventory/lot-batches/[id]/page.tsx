@@ -563,17 +563,6 @@ export default function LotBatchDetailPage() {
                     {dayjs(lotBatch.createdAt).format('DD/MM/YYYY HH:mm')}
                   </span>
                 </div>
-                {lotBatch.updatedAt && (
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <CalendarIcon className="w-4 h-4 text-slate-400" />
-                      <span className="text-sm text-slate-500">Güncelleme</span>
-                    </div>
-                    <span className="text-sm font-medium text-slate-900">
-                      {dayjs(lotBatch.updatedAt).format('DD/MM/YYYY HH:mm')}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
           </div>
