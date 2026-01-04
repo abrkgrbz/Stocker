@@ -26,7 +26,10 @@ import {
   CampaignPerformance,
   TodaysActivities,
   OverdueTasks,
-  PipelineStats
+  PipelineStats,
+  WinLossChart,
+  PipelineFunnel,
+  MonthlyTrend,
 } from '@/components/crm/dashboard';
 import { calculateDashboardMetrics } from '@/lib/crm';
 import { formatDate } from '@/lib/crm';
@@ -198,6 +201,13 @@ export default function CRMDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <TodaysActivities activities={activities} loading={activitiesLoading} />
         <OverdueTasks activities={activities} loading={activitiesLoading} />
+      </div>
+
+      {/* Win/Loss & Monthly Trend Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <WinLossChart deals={deals} loading={dealsLoading} />
+        <PipelineFunnel pipelines={pipelines} deals={deals} loading={pipelinesLoading || dealsLoading} />
+        <MonthlyTrend deals={deals} loading={dealsLoading} />
       </div>
 
       {/* Sales Funnel & Pipeline Stats */}

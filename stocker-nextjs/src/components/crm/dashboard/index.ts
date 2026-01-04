@@ -5,3 +5,6 @@ export { CampaignPerformance } from './CampaignPerformance';
 export { TodaysActivities } from './TodaysActivities';
 export { OverdueTasks } from './OverdueTasks';
 export { PipelineStats } from './PipelineStats';
+export { WinLossChart } from './WinLossChart';
+export { PipelineFunnel } from './PipelineFunnel';
+export { MonthlyTrend } from './MonthlyTrend';
