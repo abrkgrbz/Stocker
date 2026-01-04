@@ -8,6 +8,8 @@ import type {
     Deal,
     DealListParams,
     DealListResponse,
+    CreateDealRequest,
+    UpdateDealRequest,
     Activity,
     PipelineStats,
 } from '../types/crm.types';
@@ -91,15 +93,42 @@ class CRMService {
         return response.data;
     }
 
+    async createDeal(data: CreateDealRequest): Promise<Deal> {
+        const response = await api.post<Deal>(`${this.baseUrl}/deals`, data);
+        return response.data;
+    }
+
+    async updateDeal(id: string, data: UpdateDealRequest): Promise<Deal> {
+        const response = await api.put<Deal>(`${this.baseUrl}/deals/${id}`, data);
+        return response.data;
+    }
+
     async updateDealStage(id: string, stage: string): Promise<Deal> {
         const response = await api.patch<Deal>(`${this.baseUrl}/deals/${id}/stage`, { stage });
         return response.data;
+    }
+
+    async deleteDeal(id: string): Promise<void> {
+        await api.delete(`${this.baseUrl}/deals/${id}`);
     }
 
     // Activities
     async getCustomerActivities(customerId: string): Promise<Activity[]> {
         const response = await api.get<Activity[]>(`${this.baseUrl}/customers/${customerId}/activities`);
         return response.data;
+    }
+
+    async getActivities(params?: { type?: string; customerId?: string; page?: number; pageSize?: number }): Promise<{ items: Activity[]; totalCount: number }> {
+        const response = await api.get<Activity[]>(`${this.baseUrl}/activities`, {
+            params: {
+                type: params?.type,
+                customerId: params?.customerId,
+                page: params?.page || 1,
+                pageSize: params?.pageSize || 50,
+            }
+        });
+        const items = response.data || [];
+        return { items, totalCount: items.length };
     }
 
     // Pipeline Stats

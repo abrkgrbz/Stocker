@@ -23,6 +23,12 @@ import type {
     RejectLeaveDto,
     CheckInDto,
     CheckOutDto,
+    CreateEmployeeDto,
+    UpdateEmployeeDto,
+    Asset,
+    AssetListParams,
+    AssetListResponse,
+    AssetCategory,
 } from '../types/hr.types';
 
 class HRService {
@@ -55,6 +61,20 @@ class HRService {
     async getEmployeesByDepartment(departmentId: string): Promise<Employee[]> {
         const response = await api.get<Employee[]>(`${this.baseUrl}/departments/${departmentId}/employees`);
         return response.data;
+    }
+
+    async createEmployee(data: CreateEmployeeDto): Promise<Employee> {
+        const response = await api.post<Employee>(`${this.baseUrl}/employees`, data);
+        return response.data;
+    }
+
+    async updateEmployee(id: string, data: UpdateEmployeeDto): Promise<Employee> {
+        const response = await api.put<Employee>(`${this.baseUrl}/employees/${id}`, data);
+        return response.data;
+    }
+
+    async deleteEmployee(id: string): Promise<void> {
+        await api.delete(`${this.baseUrl}/employees/${id}`);
     }
 
     // ============= LEAVE REQUESTS =============
@@ -235,6 +255,28 @@ class HRService {
         const response = await api.get<Holiday[]>(`${this.baseUrl}/holidays/upcoming`, {
             params: { limit }
         });
+        return response.data;
+    }
+
+    // ============= ASSETS =============
+
+    async getAssets(params?: AssetListParams): Promise<AssetListResponse> {
+        const response = await api.get<AssetListResponse>(`${this.baseUrl}/assets`, { params });
+        return response.data;
+    }
+
+    async getAsset(id: string): Promise<Asset> {
+        const response = await api.get<Asset>(`${this.baseUrl}/assets/${id}`);
+        return response.data;
+    }
+
+    async getAssetCategories(): Promise<AssetCategory[]> {
+        const response = await api.get<AssetCategory[]>(`${this.baseUrl}/assets/categories`);
+        return response.data;
+    }
+
+    async getEmployeeAssets(employeeId: string): Promise<Asset[]> {
+        const response = await api.get<Asset[]>(`${this.baseUrl}/employees/${employeeId}/assets`);
         return response.data;
     }
 

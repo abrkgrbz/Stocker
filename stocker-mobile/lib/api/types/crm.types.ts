@@ -2,27 +2,58 @@
 
 export interface Customer {
     id: string;
-    code: string;
-    name: string;
-    email?: string;
+    companyName: string;
+    email: string;
     phone?: string;
-    company?: string;
+    website?: string;
+    industry?: string;
     address?: string;
-    city?: string;
+
+    // GeoLocation IDs (FK to Master DB)
+    countryId?: string;
+    cityId?: string;
+    districtId?: string;
+
+    // Denormalized location names
     country?: string;
-    type: CustomerType;
+    city?: string;
+    district?: string;
+    state?: string;
+    postalCode?: string;
+
+    // Business info
+    annualRevenue?: number;
+    numberOfEmployees?: number;
+    description?: string;
+
+    // Financial info
+    customerType: CustomerType;
     status: CustomerStatus;
-    tags?: string[];
-    notes?: string;
-    totalRevenue?: number;
-    totalOrders?: number;
-    lastActivityDate?: string;
+    creditLimit: number;
+    taxId?: string;
+    paymentTerms?: string;
+    contactPerson?: string;
+
+    isActive: boolean;
     createdAt: string;
-    updatedAt: string;
+    updatedAt?: string;
+
+    // Related entities
+    contacts?: Contact[];
 }
 
-export type CustomerType = 'individual' | 'company';
-export type CustomerStatus = 'active' | 'inactive' | 'lead' | 'prospect';
+export interface Contact {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    position?: string;
+    isPrimary: boolean;
+}
+
+export type CustomerType = 'Individual' | 'Corporate' | 'Government' | 'NonProfit';
+export type CustomerStatus = 'Active' | 'Inactive' | 'Prospect' | 'Suspended';
 
 export interface CustomerListParams {
     page?: number;
@@ -43,21 +74,40 @@ export interface CustomerListResponse {
 }
 
 export interface CreateCustomerRequest {
-    name: string;
-    email?: string;
+    companyName: string;
+    email: string;
     phone?: string;
-    company?: string;
+    website?: string;
+    industry?: string;
     address?: string;
-    city?: string;
+
+    // GeoLocation IDs
+    countryId?: string;
+    cityId?: string;
+    districtId?: string;
+
+    // Denormalized location names
     country?: string;
-    type: CustomerType;
-    notes?: string;
-    tags?: string[];
+    city?: string;
+    district?: string;
+    state?: string;
+    postalCode?: string;
+
+    // Business info
+    annualRevenue?: number;
+    numberOfEmployees?: number;
+    description?: string;
+
+    // Financial info
+    customerType?: CustomerType;
+    status?: CustomerStatus;
+    creditLimit?: number;
+    taxId?: string;
+    paymentTerms?: string;
+    contactPerson?: string;
 }
 
-export interface UpdateCustomerRequest extends Partial<CreateCustomerRequest> {
-    status?: CustomerStatus;
-}
+export interface UpdateCustomerRequest extends Partial<CreateCustomerRequest> {}
 
 // Deals / Opportunities
 
@@ -104,6 +154,20 @@ export interface DealListResponse {
     pageSize: number;
     totalPages: number;
 }
+
+export interface CreateDealRequest {
+    title: string;
+    customerId: string;
+    value: number;
+    currency?: string;
+    stage?: DealStage;
+    probability?: number;
+    expectedCloseDate?: string;
+    notes?: string;
+    assignedTo?: string;
+}
+
+export interface UpdateDealRequest extends Partial<CreateDealRequest> {}
 
 // Activities
 

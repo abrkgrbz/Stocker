@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { authStorage, AuthState } from '@/lib/auth-store';
 import { useTheme } from '@/lib/theme';
+import { SessionProvider } from '@/lib/security/SessionProvider';
 
 export default function DashboardLayout() {
     const router = useRouter();
@@ -47,6 +48,11 @@ export default function DashboardLayout() {
     const tabBarHeight = 60 + insets.bottom;
 
     return (
+        <SessionProvider
+            timeoutMs={15 * 60 * 1000} // 15 minutes
+            warningMs={2 * 60 * 1000}  // 2 minutes warning
+            enabled={true}
+        >
         <Tabs
             screenOptions={{
                 headerShown: false,
@@ -141,5 +147,6 @@ export default function DashboardLayout() {
                 }}
             />
         </Tabs>
+        </SessionProvider>
     );
 }

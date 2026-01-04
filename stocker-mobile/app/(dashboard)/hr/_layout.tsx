@@ -16,7 +16,14 @@ export default function HRLayout() {
             <Stack.Screen name="employees" />
             <Stack.Screen name="leaves" />
             <Stack.Screen name="assets" />
+            <Stack.Screen name="attendance" />
             <Stack.Screen name="employee/[id]" />
+            <Stack.Screen name="leave/[id]" />
+            <Stack.Screen name="asset/[id]" />
+            <Stack.Screen name="add-leave" />
+            <Stack.Screen name="add-employee" />
+            <Stack.Screen name="edit-leave/[id]" />
+            <Stack.Screen name="edit-employee/[id]" />
         </Stack>
     );
 }

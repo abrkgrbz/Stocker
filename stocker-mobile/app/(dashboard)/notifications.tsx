@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, Pressable, RefreshControl, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, FlatList, Pressable, RefreshControl, Alert } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Animated, { FadeIn, FadeInRight, SlideOutRight } from 'react-native-reanimated';
 import {
@@ -44,6 +44,7 @@ const NOTIFICATION_ICONS: Record<NotificationType, { icon: typeof Bell; color: s
 
 export default function NotificationsScreen() {
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const { colors } = useTheme();
     const {
         notifications,
@@ -116,6 +117,151 @@ export default function NotificationsScreen() {
     const getIcon = (type: NotificationType) => {
         return NOTIFICATION_ICONS[type] || NOTIFICATION_ICONS.general;
     };
+
+    const renderNotificationItem = useCallback(({ item: notification, index }: { item: StoredNotification; index: number }) => {
+        const iconConfig = getIcon(notification.type);
+        const IconComponent = iconConfig.icon;
+
+        return (
+            <Animated.View
+                entering={FadeInRight.duration(300).delay(Math.min(index, 10) * 50)}
+                exiting={SlideOutRight.duration(200)}
+            >
+                <Pressable
+                    onPress={() => handleNotificationPress(notification)}
+                    onLongPress={() => handleDeleteNotification(notification.id)}
+                    style={{
+                        backgroundColor: notification.read
+                            ? colors.surface.primary
+                            : colors.brand.primary + '10',
+                        borderRadius: 12,
+                        padding: 16,
+                        marginBottom: 12,
+                        borderWidth: 1,
+                        borderColor: notification.read
+                            ? colors.border.primary
+                            : colors.brand.primary + '30',
+                        flexDirection: 'row',
+                        gap: 12,
+                    }}
+                >
+                    <View
+                        style={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: 22,
+                            backgroundColor: iconConfig.bgColor,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <IconComponent size={22} color={iconConfig.color} />
+                    </View>
+
+                    <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                            <Text
+                                style={{
+                                    fontSize: 15,
+                                    fontWeight: notification.read ? '500' : '600',
+                                    color: colors.text.primary,
+                                    flex: 1,
+                                    marginRight: 8,
+                                }}
+                                numberOfLines={2}
+                            >
+                                {notification.title}
+                            </Text>
+                            {!notification.read && (
+                                <View
+                                    style={{
+                                        width: 8,
+                                        height: 8,
+                                        borderRadius: 4,
+                                        backgroundColor: colors.brand.primary,
+                                        marginTop: 4,
+                                    }}
+                                />
+                            )}
+                        </View>
+
+                        <Text
+                            style={{
+                                fontSize: 13,
+                                color: colors.text.secondary,
+                                marginTop: 4,
+                                lineHeight: 18,
+                            }}
+                            numberOfLines={2}
+                        >
+                            {notification.body}
+                        </Text>
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+                            <Text style={{ fontSize: 12, color: colors.text.tertiary }}>
+                                {formatTime(notification.receivedAt)}
+                            </Text>
+
+                            <View style={{ flexDirection: 'row', gap: 8 }}>
+                                {!notification.read && (
+                                    <Pressable
+                                        onPress={(e) => {
+                                            e.stopPropagation();
+                                            markAsRead(notification.id);
+                                        }}
+                                        style={{
+                                            padding: 4,
+                                            borderRadius: 4,
+                                        }}
+                                    >
+                                        <Check size={16} color={colors.brand.primary} />
+                                    </Pressable>
+                                )}
+                                <Pressable
+                                    onPress={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteNotification(notification.id);
+                                    }}
+                                    style={{
+                                        padding: 4,
+                                        borderRadius: 4,
+                                    }}
+                                >
+                                    <X size={16} color={colors.text.tertiary} />
+                                </Pressable>
+                            </View>
+                        </View>
+                    </View>
+                </Pressable>
+            </Animated.View>
+        );
+    }, [colors, markAsRead, handleNotificationPress, handleDeleteNotification, formatTime, getIcon]);
+
+    const EmptyState = useCallback(() => (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, paddingTop: 100 }}>
+            <Animated.View entering={FadeIn.duration(500)} style={{ alignItems: 'center' }}>
+                <View
+                    style={{
+                        width: 80,
+                        height: 80,
+                        borderRadius: 40,
+                        backgroundColor: colors.background.tertiary,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginBottom: 16,
+                    }}
+                >
+                    <BellOff size={40} color={colors.text.tertiary} />
+                </View>
+                <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text.primary, marginBottom: 8 }}>
+                    Bildirim Yok
+                </Text>
+                <Text style={{ fontSize: 14, color: colors.text.tertiary, textAlign: 'center' }}>
+                    Yeni bildirimleriniz burada görünecek
+                </Text>
+            </Animated.View>
+        </View>
+    ), [colors]);
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.background.secondary }} edges={['top']}>
@@ -190,159 +336,29 @@ export default function NotificationsScreen() {
                 </View>
             </Animated.View>
 
-            {notifications.length === 0 ? (
-                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-                    <Animated.View entering={FadeIn.duration(500)} style={{ alignItems: 'center' }}>
-                        <View
-                            style={{
-                                width: 80,
-                                height: 80,
-                                borderRadius: 40,
-                                backgroundColor: colors.background.tertiary,
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                marginBottom: 16,
-                            }}
-                        >
-                            <BellOff size={40} color={colors.text.tertiary} />
-                        </View>
-                        <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text.primary, marginBottom: 8 }}>
-                            Bildirim Yok
-                        </Text>
-                        <Text style={{ fontSize: 14, color: colors.text.tertiary, textAlign: 'center' }}>
-                            Yeni bildirimleriniz burada görünecek
-                        </Text>
-                    </Animated.View>
-                </View>
-            ) : (
-                <ScrollView
-                    contentContainerStyle={{ padding: 16 }}
-                    refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                    }
-                    showsVerticalScrollIndicator={false}
-                >
-                    {notifications.map((notification, index) => {
-                        const iconConfig = getIcon(notification.type);
-                        const IconComponent = iconConfig.icon;
-
-                        return (
-                            <Animated.View
-                                key={notification.id}
-                                entering={FadeInRight.duration(300).delay(index * 50)}
-                                exiting={SlideOutRight.duration(200)}
-                            >
-                                <Pressable
-                                    onPress={() => handleNotificationPress(notification)}
-                                    onLongPress={() => handleDeleteNotification(notification.id)}
-                                    style={{
-                                        backgroundColor: notification.read
-                                            ? colors.surface.primary
-                                            : colors.brand.primary + '10',
-                                        borderRadius: 12,
-                                        padding: 16,
-                                        marginBottom: 12,
-                                        borderWidth: 1,
-                                        borderColor: notification.read
-                                            ? colors.border.primary
-                                            : colors.brand.primary + '30',
-                                        flexDirection: 'row',
-                                        gap: 12,
-                                    }}
-                                >
-                                    <View
-                                        style={{
-                                            width: 44,
-                                            height: 44,
-                                            borderRadius: 22,
-                                            backgroundColor: iconConfig.bgColor,
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                        }}
-                                    >
-                                        <IconComponent size={22} color={iconConfig.color} />
-                                    </View>
-
-                                    <View style={{ flex: 1 }}>
-                                        <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                                            <Text
-                                                style={{
-                                                    fontSize: 15,
-                                                    fontWeight: notification.read ? '500' : '600',
-                                                    color: colors.text.primary,
-                                                    flex: 1,
-                                                    marginRight: 8,
-                                                }}
-                                                numberOfLines={2}
-                                            >
-                                                {notification.title}
-                                            </Text>
-                                            {!notification.read && (
-                                                <View
-                                                    style={{
-                                                        width: 8,
-                                                        height: 8,
-                                                        borderRadius: 4,
-                                                        backgroundColor: colors.brand.primary,
-                                                        marginTop: 4,
-                                                    }}
-                                                />
-                                            )}
-                                        </View>
-
-                                        <Text
-                                            style={{
-                                                fontSize: 13,
-                                                color: colors.text.secondary,
-                                                marginTop: 4,
-                                                lineHeight: 18,
-                                            }}
-                                            numberOfLines={2}
-                                        >
-                                            {notification.body}
-                                        </Text>
-
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-                                            <Text style={{ fontSize: 12, color: colors.text.tertiary }}>
-                                                {formatTime(notification.receivedAt)}
-                                            </Text>
-
-                                            <View style={{ flexDirection: 'row', gap: 8 }}>
-                                                {!notification.read && (
-                                                    <Pressable
-                                                        onPress={(e) => {
-                                                            e.stopPropagation();
-                                                            markAsRead(notification.id);
-                                                        }}
-                                                        style={{
-                                                            padding: 4,
-                                                            borderRadius: 4,
-                                                        }}
-                                                    >
-                                                        <Check size={16} color={colors.brand.primary} />
-                                                    </Pressable>
-                                                )}
-                                                <Pressable
-                                                    onPress={(e) => {
-                                                        e.stopPropagation();
-                                                        handleDeleteNotification(notification.id);
-                                                    }}
-                                                    style={{
-                                                        padding: 4,
-                                                        borderRadius: 4,
-                                                    }}
-                                                >
-                                                    <X size={16} color={colors.text.tertiary} />
-                                                </Pressable>
-                                            </View>
-                                        </View>
-                                    </View>
-                                </Pressable>
-                            </Animated.View>
-                        );
-                    })}
-                </ScrollView>
-            )}
+            <FlatList
+                data={notifications}
+                keyExtractor={(item) => item.id}
+                renderItem={renderNotificationItem}
+                contentContainerStyle={{
+                    padding: 16,
+                    paddingBottom: 16 + insets.bottom,
+                    flexGrow: notifications.length === 0 ? 1 : undefined
+                }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor={colors.brand.primary}
+                    />
+                }
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={EmptyState}
+                initialNumToRender={10}
+                maxToRenderPerBatch={10}
+                windowSize={5}
+                removeClippedSubviews={true}
+            />
         </SafeAreaView>
     );
 }

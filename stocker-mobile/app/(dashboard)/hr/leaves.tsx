@@ -22,11 +22,26 @@ import {
     Check,
     X,
     ChevronRight,
-    RefreshCw
+    RefreshCw,
+    User,
+    Hash
 } from 'lucide-react-native';
 import { useTheme } from '@/lib/theme';
 import { useLeaveRequests, useApproveLeaveRequest, useRejectLeaveRequest } from '@/lib/api/hooks/useHR';
+import {
+    SortSheet,
+    SortButton,
+    type SortOption,
+    type SortValue
+} from '@/components/ui';
 import type { LeaveRequest, LeaveStatus, LeaveType } from '@/lib/api/types/hr.types';
+
+const SORT_OPTIONS: SortOption[] = [
+    { key: 'startDate', label: 'Başlangıç Tarihi', icon: <Calendar size={18} color="#64748b" /> },
+    { key: 'endDate', label: 'Bitiş Tarihi', icon: <Calendar size={18} color="#64748b" /> },
+    { key: 'totalDays', label: 'Gün Sayısı', icon: <Hash size={18} color="#64748b" /> },
+    { key: 'employeeName', label: 'Çalışan Adı', icon: <User size={18} color="#64748b" /> },
+];
 
 const LEAVE_TYPE_CONFIG: Record<LeaveType, { label: string; color: string }> = {
     annual: { label: 'Yıllık İzin', color: '#3b82f6' },
@@ -53,6 +68,8 @@ export default function LeavesScreen() {
 
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedStatus, setSelectedStatus] = useState<LeaveStatus | 'all'>('all');
+    const [showSortSheet, setShowSortSheet] = useState(false);
+    const [sortValue, setSortValue] = useState<SortValue | null>(null);
 
     // Fetch leave requests from API
     const {
@@ -80,12 +97,40 @@ export default function LeavesScreen() {
     ];
 
     const filteredLeaves = useMemo(() => {
-        if (!searchQuery) return leaves;
-        return leaves.filter(leave => {
-            const matchesSearch = leave.employeeName.toLowerCase().includes(searchQuery.toLowerCase());
-            return matchesSearch;
-        });
-    }, [leaves, searchQuery]);
+        let result = leaves;
+
+        // Search filter
+        if (searchQuery) {
+            result = result.filter(leave => {
+                const matchesSearch = leave.employeeName.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchesSearch;
+            });
+        }
+
+        // Sorting
+        if (sortValue) {
+            result = [...result].sort((a, b) => {
+                let comparison = 0;
+                switch (sortValue.key) {
+                    case 'startDate':
+                        comparison = new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+                        break;
+                    case 'endDate':
+                        comparison = new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
+                        break;
+                    case 'totalDays':
+                        comparison = a.totalDays - b.totalDays;
+                        break;
+                    case 'employeeName':
+                        comparison = a.employeeName.localeCompare(b.employeeName);
+                        break;
+                }
+                return sortValue.order === 'asc' ? comparison : -comparison;
+            });
+        }
+
+        return result;
+    }, [leaves, searchQuery, sortValue]);
 
     const onRefresh = useCallback(() => {
         refetch();
@@ -355,6 +400,15 @@ export default function LeavesScreen() {
                         </Text>
                     </Pressable>
                 </View>
+
+                {/* Sort Button */}
+                <View style={{ marginTop: 12 }}>
+                    <SortButton
+                        onPress={() => setShowSortSheet(true)}
+                        value={sortValue}
+                        options={SORT_OPTIONS}
+                    />
+                </View>
             </Animated.View>
 
             {/* Status Filters */}
@@ -403,7 +457,7 @@ export default function LeavesScreen() {
                         tintColor={colors.brand.primary}
                     />
                 }
-                contentContainerStyle={{ paddingTop: 12, paddingBottom: insets.bottom + 20 }}
+                contentContainerStyle={{ paddingTop: 12, paddingBottom: 60 + insets.bottom + 24 }}
             >
                 {isLoading ? (
                     <View className="items-center justify-center py-12">
@@ -473,6 +527,16 @@ export default function LeavesScreen() {
                     ))
                 )}
             </ScrollView>
+
+            {/* Sort Sheet */}
+            <SortSheet
+                visible={showSortSheet}
+                onClose={() => setShowSortSheet(false)}
+                options={SORT_OPTIONS}
+                value={sortValue}
+                onChange={setSortValue}
+                title="Sıralama"
+            />
         </SafeAreaView>
     );
 }

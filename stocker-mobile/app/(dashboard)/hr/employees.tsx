@@ -22,11 +22,26 @@ import {
     ChevronRight,
     Circle,
     RefreshCw,
-    Users
+    Users,
+    Calendar,
+    Hash
 } from 'lucide-react-native';
 import { useTheme } from '@/lib/theme';
 import { useEmployees, useDepartments } from '@/lib/api/hooks/useHR';
+import {
+    SortSheet,
+    SortButton,
+    type SortOption,
+    type SortValue
+} from '@/components/ui';
 import type { Employee, EmployeeStatus } from '@/lib/api/types/hr.types';
+
+const SORT_OPTIONS: SortOption[] = [
+    { key: 'firstName', label: 'Ad', icon: <User size={18} color="#64748b" /> },
+    { key: 'lastName', label: 'Soyad', icon: <User size={18} color="#64748b" /> },
+    { key: 'hireDate', label: 'İşe Giriş Tarihi', icon: <Calendar size={18} color="#64748b" /> },
+    { key: 'departmentName', label: 'Departman', icon: <Building2 size={18} color="#64748b" /> },
+];
 
 const STATUS_CONFIG: Record<EmployeeStatus, { label: string; color: string }> = {
     active: { label: 'Aktif', color: '#22c55e' },
@@ -42,6 +57,8 @@ export default function EmployeesScreen() {
 
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedDepartment, setSelectedDepartment] = useState<string | 'all'>('all');
+    const [showSortSheet, setShowSortSheet] = useState(false);
+    const [sortValue, setSortValue] = useState<SortValue | null>(null);
 
     // Fetch employees from API
     const {
@@ -66,15 +83,43 @@ export default function EmployeesScreen() {
     }, [departmentsData]);
 
     const filteredEmployees = useMemo(() => {
-        if (!searchQuery) return employees;
-        return employees.filter(employee => {
-            const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
-            const matchesSearch = fullName.includes(searchQuery.toLowerCase()) ||
-                employee.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                employee.employeeNumber.toLowerCase().includes(searchQuery.toLowerCase());
-            return matchesSearch;
-        });
-    }, [employees, searchQuery]);
+        let result = employees;
+
+        // Search filter
+        if (searchQuery) {
+            result = result.filter(employee => {
+                const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
+                const matchesSearch = fullName.includes(searchQuery.toLowerCase()) ||
+                    employee.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    employee.employeeNumber.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchesSearch;
+            });
+        }
+
+        // Sorting
+        if (sortValue) {
+            result = [...result].sort((a, b) => {
+                let comparison = 0;
+                switch (sortValue.key) {
+                    case 'firstName':
+                        comparison = a.firstName.localeCompare(b.firstName);
+                        break;
+                    case 'lastName':
+                        comparison = a.lastName.localeCompare(b.lastName);
+                        break;
+                    case 'hireDate':
+                        comparison = new Date(a.hireDate || 0).getTime() - new Date(b.hireDate || 0).getTime();
+                        break;
+                    case 'departmentName':
+                        comparison = (a.departmentName || '').localeCompare(b.departmentName || '');
+                        break;
+                }
+                return sortValue.order === 'asc' ? comparison : -comparison;
+            });
+        }
+
+        return result;
+    }, [employees, searchQuery, sortValue]);
 
     const onRefresh = useCallback(() => {
         refetch();
@@ -249,6 +294,15 @@ export default function EmployeesScreen() {
                         </Text>
                     </Pressable>
                 </View>
+
+                {/* Sort Button */}
+                <View style={{ marginTop: 12 }}>
+                    <SortButton
+                        onPress={() => setShowSortSheet(true)}
+                        value={sortValue}
+                        options={SORT_OPTIONS}
+                    />
+                </View>
             </Animated.View>
 
             {/* Department Filters */}
@@ -297,7 +351,7 @@ export default function EmployeesScreen() {
                         tintColor={colors.brand.primary}
                     />
                 }
-                contentContainerStyle={{ paddingTop: 12, paddingBottom: insets.bottom + 20 }}
+                contentContainerStyle={{ paddingTop: 12, paddingBottom: 60 + insets.bottom + 24 }}
             >
                 {isLoading ? (
                     <View className="items-center justify-center py-12">
@@ -367,6 +421,16 @@ export default function EmployeesScreen() {
                     ))
                 )}
             </ScrollView>
+
+            {/* Sort Sheet */}
+            <SortSheet
+                visible={showSortSheet}
+                onClose={() => setShowSortSheet(false)}
+                options={SORT_OPTIONS}
+                value={sortValue}
+                onChange={setSortValue}
+                title="Sıralama"
+            />
         </SafeAreaView>
     );
 }

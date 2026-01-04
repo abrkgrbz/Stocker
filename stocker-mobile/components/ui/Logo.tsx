@@ -3,7 +3,7 @@ import { View, Text, Image } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 interface LogoProps {
-    size?: 'sm' | 'md' | 'lg' | 'xl';
+    size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
     variant?: 'dark' | 'light' | 'color';
     showText?: boolean;
     animated?: boolean;
@@ -22,6 +22,7 @@ export function Logo({ size = 'md', variant = 'color', showText = true, animated
         md: { logo: 72, text: 24, subtitle: 13 },
         lg: { logo: 96, text: 32, subtitle: 15 },
         xl: { logo: 120, text: 40, subtitle: 18 },
+        '2xl': { logo: 240, text: 48, subtitle: 20 },
     };
 
     const s = sizes[size];

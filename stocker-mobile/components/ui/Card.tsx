@@ -1,6 +1,12 @@
 import React from 'react';
-import { View, Pressable, ViewStyle, StyleSheet } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { View, Pressable, ViewStyle, Platform } from 'react-native';
+import Animated, {
+    FadeInDown,
+    FadeInRight,
+    useAnimatedStyle,
+    useSharedValue,
+    withSpring,
+} from 'react-native-reanimated';
 import { useTheme } from '@/lib/theme';
 
 interface CardProps {
@@ -10,6 +16,7 @@ interface CardProps {
     variant?: 'default' | 'outlined' | 'elevated';
     animated?: boolean;
     animationDelay?: number;
+    animationType?: 'fade-down' | 'fade-right' | 'none';
     padding?: 'none' | 'sm' | 'md' | 'lg';
     borderRadius?: 'sm' | 'md' | 'lg' | 'xl';
 }
@@ -28,6 +35,8 @@ const borderRadiusMap = {
     xl: 20,
 };
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 export function Card({
     children,
     onPress,
@@ -35,10 +44,12 @@ export function Card({
     variant = 'default',
     animated = true,
     animationDelay = 0,
+    animationType = 'fade-down',
     padding = 'lg',
     borderRadius = 'lg',
 }: CardProps) {
     const { colors } = useTheme();
+    const scale = useSharedValue(1);
 
     const baseStyle: ViewStyle = {
         backgroundColor: colors.surface.primary,
@@ -57,27 +68,63 @@ export function Card({
             backgroundColor: 'transparent',
         },
         elevated: {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 8,
-            elevation: 4,
+            ...Platform.select({
+                ios: {
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 8,
+                },
+                android: {
+                    elevation: 3,
+                },
+            }),
         },
+    };
+
+    // Hafif scale animasyonu - mevcut tasarımı bozmaz
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: withSpring(scale.value, { damping: 15, stiffness: 400 }) }],
+    }));
+
+    const handlePressIn = () => {
+        if (onPress) {
+            scale.value = 0.98;
+        }
+    };
+
+    const handlePressOut = () => {
+        if (onPress) {
+            scale.value = 1;
+        }
     };
 
     const cardStyle = [baseStyle, variantStyles[variant], style];
 
+    const getEnteringAnimation = () => {
+        if (animationType === 'none') return undefined;
+        if (animationType === 'fade-right') {
+            return FadeInRight.duration(300).delay(animationDelay);
+        }
+        return FadeInDown.duration(300).delay(animationDelay);
+    };
+
     const content = onPress ? (
-        <Pressable onPress={onPress} style={cardStyle}>
+        <AnimatedPressable
+            onPress={onPress}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+            style={[cardStyle, animatedStyle]}
+        >
             {children}
-        </Pressable>
+        </AnimatedPressable>
     ) : (
         <View style={cardStyle}>{children}</View>
     );
 
-    if (animated) {
+    if (animated && animationType !== 'none') {
         return (
-            <Animated.View entering={FadeInDown.duration(400).delay(animationDelay)}>
+            <Animated.View entering={getEnteringAnimation()}>
                 {content}
             </Animated.View>
         );

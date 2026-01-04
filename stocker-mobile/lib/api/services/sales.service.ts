@@ -186,6 +186,13 @@ class SalesService {
         return response.data;
     }
 
+    async searchQuotes(query: string): Promise<Quote[]> {
+        const response = await api.get<Quote[]>(`${this.baseUrl}/quotes/search`, {
+            params: { q: query }
+        });
+        return response.data;
+    }
+
     async getExpiringQuotes(days?: number): Promise<Quote[]> {
         const response = await api.get<Quote[]>(`${this.baseUrl}/quotes/expiring`, {
             params: { days: days || 7 }

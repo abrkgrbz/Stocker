@@ -54,6 +54,9 @@ export default function CustomerDetailScreen() {
         refetch: refetchActivities
     } = useCustomerActivities(id || '');
 
+    // Tab bar height for scroll padding
+    const tabBarHeight = 60 + insets.bottom;
+
     const onRefresh = useCallback(() => {
         refetch();
         refetchActivities();
@@ -182,7 +185,7 @@ export default function CustomerDetailScreen() {
                         Müşteri Detayı
                     </Text>
                     <Text style={{ color: colors.text.tertiary }} className="text-xs">
-                        {customer?.code || id}
+                        {customer?.companyName || id}
                     </Text>
                 </View>
                 <Pressable
@@ -197,7 +200,7 @@ export default function CustomerDetailScreen() {
             </Animated.View>
 
             <ScrollView
-                contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
+                contentContainerStyle={{ paddingBottom: tabBarHeight + 24 }}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl
@@ -269,18 +272,18 @@ export default function CustomerDetailScreen() {
                             marginBottom: 12
                         }}
                     >
-                        {customer.type === 'company' ? (
+                        {customer.customerType === 'Corporate' ? (
                             <Building2 size={36} color={colors.modules.crm} />
                         ) : (
                             <User size={36} color={colors.modules.crm} />
                         )}
                     </View>
                     <Text style={{ color: colors.text.primary, fontSize: 22, fontWeight: '700', marginBottom: 4 }}>
-                        {customer.name}
+                        {customer.companyName}
                     </Text>
-                    {customer.company && (
+                    {customer.contactPerson && (
                         <Text style={{ color: colors.text.secondary, fontSize: 15, marginBottom: 8 }}>
-                            {customer.company}
+                            {customer.contactPerson}
                         </Text>
                     )}
                     <View
@@ -325,13 +328,13 @@ export default function CustomerDetailScreen() {
                     className="flex-row px-4 py-4 gap-3"
                 >
                     <StatCard
-                        label="Toplam Ciro"
-                        value={formatCurrency(customer.totalRevenue || 0)}
+                        label="Yıllık Ciro"
+                        value={formatCurrency(customer.annualRevenue || 0)}
                         icon={TrendingUp}
                     />
                     <StatCard
-                        label="Sipariş"
-                        value={`${customer.totalOrders || 0}`}
+                        label="Kredi Limiti"
+                        value={formatCurrency(customer.creditLimit || 0)}
                         icon={ShoppingCart}
                     />
                 </Animated.View>
@@ -434,11 +437,11 @@ export default function CustomerDetailScreen() {
                     </View>
                 </Animated.View>
 
-                {/* Notes */}
-                {customer.notes && (
+                {/* Description */}
+                {customer.description && (
                     <Animated.View entering={FadeInDown.duration(400).delay(250)} className="px-4 mt-6">
                         <Text style={{ color: colors.text.tertiary }} className="text-xs font-bold uppercase mb-3 tracking-wider">
-                            Notlar
+                            Açıklama
                         </Text>
                         <View
                             style={{
@@ -450,7 +453,7 @@ export default function CustomerDetailScreen() {
                             }}
                         >
                             <Text style={{ color: colors.text.primary, fontSize: 14, lineHeight: 22 }}>
-                                {customer.notes}
+                                {customer.description}
                             </Text>
                         </View>
                     </Animated.View>

@@ -222,6 +222,30 @@ export interface CheckOutDto {
     notes?: string;
 }
 
+// Employee Create/Update
+export interface CreateEmployeeDto {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    departmentId: string;
+    positionId: string;
+    hireDate: string;
+    employeeNumber?: string;
+}
+
+export interface UpdateEmployeeDto {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    departmentId?: string;
+    positionId?: string;
+    hireDate?: string;
+    employeeNumber?: string;
+    status?: EmployeeStatus;
+}
+
 // Attendance Summary
 export interface AttendanceSummary {
     employeeId: string;
@@ -269,4 +293,30 @@ export interface Holiday {
     isRecurring: boolean;
     isNational: boolean;
     isActive: boolean;
+}
+
+// Asset List Params & Response
+export interface AssetListParams {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    categoryId?: string;
+    status?: AssetStatus;
+    assignedToId?: string;
+}
+
+export interface AssetListResponse {
+    items: Asset[];
+    totalCount: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+}
+
+export interface AssetCategory {
+    id: string;
+    name: string;
+    code: string;
+    description?: string;
+    assetCount: number;
 }

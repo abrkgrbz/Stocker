@@ -5,13 +5,13 @@ import {
     ScrollView,
     Pressable,
     RefreshControl,
-    ActivityIndicator
+    ActivityIndicator,
+    TextInput
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import Animated, { FadeIn, FadeInRight } from 'react-native-reanimated';
+import Animated, { FadeInRight } from 'react-native-reanimated';
 import {
-    ArrowLeft,
     Search,
     Plus,
     FileText,
@@ -21,11 +21,33 @@ import {
     Send,
     XCircle,
     ChevronRight,
-    RefreshCw
+    RefreshCw,
+    X,
+    Calendar,
+    DollarSign,
+    Hash
 } from 'lucide-react-native';
 import { useTheme } from '@/lib/theme';
 import { useInvoices } from '@/lib/api/hooks/useSales';
+import {
+    PageHeader,
+    FilterChips,
+    type FilterChip,
+    EmptyState,
+    ErrorState,
+    SortSheet,
+    SortButton,
+    type SortOption,
+    type SortValue
+} from '@/components/ui';
 import type { Invoice, InvoiceStatus } from '@/lib/api/types/sales.types';
+
+const SORT_OPTIONS: SortOption[] = [
+    { key: 'invoiceDate', label: 'Fatura Tarihi', icon: <Calendar size={18} color="#64748b" /> },
+    { key: 'dueDate', label: 'Vade Tarihi', icon: <Clock size={18} color="#64748b" /> },
+    { key: 'totalAmount', label: 'Tutar', icon: <DollarSign size={18} color="#64748b" /> },
+    { key: 'invoiceNumber', label: 'Fatura No', icon: <Hash size={18} color="#64748b" /> },
+];
 
 const STATUS_CONFIG: Record<InvoiceStatus, { label: string; color: string; bgColor: string; icon: any }> = {
     draft: { label: 'Taslak', color: '#64748b', bgColor: '#f1f5f9', icon: Clock },
@@ -43,6 +65,8 @@ export default function InvoicesScreen() {
 
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedStatus, setSelectedStatus] = useState<InvoiceStatus | 'all'>('all');
+    const [showSortSheet, setShowSortSheet] = useState(false);
+    const [sortValue, setSortValue] = useState<SortValue | null>(null);
 
     // Fetch invoices from API
     const {
@@ -58,7 +82,8 @@ export default function InvoicesScreen() {
 
     const invoices = invoicesResponse?.items || [];
 
-    const statusFilters: { key: InvoiceStatus | 'all'; label: string }[] = [
+    // Filter chips configuration
+    const statusFilters: FilterChip[] = [
         { key: 'all', label: 'Tümü' },
         { key: 'sent', label: 'Gönderildi' },
         { key: 'paid', label: 'Ödendi' },
@@ -67,13 +92,41 @@ export default function InvoicesScreen() {
     ];
 
     const filteredInvoices = useMemo(() => {
-        if (!searchQuery) return invoices;
-        return invoices.filter(invoice => {
-            const matchesSearch = invoice.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                invoice.customerName.toLowerCase().includes(searchQuery.toLowerCase());
-            return matchesSearch;
-        });
-    }, [invoices, searchQuery]);
+        let result = invoices;
+
+        // Search filter
+        if (searchQuery) {
+            result = result.filter(invoice => {
+                const matchesSearch = invoice.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    invoice.customerName.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchesSearch;
+            });
+        }
+
+        // Sorting
+        if (sortValue) {
+            result = [...result].sort((a, b) => {
+                let comparison = 0;
+                switch (sortValue.key) {
+                    case 'invoiceDate':
+                        comparison = new Date(a.invoiceDate).getTime() - new Date(b.invoiceDate).getTime();
+                        break;
+                    case 'dueDate':
+                        comparison = new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+                        break;
+                    case 'totalAmount':
+                        comparison = a.totalAmount - b.totalAmount;
+                        break;
+                    case 'invoiceNumber':
+                        comparison = a.invoiceNumber.localeCompare(b.invoiceNumber);
+                        break;
+                }
+                return sortValue.order === 'asc' ? comparison : -comparison;
+            });
+        }
+
+        return result;
+    }, [invoices, searchQuery, sortValue]);
 
     const onRefresh = useCallback(() => {
         refetch();
@@ -120,20 +173,20 @@ export default function InvoicesScreen() {
                         borderColor: item.status === 'overdue' ? colors.semantic.error + '50' : colors.border.primary
                     }}
                 >
-                    <View className="flex-row items-start justify-between mb-3">
-                        <View className="flex-row items-center">
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <View
                                 style={{
                                     width: 44,
                                     height: 44,
                                     borderRadius: 12,
-                                    backgroundColor: item.status === 'overdue' ? colors.semantic.errorLight : colors.semantic.successLight,
+                                    backgroundColor: item.status === 'overdue' ? colors.semantic.errorLight : colors.modules.salesLight,
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     marginRight: 12
                                 }}
                             >
-                                <FileText size={22} color={item.status === 'overdue' ? colors.semantic.error : colors.semantic.success} />
+                                <FileText size={22} color={item.status === 'overdue' ? colors.semantic.error : colors.modules.sales} />
                             </View>
                             <View>
                                 <Text style={{ color: colors.text.primary, fontSize: 15, fontWeight: '600' }}>
@@ -164,7 +217,7 @@ export default function InvoicesScreen() {
                     {/* Progress bar for partial payments */}
                     {item.status === 'partial' && (
                         <View style={{ marginBottom: 12 }}>
-                            <View className="flex-row justify-between mb-1">
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
                                 <Text style={{ color: colors.text.tertiary, fontSize: 11 }}>
                                     Ödenen: {formatCurrency(item.paidAmount)}
                                 </Text>
@@ -191,7 +244,7 @@ export default function InvoicesScreen() {
                         </View>
                     )}
 
-                    <View className="flex-row items-center justify-between">
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                         <View>
                             <Text style={{ color: colors.text.tertiary, fontSize: 12 }}>
                                 Vade: {formatDate(item.dueDate)}
@@ -211,7 +264,7 @@ export default function InvoicesScreen() {
                                 </Text>
                             )}
                         </View>
-                        <View className="flex-row items-center">
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <Text style={{ color: colors.text.primary, fontSize: 16, fontWeight: '700' }}>
                                 {formatCurrency(item.totalAmount)}
                             </Text>
@@ -226,43 +279,24 @@ export default function InvoicesScreen() {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.background.secondary }} edges={['top']}>
             {/* Header */}
-            <Animated.View
-                entering={FadeIn.duration(400)}
-                className="px-4 py-3"
+            <PageHeader
+                title="Faturalar"
+                subtitle={`${filteredInvoices.length} fatura`}
+                primaryAction={{
+                    icon: Plus,
+                    onPress: () => router.push('/(dashboard)/sales/add-invoice' as any),
+                    backgroundColor: colors.modules.sales,
+                }}
+            />
+
+            {/* Search */}
+            <View
                 style={{
+                    paddingHorizontal: 16,
+                    paddingBottom: 12,
                     backgroundColor: colors.surface.primary,
-                    borderBottomWidth: 1,
-                    borderBottomColor: colors.border.primary
                 }}
             >
-                <View className="flex-row items-center justify-between mb-3">
-                    <View className="flex-row items-center flex-1">
-                        <Pressable onPress={() => router.back()} className="mr-3 p-2 -ml-2">
-                            <ArrowLeft size={24} color={colors.text.primary} />
-                        </Pressable>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ color: colors.text.primary }} className="text-xl font-bold">Faturalar</Text>
-                            <Text style={{ color: colors.text.secondary }} className="text-sm">
-                                {filteredInvoices.length} fatura
-                            </Text>
-                        </View>
-                    </View>
-                    <Pressable
-                        onPress={() => router.push('/(dashboard)/sales/invoice/new' as any)}
-                        style={{
-                            backgroundColor: colors.brand.primary,
-                            width: 40,
-                            height: 40,
-                            borderRadius: 12,
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                    >
-                        <Plus size={22} color={colors.text.inverse} />
-                    </Pressable>
-                </View>
-
-                {/* Search */}
                 <View
                     style={{
                         backgroundColor: colors.background.tertiary,
@@ -273,130 +307,93 @@ export default function InvoicesScreen() {
                     }}
                 >
                     <Search size={20} color={colors.text.tertiary} />
-                    <Pressable style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 8 }}>
-                        <Text style={{ color: colors.text.tertiary, fontSize: 15 }}>
-                            Fatura ara...
-                        </Text>
-                    </Pressable>
+                    <TextInput
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                        placeholder="Fatura ara..."
+                        placeholderTextColor={colors.text.tertiary}
+                        style={{
+                            flex: 1,
+                            paddingVertical: 12,
+                            paddingHorizontal: 8,
+                            color: colors.text.primary,
+                            fontSize: 15
+                        }}
+                    />
+                    {searchQuery.length > 0 && (
+                        <Pressable onPress={() => setSearchQuery('')}>
+                            <X size={18} color={colors.text.tertiary} />
+                        </Pressable>
+                    )}
                 </View>
-            </Animated.View>
+
+                {/* Sort Button */}
+                <View style={{ marginTop: 12 }}>
+                    <SortButton
+                        onPress={() => setShowSortSheet(true)}
+                        value={sortValue}
+                        options={SORT_OPTIONS}
+                    />
+                </View>
+            </View>
 
             {/* Status Filters */}
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                className="py-3 px-4"
-                style={{ maxHeight: 52, backgroundColor: colors.surface.primary }}
-            >
-                {statusFilters.map((filter) => (
-                    <Pressable
-                        key={filter.key}
-                        onPress={() => setSelectedStatus(filter.key)}
-                        style={{
-                            backgroundColor: selectedStatus === filter.key
-                                ? colors.brand.primary
-                                : colors.background.tertiary,
-                            paddingHorizontal: 16,
-                            paddingVertical: 8,
-                            borderRadius: 20,
-                            marginRight: 8
-                        }}
-                    >
-                        <Text
-                            style={{
-                                color: selectedStatus === filter.key
-                                    ? colors.text.inverse
-                                    : colors.text.secondary,
-                                fontSize: 13,
-                                fontWeight: '500'
-                            }}
-                        >
-                            {filter.label}
-                        </Text>
-                    </Pressable>
-                ))}
-            </ScrollView>
+            <FilterChips
+                filters={statusFilters}
+                selectedKey={selectedStatus}
+                onSelect={(key) => setSelectedStatus(key as InvoiceStatus | 'all')}
+                moduleColor={colors.modules.sales}
+            />
 
             {/* Invoices List */}
             <ScrollView
-                className="flex-1 px-4"
+                style={{ flex: 1, paddingHorizontal: 16 }}
                 refreshControl={
                     <RefreshControl
                         refreshing={isRefetching}
                         onRefresh={onRefresh}
-                        tintColor={colors.brand.primary}
+                        tintColor={colors.modules.sales}
                     />
                 }
-                contentContainerStyle={{ paddingTop: 12, paddingBottom: insets.bottom + 20 }}
+                contentContainerStyle={{ paddingTop: 12, paddingBottom: 60 + insets.bottom + 24 }}
             >
                 {isLoading ? (
-                    <View className="items-center justify-center py-12">
-                        <ActivityIndicator size="large" color={colors.brand.primary} />
+                    <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 48 }}>
+                        <ActivityIndicator size="large" color={colors.modules.sales} />
                         <Text style={{ color: colors.text.secondary, fontSize: 14, marginTop: 12 }}>
                             Faturalar yükleniyor...
                         </Text>
                     </View>
                 ) : isError ? (
-                    <View className="items-center justify-center py-12">
-                        <View
-                            style={{
-                                width: 64,
-                                height: 64,
-                                borderRadius: 16,
-                                backgroundColor: colors.semantic.errorLight,
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                marginBottom: 16
-                            }}
-                        >
-                            <RefreshCw size={28} color={colors.semantic.error} />
-                        </View>
-                        <Text style={{ color: colors.text.primary, fontSize: 16, fontWeight: '600', marginBottom: 4 }}>
-                            Bağlantı hatası
-                        </Text>
-                        <Text style={{ color: colors.text.secondary, fontSize: 14, textAlign: 'center', marginBottom: 16 }}>
-                            Faturalar yüklenemedi
-                        </Text>
-                        <Pressable
-                            onPress={() => refetch()}
-                            style={{
-                                backgroundColor: colors.brand.primary,
-                                paddingHorizontal: 20,
-                                paddingVertical: 10,
-                                borderRadius: 8
-                            }}
-                        >
-                            <Text style={{ color: '#fff', fontWeight: '600' }}>Tekrar Dene</Text>
-                        </Pressable>
-                    </View>
+                    <ErrorState
+                        title="Bağlantı hatası"
+                        message="Faturalar yüklenemedi"
+                        onRetry={refetch}
+                    />
                 ) : filteredInvoices.length === 0 ? (
-                    <View className="items-center justify-center py-12">
-                        <View
-                            style={{
-                                width: 64,
-                                height: 64,
-                                borderRadius: 16,
-                                backgroundColor: colors.semantic.successLight,
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                marginBottom: 16
-                            }}
-                        >
-                            <FileText size={28} color={colors.semantic.success} />
-                        </View>
-                        <Text style={{ color: colors.text.primary, fontSize: 16, fontWeight: '600', marginBottom: 4 }}>
-                            Fatura bulunamadı
-                        </Text>
-                        <Text style={{ color: colors.text.secondary, fontSize: 14, textAlign: 'center' }}>
-                            {searchQuery ? 'Arama kriterlerinize uygun fatura yok' : 'Henüz fatura eklenmemiş'}
-                        </Text>
-                    </View>
+                    <EmptyState
+                        icon={FileText}
+                        title="Fatura bulunamadı"
+                        message={searchQuery ? 'Arama kriterlerinize uygun fatura yok' : 'Henüz fatura eklenmemiş'}
+                        iconBgColor={colors.modules.salesLight}
+                        iconColor={colors.modules.sales}
+                    />
                 ) : (
                     filteredInvoices.map((invoice, index) => (
                         <InvoiceCard key={invoice.id} item={invoice} index={index} />
                     ))
                 )}
             </ScrollView>
+
+            {/* Sort Sheet */}
+            <SortSheet
+                visible={showSortSheet}
+                onClose={() => setShowSortSheet(false)}
+                options={SORT_OPTIONS}
+                value={sortValue}
+                onChange={setSortValue}
+                title="Sıralama"
+            />
         </SafeAreaView>
     );
 }

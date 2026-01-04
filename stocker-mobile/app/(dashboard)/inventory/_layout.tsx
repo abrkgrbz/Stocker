@@ -14,6 +14,8 @@ export default function InventoryLayout() {
         >
             <Stack.Screen name="index" />
             <Stack.Screen name="[id]" />
+            <Stack.Screen name="add" />
+            <Stack.Screen name="edit/[id]" />
             <Stack.Screen
                 name="scanner"
                 options={{
@@ -22,6 +24,8 @@ export default function InventoryLayout() {
                 }}
             />
             <Stack.Screen name="stock-count" />
+            <Stack.Screen name="transfers" />
+            <Stack.Screen name="add-transfer" />
         </Stack>
     );
 }

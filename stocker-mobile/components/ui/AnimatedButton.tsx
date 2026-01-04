@@ -1,8 +1,57 @@
-import React from 'react';
-import { Text, ActivityIndicator, Pressable, PressableProps, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import React, { useState } from 'react';
+import { Text, ActivityIndicator, Pressable, PressableProps, View, GestureResponderEvent, StyleSheet, LayoutChangeEvent } from 'react-native';
+import Animated, {
+    useAnimatedStyle,
+    useSharedValue,
+    withSpring,
+    withTiming,
+    runOnJS,
+    Easing,
+} from 'react-native-reanimated';
+import { lightHaptic } from '@/lib/haptics';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+// Ripple effect component
+interface RippleProps {
+    x: number;
+    y: number;
+    size: number;
+    color: string;
+    onComplete: () => void;
+}
+
+function Ripple({ x, y, size, color, onComplete }: RippleProps) {
+    const scale = useSharedValue(0);
+    const opacity = useSharedValue(0.3);
+
+    React.useEffect(() => {
+        scale.value = withTiming(1, {
+            duration: 400,
+            easing: Easing.out(Easing.cubic),
+        });
+        opacity.value = withTiming(0, {
+            duration: 400,
+            easing: Easing.out(Easing.cubic),
+        }, () => {
+            runOnJS(onComplete)();
+        });
+    }, []);
+
+    const style = useAnimatedStyle(() => ({
+        position: 'absolute',
+        left: x - size / 2,
+        top: y - size / 2,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: color,
+        transform: [{ scale: scale.value }],
+        opacity: opacity.value,
+    }));
+
+    return <Animated.View style={style} />;
+}
 
 interface AnimatedButtonProps extends PressableProps {
     title: string;
@@ -12,6 +61,7 @@ interface AnimatedButtonProps extends PressableProps {
     icon?: React.ReactNode;
     iconPosition?: 'left' | 'right';
     size?: 'sm' | 'md' | 'lg';
+    haptic?: boolean;
 }
 
 export function AnimatedButton({
@@ -23,20 +73,49 @@ export function AnimatedButton({
     iconPosition = 'left',
     size = 'md',
     onPress,
+    haptic = true,
     ...props
 }: AnimatedButtonProps) {
     const scale = useSharedValue(1);
+    const [ripples, setRipples] = useState<Array<{ id: number; x: number; y: number }>>([]);
+    const [buttonDimensions, setButtonDimensions] = useState({ width: 0, height: 0 });
+    const rippleIdRef = React.useRef(0);
 
     const animatedStyle = useAnimatedStyle(() => ({
         transform: [{ scale: scale.value }],
     }));
 
-    const handlePressIn = () => {
-        scale.value = withSpring(0.97, { damping: 15 });
+    const handlePressIn = (e: GestureResponderEvent) => {
+        scale.value = withSpring(0.97, { damping: 15, stiffness: 400 });
+
+        // Add ripple effect
+        const { locationX, locationY } = e.nativeEvent;
+        const newRipple = {
+            id: rippleIdRef.current++,
+            x: locationX,
+            y: locationY,
+        };
+        setRipples((prev) => [...prev, newRipple]);
     };
 
     const handlePressOut = () => {
-        scale.value = withSpring(1, { damping: 15 });
+        scale.value = withSpring(1, { damping: 15, stiffness: 400 });
+    };
+
+    const handlePress = (e: GestureResponderEvent) => {
+        if (haptic) {
+            lightHaptic();
+        }
+        onPress?.(e);
+    };
+
+    const handleLayout = (e: LayoutChangeEvent) => {
+        const { width, height } = e.nativeEvent.layout;
+        setButtonDimensions({ width, height });
+    };
+
+    const removeRipple = (id: number) => {
+        setRipples((prev) => prev.filter((ripple) => ripple.id !== id));
     };
 
     const variants = {
@@ -46,6 +125,7 @@ export function AnimatedButton({
             text: 'text-white',
             border: '',
             spinnerColor: '#ffffff',
+            rippleColor: 'rgba(255, 255, 255, 0.3)',
         },
         secondary: {
             bg: 'bg-slate-100',
@@ -53,6 +133,7 @@ export function AnimatedButton({
             text: 'text-slate-900',
             border: 'border border-slate-200',
             spinnerColor: '#0f172a',
+            rippleColor: 'rgba(15, 23, 42, 0.15)',
         },
         outline: {
             bg: 'bg-transparent',
@@ -60,6 +141,7 @@ export function AnimatedButton({
             text: 'text-slate-900',
             border: 'border-2 border-slate-900',
             spinnerColor: '#0f172a',
+            rippleColor: 'rgba(15, 23, 42, 0.1)',
         },
         danger: {
             bg: 'bg-red-50',
@@ -67,6 +149,7 @@ export function AnimatedButton({
             text: 'text-red-600',
             border: 'border border-red-200',
             spinnerColor: '#dc2626',
+            rippleColor: 'rgba(220, 38, 38, 0.2)',
         },
         success: {
             bg: 'bg-emerald-500',
@@ -74,6 +157,7 @@ export function AnimatedButton({
             text: 'text-white',
             border: '',
             spinnerColor: '#ffffff',
+            rippleColor: 'rgba(255, 255, 255, 0.3)',
         },
     };
 
@@ -85,17 +169,35 @@ export function AnimatedButton({
 
     const v = variants[variant];
     const isDisabled = disabled || loading;
+    const rippleSize = Math.max(buttonDimensions.width, buttonDimensions.height) * 2;
 
     return (
         <AnimatedPressable
-            style={animatedStyle}
+            style={[
+                animatedStyle,
+                isDisabled && { opacity: 0.5 },
+                styles.button,
+            ]}
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}
-            onPress={onPress}
+            onPress={handlePress}
+            onLayout={handleLayout}
             disabled={isDisabled}
-            className={`w-full ${sizes[size]} rounded-xl items-center justify-center flex-row ${v.bg} ${v.border} ${isDisabled ? 'opacity-50' : v.bgActive}`}
+            className={`w-full ${sizes[size]} rounded-2xl items-center justify-center flex-row ${v.bg} ${v.border} ${isDisabled ? '' : v.bgActive}`}
             {...props}
         >
+            {/* Ripple effects */}
+            {ripples.map((ripple) => (
+                <Ripple
+                    key={ripple.id}
+                    x={ripple.x}
+                    y={ripple.y}
+                    size={rippleSize}
+                    color={v.rippleColor}
+                    onComplete={() => removeRipple(ripple.id)}
+                />
+            ))}
+
             {loading ? (
                 <ActivityIndicator color={v.spinnerColor} />
             ) : (
@@ -108,3 +210,9 @@ export function AnimatedButton({
         </AnimatedPressable>
     );
 }
+
+const styles = StyleSheet.create({
+    button: {
+        overflow: 'hidden',
+    },
+});

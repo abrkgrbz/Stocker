@@ -24,15 +24,22 @@ import {
     Globe,
     FileText,
     Tag,
-    ChevronDown
+    ChevronDown,
+    Briefcase,
+    CreditCard,
+    Hash,
+    UserCircle,
+    Factory
 } from 'lucide-react-native';
 import { useTheme } from '@/lib/theme';
 import { useCustomer, useUpdateCustomer } from '@/lib/api/hooks/useCRM';
 import type { CustomerType } from '@/lib/api/types/crm.types';
 
 const CUSTOMER_TYPES: { value: CustomerType; label: string }[] = [
-    { value: 'individual', label: 'Bireysel' },
-    { value: 'company', label: 'Kurumsal' },
+    { value: 'Individual', label: 'Bireysel' },
+    { value: 'Corporate', label: 'Kurumsal' },
+    { value: 'Government', label: 'Kamu' },
+    { value: 'NonProfit', label: 'Kar Amacı Gütmeyen' },
 ];
 
 export default function EditCustomerScreen() {
@@ -45,15 +52,21 @@ export default function EditCustomerScreen() {
     const { mutate: updateCustomer, isPending } = useUpdateCustomer();
 
     const [formData, setFormData] = useState({
-        name: '',
+        companyName: '',
         email: '',
         phone: '',
-        company: '',
+        website: '',
+        industry: '',
         address: '',
         city: '',
         country: '',
-        type: 'individual' as CustomerType,
-        notes: '',
+        district: '',
+        state: '',
+        postalCode: '',
+        customerType: 'Corporate' as CustomerType,
+        description: '',
+        taxId: '',
+        contactPerson: '',
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -62,15 +75,21 @@ export default function EditCustomerScreen() {
     useEffect(() => {
         if (customer) {
             setFormData({
-                name: customer.name || '',
+                companyName: customer.companyName || '',
                 email: customer.email || '',
                 phone: customer.phone || '',
-                company: customer.company || '',
+                website: customer.website || '',
+                industry: customer.industry || '',
                 address: customer.address || '',
                 city: customer.city || '',
                 country: customer.country || 'Türkiye',
-                type: customer.type || 'individual',
-                notes: customer.notes || '',
+                district: customer.district || '',
+                state: customer.state || '',
+                postalCode: customer.postalCode || '',
+                customerType: customer.customerType || 'Corporate',
+                description: customer.description || '',
+                taxId: customer.taxId || '',
+                contactPerson: customer.contactPerson || '',
             });
         }
     }, [customer]);
@@ -78,10 +97,12 @@ export default function EditCustomerScreen() {
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
 
-        if (!formData.name.trim()) {
-            newErrors.name = 'Müşteri adı zorunludur';
+        if (!formData.companyName.trim()) {
+            newErrors.companyName = 'Firma adı zorunludur';
         }
-        if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        if (!formData.email.trim()) {
+            newErrors.email = 'E-posta zorunludur';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
             newErrors.email = 'Geçerli bir e-posta adresi girin';
         }
 
@@ -96,15 +117,21 @@ export default function EditCustomerScreen() {
             {
                 id: id || '',
                 data: {
-                    name: formData.name.trim(),
-                    email: formData.email.trim() || undefined,
+                    companyName: formData.companyName.trim(),
+                    email: formData.email.trim(),
                     phone: formData.phone.trim() || undefined,
-                    company: formData.company.trim() || undefined,
+                    website: formData.website.trim() || undefined,
+                    industry: formData.industry.trim() || undefined,
                     address: formData.address.trim() || undefined,
                     city: formData.city.trim() || undefined,
                     country: formData.country.trim() || undefined,
-                    type: formData.type,
-                    notes: formData.notes.trim() || undefined,
+                    district: formData.district.trim() || undefined,
+                    state: formData.state.trim() || undefined,
+                    postalCode: formData.postalCode.trim() || undefined,
+                    customerType: formData.customerType,
+                    description: formData.description.trim() || undefined,
+                    taxId: formData.taxId.trim() || undefined,
+                    contactPerson: formData.contactPerson.trim() || undefined,
                 }
             },
             {
@@ -223,7 +250,7 @@ export default function EditCustomerScreen() {
                                     Müşteriyi Düzenle
                                 </Text>
                                 <Text style={{ color: colors.text.tertiary, fontSize: 13 }}>
-                                    {customer?.code || id}
+                                    {customer?.companyName || id}
                                 </Text>
                             </View>
                         </View>
@@ -291,13 +318,24 @@ export default function EditCustomerScreen() {
                             </View>
 
                             <FormInput
-                                label="Müşteri Adı *"
-                                value={formData.name}
-                                onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
-                                placeholder="Ad Soyad veya Firma Adı"
-                                error={errors.name}
-                                icon={User}
+                                label="Firma Adı *"
+                                value={formData.companyName}
+                                onChangeText={(text) => setFormData(prev => ({ ...prev, companyName: text }))}
+                                placeholder="Firma veya müşteri adı"
+                                error={errors.companyName}
+                                icon={Building2}
                                 autoCapitalize="words"
+                            />
+
+                            <FormInput
+                                label="E-posta *"
+                                value={formData.email}
+                                onChangeText={(text) => setFormData(prev => ({ ...prev, email: text }))}
+                                placeholder="ornek@firma.com"
+                                error={errors.email}
+                                keyboardType="email-address"
+                                icon={Mail}
+                                autoCapitalize="none"
                             />
 
                             {/* Customer Type */}
@@ -319,7 +357,7 @@ export default function EditCustomerScreen() {
                                     <View className="flex-row items-center">
                                         <Tag size={20} color={colors.text.tertiary} />
                                         <Text style={{ color: colors.text.primary, fontSize: 15, marginLeft: 12 }}>
-                                            {CUSTOMER_TYPES.find(t => t.value === formData.type)?.label}
+                                            {CUSTOMER_TYPES.find(t => t.value === formData.customerType)?.label}
                                         </Text>
                                     </View>
                                     <ChevronDown size={20} color={colors.text.tertiary} />
@@ -331,19 +369,19 @@ export default function EditCustomerScreen() {
                                             <Pressable
                                                 key={type.value}
                                                 onPress={() => {
-                                                    setFormData(prev => ({ ...prev, type: type.value }));
+                                                    setFormData(prev => ({ ...prev, customerType: type.value }));
                                                     setShowTypePicker(false);
                                                 }}
                                                 style={{
                                                     padding: 12,
                                                     borderRadius: 8,
-                                                    backgroundColor: formData.type === type.value
+                                                    backgroundColor: formData.customerType === type.value
                                                         ? colors.brand.primary + '20'
                                                         : 'transparent',
                                                 }}
                                             >
                                                 <Text style={{
-                                                    color: formData.type === type.value
+                                                    color: formData.customerType === type.value
                                                         ? colors.brand.primary
                                                         : colors.text.primary,
                                                     fontSize: 14
@@ -357,12 +395,21 @@ export default function EditCustomerScreen() {
                             </View>
 
                             <FormInput
-                                label="Şirket"
-                                value={formData.company}
-                                onChangeText={(text) => setFormData(prev => ({ ...prev, company: text }))}
-                                placeholder="Şirket adı (opsiyonel)"
-                                icon={Building2}
+                                label="Sektör"
+                                value={formData.industry}
+                                onChangeText={(text) => setFormData(prev => ({ ...prev, industry: text }))}
+                                placeholder="Teknoloji, Sağlık, Finans vb."
+                                icon={Factory}
                                 autoCapitalize="words"
+                            />
+
+                            <FormInput
+                                label="Web Sitesi"
+                                value={formData.website}
+                                onChangeText={(text) => setFormData(prev => ({ ...prev, website: text }))}
+                                placeholder="https://www.firma.com"
+                                icon={Globe}
+                                autoCapitalize="none"
                             />
                         </View>
                     </Animated.View>
@@ -399,23 +446,21 @@ export default function EditCustomerScreen() {
                             </View>
 
                             <FormInput
-                                label="E-posta"
-                                value={formData.email}
-                                onChangeText={(text) => setFormData(prev => ({ ...prev, email: text }))}
-                                placeholder="ornek@email.com"
-                                error={errors.email}
-                                keyboardType="email-address"
-                                icon={Mail}
-                                autoCapitalize="none"
-                            />
-
-                            <FormInput
                                 label="Telefon"
                                 value={formData.phone}
                                 onChangeText={(text) => setFormData(prev => ({ ...prev, phone: text }))}
                                 placeholder="+90 5XX XXX XX XX"
                                 keyboardType="phone-pad"
                                 icon={Phone}
+                            />
+
+                            <FormInput
+                                label="İletişim Kişisi"
+                                value={formData.contactPerson}
+                                onChangeText={(text) => setFormData(prev => ({ ...prev, contactPerson: text }))}
+                                placeholder="Ad Soyad"
+                                icon={UserCircle}
+                                autoCapitalize="words"
                             />
                         </View>
                     </Animated.View>
@@ -473,6 +518,19 @@ export default function EditCustomerScreen() {
                                 </View>
                                 <View style={{ flex: 1, marginLeft: 8 }}>
                                     <FormInput
+                                        label="İlçe"
+                                        value={formData.district}
+                                        onChangeText={(text) => setFormData(prev => ({ ...prev, district: text }))}
+                                        placeholder="Kadıköy"
+                                        icon={MapPin}
+                                        autoCapitalize="words"
+                                    />
+                                </View>
+                            </View>
+
+                            <View className="flex-row">
+                                <View style={{ flex: 1, marginRight: 8 }}>
+                                    <FormInput
                                         label="Ülke"
                                         value={formData.country}
                                         onChangeText={(text) => setFormData(prev => ({ ...prev, country: text }))}
@@ -481,12 +539,62 @@ export default function EditCustomerScreen() {
                                         autoCapitalize="words"
                                     />
                                 </View>
+                                <View style={{ flex: 1, marginLeft: 8 }}>
+                                    <FormInput
+                                        label="Posta Kodu"
+                                        value={formData.postalCode}
+                                        onChangeText={(text) => setFormData(prev => ({ ...prev, postalCode: text }))}
+                                        placeholder="34000"
+                                        icon={Hash}
+                                    />
+                                </View>
                             </View>
                         </View>
                     </Animated.View>
 
-                    {/* Notes */}
+                    {/* Financial Info */}
                     <Animated.View entering={FadeInDown.duration(400).delay(250)}>
+                        <View
+                            style={{
+                                backgroundColor: colors.surface.primary,
+                                borderRadius: 16,
+                                padding: 16,
+                                marginBottom: 16,
+                                borderWidth: 1,
+                                borderColor: colors.border.primary
+                            }}
+                        >
+                            <View className="flex-row items-center mb-4">
+                                <View
+                                    style={{
+                                        width: 40,
+                                        height: 40,
+                                        borderRadius: 10,
+                                        backgroundColor: colors.semantic.successLight,
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        marginRight: 12
+                                    }}
+                                >
+                                    <CreditCard size={20} color={colors.semantic.success} />
+                                </View>
+                                <Text style={{ color: colors.text.primary, fontSize: 16, fontWeight: '600' }}>
+                                    Finansal Bilgiler
+                                </Text>
+                            </View>
+
+                            <FormInput
+                                label="Vergi Numarası"
+                                value={formData.taxId}
+                                onChangeText={(text) => setFormData(prev => ({ ...prev, taxId: text }))}
+                                placeholder="Vergi numarası"
+                                icon={Hash}
+                            />
+                        </View>
+                    </Animated.View>
+
+                    {/* Notes */}
+                    <Animated.View entering={FadeInDown.duration(400).delay(300)}>
                         <View
                             style={{
                                 backgroundColor: colors.surface.primary,
@@ -497,9 +605,9 @@ export default function EditCustomerScreen() {
                             }}
                         >
                             <FormInput
-                                label="Notlar"
-                                value={formData.notes}
-                                onChangeText={(text) => setFormData(prev => ({ ...prev, notes: text }))}
+                                label="Açıklama"
+                                value={formData.description}
+                                onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
                                 placeholder="Müşteri hakkında notlar (opsiyonel)"
                                 icon={FileText}
                                 multiline

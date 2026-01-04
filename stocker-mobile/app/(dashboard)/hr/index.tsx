@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import {
@@ -12,7 +12,9 @@ import {
     Clock,
     AlertCircle,
     ChevronRight,
-    TrendingUp
+    TrendingUp,
+    Plus,
+    UserPlus
 } from 'lucide-react-native';
 import { useTheme } from '@/lib/theme';
 import {
@@ -24,6 +26,7 @@ import {
 export default function HRDashboardScreen() {
     const router = useRouter();
     const { colors } = useTheme();
+    const insets = useSafeAreaInsets();
 
     // Fetch data from API
     const { data: employeesData, isLoading: employeesLoading, refetch: refetchEmployees, isRefetching } = useEmployees({ pageSize: 1 });
@@ -76,6 +79,15 @@ export default function HRDashboardScreen() {
             bgColor: colors.semantic.infoLight,
             route: '/(dashboard)/hr/assets',
             badge: null
+        },
+        {
+            title: 'Puantaj',
+            subtitle: `${stats.todayPresent} bugün mevcut`,
+            icon: Clock,
+            color: '#8b5cf6',
+            bgColor: '#8b5cf620',
+            route: '/(dashboard)/hr/attendance',
+            badge: stats.todayLate > 0 ? stats.todayLate : null
         }
     ];
 
@@ -91,24 +103,43 @@ export default function HRDashboardScreen() {
                     borderBottomColor: colors.border.primary
                 }}
             >
-                <View className="flex-row items-center">
-                    <Pressable onPress={() => router.back()} className="mr-3 p-2 -ml-2">
-                        <ArrowLeft size={24} color={colors.text.primary} />
-                    </Pressable>
-                    <View>
-                        <Text style={{ color: colors.text.primary }} className="text-xl font-bold">
-                            İnsan Kaynakları
-                        </Text>
-                        <Text style={{ color: colors.text.tertiary }} className="text-sm">
-                            Çalışanlar, İzinler, Zimmetler
-                        </Text>
+                <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center">
+                        <Pressable onPress={() => router.back()} className="mr-3 p-2 -ml-2">
+                            <ArrowLeft size={24} color={colors.text.primary} />
+                        </Pressable>
+                        <View>
+                            <Text style={{ color: colors.text.primary }} className="text-xl font-bold">
+                                İnsan Kaynakları
+                            </Text>
+                            <Text style={{ color: colors.text.tertiary }} className="text-sm">
+                                Çalışanlar, İzinler, Zimmetler
+                            </Text>
+                        </View>
                     </View>
+                    <Pressable
+                        onPress={() => router.push('/(dashboard)/hr/add-employee' as any)}
+                        style={{
+                            backgroundColor: colors.modules.hr,
+                            paddingHorizontal: 12,
+                            paddingVertical: 8,
+                            borderRadius: 10,
+                            flexDirection: 'row',
+                            alignItems: 'center'
+                        }}
+                    >
+                        <UserPlus size={16} color="#fff" />
+                        <Text style={{ color: '#fff', fontWeight: '600', marginLeft: 4, fontSize: 13 }}>
+                            Ekle
+                        </Text>
+                    </Pressable>
                 </View>
             </Animated.View>
 
             <ScrollView
                 className="flex-1"
                 showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 60 + insets.bottom + 24 }}
                 refreshControl={
                     <RefreshControl
                         refreshing={isRefetching}

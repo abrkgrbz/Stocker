@@ -4,12 +4,15 @@ import type {
     EmployeeListParams,
     LeaveListParams,
     AttendanceListParams,
+    AssetListParams,
     CreateLeaveRequestDto,
     UpdateLeaveRequestDto,
     ApproveLeaveDto,
     RejectLeaveDto,
     CheckInDto,
     CheckOutDto,
+    CreateEmployeeDto,
+    UpdateEmployeeDto,
     LeaveStatus,
     LeaveType,
 } from '../types/hr.types';
@@ -54,6 +57,12 @@ export const hrKeys = {
     holidays: () => [...hrKeys.all, 'holidays'] as const,
     holidayList: (year?: number) => [...hrKeys.holidays(), 'list', year] as const,
     upcomingHolidays: () => [...hrKeys.holidays(), 'upcoming'] as const,
+    // Assets
+    assets: () => [...hrKeys.all, 'assets'] as const,
+    assetList: (params?: AssetListParams) => [...hrKeys.assets(), 'list', params] as const,
+    assetDetail: (id: string) => [...hrKeys.assets(), 'detail', id] as const,
+    assetCategories: () => [...hrKeys.assets(), 'categories'] as const,
+    employeeAssets: (employeeId: string) => [...hrKeys.assets(), 'employee', employeeId] as const,
     // Dashboard
     stats: () => [...hrKeys.all, 'stats'] as const,
     dashboard: () => [...hrKeys.all, 'dashboard'] as const,
@@ -96,6 +105,43 @@ export function useEmployeesByDepartment(departmentId: string) {
         queryKey: hrKeys.departmentEmployees(departmentId),
         queryFn: () => hrService.getEmployeesByDepartment(departmentId),
         enabled: !!departmentId,
+    });
+}
+
+export function useCreateEmployee() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (data: CreateEmployeeDto) => hrService.createEmployee(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: hrKeys.employees() });
+            queryClient.invalidateQueries({ queryKey: hrKeys.stats() });
+        },
+    });
+}
+
+export function useUpdateEmployee() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ id, data }: { id: string; data: UpdateEmployeeDto }) =>
+            hrService.updateEmployee(id, data),
+        onSuccess: (_, { id }) => {
+            queryClient.invalidateQueries({ queryKey: hrKeys.employeeDetail(id) });
+            queryClient.invalidateQueries({ queryKey: hrKeys.employees() });
+        },
+    });
+}
+
+export function useDeleteEmployee() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (id: string) => hrService.deleteEmployee(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: hrKeys.employees() });
+            queryClient.invalidateQueries({ queryKey: hrKeys.stats() });
+        },
     });
 }
 
@@ -381,5 +427,37 @@ export function useHRDashboard() {
     return useQuery({
         queryKey: hrKeys.dashboard(),
         queryFn: () => hrService.getDashboardData(),
+    });
+}
+
+// ============= ASSET HOOKS =============
+
+export function useAssets(params?: AssetListParams) {
+    return useQuery({
+        queryKey: hrKeys.assetList(params),
+        queryFn: () => hrService.getAssets(params),
+    });
+}
+
+export function useAsset(id: string) {
+    return useQuery({
+        queryKey: hrKeys.assetDetail(id),
+        queryFn: () => hrService.getAsset(id),
+        enabled: !!id,
+    });
+}
+
+export function useAssetCategories() {
+    return useQuery({
+        queryKey: hrKeys.assetCategories(),
+        queryFn: () => hrService.getAssetCategories(),
+    });
+}
+
+export function useEmployeeAssets(employeeId: string) {
+    return useQuery({
+        queryKey: hrKeys.employeeAssets(employeeId),
+        queryFn: () => hrService.getEmployeeAssets(employeeId),
+        enabled: !!employeeId,
     });
 }

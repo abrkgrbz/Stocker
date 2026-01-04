@@ -18,6 +18,13 @@ export default function SalesLayout() {
             <Stack.Screen name="quotes" />
             <Stack.Screen name="order/[id]" />
             <Stack.Screen name="invoice/[id]" />
+            <Stack.Screen name="quote/[id]" />
+            <Stack.Screen name="add-order" />
+            <Stack.Screen name="add-quote" />
+            <Stack.Screen name="edit-order/[id]" />
+            <Stack.Screen name="edit-quote/[id]" />
+            <Stack.Screen name="add-invoice" />
+            <Stack.Screen name="edit-invoice/[id]" />
         </Stack>
     );
 }

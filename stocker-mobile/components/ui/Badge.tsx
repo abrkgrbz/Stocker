@@ -1,5 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, ViewStyle } from 'react-native';
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withRepeat,
+    withSequence,
+    withTiming,
+    withSpring,
+} from 'react-native-reanimated';
 import { useTheme } from '@/lib/theme';
 
 type BadgeVariant = 'default' | 'success' | 'warning' | 'error' | 'info' | 'outline';
@@ -118,22 +126,43 @@ export function Badge({
     );
 }
 
-// Notification badge for icons
+// Notification badge for icons with optional pulse animation
 interface NotificationBadgeProps {
     count: number;
     max?: number;
     style?: ViewStyle;
+    pulse?: boolean;
 }
 
-export function NotificationBadge({ count, max = 99, style }: NotificationBadgeProps) {
+export function NotificationBadge({ count, max = 99, style, pulse = false }: NotificationBadgeProps) {
     const { colors } = useTheme();
+    const scale = useSharedValue(1);
+
+    useEffect(() => {
+        if (pulse && count > 0) {
+            scale.value = withRepeat(
+                withSequence(
+                    withSpring(1.15, { damping: 10, stiffness: 200 }),
+                    withSpring(1, { damping: 10, stiffness: 200 })
+                ),
+                -1,
+                false
+            );
+        } else {
+            scale.value = 1;
+        }
+    }, [pulse, count]);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: scale.value }],
+    }));
 
     if (count <= 0) return null;
 
     const displayCount = count > max ? `${max}+` : count.toString();
 
     return (
-        <View
+        <Animated.View
             style={[
                 {
                     position: 'absolute',
@@ -147,6 +176,7 @@ export function NotificationBadge({ count, max = 99, style }: NotificationBadgeP
                     justifyContent: 'center',
                     paddingHorizontal: 4,
                 },
+                animatedStyle,
                 style,
             ]}
         >
@@ -159,6 +189,70 @@ export function NotificationBadge({ count, max = 99, style }: NotificationBadgeP
             >
                 {displayCount}
             </Text>
+        </Animated.View>
+    );
+}
+
+// Live/Active indicator with pulse
+interface PulseIndicatorProps {
+    color?: string;
+    size?: number;
+    style?: ViewStyle;
+}
+
+export function PulseIndicator({ color, size = 8, style }: PulseIndicatorProps) {
+    const { colors } = useTheme();
+    const pulseScale = useSharedValue(1);
+    const pulseOpacity = useSharedValue(0.6);
+
+    const indicatorColor = color || colors.semantic.success;
+
+    useEffect(() => {
+        pulseScale.value = withRepeat(
+            withSequence(
+                withTiming(1.8, { duration: 1000 }),
+                withTiming(1, { duration: 0 })
+            ),
+            -1,
+            false
+        );
+        pulseOpacity.value = withRepeat(
+            withSequence(
+                withTiming(0, { duration: 1000 }),
+                withTiming(0.6, { duration: 0 })
+            ),
+            -1,
+            false
+        );
+    }, []);
+
+    const pulseStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: pulseScale.value }],
+        opacity: pulseOpacity.value,
+    }));
+
+    return (
+        <View style={[{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }, style]}>
+            <Animated.View
+                style={[
+                    {
+                        position: 'absolute',
+                        width: size,
+                        height: size,
+                        borderRadius: size / 2,
+                        backgroundColor: indicatorColor,
+                    },
+                    pulseStyle,
+                ]}
+            />
+            <View
+                style={{
+                    width: size,
+                    height: size,
+                    borderRadius: size / 2,
+                    backgroundColor: indicatorColor,
+                }}
+            />
         </View>
     );
 }

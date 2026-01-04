@@ -13,21 +13,31 @@ import {
     Search,
     ShoppingCart,
     Briefcase,
-    Clock
+    Clock,
+    FileText,
+    AlertTriangle,
+    Phone,
+    Mail,
+    Calendar,
+    MessageSquare,
+    FileCheck,
+    ArrowRight
 } from 'lucide-react-native';
 import { authStorage, User, Tenant } from '@/lib/auth-store';
 import { useTheme } from '@/lib/theme';
 import { SyncIndicator } from '@/components/ui';
 import { useNotifications } from '@/lib/notifications';
-import { useCustomers, useDeals } from '@/lib/api/hooks/useCRM';
+import { useCustomers, useDeals, useActivities } from '@/lib/api/hooks/useCRM';
 import { useLowStockProducts } from '@/lib/api/hooks/useInventory';
-import { useSalesStats, useOrders, useRecentOrders } from '@/lib/api/hooks/useSales';
+import { useSalesStats, useOrders, useRecentOrders, useOverdueInvoices } from '@/lib/api/hooks/useSales';
 
 const QUICK_ACTIONS = [
     { id: 'customers', title: 'Müşteriler', icon: Users, route: '/(dashboard)/crm', color: '#2563eb', bgColor: '#dbeafe' },
     { id: 'inventory', title: 'Stok', icon: Package, route: '/(dashboard)/inventory', color: '#059669', bgColor: '#d1fae5' },
     { id: 'sales', title: 'Satış', icon: ShoppingCart, route: '/(dashboard)/sales', color: '#d97706', bgColor: '#fef3c7' },
     { id: 'hr', title: 'İK', icon: Briefcase, route: '/(dashboard)/hr', color: '#7c3aed', bgColor: '#ede9fe' },
+    { id: 'invoices', title: 'Faturalar', icon: FileText, route: '/(dashboard)/sales/invoices', color: '#0891b2', bgColor: '#cffafe' },
+    { id: 'quotes', title: 'Teklifler', icon: FileCheck, route: '/(dashboard)/sales/quotes', color: '#ea580c', bgColor: '#ffedd5' },
 ];
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -51,17 +61,21 @@ export default function DashboardScreen() {
     const { data: salesStats, refetch: refetchSalesStats, isRefetching: salesRefetching } = useSalesStats();
     const { data: pendingOrdersData, refetch: refetchPendingOrders } = useOrders({ status: 'pending', pageSize: 1 });
     const { data: recentOrdersData, refetch: refetchRecentOrders } = useRecentOrders(4);
+    const { data: overdueInvoicesData, refetch: refetchOverdueInvoices, isRefetching: overdueRefetching } = useOverdueInvoices();
+    const { data: activitiesData, refetch: refetchActivities, isRefetching: activitiesRefetching } = useActivities({ pageSize: 5 });
 
-    const isRefreshing = customersRefetching || dealsRefetching || lowStockRefetching || salesRefetching;
+    const isRefreshing = customersRefetching || dealsRefetching || lowStockRefetching || salesRefetching || overdueRefetching || activitiesRefetching;
     const isLoading = customersLoading;
 
     // Calculate metrics from API data
     const metrics = {
         totalRevenue: salesStats?.monthlySales || 0,
+        todaySales: salesStats?.todaySales || 0,
         activeCustomers: customersData?.totalCount || 0,
         wonDeals: dealsData?.totalCount || 0,
         lowStockItems: lowStockData?.length || 0,
         pendingOrders: pendingOrdersData?.totalCount || 0,
+        overdueInvoices: overdueInvoicesData?.length || 0,
     };
 
     useEffect(() => {
@@ -86,7 +100,9 @@ export default function DashboardScreen() {
         refetchSalesStats();
         refetchPendingOrders();
         refetchRecentOrders();
-    }, [refetchCustomers, refetchDeals, refetchLowStock, refetchSalesStats, refetchPendingOrders, refetchRecentOrders]);
+        refetchOverdueInvoices();
+        refetchActivities();
+    }, [refetchCustomers, refetchDeals, refetchLowStock, refetchSalesStats, refetchPendingOrders, refetchRecentOrders, refetchOverdueInvoices, refetchActivities]);
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('tr-TR', {
@@ -94,6 +110,31 @@ export default function DashboardScreen() {
             currency: 'TRY',
             maximumFractionDigits: 0
         }).format(amount);
+    };
+
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+    };
+
+    const getActivityIcon = (type: string) => {
+        switch (type) {
+            case 'call': return Phone;
+            case 'email': return Mail;
+            case 'meeting': return Calendar;
+            case 'note': return MessageSquare;
+            default: return Clock;
+        }
+    };
+
+    const getActivityColor = (type: string) => {
+        switch (type) {
+            case 'call': return { bg: '#dbeafe', icon: '#2563eb' };
+            case 'email': return { bg: '#fce7f3', icon: '#db2777' };
+            case 'meeting': return { bg: '#d1fae5', icon: '#059669' };
+            case 'note': return { bg: '#fef3c7', icon: '#d97706' };
+            default: return { bg: colors.background.tertiary, icon: colors.text.tertiary };
+        }
     };
 
     const getInitials = (name: string | undefined) => {
@@ -132,7 +173,10 @@ export default function DashboardScreen() {
                     </View>
                     <View className="flex-row items-center" style={{ gap: 12 }}>
                         <SyncIndicator variant="icon" />
-                        <Pressable style={{ width: 40, height: 40, backgroundColor: colors.background.tertiary, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
+                        <Pressable
+                            onPress={() => router.push('/(dashboard)/search')}
+                            style={{ width: 40, height: 40, backgroundColor: colors.background.tertiary, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}
+                        >
                             <Search size={20} color={colors.text.tertiary} />
                         </Pressable>
                         <Pressable
@@ -161,19 +205,25 @@ export default function DashboardScreen() {
                 refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={colors.brand.primary} />}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Quick Actions */}
+                {/* Quick Actions - Horizontal Scroll */}
                 <Animated.View entering={FadeInDown.duration(500).delay(100)}>
                     <Text className="text-xs font-bold text-slate-500 uppercase mb-3 tracking-wider">Hızlı İşlemler</Text>
-                    <View className="flex-row flex-wrap mb-6" style={{ gap: 12 }}>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{ paddingRight: 24, gap: 12 }}
+                        className="mb-6"
+                        style={{ marginHorizontal: -24, paddingLeft: 24 }}
+                    >
                         {QUICK_ACTIONS.map((action, index) => (
                             <Animated.View
                                 key={action.id}
                                 entering={FadeInUp.duration(400).delay(150 + index * 50)}
-                                style={{ width: (screenWidth - 48 - 36) / 4 }}
                             >
                                 <Pressable
                                     onPress={() => router.push(action.route as any)}
                                     className="items-center active:opacity-70"
+                                    style={{ width: 72 }}
                                 >
                                     <View
                                         className="w-14 h-14 rounded-2xl items-center justify-center mb-2"
@@ -185,17 +235,24 @@ export default function DashboardScreen() {
                                 </Pressable>
                             </Animated.View>
                         ))}
-                    </View>
+                    </ScrollView>
                 </Animated.View>
 
-                {/* Overview Section */}
+                {/* Overview Section - Clickable Cards */}
                 <Animated.View entering={FadeInDown.duration(500).delay(200)}>
                     <Text style={{ color: colors.text.tertiary }} className="text-xs font-bold uppercase mb-3 tracking-wider">Genel Bakış</Text>
                     <View className="flex-row flex-wrap mb-6" style={{ gap: 12 }}>
-                        {/* Revenue Card */}
-                        <View style={{ width: cardWidth, backgroundColor: colors.surface.primary, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: colors.border.primary }}>
-                            <View style={{ width: 32, height: 32, backgroundColor: colors.semantic.successLight, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
-                                <DollarSign size={18} color={colors.semantic.success} />
+                        {/* Revenue Card - Clickable */}
+                        <Pressable
+                            onPress={() => router.push('/(dashboard)/sales' as any)}
+                            style={{ width: cardWidth, backgroundColor: colors.surface.primary, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: colors.border.primary }}
+                            className="active:opacity-70"
+                        >
+                            <View className="flex-row justify-between items-start">
+                                <View style={{ width: 32, height: 32, backgroundColor: colors.semantic.successLight, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+                                    <DollarSign size={18} color={colors.semantic.success} />
+                                </View>
+                                <ArrowRight size={14} color={colors.text.tertiary} />
                             </View>
                             <Text style={{ color: colors.text.tertiary, fontSize: 12 }}>Bu Ay Satış</Text>
                             {isLoading ? (
@@ -206,12 +263,19 @@ export default function DashboardScreen() {
                                     <Text style={{ color: colors.semantic.success, fontSize: 12, marginTop: 4 }}>Bu ay</Text>
                                 </>
                             )}
-                        </View>
+                        </Pressable>
 
-                        {/* Customers Card */}
-                        <View style={{ width: cardWidth, backgroundColor: colors.surface.primary, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: colors.border.primary }}>
-                            <View style={{ width: 32, height: 32, backgroundColor: colors.modules.crmLight, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
-                                <Users size={18} color={colors.modules.crm} />
+                        {/* Customers Card - Clickable */}
+                        <Pressable
+                            onPress={() => router.push('/(dashboard)/crm' as any)}
+                            style={{ width: cardWidth, backgroundColor: colors.surface.primary, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: colors.border.primary }}
+                            className="active:opacity-70"
+                        >
+                            <View className="flex-row justify-between items-start">
+                                <View style={{ width: 32, height: 32, backgroundColor: colors.modules.crmLight, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+                                    <Users size={18} color={colors.modules.crm} />
+                                </View>
+                                <ArrowRight size={14} color={colors.text.tertiary} />
                             </View>
                             <Text style={{ color: colors.text.tertiary, fontSize: 12 }}>Toplam Müşteri</Text>
                             {isLoading ? (
@@ -222,12 +286,65 @@ export default function DashboardScreen() {
                                     <Text style={{ color: colors.modules.crm, fontSize: 12, marginTop: 4 }}>Kayıtlı</Text>
                                 </>
                             )}
-                        </View>
+                        </Pressable>
 
-                        {/* Deals Card */}
-                        <View style={{ width: cardWidth, backgroundColor: colors.surface.primary, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: colors.border.primary }}>
-                            <View style={{ width: 32, height: 32, backgroundColor: colors.modules.salesLight, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
-                                <TrendingUp size={18} color={colors.modules.sales} />
+                        {/* Pending Orders Card - Clickable */}
+                        <Pressable
+                            onPress={() => router.push('/(dashboard)/sales/orders' as any)}
+                            style={{ width: cardWidth, backgroundColor: colors.surface.primary, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: metrics.pendingOrders > 0 ? colors.semantic.warning + '50' : colors.border.primary }}
+                            className="active:opacity-70"
+                        >
+                            <View className="flex-row justify-between items-start">
+                                <View style={{ width: 32, height: 32, backgroundColor: '#fef3c7', borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+                                    <ShoppingCart size={18} color="#d97706" />
+                                </View>
+                                <ArrowRight size={14} color={colors.text.tertiary} />
+                            </View>
+                            <Text style={{ color: colors.text.tertiary, fontSize: 12 }}>Bekleyen Sipariş</Text>
+                            {isLoading ? (
+                                <ActivityIndicator size="small" color="#d97706" style={{ marginVertical: 8 }} />
+                            ) : (
+                                <>
+                                    <Text style={{ color: metrics.pendingOrders > 0 ? '#d97706' : colors.text.primary, fontSize: 18, fontWeight: '700' }}>{metrics.pendingOrders}</Text>
+                                    <Text style={{ color: metrics.pendingOrders > 0 ? '#d97706' : colors.text.tertiary, fontSize: 12, marginTop: 4 }}>{metrics.pendingOrders > 0 ? 'İşlem bekliyor' : 'Yok'}</Text>
+                                </>
+                            )}
+                        </Pressable>
+
+                        {/* Overdue Invoices Card - Clickable */}
+                        <Pressable
+                            onPress={() => router.push('/(dashboard)/sales/invoices' as any)}
+                            style={{ width: cardWidth, backgroundColor: colors.surface.primary, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: metrics.overdueInvoices > 0 ? colors.semantic.error + '50' : colors.border.primary }}
+                            className="active:opacity-70"
+                        >
+                            <View className="flex-row justify-between items-start">
+                                <View style={{ width: 32, height: 32, backgroundColor: colors.semantic.errorLight, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+                                    <FileText size={18} color={colors.semantic.error} />
+                                </View>
+                                <ArrowRight size={14} color={colors.text.tertiary} />
+                            </View>
+                            <Text style={{ color: colors.text.tertiary, fontSize: 12 }}>Vadesi Geçen Fatura</Text>
+                            {isLoading ? (
+                                <ActivityIndicator size="small" color={colors.semantic.error} style={{ marginVertical: 8 }} />
+                            ) : (
+                                <>
+                                    <Text style={{ color: metrics.overdueInvoices > 0 ? colors.semantic.error : colors.text.primary, fontSize: 18, fontWeight: '700' }}>{metrics.overdueInvoices}</Text>
+                                    <Text style={{ color: metrics.overdueInvoices > 0 ? colors.semantic.error : colors.text.tertiary, fontSize: 12, marginTop: 4 }}>{metrics.overdueInvoices > 0 ? 'Dikkat!' : 'Yok'}</Text>
+                                </>
+                            )}
+                        </Pressable>
+
+                        {/* Deals Card - Clickable */}
+                        <Pressable
+                            onPress={() => router.push('/(dashboard)/crm/deals' as any)}
+                            style={{ width: cardWidth, backgroundColor: colors.surface.primary, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: colors.border.primary }}
+                            className="active:opacity-70"
+                        >
+                            <View className="flex-row justify-between items-start">
+                                <View style={{ width: 32, height: 32, backgroundColor: colors.modules.salesLight, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+                                    <TrendingUp size={18} color={colors.modules.sales} />
+                                </View>
+                                <ArrowRight size={14} color={colors.text.tertiary} />
                             </View>
                             <Text style={{ color: colors.text.tertiary, fontSize: 12 }}>Kazanılan Anlaşma</Text>
                             {isLoading ? (
@@ -238,12 +355,19 @@ export default function DashboardScreen() {
                                     <Text style={{ color: colors.modules.sales, fontSize: 12, marginTop: 4 }}>Toplam</Text>
                                 </>
                             )}
-                        </View>
+                        </Pressable>
 
-                        {/* Low Stock Card */}
-                        <View style={{ width: cardWidth, backgroundColor: colors.surface.primary, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: metrics.lowStockItems > 5 ? colors.semantic.error + '50' : colors.border.primary }}>
-                            <View style={{ width: 32, height: 32, backgroundColor: colors.semantic.errorLight, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
-                                <Package size={18} color={colors.semantic.error} />
+                        {/* Low Stock Card - Clickable */}
+                        <Pressable
+                            onPress={() => router.push('/(dashboard)/inventory' as any)}
+                            style={{ width: cardWidth, backgroundColor: colors.surface.primary, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: metrics.lowStockItems > 5 ? colors.semantic.error + '50' : colors.border.primary }}
+                            className="active:opacity-70"
+                        >
+                            <View className="flex-row justify-between items-start">
+                                <View style={{ width: 32, height: 32, backgroundColor: metrics.lowStockItems > 0 ? colors.semantic.errorLight : colors.modules.inventoryLight, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+                                    <Package size={18} color={metrics.lowStockItems > 0 ? colors.semantic.error : colors.modules.inventory} />
+                                </View>
+                                <ArrowRight size={14} color={colors.text.tertiary} />
                             </View>
                             <Text style={{ color: colors.text.tertiary, fontSize: 12 }}>Kritik Stok</Text>
                             {isLoading ? (
@@ -254,7 +378,7 @@ export default function DashboardScreen() {
                                     <Text style={{ color: metrics.lowStockItems > 0 ? colors.semantic.error : colors.text.tertiary, fontSize: 12, marginTop: 4 }}>{metrics.lowStockItems > 0 ? 'Dikkat!' : 'Sorun yok'}</Text>
                                 </>
                             )}
-                        </View>
+                        </Pressable>
                     </View>
                 </Animated.View>
 
@@ -319,10 +443,122 @@ export default function DashboardScreen() {
                     </View>
                 </Animated.View>
 
+                {/* Stock Alerts Widget */}
+                {lowStockData && lowStockData.length > 0 && (
+                    <Animated.View entering={FadeInDown.duration(500).delay(350)} className="mt-6">
+                        <View className="flex-row items-center justify-between mb-3">
+                            <Text style={{ color: colors.text.tertiary }} className="text-xs font-bold uppercase tracking-wider">Stok Uyarıları</Text>
+                            <Pressable onPress={() => router.push('/(dashboard)/inventory' as any)}>
+                                <Text style={{ color: colors.brand.primary, fontSize: 12, fontWeight: '500' }}>Tümünü Gör</Text>
+                            </Pressable>
+                        </View>
+                        <View style={{ backgroundColor: colors.surface.primary, borderRadius: 12, borderWidth: 1, borderColor: colors.semantic.error + '30', overflow: 'hidden' }}>
+                            {lowStockData.slice(0, 3).map((product, index) => (
+                                <Animated.View
+                                    key={product.id}
+                                    entering={FadeInUp.duration(400).delay(400 + index * 50)}
+                                >
+                                    <Pressable
+                                        onPress={() => router.push(`/(dashboard)/inventory/${product.id}` as any)}
+                                        style={{
+                                            padding: 16,
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            borderBottomWidth: index < Math.min(lowStockData.length, 3) - 1 ? 1 : 0,
+                                            borderBottomColor: colors.border.primary
+                                        }}
+                                    >
+                                        <View
+                                            style={{
+                                                width: 40,
+                                                height: 40,
+                                                borderRadius: 12,
+                                                backgroundColor: colors.semantic.errorLight,
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                marginRight: 12
+                                            }}
+                                        >
+                                            <AlertTriangle size={20} color={colors.semantic.error} />
+                                        </View>
+                                        <View className="flex-1">
+                                            <Text style={{ color: colors.text.primary, fontWeight: '500' }}>
+                                                {product.name}
+                                            </Text>
+                                            <Text style={{ color: colors.semantic.error, fontSize: 12 }}>
+                                                Stok: {product.stockQuantity} / Min: {product.minStockLevel}
+                                            </Text>
+                                        </View>
+                                        <ChevronRight size={16} color={colors.text.tertiary} />
+                                    </Pressable>
+                                </Animated.View>
+                            ))}
+                        </View>
+                    </Animated.View>
+                )}
+
+                {/* Activity Summary Widget */}
+                {activitiesData && activitiesData.items && activitiesData.items.length > 0 && (
+                    <Animated.View entering={FadeInDown.duration(500).delay(400)} className="mt-6">
+                        <View className="flex-row items-center justify-between mb-3">
+                            <Text style={{ color: colors.text.tertiary }} className="text-xs font-bold uppercase tracking-wider">Son Aktiviteler</Text>
+                            <Pressable onPress={() => router.push('/(dashboard)/crm/activities' as any)}>
+                                <Text style={{ color: colors.brand.primary, fontSize: 12, fontWeight: '500' }}>Tümünü Gör</Text>
+                            </Pressable>
+                        </View>
+                        <View style={{ backgroundColor: colors.surface.primary, borderRadius: 12, borderWidth: 1, borderColor: colors.border.primary, overflow: 'hidden' }}>
+                            {activitiesData.items.slice(0, 4).map((activity, index) => {
+                                const ActivityIcon = getActivityIcon(activity.type);
+                                const activityColors = getActivityColor(activity.type);
+                                return (
+                                    <Animated.View
+                                        key={activity.id}
+                                        entering={FadeInUp.duration(400).delay(450 + index * 50)}
+                                    >
+                                        <Pressable
+                                            onPress={() => router.push(`/(dashboard)/crm/${activity.customerId}` as any)}
+                                            style={{
+                                                padding: 16,
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                borderBottomWidth: index < Math.min(activitiesData.items.length, 4) - 1 ? 1 : 0,
+                                                borderBottomColor: colors.border.primary
+                                            }}
+                                        >
+                                            <View
+                                                style={{
+                                                    width: 40,
+                                                    height: 40,
+                                                    borderRadius: 12,
+                                                    backgroundColor: activityColors.bg,
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    marginRight: 12
+                                                }}
+                                            >
+                                                <ActivityIcon size={20} color={activityColors.icon} />
+                                            </View>
+                                            <View className="flex-1">
+                                                <Text style={{ color: colors.text.primary, fontWeight: '500' }} numberOfLines={1}>
+                                                    {activity.title || activity.type}
+                                                </Text>
+                                                <Text style={{ color: colors.text.tertiary, fontSize: 12 }} numberOfLines={1}>
+                                                    {activity.customerName} • {formatDate(activity.createdAt)}
+                                                </Text>
+                                            </View>
+                                            <ChevronRight size={16} color={colors.text.tertiary} />
+                                        </Pressable>
+                                    </Animated.View>
+                                );
+                            })}
+                        </View>
+                    </Animated.View>
+                )}
+
                 {/* Tenant Info Card */}
                 {tenant && (
                     <Animated.View
-                        entering={FadeInDown.duration(500).delay(400)}
+                        entering={FadeInDown.duration(500).delay(450)}
                         className="mt-6"
                     >
                         <View style={{ backgroundColor: colors.brand.primary, padding: 20, borderRadius: 16 }}>

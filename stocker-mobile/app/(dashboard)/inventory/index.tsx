@@ -25,12 +25,30 @@ import {
     Grid,
     List,
     RefreshCw,
-    WifiOff
+    WifiOff,
+    ArrowRightLeft,
+    ClipboardList,
+    DollarSign,
+    Hash,
+    Layers
 } from 'lucide-react-native';
 import { useTheme } from '@/lib/theme';
 import { useProducts, useLowStockProducts } from '@/lib/api/hooks/useInventory';
 import { useSync } from '@/lib/sync/SyncContext';
+import {
+    SortSheet,
+    SortButton,
+    type SortOption,
+    type SortValue
+} from '@/components/ui';
 import type { Product, ProductStatus } from '@/lib/api/types/inventory.types';
+
+const SORT_OPTIONS: SortOption[] = [
+    { key: 'name', label: 'Ürün Adı', icon: <Package size={18} color="#64748b" /> },
+    { key: 'price', label: 'Fiyat', icon: <DollarSign size={18} color="#64748b" /> },
+    { key: 'stockQuantity', label: 'Stok Miktarı', icon: <Layers size={18} color="#64748b" /> },
+    { key: 'sku', label: 'SKU', icon: <Hash size={18} color="#64748b" /> },
+];
 
 export default function ProductListScreen() {
     const router = useRouter();
@@ -41,6 +59,8 @@ export default function ProductListScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
     const [showLowStock, setShowLowStock] = useState(false);
+    const [showSortSheet, setShowSortSheet] = useState(false);
+    const [sortValue, setSortValue] = useState<SortValue | null>(null);
 
     // Fetch products from API
     const {
@@ -78,8 +98,30 @@ export default function ProductListScreen() {
             result = result.filter(p => p.stockQuantity <= (p.minStockLevel || 0));
         }
 
+        // Sorting
+        if (sortValue) {
+            result = [...result].sort((a, b) => {
+                let comparison = 0;
+                switch (sortValue.key) {
+                    case 'name':
+                        comparison = a.name.localeCompare(b.name);
+                        break;
+                    case 'price':
+                        comparison = a.price - b.price;
+                        break;
+                    case 'stockQuantity':
+                        comparison = a.stockQuantity - b.stockQuantity;
+                        break;
+                    case 'sku':
+                        comparison = a.sku.localeCompare(b.sku);
+                        break;
+                }
+                return sortValue.order === 'asc' ? comparison : -comparison;
+            });
+        }
+
         return result;
-    }, [products, searchQuery, showLowStock]);
+    }, [products, searchQuery, showLowStock, sortValue]);
 
     const onRefresh = useCallback(() => {
         refetch();
@@ -296,29 +338,36 @@ export default function ProductListScreen() {
 
                 {/* Filter Row */}
                 <View className="flex-row items-center justify-between mt-3">
-                    <Pressable
-                        onPress={() => setShowLowStock(!showLowStock)}
-                        style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            paddingHorizontal: 12,
-                            paddingVertical: 8,
-                            borderRadius: 20,
-                            backgroundColor: showLowStock ? colors.semantic.warning + '20' : colors.surface.primary,
-                            borderWidth: 1,
-                            borderColor: showLowStock ? colors.semantic.warning : colors.border.primary
-                        }}
-                    >
-                        <AlertTriangle size={14} color={showLowStock ? colors.semantic.warning : colors.text.tertiary} />
-                        <Text style={{
-                            color: showLowStock ? colors.semantic.warning : colors.text.secondary,
-                            fontSize: 13,
-                            fontWeight: '500',
-                            marginLeft: 6
-                        }}>
-                            Düşük Stok ({lowStockCount})
-                        </Text>
-                    </Pressable>
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <Pressable
+                            onPress={() => setShowLowStock(!showLowStock)}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                paddingHorizontal: 12,
+                                paddingVertical: 8,
+                                borderRadius: 20,
+                                backgroundColor: showLowStock ? colors.semantic.warning + '20' : colors.surface.primary,
+                                borderWidth: 1,
+                                borderColor: showLowStock ? colors.semantic.warning : colors.border.primary
+                            }}
+                        >
+                            <AlertTriangle size={14} color={showLowStock ? colors.semantic.warning : colors.text.tertiary} />
+                            <Text style={{
+                                color: showLowStock ? colors.semantic.warning : colors.text.secondary,
+                                fontSize: 13,
+                                fontWeight: '500',
+                                marginLeft: 6
+                            }}>
+                                Düşük Stok ({lowStockCount})
+                            </Text>
+                        </Pressable>
+                        <SortButton
+                            onPress={() => setShowSortSheet(true)}
+                            value={sortValue}
+                            options={SORT_OPTIONS}
+                        />
+                    </View>
 
                     <View className="flex-row">
                         <Pressable
@@ -343,6 +392,45 @@ export default function ProductListScreen() {
                             <Grid size={20} color={viewMode === 'grid' ? colors.text.inverse : colors.text.tertiary} />
                         </Pressable>
                     </View>
+                </View>
+
+                {/* Quick Actions */}
+                <View className="flex-row mt-3">
+                    <Pressable
+                        onPress={() => router.push('/(dashboard)/inventory/transfers' as any)}
+                        style={{
+                            flex: 1,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            paddingVertical: 10,
+                            borderRadius: 10,
+                            backgroundColor: colors.modules.inventoryLight,
+                            marginRight: 8
+                        }}
+                    >
+                        <ArrowRightLeft size={16} color={colors.modules.inventory} />
+                        <Text style={{ color: colors.modules.inventory, fontWeight: '600', marginLeft: 6, fontSize: 13 }}>
+                            Transferler
+                        </Text>
+                    </Pressable>
+                    <Pressable
+                        onPress={() => router.push('/(dashboard)/inventory/stock-count' as any)}
+                        style={{
+                            flex: 1,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            paddingVertical: 10,
+                            borderRadius: 10,
+                            backgroundColor: colors.modules.inventoryLight
+                        }}
+                    >
+                        <ClipboardList size={16} color={colors.modules.inventory} />
+                        <Text style={{ color: colors.modules.inventory, fontWeight: '600', marginLeft: 6, fontSize: 13 }}>
+                            Sayım
+                        </Text>
+                    </Pressable>
                 </View>
             </Animated.View>
 
@@ -433,6 +521,16 @@ export default function ProductListScreen() {
                         )}
                     </View>
                 )}
+            />
+
+            {/* Sort Sheet */}
+            <SortSheet
+                visible={showSortSheet}
+                onClose={() => setShowSortSheet(false)}
+                options={SORT_OPTIONS}
+                value={sortValue}
+                onChange={setSortValue}
+                title="Sıralama"
             />
         </SafeAreaView>
     );

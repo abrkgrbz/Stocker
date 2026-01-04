@@ -35,10 +35,10 @@ function mapCustomerToResult(customer: Customer): SearchResult {
     return {
         type: 'customer',
         id: customer.id,
-        title: customer.name,
+        title: customer.companyName,
         subtitle: customer.email || customer.phone,
         icon: 'Users',
-        route: '/(dashboard)/crm/customer/[id]',
+        route: '/(dashboard)/crm/[id]',
         data: customer,
     };
 }
@@ -197,6 +197,16 @@ export function useGlobalSearch(
                     salesService.searchInvoices(query)
                         .then(invoices => {
                             results.invoices = invoices.slice(0, limit).map(mapInvoiceToResult);
+                        })
+                        .catch(() => { /* ignore errors */ })
+                );
+            }
+
+            if (category === 'all' || category === 'quotes') {
+                searchPromises.push(
+                    salesService.searchQuotes(query)
+                        .then(quotes => {
+                            results.quotes = quotes.slice(0, limit).map(mapQuoteToResult);
                         })
                         .catch(() => { /* ignore errors */ })
                 );

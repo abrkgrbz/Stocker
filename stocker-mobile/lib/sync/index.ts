@@ -7,13 +7,23 @@ export {
 
 // Re-export common offline operations for convenience
 export const offlineOps = {
-    // CRM
+    // CRM - Customers
     queueCustomerCreate: (data: any) =>
         import('../storage/offline').then(m => m.offlineStorage.queueCustomerOperation('create', data)),
     queueCustomerUpdate: (id: string, data: any) =>
         import('../storage/offline').then(m => m.offlineStorage.queueCustomerOperation('update', { id, ...data })),
     queueCustomerDelete: (id: string) =>
         import('../storage/offline').then(m => m.offlineStorage.queueCustomerOperation('delete', { id })),
+
+    // CRM - Deals
+    queueDealCreate: (data: any) =>
+        import('../storage/offline').then(m => m.offlineStorage.queueDealOperation('create', data)),
+    queueDealUpdate: (id: string, data: any) =>
+        import('../storage/offline').then(m => m.offlineStorage.queueDealOperation('update', { id, data })),
+    queueDealDelete: (id: string) =>
+        import('../storage/offline').then(m => m.offlineStorage.queueDealOperation('delete', { id })),
+    queueDealStageUpdate: (id: string, stage: string) =>
+        import('../storage/offline').then(m => m.offlineStorage.queueDealStageUpdate(id, stage)),
 
     // Inventory
     queueProductCreate: (data: any) =>

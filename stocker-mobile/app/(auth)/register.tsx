@@ -1,40 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, Pressable, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
+import Animated, {
+    FadeIn,
+    FadeInDown,
+    FadeInUp,
+    useSharedValue,
+    useAnimatedStyle,
+} from 'react-native-reanimated';
 import { api } from '@/lib/axios';
 import { ArrowLeft, Check, Mail, Lock, Building2, User, Eye, EyeOff, AlertTriangle, CheckCircle } from 'lucide-react-native';
 import { Logo } from '@/components/ui/Logo';
 import { AnimatedButton } from '@/components/ui/AnimatedButton';
-
-// Testimonials from stocker-nextjs register page
-const TESTIMONIALS = [
-    {
-        id: 1,
-        quote: "Kurulum 5 dakika sürdü. İlk gün tüm ekip kullanmaya başladı.",
-        author: "Elif Kaya",
-        role: "Kurucu Ortak",
-        company: "ModernBiz",
-        initials: "EK",
-    },
-    {
-        id: 2,
-        quote: "Rakiplerden geçiş çok kolay oldu. Tüm verilerimizi sorunsuz aktardık.",
-        author: "Can Özdemir",
-        role: "IT Direktörü",
-        company: "FastGrowth",
-        initials: "CÖ",
-    },
-    {
-        id: 3,
-        quote: "14 günlük deneme süresi yeterli oldu. Ekibimiz ürünü o kadar sevdi ki hemen premium'a geçtik.",
-        author: "Selin Arslan",
-        role: "Finans Müdürü",
-        company: "SmartRetail",
-        initials: "SA",
-    },
-];
+import { lightHaptic, successHaptic, errorHaptic } from '@/lib/haptics';
+import { shakeAnimation } from '@/lib/animations';
+import { AuroraBackground } from '@/components/ui/AuroraBackground';
+import { GlassCard } from '@/components/ui/GlassContainer';
 
 type Step = 'email' | 'password' | 'teamName' | 'fullName' | 'complete';
 
@@ -69,15 +51,16 @@ export default function RegisterScreen() {
     const [teamNameValid, setTeamNameValid] = useState(false);
     const [teamNameError, setTeamNameError] = useState('');
 
-    // Testimonial slider
-    const [testimonialIndex, setTestimonialIndex] = useState(0);
+    // Animation values
+    const formShake = useSharedValue(0);
+    const formShakeStyle = useAnimatedStyle(() => ({
+        transform: [{ translateX: formShake.value }],
+    }));
 
-    // Auto-rotate testimonials
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setTestimonialIndex((prev) => (prev + 1) % TESTIMONIALS.length);
-        }, 6000);
-        return () => clearInterval(interval);
+    // Trigger shake animation on error
+    const triggerShake = useCallback(() => {
+        errorHaptic();
+        shakeAnimation(formShake);
     }, []);
 
     // Email validation
@@ -155,23 +138,37 @@ export default function RegisterScreen() {
     };
 
     const handleEmailContinue = () => {
-        if (emailValid) setStep('password');
+        if (emailValid) {
+            setStep('password');
+        } else {
+            triggerShake();
+        }
     };
 
     const handlePasswordContinue = () => {
-        if (passwordValid) setStep('teamName');
+        if (passwordValid) {
+            setStep('teamName');
+        } else {
+            triggerShake();
+        }
     };
 
     const handleTeamNameContinue = () => {
-        if (teamNameValid) setStep('fullName');
+        if (teamNameValid) {
+            setStep('fullName');
+        } else {
+            triggerShake();
+        }
     };
 
     const handleRegister = async () => {
         if (!firstName.trim() || !lastName.trim()) {
+            triggerShake();
             Alert.alert('Eksik Bilgi', 'Lütfen ad ve soyadınızı girin.');
             return;
         }
         if (!acceptTerms || !acceptPrivacy) {
+            triggerShake();
             Alert.alert('Şartlar', 'Devam etmek için şartları kabul etmelisiniz.');
             return;
         }
@@ -192,13 +189,16 @@ export default function RegisterScreen() {
             const data = response.data;
 
             if (data.success || data.data) {
+                successHaptic();
                 setStep('complete');
             } else {
+                triggerShake();
                 Alert.alert('Kayıt Başarısız', data.message || 'Bilinmeyen hata');
             }
         } catch (error: any) {
             console.error(error);
             const msg = error.response?.data?.message || 'Kayıt başarısız';
+            triggerShake();
             Alert.alert('Hata', msg);
         } finally {
             setLoading(false);
@@ -206,6 +206,7 @@ export default function RegisterScreen() {
     };
 
     const goBack = () => {
+        lightHaptic();
         switch (step) {
             case 'password':
                 setStep('email');
@@ -221,52 +222,54 @@ export default function RegisterScreen() {
         }
     };
 
-    const currentTestimonial = TESTIMONIALS[testimonialIndex];
-
     // Tamamlandı ekranı
     if (step === 'complete') {
         return (
-            <SafeAreaView className="flex-1 bg-white">
-                <Animated.View
-                    entering={FadeIn.duration(500)}
-                    className="flex-1 items-center justify-center p-6"
-                >
+            <AuroraBackground variant="vibrant">
+                <SafeAreaView className="flex-1">
                     <Animated.View
-                        entering={FadeInDown.duration(600).delay(100)}
-                        className="w-20 h-20 bg-emerald-100 rounded-full items-center justify-center mb-6"
+                        entering={FadeIn.duration(500)}
+                        className="flex-1 items-center justify-center p-6"
                     >
-                        <Check size={40} color="#059669" />
+                        <GlassCard padding={32} style={{ borderRadius: 28, alignItems: 'center' }}>
+                            <Animated.View
+                                entering={FadeInDown.duration(600).delay(100)}
+                                className="w-20 h-20 bg-emerald-100 rounded-full items-center justify-center mb-6"
+                            >
+                                <Check size={40} color="#059669" />
+                            </Animated.View>
+                            <Animated.Text
+                                entering={FadeInDown.duration(600).delay(200)}
+                                className="text-2xl font-bold text-slate-900 mb-2"
+                            >
+                                Hoş geldin, {firstName}!
+                            </Animated.Text>
+                            <Animated.Text
+                                entering={FadeInDown.duration(600).delay(300)}
+                                className="text-slate-500 text-center mb-2"
+                            >
+                                Hesabın başarıyla oluşturuldu.
+                            </Animated.Text>
+                            <Animated.Text
+                                entering={FadeInDown.duration(600).delay(400)}
+                                className="font-semibold text-slate-700 mb-8"
+                            >
+                                {teamName}.stoocker.app
+                            </Animated.Text>
+                            <Animated.View
+                                entering={FadeInUp.duration(600).delay(500)}
+                                className="w-full"
+                            >
+                                <AnimatedButton
+                                    title="Giriş Yap"
+                                    variant="primary"
+                                    onPress={() => router.replace('/(auth)/login')}
+                                />
+                            </Animated.View>
+                        </GlassCard>
                     </Animated.View>
-                    <Animated.Text
-                        entering={FadeInDown.duration(600).delay(200)}
-                        className="text-2xl font-bold text-slate-900 mb-2"
-                    >
-                        Hoş geldin, {firstName}!
-                    </Animated.Text>
-                    <Animated.Text
-                        entering={FadeInDown.duration(600).delay(300)}
-                        className="text-slate-500 text-center mb-2"
-                    >
-                        Hesabın başarıyla oluşturuldu.
-                    </Animated.Text>
-                    <Animated.Text
-                        entering={FadeInDown.duration(600).delay(400)}
-                        className="font-semibold text-slate-700 mb-8"
-                    >
-                        {teamName}.stoocker.app
-                    </Animated.Text>
-                    <Animated.View
-                        entering={FadeInUp.duration(600).delay(500)}
-                        className="w-full"
-                    >
-                        <AnimatedButton
-                            title="Giriş Yap"
-                            variant="primary"
-                            onPress={() => router.replace('/(auth)/login')}
-                        />
-                    </Animated.View>
-                </Animated.View>
-            </SafeAreaView>
+                </SafeAreaView>
+            </AuroraBackground>
         );
     }
 
@@ -283,37 +286,38 @@ export default function RegisterScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                className="flex-1"
-            >
-                {/* Header */}
-                <Animated.View
-                    entering={FadeIn.duration(300)}
-                    className="px-6 py-4 flex-row items-center"
+        <AuroraBackground variant="subtle">
+            <SafeAreaView className="flex-1">
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    className="flex-1"
                 >
-                    <Pressable onPress={goBack} className="p-2 -ml-2 active:opacity-70">
-                        <ArrowLeft size={24} color="#0f172a" />
-                    </Pressable>
-                </Animated.View>
-
-                <ScrollView
-                    contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24 }}
-                    keyboardShouldPersistTaps="handled"
-                    showsVerticalScrollIndicator={false}
-                >
-                    {/* Progress Steps */}
+                    {/* Header */}
                     <Animated.View
-                        entering={FadeInDown.duration(500).delay(100)}
-                        className="mb-8"
+                        entering={FadeIn.duration(300)}
+                        className="px-6 py-4 flex-row items-center"
                     >
+                        <Pressable onPress={goBack} className="p-2 -ml-2 active:opacity-70">
+                            <ArrowLeft size={24} color="#0f172a" />
+                        </Pressable>
+                    </Animated.View>
+
+                    <ScrollView
+                        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24 }}
+                        keyboardShouldPersistTaps="handled"
+                        showsVerticalScrollIndicator={false}
+                    >
+                        {/* Progress Steps - Refined */}
+                        <Animated.View
+                            entering={FadeInDown.duration(500).delay(100)}
+                            className="mb-8"
+                        >
                         <View className="flex-row items-center justify-between relative">
-                            {/* Progress Line Background */}
-                            <View className="absolute top-4 left-4 right-4 h-0.5 bg-slate-200" />
+                            {/* Progress Line Background - thinner */}
+                            <View className="absolute top-3 left-4 right-4 h-px bg-slate-200" />
                             {/* Progress Line Active */}
                             <View
-                                className="absolute top-4 left-4 h-0.5 bg-slate-900"
+                                className="absolute top-3 left-4 h-px bg-slate-900"
                                 style={{ width: `${(getCurrentStepIndex() / (STEPS.length - 1)) * 92}%` }}
                             />
 
@@ -321,21 +325,22 @@ export default function RegisterScreen() {
                                 const isActive = getCurrentStepIndex() >= index;
                                 const isCurrent = s.id === step;
                                 const isCompleted = getCurrentStepIndex() > index;
+                                const isInactive = !isActive && !isCurrent;
                                 return (
-                                    <View key={s.id} className="items-center z-10">
+                                    <View key={s.id} className="items-center z-10" style={{ opacity: isInactive ? 0.4 : 1 }}>
                                         <View
-                                            className={`w-8 h-8 rounded-full items-center justify-center ${isActive ? 'bg-slate-900' : 'bg-slate-200'
-                                                } ${isCurrent ? 'border-4 border-slate-200' : ''}`}
+                                            className={`w-6 h-6 rounded-full items-center justify-center ${isActive ? 'bg-slate-900' : 'bg-slate-100'
+                                                } ${isCurrent ? 'border-2 border-slate-300' : ''}`}
                                         >
                                             {isCompleted ? (
-                                                <Check size={16} color="#ffffff" />
+                                                <Check size={12} color="#ffffff" />
                                             ) : (
-                                                <Text className={`text-sm font-bold ${isActive ? 'text-white' : 'text-slate-500'}`}>
+                                                <Text className={`text-xs font-bold ${isActive ? 'text-white' : 'text-slate-400'}`}>
                                                     {s.number}
                                                 </Text>
                                             )}
                                         </View>
-                                        <Text className={`mt-2 text-xs font-medium ${isActive ? 'text-slate-900' : 'text-slate-400'}`}>
+                                        <Text className={`mt-1.5 text-xs font-medium ${isActive ? 'text-slate-900' : 'text-slate-400'}`}>
                                             {s.label}
                                         </Text>
                                     </View>
@@ -361,18 +366,26 @@ export default function RegisterScreen() {
                     {step === 'email' && (
                         <Animated.View
                             entering={FadeInUp.duration(500).delay(300)}
-                            style={{ gap: 16 }}
+                            style={[{ gap: 16 }, formShakeStyle]}
                         >
                             <View>
                                 <Text className="text-sm font-medium text-slate-700 mb-2">İş e-posta adresiniz</Text>
-                                <View className={`flex-row items-center bg-white border rounded-xl px-4 ${email && !emailValid ? 'border-red-300' : 'border-slate-200'}`}>
+                                <View
+                                    className="flex-row items-center rounded-2xl px-4"
+                                    style={{
+                                        backgroundColor: 'rgba(255, 255, 255, 0.4)',
+                                        height: 56,
+                                        borderWidth: 1.5,
+                                        borderColor: email && !emailValid ? '#fca5a5' : 'rgba(255, 255, 255, 0.3)',
+                                    }}
+                                >
                                     <Mail size={20} color="#94a3b8" />
                                     <TextInput
                                         value={email}
                                         onChangeText={text => setEmail(text.toLowerCase())}
                                         placeholder="ornek@sirket.com"
                                         placeholderTextColor="#94a3b8"
-                                        className="flex-1 py-4 ml-3 text-slate-900 text-base"
+                                        className="flex-1 ml-3 text-slate-900 text-base"
                                         autoCapitalize="none"
                                         keyboardType="email-address"
                                         autoComplete="email"
@@ -382,7 +395,7 @@ export default function RegisterScreen() {
                                 {emailError ? (
                                     <View className="flex-row items-center mt-2" style={{ gap: 4 }}>
                                         <AlertTriangle size={14} color="#ef4444" />
-                                        <Text className="text-sm text-red-600">{emailError}</Text>
+                                        <Text className="text-sm text-red-500">{emailError}</Text>
                                     </View>
                                 ) : emailValid ? (
                                     <View className="flex-row items-center mt-2" style={{ gap: 4 }}>
@@ -411,11 +424,19 @@ export default function RegisterScreen() {
                     {step === 'password' && (
                         <Animated.View
                             entering={FadeInUp.duration(500)}
-                            style={{ gap: 16 }}
+                            style={[{ gap: 16 }, formShakeStyle]}
                         >
                             <View>
                                 <Text className="text-sm font-medium text-slate-700 mb-2">Şifrenizi belirleyin</Text>
-                                <View className={`flex-row items-center bg-white border rounded-xl px-4 ${password && !passwordValid ? 'border-red-300' : 'border-slate-200'}`}>
+                                <View
+                                    className="flex-row items-center rounded-2xl px-4"
+                                    style={{
+                                        backgroundColor: 'rgba(255, 255, 255, 0.4)',
+                                        height: 56,
+                                        borderWidth: 1.5,
+                                        borderColor: password && !passwordValid ? '#fca5a5' : 'rgba(255, 255, 255, 0.3)',
+                                    }}
+                                >
                                     <Lock size={20} color="#94a3b8" />
                                     <TextInput
                                         value={password}
@@ -423,7 +444,7 @@ export default function RegisterScreen() {
                                         secureTextEntry={!showPassword}
                                         placeholder="En az 8 karakter"
                                         placeholderTextColor="#94a3b8"
-                                        className="flex-1 py-4 ml-3 text-slate-900 text-base"
+                                        className="flex-1 ml-3 text-slate-900 text-base"
                                         onSubmitEditing={handlePasswordContinue}
                                     />
                                     <Pressable onPress={() => setShowPassword(!showPassword)} className="p-2">
@@ -435,7 +456,7 @@ export default function RegisterScreen() {
                                     </Pressable>
                                 </View>
                                 {passwordError ? (
-                                    <Text className="text-sm text-red-600 mt-2">{passwordError}</Text>
+                                    <Text className="text-sm text-red-500 mt-2">{passwordError}</Text>
                                 ) : null}
                                 {password && !passwordError ? (
                                     <View className="mt-3" style={{ gap: 6 }}>
@@ -443,7 +464,7 @@ export default function RegisterScreen() {
                                             {[1, 2, 3, 4, 5].map((level) => (
                                                 <View
                                                     key={level}
-                                                    className={`h-1 flex-1 rounded-full ${passwordStrength >= level ? getStrengthColor() : 'bg-slate-200'}`}
+                                                    className={`h-1 flex-1 rounded-full ${passwordStrength >= level ? getStrengthColor() : 'bg-slate-100'}`}
                                                 />
                                             ))}
                                         </View>
@@ -468,11 +489,19 @@ export default function RegisterScreen() {
                     {step === 'teamName' && (
                         <Animated.View
                             entering={FadeInUp.duration(500)}
-                            style={{ gap: 16 }}
+                            style={[{ gap: 16 }, formShakeStyle]}
                         >
                             <View>
                                 <Text className="text-sm font-medium text-slate-700 mb-2">Çalışma alanı adresiniz</Text>
-                                <View className="flex-row items-center border border-slate-200 rounded-xl overflow-hidden">
+                                <View
+                                    className="flex-row items-center rounded-2xl overflow-hidden"
+                                    style={{
+                                        backgroundColor: 'rgba(255, 255, 255, 0.4)',
+                                        height: 56,
+                                        borderWidth: 1.5,
+                                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                                    }}
+                                >
                                     <View className="flex-row items-center flex-1 px-4">
                                         <Building2 size={20} color="#94a3b8" />
                                         <TextInput
@@ -480,12 +509,12 @@ export default function RegisterScreen() {
                                             onChangeText={t => setTeamName(t.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                                             placeholder="sirketiniz"
                                             placeholderTextColor="#94a3b8"
-                                            className="flex-1 py-4 ml-3 text-slate-900 text-base"
+                                            className="flex-1 ml-3 text-slate-900 text-base"
                                             autoCapitalize="none"
                                             onSubmitEditing={handleTeamNameContinue}
                                         />
                                     </View>
-                                    <View className="bg-slate-100 px-4 py-4 border-l border-slate-200">
+                                    <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.5)', paddingHorizontal: 16, height: '100%', justifyContent: 'center', borderLeftWidth: 1, borderLeftColor: 'rgba(255, 255, 255, 0.3)' }}>
                                         <Text className="text-slate-500 text-sm">.stoocker.app</Text>
                                     </View>
                                 </View>
@@ -497,7 +526,7 @@ export default function RegisterScreen() {
                                 {teamNameError ? (
                                     <View className="flex-row items-center mt-2" style={{ gap: 4 }}>
                                         <AlertTriangle size={14} color="#ef4444" />
-                                        <Text className="text-sm text-red-600">{teamNameError}</Text>
+                                        <Text className="text-sm text-red-500">{teamNameError}</Text>
                                     </View>
                                 ) : teamNameValid ? (
                                     <View className="flex-row items-center mt-2" style={{ gap: 4 }}>
@@ -523,32 +552,48 @@ export default function RegisterScreen() {
                     {step === 'fullName' && (
                         <Animated.View
                             entering={FadeInUp.duration(500)}
-                            style={{ gap: 16 }}
+                            style={[{ gap: 16 }, formShakeStyle]}
                         >
                             <View>
                                 <Text className="text-sm font-medium text-slate-700 mb-2">Adınız</Text>
-                                <View className="flex-row items-center bg-white border border-slate-200 rounded-xl px-4">
+                                <View
+                                    className="flex-row items-center rounded-2xl px-4"
+                                    style={{
+                                        backgroundColor: 'rgba(255, 255, 255, 0.4)',
+                                        height: 56,
+                                        borderWidth: 1.5,
+                                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                                    }}
+                                >
                                     <User size={20} color="#94a3b8" />
                                     <TextInput
                                         value={firstName}
                                         onChangeText={setFirstName}
                                         placeholder="Adınız"
                                         placeholderTextColor="#94a3b8"
-                                        className="flex-1 py-4 ml-3 text-slate-900 text-base"
+                                        className="flex-1 ml-3 text-slate-900 text-base"
                                     />
                                 </View>
                             </View>
 
                             <View>
                                 <Text className="text-sm font-medium text-slate-700 mb-2">Soyadınız</Text>
-                                <View className="flex-row items-center bg-white border border-slate-200 rounded-xl px-4">
+                                <View
+                                    className="flex-row items-center rounded-2xl px-4"
+                                    style={{
+                                        backgroundColor: 'rgba(255, 255, 255, 0.4)',
+                                        height: 56,
+                                        borderWidth: 1.5,
+                                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                                    }}
+                                >
                                     <User size={20} color="#94a3b8" />
                                     <TextInput
                                         value={lastName}
                                         onChangeText={setLastName}
                                         placeholder="Soyadınız"
                                         placeholderTextColor="#94a3b8"
-                                        className="flex-1 py-4 ml-3 text-slate-900 text-base"
+                                        className="flex-1 ml-3 text-slate-900 text-base"
                                     />
                                 </View>
                             </View>
@@ -600,88 +645,63 @@ export default function RegisterScreen() {
                         </Animated.View>
                     )}
 
-                    {/* Testimonial Card - Only on first step */}
-                    {step === 'email' && (
+                        {/* Trust Badges - Show on email step only (ValueCarousel removed for cleaner UX) */}
+                        {step === 'email' && (
+                            <Animated.View
+                                entering={FadeInUp.duration(600).delay(500)}
+                                className="mt-8 mb-4"
+                            >
+                                <View
+                                    style={{
+                                        shadowColor: '#6366f1',
+                                        shadowOffset: { width: 0, height: 4 },
+                                        shadowOpacity: 0.08,
+                                        shadowRadius: 16,
+                                        elevation: 4,
+                                    }}
+                                >
+                                    <GlassCard padding={16} style={{ borderRadius: 20 }}>
+                                        <View className="flex-row justify-center items-center" style={{ gap: 24 }}>
+                                            <View className="items-center">
+                                                <Text className="text-slate-900 font-bold text-lg">5 dk</Text>
+                                                <Text className="text-slate-400 text-xs">Kurulum</Text>
+                                            </View>
+                                            <View className="w-px h-8 bg-slate-200" />
+                                            <View className="items-center">
+                                                <Text className="text-slate-900 font-bold text-lg">14 gün</Text>
+                                                <Text className="text-slate-400 text-xs">Ücretsiz</Text>
+                                            </View>
+                                            <View className="w-px h-8 bg-slate-200" />
+                                            <View className="items-center">
+                                                <Text className="text-slate-900 font-bold text-lg">7/24</Text>
+                                                <Text className="text-slate-400 text-xs">Destek</Text>
+                                            </View>
+                                        </View>
+                                    </GlassCard>
+                                </View>
+                            </Animated.View>
+                        )}
+
+                        {/* Footer */}
                         <Animated.View
-                            entering={FadeInUp.duration(600).delay(500)}
-                            className="mt-8 bg-slate-50 rounded-2xl p-5"
+                            entering={FadeIn.duration(500).delay(700)}
+                            className="mt-auto pt-8 pb-4"
                         >
-                            {/* Quote Icon */}
-                            <Text className="text-slate-300 text-3xl font-serif mb-2">"</Text>
-
-                            <Text className="text-slate-700 text-base leading-relaxed mb-4">
-                                {currentTestimonial.quote}
-                            </Text>
-
-                            <View className="flex-row items-center">
-                                <View className="w-9 h-9 bg-slate-900 rounded-full items-center justify-center mr-3">
-                                    <Text className="text-white font-semibold text-sm">{currentTestimonial.initials}</Text>
-                                </View>
-                                <View>
-                                    <Text className="text-slate-900 font-medium text-sm">{currentTestimonial.author}</Text>
-                                    <Text className="text-slate-500 text-xs">{currentTestimonial.role}, {currentTestimonial.company}</Text>
-                                </View>
-                            </View>
-
-                            {/* Dots */}
-                            <View className="flex-row items-center justify-center mt-4" style={{ gap: 6 }}>
-                                {TESTIMONIALS.map((_, i) => (
-                                    <Pressable
-                                        key={i}
-                                        onPress={() => setTestimonialIndex(i)}
-                                    >
-                                        <View
-                                            className={`h-1.5 rounded-full ${i === testimonialIndex ? 'w-6 bg-slate-900' : 'w-1.5 bg-slate-300'}`}
-                                        />
-                                    </Pressable>
-                                ))}
+                            <View className="flex-row items-center justify-center" style={{ gap: 24 }}>
+                                <Pressable>
+                                    <Text className="text-slate-400 text-sm">Gizlilik</Text>
+                                </Pressable>
+                                <Pressable>
+                                    <Text className="text-slate-400 text-sm">Şartlar</Text>
+                                </Pressable>
+                                <Pressable>
+                                    <Text className="text-slate-400 text-sm">Yardım</Text>
+                                </Pressable>
                             </View>
                         </Animated.View>
-                    )}
-
-                    {/* Stats - Show on email step */}
-                    {step === 'email' && (
-                        <Animated.View
-                            entering={FadeInUp.duration(600).delay(600)}
-                            className="flex-row justify-center items-center mt-6 mb-4"
-                            style={{ gap: 24 }}
-                        >
-                            <View className="items-center">
-                                <Text className="text-slate-900 font-bold text-lg">5 dk</Text>
-                                <Text className="text-slate-500 text-xs">Kurulum</Text>
-                            </View>
-                            <View className="w-px h-8 bg-slate-200" />
-                            <View className="items-center">
-                                <Text className="text-slate-900 font-bold text-lg">14 gün</Text>
-                                <Text className="text-slate-500 text-xs">Ücretsiz</Text>
-                            </View>
-                            <View className="w-px h-8 bg-slate-200" />
-                            <View className="items-center">
-                                <Text className="text-slate-900 font-bold text-lg">7/24</Text>
-                                <Text className="text-slate-500 text-xs">Destek</Text>
-                            </View>
-                        </Animated.View>
-                    )}
-
-                    {/* Footer */}
-                    <Animated.View
-                        entering={FadeIn.duration(500).delay(700)}
-                        className="mt-auto pt-8 pb-4"
-                    >
-                        <View className="flex-row items-center justify-center" style={{ gap: 24 }}>
-                            <Pressable>
-                                <Text className="text-slate-400 text-sm">Gizlilik</Text>
-                            </Pressable>
-                            <Pressable>
-                                <Text className="text-slate-400 text-sm">Şartlar</Text>
-                            </Pressable>
-                            <Pressable>
-                                <Text className="text-slate-400 text-sm">Yardım</Text>
-                            </Pressable>
-                        </View>
-                    </Animated.View>
-                </ScrollView>
-            </KeyboardAvoidingView>
-        </SafeAreaView>
+                    </ScrollView>
+                </KeyboardAvoidingView>
+            </SafeAreaView>
+        </AuroraBackground>
     );
 }

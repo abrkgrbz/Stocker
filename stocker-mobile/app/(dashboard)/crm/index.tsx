@@ -23,12 +23,29 @@ import {
     ChevronRight,
     X,
     RefreshCw,
-    WifiOff
+    WifiOff,
+    Target,
+    Calendar,
+    DollarSign,
+    Hash
 } from 'lucide-react-native';
 import { useTheme } from '@/lib/theme';
 import { useCustomers } from '@/lib/api/hooks/useCRM';
 import { useSync } from '@/lib/sync/SyncContext';
+import {
+    SortSheet,
+    SortButton,
+    type SortOption,
+    type SortValue
+} from '@/components/ui';
 import type { Customer, CustomerStatus } from '@/lib/api/types/crm.types';
+
+const SORT_OPTIONS: SortOption[] = [
+    { key: 'companyName', label: 'Şirket Adı', icon: <Building2 size={18} color="#64748b" /> },
+    { key: 'createdAt', label: 'Eklenme Tarihi', icon: <Calendar size={18} color="#64748b" /> },
+    { key: 'creditLimit', label: 'Kredi Limiti', icon: <DollarSign size={18} color="#64748b" /> },
+    { key: 'annualRevenue', label: 'Yıllık Ciro', icon: <DollarSign size={18} color="#64748b" /> },
+];
 
 export default function CustomerListScreen() {
     const router = useRouter();
@@ -38,6 +55,8 @@ export default function CustomerListScreen() {
 
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedFilter, setSelectedFilter] = useState<CustomerStatus | 'all'>('all');
+    const [showSortSheet, setShowSortSheet] = useState(false);
+    const [sortValue, setSortValue] = useState<SortValue | null>(null);
 
     // Fetch customers from API
     const {
@@ -56,13 +75,36 @@ export default function CustomerListScreen() {
 
     // Filter customers locally for immediate search feedback
     const filteredCustomers = useMemo(() => {
-        if (searchQuery.length < 2) {
-            return selectedFilter === 'all'
-                ? customers
-                : customers.filter(c => c.status === selectedFilter);
+        let result = customers;
+
+        if (searchQuery.length < 2 && selectedFilter !== 'all') {
+            result = result.filter(c => c.status === selectedFilter);
         }
-        return customers;
-    }, [customers, searchQuery, selectedFilter]);
+
+        // Sorting
+        if (sortValue) {
+            result = [...result].sort((a, b) => {
+                let comparison = 0;
+                switch (sortValue.key) {
+                    case 'companyName':
+                        comparison = a.companyName.localeCompare(b.companyName);
+                        break;
+                    case 'createdAt':
+                        comparison = new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+                        break;
+                    case 'creditLimit':
+                        comparison = (a.creditLimit || 0) - (b.creditLimit || 0);
+                        break;
+                    case 'annualRevenue':
+                        comparison = (a.annualRevenue || 0) - (b.annualRevenue || 0);
+                        break;
+                }
+                return sortValue.order === 'asc' ? comparison : -comparison;
+            });
+        }
+
+        return result;
+    }, [customers, searchQuery, selectedFilter, sortValue]);
 
     const onRefresh = useCallback(() => {
         refetch();
@@ -70,20 +112,20 @@ export default function CustomerListScreen() {
 
     const getStatusColor = (status: CustomerStatus) => {
         switch (status) {
-            case 'active': return colors.semantic.success;
-            case 'lead': return colors.semantic.warning;
-            case 'prospect': return colors.semantic.info;
-            case 'inactive': return colors.text.tertiary;
+            case 'Active': return colors.semantic.success;
+            case 'Prospect': return colors.semantic.warning;
+            case 'Inactive': return colors.text.tertiary;
+            case 'Suspended': return colors.semantic.error;
             default: return colors.text.tertiary;
         }
     };
 
     const getStatusLabel = (status: CustomerStatus) => {
         switch (status) {
-            case 'active': return 'Aktif';
-            case 'lead': return 'Potansiyel';
-            case 'prospect': return 'Aday';
-            case 'inactive': return 'Pasif';
+            case 'Active': return 'Aktif';
+            case 'Prospect': return 'Aday';
+            case 'Inactive': return 'Pasif';
+            case 'Suspended': return 'Askıda';
             default: return status;
         }
     };
@@ -145,7 +187,7 @@ export default function CustomerListScreen() {
                             marginRight: 12
                         }}
                     >
-                        {item.type === 'company' ? (
+                        {item.customerType === 'Corporate' ? (
                             <Building2 size={22} color={colors.modules.crm} />
                         ) : (
                             <User size={22} color={colors.modules.crm} />
@@ -156,7 +198,7 @@ export default function CustomerListScreen() {
                     <View style={{ flex: 1 }}>
                         <View className="flex-row items-center justify-between mb-1">
                             <Text style={{ color: colors.text.primary, fontSize: 16, fontWeight: '600' }}>
-                                {item.name}
+                                {item.companyName}
                             </Text>
                             <View
                                 style={{
@@ -176,9 +218,9 @@ export default function CustomerListScreen() {
                             </View>
                         </View>
 
-                        {item.company && (
+                        {item.contactPerson && (
                             <Text style={{ color: colors.text.secondary, fontSize: 13, marginBottom: 4 }}>
-                                {item.company}
+                                {item.contactPerson}
                             </Text>
                         )}
 
@@ -198,18 +240,18 @@ export default function CustomerListScreen() {
                         </View>
 
                         {/* Stats */}
-                        {(item.totalRevenue || 0) > 0 && (
+                        {(item.annualRevenue || 0) > 0 && (
                             <View className="flex-row items-center mt-3 pt-3" style={{ borderTopWidth: 1, borderTopColor: colors.border.primary }}>
                                 <View style={{ flex: 1 }}>
-                                    <Text style={{ color: colors.text.tertiary, fontSize: 11 }}>Toplam Ciro</Text>
+                                    <Text style={{ color: colors.text.tertiary, fontSize: 11 }}>Yıllık Ciro</Text>
                                     <Text style={{ color: colors.text.primary, fontSize: 14, fontWeight: '600' }}>
-                                        {formatCurrency(item.totalRevenue || 0)}
+                                        {formatCurrency(item.annualRevenue || 0)}
                                     </Text>
                                 </View>
                                 <View style={{ alignItems: 'flex-end' }}>
-                                    <Text style={{ color: colors.text.tertiary, fontSize: 11 }}>Sipariş</Text>
+                                    <Text style={{ color: colors.text.tertiary, fontSize: 11 }}>Kredi Limiti</Text>
                                     <Text style={{ color: colors.text.primary, fontSize: 14, fontWeight: '600' }}>
-                                        {item.totalOrders}
+                                        {formatCurrency(item.creditLimit)}
                                     </Text>
                                 </View>
                                 <ChevronRight size={20} color={colors.text.tertiary} style={{ marginLeft: 8 }} />
@@ -249,15 +291,59 @@ export default function CustomerListScreen() {
                     <Pressable
                         onPress={() => router.push('/(dashboard)/crm/add' as any)}
                         style={{
-                            backgroundColor: colors.brand.primary,
-                            width: 40,
-                            height: 40,
-                            borderRadius: 12,
-                            alignItems: 'center',
-                            justifyContent: 'center'
+                            backgroundColor: colors.modules.crm,
+                            paddingHorizontal: 12,
+                            paddingVertical: 8,
+                            borderRadius: 10,
+                            flexDirection: 'row',
+                            alignItems: 'center'
                         }}
                     >
-                        <Plus size={22} color={colors.text.inverse} />
+                        <Plus size={16} color="#fff" />
+                        <Text style={{ color: '#fff', fontWeight: '600', marginLeft: 4, fontSize: 13 }}>
+                            Müşteri
+                        </Text>
+                    </Pressable>
+                </View>
+
+                {/* Quick Actions */}
+                <View className="flex-row mt-3 mb-3">
+                    <Pressable
+                        onPress={() => router.push('/(dashboard)/crm/deals' as any)}
+                        style={{
+                            flex: 1,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: colors.background.tertiary,
+                            paddingVertical: 10,
+                            paddingHorizontal: 14,
+                            borderRadius: 10,
+                            marginRight: 8
+                        }}
+                    >
+                        <Target size={16} color={colors.modules.crm} />
+                        <Text style={{ color: colors.text.secondary, fontSize: 13, fontWeight: '500', marginLeft: 6 }}>
+                            Fırsatlar
+                        </Text>
+                    </Pressable>
+                    <Pressable
+                        onPress={() => router.push('/(dashboard)/crm/activities' as any)}
+                        style={{
+                            flex: 1,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: colors.background.tertiary,
+                            paddingVertical: 10,
+                            paddingHorizontal: 14,
+                            borderRadius: 10
+                        }}
+                    >
+                        <Phone size={16} color={colors.modules.crm} />
+                        <Text style={{ color: colors.text.secondary, fontSize: 13, fontWeight: '500', marginLeft: 6 }}>
+                            Aktiviteler
+                        </Text>
                     </Pressable>
                 </View>
 
@@ -292,6 +378,15 @@ export default function CustomerListScreen() {
                     )}
                 </View>
 
+                {/* Sort Button */}
+                <View style={{ marginTop: 12 }}>
+                    <SortButton
+                        onPress={() => setShowSortSheet(true)}
+                        value={sortValue}
+                        options={SORT_OPTIONS}
+                    />
+                </View>
+
                 {/* Filter Chips */}
                 <Animated.ScrollView
                     horizontal
@@ -300,10 +395,10 @@ export default function CustomerListScreen() {
                     contentContainerStyle={{ paddingRight: 16 }}
                 >
                     <FilterChip label="Tümü" value="all" />
-                    <FilterChip label="Aktif" value="active" />
-                    <FilterChip label="Potansiyel" value="lead" />
-                    <FilterChip label="Aday" value="prospect" />
-                    <FilterChip label="Pasif" value="inactive" />
+                    <FilterChip label="Aktif" value="Active" />
+                    <FilterChip label="Aday" value="Prospect" />
+                    <FilterChip label="Pasif" value="Inactive" />
+                    <FilterChip label="Askıda" value="Suspended" />
                 </Animated.ScrollView>
             </Animated.View>
 
@@ -394,6 +489,16 @@ export default function CustomerListScreen() {
                         )}
                     </View>
                 )}
+            />
+
+            {/* Sort Sheet */}
+            <SortSheet
+                visible={showSortSheet}
+                onClose={() => setShowSortSheet(false)}
+                options={SORT_OPTIONS}
+                value={sortValue}
+                onChange={setSortValue}
+                title="Sıralama"
             />
         </SafeAreaView>
     );

@@ -25,10 +25,8 @@ import {
     RefreshCw
 } from 'lucide-react-native';
 import { useTheme } from '@/lib/theme';
+import { useAssets } from '@/lib/api/hooks/useHR';
 import type { Asset, AssetStatus } from '@/lib/api/types/hr.types';
-
-// TODO: Replace with useAssets hook when API is available
-// Assets API endpoint henüz backend'de mevcut değil
 
 const STATUS_CONFIG: Record<AssetStatus, { label: string; color: string; bgColor: string }> = {
     available: { label: 'Müsait', color: '#22c55e', bgColor: '#dcfce7' },
@@ -52,14 +50,19 @@ export default function AssetsScreen() {
 
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedStatus, setSelectedStatus] = useState<AssetStatus | 'all'>('all');
-    const [refreshing, setRefreshing] = useState(false);
 
-    // TODO: Replace with useAssets hook when API is available
-    // const { data: assetsResponse, isLoading, isError, refetch, isRefetching } = useAssets({ status: selectedStatus });
-    const isLoading = false;
-    const isError = false;
-    const isRefetching = refreshing;
-    const assets: Asset[] = []; // Boş array - API bağlandığında assetsResponse?.items kullanılacak
+    const {
+        data: assetsResponse,
+        isLoading,
+        isError,
+        refetch,
+        isRefetching
+    } = useAssets({
+        status: selectedStatus !== 'all' ? selectedStatus : undefined,
+        pageSize: 100
+    });
+
+    const assets = assetsResponse?.items || [];
 
     const statusFilters: { key: AssetStatus | 'all'; label: string }[] = [
         { key: 'all', label: 'Tümü' },
@@ -83,10 +86,8 @@ export default function AssetsScreen() {
     }, [assets, searchQuery, selectedStatus]);
 
     const onRefresh = useCallback(() => {
-        setRefreshing(true);
-        // TODO: Replace with refetch() when API is available
-        setTimeout(() => setRefreshing(false), 1000);
-    }, []);
+        refetch();
+    }, [refetch]);
 
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('tr-TR', {
@@ -311,7 +312,7 @@ export default function AssetsScreen() {
                         tintColor={colors.brand.primary}
                     />
                 }
-                contentContainerStyle={{ paddingTop: 12, paddingBottom: insets.bottom + 20 }}
+                contentContainerStyle={{ paddingTop: 12, paddingBottom: 60 + insets.bottom + 24 }}
             >
                 {isLoading ? (
                     <View className="items-center justify-center py-12">

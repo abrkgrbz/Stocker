@@ -206,7 +206,13 @@ class OfflineStorage {
                 break;
 
             case 'deal':
-                if (item.type === 'update') await crmService.updateDealStage(item.payload.id, item.payload.stage);
+                if (item.type === 'create') await crmService.createDeal(item.payload);
+                else if (item.type === 'update') {
+                    const { action } = item.payload;
+                    if (action === 'updateStage') await crmService.updateDealStage(item.payload.id, item.payload.stage);
+                    else await crmService.updateDeal(item.payload.id, item.payload.data);
+                }
+                else if (item.type === 'delete') await crmService.deleteDeal(item.payload.id);
                 break;
 
             // Inventory Operations
@@ -372,8 +378,19 @@ class OfflineStorage {
         await this.addToQueue({ type, entity: 'customer', payload });
     }
 
-    async queueDealUpdate(id: string, stage: string): Promise<void> {
-        await this.addToQueue({ type: 'update', entity: 'deal', payload: { id, stage } });
+    async queueDealOperation(
+        type: 'create' | 'update' | 'delete',
+        payload: any
+    ): Promise<void> {
+        await this.addToQueue({ type, entity: 'deal', payload });
+    }
+
+    async queueDealStageUpdate(id: string, stage: string): Promise<void> {
+        await this.addToQueue({
+            type: 'update',
+            entity: 'deal',
+            payload: { id, action: 'updateStage', stage },
+        });
     }
 
     // -------- Inventory Operations --------

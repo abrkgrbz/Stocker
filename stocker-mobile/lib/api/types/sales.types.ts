@@ -208,9 +208,11 @@ export interface CreateInvoiceItemRequest {
 }
 
 export interface UpdateInvoiceRequest {
+    customerId?: string;
     status?: InvoiceStatus;
     dueDate?: string;
     notes?: string;
+    items?: CreateInvoiceItemRequest[];
 }
 
 export interface CreateQuoteRequest {
