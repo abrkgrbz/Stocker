@@ -89,7 +89,7 @@ const DraggableDealCard = ({
   const isLost = deal.status === 'Lost';
   const canDrag = deal.status === 'Open';
 
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+  const { attributes, listeners, setNodeRef, transform, isDragging: isCurrentlyDragging } = useDraggable({
     id: deal.id,
     disabled: !canDrag,
   });
@@ -97,7 +97,8 @@ const DraggableDealCard = ({
   const style = transform
     ? {
         transform: CSS.Translate.toString(transform),
-        opacity: isDragging ? 0.5 : 1,
+        opacity: isDragging || isCurrentlyDragging ? 0.5 : 1,
+        zIndex: isCurrentlyDragging ? 1000 : undefined,
       }
     : undefined;
 
@@ -105,23 +106,20 @@ const DraggableDealCard = ({
     <div
       ref={setNodeRef}
       style={style}
-      className={`mb-3 bg-white border rounded-lg p-3 hover:shadow-md transition-all ${
+      {...(canDrag ? { ...attributes, ...listeners } : {})}
+      className={`mb-3 bg-white border rounded-lg p-3 hover:shadow-md transition-all touch-none ${
         isWon
           ? 'border-emerald-400 bg-emerald-50'
           : isLost
           ? 'border-red-400 bg-red-50 opacity-75'
           : 'border-slate-200 hover:border-slate-300'
-      } ${canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
+      } ${canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} ${isCurrentlyDragging ? 'shadow-lg ring-2 ring-blue-400' : ''}`}
     >
       {/* Drag Handle + Header */}
       <div className="flex justify-between items-start mb-2">
         <div className="flex items-center gap-1.5 flex-1 min-w-0">
           {canDrag && (
-            <div
-              {...attributes}
-              {...listeners}
-              className="p-1 -ml-1 text-slate-400 hover:text-slate-600 cursor-grab"
-            >
+            <div className="p-1 -ml-1 text-slate-400 hover:text-slate-600">
               <Bars3Icon className="w-4 h-4" />
             </div>
           )}
@@ -129,7 +127,10 @@ const DraggableDealCard = ({
           {isWon && <TrophyIcon className="w-3 h-3 text-emerald-500" />}
           <span
             className="text-sm font-medium text-slate-900 truncate cursor-pointer hover:text-blue-600"
-            onClick={() => onNavigate(deal.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onNavigate(deal.id);
+            }}
           >
             {deal.title}
           </span>
@@ -166,10 +167,11 @@ const DraggableDealCard = ({
 
       {/* Actions - Only for Open deals */}
       {deal.status === 'Open' && (
-        <div className="flex gap-2">
+        <div className="flex gap-2" onPointerDown={(e) => e.stopPropagation()}>
           <button
             onClick={(e) => {
               e.stopPropagation();
+              e.preventDefault();
               onCloseWon(deal);
             }}
             className="flex-1 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors flex items-center justify-center gap-1"
@@ -180,6 +182,7 @@ const DraggableDealCard = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
+              e.preventDefault();
               onCloseLost(deal);
             }}
             className="flex-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 transition-colors flex items-center justify-center gap-1"
