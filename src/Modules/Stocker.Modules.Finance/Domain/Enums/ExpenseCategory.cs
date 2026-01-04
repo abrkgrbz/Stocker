@@ -218,27 +218,42 @@ public enum ExpenseStatus
     Draft = 1,
 
     /// <summary>
+    /// Beklemede (Pending) - Onay gerektirmeyen giderler için
+    /// </summary>
+    Pending = 2,
+
+    /// <summary>
     /// Onay Bekliyor (Pending Approval)
     /// </summary>
-    PendingApproval = 2,
+    PendingApproval = 3,
 
     /// <summary>
     /// Onaylandı (Approved)
     /// </summary>
-    Approved = 3,
+    Approved = 4,
 
     /// <summary>
     /// Reddedildi (Rejected)
     /// </summary>
-    Rejected = 4,
+    Rejected = 5,
+
+    /// <summary>
+    /// İşleniyor (Processing) - Ödeme işlemi devam ediyor
+    /// </summary>
+    Processing = 6,
+
+    /// <summary>
+    /// Tamamlandı (Completed) - İşlem tamamlandı
+    /// </summary>
+    Completed = 7,
 
     /// <summary>
     /// Ödendi (Paid)
     /// </summary>
-    Paid = 5,
+    Paid = 8,
 
     /// <summary>
     /// İptal Edildi (Cancelled)
     /// </summary>
-    Cancelled = 6
+    Cancelled = 9
 }

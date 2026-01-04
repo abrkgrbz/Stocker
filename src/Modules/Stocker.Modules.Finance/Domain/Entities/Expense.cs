@@ -813,47 +813,6 @@ public class Expense : BaseEntity
 }
 
 /// <summary>
-/// Gider Durumları (Expense Statuses)
-/// </summary>
-public enum ExpenseStatus
-{
-    /// <summary>
-    /// Taslak (Draft)
-    /// </summary>
-    Draft = 1,
-
-    /// <summary>
-    /// Beklemede (Pending)
-    /// </summary>
-    Pending = 2,
-
-    /// <summary>
-    /// Onaylandı (Approved)
-    /// </summary>
-    Approved = 3,
-
-    /// <summary>
-    /// İşleniyor (Processing)
-    /// </summary>
-    Processing = 4,
-
-    /// <summary>
-    /// Tamamlandı (Completed)
-    /// </summary>
-    Completed = 5,
-
-    /// <summary>
-    /// Reddedildi (Rejected)
-    /// </summary>
-    Rejected = 6,
-
-    /// <summary>
-    /// İptal Edildi (Cancelled)
-    /// </summary>
-    Cancelled = 7
-}
-
-/// <summary>
 /// Gider Onay Durumları (Expense Approval Statuses)
 /// </summary>
 public enum ExpenseApprovalStatus

@@ -494,6 +494,22 @@ public class PromissoryNote : BaseEntity
         AddMovement(PromissoryNoteMovementType.Returned, date, $"İade edildi: {reason}");
     }
 
+    /// <summary>
+    /// İptal et (Cancel)
+    /// </summary>
+    public void Cancel(DateTime date, string reason)
+    {
+        if (Status != NegotiableInstrumentStatus.InPortfolio)
+            throw new InvalidOperationException("Sadece portföydeki senetler iptal edilebilir");
+
+        Status = NegotiableInstrumentStatus.Returned;
+        Notes = string.IsNullOrEmpty(Notes)
+            ? $"İptal edildi: {reason}"
+            : $"{Notes}\nİptal edildi: {reason}";
+
+        AddMovement(PromissoryNoteMovementType.Returned, date, $"İptal edildi: {reason}");
+    }
+
     private void AddMovement(PromissoryNoteMovementType movementType, DateTime date, string description)
     {
         var movement = new PromissoryNoteMovement(Id, movementType, date, description);
