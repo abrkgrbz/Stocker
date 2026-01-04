@@ -188,6 +188,14 @@ import type {
   ServiceLevelAnalysisDto,
   InventoryHealthScoreFilterDto,
   InventoryHealthScoreDto,
+  // Packaging Types
+  PackagingTypeDto,
+  CreatePackagingTypeDto,
+  UpdatePackagingTypeDto,
+  // Barcode Definitions
+  BarcodeDefinitionDto,
+  CreateBarcodeDefinitionDto,
+  UpdateBarcodeDefinitionDto,
 } from './inventory.types';
 
 // Import enums as values (not types) for use as default parameters
@@ -2123,6 +2131,95 @@ export class InventoryService {
     return ApiService.get<InventoryHealthScoreDto>(this.getPath('analysis/health-score'), {
       params: filter,
     });
+  }
+
+  // =====================================
+  // PACKAGING TYPES
+  // =====================================
+
+  /**
+   * Get all packaging types
+   */
+  static async getPackagingTypes(includeInactive: boolean = false): Promise<PackagingTypeDto[]> {
+    return ApiService.get<PackagingTypeDto[]>(this.getPath('packaging-types'), {
+      params: { includeInactive },
+    });
+  }
+
+  /**
+   * Get a packaging type by ID
+   */
+  static async getPackagingType(id: number): Promise<PackagingTypeDto> {
+    return ApiService.get<PackagingTypeDto>(this.getPath(`packaging-types/${id}`));
+  }
+
+  /**
+   * Create a new packaging type
+   */
+  static async createPackagingType(dto: CreatePackagingTypeDto): Promise<PackagingTypeDto> {
+    return ApiService.post<PackagingTypeDto>(this.getPath('packaging-types'), dto);
+  }
+
+  /**
+   * Update a packaging type
+   */
+  static async updatePackagingType(id: number, dto: UpdatePackagingTypeDto): Promise<PackagingTypeDto> {
+    return ApiService.put<PackagingTypeDto>(this.getPath(`packaging-types/${id}`), dto);
+  }
+
+  /**
+   * Delete a packaging type
+   */
+  static async deletePackagingType(id: number): Promise<void> {
+    return ApiService.delete(this.getPath(`packaging-types/${id}`));
+  }
+
+  // =====================================
+  // BARCODE DEFINITIONS
+  // =====================================
+
+  /**
+   * Get barcode definitions
+   */
+  static async getBarcodeDefinitions(productId?: number, includeInactive: boolean = false): Promise<BarcodeDefinitionDto[]> {
+    return ApiService.get<BarcodeDefinitionDto[]>(this.getPath('barcode-definitions'), {
+      params: { productId, includeInactive },
+    });
+  }
+
+  /**
+   * Get a barcode definition by ID
+   */
+  static async getBarcodeDefinition(id: number): Promise<BarcodeDefinitionDto> {
+    return ApiService.get<BarcodeDefinitionDto>(this.getPath(`barcode-definitions/${id}`));
+  }
+
+  /**
+   * Create a new barcode definition
+   */
+  static async createBarcodeDefinition(dto: CreateBarcodeDefinitionDto): Promise<BarcodeDefinitionDto> {
+    return ApiService.post<BarcodeDefinitionDto>(this.getPath('barcode-definitions'), dto);
+  }
+
+  /**
+   * Update a barcode definition
+   */
+  static async updateBarcodeDefinition(id: number, dto: UpdateBarcodeDefinitionDto): Promise<BarcodeDefinitionDto> {
+    return ApiService.put<BarcodeDefinitionDto>(this.getPath(`barcode-definitions/${id}`), dto);
+  }
+
+  /**
+   * Delete a barcode definition
+   */
+  static async deleteBarcodeDefinition(id: number): Promise<void> {
+    return ApiService.delete(this.getPath(`barcode-definitions/${id}`));
+  }
+
+  /**
+   * Lookup barcode
+   */
+  static async lookupBarcode(barcode: string): Promise<BarcodeDefinitionDto | null> {
+    return ApiService.get<BarcodeDefinitionDto | null>(this.getPath(`barcode-definitions/lookup/${barcode}`));
   }
 }
 

@@ -156,6 +156,14 @@ import type {
   ServiceLevelAnalysisDto,
   InventoryHealthScoreFilterDto,
   InventoryHealthScoreDto,
+  // Packaging Types
+  PackagingTypeDto,
+  CreatePackagingTypeDto,
+  UpdatePackagingTypeDto,
+  // Barcode Definitions
+  BarcodeDefinitionDto,
+  CreateBarcodeDefinitionDto,
+  UpdateBarcodeDefinitionDto,
 } from '../services/inventory.types';
 
 // =====================================
@@ -348,6 +356,14 @@ export const inventoryKeys = {
     ['inventory', 'analysis', 'service-level', filter] as const,
   inventoryHealthScore: (filter?: InventoryHealthScoreFilterDto) =>
     ['inventory', 'analysis', 'health-score', filter] as const,
+
+  // Packaging Types
+  packagingTypes: ['inventory', 'packaging-types'] as const,
+  packagingType: (id: number) => ['inventory', 'packaging-types', id] as const,
+
+  // Barcode Definitions
+  barcodeDefinitions: (productId?: number) => ['inventory', 'barcode-definitions', productId] as const,
+  barcodeDefinition: (id: number) => ['inventory', 'barcode-definitions', 'detail', id] as const,
 };
 
 // =====================================
@@ -3401,5 +3417,181 @@ export function useInventoryHealthScore(filter?: InventoryHealthScoreFilterDto, 
     queryKey: inventoryKeys.inventoryHealthScore(filter),
     queryFn: () => InventoryService.getInventoryHealthScore(filter),
     ...queryOptions.static({ enabled }),
+  });
+}
+
+// =====================================
+// PACKAGING TYPES HOOKS
+// =====================================
+
+/**
+ * Get all packaging types
+ */
+export function usePackagingTypes(includeInactive: boolean = false) {
+  return useQuery({
+    queryKey: [...inventoryKeys.packagingTypes, { includeInactive }],
+    queryFn: () => InventoryService.getPackagingTypes(includeInactive),
+    ...queryOptions.list(),
+  });
+}
+
+/**
+ * Get a packaging type by ID
+ */
+export function usePackagingType(id: number) {
+  return useQuery({
+    queryKey: inventoryKeys.packagingType(id),
+    queryFn: () => InventoryService.getPackagingType(id),
+    ...queryOptions.detail({ enabled: id > 0 }),
+  });
+}
+
+/**
+ * Create a new packaging type
+ */
+export function useCreatePackagingType() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (dto: CreatePackagingTypeDto) => InventoryService.createPackagingType(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.packagingTypes });
+      showSuccess('Ambalaj tipi başarıyla oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ambalaj tipi oluşturulurken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Update a packaging type
+ */
+export function useUpdatePackagingType() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, dto }: { id: number; dto: UpdatePackagingTypeDto }) =>
+      InventoryService.updatePackagingType(id, dto),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.packagingType(variables.id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.packagingTypes });
+      showSuccess('Ambalaj tipi başarıyla güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ambalaj tipi güncellenirken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Delete a packaging type
+ */
+export function useDeletePackagingType() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => InventoryService.deletePackagingType(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.packagingTypes });
+      showSuccess('Ambalaj tipi başarıyla silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ambalaj tipi silinirken hata oluştu');
+    },
+  });
+}
+
+// =====================================
+// BARCODE DEFINITIONS HOOKS
+// =====================================
+
+/**
+ * Get barcode definitions
+ */
+export function useBarcodeDefinitions(productId?: number, includeInactive: boolean = false) {
+  return useQuery({
+    queryKey: [...inventoryKeys.barcodeDefinitions(productId), { includeInactive }],
+    queryFn: () => InventoryService.getBarcodeDefinitions(productId, includeInactive),
+    ...queryOptions.list(),
+  });
+}
+
+/**
+ * Get a barcode definition by ID
+ */
+export function useBarcodeDefinition(id: number) {
+  return useQuery({
+    queryKey: inventoryKeys.barcodeDefinition(id),
+    queryFn: () => InventoryService.getBarcodeDefinition(id),
+    ...queryOptions.detail({ enabled: id > 0 }),
+  });
+}
+
+/**
+ * Create a new barcode definition
+ */
+export function useCreateBarcodeDefinition() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (dto: CreateBarcodeDefinitionDto) => InventoryService.createBarcodeDefinition(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.barcodeDefinitions() });
+      showSuccess('Barkod tanımı başarıyla oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Barkod tanımı oluşturulurken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Update a barcode definition
+ */
+export function useUpdateBarcodeDefinition() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, dto }: { id: number; dto: UpdateBarcodeDefinitionDto }) =>
+      InventoryService.updateBarcodeDefinition(id, dto),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.barcodeDefinition(variables.id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.barcodeDefinitions() });
+      showSuccess('Barkod tanımı başarıyla güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Barkod tanımı güncellenirken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Delete a barcode definition
+ */
+export function useDeleteBarcodeDefinition() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => InventoryService.deleteBarcodeDefinition(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.barcodeDefinitions() });
+      showSuccess('Barkod tanımı başarıyla silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Barkod tanımı silinirken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Lookup barcode
+ */
+export function useLookupBarcode() {
+  return useMutation({
+    mutationFn: (barcode: string) => InventoryService.lookupBarcode(barcode),
+    onError: (error) => {
+      showApiError(error, 'Barkod sorgulanırken hata oluştu');
+    },
   });
 }
