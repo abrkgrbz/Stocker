@@ -67,7 +67,7 @@ const onlinePlatformOptions = [
 
 interface MeetingFormProps {
   form: ReturnType<typeof Form.useForm>[0];
-  initialValues?: MeetingDto;
+  initialValues?: Partial<MeetingDto> & Record<string, any>;
   onFinish: (values: any) => void;
   loading?: boolean;
 }

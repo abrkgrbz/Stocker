@@ -5,7 +5,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CRMService, type Activity, type Deal, type Customer, type Lead, type PaginatedResponse } from '../services/crm.service';
+import { CRMService, type Activity, type Deal, type Customer, type Lead, type PaginatedResponse, type CustomerSegment } from '../services/crm.service';
 import { showSuccess, showError, showInfo, showApiError } from '@/lib/utils/notifications';
 import { queryOptions } from '../query-options';
 import type {
@@ -417,7 +417,7 @@ export function useLead(id: Guid) {
 }
 
 export function useLeadActivities(id: Guid) {
-  return useQuery({
+  return useQuery<Activity[]>({
     queryKey: crmKeys.leadActivities(id),
     queryFn: () => CRMService.getLeadActivities(id),
     ...queryOptions.detail({ enabled: !!id }),
@@ -1593,7 +1593,7 @@ export function useSegments() {
 }
 
 export function useSegment(id: string) {
-  return useQuery({
+  return useQuery<CustomerSegment>({
     queryKey: crmKeys.segment(id),
     queryFn: () => CRMService.getCustomerSegment(id),
     enabled: !!id,
@@ -1601,7 +1601,7 @@ export function useSegment(id: string) {
 }
 
 export function useSegmentMembers(id: string) {
-  return useQuery({
+  return useQuery<CustomerSegmentMemberDto[]>({
     queryKey: crmKeys.segmentMembers(id),
     queryFn: () => CRMService.getSegmentMembers(id),
     enabled: !!id,

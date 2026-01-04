@@ -49,12 +49,12 @@ export default function EditMeetingPage() {
     );
   }
 
-  // Transform meeting data for form
+  // Transform meeting data for form - Dayjs objects for DatePicker components
   const initialValues = {
     ...meeting,
     startTime: meeting.startTime ? dayjs(meeting.startTime) : undefined,
     endTime: meeting.endTime ? dayjs(meeting.endTime) : undefined,
-  };
+  } as any; // Form values use Dayjs for DatePicker
 
   return (
     <CrmFormPageLayout

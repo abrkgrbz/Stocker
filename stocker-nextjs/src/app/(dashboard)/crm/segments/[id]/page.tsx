@@ -57,7 +57,7 @@ export default function SegmentDetailPage() {
     );
   }
 
-  const typeInfo = segmentTypeLabels[segment.segmentType] || { label: segment.segmentType || 'Bilinmiyor', color: 'default' };
+  const typeInfo = segmentTypeLabels[segment.type] || { label: segment.type || 'Bilinmiyor', color: 'default' };
   const memberCount = members?.length || segment.memberCount || 0;
 
   return (

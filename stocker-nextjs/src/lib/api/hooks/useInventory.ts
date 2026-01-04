@@ -13,6 +13,7 @@ import type {
   UpdateProductDto,
   ProductImageDto,
   CategoryDto,
+  CategoryTreeDto,
   CreateCategoryDto,
   UpdateCategoryDto,
   BrandDto,
@@ -156,6 +157,10 @@ import type {
   ServiceLevelAnalysisDto,
   InventoryHealthScoreFilterDto,
   InventoryHealthScoreDto,
+  // Analytics Dashboard
+  InventoryDashboardDto,
+  StockValuationDto,
+  InventoryKPIsReportDto,
   // Packaging Types
   PackagingTypeDto,
   CreatePackagingTypeDto,
@@ -164,6 +169,18 @@ import type {
   BarcodeDefinitionDto,
   CreateBarcodeDefinitionDto,
   UpdateBarcodeDefinitionDto,
+  // Warehouse Zones
+  WarehouseZoneDto,
+  CreateWarehouseZoneDto,
+  UpdateWarehouseZoneDto,
+  // Quality Control
+  QualityControlDto,
+  CreateQualityControlDto,
+  QualityControlStatus,
+  // Cycle Counts
+  CycleCountDto,
+  CreateCycleCountDto,
+  CycleCountStatus,
 } from '../services/inventory.types';
 
 // =====================================
@@ -364,6 +381,21 @@ export const inventoryKeys = {
   // Barcode Definitions
   barcodeDefinitions: (productId?: number) => ['inventory', 'barcode-definitions', productId] as const,
   barcodeDefinition: (id: number) => ['inventory', 'barcode-definitions', 'detail', id] as const,
+
+  // Warehouse Zones
+  warehouseZones: (warehouseId?: number) => ['inventory', 'warehouse-zones', warehouseId] as const,
+  warehouseZone: (id: number) => ['inventory', 'warehouse-zones', id] as const,
+
+  // Quality Control
+  qualityControls: (status?: string) => ['inventory', 'quality-controls', status] as const,
+  qualityControl: (id: number) => ['inventory', 'quality-controls', id] as const,
+
+  // Cycle Counts
+  cycleCounts: (status?: string, warehouseId?: number) => ['inventory', 'cycle-counts', status, warehouseId] as const,
+  cycleCount: (id: number) => ['inventory', 'cycle-counts', id] as const,
+
+  // Shelf Life (Expiring Batches)
+  expiringLotBatches: (daysUntilExpiry: number) => ['inventory', 'lot-batches', 'expiring', daysUntilExpiry] as const,
 };
 
 // =====================================
@@ -371,7 +403,7 @@ export const inventoryKeys = {
 // =====================================
 
 export function useProducts(includeInactive: boolean = false, categoryId?: number, brandId?: number) {
-  return useQuery({
+  return useQuery<ProductDto[]>({
     queryKey: [...inventoryKeys.products, { includeInactive, categoryId, brandId }],
     queryFn: () => InventoryService.getProducts(includeInactive, categoryId, brandId),
     ...queryOptions.list(),
@@ -478,7 +510,7 @@ export function useDeactivateProduct() {
 // =====================================
 
 export function useCategories(includeInactive: boolean = false) {
-  return useQuery({
+  return useQuery<CategoryDto[]>({
     queryKey: [...inventoryKeys.categories, { includeInactive }],
     queryFn: () => InventoryService.getCategories(includeInactive),
     ...queryOptions.static(),
@@ -486,7 +518,7 @@ export function useCategories(includeInactive: boolean = false) {
 }
 
 export function useCategory(id: number) {
-  return useQuery({
+  return useQuery<CategoryDto>({
     queryKey: inventoryKeys.category(id),
     queryFn: () => InventoryService.getCategory(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -494,7 +526,7 @@ export function useCategory(id: number) {
 }
 
 export function useCategoryTree() {
-  return useQuery({
+  return useQuery<CategoryTreeDto[]>({
     queryKey: inventoryKeys.categoryTree,
     queryFn: () => InventoryService.getCategoryTree(),
     ...queryOptions.static(),
@@ -556,7 +588,7 @@ export function useDeleteCategory() {
 // =====================================
 
 export function useBrands(includeInactive: boolean = false) {
-  return useQuery({
+  return useQuery<BrandDto[]>({
     queryKey: [...inventoryKeys.brands, { includeInactive }],
     queryFn: () => InventoryService.getBrands(includeInactive),
     ...queryOptions.static(),
@@ -564,7 +596,7 @@ export function useBrands(includeInactive: boolean = false) {
 }
 
 export function useBrand(id: number) {
-  return useQuery({
+  return useQuery<BrandDto>({
     queryKey: inventoryKeys.brand(id),
     queryFn: () => InventoryService.getBrand(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -623,7 +655,7 @@ export function useDeleteBrand() {
 // =====================================
 
 export function useUnits(includeInactive: boolean = false) {
-  return useQuery({
+  return useQuery<UnitDto[]>({
     queryKey: [...inventoryKeys.units, { includeInactive }],
     queryFn: () => InventoryService.getUnits(includeInactive),
     ...queryOptions.static(),
@@ -631,7 +663,7 @@ export function useUnits(includeInactive: boolean = false) {
 }
 
 export function useUnit(id: number) {
-  return useQuery({
+  return useQuery<UnitDto>({
     queryKey: inventoryKeys.unit(id),
     queryFn: () => InventoryService.getUnit(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -690,7 +722,7 @@ export function useDeleteUnit() {
 // =====================================
 
 export function useWarehouses(includeInactive: boolean = false) {
-  return useQuery({
+  return useQuery<WarehouseDto[]>({
     queryKey: [...inventoryKeys.warehouses, { includeInactive }],
     queryFn: () => InventoryService.getWarehouses(includeInactive),
     ...queryOptions.static(),
@@ -698,7 +730,7 @@ export function useWarehouses(includeInactive: boolean = false) {
 }
 
 export function useWarehouse(id: number) {
-  return useQuery({
+  return useQuery<WarehouseDto>({
     queryKey: inventoryKeys.warehouse(id),
     queryFn: () => InventoryService.getWarehouse(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -848,7 +880,7 @@ export function useDeleteLocation() {
 // =====================================
 
 export function useSuppliers(includeInactive: boolean = false) {
-  return useQuery({
+  return useQuery<SupplierDto[]>({
     queryKey: [...inventoryKeys.suppliers, { includeInactive }],
     queryFn: () => InventoryService.getSuppliers(includeInactive),
     ...queryOptions.list(),
@@ -856,7 +888,7 @@ export function useSuppliers(includeInactive: boolean = false) {
 }
 
 export function useSupplier(id: number) {
-  return useQuery({
+  return useQuery<SupplierDto>({
     queryKey: inventoryKeys.supplier(id),
     queryFn: () => InventoryService.getSupplier(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -2294,7 +2326,7 @@ export function useRemoveProductBundleItem() {
  * Get inventory dashboard data with KPIs, breakdowns, trends, and alerts
  */
 export function useInventoryDashboard(warehouseId?: number, days: number = 30) {
-  return useQuery({
+  return useQuery<InventoryDashboardDto>({
     queryKey: inventoryKeys.analyticsDashboard(warehouseId, days),
     queryFn: () => InventoryService.getInventoryDashboard(warehouseId, days),
     ...queryOptions.realtime(),
@@ -2309,7 +2341,7 @@ export function useStockValuation(
   categoryId?: number,
   asOfDate?: string
 ) {
-  return useQuery({
+  return useQuery<StockValuationDto>({
     queryKey: inventoryKeys.analyticsValuation(warehouseId, categoryId, asOfDate),
     queryFn: () => InventoryService.getStockValuation(warehouseId, categoryId, asOfDate),
     ...queryOptions.list(),
@@ -2324,7 +2356,7 @@ export function useInventoryKPIs(
   endDate: string,
   warehouseId?: number
 ) {
-  return useQuery({
+  return useQuery<InventoryKPIsReportDto>({
     queryKey: inventoryKeys.analyticsKPIs(startDate, endDate, warehouseId),
     queryFn: () => InventoryService.getInventoryKPIs(startDate, endDate, warehouseId),
     ...queryOptions.list({ enabled: !!startDate && !!endDate }),
@@ -2366,7 +2398,7 @@ export function useBarcodeLookup(
   warehouseId?: number,
   enabled: boolean = true
 ) {
-  return useQuery({
+  return useQuery<BarcodeLookupResponse>({
     queryKey: inventoryKeys.barcodeLookup(barcode, warehouseId),
     queryFn: () => InventoryService.lookupBarcode(barcode, includeStock, warehouseId),
     ...queryOptions.search({ enabled: enabled && !!barcode && barcode.length > 0 }),
@@ -2475,7 +2507,7 @@ export function useCheckBarcodeUnique() {
  * Get paginated audit logs with filtering
  */
 export function useAuditLogs(filter?: InventoryAuditFilterDto) {
-  return useQuery({
+  return useQuery<PaginatedAuditLogsDto>({
     queryKey: inventoryKeys.auditLogs(filter),
     queryFn: () => InventoryService.getAuditLogs(filter),
     ...queryOptions.list(),
@@ -2486,7 +2518,7 @@ export function useAuditLogs(filter?: InventoryAuditFilterDto) {
  * Get audit dashboard with summaries and trends
  */
 export function useAuditDashboard(days: number = 30) {
-  return useQuery({
+  return useQuery<InventoryAuditDashboardDto>({
     queryKey: inventoryKeys.auditDashboard(days),
     queryFn: () => InventoryService.getAuditDashboard(days),
     ...queryOptions.list(),
@@ -2497,7 +2529,7 @@ export function useAuditDashboard(days: number = 30) {
  * Get complete history for a specific entity
  */
 export function useEntityHistory(entityType: string, entityId: string) {
-  return useQuery({
+  return useQuery<EntityHistoryDto>({
     queryKey: inventoryKeys.entityHistory(entityType, entityId),
     queryFn: () => InventoryService.getEntityHistory(entityType, entityId),
     ...queryOptions.list({ enabled: !!entityType && !!entityId }),
@@ -2508,7 +2540,7 @@ export function useEntityHistory(entityType: string, entityId: string) {
  * Get a specific audit log entry by ID
  */
 export function useAuditLogById(id: string) {
-  return useQuery({
+  return useQuery<InventoryAuditLogDto>({
     queryKey: inventoryKeys.auditLogById(id),
     queryFn: () => InventoryService.getAuditLogById(id),
     ...queryOptions.detail({ enabled: !!id }),
@@ -2572,7 +2604,7 @@ export function useProductForecasts(filter?: StockForecastFilterDto) {
  * Get aggregate forecast summary with risk analysis
  */
 export function useForecastSummary(filter?: StockForecastFilterDto) {
-  return useQuery({
+  return useQuery<ForecastSummaryDto>({
     queryKey: inventoryKeys.forecastSummary(filter),
     queryFn: () => InventoryService.getForecastSummary(filter),
     ...queryOptions.list(),
@@ -2929,7 +2961,7 @@ export function useExpireOldSuggestions() {
  * Get paginated cost layers with filtering
  */
 export function useCostLayers(filter?: CostLayerFilterDto) {
-  return useQuery({
+  return useQuery<PaginatedCostLayersDto>({
     queryKey: inventoryKeys.costLayers(filter),
     queryFn: () => InventoryService.getCostLayers(filter),
     ...queryOptions.list(),
@@ -3004,7 +3036,7 @@ export function useProductCostingSummary(productId: number, warehouseId?: number
  * Get costing summaries for multiple products
  */
 export function useProductCostingSummaries(categoryId?: number, warehouseId?: number) {
-  return useQuery({
+  return useQuery<ProductCostingSummaryDto[]>({
     queryKey: inventoryKeys.productCostingSummaries(categoryId, warehouseId),
     queryFn: () => InventoryService.getProductCostingSummaries(categoryId, warehouseId),
     ...queryOptions.list(),
@@ -3038,7 +3070,7 @@ export function useCostMethodComparison(productId: number, quantity: number, war
  * Generate inventory valuation report
  */
 export function useInventoryValuation(filter?: InventoryValuationFilterDto) {
-  return useQuery({
+  return useQuery<InventoryValuationReportDto>({
     queryKey: inventoryKeys.inventoryValuation(filter),
     queryFn: () => InventoryService.getInventoryValuation(filter),
     ...queryOptions.list(),
@@ -3060,7 +3092,7 @@ export function useTotalInventoryValue(method?: CostingMethod, warehouseId?: num
  * Generate COGS report for a period
  */
 export function useCOGSReport(filter: COGSReportFilterDto) {
-  return useQuery({
+  return useQuery<COGSReportDto>({
     queryKey: inventoryKeys.cogsReport(filter),
     queryFn: () => InventoryService.getCOGSReport(filter),
     ...queryOptions.list({ enabled: !!filter.startDate && !!filter.endDate }),
@@ -3091,7 +3123,7 @@ export function useSetStandardCost() {
  * Get cost variance analysis
  */
 export function useCostVarianceAnalysis(categoryId?: number) {
-  return useQuery({
+  return useQuery<CostVarianceAnalysisDto[]>({
     queryKey: inventoryKeys.costVarianceAnalysis(categoryId),
     queryFn: () => InventoryService.getCostVarianceAnalysis(categoryId),
     ...queryOptions.list(),
@@ -3349,7 +3381,7 @@ export function useValidateExcelImport() {
  * Provides comprehensive inventory classification analysis
  */
 export function useAbcXyzAnalysis(filter?: AbcXyzAnalysisFilterDto, enabled: boolean = true) {
-  return useQuery({
+  return useQuery<AbcXyzAnalysisSummaryDto>({
     queryKey: inventoryKeys.abcXyzAnalysis(filter),
     queryFn: () => InventoryService.getAbcXyzAnalysis(filter),
     ...queryOptions.static({ enabled }),
@@ -3365,7 +3397,7 @@ export function useProductAbcXyzClassification(
   warehouseId?: number,
   enabled: boolean = true
 ) {
-  return useQuery({
+  return useQuery<ProductAbcXyzDto>({
     queryKey: inventoryKeys.productAbcXyzClassification(productId, analysisPeriodDays, warehouseId),
     queryFn: () => InventoryService.getProductAbcXyzClassification(productId, analysisPeriodDays, warehouseId),
     ...queryOptions.static({ enabled: enabled && !!productId && productId > 0 }),
@@ -3377,7 +3409,7 @@ export function useProductAbcXyzClassification(
  * Calculates how quickly inventory is sold and replaced
  */
 export function useInventoryTurnoverAnalysis(filter?: InventoryTurnoverFilterDto, enabled: boolean = true) {
-  return useQuery({
+  return useQuery<InventoryTurnoverDto[]>({
     queryKey: inventoryKeys.inventoryTurnover(filter),
     queryFn: () => InventoryService.getInventoryTurnoverAnalysis(filter),
     ...queryOptions.static({ enabled }),
@@ -3389,7 +3421,7 @@ export function useInventoryTurnoverAnalysis(filter?: InventoryTurnoverFilterDto
  * Identifies products that haven't sold in a specified period
  */
 export function useDeadStockAnalysis(filter?: DeadStockFilterDto, enabled: boolean = true) {
-  return useQuery({
+  return useQuery<DeadStockAnalysisDto>({
     queryKey: inventoryKeys.deadStock(filter),
     queryFn: () => InventoryService.getDeadStockAnalysis(filter),
     ...queryOptions.static({ enabled }),
@@ -3401,7 +3433,7 @@ export function useDeadStockAnalysis(filter?: DeadStockFilterDto, enabled: boole
  * Measures ability to fulfill customer orders from available inventory
  */
 export function useServiceLevelAnalysis(filter?: ServiceLevelFilterDto, enabled: boolean = true) {
-  return useQuery({
+  return useQuery<ServiceLevelAnalysisDto>({
     queryKey: inventoryKeys.serviceLevel(filter),
     queryFn: () => InventoryService.getServiceLevelAnalysis(filter),
     ...queryOptions.static({ enabled }),
@@ -3413,7 +3445,7 @@ export function useServiceLevelAnalysis(filter?: ServiceLevelFilterDto, enabled:
  * Comprehensive health indicator combining multiple inventory metrics
  */
 export function useInventoryHealthScore(filter?: InventoryHealthScoreFilterDto, enabled: boolean = true) {
-  return useQuery({
+  return useQuery<InventoryHealthScoreDto>({
     queryKey: inventoryKeys.inventoryHealthScore(filter),
     queryFn: () => InventoryService.getInventoryHealthScore(filter),
     ...queryOptions.static({ enabled }),
@@ -3510,7 +3542,7 @@ export function useDeletePackagingType() {
  * Get barcode definitions
  */
 export function useBarcodeDefinitions(productId?: number, includeInactive: boolean = false) {
-  return useQuery({
+  return useQuery<BarcodeDefinitionDto[]>({
     queryKey: [...inventoryKeys.barcodeDefinitions(productId), { includeInactive }],
     queryFn: () => InventoryService.getBarcodeDefinitions(productId, includeInactive),
     ...queryOptions.list(),
@@ -3521,7 +3553,7 @@ export function useBarcodeDefinitions(productId?: number, includeInactive: boole
  * Get a barcode definition by ID
  */
 export function useBarcodeDefinition(id: number) {
-  return useQuery({
+  return useQuery<BarcodeDefinitionDto>({
     queryKey: inventoryKeys.barcodeDefinition(id),
     queryFn: () => InventoryService.getBarcodeDefinition(id),
     ...queryOptions.detail({ enabled: id > 0 }),
@@ -3593,5 +3625,223 @@ export function useLookupBarcode() {
     onError: (error) => {
       showApiError(error, 'Barkod sorgulanırken hata oluştu');
     },
+  });
+}
+
+// =====================================
+// WAREHOUSE ZONES HOOKS
+// =====================================
+
+export function useWarehouseZones(warehouseId?: number) {
+  return useQuery<WarehouseZoneDto[]>({
+    queryKey: inventoryKeys.warehouseZones(warehouseId),
+    queryFn: () => InventoryService.getWarehouseZones(warehouseId),
+    ...queryOptions.medium,
+  });
+}
+
+export function useWarehouseZone(id: number) {
+  return useQuery<WarehouseZoneDto>({
+    queryKey: inventoryKeys.warehouseZone(id),
+    queryFn: () => InventoryService.getWarehouseZone(id),
+    enabled: id > 0,
+    ...queryOptions.medium,
+  });
+}
+
+export function useCreateWarehouseZone() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (dto: CreateWarehouseZoneDto) => InventoryService.createWarehouseZone(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.warehouseZones() });
+      showSuccess('Depo bölgesi başarıyla oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Depo bölgesi oluşturulurken hata oluştu');
+    },
+  });
+}
+
+export function useUpdateWarehouseZone() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, dto }: { id: number; dto: UpdateWarehouseZoneDto }) =>
+      InventoryService.updateWarehouseZone(id, dto),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.warehouseZone(variables.id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.warehouseZones() });
+      showSuccess('Depo bölgesi başarıyla güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Depo bölgesi güncellenirken hata oluştu');
+    },
+  });
+}
+
+export function useDeleteWarehouseZone() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => InventoryService.deleteWarehouseZone(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.warehouseZones() });
+      showSuccess('Depo bölgesi başarıyla silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Depo bölgesi silinirken hata oluştu');
+    },
+  });
+}
+
+// =====================================
+// QUALITY CONTROL HOOKS
+// =====================================
+
+export function useQualityControls(params?: { status?: QualityControlStatus }) {
+  return useQuery<QualityControlDto[]>({
+    queryKey: inventoryKeys.qualityControls(params?.status),
+    queryFn: () => InventoryService.getQualityControls(params),
+    ...queryOptions.medium,
+  });
+}
+
+export function useQualityControl(id: number) {
+  return useQuery<QualityControlDto>({
+    queryKey: inventoryKeys.qualityControl(id),
+    queryFn: () => InventoryService.getQualityControl(id),
+    enabled: id > 0,
+    ...queryOptions.medium,
+  });
+}
+
+export function useCreateQualityControl() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (dto: CreateQualityControlDto) => InventoryService.createQualityControl(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.qualityControls() });
+      showSuccess('Kalite kontrol kaydı başarıyla oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kalite kontrol kaydı oluşturulurken hata oluştu');
+    },
+  });
+}
+
+export function useApproveQualityControl() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, notes }: { id: number; notes?: string }) =>
+      InventoryService.approveQualityControl(id, notes),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.qualityControl(variables.id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.qualityControls() });
+      showSuccess('Kalite kontrol kaydı onaylandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kalite kontrol kaydı onaylanırken hata oluştu');
+    },
+  });
+}
+
+export function useRejectQualityControl() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: number; reason: string }) =>
+      InventoryService.rejectQualityControl(id, reason),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.qualityControl(variables.id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.qualityControls() });
+      showSuccess('Kalite kontrol kaydı reddedildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kalite kontrol kaydı reddedilirken hata oluştu');
+    },
+  });
+}
+
+// =====================================
+// CYCLE COUNTS HOOKS
+// =====================================
+
+export function useCycleCounts(params?: { status?: CycleCountStatus; warehouseId?: number }) {
+  return useQuery<CycleCountDto[]>({
+    queryKey: inventoryKeys.cycleCounts(params?.status, params?.warehouseId),
+    queryFn: () => InventoryService.getCycleCounts(params),
+    ...queryOptions.medium,
+  });
+}
+
+export function useCycleCount(id: number) {
+  return useQuery<CycleCountDto>({
+    queryKey: inventoryKeys.cycleCount(id),
+    queryFn: () => InventoryService.getCycleCount(id),
+    enabled: id > 0,
+    ...queryOptions.medium,
+  });
+}
+
+export function useCreateCycleCount() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (dto: CreateCycleCountDto) => InventoryService.createCycleCount(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.cycleCounts() });
+      showSuccess('Dönemsel sayım başarıyla oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Dönemsel sayım oluşturulurken hata oluştu');
+    },
+  });
+}
+
+export function useStartCycleCount() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => InventoryService.startCycleCount(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.cycleCount(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.cycleCounts() });
+      showSuccess('Dönemsel sayım başlatıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Dönemsel sayım başlatılırken hata oluştu');
+    },
+  });
+}
+
+export function useCompleteCycleCount() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => InventoryService.completeCycleCount(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.cycleCount(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.cycleCounts() });
+      showSuccess('Dönemsel sayım tamamlandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Dönemsel sayım tamamlanırken hata oluştu');
+    },
+  });
+}
+
+// =====================================
+// SHELF LIFE HOOKS
+// =====================================
+
+export function useExpiringLotBatches(daysUntilExpiry: number = 30) {
+  return useQuery<LotBatchDto[]>({
+    queryKey: inventoryKeys.expiringLotBatches(daysUntilExpiry),
+    queryFn: () => InventoryService.getExpiringLotBatches(daysUntilExpiry),
+    ...queryOptions.medium,
   });
 }

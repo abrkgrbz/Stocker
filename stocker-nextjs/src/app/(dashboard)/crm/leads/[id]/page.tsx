@@ -147,7 +147,7 @@ export default function LeadDetailPage() {
 
   const handleQualify = async () => {
     try {
-      await qualifyLead.mutateAsync({ id: leadId, rating: 'Hot' });
+      await qualifyLead.mutateAsync({ id: leadId, notes: 'Qualified as Hot lead' });
       message.success('Lead nitelikli olarak işaretlendi');
       refetch();
     } catch (error) {

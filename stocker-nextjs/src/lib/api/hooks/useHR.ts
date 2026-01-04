@@ -10,6 +10,7 @@ import { queryOptions } from '../query-options';
 import type {
   // Employee
   EmployeeDto,
+  EmployeeSummaryDto,
   CreateEmployeeDto,
   UpdateEmployeeDto,
   TerminateEmployeeDto,
@@ -357,7 +358,7 @@ export const hrKeys = {
 // =====================================
 
 export function useEmployees(filter?: EmployeeFilterDto) {
-  return useQuery({
+  return useQuery<EmployeeSummaryDto[]>({
     queryKey: filter ? hrKeys.employeesFiltered(filter) : hrKeys.employees,
     queryFn: () => HRService.getEmployees(filter),
     ...queryOptions.list(),
@@ -365,7 +366,7 @@ export function useEmployees(filter?: EmployeeFilterDto) {
 }
 
 export function useEmployee(id: number) {
-  return useQuery({
+  return useQuery<EmployeeDto>({
     queryKey: hrKeys.employee(id),
     queryFn: () => HRService.getEmployee(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -473,7 +474,7 @@ export function useDeactivateEmployee() {
 // =====================================
 
 export function useDepartments(includeInactive: boolean = false) {
-  return useQuery({
+  return useQuery<DepartmentDto[]>({
     queryKey: [...hrKeys.departments, { includeInactive }],
     queryFn: () => HRService.getDepartments(includeInactive),
     ...queryOptions.static(),
@@ -481,7 +482,7 @@ export function useDepartments(includeInactive: boolean = false) {
 }
 
 export function useDepartment(id: number) {
-  return useQuery({
+  return useQuery<DepartmentDto>({
     queryKey: hrKeys.department(id),
     queryFn: () => HRService.getDepartment(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -489,7 +490,7 @@ export function useDepartment(id: number) {
 }
 
 export function useDepartmentTree() {
-  return useQuery({
+  return useQuery<DepartmentDto[]>({
     queryKey: hrKeys.departmentTree,
     queryFn: () => HRService.getDepartmentTree(),
     ...queryOptions.static(),
@@ -865,7 +866,7 @@ export function useAssignWorkSchedule() {
 // =====================================
 
 export function useAttendance(filter?: AttendanceFilterDto) {
-  return useQuery({
+  return useQuery<AttendanceDto[]>({
     queryKey: filter ? hrKeys.attendanceFiltered(filter) : hrKeys.attendance,
     queryFn: () => HRService.getAttendance(filter),
     staleTime: 30000,
@@ -873,7 +874,7 @@ export function useAttendance(filter?: AttendanceFilterDto) {
 }
 
 export function useAttendanceById(id: number) {
-  return useQuery({
+  return useQuery<AttendanceDto>({
     queryKey: hrKeys.attendanceById(id),
     queryFn: () => HRService.getAttendanceById(id),
     enabled: !!id && id > 0,
@@ -881,7 +882,7 @@ export function useAttendanceById(id: number) {
 }
 
 export function useDailyAttendance(date: string, departmentId?: number) {
-  return useQuery({
+  return useQuery<AttendanceDto[]>({
     queryKey: hrKeys.attendanceDaily(date, departmentId),
     queryFn: () => HRService.getDailyAttendance(date, departmentId),
     staleTime: 60000,

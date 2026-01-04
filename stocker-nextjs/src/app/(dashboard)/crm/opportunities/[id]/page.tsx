@@ -105,14 +105,21 @@ export default function OpportunityDetailPage() {
   }
 
   // Status colors
+  // Status colors (matches backend OpportunityStatus enum)
   const statusColors: Record<string, string> = {
+    Open: 'blue',
+    Won: 'green',
+    Lost: 'red',
+    OnHold: 'orange',
+  };
+
+  // Stage colors for pipeline stages
+  const stageColors: Record<string, string> = {
     Prospecting: 'blue',
     Qualification: 'cyan',
     NeedsAnalysis: 'geekblue',
     Proposal: 'purple',
     Negotiation: 'orange',
-    ClosedWon: 'green',
-    ClosedLost: 'red',
   };
 
   // Calculate days until close

@@ -441,6 +441,9 @@ export interface OpportunityDto {
   source?: string;
   ownerId?: string;
   ownerName?: string;
+  assignedToId?: Guid;
+  assignedToName?: string;
+  actualCloseDate?: DateTime;
   score: number;
   weightedAmount?: number; // Computed: amount * (probability / 100)
   // Related data

@@ -152,8 +152,8 @@ export default function PipelineDetailPage() {
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400 mb-1">Para Birimi</p>
-                  <p className="text-sm font-medium text-slate-900">{pipeline.currency || 'TRY'}</p>
+                  <p className="text-xs text-slate-400 mb-1">Toplam Değer</p>
+                  <p className="text-sm font-medium text-slate-900">₺{pipeline.totalValue?.toLocaleString('tr-TR') || '0'}</p>
                 </div>
               </div>
 
@@ -186,12 +186,6 @@ export default function PipelineDetailPage() {
                   <span className="text-slate-500">Toplam Fırsat</span>
                   <span className="font-medium text-slate-900">{totalDeals}</span>
                 </div>
-                {stats?.winRate !== undefined && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-500">Kazanma Oranı</span>
-                    <span className="font-medium text-emerald-600">%{stats.winRate}</span>
-                  </div>
-                )}
                 {stats?.velocity !== undefined && (
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-500">Ortalama Süre</span>

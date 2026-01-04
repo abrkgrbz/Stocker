@@ -25,6 +25,7 @@ import {
   DocumentTextIcon,
   EllipsisHorizontalIcon,
   EyeIcon,
+  EyeSlashIcon,
   FireIcon,
   MagnifyingGlassIcon,
   MapPinIcon,

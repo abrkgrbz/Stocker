@@ -13,7 +13,7 @@ interface Deal {
   id: string;
   status: 'Open' | 'Won' | 'Lost';
   amount: number;
-  actualCloseDate?: string;
+  actualCloseDate?: string | null;
   createdAt: string;
 }
 

@@ -8,7 +8,7 @@ interface Stage {
   id: string;
   name: string;
   color: string;
-  displayOrder: number;
+  order: number;
   probability: number;
   isWon?: boolean;
   isLost?: boolean;
@@ -40,10 +40,10 @@ export function PipelineFunnel({ pipelines, deals, loading }: PipelineFunnelProp
     const pipeline = pipelines.find((p) => p.isDefault) || pipelines[0];
     if (!pipeline) return null;
 
-    // Sort stages by display order
+    // Sort stages by order
     const sortedStages = [...pipeline.stages]
       .filter((s) => !s.isLost)
-      .sort((a, b) => a.displayOrder - b.displayOrder);
+      .sort((a, b) => a.order - b.order);
 
     // Calculate deals per stage
     const stageData = sortedStages.map((stage) => {

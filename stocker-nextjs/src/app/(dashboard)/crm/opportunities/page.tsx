@@ -36,15 +36,21 @@ import {
   Card,
 } from '@/components/ui/enterprise-page';
 
-// Opportunity status configuration
+// Opportunity status configuration (matches backend OpportunityStatus enum)
 const statusConfig: Record<OpportunityStatus, { color: string; label: string; icon: React.ReactNode }> = {
+  Open: { color: 'blue', label: 'Açık', icon: <ChartBarIcon className="w-4 h-4" /> },
+  Won: { color: 'green', label: 'Kazanıldı', icon: <TrophyIcon className="w-4 h-4" /> },
+  Lost: { color: 'red', label: 'Kaybedildi', icon: <StopCircleIcon className="w-4 h-4" /> },
+  OnHold: { color: 'orange', label: 'Beklemede', icon: <ArrowTrendingUpIcon className="w-4 h-4" /> },
+};
+
+// Stage configuration for kanban view
+const stageConfig: Record<string, { color: string; label: string; icon: React.ReactNode }> = {
   Prospecting: { color: 'blue', label: 'Araştırma', icon: <ChartBarIcon className="w-4 h-4" /> },
   Qualification: { color: 'cyan', label: 'Nitelendirme', icon: <CheckCircleIcon className="w-4 h-4" /> },
   NeedsAnalysis: { color: 'geekblue', label: 'İhtiyaç Analizi', icon: <ChartBarIcon className="w-4 h-4" /> },
   Proposal: { color: 'purple', label: 'Teklif', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
   Negotiation: { color: 'orange', label: 'Müzakere', icon: <ArrowTrendingUpIcon className="w-4 h-4" /> },
-  ClosedWon: { color: 'green', label: 'Kazanıldı', icon: <TrophyIcon className="w-4 h-4" /> },
-  ClosedLost: { color: 'red', label: 'Kaybedildi', icon: <StopCircleIcon className="w-4 h-4" /> },
 };
 
 export default function OpportunitiesPage() {
@@ -80,9 +86,9 @@ export default function OpportunitiesPage() {
     avgProbability: filteredOpportunities.length > 0
       ? filteredOpportunities.reduce((sum: number, o: OpportunityDto) => sum + o.probability, 0) / filteredOpportunities.length
       : 0,
-    won: filteredOpportunities.filter((o: OpportunityDto) => o.status === 'ClosedWon').length,
-    wonValue: filteredOpportunities.filter((o: OpportunityDto) => o.status === 'ClosedWon').reduce((sum: number, o: OpportunityDto) => sum + o.amount, 0),
-    active: filteredOpportunities.filter((o: OpportunityDto) => o.status !== 'ClosedWon' && o.status !== 'ClosedLost').length,
+    won: filteredOpportunities.filter((o: OpportunityDto) => o.status === 'Won').length,
+    wonValue: filteredOpportunities.filter((o: OpportunityDto) => o.status === 'Won').reduce((sum: number, o: OpportunityDto) => sum + o.amount, 0),
+    active: filteredOpportunities.filter((o: OpportunityDto) => o.status !== 'Won' && o.status !== 'Lost').length,
   };
 
   const handleCreate = () => {
@@ -140,7 +146,7 @@ export default function OpportunitiesPage() {
   // OpportunityCard Component
   const OpportunityCard = ({ opportunity }: { opportunity: OpportunityDto }) => {
     const config = statusConfig[opportunity.status];
-    const isActive = opportunity.status !== 'ClosedWon' && opportunity.status !== 'ClosedLost';
+    const isActive = opportunity.status !== 'Won' && opportunity.status !== 'Lost';
 
     return (
       <div
@@ -236,7 +242,7 @@ export default function OpportunitiesPage() {
 
   // Group opportunities by stage for Kanban view (active opportunities only)
   const activeOpportunities = filteredOpportunities.filter(
-    (o: OpportunityDto) => o.status !== 'ClosedWon' && o.status !== 'ClosedLost'
+    (o: OpportunityDto) => o.status !== 'Won' && o.status !== 'Lost'
   );
 
   const opportunitiesByStage = stages.reduce((acc: Record<string, OpportunityDto[]>, stage: any) => {
@@ -245,8 +251,8 @@ export default function OpportunitiesPage() {
   }, {} as Record<string, OpportunityDto[]>);
 
   // Get closed opportunities for special columns
-  const wonOpportunities = filteredOpportunities.filter((o: OpportunityDto) => o.status === 'ClosedWon');
-  const lostOpportunities = filteredOpportunities.filter((o: OpportunityDto) => o.status === 'ClosedLost');
+  const wonOpportunities = filteredOpportunities.filter((o: OpportunityDto) => o.status === 'Won');
+  const lostOpportunities = filteredOpportunities.filter((o: OpportunityDto) => o.status === 'Lost');
 
   // Stats Component
   const OpportunitiesStats = () => (

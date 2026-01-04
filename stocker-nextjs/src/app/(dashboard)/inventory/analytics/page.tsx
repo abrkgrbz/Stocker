@@ -421,7 +421,7 @@ export default function InventoryAnalyticsPage() {
                     outerRadius={100}
                     paddingAngle={2}
                     dataKey="value"
-                    label={({ name, percent }) => `${name} (${formatPercentage((percent || 0) * 100)})`}
+                    label={({ name, percent }: any) => `${name} (${formatPercentage((percent || 0) * 100)})`}
                     labelLine={false}
                   >
                     {categoryData.map((entry, index) => (

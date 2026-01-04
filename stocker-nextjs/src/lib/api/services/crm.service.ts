@@ -229,6 +229,8 @@ export interface Deal {
   source: string | null;
   ownerId: string | null;
   ownerName: string | null;
+  assignedToId?: string | null;
+  assignedToName?: string | null;
   weightedAmount?: number; // Computed: amount * (probability / 100)
   // Related data from backend
   products?: DealProduct[];

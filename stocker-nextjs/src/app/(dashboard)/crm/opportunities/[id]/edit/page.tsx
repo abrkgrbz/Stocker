@@ -13,15 +13,21 @@ import { OpportunityForm } from '@/components/crm/opportunities';
 import { useOpportunity, useUpdateOpportunity } from '@/lib/api/hooks/useCRM';
 import dayjs from 'dayjs';
 
-// Status labels and colors
+// Status labels and colors (matches backend OpportunityStatus enum)
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+  Open: { label: 'Açık', color: 'blue', icon: <ClockIcon className="w-4 h-4" /> },
+  Won: { label: 'Kazanıldı', color: 'success', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Lost: { label: 'Kaybedildi', color: 'error', icon: <XCircleIcon className="w-4 h-4" /> },
+  OnHold: { label: 'Beklemede', color: 'warning', icon: <ClockIcon className="w-4 h-4" /> },
+};
+
+// Stage labels and colors for pipeline stages
+const stageConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   Prospecting: { label: 'Araştırma', color: 'blue', icon: <ClockIcon className="w-4 h-4" /> },
   Qualification: { label: 'Nitelendirme', color: 'cyan', icon: <ClockIcon className="w-4 h-4" /> },
   NeedsAnalysis: { label: 'İhtiyaç Analizi', color: 'purple', icon: <ClockIcon className="w-4 h-4" /> },
   Proposal: { label: 'Teklif', color: 'orange', icon: <ClockIcon className="w-4 h-4" /> },
   Negotiation: { label: 'Müzakere', color: 'gold', icon: <ClockIcon className="w-4 h-4" /> },
-  ClosedWon: { label: 'Kazanıldı', color: 'success', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  ClosedLost: { label: 'Kaybedildi', color: 'error', icon: <XCircleIcon className="w-4 h-4" /> },
 };
 
 export default function EditOpportunityPage() {

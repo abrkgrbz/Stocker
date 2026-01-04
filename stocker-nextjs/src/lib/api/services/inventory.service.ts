@@ -196,6 +196,18 @@ import type {
   BarcodeDefinitionDto,
   CreateBarcodeDefinitionDto,
   UpdateBarcodeDefinitionDto,
+  // Warehouse Zones
+  WarehouseZoneDto,
+  CreateWarehouseZoneDto,
+  UpdateWarehouseZoneDto,
+  // Quality Control
+  QualityControlDto,
+  CreateQualityControlDto,
+  QualityControlStatus,
+  // Cycle Counts
+  CycleCountDto,
+  CreateCycleCountDto,
+  CycleCountStatus,
 } from './inventory.types';
 
 // Import enums as values (not types) for use as default parameters
@@ -2220,6 +2232,95 @@ export class InventoryService {
    */
   static async lookupBarcode(barcode: string): Promise<BarcodeDefinitionDto | null> {
     return ApiService.get<BarcodeDefinitionDto | null>(this.getPath(`barcode-definitions/lookup/${barcode}`));
+  }
+
+  // =====================================
+  // WAREHOUSE ZONES
+  // =====================================
+
+  static async getWarehouseZones(warehouseId?: number): Promise<WarehouseZoneDto[]> {
+    const params = warehouseId ? `?warehouseId=${warehouseId}` : '';
+    return ApiService.get<WarehouseZoneDto[]>(this.getPath(`warehouse-zones${params}`));
+  }
+
+  static async getWarehouseZone(id: number): Promise<WarehouseZoneDto> {
+    return ApiService.get<WarehouseZoneDto>(this.getPath(`warehouse-zones/${id}`));
+  }
+
+  static async createWarehouseZone(dto: CreateWarehouseZoneDto): Promise<WarehouseZoneDto> {
+    return ApiService.post<WarehouseZoneDto>(this.getPath('warehouse-zones'), dto);
+  }
+
+  static async updateWarehouseZone(id: number, dto: UpdateWarehouseZoneDto): Promise<WarehouseZoneDto> {
+    return ApiService.put<WarehouseZoneDto>(this.getPath(`warehouse-zones/${id}`), dto);
+  }
+
+  static async deleteWarehouseZone(id: number): Promise<void> {
+    return ApiService.delete(this.getPath(`warehouse-zones/${id}`));
+  }
+
+  // =====================================
+  // QUALITY CONTROL
+  // =====================================
+
+  static async getQualityControls(params?: { status?: QualityControlStatus }): Promise<QualityControlDto[]> {
+    const queryParams = params?.status ? `?status=${params.status}` : '';
+    return ApiService.get<QualityControlDto[]>(this.getPath(`quality-controls${queryParams}`));
+  }
+
+  static async getQualityControl(id: number): Promise<QualityControlDto> {
+    return ApiService.get<QualityControlDto>(this.getPath(`quality-controls/${id}`));
+  }
+
+  static async createQualityControl(dto: CreateQualityControlDto): Promise<QualityControlDto> {
+    return ApiService.post<QualityControlDto>(this.getPath('quality-controls'), dto);
+  }
+
+  static async approveQualityControl(id: number, notes?: string): Promise<QualityControlDto> {
+    return ApiService.post<QualityControlDto>(this.getPath(`quality-controls/${id}/approve`), { notes });
+  }
+
+  static async rejectQualityControl(id: number, reason: string): Promise<QualityControlDto> {
+    return ApiService.post<QualityControlDto>(this.getPath(`quality-controls/${id}/reject`), { reason });
+  }
+
+  // =====================================
+  // CYCLE COUNTS
+  // =====================================
+
+  static async getCycleCounts(params?: { status?: CycleCountStatus; warehouseId?: number }): Promise<CycleCountDto[]> {
+    let queryString = '';
+    if (params) {
+      const parts: string[] = [];
+      if (params.status) parts.push(`status=${params.status}`);
+      if (params.warehouseId) parts.push(`warehouseId=${params.warehouseId}`);
+      if (parts.length > 0) queryString = `?${parts.join('&')}`;
+    }
+    return ApiService.get<CycleCountDto[]>(this.getPath(`cycle-counts${queryString}`));
+  }
+
+  static async getCycleCount(id: number): Promise<CycleCountDto> {
+    return ApiService.get<CycleCountDto>(this.getPath(`cycle-counts/${id}`));
+  }
+
+  static async createCycleCount(dto: CreateCycleCountDto): Promise<CycleCountDto> {
+    return ApiService.post<CycleCountDto>(this.getPath('cycle-counts'), dto);
+  }
+
+  static async startCycleCount(id: number): Promise<CycleCountDto> {
+    return ApiService.post<CycleCountDto>(this.getPath(`cycle-counts/${id}/start`), {});
+  }
+
+  static async completeCycleCount(id: number): Promise<CycleCountDto> {
+    return ApiService.post<CycleCountDto>(this.getPath(`cycle-counts/${id}/complete`), {});
+  }
+
+  // =====================================
+  // SHELF LIFE (Expiring Lot Batches)
+  // =====================================
+
+  static async getExpiringLotBatches(daysUntilExpiry: number = 30): Promise<LotBatchDto[]> {
+    return ApiService.get<LotBatchDto[]>(this.getPath(`lot-batches/expiring?daysUntilExpiry=${daysUntilExpiry}`));
   }
 }
 

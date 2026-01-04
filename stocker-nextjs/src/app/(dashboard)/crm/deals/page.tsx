@@ -1129,7 +1129,7 @@ export default function DealsPage() {
               <div className="mb-3 bg-white border-2 border-blue-400 rounded-lg p-3 shadow-xl rotate-2 opacity-90">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-sm font-medium text-slate-900 truncate">{activeDeal.title}</span>
-                  <Tag color={statusColors[activeDeal.status]} className="ml-2 text-xs">
+                  <Tag color={statusColors[activeDeal.status as Deal['status']]} className="ml-2 text-xs">
                     Açık
                   </Tag>
                 </div>
