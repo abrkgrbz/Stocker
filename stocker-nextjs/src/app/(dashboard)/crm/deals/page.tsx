@@ -15,15 +15,16 @@ import {
   DragOverlay,
   closestCenter,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragStartEvent,
   DragEndEvent,
   DragOverEvent,
   useDroppable,
+  useDraggable,
 } from '@dnd-kit/core';
-import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import {
   ArrowPathIcon,
@@ -92,22 +93,27 @@ const DraggableDealCard = ({
   const { attributes, listeners, setNodeRef, transform, isDragging: isCurrentlyDragging } = useDraggable({
     id: deal.id,
     disabled: !canDrag,
+    data: {
+      deal,
+      type: 'deal',
+    },
   });
 
-  const style = transform
-    ? {
-        transform: CSS.Translate.toString(transform),
-        opacity: isDragging || isCurrentlyDragging ? 0.5 : 1,
-        zIndex: isCurrentlyDragging ? 1000 : undefined,
-      }
-    : undefined;
+  const style: React.CSSProperties = {
+    transform: transform ? CSS.Translate.toString(transform) : undefined,
+    opacity: isDragging || isCurrentlyDragging ? 0.5 : 1,
+    zIndex: isCurrentlyDragging ? 1000 : undefined,
+    position: 'relative' as const,
+  };
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      {...(canDrag ? { ...attributes, ...listeners } : {})}
-      className={`mb-3 bg-white border rounded-lg p-3 hover:shadow-md transition-all touch-none ${
+      {...attributes}
+      {...listeners}
+      data-draggable={canDrag}
+      className={`mb-3 bg-white border rounded-lg p-3 hover:shadow-md transition-all select-none ${
         isWon
           ? 'border-emerald-400 bg-emerald-50'
           : isLost
@@ -213,13 +219,22 @@ const DroppableColumn = ({
   children: React.ReactNode;
   isOver?: boolean;
 }) => {
-  const { setNodeRef } = useDroppable({ id });
+  const { setNodeRef, isOver: isOverCurrent } = useDroppable({
+    id,
+    data: {
+      type: 'stage',
+      stageId: id,
+    },
+  });
+
+  const showDropIndicator = isOver || isOverCurrent;
 
   return (
     <div
       ref={setNodeRef}
-      className={`p-3 max-h-[600px] overflow-y-auto transition-colors ${
-        isOver ? 'bg-blue-50' : ''
+      data-droppable={id}
+      className={`p-3 min-h-[200px] max-h-[600px] overflow-y-auto transition-all duration-200 ${
+        showDropIndicator ? 'bg-blue-50 ring-2 ring-blue-300 ring-inset' : ''
       }`}
     >
       {children}
@@ -259,11 +274,17 @@ export default function DealsPage() {
     wonAmount: deals.filter((d) => d.status === 'Won').reduce((sum, d) => sum + d.amount, 0),
   };
 
-  // DnD Sensors
+  // DnD Sensors - Use Mouse and Touch sensors for better compatibility
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 5, // 5px movement required to start drag
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200, // 200ms hold to start drag on touch
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor)
@@ -480,6 +501,7 @@ export default function DealsPage() {
 
   // Drag & Drop Handlers
   const handleDragStart = useCallback((event: DragStartEvent) => {
+    console.log('🎯 Drag started:', event.active.id);
     setActiveDealId(event.active.id as string);
   }, []);
 
@@ -490,10 +512,14 @@ export default function DealsPage() {
   const handleDragEnd = useCallback(
     async (event: DragEndEvent) => {
       const { active, over } = event;
+      console.log('🏁 Drag ended:', { activeId: active.id, overId: over?.id });
       setActiveDealId(null);
       setOverId(null);
 
-      if (!over) return;
+      if (!over) {
+        console.log('❌ No drop target');
+        return;
+      }
 
       const dealId = active.id as string;
       const newStageId = over.id as string;
