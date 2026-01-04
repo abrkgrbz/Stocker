@@ -419,120 +419,6 @@ export default function DealsPage() {
     }
   };
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger when typing in input fields
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement ||
-        (e.target as HTMLElement).isContentEditable
-      ) {
-        return;
-      }
-
-      // Ctrl/Cmd + N: New deal
-      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-        e.preventDefault();
-        router.push('/crm/deals/new');
-        return;
-      }
-
-      // Escape: Clear selection
-      if (e.key === 'Escape') {
-        if (selectedDeals.size > 0) {
-          e.preventDefault();
-          clearSelection();
-        }
-        return;
-      }
-
-      // Ctrl/Cmd + A: Select all (in list view)
-      if ((e.ctrlKey || e.metaKey) && e.key === 'a' && viewMode === 'list') {
-        e.preventDefault();
-        if (isAllSelected) {
-          clearSelection();
-        } else {
-          selectAllDeals();
-        }
-        return;
-      }
-
-      // R: Refresh
-      if (e.key === 'r' && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-        refetch();
-        return;
-      }
-
-      // K: Switch to Kanban view
-      if (e.key === 'k' && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-        setViewMode('kanban');
-        return;
-      }
-
-      // L: Switch to List view
-      if (e.key === 'l' && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-        setViewMode('list');
-        return;
-      }
-
-      // When items are selected:
-      if (selectedDeals.size > 0) {
-        // W: Mark selected as Won
-        if (e.key === 'w' && !e.ctrlKey && !e.metaKey) {
-          e.preventDefault();
-          handleBulkCloseWon();
-          return;
-        }
-
-        // X: Mark selected as Lost
-        if (e.key === 'x' && !e.ctrlKey && !e.metaKey) {
-          e.preventDefault();
-          handleBulkCloseLost();
-          return;
-        }
-      }
-
-      // ?: Show keyboard shortcuts help
-      if (e.key === '?' || (e.shiftKey && e.key === '/')) {
-        e.preventDefault();
-        showInfo(
-          'Klavye Kısayolları',
-          `
-          <div style="text-align: left; font-size: 13px;">
-            <div style="margin-bottom: 8px;"><kbd style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-right: 8px;">Ctrl+N</kbd> Yeni fırsat</div>
-            <div style="margin-bottom: 8px;"><kbd style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-right: 8px;">Ctrl+A</kbd> Tümünü seç</div>
-            <div style="margin-bottom: 8px;"><kbd style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-right: 8px;">Esc</kbd> Seçimi temizle</div>
-            <div style="margin-bottom: 8px;"><kbd style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-right: 8px;">R</kbd> Yenile</div>
-            <div style="margin-bottom: 8px;"><kbd style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-right: 8px;">K</kbd> Kanban görünümü</div>
-            <div style="margin-bottom: 8px;"><kbd style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-right: 8px;">L</kbd> Liste görünümü</div>
-            <div style="margin-bottom: 8px;"><kbd style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-right: 8px;">W</kbd> Seçilenleri kazanıldı işaretle</div>
-            <div style="margin-bottom: 8px;"><kbd style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-right: 8px;">X</kbd> Seçilenleri kaybedildi işaretle</div>
-            <div><kbd style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-right: 8px;">?</kbd> Bu yardımı göster</div>
-          </div>
-          `
-        );
-        return;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [
-    router,
-    selectedDeals,
-    viewMode,
-    isAllSelected,
-    clearSelection,
-    selectAllDeals,
-    refetch,
-    handleBulkCloseWon,
-    handleBulkCloseLost,
-  ]);
-
   const handleCreate = () => {
     router.push('/crm/deals/new');
   };
@@ -652,6 +538,120 @@ export default function DealsPage() {
     const openDeals = filteredDeals.filter((d) => d.status === 'Open');
     return openDeals.length > 0 && openDeals.every((d) => selectedDeals.has(d.id));
   }, [filteredDeals, selectedDeals]);
+
+  // Keyboard shortcuts - placed after isAllSelected and selectAllDeals are defined
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger when typing in input fields
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        (e.target as HTMLElement).isContentEditable
+      ) {
+        return;
+      }
+
+      // Ctrl/Cmd + N: New deal
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        router.push('/crm/deals/new');
+        return;
+      }
+
+      // Escape: Clear selection
+      if (e.key === 'Escape') {
+        if (selectedDeals.size > 0) {
+          e.preventDefault();
+          clearSelection();
+        }
+        return;
+      }
+
+      // Ctrl/Cmd + A: Select all (in list view)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a' && viewMode === 'list') {
+        e.preventDefault();
+        if (isAllSelected) {
+          clearSelection();
+        } else {
+          selectAllDeals();
+        }
+        return;
+      }
+
+      // R: Refresh
+      if (e.key === 'r' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        refetch();
+        return;
+      }
+
+      // K: Switch to Kanban view
+      if (e.key === 'k' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        setViewMode('kanban');
+        return;
+      }
+
+      // L: Switch to List view
+      if (e.key === 'l' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        setViewMode('list');
+        return;
+      }
+
+      // When items are selected:
+      if (selectedDeals.size > 0) {
+        // W: Mark selected as Won
+        if (e.key === 'w' && !e.ctrlKey && !e.metaKey) {
+          e.preventDefault();
+          handleBulkCloseWon();
+          return;
+        }
+
+        // X: Mark selected as Lost
+        if (e.key === 'x' && !e.ctrlKey && !e.metaKey) {
+          e.preventDefault();
+          handleBulkCloseLost();
+          return;
+        }
+      }
+
+      // ?: Show keyboard shortcuts help
+      if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+        e.preventDefault();
+        showInfo(
+          'Klavye Kısayolları',
+          `
+          <div style="text-align: left; font-size: 13px;">
+            <div style="margin-bottom: 8px;"><kbd style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-right: 8px;">Ctrl+N</kbd> Yeni fırsat</div>
+            <div style="margin-bottom: 8px;"><kbd style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-right: 8px;">Ctrl+A</kbd> Tümünü seç</div>
+            <div style="margin-bottom: 8px;"><kbd style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-right: 8px;">Esc</kbd> Seçimi temizle</div>
+            <div style="margin-bottom: 8px;"><kbd style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-right: 8px;">R</kbd> Yenile</div>
+            <div style="margin-bottom: 8px;"><kbd style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-right: 8px;">K</kbd> Kanban görünümü</div>
+            <div style="margin-bottom: 8px;"><kbd style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-right: 8px;">L</kbd> Liste görünümü</div>
+            <div style="margin-bottom: 8px;"><kbd style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-right: 8px;">W</kbd> Seçilenleri kazanıldı işaretle</div>
+            <div style="margin-bottom: 8px;"><kbd style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-right: 8px;">X</kbd> Seçilenleri kaybedildi işaretle</div>
+            <div><kbd style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-right: 8px;">?</kbd> Bu yardımı göster</div>
+          </div>
+          `
+        );
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    router,
+    selectedDeals,
+    viewMode,
+    isAllSelected,
+    clearSelection,
+    selectAllDeals,
+    refetch,
+    handleBulkCloseWon,
+    handleBulkCloseLost,
+  ]);
 
   // Group deals by stage for Kanban view
   const dealsByStage = stages.reduce(
