@@ -33,11 +33,13 @@ interface Product {
 
 interface ProductItem {
   id: Guid;
-  productId: Guid;
+  productId: Guid | number;
   productName?: string;
   quantity: number;
   unitPrice: number;
-  discount: number;
+  discount?: number;
+  discountPercent?: number;
+  discountAmount?: number;
   totalPrice: number;
 }
 
@@ -68,7 +70,8 @@ export function ProductSelector({
   const subtotal = (products || []).reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
   const totalDiscount = (products || []).reduce((sum, item) => {
     const itemTotal = item.quantity * item.unitPrice;
-    return sum + (itemTotal * (item.discount / 100));
+    const discountPercent = item.discount ?? item.discountPercent ?? 0;
+    return sum + (itemTotal * (discountPercent / 100));
   }, 0);
   const total = subtotal - totalDiscount;
 
@@ -145,11 +148,13 @@ export function ProductSelector({
     },
     {
       title: 'İndirim',
-      dataIndex: 'discount',
       key: 'discount',
       width: 100,
       align: 'center' as const,
-      render: (discount: number) => `%${discount}`,
+      render: (_: any, record: ProductItem) => {
+        const discountPct = record.discount ?? record.discountPercent ?? 0;
+        return `%${discountPct}`;
+      },
     },
     {
       title: 'Toplam',
@@ -158,7 +163,8 @@ export function ProductSelector({
       align: 'right' as const,
       render: (_: any, record: ProductItem) => {
         const itemTotal = record.quantity * record.unitPrice;
-        const discountAmount = itemTotal * (record.discount / 100);
+        const discountPct = record.discount ?? record.discountPercent ?? 0;
+        const discountAmount = itemTotal * (discountPct / 100);
         const finalTotal = itemTotal - discountAmount;
         return (
           <Text strong style={{ color: '#52c41a' }}>

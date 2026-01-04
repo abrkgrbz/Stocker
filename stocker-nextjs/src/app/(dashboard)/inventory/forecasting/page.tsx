@@ -51,6 +51,7 @@ import type {
   StockOptimizationDto,
   StockForecastFilterDto,
   ReorderSuggestionStatus,
+  SafetyStockCalculationDto,
 } from '@/lib/api/services/inventory.types';
 import { ForecastingMethod } from '@/lib/api/services/inventory.types';
 
@@ -123,10 +124,13 @@ export default function ForecastingPage() {
   const { data: optimizations, isLoading: optimizationsLoading } = useBulkStockOptimizations(selectedCategoryId, selectedWarehouseId);
 
   // Detail queries (only when modal is open)
-  const { data: productForecast } = useProductForecast(selectedProductId || 0, selectedWarehouseId, forecastDays);
+  const { data: productForecastRaw } = useProductForecast(selectedProductId || 0, selectedWarehouseId, forecastDays);
+  const productForecast = productForecastRaw as ProductForecastDto | undefined;
   const { data: demandAnalysis } = useDemandAnalysis(selectedProductId || 0, selectedWarehouseId);
-  const { data: safetyStock } = useSafetyStockCalculation(selectedProductId || 0);
-  const { data: optimization } = useStockOptimization(selectedProductId || 0);
+  const { data: safetyStockRaw } = useSafetyStockCalculation(selectedProductId || 0);
+  const safetyStock = safetyStockRaw as SafetyStockCalculationDto | undefined;
+  const { data: optimizationRaw } = useStockOptimization(selectedProductId || 0);
+  const optimization = optimizationRaw as StockOptimizationDto | undefined;
 
   // Mutations
   const generateSuggestions = useGenerateReorderSuggestions();
@@ -695,7 +699,7 @@ export default function ForecastingPage() {
                     <div className="p-4">
                       <h5 className="text-sm font-medium text-slate-900 mb-2">Öneriler</h5>
                       <ul className="list-disc pl-5 text-sm text-slate-600">
-                        {record.recommendations.map((rec, index) => (
+                        {record.recommendations.map((rec: string, index: number) => (
                           <li key={index}>{rec}</li>
                         ))}
                       </ul>
@@ -868,7 +872,7 @@ export default function ForecastingPage() {
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
                 <h4 className="text-sm font-medium text-slate-900 mb-3">Optimizasyon Önerileri</h4>
                 <ul className="list-disc pl-5 text-sm text-slate-600">
-                  {optimization.recommendations.map((rec, index) => (
+                  {optimization.recommendations.map((rec: string, index: number) => (
                     <li key={index}>{rec}</li>
                   ))}
                 </ul>

@@ -203,10 +203,12 @@ import type {
   // Quality Control
   QualityControlDto,
   CreateQualityControlDto,
+  UpdateQualityControlDto,
   QualityControlStatus,
   // Cycle Counts
   CycleCountDto,
   CreateCycleCountDto,
+  UpdateCycleCountDto,
   CycleCountStatus,
 } from './inventory.types';
 
@@ -2284,6 +2286,14 @@ export class InventoryService {
     return ApiService.post<QualityControlDto>(this.getPath(`quality-controls/${id}/reject`), { reason });
   }
 
+  static async updateQualityControl(id: number, dto: UpdateQualityControlDto): Promise<QualityControlDto> {
+    return ApiService.put<QualityControlDto>(this.getPath(`quality-controls/${id}`), dto);
+  }
+
+  static async deleteQualityControl(id: number): Promise<void> {
+    return ApiService.delete(this.getPath(`quality-controls/${id}`));
+  }
+
   // =====================================
   // CYCLE COUNTS
   // =====================================
@@ -2313,6 +2323,14 @@ export class InventoryService {
 
   static async completeCycleCount(id: number): Promise<CycleCountDto> {
     return ApiService.post<CycleCountDto>(this.getPath(`cycle-counts/${id}/complete`), {});
+  }
+
+  static async updateCycleCount(id: number, dto: UpdateCycleCountDto): Promise<CycleCountDto> {
+    return ApiService.put<CycleCountDto>(this.getPath(`cycle-counts/${id}`), dto);
+  }
+
+  static async deleteCycleCount(id: number): Promise<void> {
+    return ApiService.delete(this.getPath(`cycle-counts/${id}`));
   }
 
   // =====================================

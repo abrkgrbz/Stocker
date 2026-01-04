@@ -218,24 +218,43 @@ export default function SegmentDetailPage() {
                     Segment Kriterleri
                   </p>
                 </div>
-                {typeof segment.criteria === 'string' ? (
-                  <pre className="text-sm text-slate-700 bg-slate-50 p-4 rounded-lg overflow-x-auto">
-                    {segment.criteria}
-                  </pre>
-                ) : Array.isArray(segment.criteria) && segment.criteria.length > 0 ? (
-                  <div className="space-y-2">
-                    {segment.criteria.map((criterion: any, index: number) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg"
-                      >
-                        <Tag color="blue">{criterion.field}</Tag>
-                        <span className="text-sm text-slate-600">{criterion.operator}</span>
-                        <Tag>{String(criterion.value)}</Tag>
+                {segment.criteria ? (() => {
+                  // Try to parse as JSON array if it's a string
+                  let parsedCriteria: any[] | null = null;
+                  if (typeof segment.criteria === 'string') {
+                    try {
+                      const parsed = JSON.parse(segment.criteria);
+                      if (Array.isArray(parsed)) {
+                        parsedCriteria = parsed;
+                      }
+                    } catch {
+                      // Not JSON, display as string
+                    }
+                  }
+
+                  if (parsedCriteria && parsedCriteria.length > 0) {
+                    return (
+                      <div className="space-y-2">
+                        {parsedCriteria.map((criterion: any, index: number) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg"
+                          >
+                            <Tag color="blue">{criterion.field}</Tag>
+                            <span className="text-sm text-slate-600">{criterion.operator}</span>
+                            <Tag>{String(criterion.value)}</Tag>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                ) : (
+                    );
+                  }
+
+                  return (
+                    <pre className="text-sm text-slate-700 bg-slate-50 p-4 rounded-lg overflow-x-auto">
+                      {segment.criteria}
+                    </pre>
+                  );
+                })() : (
                   <p className="text-sm text-slate-400">Kriter tanımlanmamış</p>
                 )}
               </div>

@@ -3532,14 +3532,6 @@ export interface UpdateWarehouseZoneDto {
 // LOT BATCH
 // =====================================
 
-export enum LotBatchStatus {
-  Pending = 0,
-  Received = 1,
-  Approved = 2,
-  Quarantined = 3,
-  Rejected = 4,
-  Exhausted = 5,
-}
 
 export interface LotBatchDto {
   id: number;

@@ -18,17 +18,29 @@ import {
   useStartCycleCount,
   useCompleteCycleCount,
 } from '@/lib/api/hooks/useInventory';
-import type { CycleCountDto, CycleCountStatus, CreateCycleCountDto } from '@/lib/api/services/inventory.types';
+import type { CycleCountDto, CreateCycleCountDto } from '@/lib/api/services/inventory.types';
+import { CycleCountStatus, CycleCountType } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { PageContainer, ListPageHeader, Card } from '@/components/patterns';
 import { confirmAction } from '@/lib/utils/sweetalert';
 
 const statusConfig: Record<CycleCountStatus, { color: string; label: string }> = {
-  Scheduled: { color: 'default', label: 'Planlandı' },
-  InProgress: { color: 'blue', label: 'Devam Ediyor' },
-  Completed: { color: 'green', label: 'Tamamlandı' },
-  Cancelled: { color: 'red', label: 'İptal Edildi' },
+  [CycleCountStatus.Planned]: { color: 'default', label: 'Planlandı' },
+  [CycleCountStatus.InProgress]: { color: 'blue', label: 'Devam Ediyor' },
+  [CycleCountStatus.Completed]: { color: 'green', label: 'Tamamlandı' },
+  [CycleCountStatus.Approved]: { color: 'cyan', label: 'Onaylandı' },
+  [CycleCountStatus.Processed]: { color: 'purple', label: 'İşlendi' },
+  [CycleCountStatus.Cancelled]: { color: 'red', label: 'İptal Edildi' },
+};
+
+const countTypeLabels: Record<CycleCountType, string> = {
+  [CycleCountType.Standard]: 'Standart',
+  [CycleCountType.AbcBased]: 'ABC Bazlı',
+  [CycleCountType.ZoneBased]: 'Bölge Bazlı',
+  [CycleCountType.CategoryBased]: 'Kategori Bazlı',
+  [CycleCountType.Random]: 'Rastgele',
+  [CycleCountType.MovementBased]: 'Hareket Bazlı',
 };
 
 export default function CycleCountsPage() {
@@ -49,9 +61,9 @@ export default function CycleCountsPage() {
   // Stats
   const stats = useMemo(() => {
     const total = cycleCounts.length;
-    const scheduled = cycleCounts.filter(c => c.status === 'Scheduled').length;
-    const inProgress = cycleCounts.filter(c => c.status === 'InProgress').length;
-    const completed = cycleCounts.filter(c => c.status === 'Completed').length;
+    const scheduled = cycleCounts.filter(c => c.status === CycleCountStatus.Planned).length;
+    const inProgress = cycleCounts.filter(c => c.status === CycleCountStatus.InProgress).length;
+    const completed = cycleCounts.filter(c => c.status === CycleCountStatus.Completed).length;
     return { total, scheduled, inProgress, completed };
   }, [cycleCounts]);
 
@@ -69,7 +81,7 @@ export default function CycleCountsPage() {
   const handleStart = async (count: CycleCountDto) => {
     const confirmed = await confirmAction(
       'Sayımı Başlat',
-      `"${count.countNumber}" sayımını başlatmak istediğinizden emin misiniz?`,
+      `"${count.planNumber}" sayımını başlatmak istediğinizden emin misiniz?`,
       'Başlat'
     );
     if (confirmed) {
@@ -84,7 +96,7 @@ export default function CycleCountsPage() {
   const handleComplete = async (count: CycleCountDto) => {
     const confirmed = await confirmAction(
       'Sayımı Tamamla',
-      `"${count.countNumber}" sayımını tamamlamak istediğinizden emin misiniz?`,
+      `"${count.planNumber}" sayımını tamamlamak istediğinizden emin misiniz?`,
       'Tamamla'
     );
     if (confirmed) {
@@ -101,7 +113,10 @@ export default function CycleCountsPage() {
       const values = await form.validateFields();
       const data: CreateCycleCountDto = {
         warehouseId: values.warehouseId,
-        scheduledDate: values.scheduledDate?.toISOString(),
+        planNumber: values.planNumber || `CC-${Date.now()}`,
+        planName: values.planName || 'Dönemsel Sayım',
+        scheduledStartDate: values.scheduledDate?.toISOString(),
+        scheduledEndDate: values.scheduledDate?.toISOString(),
         description: values.description,
         countType: values.countType,
       };
@@ -117,8 +132,8 @@ export default function CycleCountsPage() {
   const columns: ColumnsType<CycleCountDto> = [
     {
       title: 'Sayım No',
-      dataIndex: 'countNumber',
-      key: 'countNumber',
+      dataIndex: 'planNumber',
+      key: 'planNumber',
       width: 130,
       render: (text: string) => <span className="font-mono font-semibold text-slate-900">{text}</span>,
     },
@@ -148,8 +163,8 @@ export default function CycleCountsPage() {
     },
     {
       title: 'Planlanan Tarih',
-      dataIndex: 'scheduledDate',
-      key: 'scheduledDate',
+      dataIndex: 'scheduledStartDate',
+      key: 'scheduledStartDate',
       width: 130,
       render: (date: string) => date ? dayjs(date).format('DD.MM.YYYY') : '-',
     },
@@ -183,7 +198,7 @@ export default function CycleCountsPage() {
           },
         ];
 
-        if (record.status === 'Scheduled') {
+        if (record.status === CycleCountStatus.Planned) {
           items.push({
             key: 'start',
             icon: <PlayIcon className="w-4 h-4" />,
@@ -192,7 +207,7 @@ export default function CycleCountsPage() {
           });
         }
 
-        if (record.status === 'InProgress') {
+        if (record.status === CycleCountStatus.InProgress) {
           items.push({
             key: 'complete',
             icon: <CheckCircleIcon className="w-4 h-4" />,
@@ -356,7 +371,7 @@ export default function CycleCountsPage() {
 
       {/* Detail Modal */}
       <Modal
-        title={`Sayım Detayı: ${selectedCount?.countNumber || ''}`}
+        title={`Sayım Detayı: ${selectedCount?.planNumber || ''}`}
         open={detailModalOpen}
         onCancel={() => {
           setDetailModalOpen(false);
@@ -374,7 +389,7 @@ export default function CycleCountsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs text-slate-500 uppercase">Sayım No</p>
-                <p className="font-semibold">{selectedCount.countNumber}</p>
+                <p className="font-semibold">{selectedCount.planNumber}</p>
               </div>
               <div>
                 <p className="text-xs text-slate-500 uppercase">Durum</p>
@@ -396,7 +411,7 @@ export default function CycleCountsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs text-slate-500 uppercase">Planlanan Tarih</p>
-                <p>{selectedCount.scheduledDate ? dayjs(selectedCount.scheduledDate).format('DD.MM.YYYY') : '-'}</p>
+                <p>{selectedCount.scheduledStartDate ? dayjs(selectedCount.scheduledStartDate).format('DD.MM.YYYY') : '-'}</p>
               </div>
               <div>
                 <p className="text-xs text-slate-500 uppercase">İlerleme</p>

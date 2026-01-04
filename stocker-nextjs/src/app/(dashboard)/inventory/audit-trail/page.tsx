@@ -49,6 +49,7 @@ import type {
   InventoryAuditFilterDto,
   InventoryAuditLogDto,
   AuditSummaryByUserDto,
+  EntityHistoryDto,
 } from '@/lib/api/services/inventory.types';
 import {
   InventoryEntityTypeLabels,
@@ -112,10 +113,11 @@ export default function AuditTrailPage() {
   const { data: dashboardData, isLoading: dashboardLoading, refetch: refetchDashboard } = useAuditDashboard(dashboardDays);
   const { data: entityTypes } = useAuditEntityTypes();
   const { data: actionTypes } = useAuditActionTypes();
-  const { data: entityHistoryData, isLoading: historyLoading } = useEntityHistory(
+  const { data: entityHistoryDataRaw, isLoading: historyLoading } = useEntityHistory(
     historyEntity?.type || '',
     historyEntity?.id || ''
   );
+  const entityHistoryData = entityHistoryDataRaw as EntityHistoryDto | undefined;
 
   // Handle filter changes
   const handleFilterChange = (key: keyof InventoryAuditFilterDto, value: unknown) => {
@@ -708,7 +710,7 @@ export default function AuditTrailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-4">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Değişiklik Geçmişi</p>
               <Timeline
-                items={entityHistoryData.changes.map((change) => ({
+                items={entityHistoryData.changes.map((change: InventoryAuditLogDto) => ({
                   color: actionColors[change.action] === 'error' ? 'red' :
                          actionColors[change.action] === 'success' ? 'green' :
                          actionColors[change.action] === 'processing' ? 'blue' : 'gray',
@@ -725,7 +727,7 @@ export default function AuditTrailPage() {
                       <span className="text-slate-900">{change.userName}</span>
                       {change.changes && change.changes.length > 0 && (
                         <div className="mt-1">
-                          {change.changes.map((c, idx) => (
+                          {change.changes.map((c: any, idx: number) => (
                             <div key={idx} className="text-xs">
                               <span className="text-slate-500">{c.fieldLabel}:</span>{' '}
                               <span className="line-through text-slate-400">{c.oldValue || '-'}</span>{' '}

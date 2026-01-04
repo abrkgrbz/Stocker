@@ -411,7 +411,7 @@ export function useProducts(includeInactive: boolean = false, categoryId?: numbe
 }
 
 export function useProduct(id: number) {
-  return useQuery({
+  return useQuery<ProductDto>({
     queryKey: inventoryKeys.product(id),
     queryFn: () => InventoryService.getProduct(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -419,7 +419,7 @@ export function useProduct(id: number) {
 }
 
 export function useLowStockProducts(warehouseId?: number) {
-  return useQuery({
+  return useQuery<LowStockProductDto[]>({
     queryKey: inventoryKeys.productsLowStock(warehouseId),
     queryFn: () => InventoryService.getLowStockProducts(warehouseId),
     ...queryOptions.list(),
@@ -738,7 +738,7 @@ export function useWarehouse(id: number) {
 }
 
 export function useWarehouseStockSummary(id: number) {
-  return useQuery({
+  return useQuery<WarehouseStockSummaryDto>({
     queryKey: inventoryKeys.warehouseStockSummary(id),
     queryFn: () => InventoryService.getWarehouseStockSummary(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -812,7 +812,7 @@ export function useSetDefaultWarehouse() {
 // =====================================
 
 export function useLocations(warehouseId?: number) {
-  return useQuery({
+  return useQuery<LocationDto[]>({
     queryKey: inventoryKeys.locations(warehouseId),
     queryFn: () => InventoryService.getLocations(warehouseId),
     ...queryOptions.static(),
@@ -820,7 +820,7 @@ export function useLocations(warehouseId?: number) {
 }
 
 export function useLocation(id: number) {
-  return useQuery({
+  return useQuery<LocationDto>({
     queryKey: inventoryKeys.location(id),
     queryFn: () => InventoryService.getLocation(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -978,7 +978,7 @@ export function useRemoveSupplierProduct() {
 // =====================================
 
 export function useStock(warehouseId?: number, productId?: number, locationId?: number) {
-  return useQuery({
+  return useQuery<StockDto[]>({
     queryKey: inventoryKeys.stock(warehouseId, productId, locationId),
     queryFn: () => InventoryService.getStock(warehouseId, productId, locationId),
     ...queryOptions.list(),
@@ -986,7 +986,7 @@ export function useStock(warehouseId?: number, productId?: number, locationId?: 
 }
 
 export function useProductStockSummary(productId: number) {
-  return useQuery({
+  return useQuery<ProductStockSummaryDto>({
     queryKey: inventoryKeys.stockSummary(productId),
     queryFn: () => InventoryService.getProductStockSummary(productId),
     ...queryOptions.detail({ enabled: !!productId && productId > 0 }),
@@ -994,7 +994,7 @@ export function useProductStockSummary(productId: number) {
 }
 
 export function useExpiringStock(daysUntilExpiry: number = 30) {
-  return useQuery({
+  return useQuery<ExpiringStockDto[]>({
     queryKey: inventoryKeys.stockExpiring(daysUntilExpiry),
     queryFn: () => InventoryService.getExpiringStock(daysUntilExpiry),
     ...queryOptions.list(),
@@ -1044,7 +1044,7 @@ export function useStockMovements(
   startDate?: string,
   endDate?: string
 ) {
-  return useQuery({
+  return useQuery<StockMovementDto[]>({
     queryKey: [...inventoryKeys.stockMovements, { productId, warehouseId, movementType, startDate, endDate }],
     queryFn: () => InventoryService.getStockMovements(productId, warehouseId, movementType, startDate, endDate),
     ...queryOptions.list(),
@@ -1052,7 +1052,7 @@ export function useStockMovements(
 }
 
 export function useStockMovement(id: number) {
-  return useQuery({
+  return useQuery<StockMovementDto>({
     queryKey: inventoryKeys.stockMovement(id),
     queryFn: () => InventoryService.getStockMovement(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -1060,7 +1060,7 @@ export function useStockMovement(id: number) {
 }
 
 export function useStockMovementSummary(startDate: string, endDate: string, warehouseId?: number) {
-  return useQuery({
+  return useQuery<StockMovementSummaryDto>({
     queryKey: inventoryKeys.stockMovementSummary(startDate, endDate, warehouseId),
     queryFn: () => InventoryService.getStockMovementSummary(startDate, endDate, warehouseId),
     ...queryOptions.detail({ enabled: !!startDate && !!endDate }),
@@ -1110,7 +1110,7 @@ export function useStockReservations(
   status?: ReservationStatus,
   expiredOnly: boolean = false
 ) {
-  return useQuery({
+  return useQuery<StockTransferDto[]>({
     queryKey: [...inventoryKeys.stockReservations, { productId, warehouseId, status, expiredOnly }],
     queryFn: () => InventoryService.getStockReservations(productId, warehouseId, status, expiredOnly),
     ...queryOptions.list(),
@@ -1118,7 +1118,7 @@ export function useStockReservations(
 }
 
 export function useStockReservation(id: number) {
-  return useQuery({
+  return useQuery<StockReservationDto>({
     queryKey: inventoryKeys.stockReservation(id),
     queryFn: () => InventoryService.getStockReservation(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -1204,7 +1204,7 @@ export function useStockTransfers(
   fromDate?: string,
   toDate?: string
 ) {
-  return useQuery({
+  return useQuery<StockCountDto[]>({
     queryKey: [...inventoryKeys.stockTransfers, { sourceWarehouseId, destinationWarehouseId, status, fromDate, toDate }],
     queryFn: () => InventoryService.getStockTransfers(sourceWarehouseId, destinationWarehouseId, status, fromDate, toDate),
     ...queryOptions.list(),
@@ -1212,7 +1212,7 @@ export function useStockTransfers(
 }
 
 export function useStockTransfer(id: number) {
-  return useQuery({
+  return useQuery<StockTransferDto>({
     queryKey: inventoryKeys.stockTransfer(id),
     queryFn: () => InventoryService.getStockTransfer(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -1362,7 +1362,7 @@ export function useStockCounts(
   fromDate?: string,
   toDate?: string
 ) {
-  return useQuery({
+  return useQuery<PriceListItemDto[]>({
     queryKey: [...inventoryKeys.stockCounts, { warehouseId, status, fromDate, toDate }],
     queryFn: () => InventoryService.getStockCounts(warehouseId, status, fromDate, toDate),
     ...queryOptions.list(),
@@ -1370,7 +1370,7 @@ export function useStockCounts(
 }
 
 export function useStockCount(id: number) {
-  return useQuery({
+  return useQuery<StockCountDto>({
     queryKey: inventoryKeys.stockCount(id),
     queryFn: () => InventoryService.getStockCount(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -1378,7 +1378,7 @@ export function useStockCount(id: number) {
 }
 
 export function useStockCountSummary(id: number) {
-  return useQuery({
+  return useQuery<StockCountSummaryDto>({
     queryKey: inventoryKeys.stockCountSummary(id),
     queryFn: () => InventoryService.getStockCountSummary(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -1514,7 +1514,7 @@ export function useCancelStockCount() {
 // =====================================
 
 export function usePriceLists(activeOnly: boolean = true) {
-  return useQuery({
+  return useQuery<PriceListDto[]>({
     queryKey: [...inventoryKeys.priceLists, { activeOnly }],
     queryFn: () => InventoryService.getPriceLists(activeOnly),
     ...queryOptions.static(),
@@ -1522,7 +1522,7 @@ export function usePriceLists(activeOnly: boolean = true) {
 }
 
 export function usePriceList(id: number) {
-  return useQuery({
+  return useQuery<PriceListDto>({
     queryKey: inventoryKeys.priceList(id),
     queryFn: () => InventoryService.getPriceList(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -1530,7 +1530,7 @@ export function usePriceList(id: number) {
 }
 
 export function useProductPrice(productId: number, priceListId?: number, quantity?: number) {
-  return useQuery({
+  return useQuery<ProductPriceDto>({
     queryKey: inventoryKeys.productPrice(productId, priceListId),
     queryFn: () => InventoryService.getProductPrice(productId, priceListId, quantity),
     ...queryOptions.static({ enabled: !!productId && productId > 0 }),
@@ -1706,7 +1706,7 @@ export function useBulkUpdatePriceListItems() {
 // =====================================
 
 export function useSerialNumbers(filter?: SerialNumberFilterDto) {
-  return useQuery({
+  return useQuery<SerialNumberListDto[]>({
     queryKey: inventoryKeys.serialNumbers(filter),
     queryFn: () => InventoryService.getSerialNumbers(filter),
     ...queryOptions.list(),
@@ -1714,7 +1714,7 @@ export function useSerialNumbers(filter?: SerialNumberFilterDto) {
 }
 
 export function useSerialNumber(id: number) {
-  return useQuery({
+  return useQuery<SerialNumberDto>({
     queryKey: inventoryKeys.serialNumber(id),
     queryFn: () => InventoryService.getSerialNumber(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -1842,7 +1842,7 @@ export function useScrapSerialNumber() {
 // =====================================
 
 export function useLotBatches(filter?: LotBatchFilterDto) {
-  return useQuery({
+  return useQuery<LotBatchListDto[]>({
     queryKey: inventoryKeys.lotBatches(filter),
     queryFn: () => InventoryService.getLotBatches(filter),
     ...queryOptions.list(),
@@ -1850,7 +1850,7 @@ export function useLotBatches(filter?: LotBatchFilterDto) {
 }
 
 export function useLotBatch(id: number) {
-  return useQuery({
+  return useQuery<LotBatchDto>({
     queryKey: inventoryKeys.lotBatch(id),
     queryFn: () => InventoryService.getLotBatch(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -1910,7 +1910,7 @@ export function useQuarantineLotBatch() {
 // =====================================
 
 export function useProductImages(productId: number, includeInactive: boolean = false) {
-  return useQuery({
+  return useQuery<ProductImageDto[]>({
     queryKey: [...inventoryKeys.productImages(productId), { includeInactive }],
     queryFn: () => InventoryService.getProductImages(productId, includeInactive),
     ...queryOptions.detail({ enabled: !!productId && productId > 0 }),
@@ -2001,7 +2001,7 @@ export function useReorderProductImages() {
 // =====================================
 
 export function useProductAttributes(includeInactive: boolean = false, filterableOnly: boolean = false) {
-  return useQuery({
+  return useQuery<ProductAttributeDetailDto[]>({
     queryKey: [...inventoryKeys.productAttributes, { includeInactive, filterableOnly }],
     queryFn: () => InventoryService.getProductAttributes(includeInactive, filterableOnly),
     ...queryOptions.static(),
@@ -2009,7 +2009,7 @@ export function useProductAttributes(includeInactive: boolean = false, filterabl
 }
 
 export function useProductAttribute(id: number) {
-  return useQuery({
+  return useQuery<ProductAttributeDetailDto>({
     queryKey: inventoryKeys.productAttribute(id),
     queryFn: () => InventoryService.getProductAttribute(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -2126,7 +2126,7 @@ export function useDeleteProductAttributeOption() {
 // =====================================
 
 export function useProductVariants(productId: number, includeInactive: boolean = false) {
-  return useQuery({
+  return useQuery<ProductVariantDto[]>({
     queryKey: [...inventoryKeys.productVariants(productId), { includeInactive }],
     queryFn: () => InventoryService.getProductVariants(productId, includeInactive),
     ...queryOptions.list({ enabled: !!productId && productId > 0 }),
@@ -2134,7 +2134,7 @@ export function useProductVariants(productId: number, includeInactive: boolean =
 }
 
 export function useProductVariant(id: number) {
-  return useQuery({
+  return useQuery<ProductVariantDto>({
     queryKey: inventoryKeys.productVariant(id),
     queryFn: () => InventoryService.getProductVariant(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -2198,7 +2198,7 @@ export function useProductBundles(
   includeInactive: boolean = false,
   validOnly: boolean = false
 ) {
-  return useQuery({
+  return useQuery<ProductBundleDto[]>({
     queryKey: [...inventoryKeys.productBundles, { includeInactive, validOnly }],
     queryFn: () => InventoryService.getProductBundles(includeInactive, validOnly),
     ...queryOptions.list(),
@@ -2206,7 +2206,7 @@ export function useProductBundles(
 }
 
 export function useProductBundle(id: number) {
-  return useQuery({
+  return useQuery<ProductBundleDto>({
     queryKey: inventoryKeys.productBundle(id),
     queryFn: () => InventoryService.getProductBundle(id),
     ...queryOptions.detail({ enabled: !!id && id > 0 }),
@@ -2371,7 +2371,7 @@ export function useInventoryKPIs(
  * Get supported barcode formats
  */
 export function useBarcodeFormats() {
-  return useQuery({
+  return useQuery<BarcodeFormat[]>({
     queryKey: inventoryKeys.barcodeFormats,
     queryFn: () => InventoryService.getBarcodeFormats(),
     ...queryOptions.static({ staleTime: Infinity }),
@@ -2382,7 +2382,7 @@ export function useBarcodeFormats() {
  * Get label size presets
  */
 export function useLabelSizes() {
-  return useQuery({
+  return useQuery<LabelSize[]>({
     queryKey: inventoryKeys.labelSizes,
     queryFn: () => InventoryService.getLabelSizes(),
     ...queryOptions.static({ staleTime: Infinity }),
@@ -2551,7 +2551,7 @@ export function useAuditLogById(id: string) {
  * Get supported entity types with labels
  */
 export function useAuditEntityTypes() {
-  return useQuery({
+  return useQuery<string[]>({
     queryKey: inventoryKeys.auditEntityTypes,
     queryFn: () => InventoryService.getAuditEntityTypes(),
     ...queryOptions.static(),
@@ -2562,7 +2562,7 @@ export function useAuditEntityTypes() {
  * Get supported action types with labels
  */
 export function useAuditActionTypes() {
-  return useQuery({
+  return useQuery<string[]>({
     queryKey: inventoryKeys.auditActionTypes,
     queryFn: () => InventoryService.getAuditActionTypes(),
     ...queryOptions.static(),
@@ -2582,7 +2582,7 @@ export function useProductForecast(
   forecastDays: number = 30,
   method?: ForecastingMethod
 ) {
-  return useQuery({
+  return useQuery<ProductForecastDto>({
     queryKey: inventoryKeys.productForecast(productId, warehouseId, forecastDays, method),
     queryFn: () => InventoryService.getProductForecast(productId, warehouseId, forecastDays, method),
     ...queryOptions.detail({ enabled: productId > 0 }),
@@ -2593,7 +2593,7 @@ export function useProductForecast(
  * Get forecasts for multiple products
  */
 export function useProductForecasts(filter?: StockForecastFilterDto) {
-  return useQuery({
+  return useQuery<PagedList<ProductForecastDto>>({
     queryKey: inventoryKeys.productForecasts(filter),
     queryFn: () => InventoryService.getProductForecasts(filter),
     ...queryOptions.list(),
@@ -2615,7 +2615,7 @@ export function useForecastSummary(filter?: StockForecastFilterDto) {
  * Get products at risk of stockout
  */
 export function useStockoutRiskProducts(riskDays: number = 7, warehouseId?: number) {
-  return useQuery({
+  return useQuery<ProductForecastDto[]>({
     queryKey: inventoryKeys.stockoutRisk(riskDays, warehouseId),
     queryFn: () => InventoryService.getStockoutRiskProducts(riskDays, warehouseId),
     ...queryOptions.list(),
@@ -2626,7 +2626,7 @@ export function useStockoutRiskProducts(riskDays: number = 7, warehouseId?: numb
  * Analyze historical demand patterns for a product
  */
 export function useDemandAnalysis(productId: number, warehouseId?: number, analysisDays: number = 90) {
-  return useQuery({
+  return useQuery<DemandAnalysisDto>({
     queryKey: inventoryKeys.demandAnalysis(productId, warehouseId, analysisDays),
     queryFn: () => InventoryService.getDemandAnalysis(productId, warehouseId, analysisDays),
     ...queryOptions.detail({ enabled: productId > 0 }),
@@ -2637,7 +2637,7 @@ export function useDemandAnalysis(productId: number, warehouseId?: number, analy
  * Get seasonal patterns for a product
  */
 export function useSeasonalPatterns(productId: number) {
-  return useQuery({
+  return useQuery<SeasonalPatternDto[]>({
     queryKey: inventoryKeys.seasonalPatterns(productId),
     queryFn: () => InventoryService.getSeasonalPatterns(productId),
     ...queryOptions.static({ enabled: productId > 0 }),
@@ -2648,7 +2648,7 @@ export function useSeasonalPatterns(productId: number) {
  * Get ABC classification for products
  */
 export function useAbcClassification(categoryId?: number, analysisDays: number = 365) {
-  return useQuery({
+  return useQuery<AbcClassificationDto[]>({
     queryKey: inventoryKeys.abcClassification(categoryId, analysisDays),
     queryFn: () => InventoryService.getAbcClassification(categoryId, analysisDays),
     ...queryOptions.static(),
@@ -2659,7 +2659,7 @@ export function useAbcClassification(categoryId?: number, analysisDays: number =
  * Calculate recommended safety stock levels
  */
 export function useSafetyStockCalculation(productId: number, serviceLevel: number = 0.95) {
-  return useQuery({
+  return useQuery<SafetyStockCalculationDto>({
     queryKey: inventoryKeys.safetyStock(productId, serviceLevel),
     queryFn: () => InventoryService.getSafetyStockCalculation(productId, serviceLevel),
     ...queryOptions.detail({ enabled: productId > 0 }),
@@ -2670,7 +2670,7 @@ export function useSafetyStockCalculation(productId: number, serviceLevel: numbe
  * Get stock optimization recommendations for a product
  */
 export function useStockOptimization(productId: number) {
-  return useQuery({
+  return useQuery<StockOptimizationDto>({
     queryKey: inventoryKeys.stockOptimization(productId),
     queryFn: () => InventoryService.getStockOptimization(productId),
     ...queryOptions.detail({ enabled: productId > 0 }),
@@ -2681,7 +2681,7 @@ export function useStockOptimization(productId: number) {
  * Get bulk stock optimization recommendations
  */
 export function useBulkStockOptimizations(categoryId?: number, warehouseId?: number) {
-  return useQuery({
+  return useQuery<StockOptimizationDto[]>({
     queryKey: inventoryKeys.bulkStockOptimizations(categoryId, warehouseId),
     queryFn: () => InventoryService.getBulkStockOptimizations(categoryId, warehouseId),
     ...queryOptions.list(),
@@ -2701,7 +2701,7 @@ export function useReorderRules(
   warehouseId?: number,
   status?: ReorderRuleStatus
 ) {
-  return useQuery({
+  return useQuery<ReorderRuleDto[]>({
     queryKey: inventoryKeys.reorderRules(productId, categoryId, warehouseId, status),
     queryFn: () => InventoryService.getReorderRules(productId, categoryId, warehouseId, status),
     ...queryOptions.list(),
@@ -2712,7 +2712,7 @@ export function useReorderRules(
  * Get a specific reorder rule by ID
  */
 export function useReorderRule(id: number) {
-  return useQuery({
+  return useQuery<ReorderRuleDto>({
     queryKey: inventoryKeys.reorderRule(id),
     queryFn: () => InventoryService.getReorderRuleById(id),
     ...queryOptions.detail({ enabled: id > 0 }),
@@ -2858,7 +2858,7 @@ export function useExecuteReorderRule() {
  * Get paginated reorder suggestions
  */
 export function useReorderSuggestions(filter?: ReorderSuggestionFilterDto) {
-  return useQuery({
+  return useQuery<ReorderSuggestionDto[]>({
     queryKey: inventoryKeys.reorderSuggestions(filter),
     queryFn: () => InventoryService.getReorderSuggestions(filter),
     ...queryOptions.list(),
@@ -2869,7 +2869,7 @@ export function useReorderSuggestions(filter?: ReorderSuggestionFilterDto) {
  * Get a specific reorder suggestion by ID
  */
 export function useReorderSuggestion(id: number) {
-  return useQuery({
+  return useQuery<ReorderSuggestionDto>({
     queryKey: inventoryKeys.reorderSuggestion(id),
     queryFn: () => InventoryService.getReorderSuggestionById(id),
     ...queryOptions.detail({ enabled: id > 0 }),
@@ -2976,7 +2976,7 @@ export function useProductCostLayers(
   warehouseId?: number,
   includeFullyConsumed: boolean = false
 ) {
-  return useQuery({
+  return useQuery<InventoryTurnoverReportDto>({
     queryKey: inventoryKeys.productCostLayers(productId, warehouseId, includeFullyConsumed),
     queryFn: () => InventoryService.getProductCostLayers(productId, warehouseId, includeFullyConsumed),
     ...queryOptions.list({ enabled: !!productId && productId > 0 }),
@@ -3025,7 +3025,7 @@ export function useConsumeFromCostLayers() {
  * Get costing summary for a specific product
  */
 export function useProductCostingSummary(productId: number, warehouseId?: number) {
-  return useQuery({
+  return useQuery<ProductCostingSummaryDto>({
     queryKey: inventoryKeys.productCostingSummary(productId, warehouseId),
     queryFn: () => InventoryService.getProductCostingSummary(productId, warehouseId),
     ...queryOptions.detail({ enabled: !!productId && productId > 0 }),
@@ -3059,7 +3059,7 @@ export function useCalculateCOGS() {
  * Compare costs across different methods
  */
 export function useCostMethodComparison(productId: number, quantity: number, warehouseId?: number) {
-  return useQuery({
+  return useQuery<CostMethodComparisonDto>({
     queryKey: inventoryKeys.costMethodComparison(productId, quantity, warehouseId),
     queryFn: () => InventoryService.compareCostMethods(productId, quantity, warehouseId),
     ...queryOptions.detail({ enabled: !!productId && productId > 0 && quantity > 0 }),
@@ -3081,7 +3081,7 @@ export function useInventoryValuation(filter?: InventoryValuationFilterDto) {
  * Get total inventory value
  */
 export function useTotalInventoryValue(method?: CostingMethod, warehouseId?: number) {
-  return useQuery({
+  return useQuery<TotalInventoryValueDto>({
     queryKey: inventoryKeys.totalInventoryValue(method, warehouseId),
     queryFn: () => InventoryService.getTotalInventoryValue(method, warehouseId),
     ...queryOptions.detail(),
@@ -3173,7 +3173,7 @@ export function useRecalculateWAC() {
  * Get current costing method for a product
  */
 export function useProductCostingMethod(productId: number) {
-  return useQuery({
+  return useQuery<ProductCostingMethodDto>({
     queryKey: inventoryKeys.productCostingMethod(productId),
     queryFn: () => InventoryService.getProductCostingMethod(productId),
     ...queryOptions.static({ enabled: !!productId && productId > 0 }),
@@ -3204,7 +3204,7 @@ export function useSetProductCostingMethod() {
  * Get supported costing methods
  */
 export function useCostingMethods() {
-  return useQuery({
+  return useQuery<CostingMethod[]>({
     queryKey: inventoryKeys.costingMethods,
     queryFn: () => InventoryService.getCostingMethods(),
     ...queryOptions.static({ staleTime: Infinity }),
@@ -3460,7 +3460,7 @@ export function useInventoryHealthScore(filter?: InventoryHealthScoreFilterDto, 
  * Get all packaging types
  */
 export function usePackagingTypes(includeInactive: boolean = false) {
-  return useQuery({
+  return useQuery<PackagingTypeDto[]>({
     queryKey: [...inventoryKeys.packagingTypes, { includeInactive }],
     queryFn: () => InventoryService.getPackagingTypes(includeInactive),
     ...queryOptions.list(),
@@ -3471,7 +3471,7 @@ export function usePackagingTypes(includeInactive: boolean = false) {
  * Get a packaging type by ID
  */
 export function usePackagingType(id: number) {
-  return useQuery({
+  return useQuery<PackagingTypeDto>({
     queryKey: inventoryKeys.packagingType(id),
     queryFn: () => InventoryService.getPackagingType(id),
     ...queryOptions.detail({ enabled: id > 0 }),

@@ -2,11 +2,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { Form, Input, InputNumber, Select, Switch } from 'antd';
-import { CubeIcon, FireIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
-import { useWarehouses } from '@/lib/api/hooks/useInventory';
-import type { WarehouseZoneDto, ZoneType } from '@/lib/api/services/inventory.types';
+import { MapPinIcon } from '@heroicons/react/24/outline';
 
 const { TextArea } = Input;
+import { useWarehouses } from '@/lib/api/hooks/useInventory';
+import type { WarehouseZoneDto } from '@/lib/api/services/inventory.types';
 
 interface WarehouseZoneFormProps {
   form: ReturnType<typeof Form.useForm>[0];
@@ -22,13 +22,13 @@ const zoneTypeOptions = [
   { value: 4, label: 'Kuru Depo' },
   { value: 5, label: 'Tehlikeli Madde' },
   { value: 6, label: 'Karantina' },
-  { value: 7, label: 'İadeler' },
+  { value: 7, label: 'İade' },
   { value: 8, label: 'Toplama' },
   { value: 9, label: 'Sevkiyat' },
-  { value: 10, label: 'Teslim Alma' },
+  { value: 10, label: 'Kabul' },
   { value: 11, label: 'Cross-Docking' },
   { value: 12, label: 'Yüksek Değerli' },
-  { value: 13, label: 'Toplu Depo' },
+  { value: 13, label: 'Toplu Depolama' },
   { value: 99, label: 'Diğer' },
 ];
 
@@ -37,12 +37,13 @@ export default function WarehouseZoneForm({ form, initialValues, onFinish, loadi
   const [isTemperatureControlled, setIsTemperatureControlled] = useState(false);
   const [isHumidityControlled, setIsHumidityControlled] = useState(false);
   const [isHazardous, setIsHazardous] = useState(false);
+  const [requiresSpecialAccess, setRequiresSpecialAccess] = useState(false);
 
-  const { data: warehouses = [] } = useWarehouses(true);
+  const { data: warehouses = [] } = useWarehouses();
 
   const warehouseOptions = warehouses.map(w => ({
     value: w.id,
-    label: w.name,
+    label: `${w.code} - ${w.name}`,
   }));
 
   useEffect(() => {
@@ -52,10 +53,14 @@ export default function WarehouseZoneForm({ form, initialValues, onFinish, loadi
       setIsTemperatureControlled(initialValues.isTemperatureControlled ?? false);
       setIsHumidityControlled(initialValues.isHumidityControlled ?? false);
       setIsHazardous(initialValues.isHazardous ?? false);
+      setRequiresSpecialAccess(initialValues.requiresSpecialAccess ?? false);
     } else {
       form.setFieldsValue({
-        zoneType: 1,
-        priority: 100,
+        priority: 0,
+        isDefaultPickingZone: false,
+        isDefaultPutawayZone: false,
+        isQuarantineZone: false,
+        isReturnsZone: false,
       });
     }
   }, [form, initialValues]);
@@ -80,7 +85,7 @@ export default function WarehouseZoneForm({ form, initialValues, onFinish, loadi
             {/* Zone Icon */}
             <div className="flex-shrink-0">
               <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
-                <CubeIcon className="w-6 h-6 text-slate-500" />
+                <MapPinIcon className="w-6 h-6 text-slate-500" />
               </div>
             </div>
 
@@ -90,21 +95,14 @@ export default function WarehouseZoneForm({ form, initialValues, onFinish, loadi
                 name="name"
                 rules={[
                   { required: true, message: 'Bölge adı zorunludur' },
-                  { max: 200, message: 'Bölge adı en fazla 200 karakter olabilir' },
+                  { max: 100, message: 'Bölge adı en fazla 100 karakter olabilir' },
                 ]}
                 className="mb-0"
               >
                 <Input
-                  placeholder="Bölge Adı Girin..."
+                  placeholder="Bölge Adı Girin... (örn: A Blok Soğuk Depo)"
                   variant="borderless"
                   className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
-                />
-              </Form.Item>
-              <Form.Item name="description" className="mb-0 mt-1">
-                <Input
-                  placeholder="Bölge hakkında kısa açıklama..."
-                  variant="borderless"
-                  className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400"
                 />
               </Form.Item>
             </div>
@@ -148,7 +146,7 @@ export default function WarehouseZoneForm({ form, initialValues, onFinish, loadi
                   className="mb-0"
                 >
                   <Input
-                    placeholder="ZONE-001"
+                    placeholder="ZONE-A1"
                     disabled={!!initialValues}
                     className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
@@ -163,10 +161,10 @@ export default function WarehouseZoneForm({ form, initialValues, onFinish, loadi
                 >
                   <Select
                     placeholder="Depo seçin"
-                    disabled={!!initialValues}
                     showSearch
                     optionFilterProp="label"
                     options={warehouseOptions}
+                    disabled={!!initialValues}
                     className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
@@ -177,42 +175,100 @@ export default function WarehouseZoneForm({ form, initialValues, onFinish, loadi
                   name="zoneType"
                   rules={[{ required: true, message: 'Bölge tipi zorunludur' }]}
                   className="mb-0"
-                  initialValue={1}
                 >
                   <Select
                     placeholder="Tip seçin"
+                    showSearch
+                    optionFilterProp="label"
                     options={zoneTypeOptions}
                     className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
+              <div className="col-span-12">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Açıklama</label>
+                <Form.Item name="description" className="mb-0">
+                  <TextArea
+                    placeholder="Bölge hakkında açıklama..."
+                    rows={2}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── KAPASİTE BİLGİLERİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Kapasite Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Öncelik</label>
-                <Form.Item name="priority" className="mb-0" initialValue={100}>
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Toplam Alan (m²)</label>
+                <Form.Item name="totalArea" className="mb-0">
                   <InputNumber
                     placeholder="100"
-                    min={1}
-                    max={999}
+                    min={0}
+                    step={0.1}
                     className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                   />
                 </Form.Item>
-                <p className="text-xs text-slate-400 mt-1">Düşük değerler önce işlenir</p>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Kullanılabilir Alan (m²)</label>
+                <Form.Item name="usableArea" className="mb-0">
+                  <InputNumber
+                    placeholder="80"
+                    min={0}
+                    step={0.1}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Maks. Palet Kapasitesi</label>
+                <Form.Item name="maxPalletCapacity" className="mb-0">
+                  <InputNumber
+                    placeholder="50"
+                    min={0}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Maks. Yükseklik (m)</label>
+                <Form.Item name="maxHeight" className="mb-0">
+                  <InputNumber
+                    placeholder="5"
+                    min={0}
+                    step={0.1}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Maks. Alan Başı Ağırlık (kg/m²)</label>
+                <Form.Item name="maxWeightPerArea" className="mb-0">
+                  <InputNumber
+                    placeholder="1000"
+                    min={0}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                  />
+                </Form.Item>
               </div>
             </div>
           </div>
 
           {/* ─────────────── SICAKLIK KONTROLÜ ─────────────── */}
           <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100 flex items-center gap-2">
-              <FireIcon className="w-4 h-4" />
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Sıcaklık Kontrolü
             </h3>
             <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-4">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <div className="text-sm text-slate-700">
-                    {isTemperatureControlled ? 'Sıcaklık kontrollü' : 'Sıcaklık kontrolsüz'}
-                  </div>
+              <div className="col-span-6">
+                <div className="flex items-center gap-3 bg-slate-50 px-4 py-3 rounded-lg border border-slate-200">
+                  <span className="text-sm font-medium text-slate-600">Sıcaklık Kontrollü</span>
                   <Form.Item name="isTemperatureControlled" valuePropName="checked" noStyle initialValue={false}>
                     <Switch
                       checked={isTemperatureControlled}
@@ -224,45 +280,44 @@ export default function WarehouseZoneForm({ form, initialValues, onFinish, loadi
                   </Form.Item>
                 </div>
               </div>
-              {isTemperatureControlled && (
-                <>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-slate-600 mb-1.5">Min. Sıcaklık (°C)</label>
-                    <Form.Item name="minTemperature" className="mb-0">
-                      <InputNumber
-                        placeholder="-20"
-                        className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
-                      />
-                    </Form.Item>
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-slate-600 mb-1.5">Max. Sıcaklık (°C)</label>
-                    <Form.Item name="maxTemperature" className="mb-0">
-                      <InputNumber
-                        placeholder="8"
-                        className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
-                      />
-                    </Form.Item>
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-slate-600 mb-1.5">Hedef Sıcaklık (°C)</label>
-                    <Form.Item name="targetTemperature" className="mb-0">
-                      <InputNumber
-                        placeholder="4"
-                        className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
-                      />
-                    </Form.Item>
-                  </div>
-                  <div className="col-span-2">
-                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 h-full">
-                      <div className="text-sm text-slate-700">İzleme</div>
-                      <Form.Item name="requiresTemperatureMonitoring" valuePropName="checked" noStyle>
-                        <Switch size="small" />
-                      </Form.Item>
-                    </div>
-                  </div>
-                </>
-              )}
+              <div className="col-span-6">
+                <div className="flex items-center gap-3 bg-slate-50 px-4 py-3 rounded-lg border border-slate-200">
+                  <span className="text-sm font-medium text-slate-600">Sıcaklık İzleme Gerekli</span>
+                  <Form.Item name="requiresTemperatureMonitoring" valuePropName="checked" noStyle initialValue={false}>
+                    <Switch disabled={!isTemperatureControlled} />
+                  </Form.Item>
+                </div>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Min. Sıcaklık (°C)</label>
+                <Form.Item name="minTemperature" className="mb-0">
+                  <InputNumber
+                    placeholder="-20"
+                    disabled={!isTemperatureControlled}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Maks. Sıcaklık (°C)</label>
+                <Form.Item name="maxTemperature" className="mb-0">
+                  <InputNumber
+                    placeholder="4"
+                    disabled={!isTemperatureControlled}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Hedef Sıcaklık (°C)</label>
+                <Form.Item name="targetTemperature" className="mb-0">
+                  <InputNumber
+                    placeholder="2"
+                    disabled={!isTemperatureControlled}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
             </div>
           </div>
 
@@ -273,10 +328,8 @@ export default function WarehouseZoneForm({ form, initialValues, onFinish, loadi
             </h3>
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <div className="text-sm text-slate-700">
-                    {isHumidityControlled ? 'Nem kontrollü' : 'Nem kontrolsüz'}
-                  </div>
+                <div className="flex items-center gap-3 bg-slate-50 px-4 py-3 rounded-lg border border-slate-200">
+                  <span className="text-sm font-medium text-slate-600">Nem Kontrollü</span>
                   <Form.Item name="isHumidityControlled" valuePropName="checked" noStyle initialValue={false}>
                     <Switch
                       checked={isHumidityControlled}
@@ -288,47 +341,42 @@ export default function WarehouseZoneForm({ form, initialValues, onFinish, loadi
                   </Form.Item>
                 </div>
               </div>
-              {isHumidityControlled && (
-                <>
-                  <div className="col-span-4">
-                    <label className="block text-sm font-medium text-slate-600 mb-1.5">Min. Nem (%)</label>
-                    <Form.Item name="minHumidity" className="mb-0">
-                      <InputNumber
-                        placeholder="30"
-                        min={0}
-                        max={100}
-                        className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
-                      />
-                    </Form.Item>
-                  </div>
-                  <div className="col-span-4">
-                    <label className="block text-sm font-medium text-slate-600 mb-1.5">Max. Nem (%)</label>
-                    <Form.Item name="maxHumidity" className="mb-0">
-                      <InputNumber
-                        placeholder="60"
-                        min={0}
-                        max={100}
-                        className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
-                      />
-                    </Form.Item>
-                  </div>
-                </>
-              )}
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Min. Nem (%)</label>
+                <Form.Item name="minHumidity" className="mb-0">
+                  <InputNumber
+                    placeholder="30"
+                    min={0}
+                    max={100}
+                    disabled={!isHumidityControlled}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Maks. Nem (%)</label>
+                <Form.Item name="maxHumidity" className="mb-0">
+                  <InputNumber
+                    placeholder="60"
+                    min={0}
+                    max={100}
+                    disabled={!isHumidityControlled}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
             </div>
           </div>
 
-          {/* ─────────────── GÜVENLİK VE TEHLİKELİ MADDE ─────────────── */}
+          {/* ─────────────── GÜVENLİK VE TEHLİKE ─────────────── */}
           <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100 flex items-center gap-2">
-              <ExclamationTriangleIcon className="w-4 h-4" />
-              Güvenlik ve Tehlikeli Madde
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Güvenlik ve Tehlike
             </h3>
             <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-4">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <div className="text-sm text-slate-700">
-                    {isHazardous ? 'Tehlikeli madde bölgesi' : 'Normal bölge'}
-                  </div>
+              <div className="col-span-6">
+                <div className="flex items-center gap-3 bg-slate-50 px-4 py-3 rounded-lg border border-slate-200">
+                  <span className="text-sm font-medium text-slate-600">Tehlikeli Madde Bölgesi</span>
                   <Form.Item name="isHazardous" valuePropName="checked" noStyle initialValue={false}>
                     <Switch
                       checked={isHazardous}
@@ -340,35 +388,39 @@ export default function WarehouseZoneForm({ form, initialValues, onFinish, loadi
                   </Form.Item>
                 </div>
               </div>
-              {isHazardous && (
-                <>
-                  <div className="col-span-4">
-                    <label className="block text-sm font-medium text-slate-600 mb-1.5">Tehlike Sınıfı</label>
-                    <Form.Item name="hazardClass" className="mb-0">
-                      <Input
-                        placeholder="Class 3"
-                        className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                      />
-                    </Form.Item>
-                  </div>
-                  <div className="col-span-4">
-                    <label className="block text-sm font-medium text-slate-600 mb-1.5">UN Numarası</label>
-                    <Form.Item name="unNumber" className="mb-0">
-                      <Input
-                        placeholder="UN1203"
-                        className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                      />
-                    </Form.Item>
-                  </div>
-                </>
-              )}
-              <div className="col-span-4">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <div className="text-sm text-slate-700">Özel Erişim Gerekli</div>
-                  <Form.Item name="requiresSpecialAccess" valuePropName="checked" noStyle>
-                    <Switch size="small" />
+              <div className="col-span-6">
+                <div className="flex items-center gap-3 bg-slate-50 px-4 py-3 rounded-lg border border-slate-200">
+                  <span className="text-sm font-medium text-slate-600">Özel Erişim Gerekli</span>
+                  <Form.Item name="requiresSpecialAccess" valuePropName="checked" noStyle initialValue={false}>
+                    <Switch
+                      checked={requiresSpecialAccess}
+                      onChange={(val) => {
+                        setRequiresSpecialAccess(val);
+                        form.setFieldValue('requiresSpecialAccess', val);
+                      }}
+                    />
                   </Form.Item>
                 </div>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Tehlike Sınıfı</label>
+                <Form.Item name="hazardClass" className="mb-0">
+                  <Input
+                    placeholder="2.1"
+                    disabled={!isHazardous}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">UN Numarası</label>
+                <Form.Item name="unNumber" className="mb-0">
+                  <Input
+                    placeholder="UN1234"
+                    disabled={!isHazardous}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
               </div>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Erişim Seviyesi</label>
@@ -377,135 +429,64 @@ export default function WarehouseZoneForm({ form, initialValues, onFinish, loadi
                     placeholder="1"
                     min={1}
                     max={10}
-                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
+                    disabled={!requiresSpecialAccess}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                   />
                 </Form.Item>
               </div>
             </div>
           </div>
 
-          {/* ─────────────── KAPASİTE ─────────────── */}
-          <div className="mb-8">
+          {/* ─────────────── OPERASYON AYARLARI ─────────────── */}
+          <div>
             <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Kapasite
+              Operasyon Ayarları
             </h3>
             <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-3">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Toplam Alan (m²)</label>
-                <Form.Item name="totalArea" className="mb-0">
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Öncelik</label>
+                <Form.Item name="priority" className="mb-0" initialValue={0}>
                   <InputNumber
-                    placeholder="100"
+                    placeholder="0"
                     min={0}
-                    addonAfter="m²"
-                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                   />
                 </Form.Item>
               </div>
-              <div className="col-span-3">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Kullanılabilir Alan (m²)</label>
-                <Form.Item name="usableArea" className="mb-0">
-                  <InputNumber
-                    placeholder="80"
-                    min={0}
-                    addonAfter="m²"
-                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
-                  />
-                </Form.Item>
-              </div>
-              <div className="col-span-3">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Max Palet Kapasitesi</label>
-                <Form.Item name="maxPalletCapacity" className="mb-0">
-                  <InputNumber
-                    placeholder="500"
-                    min={0}
-                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
-                  />
-                </Form.Item>
-              </div>
-              <div className="col-span-3">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Max Yükseklik (m)</label>
-                <Form.Item name="maxHeight" className="mb-0">
-                  <InputNumber
-                    placeholder="6"
-                    min={0}
-                    addonAfter="m"
-                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
-                  />
-                </Form.Item>
-              </div>
-              <div className="col-span-3">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Max Ağırlık (kg/m²)</label>
-                <Form.Item name="maxWeightPerArea" className="mb-0">
-                  <InputNumber
-                    placeholder="1000"
-                    min={0}
-                    addonAfter="kg/m²"
-                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
-                  />
-                </Form.Item>
-              </div>
-            </div>
-          </div>
-
-          {/* ─────────────── OPERASYON SEÇENEKLERİ ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Operasyon Seçenekleri
-            </h3>
-            <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-3">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <div className="text-sm text-slate-700">Varsayılan Toplama</div>
-                  <Form.Item name="isDefaultPickingZone" valuePropName="checked" noStyle>
-                    <Switch size="small" />
+              <div className="col-span-4">
+                <div className="flex items-center gap-3 bg-slate-50 px-4 py-3 rounded-lg border border-slate-200 h-full">
+                  <span className="text-sm font-medium text-slate-600">Varsayılan Toplama</span>
+                  <Form.Item name="isDefaultPickingZone" valuePropName="checked" noStyle initialValue={false}>
+                    <Switch />
                   </Form.Item>
                 </div>
               </div>
-              <div className="col-span-3">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <div className="text-sm text-slate-700">Varsayılan Yerleştirme</div>
-                  <Form.Item name="isDefaultPutawayZone" valuePropName="checked" noStyle>
-                    <Switch size="small" />
+              <div className="col-span-4">
+                <div className="flex items-center gap-3 bg-slate-50 px-4 py-3 rounded-lg border border-slate-200 h-full">
+                  <span className="text-sm font-medium text-slate-600">Varsayılan Yerleştirme</span>
+                  <Form.Item name="isDefaultPutawayZone" valuePropName="checked" noStyle initialValue={false}>
+                    <Switch />
                   </Form.Item>
                 </div>
               </div>
-              <div className="col-span-3">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <div className="text-sm text-slate-700">Karantina Bölgesi</div>
-                  <Form.Item name="isQuarantineZone" valuePropName="checked" noStyle>
-                    <Switch size="small" />
+              <div className="col-span-6">
+                <div className="flex items-center gap-3 bg-slate-50 px-4 py-3 rounded-lg border border-slate-200">
+                  <span className="text-sm font-medium text-slate-600">Karantina Bölgesi</span>
+                  <Form.Item name="isQuarantineZone" valuePropName="checked" noStyle initialValue={false}>
+                    <Switch />
                   </Form.Item>
                 </div>
               </div>
-              <div className="col-span-3">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <div className="text-sm text-slate-700">İade Bölgesi</div>
-                  <Form.Item name="isReturnsZone" valuePropName="checked" noStyle>
-                    <Switch size="small" />
+              <div className="col-span-6">
+                <div className="flex items-center gap-3 bg-slate-50 px-4 py-3 rounded-lg border border-slate-200">
+                  <span className="text-sm font-medium text-slate-600">İade Bölgesi</span>
+                  <Form.Item name="isReturnsZone" valuePropName="checked" noStyle initialValue={false}>
+                    <Switch />
                   </Form.Item>
                 </div>
               </div>
             </div>
           </div>
-
-          {/* ─────────────── İSTATİSTİKLER (Düzenleme Modu) ─────────────── */}
-          {initialValues && (
-            <div>
-              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-                İstatistikler
-              </h3>
-              <div className="grid grid-cols-12 gap-4">
-                <div className="col-span-6">
-                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
-                    <div className="text-2xl font-semibold text-slate-800">
-                      {initialValues.locationCount || 0}
-                    </div>
-                    <div className="text-xs text-slate-500 mt-1">Lokasyon Sayısı</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
         </div>
       </div>
