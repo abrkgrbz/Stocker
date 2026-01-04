@@ -389,6 +389,9 @@ export interface Campaign {
   deliveredCount?: number;
   openedCount?: number;
   clickedCount?: number;
+  sentCount?: number;
+  responseCount?: number;
+  convertedCount?: number;
   targetSegmentName?: string | null;
   // Ownership
   ownerId: string | null;

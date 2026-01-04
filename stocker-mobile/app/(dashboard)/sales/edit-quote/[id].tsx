@@ -27,7 +27,7 @@ export default function EditQuoteScreen() {
         formState: { errors },
         reset,
     } = useForm<CreateQuoteFormData>({
-        resolver: zodResolver(createQuoteSchema),
+        resolver: zodResolver(createQuoteSchema) as any,
         defaultValues: {
             customerId: '',
             validUntil: '',

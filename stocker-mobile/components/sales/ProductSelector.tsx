@@ -78,7 +78,7 @@ export function ProductSelector<T extends FieldValues>({
             update(existingIndex, {
                 ...existingItem,
                 quantity: existingItem.quantity + 1,
-            });
+            } as any);
         } else {
             // Add new item
             append({
@@ -97,7 +97,7 @@ export function ProductSelector<T extends FieldValues>({
     const updateQuantity = (index: number, delta: number) => {
         const item = items[index];
         const newQuantity = Math.max(1, item.quantity + delta);
-        update(index, { ...item, quantity: newQuantity });
+        update(index, { ...item, quantity: newQuantity } as any);
     };
 
     const total = calculateTotal(items);

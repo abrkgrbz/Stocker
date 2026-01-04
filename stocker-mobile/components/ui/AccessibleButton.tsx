@@ -81,11 +81,13 @@ export function AccessibleButton({
                 bg: isDark ? '#f8fafc' : '#0f172a',
                 text: isDark ? '#0f172a' : '#ffffff',
                 spinner: isDark ? '#0f172a' : '#ffffff',
+                border: 'transparent',
             },
             secondary: {
                 bg: isDark ? 'rgba(255, 255, 255, 0.1)' : '#f1f5f9',
                 text: isDark ? '#f8fafc' : '#0f172a',
                 spinner: isDark ? '#f8fafc' : '#0f172a',
+                border: 'transparent',
             },
             outline: {
                 bg: 'transparent',
@@ -97,11 +99,13 @@ export function AccessibleButton({
                 bg: isDark ? 'rgba(239, 68, 68, 0.2)' : '#fef2f2',
                 text: isDark ? '#fca5a5' : '#dc2626',
                 spinner: isDark ? '#fca5a5' : '#dc2626',
+                border: 'transparent',
             },
             ghost: {
                 bg: 'transparent',
                 text: isDark ? '#f8fafc' : '#0f172a',
                 spinner: isDark ? '#f8fafc' : '#0f172a',
+                border: 'transparent',
             },
         };
         return variants[variant];

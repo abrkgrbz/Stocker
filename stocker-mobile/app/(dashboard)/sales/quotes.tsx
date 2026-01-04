@@ -305,7 +305,7 @@ export default function QuotesScreen() {
             {/* Status Filters */}
             <FilterChips
                 filters={statusFilters}
-                selectedKey={selectedStatus}
+                selected={selectedStatus}
                 onSelect={(key) => setSelectedStatus(key as QuoteStatus | 'all')}
                 moduleColor={colors.modules.sales}
             />
@@ -337,11 +337,10 @@ export default function QuotesScreen() {
                     />
                 ) : filteredQuotes.length === 0 ? (
                     <EmptyState
-                        icon={Receipt}
+                        icon={<Receipt size={32} color={colors.modules.sales} />}
                         title="Teklif bulunamadı"
-                        message={searchQuery ? 'Arama kriterlerinize uygun teklif yok' : 'Henüz teklif eklenmemiş'}
+                        description={searchQuery ? 'Arama kriterlerinize uygun teklif yok' : 'Henüz teklif eklenmemiş'}
                         iconBgColor={colors.modules.salesLight}
-                        iconColor={colors.modules.sales}
                     />
                 ) : (
                     filteredQuotes.map((quote, index) => (

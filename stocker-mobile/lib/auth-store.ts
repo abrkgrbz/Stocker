@@ -75,6 +75,11 @@ export const authStorage = {
         await SecureStore.deleteItemAsync(TENANT_KEY);
     },
 
+    // Alias for clearAll - used by SessionProvider
+    async clearAuth(): Promise<void> {
+        return this.clearAll();
+    },
+
     async getAuthState(): Promise<AuthState> {
         const [accessToken, refreshToken, user, tenant] = await Promise.all([
             this.getAccessToken(),

@@ -5,7 +5,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CRMService, type Activity, type Deal } from '../services/crm.service';
+import { CRMService, type Activity, type Deal, type Customer, type Lead, type PaginatedResponse } from '../services/crm.service';
 import { showSuccess, showError, showInfo, showApiError } from '@/lib/utils/notifications';
 import { queryOptions } from '../query-options';
 import type {
@@ -183,7 +183,7 @@ export const crmKeys = {
 // =====================================
 
 export function useCustomers(filters?: any) {
-  return useQuery({
+  return useQuery<PaginatedResponse<Customer>>({
     queryKey: [...crmKeys.customers, filters],
     queryFn: () => CRMService.getCustomers(filters),
     ...queryOptions.list(),
@@ -191,7 +191,7 @@ export function useCustomers(filters?: any) {
 }
 
 export function useCustomer(id: string) {
-  return useQuery({
+  return useQuery<Customer>({
     queryKey: crmKeys.customer(id),
     queryFn: () => CRMService.getCustomer(id),
     ...queryOptions.detail({ enabled: !!id }),
@@ -250,7 +250,7 @@ export function useDeleteCustomer() {
 // =====================================
 
 export function useActivities(filters?: any) {
-  return useQuery({
+  return useQuery<PaginatedResponse<Activity>>({
     queryKey: [...crmKeys.activities, filters],
     queryFn: () => CRMService.getActivities(filters),
     ...queryOptions.list(),
@@ -316,10 +316,10 @@ export function useUpdateActivity() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<Activity> }) =>
-      CRMService.updateActivity(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<Activity> }) =>
+      CRMService.updateActivity(Number(id), data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: crmKeys.activity(variables.id.toString()) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.activity(variables.id) });
       queryClient.invalidateQueries({ queryKey: crmKeys.activities });
       showSuccess('Aktivite güncellendi');
     },
@@ -385,7 +385,7 @@ export function useDeleteActivity() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => CRMService.deleteActivity(id),
+    mutationFn: (id: string) => CRMService.deleteActivity(Number(id)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.activities });
       showSuccess('Aktivite silindi');
@@ -401,7 +401,7 @@ export function useDeleteActivity() {
 // =====================================
 
 export function useLeads(filters?: any) {
-  return useQuery({
+  return useQuery<PaginatedResponse<Lead>>({
     queryKey: [...crmKeys.leads, filters],
     queryFn: () => CRMService.getLeads(filters),
     ...queryOptions.list(),
@@ -409,7 +409,7 @@ export function useLeads(filters?: any) {
 }
 
 export function useLead(id: Guid) {
-  return useQuery({
+  return useQuery<Lead>({
     queryKey: crmKeys.lead(id),
     queryFn: () => CRMService.getLead(id),
     ...queryOptions.detail({ enabled: !!id }),
@@ -610,7 +610,7 @@ export function useConvertLead() {
 // =====================================
 
 export function useDeals(filters?: any) {
-  return useQuery({
+  return useQuery<PaginatedResponse<Deal>>({
     queryKey: [...crmKeys.deals, filters],
     queryFn: () => CRMService.getDeals(filters),
     ...queryOptions.list(),
@@ -618,7 +618,7 @@ export function useDeals(filters?: any) {
 }
 
 export function useDeal(id: Guid) {
-  return useQuery({
+  return useQuery<Deal>({
     queryKey: crmKeys.deal(id),
     queryFn: () => CRMService.getDeal(id),
     ...queryOptions.detail({ enabled: !!id }),

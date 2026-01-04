@@ -50,7 +50,7 @@ interface DataTableProps<T> {
     // Pagination
     onEndReached?: () => void;
     onEndReachedThreshold?: number;
-    ListFooterComponent?: React.ReactNode;
+    ListFooterComponent?: React.ComponentType<any> | React.ReactElement | null;
 
     // Animation
     animated?: boolean;

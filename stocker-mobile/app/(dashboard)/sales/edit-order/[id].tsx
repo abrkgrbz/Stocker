@@ -27,7 +27,7 @@ export default function EditOrderScreen() {
         formState: { errors },
         reset,
     } = useForm<CreateOrderFormData>({
-        resolver: zodResolver(createOrderSchema),
+        resolver: zodResolver(createOrderSchema) as any,
         defaultValues: {
             customerId: '',
             deliveryDate: '',

@@ -2,6 +2,17 @@ import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
 /**
+ * Impact haptic - alias for lightHaptic (used by animations)
+ */
+export const impactHaptic = () => {
+    if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } else {
+        Haptics.selectionAsync();
+    }
+};
+
+/**
  * Hafif dokunma geri bildirimi - butonlar, seçimler için
  */
 export const lightHaptic = () => {

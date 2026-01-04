@@ -26,7 +26,7 @@ export function useEmailValidation(options: UseEmailValidationOptions = {}) {
     const [isValidating, setIsValidating] = useState(false);
     const [touched, setTouched] = useState(false);
 
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const validate = useCallback((value: string) => {
         setIsValidating(true);
@@ -183,7 +183,7 @@ export function useTeamNameValidation(options: UseTeamNameValidationOptions = {}
     const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
     const [touched, setTouched] = useState(false);
 
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const validate = useCallback(async (value: string) => {
         const validationResult = validateTeamName(value);

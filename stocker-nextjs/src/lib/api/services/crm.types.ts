@@ -302,10 +302,13 @@ export enum ActivityType {
   Email = 'Email',
   Meeting = 'Meeting',
   Task = 'Task',
-  Note = 'Note'
+  Note = 'Note',
+  Demo = 'Demo',
+  'Follow-up' = 'Follow-up'
 }
 
 export enum ActivityStatus {
+  Pending = 'Pending',
   Scheduled = 'Scheduled',
   InProgress = 'InProgress',
   Completed = 'Completed',
@@ -1678,6 +1681,7 @@ export interface CompetitorDto {
   // Market Information
   targetMarkets?: string;
   industries?: string;
+  industry?: string; // Alias for industries (single)
   geographicCoverage?: string;
   customerSegments?: string;
 

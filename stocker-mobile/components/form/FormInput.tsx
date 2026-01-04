@@ -70,11 +70,12 @@ export function FormInput<T extends FieldValues>({
                         }}
                     >
                         {Icon && (
-                            <Icon
-                                size={20}
-                                color={colors.text.tertiary}
-                                style={multiline ? { marginTop: 14 } : undefined}
-                            />
+                            <View style={multiline ? { marginTop: 14 } : undefined}>
+                                <Icon
+                                    size={20}
+                                    color={colors.text.tertiary}
+                                />
+                            </View>
                         )}
                         <TextInput
                             value={value}

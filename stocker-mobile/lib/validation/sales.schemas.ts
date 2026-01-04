@@ -4,7 +4,6 @@ import {
     optionalString,
     optionalDateSchema,
     quantitySchema,
-    currencySchema,
     percentageSchema,
     dateSchema,
 } from './common.schemas';
@@ -14,9 +13,9 @@ export const orderItemSchema = z.object({
     productId: idSchema,
     productName: optionalString, // For display only
     quantity: quantitySchema,
-    unitPrice: currencySchema,
-    discountPercent: percentageSchema.optional().default(0),
-    taxPercent: percentageSchema.optional().default(18),
+    unitPrice: z.number().min(0, 'Fiyat negatif olamaz'),
+    discountPercent: z.number().min(0).max(100).default(0),
+    taxPercent: z.number().min(0).max(100).default(18),
 });
 
 export type OrderItemFormData = z.infer<typeof orderItemSchema>;
@@ -48,9 +47,9 @@ export const invoiceItemSchema = z.object({
     productName: optionalString,
     description: optionalString,
     quantity: quantitySchema,
-    unitPrice: currencySchema,
-    discountPercent: percentageSchema.optional().default(0),
-    taxPercent: percentageSchema.optional().default(18),
+    unitPrice: z.number().min(0, 'Fiyat negatif olamaz'),
+    discountPercent: z.number().min(0).max(100).default(0),
+    taxPercent: z.number().min(0).max(100).default(18),
 });
 
 export type InvoiceItemFormData = z.infer<typeof invoiceItemSchema>;
@@ -82,9 +81,9 @@ export const quoteItemSchema = z.object({
     productId: idSchema,
     productName: optionalString,
     quantity: quantitySchema,
-    unitPrice: currencySchema,
-    discountPercent: percentageSchema.optional().default(0),
-    taxPercent: percentageSchema.optional().default(18),
+    unitPrice: z.number().min(0, 'Fiyat negatif olamaz'),
+    discountPercent: z.number().min(0).max(100).default(0),
+    taxPercent: z.number().min(0).max(100).default(18),
 });
 
 export type QuoteItemFormData = z.infer<typeof quoteItemSchema>;

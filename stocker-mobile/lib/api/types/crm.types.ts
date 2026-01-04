@@ -500,14 +500,14 @@ export function toUIActivity(activity: Activity): UIActivity {
 
 // Helper function to convert UI Activity to backend format
 export function toBackendActivity(uiActivity: Partial<UIActivity>): Partial<CreateActivityRequest> {
-    const result: Partial<CreateActivityRequest> = { ...uiActivity };
+    const { title, type, ...rest } = uiActivity;
+    const result: Partial<CreateActivityRequest> = { ...rest };
 
-    if (uiActivity.title !== undefined) {
-        result.subject = uiActivity.title;
-        delete (result as any).title;
+    if (title !== undefined) {
+        result.subject = title;
     }
-    if (uiActivity.type !== undefined) {
-        result.type = UI_TO_BACKEND_ACTIVITY_TYPE[uiActivity.type];
+    if (type !== undefined) {
+        result.type = UI_TO_BACKEND_ACTIVITY_TYPE[type];
     }
 
     return result;

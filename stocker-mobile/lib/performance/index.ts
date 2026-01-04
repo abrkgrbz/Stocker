@@ -28,7 +28,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
     callback: T,
     delay: number
 ): T {
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     return useCallback(
         (...args: Parameters<T>) => {
@@ -73,7 +73,7 @@ export function useThrottledCallback<T extends (...args: any[]) => any>(
 ): T {
     const lastRan = useRef(Date.now());
     const lastArgs = useRef<Parameters<T> | null>(null);
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     return useCallback(
         (...args: Parameters<T>) => {
@@ -376,7 +376,7 @@ export function useBatchedUpdates<T>(
 ): [T, (updater: (prev: T) => T) => void] {
     const [value, setValue] = useState(initialValue);
     const pendingUpdatesRef = useRef<Array<(prev: T) => T>>([]);
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const batchedSetValue = useCallback((updater: (prev: T) => T) => {
         pendingUpdatesRef.current.push(updater);

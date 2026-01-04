@@ -116,7 +116,7 @@ export function ValueCarousel({ autoPlayInterval = 4000, showIcon = true }: Valu
     const [currentIndex, setCurrentIndex] = useState(0);
     const [key, setKey] = useState(0);
     const [progress, setProgress] = useState(0);
-    const progressInterval = useRef<NodeJS.Timeout | null>(null);
+    const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
     // Auto-rotate slides with progress tracking
     useEffect(() => {

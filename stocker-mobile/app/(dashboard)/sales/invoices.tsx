@@ -340,7 +340,7 @@ export default function InvoicesScreen() {
             {/* Status Filters */}
             <FilterChips
                 filters={statusFilters}
-                selectedKey={selectedStatus}
+                selected={selectedStatus}
                 onSelect={(key) => setSelectedStatus(key as InvoiceStatus | 'all')}
                 moduleColor={colors.modules.sales}
             />
@@ -372,11 +372,10 @@ export default function InvoicesScreen() {
                     />
                 ) : filteredInvoices.length === 0 ? (
                     <EmptyState
-                        icon={FileText}
+                        icon={<FileText size={32} color={colors.modules.sales} />}
                         title="Fatura bulunamadı"
-                        message={searchQuery ? 'Arama kriterlerinize uygun fatura yok' : 'Henüz fatura eklenmemiş'}
+                        description={searchQuery ? 'Arama kriterlerinize uygun fatura yok' : 'Henüz fatura eklenmemiş'}
                         iconBgColor={colors.modules.salesLight}
-                        iconColor={colors.modules.sales}
                     />
                 ) : (
                     filteredInvoices.map((invoice, index) => (

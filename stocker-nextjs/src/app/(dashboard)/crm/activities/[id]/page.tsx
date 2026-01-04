@@ -38,10 +38,14 @@ const typeLabels: Record<ActivityTypeStr, { label: string; color: string; icon: 
   Meeting: { label: 'Toplantı', color: 'purple', icon: <UsersIcon className="w-4 h-4" /> },
   Task: { label: 'Görev', color: 'orange', icon: <CheckCircleIcon className="w-4 h-4" /> },
   Note: { label: 'Not', color: 'default', icon: <DocumentTextIcon className="w-4 h-4" /> },
+  Demo: { label: 'Demo', color: 'geekblue', icon: <DocumentTextIcon className="w-4 h-4" /> },
+  'Follow-up': { label: 'Takip', color: 'volcano', icon: <PhoneIcon className="w-4 h-4" /> },
 };
 
 const statusLabels: Record<ActivityStatusStr, { label: string; color: string }> = {
+  Pending: { label: 'Beklemede', color: 'warning' },
   Scheduled: { label: 'Planlandı', color: 'default' },
+  InProgress: { label: 'Devam Ediyor', color: 'processing' },
   Completed: { label: 'Tamamlandı', color: 'success' },
   Cancelled: { label: 'İptal Edildi', color: 'error' },
 };

@@ -31,7 +31,7 @@ export default function AddQuoteScreen() {
         handleSubmit,
         formState: { errors },
     } = useForm<CreateQuoteFormData>({
-        resolver: zodResolver(createQuoteSchema),
+        resolver: zodResolver(createQuoteSchema) as any,
         defaultValues: {
             customerId: '',
             validUntil: getDefaultValidUntil(),

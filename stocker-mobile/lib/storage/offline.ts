@@ -209,7 +209,7 @@ class OfflineStorage {
                 if (item.type === 'create') await crmService.createDeal(item.payload);
                 else if (item.type === 'update') {
                     const { action } = item.payload;
-                    if (action === 'updateStage') await crmService.updateDealStage(item.payload.id, item.payload.stage);
+                    if (action === 'updateStage') await crmService.updateDeal(item.payload.id, { status: item.payload.stage });
                     else await crmService.updateDeal(item.payload.id, item.payload.data);
                 }
                 else if (item.type === 'delete') await crmService.deleteDeal(item.payload.id);

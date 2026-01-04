@@ -31,7 +31,7 @@ export default function AddInvoiceScreen() {
         handleSubmit,
         formState: { errors },
     } = useForm<CreateInvoiceFormData>({
-        resolver: zodResolver(createInvoiceSchema),
+        resolver: zodResolver(createInvoiceSchema) as any,
         defaultValues: {
             customerId: '',
             dueDate: getDefaultDueDate(),

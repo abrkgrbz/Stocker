@@ -37,19 +37,10 @@ export const requiredString = (fieldName: string = 'Bu alan') =>
 export const optionalString = z.string().optional().or(z.literal(''));
 
 // Currency/money validation
-export const currencySchema = z
-    .number()
-    .min(0, 'Tutar negatif olamaz')
-    .or(z.string().transform((val) => parseFloat(val) || 0));
+export const currencySchema = z.coerce.number().min(0, 'Tutar negatif olamaz');
 
 // Positive currency (must be > 0)
-export const positiveCurrencySchema = z
-    .number()
-    .positive('Tutar 0\'dan büyük olmalıdır')
-    .or(z.string().transform((val) => {
-        const num = parseFloat(val);
-        return isNaN(num) ? 0 : num;
-    }));
+export const positiveCurrencySchema = z.coerce.number().positive('Tutar 0\'dan büyük olmalıdır');
 
 // Quantity validation
 export const quantitySchema = z

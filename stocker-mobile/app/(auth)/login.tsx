@@ -490,7 +490,7 @@ export default function LoginScreen() {
                 const result = await rateLimiter.recordAttempt(false);
                 logSecurityEvent({ type: 'login_failure', details: { email, tenant: selectedTenant.code } });
 
-                if (result.message) {
+                if (result?.message) {
                     setError(result.message);
                 } else {
                     setError(data.message || 'E-posta veya şifre hatalı');
@@ -503,7 +503,7 @@ export default function LoginScreen() {
             const result = await rateLimiter.recordAttempt(false);
             logSecurityEvent({ type: 'login_failure', details: { email, error: error.message } });
 
-            if (result.message) {
+            if (result?.message) {
                 setError(result.message);
             } else {
                 const msg = error.response?.data?.message || 'Giriş başarısız';

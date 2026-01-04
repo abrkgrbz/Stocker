@@ -87,11 +87,25 @@ const activityConfig: Record<
     label: 'Not',
     gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
   },
+  Demo: {
+    icon: <DocumentTextIcon className="w-4 h-4" />,
+    color: 'geekblue',
+    label: 'Demo',
+    gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)'
+  },
+  'Follow-up': {
+    icon: <PhoneIcon className="w-4 h-4" />,
+    color: 'volcano',
+    label: 'Takip',
+    gradient: 'linear-gradient(135deg, #ff6b6b 0%, #ffa502 100%)'
+  },
 };
 
 // Status colors
 const statusColors: Record<Activity['status'], string> = {
+  Pending: 'orange',
   Scheduled: 'blue',
+  InProgress: 'processing',
   Completed: 'green',
   Cancelled: 'red',
 };
@@ -235,7 +249,7 @@ export default function ActivitiesPage() {
     setModalOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     Modal.confirm({
       title: 'Aktiviteyi Sil',
       content: 'Bu aktiviteyi silmek istediğinizden emin misiniz?',
@@ -254,9 +268,9 @@ export default function ActivitiesPage() {
     });
   };
 
-  const handleComplete = async (id: number) => {
+  const handleComplete = async (id: string) => {
     try {
-      await completeActivity.mutateAsync({ id: id.toString() });
+      await completeActivity.mutateAsync({ id });
       showSuccess('Aktivite tamamlandı olarak işaretlendi');
       setDrawerOpen(false);
     } catch (error: any) {

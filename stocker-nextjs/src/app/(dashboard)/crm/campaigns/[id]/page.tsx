@@ -73,8 +73,8 @@ export default function CampaignDetailPage() {
 
   const statusInfo = statusLabels[campaign.status] || { label: campaign.status, color: 'default', icon: null };
   const typeInfo = typeLabels[campaign.type] || { label: campaign.type, icon: <EnvelopeIcon className="w-4 h-4" /> };
-  const responseRate = campaign.sentCount > 0 ? Math.round((campaign.responseCount / campaign.sentCount) * 100) : 0;
-  const roi = campaign.actualCost > 0 ? Math.round(((campaign.revenue - campaign.actualCost) / campaign.actualCost) * 100) : 0;
+  const responseRate = (campaign.sentCount ?? 0) > 0 ? Math.round(((campaign.responseCount ?? 0) / (campaign.sentCount ?? 1)) * 100) : 0;
+  const roi = campaign.actualCost > 0 ? Math.round((((campaign.revenue ?? campaign.actualRevenue ?? 0) - campaign.actualCost) / campaign.actualCost) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-slate-50">

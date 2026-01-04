@@ -199,6 +199,7 @@ export function useRateLimiter(key: string, config?: Partial<RateLimitConfig>) {
             limiter.current?.checkLimit().then((result) => {
                 setState({
                     ...result,
+                    message: result.message,
                     isLocked: !result.allowed,
                 });
             });
@@ -218,6 +219,7 @@ export function useRateLimiter(key: string, config?: Partial<RateLimitConfig>) {
                     limiter.current?.checkLimit().then((result) => {
                         setState({
                             ...result,
+                            message: result.message,
                             isLocked: !result.allowed,
                         });
                     });
@@ -242,6 +244,7 @@ export function useRateLimiter(key: string, config?: Partial<RateLimitConfig>) {
         const result = await limiter.current.recordAttempt(success);
         setState({
             ...result,
+            message: result.message,
             isLocked: !result.allowed,
         });
         return result;
@@ -253,6 +256,7 @@ export function useRateLimiter(key: string, config?: Partial<RateLimitConfig>) {
         const result = await limiter.current.checkLimit();
         setState({
             ...result,
+            message: result.message,
             isLocked: !result.allowed,
         });
         return result;
@@ -307,8 +311,8 @@ export function useSessionTimeout(
 ) {
     const mergedConfig = { ...DEFAULT_SESSION_CONFIG, ...config };
     const lastActivityRef = useRef(Date.now());
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const warningRef = useRef<NodeJS.Timeout | null>(null);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const warningRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [showWarning, setShowWarning] = useState(false);
     const [remainingTime, setRemainingTime] = useState(mergedConfig.timeoutMs);
 

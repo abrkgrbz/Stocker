@@ -238,8 +238,14 @@ export default function CompetitorDetailPage() {
                   Güçlü Yönleri
                 </p>
               </div>
-              {competitor.strengths ? (
-                <p className="text-sm text-slate-700">{competitor.strengths}</p>
+              {competitor.strengths && competitor.strengths.length > 0 ? (
+                <ul className="space-y-2">
+                  {competitor.strengths.map((strength) => (
+                    <li key={strength.id} className="text-sm text-slate-700">
+                      • {strength.description}
+                    </li>
+                  ))}
+                </ul>
               ) : (
                 <p className="text-sm text-slate-400">Belirtilmemiş</p>
               )}
@@ -254,8 +260,14 @@ export default function CompetitorDetailPage() {
                   Zayıf Yönleri
                 </p>
               </div>
-              {competitor.weaknesses ? (
-                <p className="text-sm text-slate-700">{competitor.weaknesses}</p>
+              {competitor.weaknesses && competitor.weaknesses.length > 0 ? (
+                <ul className="space-y-2">
+                  {competitor.weaknesses.map((weakness) => (
+                    <li key={weakness.id} className="text-sm text-slate-700">
+                      • {weakness.description}
+                    </li>
+                  ))}
+                </ul>
               ) : (
                 <p className="text-sm text-slate-400">Belirtilmemiş</p>
               )}

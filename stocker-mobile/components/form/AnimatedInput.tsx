@@ -151,8 +151,8 @@ export function AnimatedInput({
                         ref={inputRef}
                         style={[
                             styles.input,
-                            icon && { paddingLeft: 8 },
-                            (showPasswordToggle || success || error) && { paddingRight: 40 },
+                            icon ? { paddingLeft: 8 } : undefined,
+                            (showPasswordToggle || success || error) ? { paddingRight: 40 } : undefined,
                         ]}
                         value={value}
                         onFocus={handleFocus}

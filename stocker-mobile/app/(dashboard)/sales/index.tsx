@@ -46,7 +46,7 @@ export default function SalesDashboardScreen() {
         openQuotes: quotesData?.totalCount || 0
     };
 
-    const recentOrders = recentOrdersData?.items || [];
+    const recentOrders = recentOrdersData || [];
 
     const isLoading = statsLoading;
     const isRefetching = statsRefetching;
