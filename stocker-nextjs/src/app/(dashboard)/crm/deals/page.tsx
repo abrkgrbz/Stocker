@@ -98,6 +98,8 @@ export default function DealsPage() {
           closedDate: new Date().toISOString(),
         });
         showUpdateSuccess('fırsat', '🎉 kazanıldı olarak işaretlendi!');
+        // Force refetch to update Kanban view
+        await refetch();
       } catch (error: any) {
         const apiError = error.response?.data;
         const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
@@ -121,6 +123,8 @@ export default function DealsPage() {
           closedDate: new Date().toISOString(),
         });
         showInfo('Fırsat İşaretlendi', 'Fırsat kaybedildi olarak işaretlendi');
+        // Force refetch to update Kanban view
+        await refetch();
       } catch (error: any) {
         const apiError = error.response?.data;
         const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
