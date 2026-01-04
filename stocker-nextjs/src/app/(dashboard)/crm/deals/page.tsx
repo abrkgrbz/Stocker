@@ -4,11 +4,12 @@
  * Deals List Page
  * Enterprise-grade design following Linear/Stripe/Vercel design principles
  * Supports both Kanban and List views with drag & drop
+ * Includes multi-select and bulk actions
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Input, Tag, Tooltip } from 'antd';
+import { Input, Tag, Tooltip, Checkbox, Dropdown, MenuProps } from 'antd';
 import {
   DndContext,
   DragOverlay,
@@ -35,6 +36,9 @@ import {
   TrophyIcon,
   UserIcon,
   Bars3Icon,
+  TrashIcon,
+  XMarkIcon,
+  ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 import {
   showUpdateSuccess,
@@ -49,6 +53,7 @@ import {
   useCloseDealLost,
   usePipelines,
   useMoveDealStage,
+  useDeleteDeal,
 } from '@/lib/api/hooks/useCRM';
 import { DealsStats } from '@/components/crm/deals/DealsStats';
 import dayjs from 'dayjs';
@@ -225,6 +230,8 @@ export default function DealsPage() {
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
+  const [selectedDeals, setSelectedDeals] = useState<Set<string>>(new Set());
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
   // API Hooks
   const { data, isLoading, refetch } = useDeals({});
@@ -232,6 +239,7 @@ export default function DealsPage() {
   const closeDealWon = useCloseDealWon();
   const closeDealLost = useCloseDealLost();
   const moveDealStage = useMoveDealStage();
+  const deleteDeal = useDeleteDeal();
 
   // Handle both response formats: array or { items: [] }
   const deals = Array.isArray(data) ? data : (data?.items || []);
@@ -257,6 +265,159 @@ export default function DealsPage() {
     }),
     useSensor(KeyboardSensor)
   );
+
+  // Selection helpers
+  const toggleDealSelection = useCallback((dealId: string) => {
+    setSelectedDeals((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(dealId)) {
+        newSet.delete(dealId);
+      } else {
+        newSet.add(dealId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  const clearSelection = useCallback(() => {
+    setSelectedDeals(new Set());
+  }, []);
+
+  const selectedDealsData = useMemo(() => {
+    return deals.filter((d) => selectedDeals.has(d.id));
+  }, [deals, selectedDeals]);
+
+  const selectedAmount = useMemo(() => {
+    return selectedDealsData.reduce((sum, d) => sum + d.amount, 0);
+  }, [selectedDealsData]);
+
+  // Bulk Actions
+  const handleBulkCloseWon = async () => {
+    if (selectedDeals.size === 0) return;
+
+    const confirmed = await confirmAction(
+      'Toplu Kazanıldı İşaretle',
+      `${selectedDeals.size} fırsatı kazanıldı olarak işaretlemek istediğinizden emin misiniz?`,
+      'Tümünü Kazanıldı İşaretle'
+    );
+
+    if (confirmed) {
+      setBulkActionLoading(true);
+      try {
+        const results = await Promise.allSettled(
+          selectedDealsData.map((deal) =>
+            closeDealWon.mutateAsync({
+              id: deal.id.toString(),
+              actualAmount: deal.amount,
+              closedDate: new Date().toISOString(),
+            })
+          )
+        );
+
+        const successful = results.filter((r) => r.status === 'fulfilled').length;
+        const failed = results.filter((r) => r.status === 'rejected').length;
+
+        if (failed > 0) {
+          showInfo('Kısmi Başarı', `${successful} fırsat kazanıldı olarak işaretlendi, ${failed} başarısız.`);
+        } else {
+          showUpdateSuccess('fırsatlar', `🎉 ${successful} fırsat kazanıldı olarak işaretlendi!`);
+        }
+
+        clearSelection();
+        await refetch();
+      } catch (error) {
+        showError('Toplu işlem başarısız oldu');
+      } finally {
+        setBulkActionLoading(false);
+      }
+    }
+  };
+
+  const handleBulkCloseLost = async () => {
+    if (selectedDeals.size === 0) return;
+
+    const confirmed = await confirmAction(
+      'Toplu Kaybedildi İşaretle',
+      `${selectedDeals.size} fırsatı kaybedildi olarak işaretlemek istediğinizden emin misiniz?`,
+      'Tümünü Kaybedildi İşaretle'
+    );
+
+    if (confirmed) {
+      setBulkActionLoading(true);
+      try {
+        const results = await Promise.allSettled(
+          selectedDealsData.map((deal) =>
+            closeDealLost.mutateAsync({
+              id: deal.id.toString(),
+              lostReason: 'Toplu işlem ile kapatıldı',
+              closedDate: new Date().toISOString(),
+            })
+          )
+        );
+
+        const successful = results.filter((r) => r.status === 'fulfilled').length;
+        const failed = results.filter((r) => r.status === 'rejected').length;
+
+        if (failed > 0) {
+          showInfo('Kısmi Başarı', `${successful} fırsat kaybedildi olarak işaretlendi, ${failed} başarısız.`);
+        } else {
+          showInfo('Fırsatlar İşaretlendi', `${successful} fırsat kaybedildi olarak işaretlendi.`);
+        }
+
+        clearSelection();
+        await refetch();
+      } catch (error) {
+        showError('Toplu işlem başarısız oldu');
+      } finally {
+        setBulkActionLoading(false);
+      }
+    }
+  };
+
+  const handleBulkMoveStage = async (stageId: string) => {
+    if (selectedDeals.size === 0) return;
+
+    const stage = stages.find((s) => s.id === stageId);
+    if (!stage) return;
+
+    const confirmed = await confirmAction(
+      'Toplu Aşama Değiştir',
+      `${selectedDeals.size} fırsatı "${stage.name}" aşamasına taşımak istediğinizden emin misiniz?`,
+      'Tümünü Taşı'
+    );
+
+    if (confirmed) {
+      setBulkActionLoading(true);
+      try {
+        const results = await Promise.allSettled(
+          selectedDealsData
+            .filter((d) => d.stageId !== stageId) // Skip deals already in this stage
+            .map((deal) =>
+              moveDealStage.mutateAsync({
+                id: deal.id,
+                newStageId: stageId,
+              })
+            )
+        );
+
+        const successful = results.filter((r) => r.status === 'fulfilled').length;
+        const failed = results.filter((r) => r.status === 'rejected').length;
+
+        if (failed > 0) {
+          showInfo('Kısmi Başarı', `${successful} fırsat taşındı, ${failed} başarısız.`);
+        } else {
+          showUpdateSuccess('fırsatlar', `${successful} fırsat "${stage.name}" aşamasına taşındı`);
+        }
+
+        clearSelection();
+        await refetch();
+      } catch (error) {
+        showError('Toplu işlem başarısız oldu');
+      } finally {
+        setBulkActionLoading(false);
+      }
+    }
+  };
 
   const handleCreate = () => {
     router.push('/crm/deals/new');
@@ -366,6 +527,17 @@ export default function DealsPage() {
     const searchLower = searchText.toLowerCase();
     return deal.title.toLowerCase().includes(searchLower) || deal.description?.toLowerCase().includes(searchLower) || '';
   });
+
+  // Selection helpers that depend on filteredDeals
+  const selectAllDeals = useCallback(() => {
+    const openDeals = filteredDeals.filter((d) => d.status === 'Open');
+    setSelectedDeals(new Set(openDeals.map((d) => d.id)));
+  }, [filteredDeals]);
+
+  const isAllSelected = useMemo(() => {
+    const openDeals = filteredDeals.filter((d) => d.status === 'Open');
+    return openDeals.length > 0 && openDeals.every((d) => selectedDeals.has(d.id));
+  }, [filteredDeals, selectedDeals]);
 
   // Group deals by stage for Kanban view
   const dealsByStage = stages.reduce(
@@ -538,80 +710,195 @@ export default function DealsPage() {
     </DndContext>
   );
 
-  // List View
+  // Bulk action menu items
+  const bulkActionMenuItems: MenuProps['items'] = [
+    {
+      key: 'won',
+      label: 'Kazanıldı İşaretle',
+      icon: <CheckCircleIcon className="w-4 h-4" />,
+      onClick: handleBulkCloseWon,
+    },
+    {
+      key: 'lost',
+      label: 'Kaybedildi İşaretle',
+      icon: <NoSymbolIcon className="w-4 h-4" />,
+      onClick: handleBulkCloseLost,
+    },
+    { type: 'divider' },
+    ...stages.filter((s) => !s.name.toLowerCase().includes('kazanıldı') && !s.name.toLowerCase().includes('kaybedildi')).map((stage) => ({
+      key: `stage-${stage.id}`,
+      label: `"${stage.name}" Aşamasına Taşı`,
+      onClick: () => handleBulkMoveStage(stage.id),
+    })),
+  ];
+
+  // List View with Multi-Select
   const ListView = () => (
-    <div className="bg-white border border-slate-200 rounded-lg divide-y divide-slate-100">
-      {filteredDeals.map((deal) => {
-        const isWon = deal.status === 'Won';
-        const isLost = deal.status === 'Lost';
-        const stage = stages.find((s) => s.id === deal.stageId);
+    <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+      {/* List Header with Select All */}
+      <div className="flex items-center gap-4 px-4 py-3 bg-slate-50 border-b border-slate-200">
+        <Checkbox
+          checked={isAllSelected}
+          indeterminate={selectedDeals.size > 0 && !isAllSelected}
+          onChange={(e) => {
+            if (e.target.checked) {
+              selectAllDeals();
+            } else {
+              clearSelection();
+            }
+          }}
+        />
+        <span className="text-xs text-slate-500">
+          {selectedDeals.size > 0
+            ? `${selectedDeals.size} seçili (₺${selectedAmount.toLocaleString('tr-TR')})`
+            : 'Tümünü seç'}
+        </span>
+      </div>
 
-        return (
-          <div
-            key={deal.id}
-            onClick={() => router.push(`/crm/deals/${deal.id}`)}
-            className={`flex items-center justify-between p-4 hover:bg-slate-50 cursor-pointer transition-colors ${
-              isWon ? 'bg-emerald-50' : isLost ? 'bg-red-50 opacity-75' : ''
-            }`}
-          >
-            <div className="flex items-center gap-4 flex-1 min-w-0">
-              {/* Icon */}
-              <div
-                className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                  isWon ? 'bg-emerald-100' : isLost ? 'bg-red-100' : 'bg-amber-100'
-                }`}
-              >
-                {isLost ? (
-                  <NoSymbolIcon className="w-5 h-5 text-red-500" />
-                ) : isWon ? (
-                  <TrophyIcon className="w-5 h-5 text-emerald-500" />
+      {/* List Items */}
+      <div className="divide-y divide-slate-100">
+        {filteredDeals.map((deal) => {
+          const isWon = deal.status === 'Won';
+          const isLost = deal.status === 'Lost';
+          const isOpen = deal.status === 'Open';
+          const isSelected = selectedDeals.has(deal.id);
+          const stage = stages.find((s) => s.id === deal.stageId);
+
+          return (
+            <div
+              key={deal.id}
+              className={`flex items-center gap-4 p-4 hover:bg-slate-50 cursor-pointer transition-colors ${
+                isWon ? 'bg-emerald-50' : isLost ? 'bg-red-50 opacity-75' : ''
+              } ${isSelected ? 'bg-blue-50 hover:bg-blue-100' : ''}`}
+            >
+              {/* Checkbox - Only for Open deals */}
+              <div onClick={(e) => e.stopPropagation()}>
+                {isOpen ? (
+                  <Checkbox
+                    checked={isSelected}
+                    onChange={() => toggleDealSelection(deal.id)}
+                  />
                 ) : (
-                  <TrophyIcon className="w-5 h-5 text-amber-500" />
+                  <div className="w-4" /> // Spacer for alignment
                 )}
               </div>
 
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-medium text-slate-900">{deal.title}</span>
-                  {stage && (
-                    <Tag color={stage.color} className="text-xs">
-                      {stage.name}
-                    </Tag>
-                  )}
-                  <Tag color={statusColors[deal.status as Deal['status']]} className="text-xs">
-                    {deal.status === 'Open' ? 'Açık' : deal.status === 'Won' ? '🎉 Kazanıldı' : '❌ Kaybedildi'}
-                  </Tag>
-                </div>
-                {deal.customerName && (
-                  <div className="text-xs text-slate-500 flex items-center gap-1">
-                    <UserIcon className="w-3 h-3 text-slate-400" />
-                    <span>{deal.customerName}</span>
+              {/* Row Content */}
+              <div
+                className="flex items-center justify-between flex-1 min-w-0"
+                onClick={() => router.push(`/crm/deals/${deal.id}`)}
+              >
+                <div className="flex items-center gap-4 flex-1 min-w-0">
+                  {/* Icon */}
+                  <div
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                      isWon ? 'bg-emerald-100' : isLost ? 'bg-red-100' : 'bg-amber-100'
+                    }`}
+                  >
+                    {isLost ? (
+                      <NoSymbolIcon className="w-5 h-5 text-red-500" />
+                    ) : isWon ? (
+                      <TrophyIcon className="w-5 h-5 text-emerald-500" />
+                    ) : (
+                      <TrophyIcon className="w-5 h-5 text-amber-500" />
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
 
-            {/* Amount & Meta */}
-            <div className="text-right">
-              <div className="text-lg font-semibold text-slate-900">
-                ₺{deal.amount.toLocaleString('tr-TR')}
-              </div>
-              <div className="text-xs text-slate-500">{deal.probability}% olasılık</div>
-              {deal.expectedCloseDate && (
-                <div className="text-xs text-slate-500">
-                  {dayjs(deal.expectedCloseDate).format('DD/MM/YYYY')}
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-medium text-slate-900">{deal.title}</span>
+                      {stage && (
+                        <Tag color={stage.color} className="text-xs">
+                          {stage.name}
+                        </Tag>
+                      )}
+                      <Tag color={statusColors[deal.status as Deal['status']]} className="text-xs">
+                        {deal.status === 'Open' ? 'Açık' : deal.status === 'Won' ? '🎉 Kazanıldı' : '❌ Kaybedildi'}
+                      </Tag>
+                    </div>
+                    {deal.customerName && (
+                      <div className="text-xs text-slate-500 flex items-center gap-1">
+                        <UserIcon className="w-3 h-3 text-slate-400" />
+                        <span>{deal.customerName}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
+
+                {/* Amount & Meta */}
+                <div className="text-right">
+                  <div className="text-lg font-semibold text-slate-900">
+                    ₺{deal.amount.toLocaleString('tr-TR')}
+                  </div>
+                  <div className="text-xs text-slate-500">{deal.probability}% olasılık</div>
+                  {deal.expectedCloseDate && (
+                    <div className="text-xs text-slate-500">
+                      {dayjs(deal.expectedCloseDate).format('DD/MM/YYYY')}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
+
       {filteredDeals.length === 0 && (
         <div className="text-center text-slate-400 py-12 text-sm">Fırsat bulunamadı</div>
       )}
     </div>
   );
+
+  // Bulk Action Bar Component
+  const BulkActionBar = () => {
+    if (selectedDeals.size === 0) return null;
+
+    return (
+      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+        <div className="flex items-center gap-4 bg-slate-900 text-white px-6 py-3 rounded-full shadow-xl">
+          <span className="text-sm font-medium">
+            {selectedDeals.size} fırsat seçili
+          </span>
+          <span className="text-slate-400 text-sm">
+            ₺{selectedAmount.toLocaleString('tr-TR')}
+          </span>
+          <div className="h-4 w-px bg-slate-600" />
+          <button
+            onClick={handleBulkCloseWon}
+            disabled={bulkActionLoading}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors disabled:opacity-50"
+          >
+            <CheckCircleIcon className="w-4 h-4" />
+            Kazanıldı
+          </button>
+          <button
+            onClick={handleBulkCloseLost}
+            disabled={bulkActionLoading}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-red-600 hover:bg-red-700 rounded-md transition-colors disabled:opacity-50"
+          >
+            <NoSymbolIcon className="w-4 h-4" />
+            Kaybedildi
+          </button>
+          <Dropdown menu={{ items: bulkActionMenuItems }} trigger={['click']}>
+            <button
+              disabled={bulkActionLoading}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-slate-700 hover:bg-slate-600 rounded-md transition-colors disabled:opacity-50"
+            >
+              Daha Fazla
+              <ChevronDownIcon className="w-4 h-4" />
+            </button>
+          </Dropdown>
+          <button
+            onClick={clearSelection}
+            className="p-1.5 text-slate-400 hover:text-white transition-colors"
+          >
+            <XMarkIcon className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <PageContainer maxWidth="7xl">
@@ -701,6 +988,9 @@ export default function DealsPage() {
       ) : (
         <ListView />
       )}
+
+      {/* Bulk Action Bar - Only visible when items are selected */}
+      <BulkActionBar />
     </PageContainer>
   );
 }
