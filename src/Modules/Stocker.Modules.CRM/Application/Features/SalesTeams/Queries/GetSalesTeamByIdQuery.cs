@@ -51,11 +51,25 @@ public class GetSalesTeamByIdQueryHandler : IRequestHandler<GetSalesTeamByIdQuer
             TargetPeriod = entity.TargetPeriod,
             Currency = entity.Currency,
             TerritoryId = entity.TerritoryId,
-            TerritoryNames = entity.TerritoryNames,
+            TerritoryNames = entity.TerritoryNames ?? entity.Territory?.Name,
             TeamEmail = entity.TeamEmail,
             CommunicationChannel = entity.CommunicationChannel,
             ActiveMemberCount = entity.Members.Count(m => m.IsActive),
-            TotalMemberCount = entity.Members.Count
+            TotalMemberCount = entity.Members.Count,
+            Members = entity.Members.Select(m => new SalesTeamMemberDto
+            {
+                Id = m.Id,
+                SalesTeamId = m.SalesTeamId,
+                SalesTeamName = entity.Name,
+                UserId = m.UserId,
+                UserName = m.UserName,
+                Role = m.Role,
+                IsActive = m.IsActive,
+                JoinedDate = m.JoinedDate,
+                LeftDate = m.LeftDate,
+                IndividualTarget = m.IndividualTarget,
+                CommissionRate = m.CommissionRate
+            }).ToList()
         };
     }
 }

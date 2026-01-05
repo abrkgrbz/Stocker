@@ -33,6 +33,9 @@ public class SalesTeamDto
     public int ActiveMemberCount { get; set; }
     public int TotalMemberCount { get; set; }
 
+    // Members (for detail view)
+    public List<SalesTeamMemberDto>? Members { get; set; }
+
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }
