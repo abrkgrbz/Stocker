@@ -42,10 +42,19 @@ import 'dayjs/locale/tr';
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
 
+// GUID format validation helper
+const isValidGuid = (str: string): boolean => {
+  const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return guidRegex.test(str);
+};
+
 export default function CustomerDetailPage() {
   const router = useRouter();
   const params = useParams();
   const customerId = params.id as string;
+
+  // Validate GUID format early
+  const isValidId = customerId && isValidGuid(customerId);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
@@ -70,18 +79,19 @@ export default function CustomerDetailPage() {
   const { hasModule, isLoading: modulesLoading } = useModuleCodes();
   const canCreateOrder = hasModule('Sales') && hasModule('Inventory');
 
-  const { data: customer, isLoading, error } = useCustomer(customerId);
+  // Only fetch data if ID is valid GUID format
+  const { data: customer, isLoading, error } = useCustomer(isValidId ? customerId : undefined);
   const updateCustomer = useUpdateCustomer();
   const createOrder = useCreateSalesOrder();
 
-  // Fetch customer activities
-  const { data: activitiesData, isLoading: activitiesLoading } = useActivities({
-    customerId: customerId,
-  });
+  // Fetch customer activities (only if ID is valid GUID)
+  const { data: activitiesData, isLoading: activitiesLoading } = useActivities(
+    isValidId ? { customerId: customerId } : {}
+  );
 
-  // Fetch customer orders (only if Sales module is available)
+  // Fetch customer orders (only if Sales module is available and ID is valid GUID)
   const { data: ordersData, isLoading: ordersLoading } = useSalesOrdersByCustomer(
-    customerId,
+    isValidId ? customerId : '',
     1,
     10
   );
@@ -89,9 +99,10 @@ export default function CustomerDetailPage() {
   // Fetch products for order creation (only if Inventory module is available)
   const { data: productsData, isLoading: productsLoading } = useProducts(false);
 
-  // Fetch customer contacts (only for Corporate customers)
-  // DEBUG: Temporarily fetch for all customers
-  const { data: contactsData, isLoading: contactsLoading } = useContactsByCustomer(customerId);
+  // Fetch customer contacts (only if ID is valid GUID)
+  const { data: contactsData, isLoading: contactsLoading } = useContactsByCustomer(
+    isValidId ? customerId : undefined
+  );
   const createContact = useCreateContact();
   const updateContact = useUpdateContact();
   const deleteContact = useDeleteContact();
@@ -285,6 +296,19 @@ export default function CustomerDetailPage() {
     };
     return textMap[status] || status;
   };
+
+  // Check for invalid ID format early
+  if (!isValidId) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center gap-4">
+        <Empty description="Geçersiz müşteri ID formatı" />
+        <p className="text-sm text-slate-500">Müşteri ID'si geçerli bir GUID formatında olmalıdır.</p>
+        <Button onClick={() => router.push('/crm/customers')}>
+          Müşteri Listesine Dön
+        </Button>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
