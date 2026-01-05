@@ -65,17 +65,21 @@ public class SalesTeamsController : ControllerBase
     {
         var tenantId = GetTenantId();
         var command = new CreateSalesTeamCommand(
-            tenantId,
-            request.Name,
-            request.Code,
-            request.Description,
-            true,
-            request.TeamLeaderId,
-            request.TeamLeaderName,
-            null,
-            request.SalesTarget,
-            request.TargetPeriod,
-            request.Currency ?? "TRY");
+            TenantId: tenantId,
+            Name: request.Name,
+            Code: request.Code,
+            Description: request.Description,
+            IsActive: request.IsActive ?? true,
+            TeamLeaderId: request.TeamLeaderId,
+            TeamLeaderName: request.TeamLeaderName,
+            ParentTeamId: request.ParentTeamId,
+            SalesTarget: request.SalesTarget,
+            TargetPeriod: request.TargetPeriod,
+            Currency: request.Currency ?? "TRY",
+            TerritoryId: request.TerritoryId,
+            TerritoryNames: request.TerritoryNames,
+            TeamEmail: request.TeamEmail,
+            CommunicationChannel: request.CommunicationChannel);
 
         var result = await _mediator.Send(command, cancellationToken);
 
@@ -105,11 +109,17 @@ public record CreateSalesTeamRequest(
     string Name,
     string Code,
     string? Description = null,
+    bool? IsActive = null,
     int? TeamLeaderId = null,
     string? TeamLeaderName = null,
+    Guid? ParentTeamId = null,
     decimal? SalesTarget = null,
     string? TargetPeriod = null,
-    string? Currency = null);
+    string? Currency = null,
+    Guid? TerritoryId = null,
+    string? TerritoryNames = null,
+    string? TeamEmail = null,
+    string? CommunicationChannel = null);
 
 public record AddMemberRequest(
     int UserId,
