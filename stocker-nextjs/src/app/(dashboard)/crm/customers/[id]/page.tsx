@@ -295,9 +295,14 @@ export default function CustomerDetailPage() {
   }
 
   if (error || !customer) {
+    const errorMessage = error instanceof Error ? error.message : 'Müşteri bulunamadı';
+    console.error('Customer fetch error:', error);
     return (
-      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-        <Empty description="Müşteri bulunamadı" />
+      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center gap-4">
+        <Empty description={errorMessage} />
+        <Button onClick={() => router.push('/crm/customers')}>
+          Müşteri Listesine Dön
+        </Button>
       </div>
     );
   }
