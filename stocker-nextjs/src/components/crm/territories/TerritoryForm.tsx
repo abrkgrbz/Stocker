@@ -77,6 +77,20 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
     });
   }, [form]);
 
+  // Handle territory type change - clear location and update type
+  const handleTerritoryTypeChange = useCallback((newType: TerritoryType) => {
+    setTerritoryType(newType);
+    form.setFieldValue('territoryType', newType);
+
+    // Clear location selection when type changes
+    setSelectedLocation({});
+    form.setFieldsValue({
+      countryId: undefined, country: undefined, countryCode: undefined,
+      cityId: undefined, city: undefined, region: undefined,
+      districtId: undefined, district: undefined,
+    });
+  }, [form]);
+
   // Handle form submission - include location fields
   const handleFinish = useCallback((values: any) => {
     // Ensure targetYear is set if salesTarget is provided (required by backend)
@@ -153,10 +167,7 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
                 <div className="flex bg-slate-100 p-1 rounded-lg">
                   <button
                     type="button"
-                    onClick={() => {
-                      setTerritoryType(TerritoryType.Country);
-                      form.setFieldValue('territoryType', TerritoryType.Country);
-                    }}
+                    onClick={() => handleTerritoryTypeChange(TerritoryType.Country)}
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                       territoryType === TerritoryType.Country
                         ? 'bg-white shadow-sm text-slate-900'
@@ -167,10 +178,7 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setTerritoryType(TerritoryType.Region);
-                      form.setFieldValue('territoryType', TerritoryType.Region);
-                    }}
+                    onClick={() => handleTerritoryTypeChange(TerritoryType.Region)}
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                       territoryType === TerritoryType.Region
                         ? 'bg-white shadow-sm text-slate-900'
@@ -181,10 +189,7 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setTerritoryType(TerritoryType.City);
-                      form.setFieldValue('territoryType', TerritoryType.City);
-                    }}
+                    onClick={() => handleTerritoryTypeChange(TerritoryType.City)}
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                       territoryType === TerritoryType.City
                         ? 'bg-white shadow-sm text-slate-900'
@@ -192,6 +197,17 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
                     }`}
                   >
                     Şehir
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTerritoryTypeChange(TerritoryType.District)}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      territoryType === TerritoryType.District
+                        ? 'bg-white shadow-sm text-slate-900'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    İlçe
                   </button>
                 </div>
               </Form.Item>
@@ -257,12 +273,21 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
               Coğrafi Bilgiler
             </h3>
 
-            {/* Cascade Location Select Component */}
+            {/* Dynamic hint based on territory type */}
+            <p className="text-sm text-slate-500 mb-4">
+              {territoryType === TerritoryType.Country && 'Ülke bazlı bölge için sadece ülke seçin.'}
+              {territoryType === TerritoryType.Region && 'Bölge bazlı territory için ülke ve şehir seçin.'}
+              {territoryType === TerritoryType.City && 'Şehir bazlı territory için ülke ve şehir seçin.'}
+              {territoryType === TerritoryType.District && 'İlçe bazlı territory için ülke, şehir ve ilçe seçin.'}
+            </p>
+
+            {/* Cascade Location Select Component - Dynamic based on territory type */}
             <CascadeLocationSelect
               value={selectedLocation}
               onChange={handleLocationChange}
-              showDistrict={true}
-              showRegion={true}
+              showCity={territoryType !== TerritoryType.Country}
+              showDistrict={territoryType === TerritoryType.District}
+              showRegion={territoryType === TerritoryType.Region}
               disabled={loading}
               layout="grid"
             />

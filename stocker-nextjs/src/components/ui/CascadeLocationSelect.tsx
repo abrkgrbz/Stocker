@@ -21,6 +21,8 @@ export interface CascadeLocationSelectProps {
   value?: SelectedLocation;
   /** Callback when location changes */
   onChange?: (location: SelectedLocation) => void;
+  /** Show city dropdown (default: true) */
+  showCity?: boolean;
   /** Show district dropdown (default: true) */
   showDistrict?: boolean;
   /** Show region info in city label (default: true) */
@@ -54,6 +56,7 @@ export interface CascadeLocationSelectProps {
 export function CascadeLocationSelect({
   value,
   onChange,
+  showCity = true,
   showDistrict = true,
   showRegion = true,
   disabled = false,
@@ -194,9 +197,11 @@ export function CascadeLocationSelect({
         return 'w-full';
       case 'grid':
       default:
-        return showDistrict ? 'col-span-4' : 'col-span-6';
+        // Calculate column span based on visible fields
+        const visibleFields = 1 + (showCity ? 1 : 0) + (showCity && showDistrict ? 1 : 0);
+        return visibleFields === 1 ? 'col-span-12' : visibleFields === 2 ? 'col-span-6' : 'col-span-4';
     }
-  }, [layout, showDistrict]);
+  }, [layout, showCity, showDistrict]);
 
   // ─────────────────────────────────────────────────────────────
   // SHARED SELECT STYLES
@@ -235,43 +240,45 @@ export function CascadeLocationSelect({
         />
       </div>
 
-      {/* City Select */}
-      <div className={fieldClass}>
-        <label className="block text-sm font-medium text-slate-600 mb-1.5">
-          <BuildingOffice2Icon className="w-4 h-4 inline-block mr-1 -mt-0.5" />
-          {cityLabel}
-        </label>
-        <Select
-          showSearch
-          value={value?.cityId}
-          onChange={handleCityChange}
-          placeholder={cityPlaceholder}
-          disabled={disabled || !value?.countryId}
-          loading={citiesLoading}
-          options={cityOptions}
-          filterOption={filterOption}
-          optionFilterProp="searchLabel"
-          className={selectClassName}
-          popupClassName="[&_.ant-select-item]:!py-2"
-          notFoundContent={
-            !value?.countryId ? 'Önce ülke seçin' :
-            citiesLoading ? <Spin size="small" /> :
-            'Şehir bulunamadı'
-          }
-          allowClear
-          onClear={() => onChange?.({
-            ...value,
-            cityId: undefined,
-            cityName: undefined,
-            region: undefined,
-            districtId: undefined,
-            districtName: undefined,
-          })}
-        />
-      </div>
+      {/* City Select (Optional) */}
+      {showCity && (
+        <div className={fieldClass}>
+          <label className="block text-sm font-medium text-slate-600 mb-1.5">
+            <BuildingOffice2Icon className="w-4 h-4 inline-block mr-1 -mt-0.5" />
+            {cityLabel}
+          </label>
+          <Select
+            showSearch
+            value={value?.cityId}
+            onChange={handleCityChange}
+            placeholder={cityPlaceholder}
+            disabled={disabled || !value?.countryId}
+            loading={citiesLoading}
+            options={cityOptions}
+            filterOption={filterOption}
+            optionFilterProp="searchLabel"
+            className={selectClassName}
+            popupClassName="[&_.ant-select-item]:!py-2"
+            notFoundContent={
+              !value?.countryId ? 'Önce ülke seçin' :
+              citiesLoading ? <Spin size="small" /> :
+              'Şehir bulunamadı'
+            }
+            allowClear
+            onClear={() => onChange?.({
+              ...value,
+              cityId: undefined,
+              cityName: undefined,
+              region: undefined,
+              districtId: undefined,
+              districtName: undefined,
+            })}
+          />
+        </div>
+      )}
 
-      {/* District Select (Optional) */}
-      {showDistrict && (
+      {/* District Select (Optional - requires city to be shown) */}
+      {showCity && showDistrict && (
         <div className={fieldClass}>
           <label className="block text-sm font-medium text-slate-600 mb-1.5">
             <MapIcon className="w-4 h-4 inline-block mr-1 -mt-0.5" />
