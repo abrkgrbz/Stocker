@@ -74,7 +74,7 @@ export default function CampaignDetailPage() {
   const statusInfo = statusLabels[campaign.status] || { label: campaign.status, color: 'default', icon: null };
   const typeInfo = typeLabels[campaign.type] || { label: campaign.type, icon: <EnvelopeIcon className="w-4 h-4" /> };
   const responseRate = (campaign.sentCount ?? 0) > 0 ? Math.round(((campaign.responseCount ?? 0) / (campaign.sentCount ?? 1)) * 100) : 0;
-  const roi = campaign.actualCost > 0 ? Math.round((((campaign.revenue ?? campaign.actualRevenue ?? 0) - campaign.actualCost) / campaign.actualCost) * 100) : 0;
+  const roi = campaign.actualCost > 0 ? Math.round(((campaign.actualRevenue - campaign.actualCost) / campaign.actualCost) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -232,7 +232,7 @@ export default function CampaignDetailPage() {
                 <div className="p-4 bg-slate-50 rounded-lg">
                   <p className="text-xs text-slate-400 mb-1">Planlanan Bütçe</p>
                   <p className="text-xl font-semibold text-slate-900">
-                    ₺{(campaign.budget || 0).toLocaleString('tr-TR')}
+                    ₺{(campaign.budgetedCost || 0).toLocaleString('tr-TR')}
                   </p>
                 </div>
                 <div className="p-4 bg-slate-50 rounded-lg">
@@ -256,17 +256,23 @@ export default function CampaignDetailPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-slate-50 rounded-lg">
-                  <p className="text-xs text-slate-400 mb-1">Gelir</p>
-                  <p className="text-xl font-semibold text-emerald-600">
-                    ₺{(campaign.revenue || 0).toLocaleString('tr-TR')}
+                  <p className="text-xs text-slate-400 mb-1">Beklenen Gelir</p>
+                  <p className="text-xl font-semibold text-blue-600">
+                    ₺{(campaign.expectedRevenue || 0).toLocaleString('tr-TR')}
                   </p>
                 </div>
                 <div className="p-4 bg-slate-50 rounded-lg">
-                  <p className="text-xs text-slate-400 mb-1">ROI</p>
-                  <p className={`text-xl font-semibold ${roi >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                    %{roi}
+                  <p className="text-xs text-slate-400 mb-1">Gerçekleşen Gelir</p>
+                  <p className="text-xl font-semibold text-emerald-600">
+                    ₺{(campaign.actualRevenue || 0).toLocaleString('tr-TR')}
                   </p>
                 </div>
+              </div>
+              <div className="mt-4 p-4 bg-slate-50 rounded-lg">
+                <p className="text-xs text-slate-400 mb-1">ROI</p>
+                <p className={`text-xl font-semibold ${roi >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                  %{roi}
+                </p>
               </div>
             </div>
           </div>
