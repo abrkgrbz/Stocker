@@ -40,8 +40,12 @@ export function PipelineFunnel({ pipelines, deals, loading }: PipelineFunnelProp
     const pipeline = pipelines.find((p) => p.isDefault) || pipelines[0];
     if (!pipeline) return null;
 
+    // Ensure stages is an array before spreading
+    const stages = Array.isArray(pipeline.stages) ? pipeline.stages : [];
+    if (stages.length === 0) return null;
+
     // Sort stages by order
-    const sortedStages = [...pipeline.stages]
+    const sortedStages = [...stages]
       .filter((s) => !s.isLost)
       .sort((a, b) => a.order - b.order);
 

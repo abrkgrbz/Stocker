@@ -14,6 +14,8 @@ public class Pipeline : TenantAggregateRoot
     public bool IsDefault { get; private set; }
     public int DisplayOrder { get; private set; }
     public string? Currency { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+    public DateTime? UpdatedAt { get; private set; }
     
     public virtual IReadOnlyCollection<PipelineStage> Stages => _stages.AsReadOnly();
     
@@ -31,17 +33,20 @@ public class Pipeline : TenantAggregateRoot
         IsActive = true;
         IsDefault = false;
         DisplayOrder = 0;
+        CreatedAt = DateTime.UtcNow;
     }
     
     public void UpdateDetails(string name, string? description)
     {
         Name = name;
         Description = description;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void SetAsDefault()
     {
         IsDefault = true;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void UnsetDefault()
@@ -52,6 +57,7 @@ public class Pipeline : TenantAggregateRoot
     public void SetDisplayOrder(int order)
     {
         DisplayOrder = order;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void Activate()
@@ -65,6 +71,7 @@ public class Pipeline : TenantAggregateRoot
             throw new InvalidOperationException("Cannot deactivate default pipeline");
             
         IsActive = false;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public PipelineStage AddStage(string name, decimal probability, int order, bool isWon = false, bool isLost = false)

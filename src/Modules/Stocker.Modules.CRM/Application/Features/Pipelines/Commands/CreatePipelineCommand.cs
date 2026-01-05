@@ -147,7 +147,8 @@ public class CreatePipelineCommandHandler : IRequestHandler<CreatePipelineComman
                 IsActive = s.IsActive,
                 Color = s.Color,
                 RottenDays = s.RottenDays
-            }).OrderBy(s => s.DisplayOrder).ToList()
+            }).OrderBy(s => s.DisplayOrder).ToList(),
+            CreatedAt = pipeline.CreatedAt
         };
 
         return Result<PipelineDto>.Success(dto);

@@ -8,6 +8,16 @@ import type {
 } from './location.types';
 
 /**
+ * Location API Response wrapper (matches backend LocationApiResponse<T>)
+ */
+interface LocationApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+  cached?: boolean;
+}
+
+/**
  * GeoLocation Service
  * Handles all location-related API calls (Countries, Cities, Districts)
  * Uses HybridCache on backend for optimal performance
@@ -25,8 +35,8 @@ class LocationService {
    */
   async getCountries(): Promise<CountryDto[]> {
     try {
-      const response = await ApiService.get<CountryDto[]>(`${this.basePath}/countries`);
-      return response;
+      const response = await ApiService.get<LocationApiResponse<CountryDto[]>>(`${this.basePath}/countries`);
+      return response.data ?? [];
     } catch (error) {
       logger.error('Failed to fetch countries', { error });
       throw error;
@@ -38,8 +48,8 @@ class LocationService {
    */
   async getCountryById(id: string): Promise<CountryDto> {
     try {
-      const response = await ApiService.get<CountryDto>(`${this.basePath}/countries/${id}`);
-      return response;
+      const response = await ApiService.get<LocationApiResponse<CountryDto>>(`${this.basePath}/countries/${id}`);
+      return response.data;
     } catch (error) {
       logger.error('Failed to fetch country', { id, error });
       throw error;
@@ -51,8 +61,8 @@ class LocationService {
    */
   async getCountryByCode(code: string): Promise<CountryDto> {
     try {
-      const response = await ApiService.get<CountryDto>(`${this.basePath}/countries/by-code/${code}`);
-      return response;
+      const response = await ApiService.get<LocationApiResponse<CountryDto>>(`${this.basePath}/countries/by-code/${code}`);
+      return response.data;
     } catch (error) {
       logger.error('Failed to fetch country by code', { code, error });
       throw error;
@@ -69,8 +79,8 @@ class LocationService {
    */
   async getCitiesByCountry(countryId: string): Promise<CityDto[]> {
     try {
-      const response = await ApiService.get<CityDto[]>(`${this.basePath}/countries/${countryId}/cities`);
-      return response;
+      const response = await ApiService.get<LocationApiResponse<CityDto[]>>(`${this.basePath}/countries/${countryId}/cities`);
+      return response.data ?? [];
     } catch (error) {
       logger.error('Failed to fetch cities', { countryId, error });
       throw error;
@@ -82,8 +92,8 @@ class LocationService {
    */
   async getCityById(id: string): Promise<CityDto> {
     try {
-      const response = await ApiService.get<CityDto>(`${this.basePath}/cities/${id}`);
-      return response;
+      const response = await ApiService.get<LocationApiResponse<CityDto>>(`${this.basePath}/cities/${id}`);
+      return response.data;
     } catch (error) {
       logger.error('Failed to fetch city', { id, error });
       throw error;
@@ -100,8 +110,8 @@ class LocationService {
    */
   async getDistrictsByCity(cityId: string): Promise<DistrictDto[]> {
     try {
-      const response = await ApiService.get<DistrictDto[]>(`${this.basePath}/cities/${cityId}/districts`);
-      return response;
+      const response = await ApiService.get<LocationApiResponse<DistrictDto[]>>(`${this.basePath}/cities/${cityId}/districts`);
+      return response.data ?? [];
     } catch (error) {
       logger.error('Failed to fetch districts', { cityId, error });
       throw error;
@@ -113,8 +123,8 @@ class LocationService {
    */
   async getDistrictById(id: string): Promise<DistrictDto> {
     try {
-      const response = await ApiService.get<DistrictDto>(`${this.basePath}/districts/${id}`);
-      return response;
+      const response = await ApiService.get<LocationApiResponse<DistrictDto>>(`${this.basePath}/districts/${id}`);
+      return response.data;
     } catch (error) {
       logger.error('Failed to fetch district', { id, error });
       throw error;
@@ -131,8 +141,8 @@ class LocationService {
    */
   async clearAllCache(): Promise<CacheInvalidationResult> {
     try {
-      const response = await ApiService.post<CacheInvalidationResult>(`${this.basePath}/cache/clear`);
-      return response;
+      const response = await ApiService.post<LocationApiResponse<CacheInvalidationResult>>(`${this.basePath}/cache/clear`);
+      return response.data;
     } catch (error) {
       logger.error('Failed to clear geo cache', { error });
       throw error;
@@ -145,10 +155,10 @@ class LocationService {
    */
   async clearCountryCache(countryId: string): Promise<CacheInvalidationResult> {
     try {
-      const response = await ApiService.post<CacheInvalidationResult>(
+      const response = await ApiService.post<LocationApiResponse<CacheInvalidationResult>>(
         `${this.basePath}/cache/clear/country/${countryId}`
       );
-      return response;
+      return response.data;
     } catch (error) {
       logger.error('Failed to clear country cache', { countryId, error });
       throw error;
@@ -161,10 +171,10 @@ class LocationService {
    */
   async clearCityCache(cityId: string): Promise<CacheInvalidationResult> {
     try {
-      const response = await ApiService.post<CacheInvalidationResult>(
+      const response = await ApiService.post<LocationApiResponse<CacheInvalidationResult>>(
         `${this.basePath}/cache/clear/city/${cityId}`
       );
-      return response;
+      return response.data;
     } catch (error) {
       logger.error('Failed to clear city cache', { cityId, error });
       throw error;
