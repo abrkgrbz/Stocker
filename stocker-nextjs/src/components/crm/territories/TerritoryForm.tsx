@@ -93,18 +93,13 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
 
   // Handle form submission - include location fields
   const handleFinish = useCallback((values: any) => {
-    // Debug: Log raw form values
-    console.log('📋 TerritoryForm raw values:', values);
-    console.log('📋 salesTarget type:', typeof values.salesTarget, 'value:', values.salesTarget);
-    console.log('📋 targetYear type:', typeof values.targetYear, 'value:', values.targetYear);
-
-    // Ensure targetYear is set if salesTarget is provided (required by backend)
+    // Ensure targetYear is set if salesTarget is provided
     const targetYear = values.targetYear || (values.salesTarget ? new Date().getFullYear() : undefined);
 
     // Merge location data with form values
     const submitData = {
       ...values,
-      targetYear, // Ensure targetYear is sent with salesTarget
+      targetYear,
       countryId: selectedLocation.countryId,
       country: selectedLocation.countryName,
       countryCode: selectedLocation.countryCode,
@@ -114,9 +109,6 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
       districtId: selectedLocation.districtId,
       district: selectedLocation.districtName,
     };
-
-    // Debug: Log final submit data
-    console.log('📤 TerritoryForm submitData:', submitData);
 
     onFinish(submitData);
   }, [selectedLocation, onFinish]);
