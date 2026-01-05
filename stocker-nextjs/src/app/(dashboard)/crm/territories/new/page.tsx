@@ -13,10 +13,19 @@ export default function NewTerritoryPage() {
   const createTerritory = useCreateTerritory();
 
   const handleSubmit = async (values: any) => {
+    // DEBUG: Log values before API call
+    console.log('🚀 NewTerritoryPage - Sending to API:', JSON.stringify(values, null, 2));
+
     try {
-      await createTerritory.mutateAsync(values);
+      const result = await createTerritory.mutateAsync(values);
+      console.log('✅ Territory created:', result);
+
+      // DEBUG: Wait 3 seconds before redirect so we can see logs
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
       router.push('/crm/territories');
     } catch (error) {
+      console.error('❌ Territory creation error:', error);
       // Error handled by hook
     }
   };
