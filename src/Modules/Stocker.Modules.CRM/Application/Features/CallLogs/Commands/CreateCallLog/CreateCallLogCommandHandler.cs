@@ -45,6 +45,18 @@ public class CreateCallLogCommandHandler : IRequestHandler<CreateCallLogCommand,
         if (!string.IsNullOrEmpty(request.Notes))
             callLog.SetNotes(request.Notes);
 
+        // Set status if provided
+        if (request.Status.HasValue)
+            callLog.SetStatus(request.Status.Value);
+
+        // Set outcome if provided
+        if (request.Outcome.HasValue)
+            callLog.SetOutcome(request.Outcome.Value, request.OutcomeDescription);
+
+        // Set end time if provided
+        if (request.EndTime.HasValue)
+            callLog.SetEndTime(request.EndTime.Value);
+
         var createdCallLog = await _callLogRepository.CreateAsync(callLog, cancellationToken);
         return Result<Guid>.Success(createdCallLog.Id);
     }

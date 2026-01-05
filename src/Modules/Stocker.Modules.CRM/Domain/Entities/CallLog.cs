@@ -407,6 +407,20 @@ public class CallLog : TenantEntity
     public void SetSummary(string? summary) => Summary = summary;
     public void SetTags(string? tags) => Tags = tags;
     public void SetCallType(CallType callType) => CallType = callType;
+    public void SetStatus(CallStatus status) => Status = status;
+    public void SetOutcome(CallOutcome? outcome, string? description = null)
+    {
+        Outcome = outcome;
+        OutcomeDescription = description;
+    }
+    public void SetEndTime(DateTime? endTime)
+    {
+        EndTime = endTime;
+        if (endTime.HasValue)
+        {
+            DurationSeconds = (int)(endTime.Value - StartTime).TotalSeconds;
+        }
+    }
 }
 
 #region Enums

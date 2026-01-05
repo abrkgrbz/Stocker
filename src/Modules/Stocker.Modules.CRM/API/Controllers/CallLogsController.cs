@@ -85,20 +85,24 @@ public class CallLogsController : ControllerBase
         var tenantId = GetTenantId();
 
         var command = new CreateCallLogCommand(
-            tenantId,
-            request.CallNumber,
-            request.Direction,
-            request.CallerNumber,
-            request.CalledNumber,
-            request.StartTime,
-            request.CallType,
-            request.CustomerId,
-            request.ContactId,
-            request.LeadId,
-            request.OpportunityId,
-            request.AgentUserId,
-            request.AgentName,
-            request.Notes);
+            TenantId: tenantId,
+            CallNumber: request.CallNumber,
+            Direction: request.Direction,
+            CallerNumber: request.CallerNumber,
+            CalledNumber: request.CalledNumber,
+            StartTime: request.StartTime,
+            EndTime: request.EndTime,
+            CallType: request.CallType,
+            Status: request.Status,
+            Outcome: request.Outcome,
+            OutcomeDescription: request.OutcomeDescription,
+            CustomerId: request.CustomerId,
+            ContactId: request.ContactId,
+            LeadId: request.LeadId,
+            OpportunityId: request.OpportunityId,
+            AgentUserId: request.AgentUserId,
+            AgentName: request.AgentName,
+            Notes: request.Notes);
 
         var result = await _mediator.Send(command, cancellationToken);
 
@@ -167,7 +171,11 @@ public record CreateCallLogRequest(
     string CallerNumber,
     string CalledNumber,
     DateTime? StartTime = null,
+    DateTime? EndTime = null,
     CallType? CallType = null,
+    CallStatus? Status = null,
+    CallOutcome? Outcome = null,
+    string? OutcomeDescription = null,
     Guid? CustomerId = null,
     Guid? ContactId = null,
     Guid? LeadId = null,

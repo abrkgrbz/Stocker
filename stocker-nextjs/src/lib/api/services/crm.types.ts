@@ -1140,7 +1140,11 @@ export interface CreateCallLogCommand {
   callerNumber: string;
   calledNumber: string;
   startTime?: DateTime;
+  endTime?: DateTime;
   callType?: CallType;
+  status?: CallStatus;
+  outcome?: CallOutcome;
+  outcomeDescription?: string;
   customerId?: Guid;
   contactId?: Guid;
   leadId?: Guid;
