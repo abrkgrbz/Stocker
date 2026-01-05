@@ -331,6 +331,7 @@ public class MasterDataSeeder
                 moduleLimits: new Dictionary<string, int>
                 {
                     ["CRM"] = 100,
+                    ["Finance"] = 50,
                     ["Accounting"] = 50
                 }),
             description: "Küçük işletmeler için ideal başlangıç paketi",
@@ -346,6 +347,7 @@ public class MasterDataSeeder
         
         starterPackage.AddModule("CRM", "CRM Modülü", true, 100);
         starterPackage.AddModule("Accounting", "Temel Muhasebe", true, 50);
+        starterPackage.AddModule("Finance", "Temel Finans", true, 50);
 
         packages.Add(starterPackage);
 
@@ -362,6 +364,7 @@ public class MasterDataSeeder
                 moduleLimits: new Dictionary<string, int>
                 {
                     ["CRM"] = 1000,
+                    ["Finance"] = 200,
                     ["Accounting"] = 500,
                     ["Inventory"] = 100
                 }),
@@ -382,6 +385,7 @@ public class MasterDataSeeder
         professionalPackage.AddModule("Accounting", "Profesyonel Muhasebe", true, 500);
         professionalPackage.AddModule("Inventory", "Stok Yönetimi", true, 100);
         professionalPackage.AddModule("HR", "İnsan Kaynakları", true, 50);
+        professionalPackage.AddModule("Finance", "Profesyonel Finans", true, 200);
 
         packages.Add(professionalPackage);
 
@@ -410,6 +414,7 @@ public class MasterDataSeeder
         enterprisePackage.AddModule("Inventory", "Stok Yönetimi", true);
         enterprisePackage.AddModule("HR", "İnsan Kaynakları", true);
         enterprisePackage.AddModule("Projects", "Proje Yönetimi", true);
+        enterprisePackage.AddModule("Finance", "Kurumsal Finans", true);
 
         packages.Add(enterprisePackage);
 
