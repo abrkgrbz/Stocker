@@ -26,7 +26,9 @@ export const locationKeys = {
   countries: () => [...locationKeys.all, 'countries'] as const,
   country: (id: string) => [...locationKeys.countries(), id] as const,
   countryByCode: (code: string) => [...locationKeys.countries(), 'code', code] as const,
+  regions: (countryId: string) => [...locationKeys.all, 'regions', countryId] as const,
   cities: (countryId: string) => [...locationKeys.all, 'cities', countryId] as const,
+  citiesByRegion: (countryId: string, region: string) => [...locationKeys.all, 'cities', countryId, 'region', region] as const,
   city: (id: string) => [...locationKeys.all, 'city', id] as const,
   districts: (cityId: string) => [...locationKeys.all, 'districts', cityId] as const,
   district: (id: string) => [...locationKeys.all, 'district', id] as const,
@@ -75,6 +77,24 @@ export function useCountryByCode(code: string) {
 }
 
 // =====================================
+// QUERY HOOKS - REGIONS (Unique regions from cities)
+// =====================================
+
+/**
+ * Fetch unique regions by country ID (e.g., Marmara, Ege, Akdeniz for Turkey)
+ * Only fetches when countryId is provided
+ */
+export function useRegions(countryId: string | undefined) {
+  return useQuery<string[]>({
+    queryKey: locationKeys.regions(countryId || ''),
+    queryFn: () => locationService.getRegionsByCountry(countryId!),
+    enabled: !!countryId,
+    staleTime: 1000 * 60 * 60, // 1 hour
+    gcTime: 1000 * 60 * 60 * 24, // 24 hours
+  });
+}
+
+// =====================================
 // QUERY HOOKS - CITIES (Cascade from Country)
 // =====================================
 
@@ -87,6 +107,20 @@ export function useCities(countryId: string | undefined) {
     queryKey: locationKeys.cities(countryId || ''),
     queryFn: () => locationService.getCitiesByCountry(countryId!),
     enabled: !!countryId,
+    staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 24,
+  });
+}
+
+/**
+ * Fetch cities by country ID and region name
+ * Only fetches when both countryId and region are provided
+ */
+export function useCitiesByRegion(countryId: string | undefined, region: string | undefined) {
+  return useQuery<CityDto[]>({
+    queryKey: locationKeys.citiesByRegion(countryId || '', region || ''),
+    queryFn: () => locationService.getCitiesByRegion(countryId!, region!),
+    enabled: !!countryId && !!region,
     staleTime: 1000 * 60 * 60,
     gcTime: 1000 * 60 * 60 * 24,
   });

@@ -275,8 +275,8 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
 
             {/* Dynamic hint based on territory type */}
             <p className="text-sm text-slate-500 mb-4">
-              {territoryType === TerritoryType.Country && 'Ülke bazlı bölge için sadece ülke seçin.'}
-              {territoryType === TerritoryType.Region && 'Bölge bazlı territory için ülke ve şehir seçin.'}
+              {territoryType === TerritoryType.Country && 'Ülke bazlı territory için sadece ülke seçin.'}
+              {territoryType === TerritoryType.Region && 'Bölge bazlı territory için ülke ve coğrafi bölge seçin (Marmara, Ege, Akdeniz vb.).'}
               {territoryType === TerritoryType.City && 'Şehir bazlı territory için ülke ve şehir seçin.'}
               {territoryType === TerritoryType.District && 'İlçe bazlı territory için ülke, şehir ve ilçe seçin.'}
             </p>
@@ -285,8 +285,9 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
             <CascadeLocationSelect
               value={selectedLocation}
               onChange={handleLocationChange}
-              showCity={territoryType !== TerritoryType.Country}
+              showCity={territoryType === TerritoryType.City || territoryType === TerritoryType.District}
               showDistrict={territoryType === TerritoryType.District}
+              showRegionSelect={territoryType === TerritoryType.Region}
               showRegion={territoryType === TerritoryType.Region}
               disabled={loading}
               layout="grid"

@@ -101,6 +101,41 @@ class LocationService {
   }
 
   // =====================================
+  // REGIONS (Unique regions from cities)
+  // =====================================
+
+  /**
+   * Get unique regions by country ID (e.g., Marmara, Ege, Akdeniz for Turkey)
+   * Used for region-based territory selection
+   * Cached for 24 hours on backend
+   */
+  async getRegionsByCountry(countryId: string): Promise<string[]> {
+    try {
+      const response = await ApiService.get<LocationApiResponse<string[]>>(`${this.basePath}/countries/${countryId}/regions`);
+      return response.data ?? [];
+    } catch (error) {
+      logger.error('Failed to fetch regions', { countryId, error });
+      throw error;
+    }
+  }
+
+  /**
+   * Get cities by country ID and region name
+   * Used to filter cities within a specific region
+   */
+  async getCitiesByRegion(countryId: string, regionName: string): Promise<CityDto[]> {
+    try {
+      const response = await ApiService.get<LocationApiResponse<CityDto[]>>(
+        `${this.basePath}/countries/${countryId}/regions/${encodeURIComponent(regionName)}/cities`
+      );
+      return response.data ?? [];
+    } catch (error) {
+      logger.error('Failed to fetch cities by region', { countryId, regionName, error });
+      throw error;
+    }
+  }
+
+  // =====================================
   // DISTRICTS
   // =====================================
 

@@ -3,13 +3,14 @@
 /**
  * Cascade Location Select Component
  * Country → City → District cascade dropdowns
+ * Supports region-only mode for territory selection
  * Monochrome Enterprise Theme - Black/White/Gray
  */
 
-import React, { useEffect, useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Select, Spin } from 'antd';
-import { MapPinIcon, GlobeAltIcon, BuildingOffice2Icon, MapIcon } from '@heroicons/react/24/outline';
-import { useCountries, useCities, useDistricts } from '@/lib/api/hooks/useLocations';
+import { GlobeAltIcon, BuildingOffice2Icon, MapIcon, GlobeEuropeAfricaIcon } from '@heroicons/react/24/outline';
+import { useCountries, useCities, useDistricts, useRegions } from '@/lib/api/hooks/useLocations';
 import type { SelectedLocation } from '@/lib/api/services/location.types';
 
 // ═══════════════════════════════════════════════════════════════
@@ -25,6 +26,8 @@ export interface CascadeLocationSelectProps {
   showCity?: boolean;
   /** Show district dropdown (default: true) */
   showDistrict?: boolean;
+  /** Show region dropdown instead of city (for region-based territories) */
+  showRegionSelect?: boolean;
   /** Show region info in city label (default: true) */
   showRegion?: boolean;
   /** Disable all selects */
@@ -37,12 +40,16 @@ export interface CascadeLocationSelectProps {
   cityLabel?: string;
   /** Label for district field */
   districtLabel?: string;
+  /** Label for region field */
+  regionLabel?: string;
   /** Placeholder for country */
   countryPlaceholder?: string;
   /** Placeholder for city */
   cityPlaceholder?: string;
   /** Placeholder for district */
   districtPlaceholder?: string;
+  /** Placeholder for region */
+  regionPlaceholder?: string;
   /** Layout direction */
   layout?: 'horizontal' | 'vertical' | 'grid';
   /** Required field indicator */
@@ -58,15 +65,18 @@ export function CascadeLocationSelect({
   onChange,
   showCity = true,
   showDistrict = true,
+  showRegionSelect = false,
   showRegion = true,
   disabled = false,
   className = '',
   countryLabel = 'Ülke',
   cityLabel = 'Şehir',
   districtLabel = 'İlçe',
+  regionLabel = 'Bölge',
   countryPlaceholder = 'Ülke seçin...',
   cityPlaceholder = 'Şehir seçin...',
   districtPlaceholder = 'İlçe seçin...',
+  regionPlaceholder = 'Bölge seçin...',
   layout = 'grid',
   required = false,
 }: CascadeLocationSelectProps) {
@@ -75,6 +85,7 @@ export function CascadeLocationSelect({
   // ─────────────────────────────────────────────────────────────
 
   const { data: countries, isLoading: countriesLoading } = useCountries();
+  const { data: regions, isLoading: regionsLoading } = useRegions(showRegionSelect ? value?.countryId : undefined);
   const { data: cities, isLoading: citiesLoading } = useCities(value?.countryId);
   const { data: districts, isLoading: districtsLoading } = useDistricts(value?.cityId);
 
@@ -96,6 +107,14 @@ export function CascadeLocationSelect({
       data: country,
     }));
   }, [countries]);
+
+  const regionOptions = useMemo(() => {
+    return (regions || []).map(region => ({
+      value: region,
+      label: region,
+      searchLabel: region,
+    }));
+  }, [regions]);
 
   const cityOptions = useMemo(() => {
     return (cities || []).map(city => ({
@@ -132,7 +151,7 @@ export function CascadeLocationSelect({
       countryId,
       countryName: country?.name,
       countryCode: country?.code,
-      // Reset city and district when country changes
+      // Reset city, region and district when country changes
       cityId: undefined,
       cityName: undefined,
       region: undefined,
@@ -140,6 +159,18 @@ export function CascadeLocationSelect({
       districtName: undefined,
     });
   }, [countries, onChange]);
+
+  const handleRegionChange = useCallback((regionName: string) => {
+    onChange?.({
+      ...value,
+      region: regionName,
+      // Reset city and district when region changes
+      cityId: undefined,
+      cityName: undefined,
+      districtId: undefined,
+      districtName: undefined,
+    });
+  }, [value, onChange]);
 
   const handleCityChange = useCallback((cityId: string) => {
     const city = cities?.find(c => c.id === cityId);
@@ -198,10 +229,15 @@ export function CascadeLocationSelect({
       case 'grid':
       default:
         // Calculate column span based on visible fields
-        const visibleFields = 1 + (showCity ? 1 : 0) + (showCity && showDistrict ? 1 : 0);
+        let visibleFields = 1; // Country always visible
+        if (showRegionSelect) visibleFields++;
+        else if (showCity) {
+          visibleFields++;
+          if (showDistrict) visibleFields++;
+        }
         return visibleFields === 1 ? 'col-span-12' : visibleFields === 2 ? 'col-span-6' : 'col-span-4';
     }
-  }, [layout, showCity, showDistrict]);
+  }, [layout, showCity, showDistrict, showRegionSelect]);
 
   // ─────────────────────────────────────────────────────────────
   // SHARED SELECT STYLES
@@ -240,8 +276,45 @@ export function CascadeLocationSelect({
         />
       </div>
 
-      {/* City Select (Optional) */}
-      {showCity && (
+      {/* Region Select (for region-based territories) */}
+      {showRegionSelect && (
+        <div className={fieldClass}>
+          <label className="block text-sm font-medium text-slate-600 mb-1.5">
+            <GlobeEuropeAfricaIcon className="w-4 h-4 inline-block mr-1 -mt-0.5" />
+            {regionLabel}
+          </label>
+          <Select
+            showSearch
+            value={value?.region}
+            onChange={handleRegionChange}
+            placeholder={regionPlaceholder}
+            disabled={disabled || !value?.countryId}
+            loading={regionsLoading}
+            options={regionOptions}
+            filterOption={filterOption}
+            optionFilterProp="searchLabel"
+            className={selectClassName}
+            popupClassName="[&_.ant-select-item]:!py-2"
+            notFoundContent={
+              !value?.countryId ? 'Önce ülke seçin' :
+              regionsLoading ? <Spin size="small" /> :
+              'Bölge bulunamadı'
+            }
+            allowClear
+            onClear={() => onChange?.({
+              ...value,
+              region: undefined,
+              cityId: undefined,
+              cityName: undefined,
+              districtId: undefined,
+              districtName: undefined,
+            })}
+          />
+        </div>
+      )}
+
+      {/* City Select (Optional - not shown when showRegionSelect is true) */}
+      {showCity && !showRegionSelect && (
         <div className={fieldClass}>
           <label className="block text-sm font-medium text-slate-600 mb-1.5">
             <BuildingOffice2Icon className="w-4 h-4 inline-block mr-1 -mt-0.5" />
@@ -277,8 +350,8 @@ export function CascadeLocationSelect({
         </div>
       )}
 
-      {/* District Select (Optional - requires city to be shown) */}
-      {showCity && showDistrict && (
+      {/* District Select (Optional - requires city to be shown and not in region mode) */}
+      {showCity && showDistrict && !showRegionSelect && (
         <div className={fieldClass}>
           <label className="block text-sm font-medium text-slate-600 mb-1.5">
             <MapIcon className="w-4 h-4 inline-block mr-1 -mt-0.5" />
