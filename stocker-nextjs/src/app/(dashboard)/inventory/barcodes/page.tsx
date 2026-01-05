@@ -8,6 +8,7 @@
 
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
   Table,
   Input,
@@ -608,7 +609,7 @@ export default function BarcodesPage() {
           <div className="flex items-start gap-4">
             <div className="w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
               {p.primaryImageUrl ? (
-                <img src={p.primaryImageUrl} alt={p.name} className="w-14 h-14 object-cover rounded" />
+                <Image src={p.primaryImageUrl} alt={p.name} width={56} height={56} className="object-cover rounded" />
               ) : (
                 <ShoppingBagIcon className="w-8 h-8 text-slate-400" />
               )}
@@ -881,11 +882,10 @@ export default function BarcodesPage() {
                   setIsScannerActive(!isScannerActive);
                   if (!isScannerActive) setTimeout(refocusScanner, 100);
                 }}
-                className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                  isScannerActive
-                    ? 'bg-slate-900 text-white hover:bg-slate-800'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
+                className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${isScannerActive
+                  ? 'bg-slate-900 text-white hover:bg-slate-800'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
               >
                 <BoltIcon className="w-5 h-5" />
                 {isScannerActive ? "Aktif" : "Durduruldu"}

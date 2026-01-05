@@ -12,6 +12,7 @@
 import React, { forwardRef, useState } from 'react';
 import { UserIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/cn';
+import Image from 'next/image';
 
 // =====================================
 // AVATAR PROPS
@@ -137,15 +138,20 @@ export const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
         )}
         {...props}
       >
-        {showImage && (
-          <img
+
+
+        {showImage && src && (
+          <Image
             src={src}
             alt={alt || name || 'Avatar'}
             onError={() => setImageError(true)}
+            fill
+            sizes="80px"
             className={cn(
-              'h-full w-full object-cover',
+              'object-cover',
               shape === 'circle' ? 'rounded-full' : 'rounded-lg'
             )}
+            unoptimized={src.startsWith('data:') || src.startsWith('blob:')} // Handle blob/data URIs gracefully if needed
           />
         )}
 

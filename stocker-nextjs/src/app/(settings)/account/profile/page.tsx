@@ -27,6 +27,7 @@ import { useAuth } from '@/lib/auth';
 import { useProfile, useUpdateProfile, useUploadProfileImage } from './hooks';
 import { DeleteAccountModal } from './DeleteAccountModal';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -164,9 +165,9 @@ export default function ProfilePage() {
           <div className="flex items-center gap-5">
             {/* Avatar */}
             <div className="relative">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden flex items-center justify-center">
+              <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden flex items-center justify-center">
                 {profileInfo.profileImage ? (
-                  <img src={profileInfo.profileImage} alt="" className="w-full h-full object-cover" />
+                  <Image src={profileInfo.profileImage} alt="Profile" fill className="object-cover" sizes="80px" />
                 ) : (
                   <User className="w-8 h-8 text-slate-400" />
                 )}
@@ -273,11 +274,10 @@ export default function ProfilePage() {
             <button
               onClick={handleSaveProfile}
               disabled={isUpdating || !hasChanges}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                hasChanges
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${hasChanges
                   ? 'bg-blue-600 text-white hover:bg-blue-700'
                   : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-              }`}
+                }`}
             >
               {isUpdating ? 'Kaydediliyor...' : 'Kaydet'}
             </button>

@@ -21,6 +21,7 @@ import {
   Copy,
   RefreshCw,
 } from 'lucide-react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   use2FAStatus,
@@ -117,19 +118,19 @@ export default function SecurityPage() {
 
   const lastLoginDate = securityOverview?.data?.lastLoginDate
     ? new Date(securityOverview.data.lastLoginDate).toLocaleDateString('tr-TR', {
-        day: 'numeric',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
     : profile?.data?.lastLoginDate
-    ? new Date(profile.data.lastLoginDate).toLocaleDateString('tr-TR', {
+      ? new Date(profile.data.lastLoginDate).toLocaleDateString('tr-TR', {
         day: 'numeric',
         month: 'short',
         hour: '2-digit',
         minute: '2-digit',
       })
-    : '-';
+      : '-';
 
   // Get active sessions from API
   const sessions: ActiveSessionDto[] = activeSessions?.data ?? [];
@@ -280,9 +281,8 @@ export default function SecurityPage() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`fixed top-20 right-4 z-50 flex items-center gap-2 px-4 py-3 bg-white border rounded-lg shadow-lg ${
-            errorMessage ? 'border-red-200' : 'border-slate-200'
-          }`}
+          className={`fixed top-20 right-4 z-50 flex items-center gap-2 px-4 py-3 bg-white border rounded-lg shadow-lg ${errorMessage ? 'border-red-200' : 'border-slate-200'
+            }`}
         >
           {errorMessage ? (
             <AlertCircle className="w-4 h-4 text-red-600" />
@@ -501,11 +501,11 @@ export default function SecurityPage() {
                           {session.isCurrent
                             ? 'Su an aktif'
                             : new Date(session.lastActive).toLocaleDateString('tr-TR', {
-                                day: 'numeric',
-                                month: 'short',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
+                              day: 'numeric',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
                         </span>
                       </div>
                     </div>
@@ -541,11 +541,11 @@ export default function SecurityPage() {
                 <span className="text-xs text-slate-500">
                   {event.timestamp
                     ? new Date(event.timestamp).toLocaleDateString('tr-TR', {
-                        day: 'numeric',
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })
+                      day: 'numeric',
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
                     : '-'}
                 </span>
               </div>
@@ -576,7 +576,7 @@ export default function SecurityPage() {
 
               {/* QR Code */}
               <div className="bg-white p-4 rounded-lg border border-slate-200 inline-block mb-4">
-                <img src={setupData.data.qrCodeUrl} alt="2FA QR Code" className="w-48 h-48 mx-auto" />
+                <Image src={setupData.data.qrCodeUrl} alt="2FA QR Code" width={192} height={192} className="mx-auto" unoptimized />
               </div>
 
               {/* Secret Key */}
