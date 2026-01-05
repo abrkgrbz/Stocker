@@ -12,13 +12,8 @@ const nextConfig = {
   // Redis is dynamically imported for rate-limiting
   serverExternalPackages: ['redis'],
 
-  // Disable ESLint and TypeScript checks during build
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // Note: eslint config moved to eslint.config.mjs (Next.js 16+ requirement)
+  // typescript.ignoreBuildErrors is also deprecated in Next.js 16+
 
   // Image optimization
   images: {
