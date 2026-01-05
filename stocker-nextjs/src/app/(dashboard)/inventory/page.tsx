@@ -736,7 +736,7 @@ export default function InventoryDashboardPage() {
                   <XAxis type="number" tickFormatter={(value) => `₺${(value / 1000).toFixed(0)}K`} stroke="#94a3b8" fontSize={12} />
                   <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 11, fill: '#64748b' }} />
                   <RechartsTooltip
-                    formatter={(value: number) => `₺${value.toLocaleString('tr-TR')}`}
+                    formatter={(value) => `₺${(value ?? 0).toLocaleString('tr-TR')}`}
                     labelFormatter={(label) => topProductsByValue.find(p => p.name === label)?.fullName || label}
                   />
                   <Bar dataKey="value" name="Stok Değeri" fill="#1e293b" radius={[0, 4, 4, 0]} />
@@ -758,7 +758,7 @@ export default function InventoryDashboardPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 11, fill: '#64748b' }} />
                   <YAxis tickFormatter={(value) => `₺${(value / 1000).toFixed(0)}K`} stroke="#94a3b8" fontSize={12} />
-                  <RechartsTooltip formatter={(value: number) => `₺${value.toLocaleString('tr-TR')}`} />
+                  <RechartsTooltip formatter={(value) => `₺${(value ?? 0).toLocaleString('tr-TR')}`} />
                   <Bar dataKey="value" name="Stok Değeri" radius={[4, 4, 0, 0]}>
                     {categoryValueData.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={MONOCHROME_COLORS[index % MONOCHROME_COLORS.length]} />

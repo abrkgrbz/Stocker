@@ -356,7 +356,7 @@ export default function InventoryReportsPage() {
                       <XAxis type="number" tickFormatter={(v) => `₺${(v / 1000).toFixed(0)}K`} stroke="#94a3b8" fontSize={12} />
                       <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11, fill: '#64748b' }} />
                       <RechartsTooltip
-                        formatter={(value: number) => [`₺${value.toLocaleString('tr-TR')}`, 'Değer']}
+                        formatter={(value) => [`₺${(value ?? 0).toLocaleString('tr-TR')}`, 'Değer']}
                       />
                       <Bar dataKey="value" fill="#1e293b" radius={[0, 4, 4, 0]} />
                     </BarChart>
