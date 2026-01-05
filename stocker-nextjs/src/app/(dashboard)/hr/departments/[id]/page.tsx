@@ -204,7 +204,9 @@ export default function DepartmentDetailPage() {
               <Descriptions.Item label="Üst Departman">
                 {department.parentDepartmentName || '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="Yönetici">{department.managerName || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Departman Müdürü">{department.managerName || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Maliyet Merkezi">{department.costCenter || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Konum">{department.location || '-'}</Descriptions.Item>
               <Descriptions.Item label="Durum">
                 <Tag color={department.isActive ? 'green' : 'default'}>
                   {department.isActive ? 'Aktif' : 'Pasif'}

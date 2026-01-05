@@ -76,9 +76,8 @@ export default function PipelineDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div
-                className={`w-11 h-11 rounded-xl flex items-center justify-center ${
-                  pipeline.isActive ? 'bg-indigo-100' : 'bg-slate-100'
-                }`}
+                className={`w-11 h-11 rounded-xl flex items-center justify-center ${pipeline.isActive ? 'bg-indigo-100' : 'bg-slate-100'
+                  }`}
               >
                 <FunnelIcon
                   className={`w-6 h-6 ${pipeline.isActive ? 'text-indigo-600' : 'text-slate-400'}`}
@@ -147,7 +146,7 @@ export default function PipelineDetailPage() {
                   <div className="flex items-center gap-1">
                     <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
-                      {pipeline.createdAt ? dayjs(pipeline.createdAt).format('DD/MM/YYYY') : '-'}
+                      {pipeline.createdAt && dayjs(pipeline.createdAt).year() > 2000 ? dayjs(pipeline.createdAt).format('DD/MM/YYYY') : '-'}
                     </span>
                   </div>
                 </div>

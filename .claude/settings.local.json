@@ -116,7 +116,9 @@
       "Bash(net start postgresql-x64-16)",
       "Bash(sc query:*)",
       "Bash(\"C:\\\\Program Files\\\\PostgreSQL\\\\17\\\\bin\\\\pg_ctl.exe\":*)",
-      "Bash(\"C:\\\\Program Files\\\\PostgreSQL\\\\17\\\\bin\\\\initdb.exe\" -D \"C:\\\\Program Files\\\\PostgreSQL\\\\17\\\\data\" -U postgres -W -E UTF8 --locale=Turkish_Turkey.1254)"
+      "Bash(\"C:\\\\Program Files\\\\PostgreSQL\\\\17\\\\bin\\\\initdb.exe\" -D \"C:\\\\Program Files\\\\PostgreSQL\\\\17\\\\data\" -U postgres -W -E UTF8 --locale=Turkish_Turkey.1254)",
+      "Bash(npm run lint)",
+      "Bash(tee:*)"
     ],
     "deny": [],
     "ask": []

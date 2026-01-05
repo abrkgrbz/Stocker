@@ -151,10 +151,10 @@ export default function DepartmentForm({ form, initialValues, onFinish, loading 
                 </Form.Item>
               </div>
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Yönetici</label>
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Departman Müdürü</label>
                 <Form.Item name="managerId" className="mb-0">
                   <Select
-                    placeholder="Yönetici seçin"
+                    placeholder="Müdür seçin"
                     allowClear
                     showSearch
                     optionFilterProp="label"
@@ -163,6 +163,43 @@ export default function DepartmentForm({ form, initialValues, onFinish, loading 
                       label: e.fullName,
                     }))}
                     className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── EK BİLGİLER ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Ek Bilgiler
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Maliyet Merkezi</label>
+                <Form.Item name="costCenter" className="mb-0">
+                  <Input
+                    placeholder="Örn: CC-100"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Konum</label>
+                <Form.Item name="location" className="mb-0">
+                  <Input
+                    placeholder="Örn: Merkez Ofis, Kat 3"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sıralama</label>
+                <Form.Item name="displayOrder" className="mb-0" initialValue={0}>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
               </div>

@@ -443,7 +443,7 @@ export default function PipelinesPage() {
                     )}
                   </div>
                   <Tag color="blue" className="border-slate-200">
-                    {stage.order}. Sıra
+                    {stage.order || index + 1}. Sıra
                   </Tag>
                 </div>
               ))}
