@@ -11,16 +11,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "District",
-                schema: "crm",
-                table: "Competitors");
-
-            migrationBuilder.DropColumn(
-                name: "DistrictId",
-                schema: "crm",
-                table: "Competitors");
-
             migrationBuilder.AddColumn<DateTime>(
                 name: "CreatedAt",
                 schema: "crm",
@@ -49,21 +39,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                 name: "UpdatedAt",
                 schema: "crm",
                 table: "Pipelines");
-
-            migrationBuilder.AddColumn<string>(
-                name: "District",
-                schema: "crm",
-                table: "Competitors",
-                type: "character varying(100)",
-                maxLength: 100,
-                nullable: true);
-
-            migrationBuilder.AddColumn<Guid>(
-                name: "DistrictId",
-                schema: "crm",
-                table: "Competitors",
-                type: "uuid",
-                nullable: true);
         }
     }
 }
