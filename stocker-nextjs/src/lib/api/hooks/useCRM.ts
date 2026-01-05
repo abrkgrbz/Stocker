@@ -189,10 +189,10 @@ export function useCustomers(filters?: any) {
   });
 }
 
-export function useCustomer(id: string) {
+export function useCustomer(id: string | undefined) {
   return useQuery<Customer>({
-    queryKey: crmKeys.customer(id),
-    queryFn: () => CRMService.getCustomer(id),
+    queryKey: crmKeys.customer(id || ''),
+    queryFn: () => CRMService.getCustomer(id!),
     ...queryOptions.detail({ enabled: !!id }),
   });
 }
