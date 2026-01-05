@@ -70,7 +70,7 @@ export default function CustomersPage() {
     router.push(`/crm/customers/${customer.id}/edit`);
   };
 
-  const handleView = (customerId: number) => {
+  const handleView = (customerId: string) => {
     router.push(`/crm/customers/${customerId}`);
   };
 

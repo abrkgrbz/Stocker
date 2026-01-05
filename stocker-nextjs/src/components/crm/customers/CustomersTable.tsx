@@ -26,7 +26,7 @@ interface CustomersTableProps {
   totalCount: number;
   onPageChange: (page: number, size: number) => void;
   onEdit: (customer: Customer) => void;
-  onView: (customerId: number) => void;
+  onView: (customerId: string) => void;
   onDelete?: (customerId: string) => Promise<void>;
 }
 
@@ -156,7 +156,7 @@ export function CustomersTable({
                 key: 'view',
                 label: 'Detayları Gör',
                 icon: <EyeIcon className="w-4 h-4" />,
-                onClick: () => onView(parseInt(record.id, 10)),
+                onClick: () => onView(record.id),
               },
               {
                 key: 'edit',
@@ -241,7 +241,7 @@ export function CustomersTable({
         }}
         scroll={{ x: 1200 }}
         onRow={(record) => ({
-          onClick: () => onView(parseInt(record.id, 10)),
+          onClick: () => onView(record.id),
           className: 'cursor-pointer hover:bg-gray-50',
         })}
         locale={{
