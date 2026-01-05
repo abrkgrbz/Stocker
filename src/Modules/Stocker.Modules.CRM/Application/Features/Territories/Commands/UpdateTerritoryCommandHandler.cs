@@ -47,8 +47,12 @@ public class UpdateTerritoryCommandHandler : IRequestHandler<UpdateTerritoryComm
         if (request.PostalCodeRange != null)
             territory.SetPostalCodeRange(request.PostalCodeRange);
 
-        if (request.SalesTarget.HasValue && request.TargetYear.HasValue)
-            territory.SetSalesTarget(request.SalesTarget.Value, request.TargetYear.Value);
+        if (request.SalesTarget.HasValue)
+        {
+            // Use provided year or default to current year
+            var targetYear = request.TargetYear ?? DateTime.UtcNow.Year;
+            territory.SetSalesTarget(request.SalesTarget.Value, targetYear);
+        }
 
         if (request.AssignedSalesTeamId.HasValue)
             territory.AssignToSalesTeam(request.AssignedSalesTeamId.Value);
