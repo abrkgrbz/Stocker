@@ -63,17 +63,25 @@ public class TerritoriesController : ControllerBase
         var tenantId = GetTenantId();
 
         var command = new CreateTerritoryCommand(
-            tenantId,
-            request.Name,
-            request.Code,
-            request.TerritoryType,
-            request.Description,
-            null,
-            request.Country,
-            null,
-            request.Region,
-            request.City,
-            request.District);
+            TenantId: tenantId,
+            Name: request.Name,
+            Code: request.Code,
+            TerritoryType: request.TerritoryType,
+            Description: request.Description,
+            ParentTerritoryId: request.ParentTerritoryId,
+            Country: request.Country,
+            CountryCode: request.CountryCode,
+            Region: request.Region,
+            City: request.City,
+            District: request.District,
+            PostalCodeRange: request.PostalCodeRange,
+            SalesTarget: request.SalesTarget,
+            TargetYear: request.TargetYear,
+            Currency: request.Currency ?? "TRY",
+            AssignedSalesTeamId: request.AssignedSalesTeamId,
+            PrimarySalesRepId: request.PrimarySalesRepId,
+            PrimarySalesRepName: request.PrimarySalesRepName,
+            IsActive: request.IsActive ?? true);
 
         var result = await _mediator.Send(command, cancellationToken);
 
@@ -91,22 +99,22 @@ public class TerritoriesController : ControllerBase
         var tenantId = GetTenantId();
 
         var command = new UpdateTerritoryCommand(
-            id,
-            tenantId,
-            request.Name,
-            request.Code,
-            request.Description,
-            request.Country,
-            request.Region,
-            request.City,
-            request.District,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            request.IsActive);
+            Id: id,
+            TenantId: tenantId,
+            Name: request.Name,
+            Code: request.Code,
+            Description: request.Description,
+            Country: request.Country,
+            Region: request.Region,
+            City: request.City,
+            District: request.District,
+            PostalCodeRange: request.PostalCodeRange,
+            SalesTarget: request.SalesTarget,
+            TargetYear: request.TargetYear,
+            AssignedSalesTeamId: request.AssignedSalesTeamId,
+            PrimarySalesRepId: request.PrimarySalesRepId,
+            PrimarySalesRepName: request.PrimarySalesRepName,
+            IsActive: request.IsActive);
 
         var result = await _mediator.Send(command, cancellationToken);
 
@@ -137,12 +145,20 @@ public record CreateTerritoryRequest(
     string Code,
     TerritoryType TerritoryType = TerritoryType.Region,
     string? Description = null,
+    Guid? ParentTerritoryId = null,
     string? Country = null,
+    string? CountryCode = null,
     string? Region = null,
     string? City = null,
     string? District = null,
+    string? PostalCodeRange = null,
     decimal? SalesTarget = null,
-    int? TargetYear = null);
+    int? TargetYear = null,
+    string? Currency = null,
+    Guid? AssignedSalesTeamId = null,
+    int? PrimarySalesRepId = null,
+    string? PrimarySalesRepName = null,
+    bool? IsActive = null);
 
 public record UpdateTerritoryRequest(
     string? Name = null,
@@ -153,6 +169,12 @@ public record UpdateTerritoryRequest(
     string? Region = null,
     string? City = null,
     string? District = null,
+    string? PostalCodeRange = null,
+    decimal? SalesTarget = null,
+    int? TargetYear = null,
+    Guid? AssignedSalesTeamId = null,
+    int? PrimarySalesRepId = null,
+    string? PrimarySalesRepName = null,
     bool? IsActive = null);
 
 public record AssignUserRequest(
