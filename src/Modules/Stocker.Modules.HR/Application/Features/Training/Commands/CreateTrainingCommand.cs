@@ -1,9 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Training.Commands;
@@ -11,10 +9,9 @@ namespace Stocker.Modules.HR.Application.Features.Training.Commands;
 /// <summary>
 /// Command to create a new training program
 /// </summary>
-public class CreateTrainingCommand : IRequest<Result<TrainingDto>>
+public record CreateTrainingCommand : IRequest<Result<TrainingDto>>
 {
-    public Guid TenantId { get; set; }
-    public CreateTrainingDto TrainingData { get; set; } = null!;
+    public CreateTrainingDto TrainingData { get; init; } = null!;
 }
 
 /// <summary>
@@ -24,9 +21,6 @@ public class CreateTrainingCommandValidator : AbstractValidator<CreateTrainingCo
 {
     public CreateTrainingCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.TrainingData)
             .NotNull().WithMessage("Training data is required");
 
@@ -79,21 +73,17 @@ public class CreateTrainingCommandValidator : AbstractValidator<CreateTrainingCo
 /// </summary>
 public class CreateTrainingCommandHandler : IRequestHandler<CreateTrainingCommand, Result<TrainingDto>>
 {
-    private readonly ITrainingRepository _trainingRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateTrainingCommandHandler(
-        ITrainingRepository trainingRepository,
-        IUnitOfWork unitOfWork)
+    public CreateTrainingCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _trainingRepository = trainingRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<TrainingDto>> Handle(CreateTrainingCommand request, CancellationToken cancellationToken)
     {
         // Check if training with same code already exists
-        var existingTraining = await _trainingRepository.GetByCodeAsync(request.TrainingData.Code, cancellationToken);
+        var existingTraining = await _unitOfWork.Trainings.GetByCodeAsync(request.TrainingData.Code, cancellationToken);
         if (existingTraining != null)
         {
             return Result<TrainingDto>.Failure(
@@ -122,7 +112,7 @@ public class CreateTrainingCommandHandler : IRequestHandler<CreateTrainingComman
             request.TrainingData.IsMandatory);
 
         // Set tenant ID
-        training.SetTenantId(request.TenantId);
+        training.SetTenantId(_unitOfWork.TenantId);
 
         // Update additional details
         training.Update(
@@ -161,7 +151,7 @@ public class CreateTrainingCommandHandler : IRequestHandler<CreateTrainingComman
         training.SetMandatory(request.TrainingData.IsMandatory);
 
         // Save to repository
-        await _trainingRepository.AddAsync(training, cancellationToken);
+        await _unitOfWork.Trainings.AddAsync(training, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Map to DTO

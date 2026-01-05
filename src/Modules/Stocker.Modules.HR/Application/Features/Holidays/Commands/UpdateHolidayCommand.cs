@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Holidays.Commands;
@@ -10,11 +9,10 @@ namespace Stocker.Modules.HR.Application.Features.Holidays.Commands;
 /// <summary>
 /// Command to update an existing holiday
 /// </summary>
-public class UpdateHolidayCommand : IRequest<Result<HolidayDto>>
+public record UpdateHolidayCommand : IRequest<Result<HolidayDto>>
 {
-    public Guid TenantId { get; set; }
-    public int HolidayId { get; set; }
-    public UpdateHolidayDto HolidayData { get; set; } = null!;
+    public int HolidayId { get; init; }
+    public UpdateHolidayDto HolidayData { get; init; } = null!;
 }
 
 /// <summary>
@@ -24,9 +22,6 @@ public class UpdateHolidayCommandValidator : AbstractValidator<UpdateHolidayComm
 {
     public UpdateHolidayCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.HolidayId)
             .GreaterThan(0).WithMessage("Holiday ID must be greater than 0");
 
@@ -59,21 +54,17 @@ public class UpdateHolidayCommandValidator : AbstractValidator<UpdateHolidayComm
 /// </summary>
 public class UpdateHolidayCommandHandler : IRequestHandler<UpdateHolidayCommand, Result<HolidayDto>>
 {
-    private readonly IHolidayRepository _holidayRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateHolidayCommandHandler(
-        IHolidayRepository holidayRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateHolidayCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _holidayRepository = holidayRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<HolidayDto>> Handle(UpdateHolidayCommand request, CancellationToken cancellationToken)
     {
         // Get the existing holiday
-        var holiday = await _holidayRepository.GetByIdAsync(request.HolidayId, cancellationToken);
+        var holiday = await _unitOfWork.Holidays.GetByIdAsync(request.HolidayId, cancellationToken);
         if (holiday == null)
         {
             return Result<HolidayDto>.Failure(
@@ -83,7 +74,7 @@ public class UpdateHolidayCommandHandler : IRequestHandler<UpdateHolidayCommand,
         // Check if the date is being changed and if another holiday exists on the new date
         if (holiday.Date != request.HolidayData.Date)
         {
-            var existingHoliday = await _holidayRepository.GetByDateAsync(request.HolidayData.Date, cancellationToken);
+            var existingHoliday = await _unitOfWork.Holidays.GetByDateAsync(request.HolidayData.Date, cancellationToken);
             if (existingHoliday != null && existingHoliday.Id != request.HolidayId)
             {
                 return Result<HolidayDto>.Failure(
@@ -101,7 +92,6 @@ public class UpdateHolidayCommandHandler : IRequestHandler<UpdateHolidayCommand,
             request.HolidayData.Description);
 
         // Save changes
-        await _holidayRepository.UpdateAsync(holiday, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Map to DTO

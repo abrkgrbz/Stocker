@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Documents.Commands;
@@ -10,12 +9,11 @@ namespace Stocker.Modules.HR.Application.Features.Documents.Commands;
 /// <summary>
 /// Command to verify an employee document
 /// </summary>
-public class VerifyEmployeeDocumentCommand : IRequest<Result<EmployeeDocumentDto>>
+public record VerifyEmployeeDocumentCommand : IRequest<Result<EmployeeDocumentDto>>
 {
-    public Guid TenantId { get; set; }
-    public int DocumentId { get; set; }
-    public int VerifiedById { get; set; }
-    public VerifyDocumentDto VerificationData { get; set; } = null!;
+    public int DocumentId { get; init; }
+    public int VerifiedById { get; init; }
+    public VerifyDocumentDto VerificationData { get; init; } = null!;
 }
 
 /// <summary>
@@ -25,9 +23,6 @@ public class VerifyEmployeeDocumentCommandValidator : AbstractValidator<VerifyEm
 {
     public VerifyEmployeeDocumentCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.DocumentId)
             .GreaterThan(0).WithMessage("Valid document ID is required");
 
@@ -50,20 +45,16 @@ public class VerifyEmployeeDocumentCommandValidator : AbstractValidator<VerifyEm
 /// </summary>
 public class VerifyEmployeeDocumentCommandHandler : IRequestHandler<VerifyEmployeeDocumentCommand, Result<EmployeeDocumentDto>>
 {
-    private readonly IEmployeeDocumentRepository _documentRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public VerifyEmployeeDocumentCommandHandler(
-        IEmployeeDocumentRepository documentRepository,
-        IUnitOfWork unitOfWork)
+    public VerifyEmployeeDocumentCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _documentRepository = documentRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<EmployeeDocumentDto>> Handle(VerifyEmployeeDocumentCommand request, CancellationToken cancellationToken)
     {
-        var document = await _documentRepository.GetByIdAsync(request.DocumentId, cancellationToken);
+        var document = await _unitOfWork.EmployeeDocuments.GetByIdAsync(request.DocumentId, cancellationToken);
         if (document == null)
         {
             return Result<EmployeeDocumentDto>.Failure(

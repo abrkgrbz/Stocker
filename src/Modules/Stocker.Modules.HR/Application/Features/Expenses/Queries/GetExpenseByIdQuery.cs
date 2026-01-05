@@ -1,6 +1,7 @@
+using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Expenses.Queries;
@@ -8,10 +9,18 @@ namespace Stocker.Modules.HR.Application.Features.Expenses.Queries;
 /// <summary>
 /// Query to get an expense by ID
 /// </summary>
-public class GetExpenseByIdQuery : IRequest<Result<ExpenseDto>>
+public record GetExpenseByIdQuery(int ExpenseId) : IRequest<Result<ExpenseDto>>;
+
+/// <summary>
+/// Validator for GetExpenseByIdQuery
+/// </summary>
+public class GetExpenseByIdQueryValidator : AbstractValidator<GetExpenseByIdQuery>
 {
-    public Guid TenantId { get; set; }
-    public int ExpenseId { get; set; }
+    public GetExpenseByIdQueryValidator()
+    {
+        RuleFor(x => x.ExpenseId)
+            .GreaterThan(0).WithMessage("Expense ID is required");
+    }
 }
 
 /// <summary>
@@ -19,16 +28,16 @@ public class GetExpenseByIdQuery : IRequest<Result<ExpenseDto>>
 /// </summary>
 public class GetExpenseByIdQueryHandler : IRequestHandler<GetExpenseByIdQuery, Result<ExpenseDto>>
 {
-    private readonly IExpenseRepository _expenseRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetExpenseByIdQueryHandler(IExpenseRepository expenseRepository)
+    public GetExpenseByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _expenseRepository = expenseRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<ExpenseDto>> Handle(GetExpenseByIdQuery request, CancellationToken cancellationToken)
     {
-        var expense = await _expenseRepository.GetByIdAsync(request.ExpenseId, cancellationToken);
+        var expense = await _unitOfWork.Expenses.GetByIdAsync(request.ExpenseId, cancellationToken);
         if (expense == null)
         {
             return Result<ExpenseDto>.Failure(

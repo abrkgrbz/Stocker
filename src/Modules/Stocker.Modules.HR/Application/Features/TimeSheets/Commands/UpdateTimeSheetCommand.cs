@@ -1,6 +1,5 @@
 using MediatR;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.TimeSheets.Commands;
@@ -10,7 +9,6 @@ namespace Stocker.Modules.HR.Application.Features.TimeSheets.Commands;
 /// </summary>
 public record UpdateTimeSheetCommand : IRequest<Result<int>>
 {
-    public Guid TenantId { get; init; }
     public int TimeSheetId { get; init; }
     public decimal? LeaveHours { get; init; }
     public decimal? HolidayHours { get; init; }
@@ -22,21 +20,17 @@ public record UpdateTimeSheetCommand : IRequest<Result<int>>
 /// </summary>
 public class UpdateTimeSheetCommandHandler : IRequestHandler<UpdateTimeSheetCommand, Result<int>>
 {
-    private readonly ITimeSheetRepository _timeSheetRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateTimeSheetCommandHandler(
-        ITimeSheetRepository timeSheetRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateTimeSheetCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _timeSheetRepository = timeSheetRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<int>> Handle(UpdateTimeSheetCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(UpdateTimeSheetCommand request, CancellationToken cancellationToken)
     {
         // Get existing timesheet
-        var timeSheet = await _timeSheetRepository.GetByIdAsync(request.TimeSheetId, cancellationToken);
+        var timeSheet = await _unitOfWork.TimeSheets.GetByIdAsync(request.TimeSheetId, cancellationToken);
         if (timeSheet == null)
         {
             return Result<int>.Failure(
@@ -61,7 +55,7 @@ public class UpdateTimeSheetCommandHandler : IRequestHandler<UpdateTimeSheetComm
             timeSheet.SetNotes(request.Notes);
 
         // Save changes
-        _timeSheetRepository.Update(timeSheet);
+        _unitOfWork.TimeSheets.Update(timeSheet);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(timeSheet.Id);

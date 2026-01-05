@@ -7,7 +7,6 @@ using Stocker.Modules.HR.Application.Features.Payroll.Queries;
 using Stocker.Modules.HR.Application.Services;
 using Stocker.Modules.HR.Domain.Enums;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.API.Controllers;
@@ -20,16 +19,13 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class PayrollController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
     private readonly ITurkishPayrollCalculationService _calculationService;
 
     public PayrollController(
         IMediator mediator,
-        ITenantService tenantService,
         ITurkishPayrollCalculationService calculationService)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
         _calculationService = calculationService;
     }
 
@@ -46,12 +42,8 @@ public class PayrollController : ControllerBase
         [FromQuery] PayrollStatus? status = null,
         [FromQuery] int? departmentId = null)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetPayrollsQuery
         {
-            TenantId = tenantId.Value,
             EmployeeId = employeeId,
             Year = year,
             Month = month,
@@ -72,15 +64,7 @@ public class PayrollController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<ActionResult<PayrollSummaryDto>> GetPayrollSummary(int year, int month)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var query = new GetPayrollSummaryQuery
-        {
-            TenantId = tenantId.Value,
-            Year = year,
-            Month = month
-        };
+        var query = new GetPayrollSummaryQuery(year, month);
 
         var result = await _mediator.Send(query);
         if (result.IsFailure) return BadRequest(result.Error);
@@ -97,12 +81,8 @@ public class PayrollController : ControllerBase
         int employeeId,
         [FromQuery] int? year = null)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetPayrollsQuery
         {
-            TenantId = tenantId.Value,
             EmployeeId = employeeId,
             Year = year
         };
@@ -120,10 +100,7 @@ public class PayrollController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<PayrollDto>> GetPayroll(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var query = new GetPayrollByIdQuery { TenantId = tenantId.Value, PayrollId = id };
+        var query = new GetPayrollByIdQuery(id);
         var result = await _mediator.Send(query);
 
         if (result.IsFailure)
@@ -142,10 +119,7 @@ public class PayrollController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<ActionResult<PayrollDto>> CreatePayroll(CreatePayrollDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new CreatePayrollCommand { TenantId = tenantId.Value, PayrollData = dto };
+        var command = new CreatePayrollCommand { PayrollData = dto };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure) return BadRequest(result.Error);
@@ -161,12 +135,8 @@ public class PayrollController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<PayrollItemDto>> AddPayrollItem(int id, AddPayrollItemDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new AddPayrollItemCommand
         {
-            TenantId = tenantId.Value,
             PayrollId = id,
             ItemData = dto
         };
@@ -189,12 +159,8 @@ public class PayrollController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<PayrollDto>> CalculatePayroll(int id, [FromQuery] int calculatedById)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new CalculatePayrollCommand
         {
-            TenantId = tenantId.Value,
             PayrollId = id,
             CalculatedById = calculatedById
         };
@@ -217,12 +183,8 @@ public class PayrollController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<PayrollDto>> ApprovePayroll(int id, [FromQuery] int approvedById, ApprovePayrollDto? dto = null)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new ApprovePayrollCommand
         {
-            TenantId = tenantId.Value,
             PayrollId = id,
             ApprovedById = approvedById,
             Notes = dto?.Notes
@@ -246,12 +208,8 @@ public class PayrollController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<PayrollDto>> MarkPayrollPaid(int id, MarkPayrollPaidDto? dto = null)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new MarkPayrollPaidCommand
         {
-            TenantId = tenantId.Value,
             PayrollId = id,
             PaymentData = dto ?? new MarkPayrollPaidDto()
         };
@@ -306,25 +264,11 @@ public class PayrollController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<ActionResult<decimal>> GetEmployeeCumulativeGross(int employeeId, int year, int month)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var query = new GetEmployeeCumulativeGrossQuery
-        {
-            TenantId = tenantId.Value,
-            EmployeeId = employeeId,
-            Year = year,
-            Month = month
-        };
+        var query = new GetEmployeeCumulativeGrossQuery(employeeId, year, month);
 
         var result = await _mediator.Send(query);
         if (result.IsFailure) return BadRequest(result.Error);
         return Ok(result.Value);
-    }
-
-    private static Error CreateTenantError()
-    {
-        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
     }
 }
 

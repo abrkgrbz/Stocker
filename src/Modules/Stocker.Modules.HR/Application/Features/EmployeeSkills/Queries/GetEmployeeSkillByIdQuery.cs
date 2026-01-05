@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.EmployeeSkills.Queries;
@@ -8,27 +8,23 @@ namespace Stocker.Modules.HR.Application.Features.EmployeeSkills.Queries;
 /// <summary>
 /// Query to get an employee skill by ID
 /// </summary>
-public class GetEmployeeSkillByIdQuery : IRequest<Result<EmployeeSkillDto>>
-{
-    public Guid TenantId { get; set; }
-    public int Id { get; set; }
-}
+public record GetEmployeeSkillByIdQuery(int Id) : IRequest<Result<EmployeeSkillDto>>;
 
 /// <summary>
 /// Handler for GetEmployeeSkillByIdQuery
 /// </summary>
 public class GetEmployeeSkillByIdQueryHandler : IRequestHandler<GetEmployeeSkillByIdQuery, Result<EmployeeSkillDto>>
 {
-    private readonly IEmployeeSkillRepository _repository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetEmployeeSkillByIdQueryHandler(IEmployeeSkillRepository repository)
+    public GetEmployeeSkillByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<EmployeeSkillDto>> Handle(GetEmployeeSkillByIdQuery request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.EmployeeSkills.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
             return Result<EmployeeSkillDto>.Failure(

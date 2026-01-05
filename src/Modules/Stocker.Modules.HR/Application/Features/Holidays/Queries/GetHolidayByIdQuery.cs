@@ -1,7 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Holidays.Queries;
@@ -9,11 +9,7 @@ namespace Stocker.Modules.HR.Application.Features.Holidays.Queries;
 /// <summary>
 /// Query to get a single holiday by ID
 /// </summary>
-public class GetHolidayByIdQuery : IRequest<Result<HolidayDto>>
-{
-    public Guid TenantId { get; set; }
-    public int HolidayId { get; set; }
-}
+public record GetHolidayByIdQuery(int HolidayId) : IRequest<Result<HolidayDto>>;
 
 /// <summary>
 /// Validator for GetHolidayByIdQuery
@@ -22,9 +18,6 @@ public class GetHolidayByIdQueryValidator : AbstractValidator<GetHolidayByIdQuer
 {
     public GetHolidayByIdQueryValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.HolidayId)
             .GreaterThan(0).WithMessage("Holiday ID must be greater than 0");
     }
@@ -35,16 +28,16 @@ public class GetHolidayByIdQueryValidator : AbstractValidator<GetHolidayByIdQuer
 /// </summary>
 public class GetHolidayByIdQueryHandler : IRequestHandler<GetHolidayByIdQuery, Result<HolidayDto>>
 {
-    private readonly IHolidayRepository _holidayRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetHolidayByIdQueryHandler(IHolidayRepository holidayRepository)
+    public GetHolidayByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _holidayRepository = holidayRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<HolidayDto>> Handle(GetHolidayByIdQuery request, CancellationToken cancellationToken)
     {
-        var holiday = await _holidayRepository.GetByIdAsync(request.HolidayId, cancellationToken);
+        var holiday = await _unitOfWork.Holidays.GetByIdAsync(request.HolidayId, cancellationToken);
 
         if (holiday == null)
         {

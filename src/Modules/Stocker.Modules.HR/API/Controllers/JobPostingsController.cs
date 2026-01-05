@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.JobPostings.Commands;
 using Stocker.Modules.HR.Application.Features.JobPostings.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.HR.API.Controllers;
 
@@ -17,15 +16,15 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class JobPostingsController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public JobPostingsController(IMediator mediator, ITenantService tenantService)
+    public JobPostingsController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     [HttpGet]
+    [ProducesResponseType(typeof(List<JobPostingDto>), 200)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<List<JobPostingDto>>> GetAll()
     {
         var result = await _mediator.Send(new GetJobPostingsQuery());
@@ -33,42 +32,47 @@ public class JobPostingsController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(JobPostingDto), 200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<JobPostingDto>> GetJobPosting(int id)
     {
-        var result = await _mediator.Send(new GetJobPostingByIdQuery { Id = id });
+        var result = await _mediator.Send(new GetJobPostingByIdQuery(id));
         if (result.IsFailure) return NotFound(result.Error);
         return Ok(result.Value);
     }
 
     [HttpPost]
+    [ProducesResponseType(typeof(int), 201)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<int>> Create(CreateJobPostingCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return Unauthorized();
-
-        var result = await _mediator.Send(command with { TenantId = tenantId.Value });
+        var result = await _mediator.Send(command);
         if (result.IsFailure) return BadRequest(result.Error);
         return CreatedAtAction(nameof(GetJobPosting), new { id = result.Value }, result.Value);
     }
 
     [HttpPut("{id}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult> Update(int id, UpdateJobPostingCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return Unauthorized();
-
-        var result = await _mediator.Send(command with { TenantId = tenantId.Value, JobPostingId = id });
+        var result = await _mediator.Send(command with { JobPostingId = id });
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }
 
     [HttpDelete("{id}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
     public async Task<IActionResult> Delete(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return Unauthorized();
-
-        var result = await _mediator.Send(new DeleteJobPostingCommand(tenantId.Value, id));
+        var result = await _mediator.Send(new DeleteJobPostingCommand(id));
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }

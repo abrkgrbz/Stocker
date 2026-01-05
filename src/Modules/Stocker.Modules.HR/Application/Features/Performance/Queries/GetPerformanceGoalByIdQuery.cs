@@ -1,7 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Performance.Queries;
@@ -9,11 +9,7 @@ namespace Stocker.Modules.HR.Application.Features.Performance.Queries;
 /// <summary>
 /// Query to get a single performance goal by ID
 /// </summary>
-public class GetPerformanceGoalByIdQuery : IRequest<Result<PerformanceGoalDto>>
-{
-    public Guid TenantId { get; set; }
-    public int GoalId { get; set; }
-}
+public record GetPerformanceGoalByIdQuery(int GoalId) : IRequest<Result<PerformanceGoalDto>>;
 
 /// <summary>
 /// Validator for GetPerformanceGoalByIdQuery
@@ -22,9 +18,6 @@ public class GetPerformanceGoalByIdQueryValidator : AbstractValidator<GetPerform
 {
     public GetPerformanceGoalByIdQueryValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.GoalId)
             .GreaterThan(0).WithMessage("Goal ID is required");
     }
@@ -35,36 +28,25 @@ public class GetPerformanceGoalByIdQueryValidator : AbstractValidator<GetPerform
 /// </summary>
 public class GetPerformanceGoalByIdQueryHandler : IRequestHandler<GetPerformanceGoalByIdQuery, Result<PerformanceGoalDto>>
 {
-    private readonly IPerformanceGoalRepository _goalRepository;
-    private readonly IEmployeeRepository _employeeRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetPerformanceGoalByIdQueryHandler(
-        IPerformanceGoalRepository goalRepository,
-        IEmployeeRepository employeeRepository)
+    public GetPerformanceGoalByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _goalRepository = goalRepository;
-        _employeeRepository = employeeRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PerformanceGoalDto>> Handle(GetPerformanceGoalByIdQuery request, CancellationToken cancellationToken)
     {
         // Get the goal
-        var goal = await _goalRepository.GetByIdAsync(request.GoalId, cancellationToken);
+        var goal = await _unitOfWork.PerformanceGoals.GetByIdAsync(request.GoalId, cancellationToken);
         if (goal == null)
         {
             return Result<PerformanceGoalDto>.Failure(
                 Error.NotFound("PerformanceGoal", $"Performance goal with ID {request.GoalId} not found"));
         }
 
-        // Verify tenant
-        if (goal.TenantId != request.TenantId)
-        {
-            return Result<PerformanceGoalDto>.Failure(
-                Error.Forbidden("PerformanceGoal.Tenant", "Access denied to this performance goal"));
-        }
-
         // Get employee info
-        var employee = await _employeeRepository.GetByIdAsync(goal.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(goal.EmployeeId, cancellationToken);
         if (employee == null)
         {
             return Result<PerformanceGoalDto>.Failure(
@@ -75,7 +57,7 @@ public class GetPerformanceGoalByIdQueryHandler : IRequestHandler<GetPerformance
         string? assignedByName = null;
         if (goal.AssignedById.HasValue)
         {
-            var assignedBy = await _employeeRepository.GetByIdAsync(goal.AssignedById.Value, cancellationToken);
+            var assignedBy = await _unitOfWork.Employees.GetByIdAsync(goal.AssignedById.Value, cancellationToken);
             if (assignedBy != null)
             {
                 assignedByName = $"{assignedBy.FirstName} {assignedBy.LastName}";

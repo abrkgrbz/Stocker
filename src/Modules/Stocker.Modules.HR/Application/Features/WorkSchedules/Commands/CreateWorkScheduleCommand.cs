@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.WorkSchedules.Commands;
@@ -11,10 +10,9 @@ namespace Stocker.Modules.HR.Application.Features.WorkSchedules.Commands;
 /// <summary>
 /// Command to create a new work schedule
 /// </summary>
-public class CreateWorkScheduleCommand : IRequest<Result<WorkScheduleDto>>
+public record CreateWorkScheduleCommand : IRequest<Result<WorkScheduleDto>>
 {
-    public Guid TenantId { get; set; }
-    public CreateWorkScheduleDto ScheduleData { get; set; } = null!;
+    public CreateWorkScheduleDto ScheduleData { get; init; } = null!;
 }
 
 /// <summary>
@@ -24,9 +22,6 @@ public class CreateWorkScheduleCommandValidator : AbstractValidator<CreateWorkSc
 {
     public CreateWorkScheduleCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.ScheduleData)
             .NotNull().WithMessage("Schedule data is required");
 
@@ -52,20 +47,10 @@ public class CreateWorkScheduleCommandValidator : AbstractValidator<CreateWorkSc
 /// </summary>
 public class CreateWorkScheduleCommandHandler : IRequestHandler<CreateWorkScheduleCommand, Result<WorkScheduleDto>>
 {
-    private readonly IWorkScheduleRepository _scheduleRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IShiftRepository _shiftRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateWorkScheduleCommandHandler(
-        IWorkScheduleRepository scheduleRepository,
-        IEmployeeRepository employeeRepository,
-        IShiftRepository shiftRepository,
-        IUnitOfWork unitOfWork)
+    public CreateWorkScheduleCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _scheduleRepository = scheduleRepository;
-        _employeeRepository = employeeRepository;
-        _shiftRepository = shiftRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -74,7 +59,7 @@ public class CreateWorkScheduleCommandHandler : IRequestHandler<CreateWorkSchedu
         var data = request.ScheduleData;
 
         // Validate employee exists
-        var employee = await _employeeRepository.GetByIdAsync(data.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(data.EmployeeId, cancellationToken);
         if (employee == null)
         {
             return Result<WorkScheduleDto>.Failure(
@@ -82,7 +67,7 @@ public class CreateWorkScheduleCommandHandler : IRequestHandler<CreateWorkSchedu
         }
 
         // Validate shift exists
-        var shift = await _shiftRepository.GetByIdAsync(data.ShiftId, cancellationToken);
+        var shift = await _unitOfWork.Shifts.GetByIdAsync(data.ShiftId, cancellationToken);
         if (shift == null)
         {
             return Result<WorkScheduleDto>.Failure(
@@ -90,7 +75,7 @@ public class CreateWorkScheduleCommandHandler : IRequestHandler<CreateWorkSchedu
         }
 
         // Check if schedule already exists for this employee/date
-        var employeeSchedules = await _scheduleRepository.GetByEmployeeAsync(data.EmployeeId, cancellationToken);
+        var employeeSchedules = await _unitOfWork.WorkSchedules.GetByEmployeeAsync(data.EmployeeId, cancellationToken);
         var existingSchedule = employeeSchedules.FirstOrDefault(s => s.Date.Date == data.Date.Date);
         if (existingSchedule != null)
         {
@@ -105,14 +90,14 @@ public class CreateWorkScheduleCommandHandler : IRequestHandler<CreateWorkSchedu
             data.Date,
             data.IsWorkDay);
 
-        schedule.SetTenantId(request.TenantId);
+        schedule.SetTenantId(_unitOfWork.TenantId);
 
         if (!string.IsNullOrEmpty(data.Notes))
         {
             schedule.SetNotes(data.Notes);
         }
 
-        await _scheduleRepository.AddAsync(schedule, cancellationToken);
+        await _unitOfWork.WorkSchedules.AddAsync(schedule, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new WorkScheduleDto

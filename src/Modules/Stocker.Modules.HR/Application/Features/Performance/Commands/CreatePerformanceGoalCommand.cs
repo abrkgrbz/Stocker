@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Performance.Commands;
@@ -11,11 +10,10 @@ namespace Stocker.Modules.HR.Application.Features.Performance.Commands;
 /// <summary>
 /// Command to create a performance goal for an employee
 /// </summary>
-public class CreatePerformanceGoalCommand : IRequest<Result<PerformanceGoalDto>>
+public record CreatePerformanceGoalCommand : IRequest<Result<PerformanceGoalDto>>
 {
-    public Guid TenantId { get; set; }
-    public CreatePerformanceGoalDto GoalData { get; set; } = null!;
-    public int? AssignedById { get; set; }
+    public CreatePerformanceGoalDto GoalData { get; init; } = null!;
+    public int? AssignedById { get; init; }
 }
 
 /// <summary>
@@ -25,9 +23,6 @@ public class CreatePerformanceGoalCommandValidator : AbstractValidator<CreatePer
 {
     public CreatePerformanceGoalCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.GoalData)
             .NotNull().WithMessage("Goal data is required");
 
@@ -68,20 +63,10 @@ public class CreatePerformanceGoalCommandValidator : AbstractValidator<CreatePer
 /// </summary>
 public class CreatePerformanceGoalCommandHandler : IRequestHandler<CreatePerformanceGoalCommand, Result<PerformanceGoalDto>>
 {
-    private readonly IPerformanceGoalRepository _goalRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IPerformanceReviewRepository _reviewRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreatePerformanceGoalCommandHandler(
-        IPerformanceGoalRepository goalRepository,
-        IEmployeeRepository employeeRepository,
-        IPerformanceReviewRepository reviewRepository,
-        IUnitOfWork unitOfWork)
+    public CreatePerformanceGoalCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _goalRepository = goalRepository;
-        _employeeRepository = employeeRepository;
-        _reviewRepository = reviewRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -90,7 +75,7 @@ public class CreatePerformanceGoalCommandHandler : IRequestHandler<CreatePerform
         var data = request.GoalData;
 
         // Validate employee
-        var employee = await _employeeRepository.GetByIdAsync(data.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(data.EmployeeId, cancellationToken);
         if (employee == null)
         {
             return Result<PerformanceGoalDto>.Failure(
@@ -100,7 +85,7 @@ public class CreatePerformanceGoalCommandHandler : IRequestHandler<CreatePerform
         // Validate performance review if specified
         if (data.PerformanceReviewId.HasValue)
         {
-            var review = await _reviewRepository.GetByIdAsync(data.PerformanceReviewId.Value, cancellationToken);
+            var review = await _unitOfWork.PerformanceReviews.GetByIdAsync(data.PerformanceReviewId.Value, cancellationToken);
             if (review == null)
             {
                 return Result<PerformanceGoalDto>.Failure(
@@ -118,7 +103,7 @@ public class CreatePerformanceGoalCommandHandler : IRequestHandler<CreatePerform
         string? assignedByName = null;
         if (request.AssignedById.HasValue)
         {
-            var assignedBy = await _employeeRepository.GetByIdAsync(request.AssignedById.Value, cancellationToken);
+            var assignedBy = await _unitOfWork.Employees.GetByIdAsync(request.AssignedById.Value, cancellationToken);
             if (assignedBy == null)
             {
                 return Result<PerformanceGoalDto>.Failure(
@@ -139,7 +124,7 @@ public class CreatePerformanceGoalCommandHandler : IRequestHandler<CreatePerform
             data.PerformanceReviewId);
 
         // Set tenant ID
-        goal.SetTenantId(request.TenantId);
+        goal.SetTenantId(_unitOfWork.TenantId);
 
         // Set metrics if provided
         if (!string.IsNullOrEmpty(data.Metrics))
@@ -154,7 +139,7 @@ public class CreatePerformanceGoalCommandHandler : IRequestHandler<CreatePerform
         }
 
         // Save to repository
-        await _goalRepository.AddAsync(goal, cancellationToken);
+        await _unitOfWork.PerformanceGoals.AddAsync(goal, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Map to DTO

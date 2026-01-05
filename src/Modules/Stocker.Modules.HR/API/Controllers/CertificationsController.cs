@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.Certifications.Commands;
 using Stocker.Modules.HR.Application.Features.Certifications.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.HR.API.Controllers;
 
@@ -17,12 +16,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class CertificationsController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public CertificationsController(IMediator mediator, ITenantService tenantService)
+    public CertificationsController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -55,16 +52,12 @@ public class CertificationsController : ControllerBase
     /// Create a new certification
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(Guid), 201)]
+    [ProducesResponseType(typeof(int), 201)]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
-    public async Task<ActionResult<Guid>> CreateCertification(CreateCertificationCommand command)
+    public async Task<ActionResult<int>> CreateCertification(CreateCertificationCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant ID is required");
-
-        var commandWithTenant = command with { TenantId = tenantId.Value };
-        var result = await _mediator.Send(commandWithTenant);
+        var result = await _mediator.Send(command);
 
         if (result.IsFailure)
             return BadRequest(result.Error);
@@ -76,17 +69,14 @@ public class CertificationsController : ControllerBase
     /// Update an existing certification
     /// </summary>
     [HttpPut("{id}")]
-    [ProducesResponseType(typeof(Guid), 200)]
+    [ProducesResponseType(typeof(int), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     [ProducesResponseType(401)]
-    public async Task<ActionResult<Guid>> UpdateCertification(int id, UpdateCertificationCommand command)
+    public async Task<ActionResult<int>> UpdateCertification(int id, UpdateCertificationCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant ID is required");
-
-        var commandWithTenant = command with { TenantId = tenantId.Value, CertificationId = id };
-        var result = await _mediator.Send(commandWithTenant);
+        var commandWithId = command with { CertificationId = id };
+        var result = await _mediator.Send(commandWithId);
 
         if (result.IsFailure)
             return BadRequest(result.Error);
@@ -104,10 +94,7 @@ public class CertificationsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> DeleteCertification(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant ID is required");
-
-        var command = new DeleteCertificationCommand { TenantId = tenantId.Value, CertificationId = id };
+        var command = new DeleteCertificationCommand { CertificationId = id };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)

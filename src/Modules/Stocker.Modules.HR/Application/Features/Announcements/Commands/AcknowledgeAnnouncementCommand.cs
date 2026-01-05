@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Announcements.Commands;
@@ -11,12 +10,11 @@ namespace Stocker.Modules.HR.Application.Features.Announcements.Commands;
 /// <summary>
 /// Command to acknowledge an announcement by an employee
 /// </summary>
-public class AcknowledgeAnnouncementCommand : IRequest<Result<bool>>
+public record AcknowledgeAnnouncementCommand : IRequest<Result<bool>>
 {
-    public Guid TenantId { get; set; }
-    public int AnnouncementId { get; set; }
-    public int EmployeeId { get; set; }
-    public AcknowledgeAnnouncementDto AcknowledgmentData { get; set; } = null!;
+    public int AnnouncementId { get; init; }
+    public int EmployeeId { get; init; }
+    public AcknowledgeAnnouncementDto? AcknowledgmentData { get; init; }
 }
 
 /// <summary>
@@ -26,9 +24,6 @@ public class AcknowledgeAnnouncementCommandValidator : AbstractValidator<Acknowl
 {
     public AcknowledgeAnnouncementCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.AnnouncementId)
             .GreaterThan(0).WithMessage("Valid announcement ID is required");
 
@@ -37,7 +32,7 @@ public class AcknowledgeAnnouncementCommandValidator : AbstractValidator<Acknowl
 
         When(x => x.AcknowledgmentData != null, () =>
         {
-            RuleFor(x => x.AcknowledgmentData.Comments)
+            RuleFor(x => x.AcknowledgmentData!.Comments)
                 .MaximumLength(500).WithMessage("Comments must not exceed 500 characters");
         });
     }
@@ -48,23 +43,16 @@ public class AcknowledgeAnnouncementCommandValidator : AbstractValidator<Acknowl
 /// </summary>
 public class AcknowledgeAnnouncementCommandHandler : IRequestHandler<AcknowledgeAnnouncementCommand, Result<bool>>
 {
-    private readonly IAnnouncementRepository _announcementRepository;
-    private readonly IAnnouncementAcknowledgmentRepository _acknowledgmentRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public AcknowledgeAnnouncementCommandHandler(
-        IAnnouncementRepository announcementRepository,
-        IAnnouncementAcknowledgmentRepository acknowledgmentRepository,
-        IUnitOfWork unitOfWork)
+    public AcknowledgeAnnouncementCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _announcementRepository = announcementRepository;
-        _acknowledgmentRepository = acknowledgmentRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(AcknowledgeAnnouncementCommand request, CancellationToken cancellationToken)
     {
-        var announcement = await _announcementRepository.GetByIdAsync(request.AnnouncementId, cancellationToken);
+        var announcement = await _unitOfWork.Announcements.GetByIdAsync(request.AnnouncementId, cancellationToken);
         if (announcement == null)
         {
             return Result<bool>.Failure(
@@ -78,7 +66,7 @@ public class AcknowledgeAnnouncementCommandHandler : IRequestHandler<Acknowledge
         }
 
         // Check if already acknowledged by getting all acknowledgments and filtering
-        var allAcknowledgments = await _acknowledgmentRepository.GetAllAsync(cancellationToken);
+        var allAcknowledgments = await _unitOfWork.AnnouncementAcknowledgments.GetAllAsync(cancellationToken);
         var existingAck = allAcknowledgments.FirstOrDefault(a =>
             a.AnnouncementId == request.AnnouncementId &&
             a.EmployeeId == request.EmployeeId);
@@ -94,9 +82,9 @@ public class AcknowledgeAnnouncementCommandHandler : IRequestHandler<Acknowledge
             request.EmployeeId,
             request.AcknowledgmentData?.Comments);
 
-        acknowledgment.SetTenantId(request.TenantId);
+        acknowledgment.SetTenantId(_unitOfWork.TenantId);
 
-        await _acknowledgmentRepository.AddAsync(acknowledgment, cancellationToken);
+        await _unitOfWork.AnnouncementAcknowledgments.AddAsync(acknowledgment, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

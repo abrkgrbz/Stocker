@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Interviews.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.Interviews.Commands;
 /// Command to create a new interview
 /// </summary>
 public record CreateInterviewCommand(
-    Guid TenantId,
     int JobApplicationId,
     int InterviewerId,
     InterviewType InterviewType,
@@ -31,9 +29,6 @@ public class CreateInterviewCommandValidator : AbstractValidator<CreateInterview
 {
     public CreateInterviewCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.JobApplicationId)
             .GreaterThan(0).WithMessage("Job Application ID must be greater than 0");
 
@@ -57,27 +52,17 @@ public class CreateInterviewCommandValidator : AbstractValidator<CreateInterview
 /// </summary>
 public class CreateInterviewCommandHandler : IRequestHandler<CreateInterviewCommand, Result<int>>
 {
-    private readonly IInterviewRepository _interviewRepository;
-    private readonly IJobApplicationRepository _jobApplicationRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateInterviewCommandHandler(
-        IInterviewRepository interviewRepository,
-        IJobApplicationRepository jobApplicationRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+    public CreateInterviewCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _interviewRepository = interviewRepository;
-        _jobApplicationRepository = jobApplicationRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<int>> Handle(CreateInterviewCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(CreateInterviewCommand request, CancellationToken cancellationToken)
     {
         // Verify job application exists
-        var jobApplication = await _jobApplicationRepository.GetByIdAsync(request.JobApplicationId, cancellationToken);
+        var jobApplication = await _unitOfWork.JobApplications.GetByIdAsync(request.JobApplicationId, cancellationToken);
         if (jobApplication == null)
         {
             return Result<int>.Failure(
@@ -85,7 +70,7 @@ public class CreateInterviewCommandHandler : IRequestHandler<CreateInterviewComm
         }
 
         // Verify interviewer exists
-        var interviewer = await _employeeRepository.GetByIdAsync(request.InterviewerId, cancellationToken);
+        var interviewer = await _unitOfWork.Employees.GetByIdAsync(request.InterviewerId, cancellationToken);
         if (interviewer == null)
         {
             return Result<int>.Failure(
@@ -102,7 +87,7 @@ public class CreateInterviewCommandHandler : IRequestHandler<CreateInterviewComm
             request.Round);
 
         // Set tenant ID
-        interview.SetTenantId(request.TenantId);
+        interview.SetTenantId(_unitOfWork.TenantId);
 
         // Set format and location
         interview.SetFormat(request.Format);
@@ -121,7 +106,7 @@ public class CreateInterviewCommandHandler : IRequestHandler<CreateInterviewComm
             interview.SetCandidateInstructions(request.CandidateInstructions);
 
         // Save to repository
-        await _interviewRepository.AddAsync(interview, cancellationToken);
+        await _unitOfWork.Interviews.AddAsync(interview, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(interview.Id);

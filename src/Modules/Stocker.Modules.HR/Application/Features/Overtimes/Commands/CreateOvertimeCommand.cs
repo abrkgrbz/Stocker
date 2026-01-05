@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Overtimes.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.Overtimes.Commands;
 /// </summary>
 public record CreateOvertimeCommand : IRequest<Result<int>>
 {
-    public Guid TenantId { get; init; }
     public int EmployeeId { get; init; }
     public DateOnly Date { get; init; }
     public TimeOnly StartTime { get; init; }
@@ -34,24 +32,17 @@ public record CreateOvertimeCommand : IRequest<Result<int>>
 /// </summary>
 public class CreateOvertimeCommandHandler : IRequestHandler<CreateOvertimeCommand, Result<int>>
 {
-    private readonly IOvertimeRepository _overtimeRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateOvertimeCommandHandler(
-        IOvertimeRepository overtimeRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+    public CreateOvertimeCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _overtimeRepository = overtimeRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<int>> Handle(CreateOvertimeCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(CreateOvertimeCommand request, CancellationToken cancellationToken)
     {
         // Verify employee exists
-        var employee = await _employeeRepository.GetByIdAsync(request.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(request.EmployeeId, cancellationToken);
         if (employee == null)
         {
             return Result<int>.Failure(
@@ -69,7 +60,7 @@ public class CreateOvertimeCommandHandler : IRequestHandler<CreateOvertimeComman
             request.Description);
 
         // Set tenant ID
-        overtime.SetTenantId(request.TenantId);
+        overtime.SetTenantId(_unitOfWork.TenantId);
 
         // Set optional properties
         if (request.ProjectId.HasValue || !string.IsNullOrEmpty(request.ProjectName))
@@ -94,7 +85,7 @@ public class CreateOvertimeCommandHandler : IRequestHandler<CreateOvertimeComman
             overtime.SetEmergency(true);
 
         // Save to repository
-        await _overtimeRepository.AddAsync(overtime, cancellationToken);
+        await _unitOfWork.Overtimes.AddAsync(overtime, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(overtime.Id);

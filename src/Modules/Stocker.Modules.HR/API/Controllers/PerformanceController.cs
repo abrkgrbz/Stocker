@@ -7,7 +7,6 @@ using Stocker.Modules.HR.Application.Features.Performance.Queries;
 using Stocker.Modules.HR.Domain.Entities;
 using Stocker.Modules.HR.Domain.Enums;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.API.Controllers;
@@ -20,12 +19,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class PerformanceController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public PerformanceController(IMediator mediator, ITenantService tenantService)
+    public PerformanceController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     #region Performance Reviews
@@ -44,12 +41,8 @@ public class PerformanceController : ControllerBase
         [FromQuery] PerformanceReviewStatus? status = null,
         [FromQuery] bool includeCriteria = false)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetPerformanceReviewsQuery
         {
-            TenantId = tenantId.Value,
             EmployeeId = employeeId,
             ReviewerId = reviewerId,
             Year = year,
@@ -69,19 +62,11 @@ public class PerformanceController : ControllerBase
     [HttpGet("reviews/{id}")]
     [ProducesResponseType(typeof(PerformanceReviewDto), 200)]
     [ProducesResponseType(404)]
-    public async Task<ActionResult<PerformanceReviewDto>> GetReview(int id, [FromQuery] bool includeGoals = false)
+    public async Task<ActionResult<PerformanceReviewDto>> GetReview(int id, [FromQuery] bool includeCriteria = true, [FromQuery] bool includeGoals = false)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var query = new GetPerformanceReviewByIdQuery
-        {
-            TenantId = tenantId.Value,
-            ReviewId = id,
-            IncludeGoals = includeGoals
-        };
-
+        var query = new GetPerformanceReviewByIdQuery(id, includeCriteria, includeGoals);
         var result = await _mediator.Send(query);
+
         if (result.IsFailure)
         {
             if (result.Error.Type == ErrorType.NotFound) return NotFound(result.Error);
@@ -98,10 +83,7 @@ public class PerformanceController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<ActionResult<PerformanceReviewDto>> CreateReview(CreatePerformanceReviewDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new CreatePerformanceReviewCommand { TenantId = tenantId.Value, ReviewData = dto };
+        var command = new CreatePerformanceReviewCommand { ReviewData = dto };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure) return BadRequest(result.Error);
@@ -117,10 +99,7 @@ public class PerformanceController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<PerformanceReviewDto>> UpdateReview(int id, UpdatePerformanceReviewDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new UpdatePerformanceReviewCommand { TenantId = tenantId.Value, ReviewId = id, ReviewData = dto };
+        var command = new UpdatePerformanceReviewCommand { ReviewId = id, ReviewData = dto };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -140,12 +119,8 @@ public class PerformanceController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<PerformanceReviewDto>> CompleteReview(int id, CompleteReviewDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new CompletePerformanceReviewCommand
         {
-            TenantId = tenantId.Value,
             ReviewId = id,
             OverallRating = dto.OverallRating,
             FinalComments = dto.FinalComments
@@ -178,12 +153,8 @@ public class PerformanceController : ControllerBase
         [FromQuery] bool? activeOnly = null,
         [FromQuery] bool? overdueOnly = null)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetPerformanceGoalsQuery
         {
-            TenantId = tenantId.Value,
             EmployeeId = employeeId,
             ReviewId = reviewId,
             Status = status,
@@ -205,10 +176,7 @@ public class PerformanceController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<PerformanceGoalDto>> GetGoal(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var query = new GetPerformanceGoalByIdQuery { TenantId = tenantId.Value, GoalId = id };
+        var query = new GetPerformanceGoalByIdQuery(id);
         var result = await _mediator.Send(query);
 
         if (result.IsFailure)
@@ -227,10 +195,7 @@ public class PerformanceController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<ActionResult<PerformanceGoalDto>> CreateGoal(CreatePerformanceGoalDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new CreatePerformanceGoalCommand { TenantId = tenantId.Value, GoalData = dto };
+        var command = new CreatePerformanceGoalCommand { GoalData = dto };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure) return BadRequest(result.Error);
@@ -246,10 +211,7 @@ public class PerformanceController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<PerformanceGoalDto>> UpdateGoal(int id, UpdatePerformanceGoalDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new UpdatePerformanceGoalCommand { TenantId = tenantId.Value, GoalId = id, GoalData = dto };
+        var command = new UpdatePerformanceGoalCommand { GoalId = id, GoalData = dto };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -269,12 +231,8 @@ public class PerformanceController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<PerformanceGoalDto>> UpdateGoalProgress(int id, UpdateGoalProgressDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new UpdateGoalProgressCommand
         {
-            TenantId = tenantId.Value,
             GoalId = id,
             Progress = dto.Progress,
             Notes = dto.Notes
@@ -290,9 +248,4 @@ public class PerformanceController : ControllerBase
     }
 
     #endregion
-
-    private static Error CreateTenantError()
-    {
-        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
-    }
 }

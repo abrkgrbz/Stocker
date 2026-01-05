@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.JobApplications.Queries;
@@ -8,35 +8,23 @@ namespace Stocker.Modules.HR.Application.Features.JobApplications.Queries;
 /// <summary>
 /// Query to get all job applications
 /// </summary>
-public class GetJobApplicationsQuery : IRequest<Result<List<JobApplicationDto>>>
-{
-    public Guid TenantId { get; set; }
-    public int? JobPostingId { get; set; }
-    public bool ActiveOnly { get; set; } = false;
-}
+public record GetJobApplicationsQuery(int? JobPostingId = null, bool ActiveOnly = false) : IRequest<Result<List<JobApplicationDto>>>;
 
 /// <summary>
 /// Handler for GetJobApplicationsQuery
 /// </summary>
 public class GetJobApplicationsQueryHandler : IRequestHandler<GetJobApplicationsQuery, Result<List<JobApplicationDto>>>
 {
-    private readonly IJobApplicationRepository _repository;
-    private readonly IJobPostingRepository _jobPostingRepository;
-    private readonly IEmployeeRepository _employeeRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetJobApplicationsQueryHandler(
-        IJobApplicationRepository repository,
-        IJobPostingRepository jobPostingRepository,
-        IEmployeeRepository employeeRepository)
+    public GetJobApplicationsQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _repository = repository;
-        _jobPostingRepository = jobPostingRepository;
-        _employeeRepository = employeeRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<JobApplicationDto>>> Handle(GetJobApplicationsQuery request, CancellationToken cancellationToken)
     {
-        var entities = await _repository.GetAllAsync(cancellationToken);
+        var entities = await _unitOfWork.JobApplications.GetAllAsync(cancellationToken);
 
         var filteredEntities = entities.AsEnumerable();
 
@@ -57,7 +45,7 @@ public class GetJobApplicationsQueryHandler : IRequestHandler<GetJobApplications
         foreach (var entity in filteredEntities)
         {
             string? jobTitle = null;
-            var jobPosting = await _jobPostingRepository.GetByIdAsync(entity.JobPostingId, cancellationToken);
+            var jobPosting = await _unitOfWork.JobPostings.GetByIdAsync(entity.JobPostingId, cancellationToken);
             if (jobPosting != null)
             {
                 jobTitle = jobPosting.Title;
@@ -66,7 +54,7 @@ public class GetJobApplicationsQueryHandler : IRequestHandler<GetJobApplications
             string? referredByEmployeeName = null;
             if (entity.ReferredByEmployeeId.HasValue)
             {
-                var referredBy = await _employeeRepository.GetByIdAsync(entity.ReferredByEmployeeId.Value, cancellationToken);
+                var referredBy = await _unitOfWork.Employees.GetByIdAsync(entity.ReferredByEmployeeId.Value, cancellationToken);
                 referredByEmployeeName = referredBy != null ? $"{referredBy.FirstName} {referredBy.LastName}" : null;
             }
 

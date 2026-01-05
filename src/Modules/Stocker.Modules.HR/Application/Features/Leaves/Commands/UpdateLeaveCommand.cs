@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Enums;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Leaves.Commands;
@@ -11,11 +10,10 @@ namespace Stocker.Modules.HR.Application.Features.Leaves.Commands;
 /// <summary>
 /// Command to update a leave request
 /// </summary>
-public class UpdateLeaveCommand : IRequest<Result<LeaveDto>>
+public record UpdateLeaveCommand : IRequest<Result<LeaveDto>>
 {
-    public Guid TenantId { get; set; }
-    public int LeaveId { get; set; }
-    public UpdateLeaveDto LeaveData { get; set; } = null!;
+    public int LeaveId { get; init; }
+    public UpdateLeaveDto LeaveData { get; init; } = null!;
 }
 
 /// <summary>
@@ -25,9 +23,6 @@ public class UpdateLeaveCommandValidator : AbstractValidator<UpdateLeaveCommand>
 {
     public UpdateLeaveCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.LeaveId)
             .GreaterThan(0).WithMessage("Leave ID is required");
 
@@ -61,23 +56,10 @@ public class UpdateLeaveCommandValidator : AbstractValidator<UpdateLeaveCommand>
 /// </summary>
 public class UpdateLeaveCommandHandler : IRequestHandler<UpdateLeaveCommand, Result<LeaveDto>>
 {
-    private readonly ILeaveRepository _leaveRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly ILeaveTypeRepository _leaveTypeRepository;
-    private readonly ILeaveBalanceRepository _leaveBalanceRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateLeaveCommandHandler(
-        ILeaveRepository leaveRepository,
-        IEmployeeRepository employeeRepository,
-        ILeaveTypeRepository leaveTypeRepository,
-        ILeaveBalanceRepository leaveBalanceRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateLeaveCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _leaveRepository = leaveRepository;
-        _employeeRepository = employeeRepository;
-        _leaveTypeRepository = leaveTypeRepository;
-        _leaveBalanceRepository = leaveBalanceRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -86,7 +68,7 @@ public class UpdateLeaveCommandHandler : IRequestHandler<UpdateLeaveCommand, Res
         var data = request.LeaveData;
 
         // Get existing leave
-        var leave = await _leaveRepository.GetWithDetailsAsync(request.LeaveId, cancellationToken);
+        var leave = await _unitOfWork.Leaves.GetWithDetailsAsync(request.LeaveId, cancellationToken);
         if (leave == null)
         {
             return Result<LeaveDto>.Failure(
@@ -106,7 +88,7 @@ public class UpdateLeaveCommandHandler : IRequestHandler<UpdateLeaveCommand, Res
         var oldYear = leave.StartDate.Year;
 
         // Validate leave type
-        var leaveType = await _leaveTypeRepository.GetByIdAsync(data.LeaveTypeId, cancellationToken);
+        var leaveType = await _unitOfWork.LeaveTypes.GetByIdAsync(data.LeaveTypeId, cancellationToken);
         if (leaveType == null)
         {
             return Result<LeaveDto>.Failure(
@@ -127,7 +109,7 @@ public class UpdateLeaveCommandHandler : IRequestHandler<UpdateLeaveCommand, Res
         }
 
         // Check for overlapping leaves
-        if (await _leaveRepository.HasOverlappingLeaveAsync(
+        if (await _unitOfWork.Leaves.HasOverlappingLeaveAsync(
             leave.EmployeeId,
             data.StartDate.Date,
             data.EndDate.Date,
@@ -155,7 +137,7 @@ public class UpdateLeaveCommandHandler : IRequestHandler<UpdateLeaveCommand, Res
         if (data.SubstituteEmployeeId.HasValue)
         {
             // Validate substitute employee
-            var substituteEmployee = await _employeeRepository.GetByIdAsync(data.SubstituteEmployeeId.Value, cancellationToken);
+            var substituteEmployee = await _unitOfWork.Employees.GetByIdAsync(data.SubstituteEmployeeId.Value, cancellationToken);
             if (substituteEmployee == null)
             {
                 return Result<LeaveDto>.Failure(
@@ -173,7 +155,7 @@ public class UpdateLeaveCommandHandler : IRequestHandler<UpdateLeaveCommand, Res
         var newYear = data.StartDate.Year;
 
         // Remove old pending days
-        var oldBalance = await _leaveBalanceRepository.GetByEmployeeLeaveTypeAndYearAsync(
+        var oldBalance = await _unitOfWork.LeaveBalances.GetByEmployeeLeaveTypeAndYearAsync(
             leave.EmployeeId,
             oldLeaveTypeId,
             oldYear,
@@ -185,7 +167,7 @@ public class UpdateLeaveCommandHandler : IRequestHandler<UpdateLeaveCommand, Res
         }
 
         // Add new pending days
-        var newBalance = await _leaveBalanceRepository.GetByEmployeeLeaveTypeAndYearAsync(
+        var newBalance = await _unitOfWork.LeaveBalances.GetByEmployeeLeaveTypeAndYearAsync(
             leave.EmployeeId,
             data.LeaveTypeId,
             newYear,
@@ -213,7 +195,7 @@ public class UpdateLeaveCommandHandler : IRequestHandler<UpdateLeaveCommand, Res
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Get employee and map to DTO
-        var employee = await _employeeRepository.GetByIdAsync(leave.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(leave.EmployeeId, cancellationToken);
 
         var leaveDto = new LeaveDto
         {

@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Certifications.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.Certifications.Commands;
 /// </summary>
 public record CreateCertificationCommand : IRequest<Result<int>>
 {
-    public Guid TenantId { get; init; }
     public int EmployeeId { get; init; }
     public string CertificationName { get; init; } = string.Empty;
     public string IssuingAuthority { get; init; } = string.Empty;
@@ -45,18 +43,14 @@ public record CreateCertificationCommand : IRequest<Result<int>>
 /// </summary>
 public class CreateCertificationCommandHandler : IRequestHandler<CreateCertificationCommand, Result<int>>
 {
-    private readonly ICertificationRepository _certificationRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateCertificationCommandHandler(
-        ICertificationRepository certificationRepository,
-        IUnitOfWork unitOfWork)
+    public CreateCertificationCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _certificationRepository = certificationRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<int>> Handle(CreateCertificationCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(CreateCertificationCommand request, CancellationToken cancellationToken)
     {
         var certification = new Certification(
             request.EmployeeId,
@@ -65,7 +59,7 @@ public class CreateCertificationCommandHandler : IRequestHandler<CreateCertifica
             request.IssueDate,
             request.CertificationType);
 
-        certification.SetTenantId(request.TenantId);
+        certification.SetTenantId(_unitOfWork.TenantId);
 
         if (!string.IsNullOrEmpty(request.CertificationNumber))
             certification.SetCertificationNumber(request.CertificationNumber);
@@ -104,7 +98,7 @@ public class CreateCertificationCommandHandler : IRequestHandler<CreateCertifica
 
         certification.SetRequiredForJob(request.RequiredForJob);
 
-        await _certificationRepository.AddAsync(certification, cancellationToken);
+        await _unitOfWork.Certifications.AddAsync(certification, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(certification.Id);

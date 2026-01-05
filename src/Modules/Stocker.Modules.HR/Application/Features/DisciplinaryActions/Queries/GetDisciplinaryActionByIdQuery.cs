@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 
 namespace Stocker.Modules.HR.Application.Features.DisciplinaryActions.Queries;
 
@@ -8,16 +8,16 @@ public record GetDisciplinaryActionByIdQuery(int Id) : IRequest<DisciplinaryActi
 
 public class GetDisciplinaryActionByIdQueryHandler : IRequestHandler<GetDisciplinaryActionByIdQuery, DisciplinaryActionDto?>
 {
-    private readonly IDisciplinaryActionRepository _repository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetDisciplinaryActionByIdQueryHandler(IDisciplinaryActionRepository repository)
+    public GetDisciplinaryActionByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<DisciplinaryActionDto?> Handle(GetDisciplinaryActionByIdQuery request, CancellationToken cancellationToken)
+    public async Task<DisciplinaryActionDto?> Handle(GetDisciplinaryActionByIdQuery request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.DisciplinaryActions.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null) return null;
 
         return new DisciplinaryActionDto

@@ -6,7 +6,6 @@ using Stocker.Modules.HR.Application.Features.Expenses.Commands;
 using Stocker.Modules.HR.Application.Features.Expenses.Queries;
 using Stocker.Modules.HR.Domain.Enums;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.API.Controllers;
@@ -19,12 +18,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class ExpensesController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public ExpensesController(IMediator mediator, ITenantService tenantService)
+    public ExpensesController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -41,12 +38,8 @@ public class ExpensesController : ControllerBase
         [FromQuery] DateTime? toDate = null,
         [FromQuery] bool includeInactive = false)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetExpensesQuery
         {
-            TenantId = tenantId.Value,
             EmployeeId = employeeId,
             ExpenseType = expenseType,
             Status = status,
@@ -71,12 +64,8 @@ public class ExpensesController : ControllerBase
         [FromQuery] ExpenseStatus? status = null,
         [FromQuery] bool includeInactive = false)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetExpensesQuery
         {
-            TenantId = tenantId.Value,
             EmployeeId = employeeId,
             Status = status,
             IncludeInactive = includeInactive
@@ -95,10 +84,7 @@ public class ExpensesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<ExpenseDto>> GetExpense(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var query = new GetExpenseByIdQuery { TenantId = tenantId.Value, ExpenseId = id };
+        var query = new GetExpenseByIdQuery(id);
         var result = await _mediator.Send(query);
 
         if (result.IsFailure)
@@ -117,10 +103,7 @@ public class ExpensesController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<ActionResult<ExpenseDto>> CreateExpense(CreateExpenseDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new CreateExpenseCommand { TenantId = tenantId.Value, ExpenseData = dto };
+        var command = new CreateExpenseCommand { ExpenseData = dto };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure) return BadRequest(result.Error);
@@ -136,10 +119,7 @@ public class ExpensesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<ExpenseDto>> UpdateExpense(int id, UpdateExpenseDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new UpdateExpenseCommand { TenantId = tenantId.Value, ExpenseId = id, ExpenseData = dto };
+        var command = new UpdateExpenseCommand { ExpenseId = id, ExpenseData = dto };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -159,10 +139,7 @@ public class ExpensesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<ExpenseDto>> SubmitExpense(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new SubmitExpenseCommand { TenantId = tenantId.Value, ExpenseId = id };
+        var command = new SubmitExpenseCommand { ExpenseId = id };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -182,12 +159,8 @@ public class ExpensesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<ExpenseDto>> ApproveExpense(int id, ApproveExpenseDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new ApproveExpenseCommand
         {
-            TenantId = tenantId.Value,
             ExpenseId = id,
             ApprovalData = dto
         };
@@ -210,12 +183,8 @@ public class ExpensesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<ExpenseDto>> RejectExpense(int id, RejectExpenseDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new RejectExpenseCommand
         {
-            TenantId = tenantId.Value,
             ExpenseId = id,
             RejectionData = dto
         };
@@ -238,12 +207,8 @@ public class ExpensesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<ExpenseDto>> MarkExpensePaid(int id, [FromQuery] string? paymentReference = null)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new MarkExpensePaidCommand
         {
-            TenantId = tenantId.Value,
             ExpenseId = id,
             PaymentReference = paymentReference
         };
@@ -255,10 +220,5 @@ public class ExpensesController : ControllerBase
             return BadRequest(result.Error);
         }
         return Ok(result.Value);
-    }
-
-    private static Error CreateTenantError()
-    {
-        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
     }
 }

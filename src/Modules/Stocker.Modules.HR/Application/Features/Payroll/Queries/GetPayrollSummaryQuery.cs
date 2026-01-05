@@ -1,7 +1,8 @@
+using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Enums;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Payroll.Queries;
@@ -9,11 +10,21 @@ namespace Stocker.Modules.HR.Application.Features.Payroll.Queries;
 /// <summary>
 /// Query to get payroll summary for a period
 /// </summary>
-public class GetPayrollSummaryQuery : IRequest<Result<PayrollSummaryDto>>
+public record GetPayrollSummaryQuery(int Year, int Month) : IRequest<Result<PayrollSummaryDto>>;
+
+/// <summary>
+/// Validator for GetPayrollSummaryQuery
+/// </summary>
+public class GetPayrollSummaryQueryValidator : AbstractValidator<GetPayrollSummaryQuery>
 {
-    public Guid TenantId { get; set; }
-    public int Year { get; set; }
-    public int Month { get; set; }
+    public GetPayrollSummaryQueryValidator()
+    {
+        RuleFor(x => x.Year)
+            .InclusiveBetween(2000, 2100).WithMessage("Year must be between 2000 and 2100");
+
+        RuleFor(x => x.Month)
+            .InclusiveBetween(1, 12).WithMessage("Month must be between 1 and 12");
+    }
 }
 
 /// <summary>
@@ -21,16 +32,16 @@ public class GetPayrollSummaryQuery : IRequest<Result<PayrollSummaryDto>>
 /// </summary>
 public class GetPayrollSummaryQueryHandler : IRequestHandler<GetPayrollSummaryQuery, Result<PayrollSummaryDto>>
 {
-    private readonly IPayrollRepository _payrollRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetPayrollSummaryQueryHandler(IPayrollRepository payrollRepository)
+    public GetPayrollSummaryQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _payrollRepository = payrollRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PayrollSummaryDto>> Handle(GetPayrollSummaryQuery request, CancellationToken cancellationToken)
     {
-        var payrolls = await _payrollRepository.GetByPeriodAsync(request.Year, request.Month, cancellationToken);
+        var payrolls = await _unitOfWork.Payrolls.GetByPeriodAsync(request.Year, request.Month, cancellationToken);
         var payrollList = payrolls.ToList();
 
         var summary = new PayrollSummaryDto

@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.JobPostings.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.JobPostings.Commands;
 /// Command to create a new job posting
 /// </summary>
 public record CreateJobPostingCommand(
-    Guid TenantId,
     string Title,
     string PostingCode,
     int DepartmentId,
@@ -34,9 +32,6 @@ public class CreateJobPostingCommandValidator : AbstractValidator<CreateJobPosti
 {
     public CreateJobPostingCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("Title is required")
             .MaximumLength(200).WithMessage("Title must not exceed 200 characters");
@@ -74,27 +69,17 @@ public class CreateJobPostingCommandValidator : AbstractValidator<CreateJobPosti
 /// </summary>
 public class CreateJobPostingCommandHandler : IRequestHandler<CreateJobPostingCommand, Result<int>>
 {
-    private readonly IJobPostingRepository _jobPostingRepository;
-    private readonly IDepartmentRepository _departmentRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateJobPostingCommandHandler(
-        IJobPostingRepository jobPostingRepository,
-        IDepartmentRepository departmentRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+    public CreateJobPostingCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _jobPostingRepository = jobPostingRepository;
-        _departmentRepository = departmentRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<Result<int>> Handle(CreateJobPostingCommand request, CancellationToken cancellationToken)
     {
         // Verify department exists
-        var department = await _departmentRepository.GetByIdAsync(request.DepartmentId, cancellationToken);
+        var department = await _unitOfWork.Departments.GetByIdAsync(request.DepartmentId, cancellationToken);
         if (department == null)
         {
             return Result<int>.Failure(
@@ -102,7 +87,7 @@ public class CreateJobPostingCommandHandler : IRequestHandler<CreateJobPostingCo
         }
 
         // Check if posting code already exists
-        var existingPosting = await _jobPostingRepository.GetByCodeAsync(request.PostingCode, cancellationToken);
+        var existingPosting = await _unitOfWork.JobPostings.GetByCodeAsync(request.PostingCode, cancellationToken);
         if (existingPosting != null)
         {
             return Result<int>.Failure(
@@ -112,7 +97,7 @@ public class CreateJobPostingCommandHandler : IRequestHandler<CreateJobPostingCo
         // Verify hiring manager if specified
         if (request.HiringManagerId.HasValue)
         {
-            var hiringManager = await _employeeRepository.GetByIdAsync(request.HiringManagerId.Value, cancellationToken);
+            var hiringManager = await _unitOfWork.Employees.GetByIdAsync(request.HiringManagerId.Value, cancellationToken);
             if (hiringManager == null)
             {
                 return Result<int>.Failure(
@@ -130,7 +115,7 @@ public class CreateJobPostingCommandHandler : IRequestHandler<CreateJobPostingCo
             request.ExperienceLevel);
 
         // Set tenant ID
-        jobPosting.SetTenantId(request.TenantId);
+        jobPosting.SetTenantId(_unitOfWork.TenantId);
 
         // Update basic info
         jobPosting.UpdateBasicInfo(request.Title, request.Description, request.NumberOfOpenings);
@@ -154,7 +139,7 @@ public class CreateJobPostingCommandHandler : IRequestHandler<CreateJobPostingCo
             jobPosting.SetDeadline(request.ApplicationDeadline);
 
         // Save to repository
-        await _jobPostingRepository.AddAsync(jobPosting, cancellationToken);
+        await _unitOfWork.JobPostings.AddAsync(jobPosting, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(jobPosting.Id);

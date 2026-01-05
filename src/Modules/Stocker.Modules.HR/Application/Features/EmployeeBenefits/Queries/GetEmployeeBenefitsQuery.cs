@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 
 namespace Stocker.Modules.HR.Application.Features.EmployeeBenefits.Queries;
 
@@ -8,16 +8,16 @@ public record GetEmployeeBenefitsQuery() : IRequest<List<EmployeeBenefitDto>>;
 
 public class GetEmployeeBenefitsQueryHandler : IRequestHandler<GetEmployeeBenefitsQuery, List<EmployeeBenefitDto>>
 {
-    private readonly IEmployeeBenefitRepository _repository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetEmployeeBenefitsQueryHandler(IEmployeeBenefitRepository repository)
+    public GetEmployeeBenefitsQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<List<EmployeeBenefitDto>> Handle(GetEmployeeBenefitsQuery request, CancellationToken cancellationToken)
+    public async Task<List<EmployeeBenefitDto>> Handle(GetEmployeeBenefitsQuery request, CancellationToken cancellationToken)
     {
-        var entities = await _repository.GetAllAsync(cancellationToken);
+        var entities = await _unitOfWork.EmployeeBenefits.GetAllAsync(cancellationToken);
         return entities.Select(entity => new EmployeeBenefitDto
         {
             Id = entity.Id,

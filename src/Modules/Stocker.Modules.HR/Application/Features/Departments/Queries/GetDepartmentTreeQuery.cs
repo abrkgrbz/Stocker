@@ -2,6 +2,7 @@ using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
 using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Departments.Queries;
@@ -9,10 +10,9 @@ namespace Stocker.Modules.HR.Application.Features.Departments.Queries;
 /// <summary>
 /// Query to get the department hierarchy tree
 /// </summary>
-public class GetDepartmentTreeQuery : IRequest<Result<List<DepartmentTreeDto>>>
+public record GetDepartmentTreeQuery : IRequest<Result<List<DepartmentTreeDto>>>
 {
-    public Guid TenantId { get; set; }
-    public bool IncludeInactive { get; set; } = false;
+    public bool IncludeInactive { get; init; } = false;
 }
 
 /// <summary>
@@ -20,16 +20,16 @@ public class GetDepartmentTreeQuery : IRequest<Result<List<DepartmentTreeDto>>>
 /// </summary>
 public class GetDepartmentTreeQueryHandler : IRequestHandler<GetDepartmentTreeQuery, Result<List<DepartmentTreeDto>>>
 {
-    private readonly IDepartmentRepository _departmentRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetDepartmentTreeQueryHandler(IDepartmentRepository departmentRepository)
+    public GetDepartmentTreeQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _departmentRepository = departmentRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<DepartmentTreeDto>>> Handle(GetDepartmentTreeQuery request, CancellationToken cancellationToken)
     {
-        var allDepartments = await _departmentRepository.GetDepartmentTreeAsync(cancellationToken);
+        var allDepartments = await _unitOfWork.Departments.GetDepartmentTreeAsync(cancellationToken);
 
         if (!request.IncludeInactive)
         {
@@ -53,7 +53,7 @@ public class GetDepartmentTreeQueryHandler : IRequestHandler<GetDepartmentTreeQu
 
         foreach (var department in departments)
         {
-            var employeeCount = await _departmentRepository.GetEmployeeCountAsync(department.Id, cancellationToken);
+            var employeeCount = await _unitOfWork.Departments.GetEmployeeCountAsync(department.Id, cancellationToken);
             var children = allDepartments.Where(d => d.ParentDepartmentId == department.Id).ToList();
 
             var node = new DepartmentTreeDto

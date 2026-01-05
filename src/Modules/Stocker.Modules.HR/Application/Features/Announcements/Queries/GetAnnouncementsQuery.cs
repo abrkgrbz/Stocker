@@ -1,7 +1,7 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Announcements.Queries;
@@ -9,13 +9,12 @@ namespace Stocker.Modules.HR.Application.Features.Announcements.Queries;
 /// <summary>
 /// Query to get all announcements with optional filtering
 /// </summary>
-public class GetAnnouncementsQuery : IRequest<Result<List<AnnouncementDto>>>
+public record GetAnnouncementsQuery : IRequest<Result<List<AnnouncementDto>>>
 {
-    public Guid TenantId { get; set; }
-    public string? Type { get; set; }
-    public bool? IsPublished { get; set; }
-    public bool? IsActive { get; set; }
-    public int? DepartmentId { get; set; }
+    public string? Type { get; init; }
+    public bool? IsPublished { get; init; }
+    public bool? IsActive { get; init; }
+    public int? DepartmentId { get; init; }
 }
 
 /// <summary>
@@ -23,16 +22,16 @@ public class GetAnnouncementsQuery : IRequest<Result<List<AnnouncementDto>>>
 /// </summary>
 public class GetAnnouncementsQueryHandler : IRequestHandler<GetAnnouncementsQuery, Result<List<AnnouncementDto>>>
 {
-    private readonly IAnnouncementRepository _announcementRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetAnnouncementsQueryHandler(IAnnouncementRepository announcementRepository)
+    public GetAnnouncementsQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _announcementRepository = announcementRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<AnnouncementDto>>> Handle(GetAnnouncementsQuery request, CancellationToken cancellationToken)
     {
-        var announcements = await _announcementRepository.GetAllAsync(cancellationToken);
+        var announcements = await _unitOfWork.Announcements.GetAllAsync(cancellationToken);
 
         // Apply filters
         var filtered = announcements.AsEnumerable();

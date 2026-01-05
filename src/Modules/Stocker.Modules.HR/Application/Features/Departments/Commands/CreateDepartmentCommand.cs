@@ -3,7 +3,7 @@ using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
 using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Departments.Commands;
@@ -11,10 +11,9 @@ namespace Stocker.Modules.HR.Application.Features.Departments.Commands;
 /// <summary>
 /// Command to create a new department
 /// </summary>
-public class CreateDepartmentCommand : IRequest<Result<DepartmentDto>>
+public record CreateDepartmentCommand : IRequest<Result<DepartmentDto>>
 {
-    public Guid TenantId { get; set; }
-    public CreateDepartmentDto DepartmentData { get; set; } = null!;
+    public CreateDepartmentDto DepartmentData { get; init; } = null!;
 }
 
 /// <summary>
@@ -24,9 +23,6 @@ public class CreateDepartmentCommandValidator : AbstractValidator<CreateDepartme
 {
     public CreateDepartmentCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.DepartmentData)
             .NotNull().WithMessage("Department data is required");
 
@@ -51,21 +47,17 @@ public class CreateDepartmentCommandValidator : AbstractValidator<CreateDepartme
 /// </summary>
 public class CreateDepartmentCommandHandler : IRequestHandler<CreateDepartmentCommand, Result<DepartmentDto>>
 {
-    private readonly IDepartmentRepository _departmentRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateDepartmentCommandHandler(
-        IDepartmentRepository departmentRepository,
-        IUnitOfWork unitOfWork)
+    public CreateDepartmentCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _departmentRepository = departmentRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<DepartmentDto>> Handle(CreateDepartmentCommand request, CancellationToken cancellationToken)
     {
         // Check if department with same code already exists
-        var existingDepartment = await _departmentRepository.GetByCodeAsync(request.DepartmentData.Code, cancellationToken);
+        var existingDepartment = await _unitOfWork.Departments.GetByCodeAsync(request.DepartmentData.Code, cancellationToken);
         if (existingDepartment != null)
         {
             return Result<DepartmentDto>.Failure(
@@ -76,7 +68,7 @@ public class CreateDepartmentCommandHandler : IRequestHandler<CreateDepartmentCo
         Department? parentDepartment = null;
         if (request.DepartmentData.ParentDepartmentId.HasValue)
         {
-            parentDepartment = await _departmentRepository.GetByIdAsync(
+            parentDepartment = await _unitOfWork.Departments.GetByIdAsync(
                 request.DepartmentData.ParentDepartmentId.Value, cancellationToken);
 
             if (parentDepartment == null)
@@ -97,7 +89,7 @@ public class CreateDepartmentCommandHandler : IRequestHandler<CreateDepartmentCo
             request.DepartmentData.DisplayOrder);
 
         // Set tenant ID
-        department.SetTenantId(request.TenantId);
+        department.SetTenantId(_unitOfWork.TenantId);
 
         // Set manager if specified
         if (request.DepartmentData.ManagerId.HasValue)
@@ -106,7 +98,7 @@ public class CreateDepartmentCommandHandler : IRequestHandler<CreateDepartmentCo
         }
 
         // Save to repository
-        await _departmentRepository.AddAsync(department, cancellationToken);
+        await _unitOfWork.Departments.AddAsync(department, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Map to DTO

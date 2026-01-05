@@ -1,6 +1,5 @@
 using MediatR;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.DisciplinaryActions.Commands;
@@ -10,7 +9,6 @@ namespace Stocker.Modules.HR.Application.Features.DisciplinaryActions.Commands;
 /// </summary>
 public record DeleteDisciplinaryActionCommand : IRequest<Result<int>>
 {
-    public Guid TenantId { get; init; }
     public int DisciplinaryActionId { get; init; }
 }
 
@@ -19,27 +17,23 @@ public record DeleteDisciplinaryActionCommand : IRequest<Result<int>>
 /// </summary>
 public class DeleteDisciplinaryActionCommandHandler : IRequestHandler<DeleteDisciplinaryActionCommand, Result<int>>
 {
-    private readonly IDisciplinaryActionRepository _disciplinaryActionRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public DeleteDisciplinaryActionCommandHandler(
-        IDisciplinaryActionRepository disciplinaryActionRepository,
-        IUnitOfWork unitOfWork)
+    public DeleteDisciplinaryActionCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _disciplinaryActionRepository = disciplinaryActionRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<int>> Handle(DeleteDisciplinaryActionCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(DeleteDisciplinaryActionCommand request, CancellationToken cancellationToken)
     {
-        var disciplinaryAction = await _disciplinaryActionRepository.GetByIdAsync(request.DisciplinaryActionId, cancellationToken);
+        var disciplinaryAction = await _unitOfWork.DisciplinaryActions.GetByIdAsync(request.DisciplinaryActionId, cancellationToken);
         if (disciplinaryAction == null)
         {
             return Result<int>.Failure(
                 Error.NotFound("DisciplinaryAction", $"Disciplinary action with ID {request.DisciplinaryActionId} not found"));
         }
 
-        _disciplinaryActionRepository.Remove(disciplinaryAction);
+        _unitOfWork.DisciplinaryActions.Remove(disciplinaryAction);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(disciplinaryAction.Id);

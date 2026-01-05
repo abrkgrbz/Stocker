@@ -6,7 +6,6 @@ using Stocker.Modules.HR.Application.Features.Employees.Commands;
 using Stocker.Modules.HR.Application.Features.Employees.Queries;
 using Stocker.Modules.HR.Domain.Enums;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.API.Controllers;
@@ -19,12 +18,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class EmployeesController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public EmployeesController(IMediator mediator, ITenantService tenantService)
+    public EmployeesController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -42,12 +39,8 @@ public class EmployeesController : ControllerBase
         [FromQuery] bool includeInactive = false,
         [FromQuery] string? searchTerm = null)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetEmployeesQuery
         {
-            TenantId = tenantId.Value,
             DepartmentId = departmentId,
             PositionId = positionId,
             ManagerId = managerId,
@@ -73,16 +66,7 @@ public class EmployeesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<EmployeeDto>> GetEmployee(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var query = new GetEmployeeByIdQuery
-        {
-            TenantId = tenantId.Value,
-            EmployeeId = id
-        };
-
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(new GetEmployeeByIdQuery(id));
 
         if (result.IsFailure)
         {
@@ -103,12 +87,8 @@ public class EmployeesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<EmployeeDto>> CreateEmployee(CreateEmployeeDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new CreateEmployeeCommand
         {
-            TenantId = tenantId.Value,
             EmployeeData = dto
         };
 
@@ -130,12 +110,8 @@ public class EmployeesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<EmployeeDto>> UpdateEmployee(int id, UpdateEmployeeDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new UpdateEmployeeCommand
         {
-            TenantId = tenantId.Value,
             EmployeeId = id,
             EmployeeData = dto
         };
@@ -162,12 +138,8 @@ public class EmployeesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<EmployeeDto>> TerminateEmployee(int id, TerminateEmployeeDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new TerminateEmployeeCommand
         {
-            TenantId = tenantId.Value,
             EmployeeId = id,
             TerminationData = dto
         };
@@ -182,10 +154,5 @@ public class EmployeesController : ControllerBase
         }
 
         return Ok(result.Value);
-    }
-
-    private static Error CreateTenantError()
-    {
-        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
     }
 }

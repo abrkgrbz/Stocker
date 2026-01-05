@@ -1,6 +1,7 @@
+using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.WorkLocations.Queries;
@@ -8,10 +9,18 @@ namespace Stocker.Modules.HR.Application.Features.WorkLocations.Queries;
 /// <summary>
 /// Query to get a work location by ID
 /// </summary>
-public class GetWorkLocationByIdQuery : IRequest<Result<WorkLocationDto>>
+public record GetWorkLocationByIdQuery(int WorkLocationId) : IRequest<Result<WorkLocationDto>>;
+
+/// <summary>
+/// Validator for GetWorkLocationByIdQuery
+/// </summary>
+public class GetWorkLocationByIdQueryValidator : AbstractValidator<GetWorkLocationByIdQuery>
 {
-    public Guid TenantId { get; set; }
-    public int WorkLocationId { get; set; }
+    public GetWorkLocationByIdQueryValidator()
+    {
+        RuleFor(x => x.WorkLocationId)
+            .GreaterThan(0).WithMessage("Work location ID must be greater than 0");
+    }
 }
 
 /// <summary>
@@ -19,16 +28,16 @@ public class GetWorkLocationByIdQuery : IRequest<Result<WorkLocationDto>>
 /// </summary>
 public class GetWorkLocationByIdQueryHandler : IRequestHandler<GetWorkLocationByIdQuery, Result<WorkLocationDto>>
 {
-    private readonly IWorkLocationRepository _workLocationRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetWorkLocationByIdQueryHandler(IWorkLocationRepository workLocationRepository)
+    public GetWorkLocationByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _workLocationRepository = workLocationRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<WorkLocationDto>> Handle(GetWorkLocationByIdQuery request, CancellationToken cancellationToken)
     {
-        var workLocation = await _workLocationRepository.GetByIdAsync(request.WorkLocationId, cancellationToken);
+        var workLocation = await _unitOfWork.WorkLocations.GetByIdAsync(request.WorkLocationId, cancellationToken);
         if (workLocation == null)
         {
             return Result<WorkLocationDto>.Failure(
@@ -36,7 +45,7 @@ public class GetWorkLocationByIdQueryHandler : IRequestHandler<GetWorkLocationBy
         }
 
         // Get employee count
-        var employeeCount = await _workLocationRepository.GetEmployeeCountAsync(workLocation.Id, cancellationToken);
+        var employeeCount = await _unitOfWork.WorkLocations.GetEmployeeCountAsync(workLocation.Id, cancellationToken);
 
         // Map to DTO
         var locationDto = new WorkLocationDto

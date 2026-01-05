@@ -3,8 +3,7 @@ using MediatR;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.WorkLocations.Commands;
@@ -12,10 +11,9 @@ namespace Stocker.Modules.HR.Application.Features.WorkLocations.Commands;
 /// <summary>
 /// Command to create a new work location
 /// </summary>
-public class CreateWorkLocationCommand : IRequest<Result<WorkLocationDto>>
+public record CreateWorkLocationCommand : IRequest<Result<WorkLocationDto>>
 {
-    public Guid TenantId { get; set; }
-    public CreateWorkLocationDto LocationData { get; set; } = null!;
+    public CreateWorkLocationDto LocationData { get; init; } = null!;
 }
 
 /// <summary>
@@ -25,9 +23,6 @@ public class CreateWorkLocationCommandValidator : AbstractValidator<CreateWorkLo
 {
     public CreateWorkLocationCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.LocationData)
             .NotNull().WithMessage("Location data is required");
 
@@ -75,21 +70,17 @@ public class CreateWorkLocationCommandValidator : AbstractValidator<CreateWorkLo
 /// </summary>
 public class CreateWorkLocationCommandHandler : IRequestHandler<CreateWorkLocationCommand, Result<WorkLocationDto>>
 {
-    private readonly IWorkLocationRepository _workLocationRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateWorkLocationCommandHandler(
-        IWorkLocationRepository workLocationRepository,
-        IUnitOfWork unitOfWork)
+    public CreateWorkLocationCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _workLocationRepository = workLocationRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<WorkLocationDto>> Handle(CreateWorkLocationCommand request, CancellationToken cancellationToken)
     {
         // Check if location with same code already exists
-        var existingLocation = await _workLocationRepository.GetByCodeAsync(request.LocationData.Code, cancellationToken);
+        var existingLocation = await _unitOfWork.WorkLocations.GetByCodeAsync(request.LocationData.Code, cancellationToken);
         if (existingLocation != null)
         {
             return Result<WorkLocationDto>.Failure(
@@ -99,7 +90,7 @@ public class CreateWorkLocationCommandHandler : IRequestHandler<CreateWorkLocati
         // If marking as headquarters, check if one already exists
         if (request.LocationData.IsHeadquarters)
         {
-            var existingHeadquarters = await _workLocationRepository.GetHeadquartersAsync(cancellationToken);
+            var existingHeadquarters = await _unitOfWork.WorkLocations.GetHeadquartersAsync(cancellationToken);
             if (existingHeadquarters != null)
             {
                 return Result<WorkLocationDto>.Failure(
@@ -116,7 +107,7 @@ public class CreateWorkLocationCommandHandler : IRequestHandler<CreateWorkLocati
             request.LocationData.IsHeadquarters);
 
         // Set tenant ID
-        workLocation.SetTenantId(request.TenantId);
+        workLocation.SetTenantId(_unitOfWork.TenantId);
 
         // Set address if provided
         if (!string.IsNullOrWhiteSpace(request.LocationData.Street) &&
@@ -163,7 +154,7 @@ public class CreateWorkLocationCommandHandler : IRequestHandler<CreateWorkLocati
         }
 
         // Save to repository
-        await _workLocationRepository.AddAsync(workLocation, cancellationToken);
+        await _unitOfWork.WorkLocations.AddAsync(workLocation, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Map to DTO

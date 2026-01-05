@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.Shifts.Commands;
 using Stocker.Modules.HR.Application.Features.Shifts.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.API.Controllers;
@@ -18,12 +17,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class ShiftsController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public ShiftsController(IMediator mediator, ITenantService tenantService)
+    public ShiftsController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -38,12 +35,8 @@ public class ShiftsController : ControllerBase
         [FromQuery] bool? nightShiftsOnly = null,
         [FromQuery] bool? flexibleOnly = null)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetShiftsQuery
         {
-            TenantId = tenantId.Value,
             ActiveOnly = activeOnly,
             NightShiftsOnly = nightShiftsOnly,
             FlexibleOnly = flexibleOnly
@@ -66,16 +59,7 @@ public class ShiftsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<ShiftDto>> GetShift(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var query = new GetShiftByIdQuery
-        {
-            TenantId = tenantId.Value,
-            ShiftId = id
-        };
-
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(new GetShiftByIdQuery(id));
 
         if (result.IsFailure)
         {
@@ -96,12 +80,8 @@ public class ShiftsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<ShiftDto>> CreateShift(CreateShiftDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new CreateShiftCommand
         {
-            TenantId = tenantId.Value,
             ShiftData = dto
         };
 
@@ -123,12 +103,8 @@ public class ShiftsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<ShiftDto>> UpdateShift(int id, UpdateShiftDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new UpdateShiftCommand
         {
-            TenantId = tenantId.Value,
             ShiftId = id,
             ShiftData = dto
         };
@@ -155,16 +131,7 @@ public class ShiftsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> DeleteShift(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new DeleteShiftCommand
-        {
-            TenantId = tenantId.Value,
-            ShiftId = id
-        };
-
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(new DeleteShiftCommand(id));
 
         if (result.IsFailure)
         {
@@ -174,10 +141,5 @@ public class ShiftsController : ControllerBase
         }
 
         return NoContent();
-    }
-
-    private static Error CreateTenantError()
-    {
-        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
     }
 }

@@ -1,7 +1,7 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Training.Queries;
@@ -9,13 +9,12 @@ namespace Stocker.Modules.HR.Application.Features.Training.Queries;
 /// <summary>
 /// Query to get trainings for a specific employee
 /// </summary>
-public class GetEmployeeTrainingsQuery : IRequest<Result<List<EmployeeTrainingDto>>>
+public record GetEmployeeTrainingsQuery : IRequest<Result<List<EmployeeTrainingDto>>>
 {
-    public Guid TenantId { get; set; }
-    public int EmployeeId { get; set; }
-    public EmployeeTrainingStatus? Status { get; set; }
-    public bool OnlyActive { get; set; } = true;
-    public bool? ActiveCertificatesOnly { get; set; }
+    public int EmployeeId { get; init; }
+    public EmployeeTrainingStatus? Status { get; init; }
+    public bool OnlyActive { get; init; } = true;
+    public bool? ActiveCertificatesOnly { get; init; }
 }
 
 /// <summary>
@@ -23,24 +22,17 @@ public class GetEmployeeTrainingsQuery : IRequest<Result<List<EmployeeTrainingDt
 /// </summary>
 public class GetEmployeeTrainingsQueryHandler : IRequestHandler<GetEmployeeTrainingsQuery, Result<List<EmployeeTrainingDto>>>
 {
-    private readonly IEmployeeTrainingRepository _employeeTrainingRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly ITrainingRepository _trainingRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetEmployeeTrainingsQueryHandler(
-        IEmployeeTrainingRepository employeeTrainingRepository,
-        IEmployeeRepository employeeRepository,
-        ITrainingRepository trainingRepository)
+    public GetEmployeeTrainingsQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _employeeTrainingRepository = employeeTrainingRepository;
-        _employeeRepository = employeeRepository;
-        _trainingRepository = trainingRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<EmployeeTrainingDto>>> Handle(GetEmployeeTrainingsQuery request, CancellationToken cancellationToken)
     {
         // Verify employee exists
-        var employee = await _employeeRepository.GetByIdAsync(request.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(request.EmployeeId, cancellationToken);
         if (employee == null)
         {
             return Result<List<EmployeeTrainingDto>>.Failure(
@@ -52,12 +44,12 @@ public class GetEmployeeTrainingsQueryHandler : IRequestHandler<GetEmployeeTrain
 
         if (request.Status.HasValue)
         {
-            employeeTrainings = await _employeeTrainingRepository.GetByEmployeeAndStatusAsync(
+            employeeTrainings = await _unitOfWork.EmployeeTrainings.GetByEmployeeAndStatusAsync(
                 request.EmployeeId, request.Status.Value, cancellationToken);
         }
         else
         {
-            employeeTrainings = await _employeeTrainingRepository.GetByEmployeeAsync(
+            employeeTrainings = await _unitOfWork.EmployeeTrainings.GetByEmployeeAsync(
                 request.EmployeeId, cancellationToken);
         }
 
@@ -77,7 +69,7 @@ public class GetEmployeeTrainingsQueryHandler : IRequestHandler<GetEmployeeTrain
         foreach (var employeeTraining in filteredTrainings)
         {
             // Get training details
-            var training = await _trainingRepository.GetByIdAsync(employeeTraining.TrainingId, cancellationToken);
+            var training = await _unitOfWork.Trainings.GetByIdAsync(employeeTraining.TrainingId, cancellationToken);
             if (training == null || (request.OnlyActive && !training.IsActive))
             {
                 continue;

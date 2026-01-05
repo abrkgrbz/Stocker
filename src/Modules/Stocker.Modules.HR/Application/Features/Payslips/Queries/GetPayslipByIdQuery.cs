@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 
 namespace Stocker.Modules.HR.Application.Features.Payslips.Queries;
 
@@ -8,16 +8,16 @@ public record GetPayslipByIdQuery(int Id) : IRequest<PayslipDto?>;
 
 public class GetPayslipByIdQueryHandler : IRequestHandler<GetPayslipByIdQuery, PayslipDto?>
 {
-    private readonly IPayslipRepository _repository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetPayslipByIdQueryHandler(IPayslipRepository repository)
+    public GetPayslipByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<PayslipDto?> Handle(GetPayslipByIdQuery request, CancellationToken cancellationToken)
+    public async Task<PayslipDto?> Handle(GetPayslipByIdQuery request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.Payslips.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null) return null;
 
         return new PayslipDto

@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.WorkLocations.Queries;
@@ -8,13 +8,12 @@ namespace Stocker.Modules.HR.Application.Features.WorkLocations.Queries;
 /// <summary>
 /// Query to get work locations with filters
 /// </summary>
-public class GetWorkLocationsQuery : IRequest<Result<List<WorkLocationDto>>>
+public record GetWorkLocationsQuery : IRequest<Result<List<WorkLocationDto>>>
 {
-    public Guid TenantId { get; set; }
-    public bool IncludeInactive { get; set; } = false;
-    public bool? OnlyHeadquarters { get; set; }
-    public bool? OnlyRemote { get; set; }
-    public bool? OnlyWithGeofencing { get; set; }
+    public bool IncludeInactive { get; init; } = false;
+    public bool? OnlyHeadquarters { get; init; }
+    public bool? OnlyRemote { get; init; }
+    public bool? OnlyWithGeofencing { get; init; }
 }
 
 /// <summary>
@@ -22,11 +21,11 @@ public class GetWorkLocationsQuery : IRequest<Result<List<WorkLocationDto>>>
 /// </summary>
 public class GetWorkLocationsQueryHandler : IRequestHandler<GetWorkLocationsQuery, Result<List<WorkLocationDto>>>
 {
-    private readonly IWorkLocationRepository _workLocationRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetWorkLocationsQueryHandler(IWorkLocationRepository workLocationRepository)
+    public GetWorkLocationsQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _workLocationRepository = workLocationRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<WorkLocationDto>>> Handle(GetWorkLocationsQuery request, CancellationToken cancellationToken)
@@ -36,23 +35,23 @@ public class GetWorkLocationsQueryHandler : IRequestHandler<GetWorkLocationsQuer
         // Apply specific filters
         if (request.OnlyHeadquarters == true)
         {
-            var headquarters = await _workLocationRepository.GetHeadquartersAsync(cancellationToken);
+            var headquarters = await _unitOfWork.WorkLocations.GetHeadquartersAsync(cancellationToken);
             workLocations = headquarters != null ? new[] { headquarters } : Array.Empty<Domain.Entities.WorkLocation>();
         }
         else if (request.OnlyRemote == true)
         {
-            workLocations = await _workLocationRepository.GetRemoteLocationsAsync(cancellationToken);
+            workLocations = await _unitOfWork.WorkLocations.GetRemoteLocationsAsync(cancellationToken);
         }
         else if (request.OnlyWithGeofencing == true)
         {
-            workLocations = await _workLocationRepository.GetWithGeofencingAsync(cancellationToken);
+            workLocations = await _unitOfWork.WorkLocations.GetWithGeofencingAsync(cancellationToken);
         }
         else
         {
             // Get all locations
             workLocations = request.IncludeInactive
-                ? await _workLocationRepository.GetAllAsync(cancellationToken)
-                : await _workLocationRepository.GetActiveAsync(cancellationToken);
+                ? await _unitOfWork.WorkLocations.GetAllAsync(cancellationToken)
+                : await _unitOfWork.WorkLocations.GetActiveAsync(cancellationToken);
         }
 
         // Filter by active status if needed
@@ -65,7 +64,7 @@ public class GetWorkLocationsQueryHandler : IRequestHandler<GetWorkLocationsQuer
         var locationDtos = new List<WorkLocationDto>();
         foreach (var location in workLocations)
         {
-            var employeeCount = await _workLocationRepository.GetEmployeeCountAsync(location.Id, cancellationToken);
+            var employeeCount = await _unitOfWork.WorkLocations.GetEmployeeCountAsync(location.Id, cancellationToken);
 
             locationDtos.Add(new WorkLocationDto
             {

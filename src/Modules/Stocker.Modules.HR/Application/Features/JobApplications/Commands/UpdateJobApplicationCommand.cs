@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.JobApplications.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.JobApplications.Commands;
 /// Command to update a job application
 /// </summary>
 public record UpdateJobApplicationCommand(
-    Guid TenantId,
     int JobApplicationId,
     ApplicationStatus? Status = null,
     ApplicationStage? CurrentStage = null,
@@ -31,9 +29,6 @@ public class UpdateJobApplicationCommandValidator : AbstractValidator<UpdateJobA
 {
     public UpdateJobApplicationCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.JobApplicationId)
             .GreaterThan(0).WithMessage("Job Application ID must be greater than 0");
 
@@ -56,21 +51,17 @@ public class UpdateJobApplicationCommandValidator : AbstractValidator<UpdateJobA
 /// </summary>
 public class UpdateJobApplicationCommandHandler : IRequestHandler<UpdateJobApplicationCommand, Result<bool>>
 {
-    private readonly IJobApplicationRepository _jobApplicationRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateJobApplicationCommandHandler(
-        IJobApplicationRepository jobApplicationRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateJobApplicationCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _jobApplicationRepository = jobApplicationRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<bool>> Handle(UpdateJobApplicationCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(UpdateJobApplicationCommand request, CancellationToken cancellationToken)
     {
         // Get existing job application
-        var jobApplication = await _jobApplicationRepository.GetByIdAsync(request.JobApplicationId, cancellationToken);
+        var jobApplication = await _unitOfWork.JobApplications.GetByIdAsync(request.JobApplicationId, cancellationToken);
         if (jobApplication == null)
         {
             return Result<bool>.Failure(
@@ -107,7 +98,7 @@ public class UpdateJobApplicationCommandHandler : IRequestHandler<UpdateJobAppli
             jobApplication.Evaluate(request.OverallRating.Value, null, null, request.Notes, 0);
 
         // Save changes
-        _jobApplicationRepository.Update(jobApplication);
+        _unitOfWork.JobApplications.Update(jobApplication);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

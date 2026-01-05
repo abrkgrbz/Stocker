@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Enums;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Payroll.Commands;
@@ -11,12 +10,11 @@ namespace Stocker.Modules.HR.Application.Features.Payroll.Commands;
 /// <summary>
 /// Command to approve a payroll
 /// </summary>
-public class ApprovePayrollCommand : IRequest<Result<PayrollDto>>
+public record ApprovePayrollCommand : IRequest<Result<PayrollDto>>
 {
-    public Guid TenantId { get; set; }
-    public int PayrollId { get; set; }
-    public int ApprovedById { get; set; }
-    public string? Notes { get; set; }
+    public int PayrollId { get; init; }
+    public int ApprovedById { get; init; }
+    public string? Notes { get; init; }
 }
 
 /// <summary>
@@ -26,9 +24,6 @@ public class ApprovePayrollCommandValidator : AbstractValidator<ApprovePayrollCo
 {
     public ApprovePayrollCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.PayrollId)
             .GreaterThan(0).WithMessage("Valid payroll ID is required");
 
@@ -45,23 +40,16 @@ public class ApprovePayrollCommandValidator : AbstractValidator<ApprovePayrollCo
 /// </summary>
 public class ApprovePayrollCommandHandler : IRequestHandler<ApprovePayrollCommand, Result<PayrollDto>>
 {
-    private readonly IPayrollRepository _payrollRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public ApprovePayrollCommandHandler(
-        IPayrollRepository payrollRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+    public ApprovePayrollCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _payrollRepository = payrollRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PayrollDto>> Handle(ApprovePayrollCommand request, CancellationToken cancellationToken)
     {
-        var payroll = await _payrollRepository.GetByIdAsync(request.PayrollId, cancellationToken);
+        var payroll = await _unitOfWork.Payrolls.GetByIdAsync(request.PayrollId, cancellationToken);
         if (payroll == null)
         {
             return Result<PayrollDto>.Failure(
@@ -74,7 +62,7 @@ public class ApprovePayrollCommandHandler : IRequestHandler<ApprovePayrollComman
                 Error.Validation("Payroll.InvalidStatus", "Only calculated or pending payrolls can be approved"));
         }
 
-        var employee = await _employeeRepository.GetByIdAsync(payroll.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(payroll.EmployeeId, cancellationToken);
 
         payroll.Approve(request.ApprovedById);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Documents.Commands;
@@ -11,10 +10,9 @@ namespace Stocker.Modules.HR.Application.Features.Documents.Commands;
 /// <summary>
 /// Command to create a new employee document
 /// </summary>
-public class CreateEmployeeDocumentCommand : IRequest<Result<EmployeeDocumentDto>>
+public record CreateEmployeeDocumentCommand : IRequest<Result<EmployeeDocumentDto>>
 {
-    public Guid TenantId { get; set; }
-    public CreateEmployeeDocumentDto DocumentData { get; set; } = null!;
+    public CreateEmployeeDocumentDto DocumentData { get; init; } = null!;
 }
 
 /// <summary>
@@ -24,9 +22,6 @@ public class CreateEmployeeDocumentCommandValidator : AbstractValidator<CreateEm
 {
     public CreateEmployeeDocumentCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.DocumentData)
             .NotNull().WithMessage("Document data is required");
 
@@ -57,14 +52,10 @@ public class CreateEmployeeDocumentCommandValidator : AbstractValidator<CreateEm
 /// </summary>
 public class CreateEmployeeDocumentCommandHandler : IRequestHandler<CreateEmployeeDocumentCommand, Result<EmployeeDocumentDto>>
 {
-    private readonly IEmployeeDocumentRepository _documentRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateEmployeeDocumentCommandHandler(
-        IEmployeeDocumentRepository documentRepository,
-        IUnitOfWork unitOfWork)
+    public CreateEmployeeDocumentCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _documentRepository = documentRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -80,7 +71,7 @@ public class CreateEmployeeDocumentCommandHandler : IRequestHandler<CreateEmploy
             string.Empty, // fileName - will be set later if file is uploaded
             string.Empty); // fileUrl - will be set later if file is uploaded
 
-        document.SetTenantId(request.TenantId);
+        document.SetTenantId(_unitOfWork.TenantId);
 
         // Update with additional fields
         document.Update(
@@ -96,7 +87,7 @@ public class CreateEmployeeDocumentCommandHandler : IRequestHandler<CreateEmploy
             document.SetNotes(data.Notes);
         }
 
-        await _documentRepository.AddAsync(document, cancellationToken);
+        await _unitOfWork.EmployeeDocuments.AddAsync(document, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = MapToDto(document);

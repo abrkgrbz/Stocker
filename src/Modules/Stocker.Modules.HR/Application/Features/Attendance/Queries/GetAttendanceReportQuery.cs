@@ -1,7 +1,7 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Enums;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Attendance.Queries;
@@ -9,13 +9,12 @@ namespace Stocker.Modules.HR.Application.Features.Attendance.Queries;
 /// <summary>
 /// Query to get attendance report for a period
 /// </summary>
-public class GetAttendanceReportQuery : IRequest<Result<List<AttendanceSummaryDto>>>
+public record GetAttendanceReportQuery : IRequest<Result<List<AttendanceSummaryDto>>>
 {
-    public Guid TenantId { get; set; }
-    public int? EmployeeId { get; set; }
-    public int? DepartmentId { get; set; }
-    public int Year { get; set; }
-    public int Month { get; set; }
+    public int? EmployeeId { get; init; }
+    public int? DepartmentId { get; init; }
+    public int Year { get; init; }
+    public int Month { get; init; }
 }
 
 /// <summary>
@@ -23,18 +22,11 @@ public class GetAttendanceReportQuery : IRequest<Result<List<AttendanceSummaryDt
 /// </summary>
 public class GetAttendanceReportQueryHandler : IRequestHandler<GetAttendanceReportQuery, Result<List<AttendanceSummaryDto>>>
 {
-    private readonly IAttendanceRepository _attendanceRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IDepartmentRepository _departmentRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetAttendanceReportQueryHandler(
-        IAttendanceRepository attendanceRepository,
-        IEmployeeRepository employeeRepository,
-        IDepartmentRepository departmentRepository)
+    public GetAttendanceReportQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _attendanceRepository = attendanceRepository;
-        _employeeRepository = employeeRepository;
-        _departmentRepository = departmentRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<AttendanceSummaryDto>>> Handle(GetAttendanceReportQuery request, CancellationToken cancellationToken)
@@ -57,7 +49,7 @@ public class GetAttendanceReportQueryHandler : IRequestHandler<GetAttendanceRepo
 
         if (request.EmployeeId.HasValue)
         {
-            var employee = await _employeeRepository.GetByIdAsync(request.EmployeeId.Value, cancellationToken);
+            var employee = await _unitOfWork.Employees.GetByIdAsync(request.EmployeeId.Value, cancellationToken);
             if (employee == null)
             {
                 return Result<List<AttendanceSummaryDto>>.Failure(
@@ -67,17 +59,17 @@ public class GetAttendanceReportQueryHandler : IRequestHandler<GetAttendanceRepo
         }
         else if (request.DepartmentId.HasValue)
         {
-            var department = await _departmentRepository.GetByIdAsync(request.DepartmentId.Value, cancellationToken);
+            var department = await _unitOfWork.Departments.GetByIdAsync(request.DepartmentId.Value, cancellationToken);
             if (department == null)
             {
                 return Result<List<AttendanceSummaryDto>>.Failure(
                     Error.NotFound("Department", $"Department with ID {request.DepartmentId} not found"));
             }
-            employees = await _employeeRepository.GetByDepartmentAsync(request.DepartmentId.Value, cancellationToken);
+            employees = await _unitOfWork.Employees.GetByDepartmentAsync(request.DepartmentId.Value, cancellationToken);
         }
         else
         {
-            employees = await _employeeRepository.GetActiveEmployeesAsync(cancellationToken);
+            employees = await _unitOfWork.Employees.GetActiveEmployeesAsync(cancellationToken);
         }
 
         // Generate summaries
@@ -86,7 +78,7 @@ public class GetAttendanceReportQueryHandler : IRequestHandler<GetAttendanceRepo
         foreach (var employee in employees)
         {
             // Get monthly summary from repository
-            var summary = await _attendanceRepository.GetMonthlySummaryAsync(
+            var summary = await _unitOfWork.Attendances.GetMonthlySummaryAsync(
                 employee.Id,
                 request.Year,
                 request.Month,
@@ -109,7 +101,7 @@ public class GetAttendanceReportQueryHandler : IRequestHandler<GetAttendanceRepo
             var startDate = new DateTime(request.Year, request.Month, 1);
             var endDate = startDate.AddMonths(1).AddDays(-1);
 
-            var attendances = await _attendanceRepository.GetByEmployeeAndDateRangeAsync(
+            var attendances = await _unitOfWork.Attendances.GetByEmployeeAndDateRangeAsync(
                 employee.Id,
                 startDate,
                 endDate,

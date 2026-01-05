@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Enums;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Attendance.Commands;
@@ -11,17 +10,16 @@ namespace Stocker.Modules.HR.Application.Features.Attendance.Commands;
 /// <summary>
 /// Command to update/correct attendance record manually
 /// </summary>
-public class UpdateAttendanceCommand : IRequest<Result<AttendanceDto>>
+public record UpdateAttendanceCommand : IRequest<Result<AttendanceDto>>
 {
-    public Guid TenantId { get; set; }
-    public int AttendanceId { get; set; }
-    public TimeSpan? CheckInTime { get; set; }
-    public TimeSpan? CheckOutTime { get; set; }
-    public AttendanceStatus? Status { get; set; }
-    public int? ShiftId { get; set; }
-    public string? Notes { get; set; }
-    public string CorrectionReason { get; set; } = string.Empty;
-    public int? ApprovedById { get; set; }
+    public int AttendanceId { get; init; }
+    public TimeSpan? CheckInTime { get; init; }
+    public TimeSpan? CheckOutTime { get; init; }
+    public AttendanceStatus? Status { get; init; }
+    public int? ShiftId { get; init; }
+    public string? Notes { get; init; }
+    public string CorrectionReason { get; init; } = string.Empty;
+    public int? ApprovedById { get; init; }
 }
 
 /// <summary>
@@ -31,9 +29,6 @@ public class UpdateAttendanceCommandValidator : AbstractValidator<UpdateAttendan
 {
     public UpdateAttendanceCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.AttendanceId)
             .GreaterThan(0).WithMessage("Attendance ID is required");
 
@@ -57,27 +52,17 @@ public class UpdateAttendanceCommandValidator : AbstractValidator<UpdateAttendan
 /// </summary>
 public class UpdateAttendanceCommandHandler : IRequestHandler<UpdateAttendanceCommand, Result<AttendanceDto>>
 {
-    private readonly IAttendanceRepository _attendanceRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IShiftRepository _shiftRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateAttendanceCommandHandler(
-        IAttendanceRepository attendanceRepository,
-        IEmployeeRepository employeeRepository,
-        IShiftRepository shiftRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateAttendanceCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _attendanceRepository = attendanceRepository;
-        _employeeRepository = employeeRepository;
-        _shiftRepository = shiftRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<AttendanceDto>> Handle(UpdateAttendanceCommand request, CancellationToken cancellationToken)
     {
         // Get attendance record
-        var attendance = await _attendanceRepository.GetByIdAsync(request.AttendanceId, cancellationToken);
+        var attendance = await _unitOfWork.Attendances.GetByIdAsync(request.AttendanceId, cancellationToken);
         if (attendance == null)
         {
             return Result<AttendanceDto>.Failure(
@@ -85,7 +70,7 @@ public class UpdateAttendanceCommandHandler : IRequestHandler<UpdateAttendanceCo
         }
 
         // Get employee for mapping
-        var employee = await _employeeRepository.GetByIdAsync(attendance.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(attendance.EmployeeId, cancellationToken);
         if (employee == null)
         {
             return Result<AttendanceDto>.Failure(
@@ -95,7 +80,7 @@ public class UpdateAttendanceCommandHandler : IRequestHandler<UpdateAttendanceCo
         // Validate approver if provided
         if (request.ApprovedById.HasValue)
         {
-            var approver = await _employeeRepository.GetByIdAsync(request.ApprovedById.Value, cancellationToken);
+            var approver = await _unitOfWork.Employees.GetByIdAsync(request.ApprovedById.Value, cancellationToken);
             if (approver == null)
             {
                 return Result<AttendanceDto>.Failure(
@@ -118,7 +103,7 @@ public class UpdateAttendanceCommandHandler : IRequestHandler<UpdateAttendanceCo
         // Update shift if provided
         if (request.ShiftId.HasValue)
         {
-            var shift = await _shiftRepository.GetByIdAsync(request.ShiftId.Value, cancellationToken);
+            var shift = await _unitOfWork.Shifts.GetByIdAsync(request.ShiftId.Value, cancellationToken);
             if (shift == null)
             {
                 return Result<AttendanceDto>.Failure(
@@ -174,14 +159,14 @@ public class UpdateAttendanceCommandHandler : IRequestHandler<UpdateAttendanceCo
         }
 
         // Save changes
-        await _attendanceRepository.UpdateAsync(attendance, cancellationToken);
+        await _unitOfWork.Attendances.UpdateAsync(attendance, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Get shift name if applicable
         string? shiftName = null;
         if (attendance.ShiftId.HasValue)
         {
-            var shift = await _shiftRepository.GetByIdAsync(attendance.ShiftId.Value, cancellationToken);
+            var shift = await _unitOfWork.Shifts.GetByIdAsync(attendance.ShiftId.Value, cancellationToken);
             shiftName = shift?.Name;
         }
 

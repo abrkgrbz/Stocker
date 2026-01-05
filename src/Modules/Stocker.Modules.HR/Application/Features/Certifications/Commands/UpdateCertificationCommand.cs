@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Certifications.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.Certifications.Commands;
 /// </summary>
 public record UpdateCertificationCommand : IRequest<Result<int>>
 {
-    public Guid TenantId { get; init; }
     public int CertificationId { get; init; }
     public CertificationStatus? Status { get; init; }
     public string? CertificationNumber { get; init; }
@@ -39,20 +37,16 @@ public record UpdateCertificationCommand : IRequest<Result<int>>
 /// </summary>
 public class UpdateCertificationCommandHandler : IRequestHandler<UpdateCertificationCommand, Result<int>>
 {
-    private readonly ICertificationRepository _certificationRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateCertificationCommandHandler(
-        ICertificationRepository certificationRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateCertificationCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _certificationRepository = certificationRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<int>> Handle(UpdateCertificationCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(UpdateCertificationCommand request, CancellationToken cancellationToken)
     {
-        var certification = await _certificationRepository.GetByIdAsync(request.CertificationId, cancellationToken);
+        var certification = await _unitOfWork.Certifications.GetByIdAsync(request.CertificationId, cancellationToken);
         if (certification == null)
         {
             return Result<int>.Failure(
@@ -98,7 +92,7 @@ public class UpdateCertificationCommandHandler : IRequestHandler<UpdateCertifica
         if (request.RequiredForJob.HasValue)
             certification.SetRequiredForJob(request.RequiredForJob.Value);
 
-        _certificationRepository.Update(certification);
+        _unitOfWork.Certifications.Update(certification);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(certification.Id);

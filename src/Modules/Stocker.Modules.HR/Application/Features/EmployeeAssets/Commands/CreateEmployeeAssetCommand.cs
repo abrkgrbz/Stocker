@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.EmployeeAssets.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.EmployeeAssets.Commands;
 /// </summary>
 public record CreateEmployeeAssetCommand : IRequest<Result<int>>
 {
-    public Guid TenantId { get; init; }
     public int EmployeeId { get; init; }
     public AssetType AssetType { get; init; }
     public string AssetName { get; init; } = string.Empty;
@@ -51,18 +49,14 @@ public record CreateEmployeeAssetCommand : IRequest<Result<int>>
 /// </summary>
 public class CreateEmployeeAssetCommandHandler : IRequestHandler<CreateEmployeeAssetCommand, Result<int>>
 {
-    private readonly IEmployeeAssetRepository _employeeAssetRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateEmployeeAssetCommandHandler(
-        IEmployeeAssetRepository employeeAssetRepository,
-        IUnitOfWork unitOfWork)
+    public CreateEmployeeAssetCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _employeeAssetRepository = employeeAssetRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<int>> Handle(CreateEmployeeAssetCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(CreateEmployeeAssetCommand request, CancellationToken cancellationToken)
     {
         var employeeAsset = new EmployeeAsset(
             request.EmployeeId,
@@ -70,7 +64,7 @@ public class CreateEmployeeAssetCommandHandler : IRequestHandler<CreateEmployeeA
             request.AssetName,
             request.ConditionAtAssignment);
 
-        employeeAsset.SetTenantId(request.TenantId);
+        employeeAsset.SetTenantId(_unitOfWork.TenantId);
 
         employeeAsset.SetAssetDetails(request.AssetCode, request.SerialNumber, request.Model, request.Brand);
 
@@ -123,7 +117,7 @@ public class CreateEmployeeAssetCommandHandler : IRequestHandler<CreateEmployeeA
         if (request.InventoryItemId.HasValue)
             employeeAsset.SetInventoryItemId(request.InventoryItemId);
 
-        await _employeeAssetRepository.AddAsync(employeeAsset, cancellationToken);
+        await _unitOfWork.EmployeeAssets.AddAsync(employeeAsset, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(employeeAsset.Id);

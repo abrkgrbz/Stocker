@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.LeaveTypes.Commands;
@@ -11,10 +10,9 @@ namespace Stocker.Modules.HR.Application.Features.LeaveTypes.Commands;
 /// <summary>
 /// Command to create a new leave type
 /// </summary>
-public class CreateLeaveTypeCommand : IRequest<Result<LeaveTypeDto>>
+public record CreateLeaveTypeCommand : IRequest<Result<LeaveTypeDto>>
 {
-    public Guid TenantId { get; set; }
-    public CreateLeaveTypeDto LeaveTypeData { get; set; } = null!;
+    public CreateLeaveTypeDto LeaveTypeData { get; init; } = null!;
 }
 
 /// <summary>
@@ -24,9 +22,6 @@ public class CreateLeaveTypeCommandValidator : AbstractValidator<CreateLeaveType
 {
     public CreateLeaveTypeCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.LeaveTypeData)
             .NotNull().WithMessage("Leave type data is required");
 
@@ -58,14 +53,10 @@ public class CreateLeaveTypeCommandValidator : AbstractValidator<CreateLeaveType
 /// </summary>
 public class CreateLeaveTypeCommandHandler : IRequestHandler<CreateLeaveTypeCommand, Result<LeaveTypeDto>>
 {
-    private readonly ILeaveTypeRepository _leaveTypeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateLeaveTypeCommandHandler(
-        ILeaveTypeRepository leaveTypeRepository,
-        IUnitOfWork unitOfWork)
+    public CreateLeaveTypeCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _leaveTypeRepository = leaveTypeRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -74,7 +65,7 @@ public class CreateLeaveTypeCommandHandler : IRequestHandler<CreateLeaveTypeComm
         var data = request.LeaveTypeData;
 
         // Check if code already exists
-        var existingByCode = await _leaveTypeRepository.GetByCodeAsync(data.Code, cancellationToken);
+        var existingByCode = await _unitOfWork.LeaveTypes.GetByCodeAsync(data.Code, cancellationToken);
         if (existingByCode != null)
         {
             return Result<LeaveTypeDto>.Failure(
@@ -90,7 +81,7 @@ public class CreateLeaveTypeCommandHandler : IRequestHandler<CreateLeaveTypeComm
             data.Description,
             data.MinNoticeDays ?? 0);
 
-        leaveType.SetTenantId(request.TenantId);
+        leaveType.SetTenantId(_unitOfWork.TenantId);
 
         // Update with additional properties
         leaveType.Update(
@@ -115,7 +106,7 @@ public class CreateLeaveTypeCommandHandler : IRequestHandler<CreateLeaveTypeComm
             leaveType.SetColor(data.Color);
         }
 
-        await _leaveTypeRepository.AddAsync(leaveType, cancellationToken);
+        await _unitOfWork.LeaveTypes.AddAsync(leaveType, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = MapToDto(leaveType);

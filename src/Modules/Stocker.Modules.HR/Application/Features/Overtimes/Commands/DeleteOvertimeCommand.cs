@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Overtimes.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.Overtimes.Commands;
 /// </summary>
 public record DeleteOvertimeCommand : IRequest<Result<bool>>
 {
-    public Guid TenantId { get; init; }
     public int OvertimeId { get; init; }
 }
 
@@ -20,21 +18,17 @@ public record DeleteOvertimeCommand : IRequest<Result<bool>>
 /// </summary>
 public class DeleteOvertimeCommandHandler : IRequestHandler<DeleteOvertimeCommand, Result<bool>>
 {
-    private readonly IOvertimeRepository _overtimeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public DeleteOvertimeCommandHandler(
-        IOvertimeRepository overtimeRepository,
-        IUnitOfWork unitOfWork)
+    public DeleteOvertimeCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _overtimeRepository = overtimeRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<bool>> Handle(DeleteOvertimeCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(DeleteOvertimeCommand request, CancellationToken cancellationToken)
     {
         // Get existing overtime
-        var overtime = await _overtimeRepository.GetByIdAsync(request.OvertimeId, cancellationToken);
+        var overtime = await _unitOfWork.Overtimes.GetByIdAsync(request.OvertimeId, cancellationToken);
         if (overtime == null)
         {
             return Result<bool>.Failure(
@@ -55,7 +49,7 @@ public class DeleteOvertimeCommandHandler : IRequestHandler<DeleteOvertimeComman
         }
 
         // Soft delete
-        _overtimeRepository.Remove(overtime);
+        _unitOfWork.Overtimes.Remove(overtime);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

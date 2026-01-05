@@ -6,7 +6,6 @@ using Stocker.Modules.HR.Application.Features.Leaves.Commands;
 using Stocker.Modules.HR.Application.Features.Leaves.Queries;
 using Stocker.Modules.HR.Domain.Enums;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.API.Controllers;
@@ -19,12 +18,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class LeavesController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public LeavesController(IMediator mediator, ITenantService tenantService)
+    public LeavesController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -39,20 +36,22 @@ public class LeavesController : ControllerBase
         [FromQuery] LeaveStatus? status = null,
         [FromQuery] DateTime? startDate = null,
         [FromQuery] DateTime? endDate = null,
-        [FromQuery] int? year = null)
+        [FromQuery] int? year = null,
+        [FromQuery] int? departmentId = null,
+        [FromQuery] bool includePendingForApproval = false,
+        [FromQuery] int? approverId = null)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetLeavesQuery
         {
-            TenantId = tenantId.Value,
             EmployeeId = employeeId,
             LeaveTypeId = leaveTypeId,
             Status = status,
             StartDate = startDate,
             EndDate = endDate,
-            Year = year
+            Year = year,
+            DepartmentId = departmentId,
+            IncludePendingForApproval = includePendingForApproval,
+            ApproverId = approverId
         };
 
         var result = await _mediator.Send(query);
@@ -68,10 +67,7 @@ public class LeavesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<LeaveDto>> GetLeave(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var query = new GetLeaveByIdQuery { TenantId = tenantId.Value, LeaveId = id };
+        var query = new GetLeaveByIdQuery(id);
         var result = await _mediator.Send(query);
 
         if (result.IsFailure)
@@ -86,18 +82,14 @@ public class LeavesController : ControllerBase
     /// Get employee's leave balance
     /// </summary>
     [HttpGet("balance/{employeeId}")]
-    [ProducesResponseType(typeof(List<LeaveBalanceDto>), 200)]
+    [ProducesResponseType(typeof(EmployeeLeaveSummaryDto), 200)]
     [ProducesResponseType(404)]
-    public async Task<ActionResult<List<LeaveBalanceDto>>> GetLeaveBalance(int employeeId, [FromQuery] int? year = null)
+    public async Task<ActionResult<EmployeeLeaveSummaryDto>> GetLeaveBalance(int employeeId, [FromQuery] int? year = null)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetLeaveBalanceQuery
         {
-            TenantId = tenantId.Value,
             EmployeeId = employeeId,
-            Year = year ?? DateTime.UtcNow.Year
+            Year = year
         };
 
         var result = await _mediator.Send(query);
@@ -117,10 +109,7 @@ public class LeavesController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<ActionResult<LeaveDto>> CreateLeave(CreateLeaveDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new CreateLeaveCommand { TenantId = tenantId.Value, LeaveData = dto };
+        var command = new CreateLeaveCommand { LeaveData = dto };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure) return BadRequest(result.Error);
@@ -136,10 +125,7 @@ public class LeavesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<LeaveDto>> UpdateLeave(int id, UpdateLeaveDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new UpdateLeaveCommand { TenantId = tenantId.Value, LeaveId = id, LeaveData = dto };
+        var command = new UpdateLeaveCommand { LeaveId = id, LeaveData = dto };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -159,16 +145,13 @@ public class LeavesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<LeaveDto>> ApproveLeave(int id, ApproveLeaveDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new ApproveLeaveCommand
         {
-            TenantId = tenantId.Value,
             LeaveId = id,
             IsApproved = dto.IsApproved,
             ApprovedById = dto.ApproverId,
-            Notes = dto.ApprovalNotes
+            Notes = dto.ApprovalNotes,
+            RejectionReason = dto.RejectionReason
         };
         var result = await _mediator.Send(command);
 
@@ -189,12 +172,8 @@ public class LeavesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<LeaveDto>> CancelLeave(int id, [FromBody] CancelLeaveDto? dto = null)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new CancelLeaveCommand
         {
-            TenantId = tenantId.Value,
             LeaveId = id,
             Reason = dto?.CancellationReason
         };
@@ -207,11 +186,6 @@ public class LeavesController : ControllerBase
         }
         return Ok(result.Value);
     }
-
-    private static Error CreateTenantError()
-    {
-        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
-    }
 }
 
 public class ApproveLeaveDto
@@ -219,6 +193,7 @@ public class ApproveLeaveDto
     public bool IsApproved { get; set; }
     public int ApproverId { get; set; }
     public string? ApprovalNotes { get; set; }
+    public string? RejectionReason { get; set; }
 }
 
 public class CancelLeaveDto

@@ -1,7 +1,7 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Enums;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Training.Queries;
@@ -9,18 +9,17 @@ namespace Stocker.Modules.HR.Application.Features.Training.Queries;
 /// <summary>
 /// Query to get trainings with filters
 /// </summary>
-public class GetTrainingsQuery : IRequest<Result<List<TrainingDto>>>
+public record GetTrainingsQuery : IRequest<Result<List<TrainingDto>>>
 {
-    public Guid TenantId { get; set; }
-    public TrainingStatus? Status { get; set; }
-    public bool? MandatoryOnly { get; set; }
-    public bool? OnlineOnly { get; set; }
-    public bool? WithCertification { get; set; }
-    public DateTime? StartDateFrom { get; set; }
-    public DateTime? StartDateTo { get; set; }
-    public bool IncludeInactive { get; set; } = false;
-    public bool? UpcomingOnly { get; set; }
-    public int? UpcomingDays { get; set; } = 30;
+    public TrainingStatus? Status { get; init; }
+    public bool? MandatoryOnly { get; init; }
+    public bool? OnlineOnly { get; init; }
+    public bool? WithCertification { get; init; }
+    public DateTime? StartDateFrom { get; init; }
+    public DateTime? StartDateTo { get; init; }
+    public bool IncludeInactive { get; init; } = false;
+    public bool? UpcomingOnly { get; init; }
+    public int? UpcomingDays { get; init; } = 30;
 }
 
 /// <summary>
@@ -28,11 +27,11 @@ public class GetTrainingsQuery : IRequest<Result<List<TrainingDto>>>
 /// </summary>
 public class GetTrainingsQueryHandler : IRequestHandler<GetTrainingsQuery, Result<List<TrainingDto>>>
 {
-    private readonly ITrainingRepository _trainingRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetTrainingsQueryHandler(ITrainingRepository trainingRepository)
+    public GetTrainingsQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _trainingRepository = trainingRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<TrainingDto>>> Handle(GetTrainingsQuery request, CancellationToken cancellationToken)
@@ -42,21 +41,21 @@ public class GetTrainingsQueryHandler : IRequestHandler<GetTrainingsQuery, Resul
         // Get trainings based on filters
         if (request.UpcomingOnly == true)
         {
-            trainings = await _trainingRepository.GetUpcomingAsync(
+            trainings = await _unitOfWork.Trainings.GetUpcomingAsync(
                 request.UpcomingDays ?? 30, cancellationToken);
         }
         else if (request.Status.HasValue)
         {
-            trainings = await _trainingRepository.GetByStatusAsync(
+            trainings = await _unitOfWork.Trainings.GetByStatusAsync(
                 request.Status.Value, cancellationToken);
         }
         else if (request.MandatoryOnly == true)
         {
-            trainings = await _trainingRepository.GetMandatoryTrainingsAsync(cancellationToken);
+            trainings = await _unitOfWork.Trainings.GetMandatoryTrainingsAsync(cancellationToken);
         }
         else
         {
-            trainings = await _trainingRepository.GetAllAsync(cancellationToken);
+            trainings = await _unitOfWork.Trainings.GetAllAsync(cancellationToken);
         }
 
         // Apply additional filters

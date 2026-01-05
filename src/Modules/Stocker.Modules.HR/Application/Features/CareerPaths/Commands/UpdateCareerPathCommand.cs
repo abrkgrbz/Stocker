@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.CareerPaths.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.CareerPaths.Commands;
 /// </summary>
 public record UpdateCareerPathCommand : IRequest<Result<int>>
 {
-    public Guid TenantId { get; init; }
     public int CareerPathId { get; init; }
     public int? TargetPositionId { get; init; }
     public string? TargetPositionName { get; init; }
@@ -38,20 +36,16 @@ public record UpdateCareerPathCommand : IRequest<Result<int>>
 /// </summary>
 public class UpdateCareerPathCommandHandler : IRequestHandler<UpdateCareerPathCommand, Result<int>>
 {
-    private readonly ICareerPathRepository _careerPathRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateCareerPathCommandHandler(
-        ICareerPathRepository careerPathRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateCareerPathCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _careerPathRepository = careerPathRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<int>> Handle(UpdateCareerPathCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(UpdateCareerPathCommand request, CancellationToken cancellationToken)
     {
-        var careerPath = await _careerPathRepository.GetByIdAsync(request.CareerPathId, cancellationToken);
+        var careerPath = await _unitOfWork.CareerPaths.GetByIdAsync(request.CareerPathId, cancellationToken);
         if (careerPath == null)
         {
             return Result<int>.Failure(
@@ -107,7 +101,7 @@ public class UpdateCareerPathCommandHandler : IRequestHandler<UpdateCareerPathCo
         if (request.NextReviewDate.HasValue)
             careerPath.SetNextReviewDate(request.NextReviewDate);
 
-        _careerPathRepository.Update(careerPath);
+        _unitOfWork.CareerPaths.Update(careerPath);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(careerPath.Id);

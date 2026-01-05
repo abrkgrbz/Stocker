@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Overtimes.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.Overtimes.Commands;
 /// </summary>
 public record UpdateOvertimeCommand : IRequest<Result<bool>>
 {
-    public Guid TenantId { get; init; }
     public int OvertimeId { get; init; }
     public decimal? ActualHours { get; init; }
     public int? BreakMinutes { get; init; }
@@ -29,21 +27,17 @@ public record UpdateOvertimeCommand : IRequest<Result<bool>>
 /// </summary>
 public class UpdateOvertimeCommandHandler : IRequestHandler<UpdateOvertimeCommand, Result<bool>>
 {
-    private readonly IOvertimeRepository _overtimeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateOvertimeCommandHandler(
-        IOvertimeRepository overtimeRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateOvertimeCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _overtimeRepository = overtimeRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<bool>> Handle(UpdateOvertimeCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(UpdateOvertimeCommand request, CancellationToken cancellationToken)
     {
         // Get existing overtime
-        var overtime = await _overtimeRepository.GetByIdAsync(request.OvertimeId, cancellationToken);
+        var overtime = await _unitOfWork.Overtimes.GetByIdAsync(request.OvertimeId, cancellationToken);
         if (overtime == null)
         {
             return Result<bool>.Failure(
@@ -80,7 +74,7 @@ public class UpdateOvertimeCommandHandler : IRequestHandler<UpdateOvertimeComman
             overtime.SetNotes(request.Notes);
 
         // Save changes
-        _overtimeRepository.Update(overtime);
+        _unitOfWork.Overtimes.Update(overtime);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

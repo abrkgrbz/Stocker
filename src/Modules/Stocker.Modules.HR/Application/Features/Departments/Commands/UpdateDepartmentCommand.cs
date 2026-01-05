@@ -2,7 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Departments.Commands;
@@ -10,11 +10,10 @@ namespace Stocker.Modules.HR.Application.Features.Departments.Commands;
 /// <summary>
 /// Command to update a department
 /// </summary>
-public class UpdateDepartmentCommand : IRequest<Result<DepartmentDto>>
+public record UpdateDepartmentCommand : IRequest<Result<DepartmentDto>>
 {
-    public Guid TenantId { get; set; }
-    public int DepartmentId { get; set; }
-    public UpdateDepartmentDto DepartmentData { get; set; } = null!;
+    public int DepartmentId { get; init; }
+    public UpdateDepartmentDto DepartmentData { get; init; } = null!;
 }
 
 /// <summary>
@@ -24,9 +23,6 @@ public class UpdateDepartmentCommandValidator : AbstractValidator<UpdateDepartme
 {
     public UpdateDepartmentCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.DepartmentId)
             .GreaterThan(0).WithMessage("Department ID must be greater than 0");
 
@@ -50,24 +46,17 @@ public class UpdateDepartmentCommandValidator : AbstractValidator<UpdateDepartme
 /// </summary>
 public class UpdateDepartmentCommandHandler : IRequestHandler<UpdateDepartmentCommand, Result<DepartmentDto>>
 {
-    private readonly IDepartmentRepository _departmentRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateDepartmentCommandHandler(
-        IDepartmentRepository departmentRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateDepartmentCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _departmentRepository = departmentRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<DepartmentDto>> Handle(UpdateDepartmentCommand request, CancellationToken cancellationToken)
     {
         // Get existing department
-        var department = await _departmentRepository.GetByIdAsync(request.DepartmentId, cancellationToken);
+        var department = await _unitOfWork.Departments.GetByIdAsync(request.DepartmentId, cancellationToken);
         if (department == null)
         {
             return Result<DepartmentDto>.Failure(
@@ -84,7 +73,7 @@ public class UpdateDepartmentCommandHandler : IRequestHandler<UpdateDepartmentCo
                     Error.Validation("Department.ParentDepartmentId", "A department cannot be its own parent"));
             }
 
-            var parentDepartment = await _departmentRepository.GetByIdAsync(
+            var parentDepartment = await _unitOfWork.Departments.GetByIdAsync(
                 request.DepartmentData.ParentDepartmentId.Value, cancellationToken);
 
             if (parentDepartment == null)
@@ -109,17 +98,17 @@ public class UpdateDepartmentCommandHandler : IRequestHandler<UpdateDepartmentCo
         }
 
         // Save changes
-        _departmentRepository.Update(department);
+        _unitOfWork.Departments.Update(department);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Get employee count
-        var employeeCount = await _departmentRepository.GetEmployeeCountAsync(department.Id, cancellationToken);
+        var employeeCount = await _unitOfWork.Departments.GetEmployeeCountAsync(department.Id, cancellationToken);
 
         // Get manager name if available
         string? managerName = null;
         if (department.ManagerId.HasValue)
         {
-            var manager = await _employeeRepository.GetByIdAsync(department.ManagerId.Value, cancellationToken);
+            var manager = await _unitOfWork.Employees.GetByIdAsync(department.ManagerId.Value, cancellationToken);
             managerName = manager != null ? $"{manager.FirstName} {manager.LastName}" : null;
         }
 
@@ -127,7 +116,7 @@ public class UpdateDepartmentCommandHandler : IRequestHandler<UpdateDepartmentCo
         string? parentDepartmentName = null;
         if (department.ParentDepartmentId.HasValue)
         {
-            var parent = await _departmentRepository.GetByIdAsync(department.ParentDepartmentId.Value, cancellationToken);
+            var parent = await _unitOfWork.Departments.GetByIdAsync(department.ParentDepartmentId.Value, cancellationToken);
             parentDepartmentName = parent?.Name;
         }
 

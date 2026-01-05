@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.LeaveTypes.Queries;
@@ -8,12 +8,11 @@ namespace Stocker.Modules.HR.Application.Features.LeaveTypes.Queries;
 /// <summary>
 /// Query to get all leave types with optional filtering
 /// </summary>
-public class GetLeaveTypesQuery : IRequest<Result<List<LeaveTypeDto>>>
+public record GetLeaveTypesQuery : IRequest<Result<List<LeaveTypeDto>>>
 {
-    public Guid TenantId { get; set; }
-    public bool? IsPaid { get; set; }
-    public bool? RequiresApproval { get; set; }
-    public bool IncludeInactive { get; set; }
+    public bool? IsPaid { get; init; }
+    public bool? RequiresApproval { get; init; }
+    public bool IncludeInactive { get; init; }
 }
 
 /// <summary>
@@ -21,16 +20,16 @@ public class GetLeaveTypesQuery : IRequest<Result<List<LeaveTypeDto>>>
 /// </summary>
 public class GetLeaveTypesQueryHandler : IRequestHandler<GetLeaveTypesQuery, Result<List<LeaveTypeDto>>>
 {
-    private readonly ILeaveTypeRepository _leaveTypeRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetLeaveTypesQueryHandler(ILeaveTypeRepository leaveTypeRepository)
+    public GetLeaveTypesQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _leaveTypeRepository = leaveTypeRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<LeaveTypeDto>>> Handle(GetLeaveTypesQuery request, CancellationToken cancellationToken)
     {
-        var leaveTypes = await _leaveTypeRepository.GetAllAsync(cancellationToken);
+        var leaveTypes = await _unitOfWork.LeaveTypes.GetAllAsync(cancellationToken);
 
         var filtered = leaveTypes.AsEnumerable();
 

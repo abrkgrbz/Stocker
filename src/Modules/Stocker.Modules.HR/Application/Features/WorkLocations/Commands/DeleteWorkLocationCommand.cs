@@ -1,7 +1,6 @@
 using FluentValidation;
 using MediatR;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.WorkLocations.Commands;
@@ -9,10 +8,9 @@ namespace Stocker.Modules.HR.Application.Features.WorkLocations.Commands;
 /// <summary>
 /// Command to delete a work location
 /// </summary>
-public class DeleteWorkLocationCommand : IRequest<Result<bool>>
+public record DeleteWorkLocationCommand : IRequest<Result<bool>>
 {
-    public Guid TenantId { get; set; }
-    public int WorkLocationId { get; set; }
+    public int WorkLocationId { get; init; }
 }
 
 /// <summary>
@@ -22,9 +20,6 @@ public class DeleteWorkLocationCommandValidator : AbstractValidator<DeleteWorkLo
 {
     public DeleteWorkLocationCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.WorkLocationId)
             .GreaterThan(0).WithMessage("Work location ID must be greater than 0");
     }
@@ -35,21 +30,17 @@ public class DeleteWorkLocationCommandValidator : AbstractValidator<DeleteWorkLo
 /// </summary>
 public class DeleteWorkLocationCommandHandler : IRequestHandler<DeleteWorkLocationCommand, Result<bool>>
 {
-    private readonly IWorkLocationRepository _workLocationRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public DeleteWorkLocationCommandHandler(
-        IWorkLocationRepository workLocationRepository,
-        IUnitOfWork unitOfWork)
+    public DeleteWorkLocationCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _workLocationRepository = workLocationRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(DeleteWorkLocationCommand request, CancellationToken cancellationToken)
     {
         // Get existing work location
-        var workLocation = await _workLocationRepository.GetByIdAsync(request.WorkLocationId, cancellationToken);
+        var workLocation = await _unitOfWork.WorkLocations.GetByIdAsync(request.WorkLocationId, cancellationToken);
         if (workLocation == null)
         {
             return Result<bool>.Failure(
@@ -57,7 +48,7 @@ public class DeleteWorkLocationCommandHandler : IRequestHandler<DeleteWorkLocati
         }
 
         // Check if location has employees
-        var employeeCount = await _workLocationRepository.GetEmployeeCountAsync(request.WorkLocationId, cancellationToken);
+        var employeeCount = await _unitOfWork.WorkLocations.GetEmployeeCountAsync(request.WorkLocationId, cancellationToken);
         if (employeeCount > 0)
         {
             return Result<bool>.Failure(
@@ -74,7 +65,7 @@ public class DeleteWorkLocationCommandHandler : IRequestHandler<DeleteWorkLocati
         }
 
         // Soft delete
-        _workLocationRepository.Remove(workLocation);
+        _unitOfWork.WorkLocations.Remove(workLocation);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

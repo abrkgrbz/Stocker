@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Performance.Commands;
@@ -11,12 +10,11 @@ namespace Stocker.Modules.HR.Application.Features.Performance.Commands;
 /// <summary>
 /// Command to update goal progress
 /// </summary>
-public class UpdateGoalProgressCommand : IRequest<Result<PerformanceGoalDto>>
+public record UpdateGoalProgressCommand : IRequest<Result<PerformanceGoalDto>>
 {
-    public Guid TenantId { get; set; }
-    public int GoalId { get; set; }
-    public decimal Progress { get; set; }
-    public string? Notes { get; set; }
+    public int GoalId { get; init; }
+    public decimal Progress { get; init; }
+    public string? Notes { get; init; }
 }
 
 /// <summary>
@@ -26,9 +24,6 @@ public class UpdateGoalProgressCommandValidator : AbstractValidator<UpdateGoalPr
 {
     public UpdateGoalProgressCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.GoalId)
             .GreaterThan(0).WithMessage("Goal ID is required");
 
@@ -43,35 +38,21 @@ public class UpdateGoalProgressCommandValidator : AbstractValidator<UpdateGoalPr
 /// </summary>
 public class UpdateGoalProgressCommandHandler : IRequestHandler<UpdateGoalProgressCommand, Result<PerformanceGoalDto>>
 {
-    private readonly IPerformanceGoalRepository _goalRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateGoalProgressCommandHandler(
-        IPerformanceGoalRepository goalRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateGoalProgressCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _goalRepository = goalRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PerformanceGoalDto>> Handle(UpdateGoalProgressCommand request, CancellationToken cancellationToken)
     {
         // Get the goal
-        var goal = await _goalRepository.GetByIdAsync(request.GoalId, cancellationToken);
+        var goal = await _unitOfWork.PerformanceGoals.GetByIdAsync(request.GoalId, cancellationToken);
         if (goal == null)
         {
             return Result<PerformanceGoalDto>.Failure(
                 Error.NotFound("PerformanceGoal", $"Performance goal with ID {request.GoalId} not found"));
-        }
-
-        // Verify tenant
-        if (goal.TenantId != request.TenantId)
-        {
-            return Result<PerformanceGoalDto>.Failure(
-                Error.Forbidden("PerformanceGoal.Tenant", "Access denied to this performance goal"));
         }
 
         // Check if goal can be updated
@@ -113,13 +94,13 @@ public class UpdateGoalProgressCommandHandler : IRequestHandler<UpdateGoalProgre
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Get employee info
-        var employee = await _employeeRepository.GetByIdAsync(goal.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(goal.EmployeeId, cancellationToken);
 
         // Get assigned by info if available
         string? assignedByName = null;
         if (goal.AssignedById.HasValue)
         {
-            var assignedBy = await _employeeRepository.GetByIdAsync(goal.AssignedById.Value, cancellationToken);
+            var assignedBy = await _unitOfWork.Employees.GetByIdAsync(goal.AssignedById.Value, cancellationToken);
             if (assignedBy != null)
             {
                 assignedByName = $"{assignedBy.FirstName} {assignedBy.LastName}";

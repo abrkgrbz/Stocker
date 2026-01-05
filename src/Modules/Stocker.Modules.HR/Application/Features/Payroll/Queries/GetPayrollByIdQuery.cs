@@ -1,6 +1,7 @@
+using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Payroll.Queries;
@@ -8,10 +9,18 @@ namespace Stocker.Modules.HR.Application.Features.Payroll.Queries;
 /// <summary>
 /// Query to get a payroll by ID with items
 /// </summary>
-public class GetPayrollByIdQuery : IRequest<Result<PayrollDto>>
+public record GetPayrollByIdQuery(int PayrollId) : IRequest<Result<PayrollDto>>;
+
+/// <summary>
+/// Validator for GetPayrollByIdQuery
+/// </summary>
+public class GetPayrollByIdQueryValidator : AbstractValidator<GetPayrollByIdQuery>
 {
-    public Guid TenantId { get; set; }
-    public int PayrollId { get; set; }
+    public GetPayrollByIdQueryValidator()
+    {
+        RuleFor(x => x.PayrollId)
+            .GreaterThan(0).WithMessage("Payroll ID is required");
+    }
 }
 
 /// <summary>
@@ -19,27 +28,23 @@ public class GetPayrollByIdQuery : IRequest<Result<PayrollDto>>
 /// </summary>
 public class GetPayrollByIdQueryHandler : IRequestHandler<GetPayrollByIdQuery, Result<PayrollDto>>
 {
-    private readonly IPayrollRepository _payrollRepository;
-    private readonly IEmployeeRepository _employeeRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetPayrollByIdQueryHandler(
-        IPayrollRepository payrollRepository,
-        IEmployeeRepository employeeRepository)
+    public GetPayrollByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _payrollRepository = payrollRepository;
-        _employeeRepository = employeeRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PayrollDto>> Handle(GetPayrollByIdQuery request, CancellationToken cancellationToken)
     {
-        var payroll = await _payrollRepository.GetWithItemsAsync(request.PayrollId, cancellationToken);
+        var payroll = await _unitOfWork.Payrolls.GetWithItemsAsync(request.PayrollId, cancellationToken);
         if (payroll == null)
         {
             return Result<PayrollDto>.Failure(
                 Error.NotFound("Payroll.NotFound", $"Payroll with ID {request.PayrollId} not found"));
         }
 
-        var employee = await _employeeRepository.GetByIdAsync(payroll.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(payroll.EmployeeId, cancellationToken);
 
         var dto = new PayrollDto
         {

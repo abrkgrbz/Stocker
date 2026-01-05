@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Payslips.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.Payslips.Commands;
 /// </summary>
 public record UpdatePayslipCommand : IRequest<Result<bool>>
 {
-    public Guid TenantId { get; init; }
     public int PayslipId { get; init; }
     public decimal? BaseSalary { get; init; }
     public decimal? OvertimePay { get; init; }
@@ -33,21 +31,17 @@ public record UpdatePayslipCommand : IRequest<Result<bool>>
 /// </summary>
 public class UpdatePayslipCommandHandler : IRequestHandler<UpdatePayslipCommand, Result<bool>>
 {
-    private readonly IPayslipRepository _payslipRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdatePayslipCommandHandler(
-        IPayslipRepository payslipRepository,
-        IUnitOfWork unitOfWork)
+    public UpdatePayslipCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _payslipRepository = payslipRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<bool>> Handle(UpdatePayslipCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(UpdatePayslipCommand request, CancellationToken cancellationToken)
     {
         // Get existing payslip
-        var payslip = await _payslipRepository.GetByIdAsync(request.PayslipId, cancellationToken);
+        var payslip = await _unitOfWork.Payslips.GetByIdAsync(request.PayslipId, cancellationToken);
         if (payslip == null)
         {
             return Result<bool>.Failure(
@@ -126,7 +120,7 @@ public class UpdatePayslipCommandHandler : IRequestHandler<UpdatePayslipCommand,
             payslip.SetNotes(request.Notes);
 
         // Save changes
-        _payslipRepository.Update(payslip);
+        _unitOfWork.Payslips.Update(payslip);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

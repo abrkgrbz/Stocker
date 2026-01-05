@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.Departments.Commands;
 using Stocker.Modules.HR.Application.Features.Departments.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.API.Controllers;
@@ -18,12 +17,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class DepartmentsController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public DepartmentsController(IMediator mediator, ITenantService tenantService)
+    public DepartmentsController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -37,12 +34,8 @@ public class DepartmentsController : ControllerBase
         [FromQuery] bool includeInactive = false,
         [FromQuery] int? parentDepartmentId = null)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetDepartmentsQuery
         {
-            TenantId = tenantId.Value,
             IncludeInactive = includeInactive,
             ParentDepartmentId = parentDepartmentId
         };
@@ -64,15 +57,7 @@ public class DepartmentsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<List<DepartmentTreeDto>>> GetDepartmentTree()
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var query = new GetDepartmentTreeQuery
-        {
-            TenantId = tenantId.Value
-        };
-
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(new GetDepartmentTreeQuery());
 
         if (result.IsFailure)
             return BadRequest(result.Error);
@@ -89,16 +74,7 @@ public class DepartmentsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<DepartmentDto>> GetDepartment(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var query = new GetDepartmentByIdQuery
-        {
-            TenantId = tenantId.Value,
-            DepartmentId = id
-        };
-
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(new GetDepartmentByIdQuery(id));
 
         if (result.IsFailure)
         {
@@ -119,12 +95,8 @@ public class DepartmentsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<DepartmentDto>> CreateDepartment(CreateDepartmentDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new CreateDepartmentCommand
         {
-            TenantId = tenantId.Value,
             DepartmentData = dto
         };
 
@@ -146,12 +118,8 @@ public class DepartmentsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<DepartmentDto>> UpdateDepartment(int id, UpdateDepartmentDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new UpdateDepartmentCommand
         {
-            TenantId = tenantId.Value,
             DepartmentId = id,
             DepartmentData = dto
         };
@@ -178,16 +146,7 @@ public class DepartmentsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> DeleteDepartment(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new DeleteDepartmentCommand
-        {
-            TenantId = tenantId.Value,
-            DepartmentId = id
-        };
-
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(new DeleteDepartmentCommand(id));
 
         if (result.IsFailure)
         {
@@ -197,10 +156,5 @@ public class DepartmentsController : ControllerBase
         }
 
         return NoContent();
-    }
-
-    private static Error CreateTenantError()
-    {
-        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
     }
 }

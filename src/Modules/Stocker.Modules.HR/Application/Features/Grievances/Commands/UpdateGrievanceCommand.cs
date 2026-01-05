@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Grievances.Commands;
@@ -10,17 +9,18 @@ namespace Stocker.Modules.HR.Application.Features.Grievances.Commands;
 /// <summary>
 /// Command to update a grievance
 /// </summary>
-public record UpdateGrievanceCommand(
-    Guid TenantId,
-    int GrievanceId,
-    GrievanceStatus? Status = null,
-    GrievancePriority? Priority = null,
-    int? AssignedToId = null,
-    int? HrRepresentativeId = null,
-    string? InvestigationNotes = null,
-    string? Resolution = null,
-    ResolutionType? ResolutionType = null,
-    string? InternalNotes = null) : IRequest<Result<bool>>;
+public record UpdateGrievanceCommand : IRequest<Result<bool>>
+{
+    public int GrievanceId { get; init; }
+    public GrievanceStatus? Status { get; init; }
+    public GrievancePriority? Priority { get; init; }
+    public int? AssignedToId { get; init; }
+    public int? HrRepresentativeId { get; init; }
+    public string? InvestigationNotes { get; init; }
+    public string? Resolution { get; init; }
+    public ResolutionType? ResolutionType { get; init; }
+    public string? InternalNotes { get; init; }
+}
 
 /// <summary>
 /// Validator for UpdateGrievanceCommand
@@ -29,9 +29,6 @@ public class UpdateGrievanceCommandValidator : AbstractValidator<UpdateGrievance
 {
     public UpdateGrievanceCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.GrievanceId)
             .GreaterThan(0).WithMessage("Grievance ID must be greater than 0");
     }
@@ -42,24 +39,17 @@ public class UpdateGrievanceCommandValidator : AbstractValidator<UpdateGrievance
 /// </summary>
 public class UpdateGrievanceCommandHandler : IRequestHandler<UpdateGrievanceCommand, Result<bool>>
 {
-    private readonly IGrievanceRepository _grievanceRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateGrievanceCommandHandler(
-        IGrievanceRepository grievanceRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateGrievanceCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _grievanceRepository = grievanceRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<bool>> Handle(UpdateGrievanceCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(UpdateGrievanceCommand request, CancellationToken cancellationToken)
     {
         // Get existing grievance
-        var grievance = await _grievanceRepository.GetByIdAsync(request.GrievanceId, cancellationToken);
+        var grievance = await _unitOfWork.Grievances.GetByIdAsync(request.GrievanceId, cancellationToken);
         if (grievance == null)
         {
             return Result<bool>.Failure(
@@ -69,7 +59,7 @@ public class UpdateGrievanceCommandHandler : IRequestHandler<UpdateGrievanceComm
         // Verify assignee if specified
         if (request.AssignedToId.HasValue)
         {
-            var assignee = await _employeeRepository.GetByIdAsync(request.AssignedToId.Value, cancellationToken);
+            var assignee = await _unitOfWork.Employees.GetByIdAsync(request.AssignedToId.Value, cancellationToken);
             if (assignee == null)
             {
                 return Result<bool>.Failure(
@@ -92,7 +82,7 @@ public class UpdateGrievanceCommandHandler : IRequestHandler<UpdateGrievanceComm
             grievance.SetInternalNotes(request.InternalNotes);
 
         // Save changes
-        _grievanceRepository.Update(grievance);
+        await _unitOfWork.Grievances.UpdateAsync(grievance, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

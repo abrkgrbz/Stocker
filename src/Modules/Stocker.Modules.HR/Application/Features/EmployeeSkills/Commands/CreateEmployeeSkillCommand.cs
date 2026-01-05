@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.EmployeeSkills.Commands;
@@ -10,17 +9,18 @@ namespace Stocker.Modules.HR.Application.Features.EmployeeSkills.Commands;
 /// <summary>
 /// Command to create a new employee skill
 /// </summary>
-public record CreateEmployeeSkillCommand(
-    Guid TenantId,
-    int EmployeeId,
-    string SkillName,
-    SkillCategory Category,
-    ProficiencyLevel ProficiencyLevel,
-    SkillType SkillType = SkillType.Technical,
-    int? SkillId = null,
-    decimal? YearsOfExperience = null,
-    bool IsPrimary = false,
-    bool IsActivelyUsed = true) : IRequest<Result<int>>;
+public record CreateEmployeeSkillCommand : IRequest<Result<int>>
+{
+    public int EmployeeId { get; init; }
+    public string SkillName { get; init; } = string.Empty;
+    public SkillCategory Category { get; init; }
+    public ProficiencyLevel ProficiencyLevel { get; init; }
+    public SkillType SkillType { get; init; } = SkillType.Technical;
+    public int? SkillId { get; init; }
+    public decimal? YearsOfExperience { get; init; }
+    public bool IsPrimary { get; init; }
+    public bool IsActivelyUsed { get; init; } = true;
+}
 
 /// <summary>
 /// Validator for CreateEmployeeSkillCommand
@@ -29,9 +29,6 @@ public class CreateEmployeeSkillCommandValidator : AbstractValidator<CreateEmplo
 {
     public CreateEmployeeSkillCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.EmployeeId)
             .GreaterThan(0).WithMessage("Employee ID must be greater than 0");
 
@@ -50,24 +47,17 @@ public class CreateEmployeeSkillCommandValidator : AbstractValidator<CreateEmplo
 /// </summary>
 public class CreateEmployeeSkillCommandHandler : IRequestHandler<CreateEmployeeSkillCommand, Result<int>>
 {
-    private readonly IEmployeeSkillRepository _employeeSkillRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateEmployeeSkillCommandHandler(
-        IEmployeeSkillRepository employeeSkillRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+    public CreateEmployeeSkillCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _employeeSkillRepository = employeeSkillRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<int>> Handle(CreateEmployeeSkillCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(CreateEmployeeSkillCommand request, CancellationToken cancellationToken)
     {
         // Verify employee exists
-        var employee = await _employeeRepository.GetByIdAsync(request.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(request.EmployeeId, cancellationToken);
         if (employee == null)
         {
             return Result<int>.Failure(
@@ -83,7 +73,7 @@ public class CreateEmployeeSkillCommandHandler : IRequestHandler<CreateEmployeeS
             request.SkillType);
 
         // Set tenant ID
-        employeeSkill.SetTenantId(request.TenantId);
+        employeeSkill.SetTenantId(_unitOfWork.TenantId);
 
         // Set optional properties
         if (request.SkillId.HasValue)
@@ -96,7 +86,7 @@ public class CreateEmployeeSkillCommandHandler : IRequestHandler<CreateEmployeeS
         employeeSkill.SetActivelyUsed(request.IsActivelyUsed);
 
         // Save to repository
-        await _employeeSkillRepository.AddAsync(employeeSkill, cancellationToken);
+        await _unitOfWork.EmployeeSkills.AddAsync(employeeSkill, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(employeeSkill.Id);

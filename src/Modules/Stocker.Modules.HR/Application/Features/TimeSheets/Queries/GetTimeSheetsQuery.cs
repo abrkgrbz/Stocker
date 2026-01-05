@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 
 namespace Stocker.Modules.HR.Application.Features.TimeSheets.Queries;
 
@@ -8,16 +8,16 @@ public record GetTimeSheetsQuery() : IRequest<List<TimeSheetDto>>;
 
 public class GetTimeSheetsQueryHandler : IRequestHandler<GetTimeSheetsQuery, List<TimeSheetDto>>
 {
-    private readonly ITimeSheetRepository _repository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetTimeSheetsQueryHandler(ITimeSheetRepository repository)
+    public GetTimeSheetsQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<List<TimeSheetDto>> Handle(GetTimeSheetsQuery request, CancellationToken cancellationToken)
+    public async Task<List<TimeSheetDto>> Handle(GetTimeSheetsQuery request, CancellationToken cancellationToken)
     {
-        var entities = await _repository.GetAllAsync(cancellationToken);
+        var entities = await _unitOfWork.TimeSheets.GetAllAsync(cancellationToken);
         return entities.Select(e => new TimeSheetDto
         {
             Id = e.Id,

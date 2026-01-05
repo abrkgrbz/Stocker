@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Holidays.Commands;
@@ -11,10 +10,9 @@ namespace Stocker.Modules.HR.Application.Features.Holidays.Commands;
 /// <summary>
 /// Command to create a new holiday
 /// </summary>
-public class CreateHolidayCommand : IRequest<Result<HolidayDto>>
+public record CreateHolidayCommand : IRequest<Result<HolidayDto>>
 {
-    public Guid TenantId { get; set; }
-    public CreateHolidayDto HolidayData { get; set; } = null!;
+    public CreateHolidayDto HolidayData { get; init; } = null!;
 }
 
 /// <summary>
@@ -24,9 +22,6 @@ public class CreateHolidayCommandValidator : AbstractValidator<CreateHolidayComm
 {
     public CreateHolidayCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.HolidayData)
             .NotNull().WithMessage("Holiday data is required");
 
@@ -56,21 +51,17 @@ public class CreateHolidayCommandValidator : AbstractValidator<CreateHolidayComm
 /// </summary>
 public class CreateHolidayCommandHandler : IRequestHandler<CreateHolidayCommand, Result<HolidayDto>>
 {
-    private readonly IHolidayRepository _holidayRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateHolidayCommandHandler(
-        IHolidayRepository holidayRepository,
-        IUnitOfWork unitOfWork)
+    public CreateHolidayCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _holidayRepository = holidayRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<HolidayDto>> Handle(CreateHolidayCommand request, CancellationToken cancellationToken)
     {
         // Check if a holiday already exists on the same date
-        var existingHoliday = await _holidayRepository.GetByDateAsync(request.HolidayData.Date, cancellationToken);
+        var existingHoliday = await _unitOfWork.Holidays.GetByDateAsync(request.HolidayData.Date, cancellationToken);
         if (existingHoliday != null)
         {
             return Result<HolidayDto>.Failure(
@@ -87,10 +78,10 @@ public class CreateHolidayCommandHandler : IRequestHandler<CreateHolidayCommand,
             request.HolidayData.Description);
 
         // Set tenant ID
-        holiday.SetTenantId(request.TenantId);
+        holiday.SetTenantId(_unitOfWork.TenantId);
 
         // Save to repository
-        await _holidayRepository.AddAsync(holiday, cancellationToken);
+        await _unitOfWork.Holidays.AddAsync(holiday, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Map to DTO

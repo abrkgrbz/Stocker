@@ -1,6 +1,5 @@
 using MediatR;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.CareerPaths.Commands;
@@ -10,7 +9,6 @@ namespace Stocker.Modules.HR.Application.Features.CareerPaths.Commands;
 /// </summary>
 public record DeleteCareerPathCommand : IRequest<Result<int>>
 {
-    public Guid TenantId { get; init; }
     public int CareerPathId { get; init; }
 }
 
@@ -19,27 +17,23 @@ public record DeleteCareerPathCommand : IRequest<Result<int>>
 /// </summary>
 public class DeleteCareerPathCommandHandler : IRequestHandler<DeleteCareerPathCommand, Result<int>>
 {
-    private readonly ICareerPathRepository _careerPathRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public DeleteCareerPathCommandHandler(
-        ICareerPathRepository careerPathRepository,
-        IUnitOfWork unitOfWork)
+    public DeleteCareerPathCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _careerPathRepository = careerPathRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<Result<int>> Handle(DeleteCareerPathCommand request, CancellationToken cancellationToken)
     {
-        var careerPath = await _careerPathRepository.GetByIdAsync(request.CareerPathId, cancellationToken);
+        var careerPath = await _unitOfWork.CareerPaths.GetByIdAsync(request.CareerPathId, cancellationToken);
         if (careerPath == null)
         {
             return Result<int>.Failure(
                 Error.NotFound("CareerPath", $"Career path with ID {request.CareerPathId} not found"));
         }
 
-        _careerPathRepository.Remove(careerPath);
+        _unitOfWork.CareerPaths.Remove(careerPath);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(careerPath.Id);

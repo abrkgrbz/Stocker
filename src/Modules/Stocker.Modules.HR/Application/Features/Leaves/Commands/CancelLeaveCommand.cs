@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Enums;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Leaves.Commands;
@@ -11,11 +10,10 @@ namespace Stocker.Modules.HR.Application.Features.Leaves.Commands;
 /// <summary>
 /// Command to cancel a leave request
 /// </summary>
-public class CancelLeaveCommand : IRequest<Result<LeaveDto>>
+public record CancelLeaveCommand : IRequest<Result<LeaveDto>>
 {
-    public Guid TenantId { get; set; }
-    public int LeaveId { get; set; }
-    public string? Reason { get; set; }
+    public int LeaveId { get; init; }
+    public string? Reason { get; init; }
 }
 
 /// <summary>
@@ -25,9 +23,6 @@ public class CancelLeaveCommandValidator : AbstractValidator<CancelLeaveCommand>
 {
     public CancelLeaveCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.LeaveId)
             .GreaterThan(0).WithMessage("Leave ID is required");
     }
@@ -38,30 +33,17 @@ public class CancelLeaveCommandValidator : AbstractValidator<CancelLeaveCommand>
 /// </summary>
 public class CancelLeaveCommandHandler : IRequestHandler<CancelLeaveCommand, Result<LeaveDto>>
 {
-    private readonly ILeaveRepository _leaveRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly ILeaveTypeRepository _leaveTypeRepository;
-    private readonly ILeaveBalanceRepository _leaveBalanceRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CancelLeaveCommandHandler(
-        ILeaveRepository leaveRepository,
-        IEmployeeRepository employeeRepository,
-        ILeaveTypeRepository leaveTypeRepository,
-        ILeaveBalanceRepository leaveBalanceRepository,
-        IUnitOfWork unitOfWork)
+    public CancelLeaveCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _leaveRepository = leaveRepository;
-        _employeeRepository = employeeRepository;
-        _leaveTypeRepository = leaveTypeRepository;
-        _leaveBalanceRepository = leaveBalanceRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<LeaveDto>> Handle(CancelLeaveCommand request, CancellationToken cancellationToken)
     {
         // Get existing leave
-        var leave = await _leaveRepository.GetWithDetailsAsync(request.LeaveId, cancellationToken);
+        var leave = await _unitOfWork.Leaves.GetWithDetailsAsync(request.LeaveId, cancellationToken);
         if (leave == null)
         {
             return Result<LeaveDto>.Failure(
@@ -95,7 +77,7 @@ public class CancelLeaveCommandHandler : IRequestHandler<CancelLeaveCommand, Res
 
         // Update balance based on previous status
         var year = leave.StartDate.Year;
-        var balance = await _leaveBalanceRepository.GetByEmployeeLeaveTypeAndYearAsync(
+        var balance = await _unitOfWork.LeaveBalances.GetByEmployeeLeaveTypeAndYearAsync(
             leave.EmployeeId,
             leave.LeaveTypeId,
             year,
@@ -119,13 +101,13 @@ public class CancelLeaveCommandHandler : IRequestHandler<CancelLeaveCommand, Res
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Get related entities for DTO
-        var employee = await _employeeRepository.GetByIdAsync(leave.EmployeeId, cancellationToken);
-        var leaveType = await _leaveTypeRepository.GetByIdAsync(leave.LeaveTypeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(leave.EmployeeId, cancellationToken);
+        var leaveType = await _unitOfWork.LeaveTypes.GetByIdAsync(leave.LeaveTypeId, cancellationToken);
 
         string? approvedByName = null;
         if (leave.ApprovedById.HasValue)
         {
-            var approver = await _employeeRepository.GetByIdAsync(leave.ApprovedById.Value, cancellationToken);
+            var approver = await _unitOfWork.Employees.GetByIdAsync(leave.ApprovedById.Value, cancellationToken);
             approvedByName = approver != null
                 ? $"{approver.FirstName} {approver.LastName}"
                 : null;
@@ -134,7 +116,7 @@ public class CancelLeaveCommandHandler : IRequestHandler<CancelLeaveCommand, Res
         string? substituteEmployeeName = null;
         if (leave.SubstituteEmployeeId.HasValue)
         {
-            var substituteEmployee = await _employeeRepository.GetByIdAsync(leave.SubstituteEmployeeId.Value, cancellationToken);
+            var substituteEmployee = await _unitOfWork.Employees.GetByIdAsync(leave.SubstituteEmployeeId.Value, cancellationToken);
             substituteEmployeeName = substituteEmployee != null
                 ? $"{substituteEmployee.FirstName} {substituteEmployee.LastName}"
                 : null;

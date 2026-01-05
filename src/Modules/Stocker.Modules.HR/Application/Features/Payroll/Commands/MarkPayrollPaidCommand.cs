@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Enums;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Payroll.Commands;
@@ -11,11 +10,10 @@ namespace Stocker.Modules.HR.Application.Features.Payroll.Commands;
 /// <summary>
 /// Command to mark a payroll as paid
 /// </summary>
-public class MarkPayrollPaidCommand : IRequest<Result<PayrollDto>>
+public record MarkPayrollPaidCommand : IRequest<Result<PayrollDto>>
 {
-    public Guid TenantId { get; set; }
-    public int PayrollId { get; set; }
-    public MarkPayrollPaidDto PaymentData { get; set; } = null!;
+    public int PayrollId { get; init; }
+    public MarkPayrollPaidDto PaymentData { get; init; } = null!;
 }
 
 /// <summary>
@@ -25,9 +23,6 @@ public class MarkPayrollPaidCommandValidator : AbstractValidator<MarkPayrollPaid
 {
     public MarkPayrollPaidCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.PayrollId)
             .GreaterThan(0).WithMessage("Valid payroll ID is required");
 
@@ -44,23 +39,16 @@ public class MarkPayrollPaidCommandValidator : AbstractValidator<MarkPayrollPaid
 /// </summary>
 public class MarkPayrollPaidCommandHandler : IRequestHandler<MarkPayrollPaidCommand, Result<PayrollDto>>
 {
-    private readonly IPayrollRepository _payrollRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public MarkPayrollPaidCommandHandler(
-        IPayrollRepository payrollRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+    public MarkPayrollPaidCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _payrollRepository = payrollRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PayrollDto>> Handle(MarkPayrollPaidCommand request, CancellationToken cancellationToken)
     {
-        var payroll = await _payrollRepository.GetByIdAsync(request.PayrollId, cancellationToken);
+        var payroll = await _unitOfWork.Payrolls.GetByIdAsync(request.PayrollId, cancellationToken);
         if (payroll == null)
         {
             return Result<PayrollDto>.Failure(
@@ -73,7 +61,7 @@ public class MarkPayrollPaidCommandHandler : IRequestHandler<MarkPayrollPaidComm
                 Error.Validation("Payroll.InvalidStatus", "Only approved payrolls can be marked as paid"));
         }
 
-        var employee = await _employeeRepository.GetByIdAsync(payroll.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(payroll.EmployeeId, cancellationToken);
 
         payroll.MarkAsPaid(request.PaymentData?.PaymentReference);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

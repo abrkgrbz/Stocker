@@ -1,7 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Leaves.Queries;
@@ -9,11 +9,10 @@ namespace Stocker.Modules.HR.Application.Features.Leaves.Queries;
 /// <summary>
 /// Query to get employee's leave balance
 /// </summary>
-public class GetLeaveBalanceQuery : IRequest<Result<EmployeeLeaveSummaryDto>>
+public record GetLeaveBalanceQuery : IRequest<Result<EmployeeLeaveSummaryDto>>
 {
-    public Guid TenantId { get; set; }
-    public int EmployeeId { get; set; }
-    public int? Year { get; set; }
+    public int EmployeeId { get; init; }
+    public int? Year { get; init; }
 }
 
 /// <summary>
@@ -23,9 +22,6 @@ public class GetLeaveBalanceQueryValidator : AbstractValidator<GetLeaveBalanceQu
 {
     public GetLeaveBalanceQueryValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.EmployeeId)
             .GreaterThan(0).WithMessage("Employee ID is required");
 
@@ -40,24 +36,17 @@ public class GetLeaveBalanceQueryValidator : AbstractValidator<GetLeaveBalanceQu
 /// </summary>
 public class GetLeaveBalanceQueryHandler : IRequestHandler<GetLeaveBalanceQuery, Result<EmployeeLeaveSummaryDto>>
 {
-    private readonly ILeaveBalanceRepository _leaveBalanceRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly ILeaveTypeRepository _leaveTypeRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetLeaveBalanceQueryHandler(
-        ILeaveBalanceRepository leaveBalanceRepository,
-        IEmployeeRepository employeeRepository,
-        ILeaveTypeRepository leaveTypeRepository)
+    public GetLeaveBalanceQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _leaveBalanceRepository = leaveBalanceRepository;
-        _employeeRepository = employeeRepository;
-        _leaveTypeRepository = leaveTypeRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<EmployeeLeaveSummaryDto>> Handle(GetLeaveBalanceQuery request, CancellationToken cancellationToken)
     {
         // Validate employee
-        var employee = await _employeeRepository.GetByIdAsync(request.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(request.EmployeeId, cancellationToken);
         if (employee == null)
         {
             return Result<EmployeeLeaveSummaryDto>.Failure(
@@ -68,7 +57,7 @@ public class GetLeaveBalanceQueryHandler : IRequestHandler<GetLeaveBalanceQuery,
         var year = request.Year ?? DateTime.UtcNow.Year;
 
         // Get all leave balances for the employee and year
-        var balances = await _leaveBalanceRepository.GetByEmployeeAndYearAsync(
+        var balances = await _unitOfWork.LeaveBalances.GetByEmployeeAndYearAsync(
             request.EmployeeId,
             year,
             cancellationToken);
@@ -77,7 +66,7 @@ public class GetLeaveBalanceQueryHandler : IRequestHandler<GetLeaveBalanceQuery,
         var balanceDtos = new List<LeaveBalanceDto>();
         foreach (var balance in balances)
         {
-            var leaveType = await _leaveTypeRepository.GetByIdAsync(balance.LeaveTypeId, cancellationToken);
+            var leaveType = await _unitOfWork.LeaveTypes.GetByIdAsync(balance.LeaveTypeId, cancellationToken);
 
             balanceDtos.Add(new LeaveBalanceDto
             {

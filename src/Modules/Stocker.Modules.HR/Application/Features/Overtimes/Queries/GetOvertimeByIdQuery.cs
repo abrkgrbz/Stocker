@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 
 namespace Stocker.Modules.HR.Application.Features.Overtimes.Queries;
 
@@ -8,16 +8,16 @@ public record GetOvertimeByIdQuery(int Id) : IRequest<OvertimeDto?>;
 
 public class GetOvertimeByIdQueryHandler : IRequestHandler<GetOvertimeByIdQuery, OvertimeDto?>
 {
-    private readonly IOvertimeRepository _repository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetOvertimeByIdQueryHandler(IOvertimeRepository repository)
+    public GetOvertimeByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<OvertimeDto?> Handle(GetOvertimeByIdQuery request, CancellationToken cancellationToken)
+    public async Task<OvertimeDto?> Handle(GetOvertimeByIdQuery request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.Overtimes.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null) return null;
 
         return new OvertimeDto

@@ -3,8 +3,7 @@ using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Services;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Payroll.Commands;
@@ -12,10 +11,9 @@ namespace Stocker.Modules.HR.Application.Features.Payroll.Commands;
 /// <summary>
 /// Command to create a new payroll record
 /// </summary>
-public class CreatePayrollCommand : IRequest<Result<PayrollDto>>
+public record CreatePayrollCommand : IRequest<Result<PayrollDto>>
 {
-    public Guid TenantId { get; set; }
-    public CreatePayrollDto PayrollData { get; set; } = null!;
+    public CreatePayrollDto PayrollData { get; init; } = null!;
 }
 
 /// <summary>
@@ -25,9 +23,6 @@ public class CreatePayrollCommandValidator : AbstractValidator<CreatePayrollComm
 {
     public CreatePayrollCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.PayrollData)
             .NotNull().WithMessage("Payroll data is required");
 
@@ -50,19 +45,13 @@ public class CreatePayrollCommandValidator : AbstractValidator<CreatePayrollComm
 /// </summary>
 public class CreatePayrollCommandHandler : IRequestHandler<CreatePayrollCommand, Result<PayrollDto>>
 {
-    private readonly IPayrollRepository _payrollRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
     private readonly ITurkishPayrollCalculationService _calculationService;
 
     public CreatePayrollCommandHandler(
-        IPayrollRepository payrollRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork,
+        IHRUnitOfWork unitOfWork,
         ITurkishPayrollCalculationService calculationService)
     {
-        _payrollRepository = payrollRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
         _calculationService = calculationService;
     }
@@ -72,7 +61,7 @@ public class CreatePayrollCommandHandler : IRequestHandler<CreatePayrollCommand,
         var data = request.PayrollData;
 
         // Check if payroll already exists for this employee/period
-        var existingPayroll = await _payrollRepository.GetByEmployeeAndPeriodAsync(
+        var existingPayroll = await _unitOfWork.Payrolls.GetByEmployeeAndPeriodAsync(
             data.EmployeeId, data.Year, data.Month, cancellationToken);
         if (existingPayroll != null)
         {
@@ -82,7 +71,7 @@ public class CreatePayrollCommandHandler : IRequestHandler<CreatePayrollCommand,
         }
 
         // Get employee for base salary
-        var employee = await _employeeRepository.GetByIdAsync(data.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(data.EmployeeId, cancellationToken);
         if (employee == null)
         {
             return Result<PayrollDto>.Failure(
@@ -104,7 +93,7 @@ public class CreatePayrollCommandHandler : IRequestHandler<CreatePayrollCommand,
             periodEndDate,
             baseSalary);
 
-        payroll.SetTenantId(request.TenantId);
+        payroll.SetTenantId(_unitOfWork.TenantId);
 
         // Set earnings
         payroll.SetEarnings(
@@ -167,7 +156,7 @@ public class CreatePayrollCommandHandler : IRequestHandler<CreatePayrollCommand,
             payroll.SetNotes(data.Notes);
         }
 
-        await _payrollRepository.AddAsync(payroll, cancellationToken);
+        await _unitOfWork.Payrolls.AddAsync(payroll, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = MapToDto(payroll, employee);

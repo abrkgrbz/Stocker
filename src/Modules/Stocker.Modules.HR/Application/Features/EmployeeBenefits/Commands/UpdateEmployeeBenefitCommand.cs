@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.EmployeeBenefits.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.EmployeeBenefits.Commands;
 /// </summary>
 public record UpdateEmployeeBenefitCommand : IRequest<Result<int>>
 {
-    public Guid TenantId { get; init; }
     public int EmployeeBenefitId { get; init; }
     public decimal? Amount { get; init; }
     public BenefitStatus? Status { get; init; }
@@ -38,20 +36,16 @@ public record UpdateEmployeeBenefitCommand : IRequest<Result<int>>
 /// </summary>
 public class UpdateEmployeeBenefitCommandHandler : IRequestHandler<UpdateEmployeeBenefitCommand, Result<int>>
 {
-    private readonly IEmployeeBenefitRepository _employeeBenefitRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateEmployeeBenefitCommandHandler(
-        IEmployeeBenefitRepository employeeBenefitRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateEmployeeBenefitCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _employeeBenefitRepository = employeeBenefitRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<int>> Handle(UpdateEmployeeBenefitCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(UpdateEmployeeBenefitCommand request, CancellationToken cancellationToken)
     {
-        var employeeBenefit = await _employeeBenefitRepository.GetByIdAsync(request.EmployeeBenefitId, cancellationToken);
+        var employeeBenefit = await _unitOfWork.EmployeeBenefits.GetByIdAsync(request.EmployeeBenefitId, cancellationToken);
         if (employeeBenefit == null)
         {
             return Result<int>.Failure(
@@ -98,7 +92,7 @@ public class UpdateEmployeeBenefitCommandHandler : IRequestHandler<UpdateEmploye
         if (!string.IsNullOrEmpty(request.DocumentUrl))
             employeeBenefit.SetDocumentUrl(request.DocumentUrl);
 
-        _employeeBenefitRepository.Update(employeeBenefit);
+        _unitOfWork.EmployeeBenefits.Update(employeeBenefit);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(employeeBenefit.Id);

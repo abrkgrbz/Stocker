@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Interviews.Queries;
@@ -8,34 +8,23 @@ namespace Stocker.Modules.HR.Application.Features.Interviews.Queries;
 /// <summary>
 /// Query to get an interview by ID
 /// </summary>
-public class GetInterviewByIdQuery : IRequest<Result<InterviewDto>>
-{
-    public Guid TenantId { get; set; }
-    public int Id { get; set; }
-}
+public record GetInterviewByIdQuery(int Id) : IRequest<Result<InterviewDto>>;
 
 /// <summary>
 /// Handler for GetInterviewByIdQuery
 /// </summary>
 public class GetInterviewByIdQueryHandler : IRequestHandler<GetInterviewByIdQuery, Result<InterviewDto>>
 {
-    private readonly IInterviewRepository _repository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IJobApplicationRepository _jobApplicationRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetInterviewByIdQueryHandler(
-        IInterviewRepository repository,
-        IEmployeeRepository employeeRepository,
-        IJobApplicationRepository jobApplicationRepository)
+    public GetInterviewByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _repository = repository;
-        _employeeRepository = employeeRepository;
-        _jobApplicationRepository = jobApplicationRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<InterviewDto>> Handle(GetInterviewByIdQuery request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.Interviews.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
             return Result<InterviewDto>.Failure(
@@ -43,11 +32,11 @@ public class GetInterviewByIdQueryHandler : IRequestHandler<GetInterviewByIdQuer
         }
 
         // Get related names
-        var interviewer = await _employeeRepository.GetByIdAsync(entity.InterviewerId, cancellationToken);
+        var interviewer = await _unitOfWork.Employees.GetByIdAsync(entity.InterviewerId, cancellationToken);
         var interviewerName = interviewer != null ? $"{interviewer.FirstName} {interviewer.LastName}" : string.Empty;
 
         string? candidateName = null;
-        var jobApplication = await _jobApplicationRepository.GetByIdAsync(entity.JobApplicationId, cancellationToken);
+        var jobApplication = await _unitOfWork.JobApplications.GetByIdAsync(entity.JobApplicationId, cancellationToken);
         if (jobApplication != null)
         {
             candidateName = $"{jobApplication.FirstName} {jobApplication.LastName}";

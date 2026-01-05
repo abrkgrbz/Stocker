@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Training.Queries;
@@ -8,30 +8,18 @@ namespace Stocker.Modules.HR.Application.Features.Training.Queries;
 /// <summary>
 /// Query to get a single training by ID
 /// </summary>
-public class GetTrainingByIdQuery : IRequest<Result<TrainingDto>>
-{
-    public Guid TenantId { get; set; }
-    public int TrainingId { get; set; }
-    public bool IncludeParticipants { get; set; } = false;
-}
+public record GetTrainingByIdQuery(int TrainingId, bool IncludeParticipants = false) : IRequest<Result<TrainingDto>>;
 
 /// <summary>
 /// Handler for GetTrainingByIdQuery
 /// </summary>
 public class GetTrainingByIdQueryHandler : IRequestHandler<GetTrainingByIdQuery, Result<TrainingDto>>
 {
-    private readonly ITrainingRepository _trainingRepository;
-    private readonly IEmployeeTrainingRepository _employeeTrainingRepository;
-    private readonly IEmployeeRepository _employeeRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetTrainingByIdQueryHandler(
-        ITrainingRepository trainingRepository,
-        IEmployeeTrainingRepository employeeTrainingRepository,
-        IEmployeeRepository employeeRepository)
+    public GetTrainingByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _trainingRepository = trainingRepository;
-        _employeeTrainingRepository = employeeTrainingRepository;
-        _employeeRepository = employeeRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<TrainingDto>> Handle(GetTrainingByIdQuery request, CancellationToken cancellationToken)
@@ -41,11 +29,11 @@ public class GetTrainingByIdQueryHandler : IRequestHandler<GetTrainingByIdQuery,
 
         if (request.IncludeParticipants)
         {
-            training = await _trainingRepository.GetWithParticipantsAsync(request.TrainingId, cancellationToken);
+            training = await _unitOfWork.Trainings.GetWithParticipantsAsync(request.TrainingId, cancellationToken);
         }
         else
         {
-            training = await _trainingRepository.GetByIdAsync(request.TrainingId, cancellationToken);
+            training = await _unitOfWork.Trainings.GetByIdAsync(request.TrainingId, cancellationToken);
         }
 
         if (training == null)

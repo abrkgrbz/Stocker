@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Payslips.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.Payslips.Commands;
 /// </summary>
 public record CreatePayslipCommand : IRequest<Result<int>>
 {
-    public Guid TenantId { get; init; }
     public int EmployeeId { get; init; }
     public int PayrollId { get; init; }
     public string PayslipNumber { get; init; } = string.Empty;
@@ -36,24 +34,17 @@ public record CreatePayslipCommand : IRequest<Result<int>>
 /// </summary>
 public class CreatePayslipCommandHandler : IRequestHandler<CreatePayslipCommand, Result<int>>
 {
-    private readonly IPayslipRepository _payslipRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreatePayslipCommandHandler(
-        IPayslipRepository payslipRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+    public CreatePayslipCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _payslipRepository = payslipRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<int>> Handle(CreatePayslipCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(CreatePayslipCommand request, CancellationToken cancellationToken)
     {
         // Verify employee exists
-        var employee = await _employeeRepository.GetByIdAsync(request.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(request.EmployeeId, cancellationToken);
         if (employee == null)
         {
             return Result<int>.Failure(
@@ -61,7 +52,7 @@ public class CreatePayslipCommandHandler : IRequestHandler<CreatePayslipCommand,
         }
 
         // Check if payslip already exists for this employee and period
-        var existingPayslip = await _payslipRepository.GetByEmployeeAndPeriodAsync(
+        var existingPayslip = await _unitOfWork.Payslips.GetByEmployeeAndPeriodAsync(
             request.EmployeeId, request.Year, request.Month, cancellationToken);
         if (existingPayslip != null)
         {
@@ -81,7 +72,7 @@ public class CreatePayslipCommandHandler : IRequestHandler<CreatePayslipCommand,
             request.PaymentDate);
 
         // Set tenant ID
-        payslip.SetTenantId(request.TenantId);
+        payslip.SetTenantId(_unitOfWork.TenantId);
 
         // Set earnings
         payslip.SetEarnings(
@@ -117,7 +108,7 @@ public class CreatePayslipCommandHandler : IRequestHandler<CreatePayslipCommand,
             null);
 
         // Save to repository
-        await _payslipRepository.AddAsync(payslip, cancellationToken);
+        await _unitOfWork.Payslips.AddAsync(payslip, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(payslip.Id);

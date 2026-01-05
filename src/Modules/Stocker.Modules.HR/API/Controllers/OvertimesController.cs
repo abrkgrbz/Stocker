@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.Overtimes.Commands;
 using Stocker.Modules.HR.Application.Features.Overtimes.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.HR.API.Controllers;
 
@@ -17,12 +16,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class OvertimesController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public OvertimesController(IMediator mediator, ITenantService tenantService)
+    public OvertimesController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     [HttpGet]
@@ -43,10 +40,7 @@ public class OvertimesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<int>> Create(CreateOvertimeCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant ID is required");
-
-        var result = await _mediator.Send(command with { TenantId = tenantId.Value });
+        var result = await _mediator.Send(command);
         if (result.IsFailure) return BadRequest(result.Error);
         return CreatedAtAction(nameof(GetOvertime), new { id = result.Value }, result.Value);
     }
@@ -54,10 +48,7 @@ public class OvertimesController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult> Update(int id, UpdateOvertimeCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant ID is required");
-
-        var result = await _mediator.Send(command with { TenantId = tenantId.Value, OvertimeId = id });
+        var result = await _mediator.Send(command with { OvertimeId = id });
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }
@@ -65,10 +56,7 @@ public class OvertimesController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant ID is required");
-
-        var result = await _mediator.Send(new DeleteOvertimeCommand { TenantId = tenantId.Value, OvertimeId = id });
+        var result = await _mediator.Send(new DeleteOvertimeCommand { OvertimeId = id });
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }

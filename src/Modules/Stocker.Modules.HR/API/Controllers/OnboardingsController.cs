@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.Onboardings.Commands;
 using Stocker.Modules.HR.Application.Features.Onboardings.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.HR.API.Controllers;
 
@@ -17,36 +16,32 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class OnboardingsController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public OnboardingsController(IMediator mediator, ITenantService tenantService)
+    public OnboardingsController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<OnboardingDto>>> GetAll()
+    public async Task<ActionResult<List<OnboardingDto>>> GetAll([FromQuery] int? employeeId = null, [FromQuery] bool activeOnly = false)
     {
-        var result = await _mediator.Send(new GetOnboardingsQuery());
-        return Ok(result);
+        var result = await _mediator.Send(new GetOnboardingsQuery(employeeId, activeOnly));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return Ok(result.Value);
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<OnboardingDto>> GetOnboarding(int id)
     {
         var result = await _mediator.Send(new GetOnboardingByIdQuery(id));
-        if (result == null) return NotFound();
-        return Ok(result);
+        if (result.IsFailure) return NotFound(result.Error);
+        return Ok(result.Value);
     }
 
     [HttpPost]
     public async Task<ActionResult<int>> Create(CreateOnboardingCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (tenantId == null) return Unauthorized();
-
-        var result = await _mediator.Send(command with { TenantId = tenantId.Value });
+        var result = await _mediator.Send(command);
         if (result.IsFailure) return BadRequest(result.Error);
         return CreatedAtAction(nameof(GetOnboarding), new { id = result.Value }, result.Value);
     }
@@ -54,10 +49,7 @@ public class OnboardingsController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, UpdateOnboardingCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (tenantId == null) return Unauthorized();
-
-        var result = await _mediator.Send(command with { TenantId = tenantId.Value, OnboardingId = id });
+        var result = await _mediator.Send(command with { OnboardingId = id });
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }
@@ -65,10 +57,7 @@ public class OnboardingsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (tenantId == null) return Unauthorized();
-
-        var result = await _mediator.Send(new DeleteOnboardingCommand { TenantId = tenantId.Value, OnboardingId = id });
+        var result = await _mediator.Send(new DeleteOnboardingCommand(id));
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }

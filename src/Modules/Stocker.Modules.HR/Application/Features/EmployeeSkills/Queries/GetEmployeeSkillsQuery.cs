@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.EmployeeSkills.Queries;
@@ -8,11 +8,10 @@ namespace Stocker.Modules.HR.Application.Features.EmployeeSkills.Queries;
 /// <summary>
 /// Query to get all employee skills
 /// </summary>
-public class GetEmployeeSkillsQuery : IRequest<Result<List<EmployeeSkillDto>>>
+public record GetEmployeeSkillsQuery : IRequest<Result<List<EmployeeSkillDto>>>
 {
-    public Guid TenantId { get; set; }
-    public int? EmployeeId { get; set; }
-    public bool ActiveOnly { get; set; } = true;
+    public int? EmployeeId { get; init; }
+    public bool ActiveOnly { get; init; } = true;
 }
 
 /// <summary>
@@ -20,16 +19,16 @@ public class GetEmployeeSkillsQuery : IRequest<Result<List<EmployeeSkillDto>>>
 /// </summary>
 public class GetEmployeeSkillsQueryHandler : IRequestHandler<GetEmployeeSkillsQuery, Result<List<EmployeeSkillDto>>>
 {
-    private readonly IEmployeeSkillRepository _repository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetEmployeeSkillsQueryHandler(IEmployeeSkillRepository repository)
+    public GetEmployeeSkillsQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<EmployeeSkillDto>>> Handle(GetEmployeeSkillsQuery request, CancellationToken cancellationToken)
     {
-        var entities = await _repository.GetAllAsync(cancellationToken);
+        var entities = await _unitOfWork.EmployeeSkills.GetAllAsync(cancellationToken);
 
         var filteredEntities = entities.AsEnumerable();
 

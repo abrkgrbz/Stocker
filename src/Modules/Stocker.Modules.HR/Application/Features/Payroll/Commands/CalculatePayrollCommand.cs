@@ -3,8 +3,7 @@ using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
 using Stocker.Modules.HR.Domain.Enums;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Payroll.Commands;
@@ -12,11 +11,10 @@ namespace Stocker.Modules.HR.Application.Features.Payroll.Commands;
 /// <summary>
 /// Command to calculate payroll amounts
 /// </summary>
-public class CalculatePayrollCommand : IRequest<Result<PayrollDto>>
+public record CalculatePayrollCommand : IRequest<Result<PayrollDto>>
 {
-    public Guid TenantId { get; set; }
-    public int PayrollId { get; set; }
-    public int CalculatedById { get; set; }
+    public int PayrollId { get; init; }
+    public int CalculatedById { get; init; }
 }
 
 /// <summary>
@@ -26,9 +24,6 @@ public class CalculatePayrollCommandValidator : AbstractValidator<CalculatePayro
 {
     public CalculatePayrollCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.PayrollId)
             .GreaterThan(0).WithMessage("Valid payroll ID is required");
 
@@ -42,23 +37,16 @@ public class CalculatePayrollCommandValidator : AbstractValidator<CalculatePayro
 /// </summary>
 public class CalculatePayrollCommandHandler : IRequestHandler<CalculatePayrollCommand, Result<PayrollDto>>
 {
-    private readonly IPayrollRepository _payrollRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CalculatePayrollCommandHandler(
-        IPayrollRepository payrollRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+    public CalculatePayrollCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _payrollRepository = payrollRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PayrollDto>> Handle(CalculatePayrollCommand request, CancellationToken cancellationToken)
     {
-        var payroll = await _payrollRepository.GetByIdAsync(request.PayrollId, cancellationToken);
+        var payroll = await _unitOfWork.Payrolls.GetByIdAsync(request.PayrollId, cancellationToken);
         if (payroll == null)
         {
             return Result<PayrollDto>.Failure(
@@ -71,7 +59,7 @@ public class CalculatePayrollCommandHandler : IRequestHandler<CalculatePayrollCo
                 Error.Validation("Payroll.InvalidStatus", "Only draft payrolls can be calculated"));
         }
 
-        var employee = await _employeeRepository.GetByIdAsync(payroll.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(payroll.EmployeeId, cancellationToken);
         if (employee == null)
         {
             return Result<PayrollDto>.Failure(

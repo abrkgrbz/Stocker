@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Performance.Commands;
@@ -11,10 +10,9 @@ namespace Stocker.Modules.HR.Application.Features.Performance.Commands;
 /// <summary>
 /// Command to create a new performance review
 /// </summary>
-public class CreatePerformanceReviewCommand : IRequest<Result<PerformanceReviewDto>>
+public record CreatePerformanceReviewCommand : IRequest<Result<PerformanceReviewDto>>
 {
-    public Guid TenantId { get; set; }
-    public CreatePerformanceReviewDto ReviewData { get; set; } = null!;
+    public CreatePerformanceReviewDto ReviewData { get; init; } = null!;
 }
 
 /// <summary>
@@ -24,9 +22,6 @@ public class CreatePerformanceReviewCommandValidator : AbstractValidator<CreateP
 {
     public CreatePerformanceReviewCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.ReviewData)
             .NotNull().WithMessage("Review data is required");
 
@@ -66,17 +61,10 @@ public class CreatePerformanceReviewCommandValidator : AbstractValidator<CreateP
 /// </summary>
 public class CreatePerformanceReviewCommandHandler : IRequestHandler<CreatePerformanceReviewCommand, Result<PerformanceReviewDto>>
 {
-    private readonly IPerformanceReviewRepository _reviewRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreatePerformanceReviewCommandHandler(
-        IPerformanceReviewRepository reviewRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+    public CreatePerformanceReviewCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _reviewRepository = reviewRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -85,7 +73,7 @@ public class CreatePerformanceReviewCommandHandler : IRequestHandler<CreatePerfo
         var data = request.ReviewData;
 
         // Validate employee
-        var employee = await _employeeRepository.GetByIdAsync(data.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(data.EmployeeId, cancellationToken);
         if (employee == null)
         {
             return Result<PerformanceReviewDto>.Failure(
@@ -93,7 +81,7 @@ public class CreatePerformanceReviewCommandHandler : IRequestHandler<CreatePerfo
         }
 
         // Validate reviewer
-        var reviewer = await _employeeRepository.GetByIdAsync(data.ReviewerId, cancellationToken);
+        var reviewer = await _unitOfWork.Employees.GetByIdAsync(data.ReviewerId, cancellationToken);
         if (reviewer == null)
         {
             return Result<PerformanceReviewDto>.Failure(
@@ -143,7 +131,7 @@ public class CreatePerformanceReviewCommandHandler : IRequestHandler<CreatePerfo
             quarter);
 
         // Set tenant ID
-        review.SetTenantId(request.TenantId);
+        review.SetTenantId(_unitOfWork.TenantId);
 
         // Add criteria if provided
         if (data.Criteria != null && data.Criteria.Any())
@@ -162,11 +150,11 @@ public class CreatePerformanceReviewCommandHandler : IRequestHandler<CreatePerfo
         }
 
         // Save to repository
-        await _reviewRepository.AddAsync(review, cancellationToken);
+        await _unitOfWork.PerformanceReviews.AddAsync(review, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Reload with criteria to get IDs
-        var savedReview = await _reviewRepository.GetWithCriteriaAsync(review.Id, cancellationToken);
+        var savedReview = await _unitOfWork.PerformanceReviews.GetWithCriteriaAsync(review.Id, cancellationToken);
 
         // Map to DTO
         var reviewDto = new PerformanceReviewDto

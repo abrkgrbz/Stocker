@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.JobPostings.Queries;
@@ -8,40 +8,23 @@ namespace Stocker.Modules.HR.Application.Features.JobPostings.Queries;
 /// <summary>
 /// Query to get a job posting by ID
 /// </summary>
-public class GetJobPostingByIdQuery : IRequest<Result<JobPostingDto>>
-{
-    public Guid TenantId { get; set; }
-    public int Id { get; set; }
-}
+public record GetJobPostingByIdQuery(int Id) : IRequest<Result<JobPostingDto>>;
 
 /// <summary>
 /// Handler for GetJobPostingByIdQuery
 /// </summary>
 public class GetJobPostingByIdQueryHandler : IRequestHandler<GetJobPostingByIdQuery, Result<JobPostingDto>>
 {
-    private readonly IJobPostingRepository _repository;
-    private readonly IDepartmentRepository _departmentRepository;
-    private readonly IPositionRepository _positionRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IWorkLocationRepository _workLocationRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetJobPostingByIdQueryHandler(
-        IJobPostingRepository repository,
-        IDepartmentRepository departmentRepository,
-        IPositionRepository positionRepository,
-        IEmployeeRepository employeeRepository,
-        IWorkLocationRepository workLocationRepository)
+    public GetJobPostingByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _repository = repository;
-        _departmentRepository = departmentRepository;
-        _positionRepository = positionRepository;
-        _employeeRepository = employeeRepository;
-        _workLocationRepository = workLocationRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<JobPostingDto>> Handle(GetJobPostingByIdQuery request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.JobPostings.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
             return Result<JobPostingDto>.Failure(
@@ -49,27 +32,27 @@ public class GetJobPostingByIdQueryHandler : IRequestHandler<GetJobPostingByIdQu
         }
 
         // Get related names
-        var department = await _departmentRepository.GetByIdAsync(entity.DepartmentId, cancellationToken);
+        var department = await _unitOfWork.Departments.GetByIdAsync(entity.DepartmentId, cancellationToken);
         var departmentName = department?.Name ?? string.Empty;
 
         string? positionTitle = null;
         if (entity.PositionId.HasValue)
         {
-            var position = await _positionRepository.GetByIdAsync(entity.PositionId.Value, cancellationToken);
+            var position = await _unitOfWork.Positions.GetByIdAsync(entity.PositionId.Value, cancellationToken);
             positionTitle = position?.Title;
         }
 
         string? hiringManagerName = null;
         if (entity.HiringManagerId.HasValue)
         {
-            var manager = await _employeeRepository.GetByIdAsync(entity.HiringManagerId.Value, cancellationToken);
+            var manager = await _unitOfWork.Employees.GetByIdAsync(entity.HiringManagerId.Value, cancellationToken);
             hiringManagerName = manager != null ? $"{manager.FirstName} {manager.LastName}" : null;
         }
 
         string? workLocationName = null;
         if (entity.WorkLocationId.HasValue)
         {
-            var workLocation = await _workLocationRepository.GetByIdAsync(entity.WorkLocationId.Value, cancellationToken);
+            var workLocation = await _unitOfWork.WorkLocations.GetByIdAsync(entity.WorkLocationId.Value, cancellationToken);
             workLocationName = workLocation?.Name;
         }
 

@@ -1,6 +1,5 @@
 using MediatR;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.EmployeeAssets.Commands;
@@ -10,7 +9,6 @@ namespace Stocker.Modules.HR.Application.Features.EmployeeAssets.Commands;
 /// </summary>
 public record DeleteEmployeeAssetCommand : IRequest<Result<bool>>
 {
-    public Guid TenantId { get; init; }
     public int EmployeeAssetId { get; init; }
 }
 
@@ -19,27 +17,23 @@ public record DeleteEmployeeAssetCommand : IRequest<Result<bool>>
 /// </summary>
 public class DeleteEmployeeAssetCommandHandler : IRequestHandler<DeleteEmployeeAssetCommand, Result<bool>>
 {
-    private readonly IEmployeeAssetRepository _employeeAssetRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public DeleteEmployeeAssetCommandHandler(
-        IEmployeeAssetRepository employeeAssetRepository,
-        IUnitOfWork unitOfWork)
+    public DeleteEmployeeAssetCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _employeeAssetRepository = employeeAssetRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<bool>> Handle(DeleteEmployeeAssetCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(DeleteEmployeeAssetCommand request, CancellationToken cancellationToken)
     {
-        var employeeAsset = await _employeeAssetRepository.GetByIdAsync(request.EmployeeAssetId, cancellationToken);
+        var employeeAsset = await _unitOfWork.EmployeeAssets.GetByIdAsync(request.EmployeeAssetId, cancellationToken);
         if (employeeAsset == null)
         {
             return Result<bool>.Failure(
                 Error.NotFound("EmployeeAsset", $"Employee asset with ID {request.EmployeeAssetId} not found"));
         }
 
-        _employeeAssetRepository.Remove(employeeAsset);
+        _unitOfWork.EmployeeAssets.Remove(employeeAsset);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

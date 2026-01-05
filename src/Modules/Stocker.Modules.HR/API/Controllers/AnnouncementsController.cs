@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.Announcements.Commands;
 using Stocker.Modules.HR.Application.Features.Announcements.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.API.Controllers;
@@ -18,12 +17,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class AnnouncementsController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public AnnouncementsController(IMediator mediator, ITenantService tenantService)
+    public AnnouncementsController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -38,12 +35,8 @@ public class AnnouncementsController : ControllerBase
         [FromQuery] bool? isActive = null,
         [FromQuery] int? departmentId = null)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetAnnouncementsQuery
         {
-            TenantId = tenantId.Value,
             Type = type,
             IsPublished = isPublished,
             IsActive = isActive,
@@ -63,10 +56,7 @@ public class AnnouncementsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<AnnouncementDto>> GetAnnouncement(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var query = new GetAnnouncementByIdQuery { TenantId = tenantId.Value, AnnouncementId = id };
+        var query = new GetAnnouncementByIdQuery(id);
         var result = await _mediator.Send(query);
 
         if (result.IsFailure)
@@ -85,12 +75,8 @@ public class AnnouncementsController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<ActionResult<AnnouncementDto>> CreateAnnouncement(CreateAnnouncementDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new CreateAnnouncementCommand
         {
-            TenantId = tenantId.Value,
             AuthorId = dto.AuthorId,
             AnnouncementData = dto
         };
@@ -109,10 +95,7 @@ public class AnnouncementsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<AnnouncementDto>> UpdateAnnouncement(int id, UpdateAnnouncementDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new UpdateAnnouncementCommand { TenantId = tenantId.Value, AnnouncementId = id, AnnouncementData = dto };
+        var command = new UpdateAnnouncementCommand { AnnouncementId = id, AnnouncementData = dto };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -131,10 +114,7 @@ public class AnnouncementsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteAnnouncement(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new DeleteAnnouncementCommand { TenantId = tenantId.Value, AnnouncementId = id };
+        var command = new DeleteAnnouncementCommand { AnnouncementId = id };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -154,10 +134,7 @@ public class AnnouncementsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<AnnouncementDto>> PublishAnnouncement(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new PublishAnnouncementCommand { TenantId = tenantId.Value, AnnouncementId = id };
+        var command = new PublishAnnouncementCommand { AnnouncementId = id };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -177,14 +154,10 @@ public class AnnouncementsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> AcknowledgeAnnouncement(int id, [FromQuery] int employeeId, AcknowledgeAnnouncementDto? dto = null)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         if (employeeId <= 0) return BadRequest(new Error("Employee.Required", "Employee ID is required", ErrorType.Validation));
 
         var command = new AcknowledgeAnnouncementCommand
         {
-            TenantId = tenantId.Value,
             AnnouncementId = id,
             EmployeeId = employeeId,
             AcknowledgmentData = dto ?? new AcknowledgeAnnouncementDto()
@@ -197,10 +170,5 @@ public class AnnouncementsController : ControllerBase
             return BadRequest(result.Error);
         }
         return Ok(new { message = "Announcement acknowledged successfully" });
-    }
-
-    private static Error CreateTenantError()
-    {
-        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
     }
 }

@@ -1,6 +1,5 @@
 using MediatR;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Onboardings.Commands;
@@ -10,7 +9,6 @@ namespace Stocker.Modules.HR.Application.Features.Onboardings.Commands;
 /// </summary>
 public record UpdateOnboardingCommand : IRequest<Result<bool>>
 {
-    public Guid TenantId { get; init; }
     public int OnboardingId { get; init; }
     public DateTime? PlannedEndDate { get; init; }
     public int? BuddyId { get; init; }
@@ -27,24 +25,17 @@ public record UpdateOnboardingCommand : IRequest<Result<bool>>
 /// </summary>
 public class UpdateOnboardingCommandHandler : IRequestHandler<UpdateOnboardingCommand, Result<bool>>
 {
-    private readonly IOnboardingRepository _onboardingRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateOnboardingCommandHandler(
-        IOnboardingRepository onboardingRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateOnboardingCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _onboardingRepository = onboardingRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<bool>> Handle(UpdateOnboardingCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(UpdateOnboardingCommand request, CancellationToken cancellationToken)
     {
         // Get existing onboarding
-        var onboarding = await _onboardingRepository.GetByIdAsync(request.OnboardingId, cancellationToken);
+        var onboarding = await _unitOfWork.Onboardings.GetByIdAsync(request.OnboardingId, cancellationToken);
         if (onboarding == null)
         {
             return Result<bool>.Failure(
@@ -54,7 +45,7 @@ public class UpdateOnboardingCommandHandler : IRequestHandler<UpdateOnboardingCo
         // Verify buddy exists if specified
         if (request.BuddyId.HasValue)
         {
-            var buddy = await _employeeRepository.GetByIdAsync(request.BuddyId.Value, cancellationToken);
+            var buddy = await _unitOfWork.Employees.GetByIdAsync(request.BuddyId.Value, cancellationToken);
             if (buddy == null)
             {
                 return Result<bool>.Failure(
@@ -85,7 +76,7 @@ public class UpdateOnboardingCommandHandler : IRequestHandler<UpdateOnboardingCo
             onboarding.SetNotes(request.Notes);
 
         // Save changes
-        _onboardingRepository.Update(onboarding);
+        _unitOfWork.Onboardings.Update(onboarding);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

@@ -2,7 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Performance.Queries;
@@ -10,15 +10,14 @@ namespace Stocker.Modules.HR.Application.Features.Performance.Queries;
 /// <summary>
 /// Query to get performance goals with filters
 /// </summary>
-public class GetPerformanceGoalsQuery : IRequest<Result<List<PerformanceGoalDto>>>
+public record GetPerformanceGoalsQuery : IRequest<Result<List<PerformanceGoalDto>>>
 {
-    public Guid TenantId { get; set; }
-    public int? EmployeeId { get; set; }
-    public int? ReviewId { get; set; }
-    public GoalStatus? Status { get; set; }
-    public string? Category { get; set; }
-    public bool? ActiveOnly { get; set; }
-    public bool? OverdueOnly { get; set; }
+    public int? EmployeeId { get; init; }
+    public int? ReviewId { get; init; }
+    public GoalStatus? Status { get; init; }
+    public string? Category { get; init; }
+    public bool? ActiveOnly { get; init; }
+    public bool? OverdueOnly { get; init; }
 }
 
 /// <summary>
@@ -28,9 +27,6 @@ public class GetPerformanceGoalsQueryValidator : AbstractValidator<GetPerformanc
 {
     public GetPerformanceGoalsQueryValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.EmployeeId)
             .GreaterThan(0).WithMessage("Invalid employee ID")
             .When(x => x.EmployeeId.HasValue);
@@ -46,15 +42,11 @@ public class GetPerformanceGoalsQueryValidator : AbstractValidator<GetPerformanc
 /// </summary>
 public class GetPerformanceGoalsQueryHandler : IRequestHandler<GetPerformanceGoalsQuery, Result<List<PerformanceGoalDto>>>
 {
-    private readonly IPerformanceGoalRepository _goalRepository;
-    private readonly IEmployeeRepository _employeeRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetPerformanceGoalsQueryHandler(
-        IPerformanceGoalRepository goalRepository,
-        IEmployeeRepository employeeRepository)
+    public GetPerformanceGoalsQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _goalRepository = goalRepository;
-        _employeeRepository = employeeRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<PerformanceGoalDto>>> Handle(GetPerformanceGoalsQuery request, CancellationToken cancellationToken)
@@ -64,50 +56,51 @@ public class GetPerformanceGoalsQueryHandler : IRequestHandler<GetPerformanceGoa
         // Apply filters based on query parameters
         if (request.OverdueOnly == true)
         {
-            goals = await _goalRepository.GetOverdueAsync(cancellationToken);
+            goals = await _unitOfWork.PerformanceGoals.GetOverdueAsync(cancellationToken);
         }
         else if (request.EmployeeId.HasValue && request.ActiveOnly == true)
         {
-            goals = await _goalRepository.GetActiveByEmployeeAsync(request.EmployeeId.Value, cancellationToken);
+            goals = await _unitOfWork.PerformanceGoals.GetActiveByEmployeeAsync(request.EmployeeId.Value, cancellationToken);
         }
         else if (request.EmployeeId.HasValue)
         {
-            goals = await _goalRepository.GetByEmployeeAsync(request.EmployeeId.Value, cancellationToken);
+            goals = await _unitOfWork.PerformanceGoals.GetByEmployeeAsync(request.EmployeeId.Value, cancellationToken);
         }
         else if (request.ReviewId.HasValue)
         {
-            goals = await _goalRepository.GetByPerformanceReviewAsync(request.ReviewId.Value, cancellationToken);
+            goals = await _unitOfWork.PerformanceGoals.GetByPerformanceReviewAsync(request.ReviewId.Value, cancellationToken);
         }
         else
         {
-            goals = await _goalRepository.GetAllAsync(cancellationToken);
+            goals = await _unitOfWork.PerformanceGoals.GetAllAsync(cancellationToken);
         }
 
-        // Filter by tenant
-        goals = goals.Where(g => g.TenantId == request.TenantId).ToList();
-
         // Apply additional filters
+        var filteredGoals = goals.AsEnumerable();
+
         if (request.Status.HasValue)
         {
-            goals = goals.Where(g => g.Status == request.Status.Value).ToList();
+            filteredGoals = filteredGoals.Where(g => g.Status == request.Status.Value);
         }
 
         if (!string.IsNullOrEmpty(request.Category))
         {
-            goals = goals.Where(g => g.Category != null &&
-                                    g.Category.Equals(request.Category, StringComparison.OrdinalIgnoreCase)).ToList();
+            filteredGoals = filteredGoals.Where(g => g.Category != null &&
+                                    g.Category.Equals(request.Category, StringComparison.OrdinalIgnoreCase));
         }
 
+        var goalsList = filteredGoals.ToList();
+
         // Get employee and assigned by information
-        var employeeIds = goals.Select(g => g.EmployeeId).Distinct().ToList();
-        var assignedByIds = goals.Where(g => g.AssignedById.HasValue)
+        var employeeIds = goalsList.Select(g => g.EmployeeId).Distinct().ToList();
+        var assignedByIds = goalsList.Where(g => g.AssignedById.HasValue)
             .Select(g => g.AssignedById!.Value).Distinct().ToList();
         var allEmployeeIds = employeeIds.Union(assignedByIds).Distinct().ToList();
 
         var employees = new Dictionary<int, Employee>();
         foreach (var empId in allEmployeeIds)
         {
-            var emp = await _employeeRepository.GetByIdAsync(empId, cancellationToken);
+            var emp = await _unitOfWork.Employees.GetByIdAsync(empId, cancellationToken);
             if (emp != null)
             {
                 employees[empId] = emp;
@@ -115,7 +108,7 @@ public class GetPerformanceGoalsQueryHandler : IRequestHandler<GetPerformanceGoa
         }
 
         // Map to DTOs
-        var goalDtos = goals.Select(goal => new PerformanceGoalDto
+        var goalDtos = goalsList.Select(goal => new PerformanceGoalDto
         {
             Id = goal.Id,
             EmployeeId = goal.EmployeeId,

@@ -1,24 +1,38 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
+using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Onboardings.Queries;
 
-public record GetOnboardingsQuery() : IRequest<List<OnboardingDto>>;
+public record GetOnboardingsQuery(int? EmployeeId = null, bool ActiveOnly = false) : IRequest<Result<List<OnboardingDto>>>;
 
-public class GetOnboardingsQueryHandler : IRequestHandler<GetOnboardingsQuery, List<OnboardingDto>>
+public class GetOnboardingsQueryHandler : IRequestHandler<GetOnboardingsQuery, Result<List<OnboardingDto>>>
 {
-    private readonly IOnboardingRepository _repository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetOnboardingsQueryHandler(IOnboardingRepository repository)
+    public GetOnboardingsQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<List<OnboardingDto>> Handle(GetOnboardingsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<OnboardingDto>>> Handle(GetOnboardingsQuery request, CancellationToken cancellationToken)
     {
-        var entities = await _repository.GetAllAsync(cancellationToken);
-        return entities.Select(e => new OnboardingDto
+        var entities = await _unitOfWork.Onboardings.GetAllAsync(cancellationToken);
+
+        if (request.EmployeeId.HasValue)
+        {
+            entities = entities.Where(o => o.EmployeeId == request.EmployeeId.Value).ToList();
+        }
+
+        if (request.ActiveOnly)
+        {
+            entities = entities.Where(o =>
+                o.Status != Domain.Entities.OnboardingStatus.Completed &&
+                o.Status != Domain.Entities.OnboardingStatus.Cancelled).ToList();
+        }
+
+        var dtos = entities.Select(e => new OnboardingDto
         {
             Id = e.Id,
             EmployeeId = e.EmployeeId,
@@ -63,5 +77,7 @@ public class GetOnboardingsQueryHandler : IRequestHandler<GetOnboardingsQuery, L
             CreatedAt = e.CreatedDate,
             UpdatedAt = e.UpdatedDate
         }).ToList();
+
+        return Result<List<OnboardingDto>>.Success(dtos);
     }
 }

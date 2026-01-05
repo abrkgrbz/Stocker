@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.CareerPaths.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.CareerPaths.Commands;
 /// </summary>
 public record CreateCareerPathCommand : IRequest<Result<int>>
 {
-    public Guid TenantId { get; init; }
     public int EmployeeId { get; init; }
     public string PathName { get; init; } = string.Empty;
     public int CurrentPositionId { get; init; }
@@ -36,14 +34,10 @@ public record CreateCareerPathCommand : IRequest<Result<int>>
 /// </summary>
 public class CreateCareerPathCommandHandler : IRequestHandler<CreateCareerPathCommand, Result<int>>
 {
-    private readonly ICareerPathRepository _careerPathRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateCareerPathCommandHandler(
-        ICareerPathRepository careerPathRepository,
-        IUnitOfWork unitOfWork)
+    public CreateCareerPathCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _careerPathRepository = careerPathRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -56,7 +50,7 @@ public class CreateCareerPathCommandHandler : IRequestHandler<CreateCareerPathCo
             request.CurrentLevel,
             request.CareerTrack);
 
-        careerPath.SetTenantId(request.TenantId);
+        careerPath.SetTenantId(_unitOfWork.TenantId);
 
         if (request.TargetPositionId.HasValue && !string.IsNullOrEmpty(request.TargetPositionName))
         {
@@ -91,7 +85,7 @@ public class CreateCareerPathCommandHandler : IRequestHandler<CreateCareerPathCo
         if (!string.IsNullOrEmpty(request.Notes))
             careerPath.SetNotes(request.Notes);
 
-        await _careerPathRepository.AddAsync(careerPath, cancellationToken);
+        await _unitOfWork.CareerPaths.AddAsync(careerPath, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(careerPath.Id);

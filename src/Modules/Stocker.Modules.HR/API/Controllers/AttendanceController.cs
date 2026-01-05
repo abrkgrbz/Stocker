@@ -6,7 +6,6 @@ using Stocker.Modules.HR.Application.Features.Attendance.Commands;
 using Stocker.Modules.HR.Application.Features.Attendance.Queries;
 using Stocker.Modules.HR.Domain.Enums;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.API.Controllers;
@@ -19,12 +18,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class AttendanceController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public AttendanceController(IMediator mediator, ITenantService tenantService)
+    public AttendanceController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -42,12 +39,8 @@ public class AttendanceController : ControllerBase
         [FromQuery] bool? lateOnly = null,
         [FromQuery] bool? overtimeOnly = null)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetAttendanceQuery
         {
-            TenantId = tenantId.Value,
             EmployeeId = employeeId,
             StartDate = startDate,
             EndDate = endDate,
@@ -72,12 +65,8 @@ public class AttendanceController : ControllerBase
         [FromQuery] DateTime? date = null,
         [FromQuery] int? departmentId = null)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetDailyAttendanceQuery
         {
-            TenantId = tenantId.Value,
             Date = date ?? DateTime.UtcNow.Date,
             DepartmentId = departmentId
         };
@@ -99,12 +88,8 @@ public class AttendanceController : ControllerBase
         [FromQuery] int? year = null,
         [FromQuery] int? month = null)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetAttendanceReportQuery
         {
-            TenantId = tenantId.Value,
             EmployeeId = employeeId,
             DepartmentId = departmentId,
             Year = year ?? DateTime.UtcNow.Year,
@@ -124,12 +109,8 @@ public class AttendanceController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<ActionResult<AttendanceDto>> CheckIn(CheckInDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new RecordCheckInCommand
         {
-            TenantId = tenantId.Value,
             EmployeeId = dto.EmployeeId,
             Latitude = dto.Latitude,
             Longitude = dto.Longitude,
@@ -150,12 +131,8 @@ public class AttendanceController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<ActionResult<AttendanceDto>> CheckOut(CheckOutDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new RecordCheckOutCommand
         {
-            TenantId = tenantId.Value,
             EmployeeId = dto.EmployeeId,
             Latitude = dto.Latitude,
             Longitude = dto.Longitude,
@@ -177,12 +154,8 @@ public class AttendanceController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<AttendanceDto>> UpdateAttendance(int id, UpdateAttendanceDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new UpdateAttendanceCommand
         {
-            TenantId = tenantId.Value,
             AttendanceId = id,
             CheckInTime = dto.CheckInTime?.TimeOfDay,
             CheckOutTime = dto.CheckOutTime?.TimeOfDay,
@@ -198,10 +171,5 @@ public class AttendanceController : ControllerBase
             return BadRequest(result.Error);
         }
         return Ok(result.Value);
-    }
-
-    private static Error CreateTenantError()
-    {
-        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
     }
 }

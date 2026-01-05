@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Training.Commands;
@@ -11,17 +10,16 @@ namespace Stocker.Modules.HR.Application.Features.Training.Commands;
 /// <summary>
 /// Command to mark an employee's training as complete
 /// </summary>
-public class CompleteTrainingCommand : IRequest<Result<EmployeeTrainingDto>>
+public record CompleteTrainingCommand : IRequest<Result<EmployeeTrainingDto>>
 {
-    public Guid TenantId { get; set; }
-    public int TrainingId { get; set; }
-    public int EmployeeId { get; set; }
-    public decimal? Score { get; set; }
-    public bool IsPassed { get; set; } = true;
-    public string? CompletionNotes { get; set; }
-    public string? CertificateNumber { get; set; }
-    public string? CertificateUrl { get; set; }
-    public DateTime? CertificateExpiryDate { get; set; }
+    public int TrainingId { get; init; }
+    public int EmployeeId { get; init; }
+    public decimal? Score { get; init; }
+    public bool IsPassed { get; init; } = true;
+    public string? CompletionNotes { get; init; }
+    public string? CertificateNumber { get; init; }
+    public string? CertificateUrl { get; init; }
+    public DateTime? CertificateExpiryDate { get; init; }
 }
 
 /// <summary>
@@ -31,9 +29,6 @@ public class CompleteTrainingCommandValidator : AbstractValidator<CompleteTraini
 {
     public CompleteTrainingCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.TrainingId)
             .GreaterThan(0).WithMessage("Training ID is required");
 
@@ -61,27 +56,17 @@ public class CompleteTrainingCommandValidator : AbstractValidator<CompleteTraini
 /// </summary>
 public class CompleteTrainingCommandHandler : IRequestHandler<CompleteTrainingCommand, Result<EmployeeTrainingDto>>
 {
-    private readonly IEmployeeTrainingRepository _employeeTrainingRepository;
-    private readonly ITrainingRepository _trainingRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CompleteTrainingCommandHandler(
-        IEmployeeTrainingRepository employeeTrainingRepository,
-        ITrainingRepository trainingRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+    public CompleteTrainingCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _employeeTrainingRepository = employeeTrainingRepository;
-        _trainingRepository = trainingRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<EmployeeTrainingDto>> Handle(CompleteTrainingCommand request, CancellationToken cancellationToken)
     {
         // Get employee training by employee and training IDs
-        var employeeTraining = await _employeeTrainingRepository.GetByEmployeeAndTrainingAsync(
+        var employeeTraining = await _unitOfWork.EmployeeTrainings.GetByEmployeeAndTrainingAsync(
             request.EmployeeId, request.TrainingId, cancellationToken);
 
         if (employeeTraining == null)
@@ -91,7 +76,7 @@ public class CompleteTrainingCommandHandler : IRequestHandler<CompleteTrainingCo
         }
 
         // Verify training exists
-        var training = await _trainingRepository.GetByIdAsync(employeeTraining.TrainingId, cancellationToken);
+        var training = await _unitOfWork.Trainings.GetByIdAsync(employeeTraining.TrainingId, cancellationToken);
         if (training == null)
         {
             return Result<EmployeeTrainingDto>.Failure(
@@ -99,7 +84,7 @@ public class CompleteTrainingCommandHandler : IRequestHandler<CompleteTrainingCo
         }
 
         // Verify employee exists
-        var employee = await _employeeRepository.GetByIdAsync(employeeTraining.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(employeeTraining.EmployeeId, cancellationToken);
         if (employee == null)
         {
             return Result<EmployeeTrainingDto>.Failure(
@@ -150,7 +135,7 @@ public class CompleteTrainingCommandHandler : IRequestHandler<CompleteTrainingCo
         }
 
         // Save changes
-        await _employeeTrainingRepository.UpdateAsync(employeeTraining, cancellationToken);
+        _unitOfWork.EmployeeTrainings.Update(employeeTraining);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Map to DTO

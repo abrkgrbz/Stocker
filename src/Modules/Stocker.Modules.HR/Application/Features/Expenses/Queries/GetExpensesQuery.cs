@@ -1,7 +1,7 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Enums;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Expenses.Queries;
@@ -9,15 +9,14 @@ namespace Stocker.Modules.HR.Application.Features.Expenses.Queries;
 /// <summary>
 /// Query to get expenses with optional filtering
 /// </summary>
-public class GetExpensesQuery : IRequest<Result<List<ExpenseDto>>>
+public record GetExpensesQuery : IRequest<Result<List<ExpenseDto>>>
 {
-    public Guid TenantId { get; set; }
-    public int? EmployeeId { get; set; }
-    public ExpenseType? ExpenseType { get; set; }
-    public ExpenseStatus? Status { get; set; }
-    public DateTime? FromDate { get; set; }
-    public DateTime? ToDate { get; set; }
-    public bool IncludeInactive { get; set; }
+    public int? EmployeeId { get; init; }
+    public ExpenseType? ExpenseType { get; init; }
+    public ExpenseStatus? Status { get; init; }
+    public DateTime? FromDate { get; init; }
+    public DateTime? ToDate { get; init; }
+    public bool IncludeInactive { get; init; }
 }
 
 /// <summary>
@@ -25,11 +24,11 @@ public class GetExpensesQuery : IRequest<Result<List<ExpenseDto>>>
 /// </summary>
 public class GetExpensesQueryHandler : IRequestHandler<GetExpensesQuery, Result<List<ExpenseDto>>>
 {
-    private readonly IExpenseRepository _expenseRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetExpensesQueryHandler(IExpenseRepository expenseRepository)
+    public GetExpensesQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _expenseRepository = expenseRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<ExpenseDto>>> Handle(GetExpensesQuery request, CancellationToken cancellationToken)
@@ -38,11 +37,11 @@ public class GetExpensesQueryHandler : IRequestHandler<GetExpensesQuery, Result<
 
         if (request.EmployeeId.HasValue)
         {
-            expenses = await _expenseRepository.GetByEmployeeAsync(request.EmployeeId.Value, cancellationToken);
+            expenses = await _unitOfWork.Expenses.GetByEmployeeAsync(request.EmployeeId.Value, cancellationToken);
         }
         else
         {
-            expenses = await _expenseRepository.GetAllAsync(cancellationToken);
+            expenses = await _unitOfWork.Expenses.GetAllAsync(cancellationToken);
         }
 
         var filtered = expenses.AsEnumerable();

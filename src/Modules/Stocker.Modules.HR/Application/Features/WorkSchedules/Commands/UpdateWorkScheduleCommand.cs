@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.WorkSchedules.Commands;
@@ -10,11 +9,10 @@ namespace Stocker.Modules.HR.Application.Features.WorkSchedules.Commands;
 /// <summary>
 /// Command to update an existing work schedule
 /// </summary>
-public class UpdateWorkScheduleCommand : IRequest<Result<WorkScheduleDto>>
+public record UpdateWorkScheduleCommand : IRequest<Result<WorkScheduleDto>>
 {
-    public Guid TenantId { get; set; }
-    public int ScheduleId { get; set; }
-    public UpdateWorkScheduleDto ScheduleData { get; set; } = null!;
+    public int ScheduleId { get; init; }
+    public UpdateWorkScheduleDto ScheduleData { get; init; } = null!;
 }
 
 /// <summary>
@@ -24,9 +22,6 @@ public class UpdateWorkScheduleCommandValidator : AbstractValidator<UpdateWorkSc
 {
     public UpdateWorkScheduleCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.ScheduleId)
             .GreaterThan(0).WithMessage("Valid schedule ID is required");
 
@@ -49,26 +44,16 @@ public class UpdateWorkScheduleCommandValidator : AbstractValidator<UpdateWorkSc
 /// </summary>
 public class UpdateWorkScheduleCommandHandler : IRequestHandler<UpdateWorkScheduleCommand, Result<WorkScheduleDto>>
 {
-    private readonly IWorkScheduleRepository _scheduleRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IShiftRepository _shiftRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateWorkScheduleCommandHandler(
-        IWorkScheduleRepository scheduleRepository,
-        IEmployeeRepository employeeRepository,
-        IShiftRepository shiftRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateWorkScheduleCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _scheduleRepository = scheduleRepository;
-        _employeeRepository = employeeRepository;
-        _shiftRepository = shiftRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<WorkScheduleDto>> Handle(UpdateWorkScheduleCommand request, CancellationToken cancellationToken)
     {
-        var schedule = await _scheduleRepository.GetByIdAsync(request.ScheduleId, cancellationToken);
+        var schedule = await _unitOfWork.WorkSchedules.GetByIdAsync(request.ScheduleId, cancellationToken);
         if (schedule == null)
         {
             return Result<WorkScheduleDto>.Failure(
@@ -80,7 +65,7 @@ public class UpdateWorkScheduleCommandHandler : IRequestHandler<UpdateWorkSchedu
         // Validate shift if changed
         if (schedule.ShiftId != data.ShiftId)
         {
-            var shift = await _shiftRepository.GetByIdAsync(data.ShiftId, cancellationToken);
+            var shift = await _unitOfWork.Shifts.GetByIdAsync(data.ShiftId, cancellationToken);
             if (shift == null)
             {
                 return Result<WorkScheduleDto>.Failure(
@@ -111,8 +96,8 @@ public class UpdateWorkScheduleCommandHandler : IRequestHandler<UpdateWorkSchedu
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var employee = await _employeeRepository.GetByIdAsync(schedule.EmployeeId, cancellationToken);
-        var shiftEntity = await _shiftRepository.GetByIdAsync(schedule.ShiftId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(schedule.EmployeeId, cancellationToken);
+        var shiftEntity = await _unitOfWork.Shifts.GetByIdAsync(schedule.ShiftId, cancellationToken);
 
         var dto = new WorkScheduleDto
         {

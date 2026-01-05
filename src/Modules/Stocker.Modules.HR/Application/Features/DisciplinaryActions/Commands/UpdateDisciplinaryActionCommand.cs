@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.DisciplinaryActions.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.DisciplinaryActions.Commands;
 /// </summary>
 public record UpdateDisciplinaryActionCommand : IRequest<Result<int>>
 {
-    public Guid TenantId { get; init; }
     public int DisciplinaryActionId { get; init; }
     public string? InvestigationNotes { get; init; }
     public string? InvestigationFindings { get; init; }
@@ -39,20 +37,16 @@ public record UpdateDisciplinaryActionCommand : IRequest<Result<int>>
 /// </summary>
 public class UpdateDisciplinaryActionCommandHandler : IRequestHandler<UpdateDisciplinaryActionCommand, Result<int>>
 {
-    private readonly IDisciplinaryActionRepository _disciplinaryActionRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateDisciplinaryActionCommandHandler(
-        IDisciplinaryActionRepository disciplinaryActionRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateDisciplinaryActionCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _disciplinaryActionRepository = disciplinaryActionRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<int>> Handle(UpdateDisciplinaryActionCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(UpdateDisciplinaryActionCommand request, CancellationToken cancellationToken)
     {
-        var disciplinaryAction = await _disciplinaryActionRepository.GetByIdAsync(request.DisciplinaryActionId, cancellationToken);
+        var disciplinaryAction = await _unitOfWork.DisciplinaryActions.GetByIdAsync(request.DisciplinaryActionId, cancellationToken);
         if (disciplinaryAction == null)
         {
             return Result<int>.Failure(
@@ -108,7 +102,7 @@ public class UpdateDisciplinaryActionCommandHandler : IRequestHandler<UpdateDisc
         if (!string.IsNullOrEmpty(request.InternalNotes))
             disciplinaryAction.SetInternalNotes(request.InternalNotes);
 
-        _disciplinaryActionRepository.Update(disciplinaryAction);
+        _unitOfWork.DisciplinaryActions.Update(disciplinaryAction);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(disciplinaryAction.Id);

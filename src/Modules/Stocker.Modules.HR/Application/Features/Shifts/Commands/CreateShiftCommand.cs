@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Shifts.Commands;
@@ -11,10 +10,9 @@ namespace Stocker.Modules.HR.Application.Features.Shifts.Commands;
 /// <summary>
 /// Command to create a new shift
 /// </summary>
-public class CreateShiftCommand : IRequest<Result<ShiftDto>>
+public record CreateShiftCommand : IRequest<Result<ShiftDto>>
 {
-    public Guid TenantId { get; set; }
-    public CreateShiftDto ShiftData { get; set; } = null!;
+    public CreateShiftDto ShiftData { get; init; } = null!;
 }
 
 /// <summary>
@@ -24,9 +22,6 @@ public class CreateShiftCommandValidator : AbstractValidator<CreateShiftCommand>
 {
     public CreateShiftCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.ShiftData)
             .NotNull().WithMessage("Shift data is required");
 
@@ -51,14 +46,10 @@ public class CreateShiftCommandValidator : AbstractValidator<CreateShiftCommand>
 /// </summary>
 public class CreateShiftCommandHandler : IRequestHandler<CreateShiftCommand, Result<ShiftDto>>
 {
-    private readonly IShiftRepository _shiftRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateShiftCommandHandler(
-        IShiftRepository shiftRepository,
-        IUnitOfWork unitOfWork)
+    public CreateShiftCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _shiftRepository = shiftRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -67,7 +58,7 @@ public class CreateShiftCommandHandler : IRequestHandler<CreateShiftCommand, Res
         var data = request.ShiftData;
 
         // Check if shift with same code already exists
-        if (await _shiftRepository.ExistsWithCodeAsync(data.Code, cancellationToken: cancellationToken))
+        if (await _unitOfWork.Shifts.ExistsWithCodeAsync(data.Code, cancellationToken: cancellationToken))
         {
             return Result<ShiftDto>.Failure(
                 Error.Conflict("Shift.Code", "A shift with this code already exists"));
@@ -85,7 +76,7 @@ public class CreateShiftCommandHandler : IRequestHandler<CreateShiftCommand, Res
             data.Description);
 
         // Set tenant ID
-        shift.SetTenantId(request.TenantId);
+        shift.SetTenantId(_unitOfWork.TenantId);
 
         // Set break time if provided
         if (data.BreakStartTime.HasValue || data.BreakEndTime.HasValue)
@@ -106,7 +97,7 @@ public class CreateShiftCommandHandler : IRequestHandler<CreateShiftCommand, Res
         }
 
         // Save to repository
-        await _shiftRepository.AddAsync(shift, cancellationToken);
+        await _unitOfWork.Shifts.AddAsync(shift, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Map to DTO

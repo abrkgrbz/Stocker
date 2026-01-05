@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Interviews.Queries;
@@ -8,36 +8,23 @@ namespace Stocker.Modules.HR.Application.Features.Interviews.Queries;
 /// <summary>
 /// Query to get all interviews
 /// </summary>
-public class GetInterviewsQuery : IRequest<Result<List<InterviewDto>>>
-{
-    public Guid TenantId { get; set; }
-    public int? JobApplicationId { get; set; }
-    public int? InterviewerId { get; set; }
-    public bool UpcomingOnly { get; set; } = false;
-}
+public record GetInterviewsQuery(int? JobApplicationId = null, int? InterviewerId = null, bool UpcomingOnly = false) : IRequest<Result<List<InterviewDto>>>;
 
 /// <summary>
 /// Handler for GetInterviewsQuery
 /// </summary>
 public class GetInterviewsQueryHandler : IRequestHandler<GetInterviewsQuery, Result<List<InterviewDto>>>
 {
-    private readonly IInterviewRepository _repository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IJobApplicationRepository _jobApplicationRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetInterviewsQueryHandler(
-        IInterviewRepository repository,
-        IEmployeeRepository employeeRepository,
-        IJobApplicationRepository jobApplicationRepository)
+    public GetInterviewsQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _repository = repository;
-        _employeeRepository = employeeRepository;
-        _jobApplicationRepository = jobApplicationRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<InterviewDto>>> Handle(GetInterviewsQuery request, CancellationToken cancellationToken)
     {
-        var entities = await _repository.GetAllAsync(cancellationToken);
+        var entities = await _unitOfWork.Interviews.GetAllAsync(cancellationToken);
 
         var filteredEntities = entities.AsEnumerable();
 
@@ -62,11 +49,11 @@ public class GetInterviewsQueryHandler : IRequestHandler<GetInterviewsQuery, Res
         var dtos = new List<InterviewDto>();
         foreach (var entity in filteredEntities)
         {
-            var interviewer = await _employeeRepository.GetByIdAsync(entity.InterviewerId, cancellationToken);
+            var interviewer = await _unitOfWork.Employees.GetByIdAsync(entity.InterviewerId, cancellationToken);
             var interviewerName = interviewer != null ? $"{interviewer.FirstName} {interviewer.LastName}" : string.Empty;
 
             string? candidateName = null;
-            var jobApplication = await _jobApplicationRepository.GetByIdAsync(entity.JobApplicationId, cancellationToken);
+            var jobApplication = await _unitOfWork.JobApplications.GetByIdAsync(entity.JobApplicationId, cancellationToken);
             if (jobApplication != null)
             {
                 candidateName = $"{jobApplication.FirstName} {jobApplication.LastName}";

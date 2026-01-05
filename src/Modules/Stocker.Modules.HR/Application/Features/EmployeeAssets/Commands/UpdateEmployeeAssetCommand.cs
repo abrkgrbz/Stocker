@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.EmployeeAssets.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.EmployeeAssets.Commands;
 /// </summary>
 public record UpdateEmployeeAssetCommand : IRequest<Result<int>>
 {
-    public Guid TenantId { get; init; }
     public int EmployeeAssetId { get; init; }
     public AssetAssignmentStatus? Status { get; init; }
     public AssetCondition? ConditionAtReturn { get; init; }
@@ -42,20 +40,16 @@ public record UpdateEmployeeAssetCommand : IRequest<Result<int>>
 /// </summary>
 public class UpdateEmployeeAssetCommandHandler : IRequestHandler<UpdateEmployeeAssetCommand, Result<int>>
 {
-    private readonly IEmployeeAssetRepository _employeeAssetRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateEmployeeAssetCommandHandler(
-        IEmployeeAssetRepository employeeAssetRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateEmployeeAssetCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _employeeAssetRepository = employeeAssetRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<int>> Handle(UpdateEmployeeAssetCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(UpdateEmployeeAssetCommand request, CancellationToken cancellationToken)
     {
-        var employeeAsset = await _employeeAssetRepository.GetByIdAsync(request.EmployeeAssetId, cancellationToken);
+        var employeeAsset = await _unitOfWork.EmployeeAssets.GetByIdAsync(request.EmployeeAssetId, cancellationToken);
         if (employeeAsset == null)
         {
             return Result<int>.Failure(
@@ -117,7 +111,7 @@ public class UpdateEmployeeAssetCommandHandler : IRequestHandler<UpdateEmployeeA
         if (!string.IsNullOrEmpty(request.Tags))
             employeeAsset.SetTags(request.Tags);
 
-        _employeeAssetRepository.Update(employeeAsset);
+        _unitOfWork.EmployeeAssets.Update(employeeAsset);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(employeeAsset.Id);

@@ -1,7 +1,6 @@
 using FluentValidation;
 using MediatR;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Grievances.Commands;
@@ -9,9 +8,7 @@ namespace Stocker.Modules.HR.Application.Features.Grievances.Commands;
 /// <summary>
 /// Command to delete a grievance
 /// </summary>
-public record DeleteGrievanceCommand(
-    Guid TenantId,
-    int GrievanceId) : IRequest<Result<bool>>;
+public record DeleteGrievanceCommand(int GrievanceId) : IRequest<Result<bool>>;
 
 /// <summary>
 /// Validator for DeleteGrievanceCommand
@@ -20,9 +17,6 @@ public class DeleteGrievanceCommandValidator : AbstractValidator<DeleteGrievance
 {
     public DeleteGrievanceCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.GrievanceId)
             .GreaterThan(0).WithMessage("Grievance ID must be greater than 0");
     }
@@ -33,21 +27,17 @@ public class DeleteGrievanceCommandValidator : AbstractValidator<DeleteGrievance
 /// </summary>
 public class DeleteGrievanceCommandHandler : IRequestHandler<DeleteGrievanceCommand, Result<bool>>
 {
-    private readonly IGrievanceRepository _grievanceRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public DeleteGrievanceCommandHandler(
-        IGrievanceRepository grievanceRepository,
-        IUnitOfWork unitOfWork)
+    public DeleteGrievanceCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _grievanceRepository = grievanceRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<bool>> Handle(DeleteGrievanceCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(DeleteGrievanceCommand request, CancellationToken cancellationToken)
     {
         // Get existing grievance
-        var grievance = await _grievanceRepository.GetByIdAsync(request.GrievanceId, cancellationToken);
+        var grievance = await _unitOfWork.Grievances.GetByIdAsync(request.GrievanceId, cancellationToken);
         if (grievance == null)
         {
             return Result<bool>.Failure(
@@ -55,7 +45,7 @@ public class DeleteGrievanceCommandHandler : IRequestHandler<DeleteGrievanceComm
         }
 
         // Remove grievance
-        _grievanceRepository.Remove(grievance);
+        _unitOfWork.Grievances.Remove(grievance);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

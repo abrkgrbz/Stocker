@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.SuccessionPlans.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.SuccessionPlans.Commands;
 /// </summary>
 public record DeleteSuccessionPlanCommand : IRequest<Result<bool>>
 {
-    public Guid TenantId { get; init; }
     public int SuccessionPlanId { get; init; }
 }
 
@@ -20,21 +18,17 @@ public record DeleteSuccessionPlanCommand : IRequest<Result<bool>>
 /// </summary>
 public class DeleteSuccessionPlanCommandHandler : IRequestHandler<DeleteSuccessionPlanCommand, Result<bool>>
 {
-    private readonly ISuccessionPlanRepository _successionPlanRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public DeleteSuccessionPlanCommandHandler(
-        ISuccessionPlanRepository successionPlanRepository,
-        IUnitOfWork unitOfWork)
+    public DeleteSuccessionPlanCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _successionPlanRepository = successionPlanRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<bool>> Handle(DeleteSuccessionPlanCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(DeleteSuccessionPlanCommand request, CancellationToken cancellationToken)
     {
         // Get existing succession plan
-        var successionPlan = await _successionPlanRepository.GetByIdAsync(request.SuccessionPlanId, cancellationToken);
+        var successionPlan = await _unitOfWork.SuccessionPlans.GetByIdAsync(request.SuccessionPlanId, cancellationToken);
         if (successionPlan == null)
         {
             return Result<bool>.Failure(
@@ -55,7 +49,7 @@ public class DeleteSuccessionPlanCommandHandler : IRequestHandler<DeleteSuccessi
         }
 
         // Delete the succession plan
-        _successionPlanRepository.Remove(successionPlan);
+        _unitOfWork.SuccessionPlans.Remove(successionPlan);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

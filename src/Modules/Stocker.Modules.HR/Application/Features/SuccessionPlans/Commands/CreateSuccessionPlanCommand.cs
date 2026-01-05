@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.SuccessionPlans.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.SuccessionPlans.Commands;
 /// </summary>
 public record CreateSuccessionPlanCommand : IRequest<Result<int>>
 {
-    public Guid TenantId { get; init; }
     public string PlanName { get; init; } = string.Empty;
     public int PositionId { get; init; }
     public int DepartmentId { get; init; }
@@ -33,30 +31,17 @@ public record CreateSuccessionPlanCommand : IRequest<Result<int>>
 /// </summary>
 public class CreateSuccessionPlanCommandHandler : IRequestHandler<CreateSuccessionPlanCommand, Result<int>>
 {
-    private readonly ISuccessionPlanRepository _successionPlanRepository;
-    private readonly IPositionRepository _positionRepository;
-    private readonly IDepartmentRepository _departmentRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateSuccessionPlanCommandHandler(
-        ISuccessionPlanRepository successionPlanRepository,
-        IPositionRepository positionRepository,
-        IDepartmentRepository departmentRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+    public CreateSuccessionPlanCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _successionPlanRepository = successionPlanRepository;
-        _positionRepository = positionRepository;
-        _departmentRepository = departmentRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<int>> Handle(CreateSuccessionPlanCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(CreateSuccessionPlanCommand request, CancellationToken cancellationToken)
     {
         // Verify position exists
-        var position = await _positionRepository.GetByIdAsync(request.PositionId, cancellationToken);
+        var position = await _unitOfWork.Positions.GetByIdAsync(request.PositionId, cancellationToken);
         if (position == null)
         {
             return Result<int>.Failure(
@@ -64,7 +49,7 @@ public class CreateSuccessionPlanCommandHandler : IRequestHandler<CreateSuccessi
         }
 
         // Verify department exists
-        var department = await _departmentRepository.GetByIdAsync(request.DepartmentId, cancellationToken);
+        var department = await _unitOfWork.Departments.GetByIdAsync(request.DepartmentId, cancellationToken);
         if (department == null)
         {
             return Result<int>.Failure(
@@ -74,7 +59,7 @@ public class CreateSuccessionPlanCommandHandler : IRequestHandler<CreateSuccessi
         // Verify current incumbent exists if specified
         if (request.CurrentIncumbentId.HasValue)
         {
-            var incumbent = await _employeeRepository.GetByIdAsync(request.CurrentIncumbentId.Value, cancellationToken);
+            var incumbent = await _unitOfWork.Employees.GetByIdAsync(request.CurrentIncumbentId.Value, cancellationToken);
             if (incumbent == null)
             {
                 return Result<int>.Failure(
@@ -91,7 +76,7 @@ public class CreateSuccessionPlanCommandHandler : IRequestHandler<CreateSuccessi
             request.Priority);
 
         // Set tenant ID
-        successionPlan.SetTenantId(request.TenantId);
+        successionPlan.SetTenantId(_unitOfWork.TenantId);
 
         // Set optional properties
         if (request.CurrentIncumbentId.HasValue)
@@ -122,7 +107,7 @@ public class CreateSuccessionPlanCommandHandler : IRequestHandler<CreateSuccessi
         successionPlan.AssessRisk();
 
         // Save to repository
-        await _successionPlanRepository.AddAsync(successionPlan, cancellationToken);
+        await _unitOfWork.SuccessionPlans.AddAsync(successionPlan, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(successionPlan.Id);

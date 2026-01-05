@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 
 namespace Stocker.Modules.HR.Application.Features.Certifications.Queries;
 
@@ -8,16 +8,16 @@ public record GetCertificationByIdQuery(int Id) : IRequest<CertificationDto?>;
 
 public class GetCertificationByIdQueryHandler : IRequestHandler<GetCertificationByIdQuery, CertificationDto?>
 {
-    private readonly ICertificationRepository _repository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetCertificationByIdQueryHandler(ICertificationRepository repository)
+    public GetCertificationByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<CertificationDto?> Handle(GetCertificationByIdQuery request, CancellationToken cancellationToken)
+    public async Task<CertificationDto?> Handle(GetCertificationByIdQuery request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.Certifications.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null) return null;
 
         return new CertificationDto

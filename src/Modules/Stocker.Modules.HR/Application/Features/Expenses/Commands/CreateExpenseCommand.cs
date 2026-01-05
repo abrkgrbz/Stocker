@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Expenses.Commands;
@@ -11,10 +10,9 @@ namespace Stocker.Modules.HR.Application.Features.Expenses.Commands;
 /// <summary>
 /// Command to create a new expense
 /// </summary>
-public class CreateExpenseCommand : IRequest<Result<ExpenseDto>>
+public record CreateExpenseCommand : IRequest<Result<ExpenseDto>>
 {
-    public Guid TenantId { get; set; }
-    public CreateExpenseDto ExpenseData { get; set; } = null!;
+    public CreateExpenseDto ExpenseData { get; init; } = null!;
 }
 
 /// <summary>
@@ -24,9 +22,6 @@ public class CreateExpenseCommandValidator : AbstractValidator<CreateExpenseComm
 {
     public CreateExpenseCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.ExpenseData)
             .NotNull().WithMessage("Expense data is required");
 
@@ -61,14 +56,10 @@ public class CreateExpenseCommandValidator : AbstractValidator<CreateExpenseComm
 /// </summary>
 public class CreateExpenseCommandHandler : IRequestHandler<CreateExpenseCommand, Result<ExpenseDto>>
 {
-    private readonly IExpenseRepository _expenseRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateExpenseCommandHandler(
-        IExpenseRepository expenseRepository,
-        IUnitOfWork unitOfWork)
+    public CreateExpenseCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _expenseRepository = expenseRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -99,9 +90,9 @@ public class CreateExpenseCommandHandler : IRequestHandler<CreateExpenseCommand,
             expense.SetNotes(data.Notes);
         }
 
-        expense.SetTenantId(request.TenantId);
+        expense.SetTenantId(_unitOfWork.TenantId);
 
-        await _expenseRepository.AddAsync(expense, cancellationToken);
+        await _unitOfWork.Expenses.AddAsync(expense, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = MapToDto(expense);

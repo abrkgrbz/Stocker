@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Training.Commands;
@@ -11,12 +10,11 @@ namespace Stocker.Modules.HR.Application.Features.Training.Commands;
 /// <summary>
 /// Command to enroll an employee in a training
 /// </summary>
-public class EnrollEmployeeCommand : IRequest<Result<EmployeeTrainingDto>>
+public record EnrollEmployeeCommand : IRequest<Result<EmployeeTrainingDto>>
 {
-    public Guid TenantId { get; set; }
-    public int EmployeeId { get; set; }
-    public int TrainingId { get; set; }
-    public string? Notes { get; set; }
+    public int EmployeeId { get; init; }
+    public int TrainingId { get; init; }
+    public string? Notes { get; init; }
 }
 
 /// <summary>
@@ -26,9 +24,6 @@ public class EnrollEmployeeCommandValidator : AbstractValidator<EnrollEmployeeCo
 {
     public EnrollEmployeeCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.EmployeeId)
             .GreaterThan(0).WithMessage("Employee ID is required");
 
@@ -45,27 +40,17 @@ public class EnrollEmployeeCommandValidator : AbstractValidator<EnrollEmployeeCo
 /// </summary>
 public class EnrollEmployeeCommandHandler : IRequestHandler<EnrollEmployeeCommand, Result<EmployeeTrainingDto>>
 {
-    private readonly ITrainingRepository _trainingRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IEmployeeTrainingRepository _employeeTrainingRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public EnrollEmployeeCommandHandler(
-        ITrainingRepository trainingRepository,
-        IEmployeeRepository employeeRepository,
-        IEmployeeTrainingRepository employeeTrainingRepository,
-        IUnitOfWork unitOfWork)
+    public EnrollEmployeeCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _trainingRepository = trainingRepository;
-        _employeeRepository = employeeRepository;
-        _employeeTrainingRepository = employeeTrainingRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<EmployeeTrainingDto>> Handle(EnrollEmployeeCommand request, CancellationToken cancellationToken)
     {
         // Verify employee exists
-        var employee = await _employeeRepository.GetByIdAsync(request.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(request.EmployeeId, cancellationToken);
         if (employee == null)
         {
             return Result<EmployeeTrainingDto>.Failure(
@@ -73,7 +58,7 @@ public class EnrollEmployeeCommandHandler : IRequestHandler<EnrollEmployeeComman
         }
 
         // Verify training exists
-        var training = await _trainingRepository.GetWithParticipantsAsync(request.TrainingId, cancellationToken);
+        var training = await _unitOfWork.Trainings.GetWithParticipantsAsync(request.TrainingId, cancellationToken);
         if (training == null)
         {
             return Result<EmployeeTrainingDto>.Failure(
@@ -96,7 +81,7 @@ public class EnrollEmployeeCommandHandler : IRequestHandler<EnrollEmployeeComman
         }
 
         // Check if employee is already enrolled
-        var existingEnrollment = await _employeeTrainingRepository.GetByEmployeeAndTrainingAsync(
+        var existingEnrollment = await _unitOfWork.EmployeeTrainings.GetByEmployeeAndTrainingAsync(
             request.EmployeeId, request.TrainingId, cancellationToken);
 
         if (existingEnrollment != null && existingEnrollment.Status != EmployeeTrainingStatus.Cancelled)
@@ -121,10 +106,10 @@ public class EnrollEmployeeCommandHandler : IRequestHandler<EnrollEmployeeComman
         }
 
         // Set tenant ID
-        employeeTraining.SetTenantId(request.TenantId);
+        employeeTraining.SetTenantId(_unitOfWork.TenantId);
 
         // Save to repository
-        await _employeeTrainingRepository.AddAsync(employeeTraining, cancellationToken);
+        await _unitOfWork.EmployeeTrainings.AddAsync(employeeTraining, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Map to DTO

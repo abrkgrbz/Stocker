@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Grievances.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.Grievances.Commands;
 /// Command to create a new grievance
 /// </summary>
 public record CreateGrievanceCommand(
-    Guid TenantId,
     int ComplainantId,
     string GrievanceCode,
     string Subject,
@@ -32,9 +30,6 @@ public class CreateGrievanceCommandValidator : AbstractValidator<CreateGrievance
 {
     public CreateGrievanceCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.ComplainantId)
             .GreaterThan(0).WithMessage("Complainant ID must be greater than 0");
 
@@ -57,24 +52,17 @@ public class CreateGrievanceCommandValidator : AbstractValidator<CreateGrievance
 /// </summary>
 public class CreateGrievanceCommandHandler : IRequestHandler<CreateGrievanceCommand, Result<int>>
 {
-    private readonly IGrievanceRepository _grievanceRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateGrievanceCommandHandler(
-        IGrievanceRepository grievanceRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+    public CreateGrievanceCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _grievanceRepository = grievanceRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<Result<int>> Handle(CreateGrievanceCommand request, CancellationToken cancellationToken)
     {
         // Verify complainant exists
-        var complainant = await _employeeRepository.GetByIdAsync(request.ComplainantId, cancellationToken);
+        var complainant = await _unitOfWork.Employees.GetByIdAsync(request.ComplainantId, cancellationToken);
         if (complainant == null)
         {
             return Result<int>.Failure(
@@ -82,7 +70,7 @@ public class CreateGrievanceCommandHandler : IRequestHandler<CreateGrievanceComm
         }
 
         // Check if grievance code already exists
-        var existingGrievance = await _grievanceRepository.GetByCodeAsync(request.GrievanceCode, cancellationToken);
+        var existingGrievance = await _unitOfWork.Grievances.GetByCodeAsync(request.GrievanceCode, cancellationToken);
         if (existingGrievance != null)
         {
             return Result<int>.Failure(
@@ -92,7 +80,7 @@ public class CreateGrievanceCommandHandler : IRequestHandler<CreateGrievanceComm
         // Verify accused person if specified
         if (request.AccusedPersonId.HasValue)
         {
-            var accusedPerson = await _employeeRepository.GetByIdAsync(request.AccusedPersonId.Value, cancellationToken);
+            var accusedPerson = await _unitOfWork.Employees.GetByIdAsync(request.AccusedPersonId.Value, cancellationToken);
             if (accusedPerson == null)
             {
                 return Result<int>.Failure(
@@ -110,7 +98,7 @@ public class CreateGrievanceCommandHandler : IRequestHandler<CreateGrievanceComm
             request.Priority);
 
         // Set tenant ID
-        grievance.SetTenantId(request.TenantId);
+        grievance.SetTenantId(_unitOfWork.TenantId);
 
         // Set optional properties
         if (request.IncidentDate.HasValue || !string.IsNullOrEmpty(request.IncidentLocation))
@@ -122,7 +110,7 @@ public class CreateGrievanceCommandHandler : IRequestHandler<CreateGrievanceComm
         grievance.SetConfidentiality(request.IsAnonymous, request.IsConfidential, request.RetaliationProtectionRequested);
 
         // Save to repository
-        await _grievanceRepository.AddAsync(grievance, cancellationToken);
+        await _unitOfWork.Grievances.AddAsync(grievance, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(grievance.Id);

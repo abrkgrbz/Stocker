@@ -2,7 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Positions.Commands;
@@ -10,11 +10,10 @@ namespace Stocker.Modules.HR.Application.Features.Positions.Commands;
 /// <summary>
 /// Command to update a position
 /// </summary>
-public class UpdatePositionCommand : IRequest<Result<PositionDto>>
+public record UpdatePositionCommand : IRequest<Result<PositionDto>>
 {
-    public Guid TenantId { get; set; }
-    public int PositionId { get; set; }
-    public UpdatePositionDto PositionData { get; set; } = null!;
+    public int PositionId { get; init; }
+    public UpdatePositionDto PositionData { get; init; } = null!;
 }
 
 /// <summary>
@@ -24,9 +23,6 @@ public class UpdatePositionCommandValidator : AbstractValidator<UpdatePositionCo
 {
     public UpdatePositionCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.PositionId)
             .GreaterThan(0).WithMessage("Position ID must be greater than 0");
 
@@ -54,17 +50,10 @@ public class UpdatePositionCommandValidator : AbstractValidator<UpdatePositionCo
 /// </summary>
 public class UpdatePositionCommandHandler : IRequestHandler<UpdatePositionCommand, Result<PositionDto>>
 {
-    private readonly IPositionRepository _positionRepository;
-    private readonly IDepartmentRepository _departmentRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdatePositionCommandHandler(
-        IPositionRepository positionRepository,
-        IDepartmentRepository departmentRepository,
-        IUnitOfWork unitOfWork)
+    public UpdatePositionCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _positionRepository = positionRepository;
-        _departmentRepository = departmentRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -73,7 +62,7 @@ public class UpdatePositionCommandHandler : IRequestHandler<UpdatePositionComman
         var data = request.PositionData;
 
         // Get existing position
-        var position = await _positionRepository.GetByIdAsync(request.PositionId, cancellationToken);
+        var position = await _unitOfWork.Positions.GetByIdAsync(request.PositionId, cancellationToken);
         if (position == null)
         {
             return Result<PositionDto>.Failure(
@@ -81,7 +70,7 @@ public class UpdatePositionCommandHandler : IRequestHandler<UpdatePositionComman
         }
 
         // Validate department
-        var department = await _departmentRepository.GetByIdAsync(data.DepartmentId, cancellationToken);
+        var department = await _unitOfWork.Departments.GetByIdAsync(data.DepartmentId, cancellationToken);
         if (department == null)
         {
             return Result<PositionDto>.Failure(
@@ -98,11 +87,11 @@ public class UpdatePositionCommandHandler : IRequestHandler<UpdatePositionComman
         }
 
         // Save changes
-        _positionRepository.Update(position);
+        _unitOfWork.Positions.Update(position);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Get employee count for this position
-        var employeeCount = await _positionRepository.GetEmployeeCountAsync(position.Id, cancellationToken);
+        var employeeCount = await _unitOfWork.Positions.GetEmployeeCountAsync(position.Id, cancellationToken);
 
         // Map to DTO
         var positionDto = new PositionDto

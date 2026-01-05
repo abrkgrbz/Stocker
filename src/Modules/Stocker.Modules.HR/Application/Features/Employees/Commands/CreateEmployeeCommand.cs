@@ -4,7 +4,7 @@ using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
 using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Employees.Commands;
@@ -12,10 +12,9 @@ namespace Stocker.Modules.HR.Application.Features.Employees.Commands;
 /// <summary>
 /// Command to create a new employee
 /// </summary>
-public class CreateEmployeeCommand : IRequest<Result<EmployeeDto>>
+public record CreateEmployeeCommand : IRequest<Result<EmployeeDto>>
 {
-    public Guid TenantId { get; set; }
-    public CreateEmployeeDto EmployeeData { get; set; } = null!;
+    public CreateEmployeeDto EmployeeData { get; init; } = null!;
 }
 
 /// <summary>
@@ -25,9 +24,6 @@ public class CreateEmployeeCommandValidator : AbstractValidator<CreateEmployeeCo
 {
     public CreateEmployeeCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.EmployeeData)
             .NotNull().WithMessage("Employee data is required");
 
@@ -76,20 +72,10 @@ public class CreateEmployeeCommandValidator : AbstractValidator<CreateEmployeeCo
 /// </summary>
 public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeCommand, Result<EmployeeDto>>
 {
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IDepartmentRepository _departmentRepository;
-    private readonly IPositionRepository _positionRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateEmployeeCommandHandler(
-        IEmployeeRepository employeeRepository,
-        IDepartmentRepository departmentRepository,
-        IPositionRepository positionRepository,
-        IUnitOfWork unitOfWork)
+    public CreateEmployeeCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _employeeRepository = employeeRepository;
-        _departmentRepository = departmentRepository;
-        _positionRepository = positionRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -98,21 +84,21 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
         var data = request.EmployeeData;
 
         // Check if employee with same code already exists
-        if (await _employeeRepository.ExistsWithCodeAsync(data.EmployeeCode, cancellationToken: cancellationToken))
+        if (await _unitOfWork.Employees.ExistsWithCodeAsync(data.EmployeeCode, cancellationToken: cancellationToken))
         {
             return Result<EmployeeDto>.Failure(
                 Error.Conflict("Employee.Code", "An employee with this code already exists"));
         }
 
         // Check if email already exists
-        if (await _employeeRepository.ExistsWithEmailAsync(data.Email, cancellationToken: cancellationToken))
+        if (await _unitOfWork.Employees.ExistsWithEmailAsync(data.Email, cancellationToken: cancellationToken))
         {
             return Result<EmployeeDto>.Failure(
                 Error.Conflict("Employee.Email", "An employee with this email already exists"));
         }
 
         // Validate department
-        var department = await _departmentRepository.GetByIdAsync(data.DepartmentId, cancellationToken);
+        var department = await _unitOfWork.Departments.GetByIdAsync(data.DepartmentId, cancellationToken);
         if (department == null)
         {
             return Result<EmployeeDto>.Failure(
@@ -120,7 +106,7 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
         }
 
         // Validate position
-        var position = await _positionRepository.GetByIdAsync(data.PositionId, cancellationToken);
+        var position = await _unitOfWork.Positions.GetByIdAsync(data.PositionId, cancellationToken);
         if (position == null)
         {
             return Result<EmployeeDto>.Failure(
@@ -131,7 +117,7 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
         string? managerName = null;
         if (data.ManagerId.HasValue)
         {
-            var manager = await _employeeRepository.GetByIdAsync(data.ManagerId.Value, cancellationToken);
+            var manager = await _unitOfWork.Employees.GetByIdAsync(data.ManagerId.Value, cancellationToken);
             if (manager == null)
             {
                 return Result<EmployeeDto>.Failure(
@@ -172,7 +158,7 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
             data.PayrollPeriod);
 
         // Set tenant ID
-        employee.SetTenantId(request.TenantId);
+        employee.SetTenantId(_unitOfWork.TenantId);
 
         // Set manager if specified
         if (data.ManagerId.HasValue)
@@ -249,7 +235,7 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
         }
 
         // Save to repository
-        await _employeeRepository.AddAsync(employee, cancellationToken);
+        await _unitOfWork.Employees.AddAsync(employee, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Map to DTO

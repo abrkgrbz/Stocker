@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.WorkLocations.Commands;
@@ -11,11 +10,10 @@ namespace Stocker.Modules.HR.Application.Features.WorkLocations.Commands;
 /// <summary>
 /// Command to update a work location
 /// </summary>
-public class UpdateWorkLocationCommand : IRequest<Result<WorkLocationDto>>
+public record UpdateWorkLocationCommand : IRequest<Result<WorkLocationDto>>
 {
-    public Guid TenantId { get; set; }
-    public int WorkLocationId { get; set; }
-    public UpdateWorkLocationDto LocationData { get; set; } = null!;
+    public int WorkLocationId { get; init; }
+    public UpdateWorkLocationDto LocationData { get; init; } = null!;
 }
 
 /// <summary>
@@ -25,9 +23,6 @@ public class UpdateWorkLocationCommandValidator : AbstractValidator<UpdateWorkLo
 {
     public UpdateWorkLocationCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.WorkLocationId)
             .GreaterThan(0).WithMessage("Work location ID must be greater than 0");
 
@@ -74,21 +69,17 @@ public class UpdateWorkLocationCommandValidator : AbstractValidator<UpdateWorkLo
 /// </summary>
 public class UpdateWorkLocationCommandHandler : IRequestHandler<UpdateWorkLocationCommand, Result<WorkLocationDto>>
 {
-    private readonly IWorkLocationRepository _workLocationRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateWorkLocationCommandHandler(
-        IWorkLocationRepository workLocationRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateWorkLocationCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _workLocationRepository = workLocationRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<WorkLocationDto>> Handle(UpdateWorkLocationCommand request, CancellationToken cancellationToken)
     {
         // Get existing work location
-        var workLocation = await _workLocationRepository.GetByIdAsync(request.WorkLocationId, cancellationToken);
+        var workLocation = await _unitOfWork.WorkLocations.GetByIdAsync(request.WorkLocationId, cancellationToken);
         if (workLocation == null)
         {
             return Result<WorkLocationDto>.Failure(
@@ -98,7 +89,7 @@ public class UpdateWorkLocationCommandHandler : IRequestHandler<UpdateWorkLocati
         // If marking as headquarters, check if another one already exists
         if (request.LocationData.IsHeadquarters && !workLocation.IsHeadquarters)
         {
-            var existingHeadquarters = await _workLocationRepository.GetHeadquartersAsync(cancellationToken);
+            var existingHeadquarters = await _unitOfWork.WorkLocations.GetHeadquartersAsync(cancellationToken);
             if (existingHeadquarters != null && existingHeadquarters.Id != request.WorkLocationId)
             {
                 return Result<WorkLocationDto>.Failure(
@@ -157,11 +148,10 @@ public class UpdateWorkLocationCommandHandler : IRequestHandler<UpdateWorkLocati
         workLocation.SetAsRemote(request.LocationData.IsRemote);
 
         // Save changes
-        _workLocationRepository.Update(workLocation);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Get employee count
-        var employeeCount = await _workLocationRepository.GetEmployeeCountAsync(workLocation.Id, cancellationToken);
+        var employeeCount = await _unitOfWork.WorkLocations.GetEmployeeCountAsync(workLocation.Id, cancellationToken);
 
         // Map to DTO
         var locationDto = new WorkLocationDto

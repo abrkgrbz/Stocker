@@ -1,7 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Leaves.Queries;
@@ -9,11 +9,7 @@ namespace Stocker.Modules.HR.Application.Features.Leaves.Queries;
 /// <summary>
 /// Query to get a single leave by ID
 /// </summary>
-public class GetLeaveByIdQuery : IRequest<Result<LeaveDto>>
-{
-    public Guid TenantId { get; set; }
-    public int LeaveId { get; set; }
-}
+public record GetLeaveByIdQuery(int LeaveId) : IRequest<Result<LeaveDto>>;
 
 /// <summary>
 /// Validator for GetLeaveByIdQuery
@@ -22,9 +18,6 @@ public class GetLeaveByIdQueryValidator : AbstractValidator<GetLeaveByIdQuery>
 {
     public GetLeaveByIdQueryValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.LeaveId)
             .GreaterThan(0).WithMessage("Leave ID is required");
     }
@@ -35,24 +28,17 @@ public class GetLeaveByIdQueryValidator : AbstractValidator<GetLeaveByIdQuery>
 /// </summary>
 public class GetLeaveByIdQueryHandler : IRequestHandler<GetLeaveByIdQuery, Result<LeaveDto>>
 {
-    private readonly ILeaveRepository _leaveRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly ILeaveTypeRepository _leaveTypeRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetLeaveByIdQueryHandler(
-        ILeaveRepository leaveRepository,
-        IEmployeeRepository employeeRepository,
-        ILeaveTypeRepository leaveTypeRepository)
+    public GetLeaveByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _leaveRepository = leaveRepository;
-        _employeeRepository = employeeRepository;
-        _leaveTypeRepository = leaveTypeRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<LeaveDto>> Handle(GetLeaveByIdQuery request, CancellationToken cancellationToken)
     {
         // Get leave with details
-        var leave = await _leaveRepository.GetWithDetailsAsync(request.LeaveId, cancellationToken);
+        var leave = await _unitOfWork.Leaves.GetWithDetailsAsync(request.LeaveId, cancellationToken);
         if (leave == null)
         {
             return Result<LeaveDto>.Failure(
@@ -60,13 +46,13 @@ public class GetLeaveByIdQueryHandler : IRequestHandler<GetLeaveByIdQuery, Resul
         }
 
         // Get related entities
-        var employee = await _employeeRepository.GetByIdAsync(leave.EmployeeId, cancellationToken);
-        var leaveType = await _leaveTypeRepository.GetByIdAsync(leave.LeaveTypeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(leave.EmployeeId, cancellationToken);
+        var leaveType = await _unitOfWork.LeaveTypes.GetByIdAsync(leave.LeaveTypeId, cancellationToken);
 
         string? approvedByName = null;
         if (leave.ApprovedById.HasValue)
         {
-            var approver = await _employeeRepository.GetByIdAsync(leave.ApprovedById.Value, cancellationToken);
+            var approver = await _unitOfWork.Employees.GetByIdAsync(leave.ApprovedById.Value, cancellationToken);
             approvedByName = approver != null
                 ? $"{approver.FirstName} {approver.LastName}"
                 : null;
@@ -75,7 +61,7 @@ public class GetLeaveByIdQueryHandler : IRequestHandler<GetLeaveByIdQuery, Resul
         string? substituteEmployeeName = null;
         if (leave.SubstituteEmployeeId.HasValue)
         {
-            var substituteEmployee = await _employeeRepository.GetByIdAsync(leave.SubstituteEmployeeId.Value, cancellationToken);
+            var substituteEmployee = await _unitOfWork.Employees.GetByIdAsync(leave.SubstituteEmployeeId.Value, cancellationToken);
             substituteEmployeeName = substituteEmployee != null
                 ? $"{substituteEmployee.FirstName} {substituteEmployee.LastName}"
                 : null;

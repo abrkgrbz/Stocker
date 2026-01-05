@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 
 namespace Stocker.Modules.HR.Application.Features.SuccessionPlans.Queries;
 
@@ -8,16 +8,16 @@ public record GetSuccessionPlanByIdQuery(int Id) : IRequest<SuccessionPlanDto?>;
 
 public class GetSuccessionPlanByIdQueryHandler : IRequestHandler<GetSuccessionPlanByIdQuery, SuccessionPlanDto?>
 {
-    private readonly ISuccessionPlanRepository _repository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetSuccessionPlanByIdQueryHandler(ISuccessionPlanRepository repository)
+    public GetSuccessionPlanByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<SuccessionPlanDto?> Handle(GetSuccessionPlanByIdQuery request, CancellationToken cancellationToken)
+    public async Task<SuccessionPlanDto?> Handle(GetSuccessionPlanByIdQuery request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.SuccessionPlans.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null) return null;
 
         return new SuccessionPlanDto

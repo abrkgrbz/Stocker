@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.DisciplinaryActions.Commands;
 using Stocker.Modules.HR.Application.Features.DisciplinaryActions.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.HR.API.Controllers;
 
@@ -17,12 +16,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class DisciplinaryActionsController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public DisciplinaryActionsController(IMediator mediator, ITenantService tenantService)
+    public DisciplinaryActionsController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -55,16 +52,12 @@ public class DisciplinaryActionsController : ControllerBase
     /// Create a new disciplinary action
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(Guid), 201)]
+    [ProducesResponseType(typeof(int), 201)]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
-    public async Task<ActionResult<Guid>> CreateDisciplinaryAction(CreateDisciplinaryActionCommand command)
+    public async Task<ActionResult<int>> CreateDisciplinaryAction(CreateDisciplinaryActionCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant ID is required");
-
-        var commandWithTenant = command with { TenantId = tenantId.Value };
-        var result = await _mediator.Send(commandWithTenant);
+        var result = await _mediator.Send(command);
 
         if (result.IsFailure)
             return BadRequest(result.Error);
@@ -76,17 +69,14 @@ public class DisciplinaryActionsController : ControllerBase
     /// Update an existing disciplinary action
     /// </summary>
     [HttpPut("{id}")]
-    [ProducesResponseType(typeof(Guid), 200)]
+    [ProducesResponseType(typeof(int), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     [ProducesResponseType(401)]
-    public async Task<ActionResult<Guid>> UpdateDisciplinaryAction(int id, UpdateDisciplinaryActionCommand command)
+    public async Task<ActionResult<int>> UpdateDisciplinaryAction(int id, UpdateDisciplinaryActionCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant ID is required");
-
-        var commandWithTenant = command with { TenantId = tenantId.Value, DisciplinaryActionId = id };
-        var result = await _mediator.Send(commandWithTenant);
+        var commandWithId = command with { DisciplinaryActionId = id };
+        var result = await _mediator.Send(commandWithId);
 
         if (result.IsFailure)
             return BadRequest(result.Error);
@@ -104,10 +94,7 @@ public class DisciplinaryActionsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> DeleteDisciplinaryAction(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant ID is required");
-
-        var command = new DeleteDisciplinaryActionCommand { TenantId = tenantId.Value, DisciplinaryActionId = id };
+        var command = new DeleteDisciplinaryActionCommand { DisciplinaryActionId = id };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)

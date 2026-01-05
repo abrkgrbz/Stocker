@@ -1,26 +1,31 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
+using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Onboardings.Queries;
 
-public record GetOnboardingByIdQuery(int Id) : IRequest<OnboardingDto?>;
+public record GetOnboardingByIdQuery(int Id) : IRequest<Result<OnboardingDto>>;
 
-public class GetOnboardingByIdQueryHandler : IRequestHandler<GetOnboardingByIdQuery, OnboardingDto?>
+public class GetOnboardingByIdQueryHandler : IRequestHandler<GetOnboardingByIdQuery, Result<OnboardingDto>>
 {
-    private readonly IOnboardingRepository _repository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetOnboardingByIdQueryHandler(IOnboardingRepository repository)
+    public GetOnboardingByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<OnboardingDto?> Handle(GetOnboardingByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<OnboardingDto>> Handle(GetOnboardingByIdQuery request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
-        if (entity == null) return null;
+        var entity = await _unitOfWork.Onboardings.GetByIdAsync(request.Id, cancellationToken);
+        if (entity == null)
+        {
+            return Result<OnboardingDto>.Failure(
+                Error.NotFound("Onboarding", $"Onboarding with ID {request.Id} not found"));
+        }
 
-        return new OnboardingDto
+        var dto = new OnboardingDto
         {
             Id = entity.Id,
             EmployeeId = entity.EmployeeId,
@@ -65,5 +70,7 @@ public class GetOnboardingByIdQueryHandler : IRequestHandler<GetOnboardingByIdQu
             CreatedAt = entity.CreatedDate,
             UpdatedAt = entity.UpdatedDate
         };
+
+        return Result<OnboardingDto>.Success(dto);
     }
 }

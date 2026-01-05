@@ -1,6 +1,7 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Departments.Queries;
@@ -8,11 +9,10 @@ namespace Stocker.Modules.HR.Application.Features.Departments.Queries;
 /// <summary>
 /// Query to get all departments
 /// </summary>
-public class GetDepartmentsQuery : IRequest<Result<List<DepartmentDto>>>
+public record GetDepartmentsQuery : IRequest<Result<List<DepartmentDto>>>
 {
-    public Guid TenantId { get; set; }
-    public bool IncludeInactive { get; set; } = false;
-    public int? ParentDepartmentId { get; set; }
+    public bool IncludeInactive { get; init; } = false;
+    public int? ParentDepartmentId { get; init; }
 }
 
 /// <summary>
@@ -20,15 +20,11 @@ public class GetDepartmentsQuery : IRequest<Result<List<DepartmentDto>>>
 /// </summary>
 public class GetDepartmentsQueryHandler : IRequestHandler<GetDepartmentsQuery, Result<List<DepartmentDto>>>
 {
-    private readonly IDepartmentRepository _departmentRepository;
-    private readonly IEmployeeRepository _employeeRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetDepartmentsQueryHandler(
-        IDepartmentRepository departmentRepository,
-        IEmployeeRepository employeeRepository)
+    public GetDepartmentsQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _departmentRepository = departmentRepository;
-        _employeeRepository = employeeRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<DepartmentDto>>> Handle(GetDepartmentsQuery request, CancellationToken cancellationToken)
@@ -37,11 +33,11 @@ public class GetDepartmentsQueryHandler : IRequestHandler<GetDepartmentsQuery, R
 
         if (request.ParentDepartmentId.HasValue)
         {
-            departments = await _departmentRepository.GetSubDepartmentsAsync(request.ParentDepartmentId.Value, cancellationToken);
+            departments = await _unitOfWork.Departments.GetSubDepartmentsAsync(request.ParentDepartmentId.Value, cancellationToken);
         }
         else
         {
-            departments = await _departmentRepository.GetRootDepartmentsAsync(cancellationToken);
+            departments = await _unitOfWork.Departments.GetRootDepartmentsAsync(cancellationToken);
         }
 
         if (!request.IncludeInactive)
@@ -52,19 +48,19 @@ public class GetDepartmentsQueryHandler : IRequestHandler<GetDepartmentsQuery, R
         var departmentDtos = new List<DepartmentDto>();
         foreach (var department in departments)
         {
-            var employeeCount = await _departmentRepository.GetEmployeeCountAsync(department.Id, cancellationToken);
+            var employeeCount = await _unitOfWork.Departments.GetEmployeeCountAsync(department.Id, cancellationToken);
 
             string? managerName = null;
             if (department.ManagerId.HasValue)
             {
-                var manager = await _employeeRepository.GetByIdAsync(department.ManagerId.Value, cancellationToken);
+                var manager = await _unitOfWork.Employees.GetByIdAsync(department.ManagerId.Value, cancellationToken);
                 managerName = manager != null ? $"{manager.FirstName} {manager.LastName}" : null;
             }
 
             string? parentDepartmentName = null;
             if (department.ParentDepartmentId.HasValue)
             {
-                var parent = await _departmentRepository.GetByIdAsync(department.ParentDepartmentId.Value, cancellationToken);
+                var parent = await _unitOfWork.Departments.GetByIdAsync(department.ParentDepartmentId.Value, cancellationToken);
                 parentDepartmentName = parent?.Name;
             }
 

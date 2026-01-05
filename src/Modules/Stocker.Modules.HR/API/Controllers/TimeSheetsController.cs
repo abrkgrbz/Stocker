@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.TimeSheets.Commands;
 using Stocker.Modules.HR.Application.Features.TimeSheets.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.HR.API.Controllers;
 
@@ -17,12 +16,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class TimeSheetsController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public TimeSheetsController(IMediator mediator, ITenantService tenantService)
+    public TimeSheetsController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     [HttpGet]
@@ -43,10 +40,7 @@ public class TimeSheetsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<int>> Create(CreateTimeSheetCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant context is required");
-
-        var result = await _mediator.Send(command with { TenantId = tenantId.Value });
+        var result = await _mediator.Send(command);
         if (result.IsFailure) return BadRequest(result.Error);
         return CreatedAtAction(nameof(GetTimeSheet), new { id = result.Value }, result.Value);
     }
@@ -54,10 +48,7 @@ public class TimeSheetsController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, UpdateTimeSheetCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant context is required");
-
-        var result = await _mediator.Send(command with { TenantId = tenantId.Value, TimeSheetId = id });
+        var result = await _mediator.Send(command with { TimeSheetId = id });
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }
@@ -65,10 +56,7 @@ public class TimeSheetsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant context is required");
-
-        var result = await _mediator.Send(new DeleteTimeSheetCommand { TenantId = tenantId.Value, TimeSheetId = id });
+        var result = await _mediator.Send(new DeleteTimeSheetCommand { TimeSheetId = id });
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }

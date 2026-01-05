@@ -1,6 +1,7 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Departments.Queries;
@@ -8,50 +9,42 @@ namespace Stocker.Modules.HR.Application.Features.Departments.Queries;
 /// <summary>
 /// Query to get a department by ID
 /// </summary>
-public class GetDepartmentByIdQuery : IRequest<Result<DepartmentDto>>
-{
-    public Guid TenantId { get; set; }
-    public int DepartmentId { get; set; }
-}
+public record GetDepartmentByIdQuery(int DepartmentId) : IRequest<Result<DepartmentDto>>;
 
 /// <summary>
 /// Handler for GetDepartmentByIdQuery
 /// </summary>
 public class GetDepartmentByIdQueryHandler : IRequestHandler<GetDepartmentByIdQuery, Result<DepartmentDto>>
 {
-    private readonly IDepartmentRepository _departmentRepository;
-    private readonly IEmployeeRepository _employeeRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetDepartmentByIdQueryHandler(
-        IDepartmentRepository departmentRepository,
-        IEmployeeRepository employeeRepository)
+    public GetDepartmentByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _departmentRepository = departmentRepository;
-        _employeeRepository = employeeRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<DepartmentDto>> Handle(GetDepartmentByIdQuery request, CancellationToken cancellationToken)
     {
-        var department = await _departmentRepository.GetWithSubDepartmentsAsync(request.DepartmentId, cancellationToken);
+        var department = await _unitOfWork.Departments.GetWithSubDepartmentsAsync(request.DepartmentId, cancellationToken);
         if (department == null)
         {
             return Result<DepartmentDto>.Failure(
                 Error.NotFound("Department", $"Department with ID {request.DepartmentId} not found"));
         }
 
-        var employeeCount = await _departmentRepository.GetEmployeeCountAsync(department.Id, cancellationToken);
+        var employeeCount = await _unitOfWork.Departments.GetEmployeeCountAsync(department.Id, cancellationToken);
 
         string? managerName = null;
         if (department.ManagerId.HasValue)
         {
-            var manager = await _employeeRepository.GetByIdAsync(department.ManagerId.Value, cancellationToken);
+            var manager = await _unitOfWork.Employees.GetByIdAsync(department.ManagerId.Value, cancellationToken);
             managerName = manager != null ? $"{manager.FirstName} {manager.LastName}" : null;
         }
 
         string? parentDepartmentName = null;
         if (department.ParentDepartmentId.HasValue)
         {
-            var parent = await _departmentRepository.GetByIdAsync(department.ParentDepartmentId.Value, cancellationToken);
+            var parent = await _unitOfWork.Departments.GetByIdAsync(department.ParentDepartmentId.Value, cancellationToken);
             parentDepartmentName = parent?.Name;
         }
 
@@ -59,7 +52,7 @@ public class GetDepartmentByIdQueryHandler : IRequestHandler<GetDepartmentByIdQu
         var subDepartmentDtos = new List<DepartmentDto>();
         foreach (var subDept in department.SubDepartments)
         {
-            var subEmployeeCount = await _departmentRepository.GetEmployeeCountAsync(subDept.Id, cancellationToken);
+            var subEmployeeCount = await _unitOfWork.Departments.GetEmployeeCountAsync(subDept.Id, cancellationToken);
             subDepartmentDtos.Add(new DepartmentDto
             {
                 Id = subDept.Id,

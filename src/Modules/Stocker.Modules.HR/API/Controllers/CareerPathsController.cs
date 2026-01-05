@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.CareerPaths.Commands;
 using Stocker.Modules.HR.Application.Features.CareerPaths.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.HR.API.Controllers;
 
@@ -17,12 +16,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class CareerPathsController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public CareerPathsController(IMediator mediator, ITenantService tenantService)
+    public CareerPathsController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -55,16 +52,12 @@ public class CareerPathsController : ControllerBase
     /// Create a new career path
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(Guid), 201)]
+    [ProducesResponseType(typeof(int), 201)]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
-    public async Task<ActionResult<Guid>> CreateCareerPath(CreateCareerPathCommand command)
+    public async Task<ActionResult<int>> CreateCareerPath(CreateCareerPathCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant ID is required");
-
-        var commandWithTenant = command with { TenantId = tenantId.Value };
-        var result = await _mediator.Send(commandWithTenant);
+        var result = await _mediator.Send(command);
 
         if (result.IsFailure)
             return BadRequest(result.Error);
@@ -76,17 +69,14 @@ public class CareerPathsController : ControllerBase
     /// Update an existing career path
     /// </summary>
     [HttpPut("{id}")]
-    [ProducesResponseType(typeof(Guid), 200)]
+    [ProducesResponseType(typeof(int), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     [ProducesResponseType(401)]
-    public async Task<ActionResult<Guid>> UpdateCareerPath(int id, UpdateCareerPathCommand command)
+    public async Task<ActionResult<int>> UpdateCareerPath(int id, UpdateCareerPathCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant ID is required");
-
-        var commandWithTenant = command with { TenantId = tenantId.Value, CareerPathId = id };
-        var result = await _mediator.Send(commandWithTenant);
+        var commandWithId = command with { CareerPathId = id };
+        var result = await _mediator.Send(commandWithId);
 
         if (result.IsFailure)
             return BadRequest(result.Error);
@@ -104,10 +94,7 @@ public class CareerPathsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> DeleteCareerPath(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant ID is required");
-
-        var command = new DeleteCareerPathCommand { TenantId = tenantId.Value, CareerPathId = id };
+        var command = new DeleteCareerPathCommand { CareerPathId = id };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)

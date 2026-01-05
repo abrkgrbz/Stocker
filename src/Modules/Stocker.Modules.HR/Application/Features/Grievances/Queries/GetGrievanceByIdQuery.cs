@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Grievances.Queries;
@@ -8,29 +8,23 @@ namespace Stocker.Modules.HR.Application.Features.Grievances.Queries;
 /// <summary>
 /// Query to get a grievance by ID
 /// </summary>
-public class GetGrievanceByIdQuery : IRequest<Result<GrievanceDto>>
-{
-    public Guid TenantId { get; set; }
-    public int Id { get; set; }
-}
+public record GetGrievanceByIdQuery(int Id) : IRequest<Result<GrievanceDto>>;
 
 /// <summary>
 /// Handler for GetGrievanceByIdQuery
 /// </summary>
 public class GetGrievanceByIdQueryHandler : IRequestHandler<GetGrievanceByIdQuery, Result<GrievanceDto>>
 {
-    private readonly IGrievanceRepository _repository;
-    private readonly IEmployeeRepository _employeeRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetGrievanceByIdQueryHandler(IGrievanceRepository repository, IEmployeeRepository employeeRepository)
+    public GetGrievanceByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _repository = repository;
-        _employeeRepository = employeeRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<GrievanceDto>> Handle(GetGrievanceByIdQuery request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.Grievances.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
             return Result<GrievanceDto>.Failure(
@@ -38,27 +32,27 @@ public class GetGrievanceByIdQueryHandler : IRequestHandler<GetGrievanceByIdQuer
         }
 
         // Get related names
-        var complainant = await _employeeRepository.GetByIdAsync(entity.ComplainantId, cancellationToken);
+        var complainant = await _unitOfWork.Employees.GetByIdAsync(entity.ComplainantId, cancellationToken);
         var complainantName = complainant != null ? $"{complainant.FirstName} {complainant.LastName}" : string.Empty;
 
         string? accusedPersonName = null;
         if (entity.AccusedPersonId.HasValue)
         {
-            var accusedPerson = await _employeeRepository.GetByIdAsync(entity.AccusedPersonId.Value, cancellationToken);
+            var accusedPerson = await _unitOfWork.Employees.GetByIdAsync(entity.AccusedPersonId.Value, cancellationToken);
             accusedPersonName = accusedPerson != null ? $"{accusedPerson.FirstName} {accusedPerson.LastName}" : null;
         }
 
         string? assignedToName = null;
         if (entity.AssignedToId.HasValue)
         {
-            var assignedTo = await _employeeRepository.GetByIdAsync(entity.AssignedToId.Value, cancellationToken);
+            var assignedTo = await _unitOfWork.Employees.GetByIdAsync(entity.AssignedToId.Value, cancellationToken);
             assignedToName = assignedTo != null ? $"{assignedTo.FirstName} {assignedTo.LastName}" : null;
         }
 
         string? hrRepresentativeName = null;
         if (entity.HrRepresentativeId.HasValue)
         {
-            var hrRep = await _employeeRepository.GetByIdAsync(entity.HrRepresentativeId.Value, cancellationToken);
+            var hrRep = await _unitOfWork.Employees.GetByIdAsync(entity.HrRepresentativeId.Value, cancellationToken);
             hrRepresentativeName = hrRep != null ? $"{hrRep.FirstName} {hrRep.LastName}" : null;
         }
 

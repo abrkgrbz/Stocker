@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.DisciplinaryActions.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.DisciplinaryActions.Commands;
 /// </summary>
 public record CreateDisciplinaryActionCommand : IRequest<Result<int>>
 {
-    public Guid TenantId { get; init; }
     public int EmployeeId { get; init; }
     public string ActionCode { get; init; } = string.Empty;
     public DateTime IncidentDate { get; init; }
@@ -35,18 +33,14 @@ public record CreateDisciplinaryActionCommand : IRequest<Result<int>>
 /// </summary>
 public class CreateDisciplinaryActionCommandHandler : IRequestHandler<CreateDisciplinaryActionCommand, Result<int>>
 {
-    private readonly IDisciplinaryActionRepository _disciplinaryActionRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateDisciplinaryActionCommandHandler(
-        IDisciplinaryActionRepository disciplinaryActionRepository,
-        IUnitOfWork unitOfWork)
+    public CreateDisciplinaryActionCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _disciplinaryActionRepository = disciplinaryActionRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<int>> Handle(CreateDisciplinaryActionCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(CreateDisciplinaryActionCommand request, CancellationToken cancellationToken)
     {
         var disciplinaryAction = new DisciplinaryAction(
             request.EmployeeId,
@@ -56,7 +50,7 @@ public class CreateDisciplinaryActionCommandHandler : IRequestHandler<CreateDisc
             request.ActionType,
             request.SeverityLevel);
 
-        disciplinaryAction.SetTenantId(request.TenantId);
+        disciplinaryAction.SetTenantId(_unitOfWork.TenantId);
 
         if (!string.IsNullOrEmpty(request.IncidentLocation))
             disciplinaryAction.SetIncidentLocation(request.IncidentLocation);
@@ -85,7 +79,7 @@ public class CreateDisciplinaryActionCommandHandler : IRequestHandler<CreateDisc
         if (!string.IsNullOrEmpty(request.InternalNotes))
             disciplinaryAction.SetInternalNotes(request.InternalNotes);
 
-        await _disciplinaryActionRepository.AddAsync(disciplinaryAction, cancellationToken);
+        await _unitOfWork.DisciplinaryActions.AddAsync(disciplinaryAction, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(disciplinaryAction.Id);

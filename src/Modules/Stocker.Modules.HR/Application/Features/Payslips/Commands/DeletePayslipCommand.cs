@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Payslips.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.Payslips.Commands;
 /// </summary>
 public record DeletePayslipCommand : IRequest<Result<bool>>
 {
-    public Guid TenantId { get; init; }
     public int PayslipId { get; init; }
 }
 
@@ -20,21 +18,17 @@ public record DeletePayslipCommand : IRequest<Result<bool>>
 /// </summary>
 public class DeletePayslipCommandHandler : IRequestHandler<DeletePayslipCommand, Result<bool>>
 {
-    private readonly IPayslipRepository _payslipRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public DeletePayslipCommandHandler(
-        IPayslipRepository payslipRepository,
-        IUnitOfWork unitOfWork)
+    public DeletePayslipCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _payslipRepository = payslipRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<bool>> Handle(DeletePayslipCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(DeletePayslipCommand request, CancellationToken cancellationToken)
     {
         // Get existing payslip
-        var payslip = await _payslipRepository.GetByIdAsync(request.PayslipId, cancellationToken);
+        var payslip = await _unitOfWork.Payslips.GetByIdAsync(request.PayslipId, cancellationToken);
         if (payslip == null)
         {
             return Result<bool>.Failure(
@@ -55,7 +49,7 @@ public class DeletePayslipCommandHandler : IRequestHandler<DeletePayslipCommand,
         }
 
         // Soft delete
-        _payslipRepository.Remove(payslip);
+        _unitOfWork.Payslips.Remove(payslip);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Training.Commands;
@@ -10,11 +9,10 @@ namespace Stocker.Modules.HR.Application.Features.Training.Commands;
 /// <summary>
 /// Command to update an existing training
 /// </summary>
-public class UpdateTrainingCommand : IRequest<Result<TrainingDto>>
+public record UpdateTrainingCommand : IRequest<Result<TrainingDto>>
 {
-    public Guid TenantId { get; set; }
-    public int TrainingId { get; set; }
-    public UpdateTrainingDto TrainingData { get; set; } = null!;
+    public int TrainingId { get; init; }
+    public UpdateTrainingDto TrainingData { get; init; } = null!;
 }
 
 /// <summary>
@@ -24,9 +22,6 @@ public class UpdateTrainingCommandValidator : AbstractValidator<UpdateTrainingCo
 {
     public UpdateTrainingCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.TrainingId)
             .GreaterThan(0).WithMessage("Training ID is required");
 
@@ -78,21 +73,17 @@ public class UpdateTrainingCommandValidator : AbstractValidator<UpdateTrainingCo
 /// </summary>
 public class UpdateTrainingCommandHandler : IRequestHandler<UpdateTrainingCommand, Result<TrainingDto>>
 {
-    private readonly ITrainingRepository _trainingRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateTrainingCommandHandler(
-        ITrainingRepository trainingRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateTrainingCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _trainingRepository = trainingRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<TrainingDto>> Handle(UpdateTrainingCommand request, CancellationToken cancellationToken)
     {
         // Get the training
-        var training = await _trainingRepository.GetByIdAsync(request.TrainingId, cancellationToken);
+        var training = await _unitOfWork.Trainings.GetByIdAsync(request.TrainingId, cancellationToken);
         if (training == null)
         {
             return Result<TrainingDto>.Failure(
@@ -147,7 +138,7 @@ public class UpdateTrainingCommandHandler : IRequestHandler<UpdateTrainingComman
         training.SetMandatory(request.TrainingData.IsMandatory);
 
         // Save changes
-        await _trainingRepository.UpdateAsync(training, cancellationToken);
+        _unitOfWork.Trainings.Update(training);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Map to DTO

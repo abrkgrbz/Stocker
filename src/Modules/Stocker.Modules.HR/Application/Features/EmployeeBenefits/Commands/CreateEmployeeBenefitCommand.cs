@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.EmployeeBenefits.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.EmployeeBenefits.Commands;
 /// </summary>
 public record CreateEmployeeBenefitCommand : IRequest<Result<int>>
 {
-    public Guid TenantId { get; init; }
     public int EmployeeId { get; init; }
     public BenefitType BenefitType { get; init; }
     public string BenefitName { get; init; } = string.Empty;
@@ -50,18 +48,14 @@ public record CreateEmployeeBenefitCommand : IRequest<Result<int>>
 /// </summary>
 public class CreateEmployeeBenefitCommandHandler : IRequestHandler<CreateEmployeeBenefitCommand, Result<int>>
 {
-    private readonly IEmployeeBenefitRepository _employeeBenefitRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateEmployeeBenefitCommandHandler(
-        IEmployeeBenefitRepository employeeBenefitRepository,
-        IUnitOfWork unitOfWork)
+    public CreateEmployeeBenefitCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _employeeBenefitRepository = employeeBenefitRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<int>> Handle(CreateEmployeeBenefitCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(CreateEmployeeBenefitCommand request, CancellationToken cancellationToken)
     {
         var employeeBenefit = new EmployeeBenefit(
             request.EmployeeId,
@@ -71,7 +65,7 @@ public class CreateEmployeeBenefitCommandHandler : IRequestHandler<CreateEmploye
             request.StartDate,
             request.PaymentFrequency);
 
-        employeeBenefit.SetTenantId(request.TenantId);
+        employeeBenefit.SetTenantId(_unitOfWork.TenantId);
 
         if (request.EndDate.HasValue)
             employeeBenefit.SetEndDate(request.EndDate);
@@ -134,7 +128,7 @@ public class CreateEmployeeBenefitCommandHandler : IRequestHandler<CreateEmploye
         if (!string.IsNullOrEmpty(request.DocumentUrl))
             employeeBenefit.SetDocumentUrl(request.DocumentUrl);
 
-        await _employeeBenefitRepository.AddAsync(employeeBenefit, cancellationToken);
+        await _unitOfWork.EmployeeBenefits.AddAsync(employeeBenefit, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(employeeBenefit.Id);

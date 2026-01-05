@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.LeaveTypes.Commands;
@@ -10,11 +9,10 @@ namespace Stocker.Modules.HR.Application.Features.LeaveTypes.Commands;
 /// <summary>
 /// Command to update an existing leave type
 /// </summary>
-public class UpdateLeaveTypeCommand : IRequest<Result<LeaveTypeDto>>
+public record UpdateLeaveTypeCommand : IRequest<Result<LeaveTypeDto>>
 {
-    public Guid TenantId { get; set; }
-    public int LeaveTypeId { get; set; }
-    public UpdateLeaveTypeDto LeaveTypeData { get; set; } = null!;
+    public int LeaveTypeId { get; init; }
+    public UpdateLeaveTypeDto LeaveTypeData { get; init; } = null!;
 }
 
 /// <summary>
@@ -24,9 +22,6 @@ public class UpdateLeaveTypeCommandValidator : AbstractValidator<UpdateLeaveType
 {
     public UpdateLeaveTypeCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.LeaveTypeId)
             .GreaterThan(0).WithMessage("Valid leave type ID is required");
 
@@ -57,20 +52,16 @@ public class UpdateLeaveTypeCommandValidator : AbstractValidator<UpdateLeaveType
 /// </summary>
 public class UpdateLeaveTypeCommandHandler : IRequestHandler<UpdateLeaveTypeCommand, Result<LeaveTypeDto>>
 {
-    private readonly ILeaveTypeRepository _leaveTypeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateLeaveTypeCommandHandler(
-        ILeaveTypeRepository leaveTypeRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateLeaveTypeCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _leaveTypeRepository = leaveTypeRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<LeaveTypeDto>> Handle(UpdateLeaveTypeCommand request, CancellationToken cancellationToken)
     {
-        var leaveType = await _leaveTypeRepository.GetByIdAsync(request.LeaveTypeId, cancellationToken);
+        var leaveType = await _unitOfWork.LeaveTypes.GetByIdAsync(request.LeaveTypeId, cancellationToken);
         if (leaveType == null)
         {
             return Result<LeaveTypeDto>.Failure(

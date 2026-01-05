@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.JobPostings.Commands;
@@ -10,21 +9,22 @@ namespace Stocker.Modules.HR.Application.Features.JobPostings.Commands;
 /// <summary>
 /// Command to update a job posting
 /// </summary>
-public record UpdateJobPostingCommand(
-    Guid TenantId,
-    int JobPostingId,
-    string? Title = null,
-    string? Description = null,
-    int? NumberOfOpenings = null,
-    JobPostingStatus? Status = null,
-    string? Requirements = null,
-    string? Responsibilities = null,
-    decimal? SalaryMin = null,
-    decimal? SalaryMax = null,
-    DateTime? ApplicationDeadline = null,
-    int? HiringManagerId = null,
-    bool? IsFeatured = null,
-    bool? IsUrgent = null) : IRequest<Result<bool>>;
+public record UpdateJobPostingCommand : IRequest<Result<bool>>
+{
+    public int JobPostingId { get; init; }
+    public string? Title { get; init; }
+    public string? Description { get; init; }
+    public int? NumberOfOpenings { get; init; }
+    public JobPostingStatus? Status { get; init; }
+    public string? Requirements { get; init; }
+    public string? Responsibilities { get; init; }
+    public decimal? SalaryMin { get; init; }
+    public decimal? SalaryMax { get; init; }
+    public DateTime? ApplicationDeadline { get; init; }
+    public int? HiringManagerId { get; init; }
+    public bool? IsFeatured { get; init; }
+    public bool? IsUrgent { get; init; }
+}
 
 /// <summary>
 /// Validator for UpdateJobPostingCommand
@@ -33,9 +33,6 @@ public class UpdateJobPostingCommandValidator : AbstractValidator<UpdateJobPosti
 {
     public UpdateJobPostingCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.JobPostingId)
             .GreaterThan(0).WithMessage("Job Posting ID must be greater than 0");
 
@@ -66,24 +63,17 @@ public class UpdateJobPostingCommandValidator : AbstractValidator<UpdateJobPosti
 /// </summary>
 public class UpdateJobPostingCommandHandler : IRequestHandler<UpdateJobPostingCommand, Result<bool>>
 {
-    private readonly IJobPostingRepository _jobPostingRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateJobPostingCommandHandler(
-        IJobPostingRepository jobPostingRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateJobPostingCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _jobPostingRepository = jobPostingRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<bool>> Handle(UpdateJobPostingCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(UpdateJobPostingCommand request, CancellationToken cancellationToken)
     {
         // Get existing job posting
-        var jobPosting = await _jobPostingRepository.GetByIdAsync(request.JobPostingId, cancellationToken);
+        var jobPosting = await _unitOfWork.JobPostings.GetByIdAsync(request.JobPostingId, cancellationToken);
         if (jobPosting == null)
         {
             return Result<bool>.Failure(
@@ -93,7 +83,7 @@ public class UpdateJobPostingCommandHandler : IRequestHandler<UpdateJobPostingCo
         // Verify hiring manager if specified
         if (request.HiringManagerId.HasValue)
         {
-            var hiringManager = await _employeeRepository.GetByIdAsync(request.HiringManagerId.Value, cancellationToken);
+            var hiringManager = await _unitOfWork.Employees.GetByIdAsync(request.HiringManagerId.Value, cancellationToken);
             if (hiringManager == null)
             {
                 return Result<bool>.Failure(
@@ -149,7 +139,7 @@ public class UpdateJobPostingCommandHandler : IRequestHandler<UpdateJobPostingCo
         }
 
         // Save changes
-        _jobPostingRepository.Update(jobPosting);
+        await _unitOfWork.JobPostings.UpdateAsync(jobPosting, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

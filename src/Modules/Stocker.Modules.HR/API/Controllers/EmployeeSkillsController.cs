@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.EmployeeSkills.Commands;
 using Stocker.Modules.HR.Application.Features.EmployeeSkills.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.HR.API.Controllers;
 
@@ -17,12 +16,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class EmployeeSkillsController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public EmployeeSkillsController(IMediator mediator, ITenantService tenantService)
+    public EmployeeSkillsController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     [HttpGet]
@@ -31,7 +28,8 @@ public class EmployeeSkillsController : ControllerBase
     public async Task<ActionResult<List<EmployeeSkillDto>>> GetEmployeeSkills()
     {
         var result = await _mediator.Send(new GetEmployeeSkillsQuery());
-        return Ok(result);
+        if (result.IsFailure) return BadRequest(result.Error);
+        return Ok(result.Value);
     }
 
     [HttpGet("{id}")]
@@ -40,7 +38,7 @@ public class EmployeeSkillsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<EmployeeSkillDto>> GetEmployeeSkill(int id)
     {
-        var result = await _mediator.Send(new GetEmployeeSkillByIdQuery { Id = id });
+        var result = await _mediator.Send(new GetEmployeeSkillByIdQuery(id));
         if (result.IsFailure) return NotFound(result.Error);
         return Ok(result.Value);
     }
@@ -51,11 +49,7 @@ public class EmployeeSkillsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<int>> CreateEmployeeSkill(CreateEmployeeSkillCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant ID is required");
-
-        var commandWithTenant = command with { TenantId = tenantId.Value };
-        var result = await _mediator.Send(commandWithTenant);
+        var result = await _mediator.Send(command);
 
         if (result.IsFailure)
             return BadRequest(result.Error);
@@ -64,17 +58,14 @@ public class EmployeeSkillsController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [ProducesResponseType(typeof(int), 200)]
+    [ProducesResponseType(typeof(bool), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     [ProducesResponseType(401)]
-    public async Task<ActionResult<int>> UpdateEmployeeSkill(int id, UpdateEmployeeSkillCommand command)
+    public async Task<ActionResult<bool>> UpdateEmployeeSkill(int id, UpdateEmployeeSkillCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant ID is required");
-
-        var commandWithTenant = command with { TenantId = tenantId.Value, EmployeeSkillId = id };
-        var result = await _mediator.Send(commandWithTenant);
+        var commandWithId = command with { EmployeeSkillId = id };
+        var result = await _mediator.Send(commandWithId);
 
         if (result.IsFailure)
             return BadRequest(result.Error);
@@ -89,10 +80,7 @@ public class EmployeeSkillsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> DeleteEmployeeSkill(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant ID is required");
-
-        var command = new DeleteEmployeeSkillCommand(tenantId.Value, id);
+        var command = new DeleteEmployeeSkillCommand { EmployeeSkillId = id };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)

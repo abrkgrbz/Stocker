@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.SuccessionPlans.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.SuccessionPlans.Commands;
 /// </summary>
 public record UpdateSuccessionPlanCommand : IRequest<Result<bool>>
 {
-    public Guid TenantId { get; init; }
     public int SuccessionPlanId { get; init; }
     public SuccessionPriority? Priority { get; init; }
     public int? CurrentIncumbentId { get; init; }
@@ -36,24 +34,17 @@ public record UpdateSuccessionPlanCommand : IRequest<Result<bool>>
 /// </summary>
 public class UpdateSuccessionPlanCommandHandler : IRequestHandler<UpdateSuccessionPlanCommand, Result<bool>>
 {
-    private readonly ISuccessionPlanRepository _successionPlanRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateSuccessionPlanCommandHandler(
-        ISuccessionPlanRepository successionPlanRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateSuccessionPlanCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _successionPlanRepository = successionPlanRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<bool>> Handle(UpdateSuccessionPlanCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(UpdateSuccessionPlanCommand request, CancellationToken cancellationToken)
     {
         // Get existing succession plan
-        var successionPlan = await _successionPlanRepository.GetByIdAsync(request.SuccessionPlanId, cancellationToken);
+        var successionPlan = await _unitOfWork.SuccessionPlans.GetByIdAsync(request.SuccessionPlanId, cancellationToken);
         if (successionPlan == null)
         {
             return Result<bool>.Failure(
@@ -63,7 +54,7 @@ public class UpdateSuccessionPlanCommandHandler : IRequestHandler<UpdateSuccessi
         // Verify current incumbent exists if specified
         if (request.CurrentIncumbentId.HasValue)
         {
-            var incumbent = await _employeeRepository.GetByIdAsync(request.CurrentIncumbentId.Value, cancellationToken);
+            var incumbent = await _unitOfWork.Employees.GetByIdAsync(request.CurrentIncumbentId.Value, cancellationToken);
             if (incumbent == null)
             {
                 return Result<bool>.Failure(
@@ -121,7 +112,7 @@ public class UpdateSuccessionPlanCommandHandler : IRequestHandler<UpdateSuccessi
         successionPlan.AssessRisk();
 
         // Save changes
-        _successionPlanRepository.Update(successionPlan);
+        _unitOfWork.SuccessionPlans.Update(successionPlan);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

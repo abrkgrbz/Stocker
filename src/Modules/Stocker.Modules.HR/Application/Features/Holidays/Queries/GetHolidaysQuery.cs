@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Holidays.Queries;
@@ -8,12 +8,11 @@ namespace Stocker.Modules.HR.Application.Features.Holidays.Queries;
 /// <summary>
 /// Query to get holidays with optional filters
 /// </summary>
-public class GetHolidaysQuery : IRequest<Result<List<HolidayDto>>>
+public record GetHolidaysQuery : IRequest<Result<List<HolidayDto>>>
 {
-    public Guid TenantId { get; set; }
-    public int? Year { get; set; }
-    public bool? IsRecurring { get; set; }
-    public bool IncludeInactive { get; set; } = false;
+    public int? Year { get; init; }
+    public bool? IsRecurring { get; init; }
+    public bool IncludeInactive { get; init; } = false;
 }
 
 /// <summary>
@@ -21,11 +20,11 @@ public class GetHolidaysQuery : IRequest<Result<List<HolidayDto>>>
 /// </summary>
 public class GetHolidaysQueryHandler : IRequestHandler<GetHolidaysQuery, Result<List<HolidayDto>>>
 {
-    private readonly IHolidayRepository _holidayRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetHolidaysQueryHandler(IHolidayRepository holidayRepository)
+    public GetHolidaysQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _holidayRepository = holidayRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<HolidayDto>>> Handle(GetHolidaysQuery request, CancellationToken cancellationToken)
@@ -35,11 +34,11 @@ public class GetHolidaysQueryHandler : IRequestHandler<GetHolidaysQuery, Result<
         // Get holidays by year if specified, otherwise get all
         if (request.Year.HasValue)
         {
-            holidays = await _holidayRepository.GetByYearAsync(request.Year.Value, cancellationToken);
+            holidays = await _unitOfWork.Holidays.GetByYearAsync(request.Year.Value, cancellationToken);
         }
         else
         {
-            holidays = await _holidayRepository.GetAllAsync(cancellationToken);
+            holidays = await _unitOfWork.Holidays.GetAllAsync(cancellationToken);
         }
 
         // Filter by recurring status if specified

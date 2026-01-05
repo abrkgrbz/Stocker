@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Announcements.Commands;
@@ -11,11 +10,10 @@ namespace Stocker.Modules.HR.Application.Features.Announcements.Commands;
 /// <summary>
 /// Command to update an existing announcement
 /// </summary>
-public class UpdateAnnouncementCommand : IRequest<Result<AnnouncementDto>>
+public record UpdateAnnouncementCommand : IRequest<Result<AnnouncementDto>>
 {
-    public Guid TenantId { get; set; }
-    public int AnnouncementId { get; set; }
-    public UpdateAnnouncementDto AnnouncementData { get; set; } = null!;
+    public int AnnouncementId { get; init; }
+    public UpdateAnnouncementDto AnnouncementData { get; init; } = null!;
 }
 
 /// <summary>
@@ -25,9 +23,6 @@ public class UpdateAnnouncementCommandValidator : AbstractValidator<UpdateAnnoun
 {
     public UpdateAnnouncementCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.AnnouncementId)
             .GreaterThan(0).WithMessage("Valid announcement ID is required");
 
@@ -57,20 +52,16 @@ public class UpdateAnnouncementCommandValidator : AbstractValidator<UpdateAnnoun
 /// </summary>
 public class UpdateAnnouncementCommandHandler : IRequestHandler<UpdateAnnouncementCommand, Result<AnnouncementDto>>
 {
-    private readonly IAnnouncementRepository _announcementRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateAnnouncementCommandHandler(
-        IAnnouncementRepository announcementRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateAnnouncementCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _announcementRepository = announcementRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<AnnouncementDto>> Handle(UpdateAnnouncementCommand request, CancellationToken cancellationToken)
     {
-        var announcement = await _announcementRepository.GetByIdAsync(request.AnnouncementId, cancellationToken);
+        var announcement = await _unitOfWork.Announcements.GetByIdAsync(request.AnnouncementId, cancellationToken);
         if (announcement == null)
         {
             return Result<AnnouncementDto>.Failure(

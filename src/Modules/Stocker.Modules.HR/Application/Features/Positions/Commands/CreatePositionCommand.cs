@@ -3,7 +3,7 @@ using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
 using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Positions.Commands;
@@ -11,10 +11,9 @@ namespace Stocker.Modules.HR.Application.Features.Positions.Commands;
 /// <summary>
 /// Command to create a new position
 /// </summary>
-public class CreatePositionCommand : IRequest<Result<PositionDto>>
+public record CreatePositionCommand : IRequest<Result<PositionDto>>
 {
-    public Guid TenantId { get; set; }
-    public CreatePositionDto PositionData { get; set; } = null!;
+    public CreatePositionDto PositionData { get; init; } = null!;
 }
 
 /// <summary>
@@ -24,9 +23,6 @@ public class CreatePositionCommandValidator : AbstractValidator<CreatePositionCo
 {
     public CreatePositionCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.PositionData)
             .NotNull().WithMessage("Position data is required");
 
@@ -61,17 +57,10 @@ public class CreatePositionCommandValidator : AbstractValidator<CreatePositionCo
 /// </summary>
 public class CreatePositionCommandHandler : IRequestHandler<CreatePositionCommand, Result<PositionDto>>
 {
-    private readonly IPositionRepository _positionRepository;
-    private readonly IDepartmentRepository _departmentRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreatePositionCommandHandler(
-        IPositionRepository positionRepository,
-        IDepartmentRepository departmentRepository,
-        IUnitOfWork unitOfWork)
+    public CreatePositionCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _positionRepository = positionRepository;
-        _departmentRepository = departmentRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -80,7 +69,7 @@ public class CreatePositionCommandHandler : IRequestHandler<CreatePositionComman
         var data = request.PositionData;
 
         // Check if position with same code already exists
-        var existingPosition = await _positionRepository.GetByCodeAsync(data.Code, cancellationToken);
+        var existingPosition = await _unitOfWork.Positions.GetByCodeAsync(data.Code, cancellationToken);
         if (existingPosition != null)
         {
             return Result<PositionDto>.Failure(
@@ -88,7 +77,7 @@ public class CreatePositionCommandHandler : IRequestHandler<CreatePositionComman
         }
 
         // Validate department
-        var department = await _departmentRepository.GetByIdAsync(data.DepartmentId, cancellationToken);
+        var department = await _unitOfWork.Departments.GetByIdAsync(data.DepartmentId, cancellationToken);
         if (department == null)
         {
             return Result<PositionDto>.Failure(
@@ -108,7 +97,7 @@ public class CreatePositionCommandHandler : IRequestHandler<CreatePositionComman
             data.HeadCount);
 
         // Set tenant ID
-        position.SetTenantId(request.TenantId);
+        position.SetTenantId(_unitOfWork.TenantId);
 
         // Update additional fields if provided
         if (!string.IsNullOrEmpty(data.Requirements) || !string.IsNullOrEmpty(data.Responsibilities))
@@ -117,7 +106,7 @@ public class CreatePositionCommandHandler : IRequestHandler<CreatePositionComman
         }
 
         // Save to repository
-        await _positionRepository.AddAsync(position, cancellationToken);
+        await _unitOfWork.Positions.AddAsync(position, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Map to DTO

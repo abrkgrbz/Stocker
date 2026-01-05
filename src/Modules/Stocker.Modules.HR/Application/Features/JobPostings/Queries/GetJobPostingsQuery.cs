@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.JobPostings.Queries;
@@ -8,41 +8,23 @@ namespace Stocker.Modules.HR.Application.Features.JobPostings.Queries;
 /// <summary>
 /// Query to get all job postings
 /// </summary>
-public class GetJobPostingsQuery : IRequest<Result<List<JobPostingDto>>>
-{
-    public Guid TenantId { get; set; }
-    public int? DepartmentId { get; set; }
-    public bool OpenOnly { get; set; } = true;
-}
+public record GetJobPostingsQuery(int? DepartmentId = null, bool OpenOnly = true) : IRequest<Result<List<JobPostingDto>>>;
 
 /// <summary>
 /// Handler for GetJobPostingsQuery
 /// </summary>
 public class GetJobPostingsQueryHandler : IRequestHandler<GetJobPostingsQuery, Result<List<JobPostingDto>>>
 {
-    private readonly IJobPostingRepository _repository;
-    private readonly IDepartmentRepository _departmentRepository;
-    private readonly IPositionRepository _positionRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IWorkLocationRepository _workLocationRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetJobPostingsQueryHandler(
-        IJobPostingRepository repository,
-        IDepartmentRepository departmentRepository,
-        IPositionRepository positionRepository,
-        IEmployeeRepository employeeRepository,
-        IWorkLocationRepository workLocationRepository)
+    public GetJobPostingsQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _repository = repository;
-        _departmentRepository = departmentRepository;
-        _positionRepository = positionRepository;
-        _employeeRepository = employeeRepository;
-        _workLocationRepository = workLocationRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<JobPostingDto>>> Handle(GetJobPostingsQuery request, CancellationToken cancellationToken)
     {
-        var entities = await _repository.GetAllAsync(cancellationToken);
+        var entities = await _unitOfWork.JobPostings.GetAllAsync(cancellationToken);
 
         var filteredEntities = entities.AsEnumerable();
 
@@ -59,27 +41,27 @@ public class GetJobPostingsQueryHandler : IRequestHandler<GetJobPostingsQuery, R
         var dtos = new List<JobPostingDto>();
         foreach (var entity in filteredEntities)
         {
-            var department = await _departmentRepository.GetByIdAsync(entity.DepartmentId, cancellationToken);
+            var department = await _unitOfWork.Departments.GetByIdAsync(entity.DepartmentId, cancellationToken);
             var departmentName = department?.Name ?? string.Empty;
 
             string? positionTitle = null;
             if (entity.PositionId.HasValue)
             {
-                var position = await _positionRepository.GetByIdAsync(entity.PositionId.Value, cancellationToken);
+                var position = await _unitOfWork.Positions.GetByIdAsync(entity.PositionId.Value, cancellationToken);
                 positionTitle = position?.Title;
             }
 
             string? hiringManagerName = null;
             if (entity.HiringManagerId.HasValue)
             {
-                var manager = await _employeeRepository.GetByIdAsync(entity.HiringManagerId.Value, cancellationToken);
+                var manager = await _unitOfWork.Employees.GetByIdAsync(entity.HiringManagerId.Value, cancellationToken);
                 hiringManagerName = manager != null ? $"{manager.FirstName} {manager.LastName}" : null;
             }
 
             string? workLocationName = null;
             if (entity.WorkLocationId.HasValue)
             {
-                var workLocation = await _workLocationRepository.GetByIdAsync(entity.WorkLocationId.Value, cancellationToken);
+                var workLocation = await _unitOfWork.WorkLocations.GetByIdAsync(entity.WorkLocationId.Value, cancellationToken);
                 workLocationName = workLocation?.Name;
             }
 

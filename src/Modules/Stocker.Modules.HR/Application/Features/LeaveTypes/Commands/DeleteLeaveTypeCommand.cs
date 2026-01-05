@@ -1,7 +1,6 @@
 using FluentValidation;
 using MediatR;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.LeaveTypes.Commands;
@@ -9,10 +8,9 @@ namespace Stocker.Modules.HR.Application.Features.LeaveTypes.Commands;
 /// <summary>
 /// Command to delete (deactivate) a leave type
 /// </summary>
-public class DeleteLeaveTypeCommand : IRequest<Result<bool>>
+public record DeleteLeaveTypeCommand : IRequest<Result<bool>>
 {
-    public Guid TenantId { get; set; }
-    public int LeaveTypeId { get; set; }
+    public int LeaveTypeId { get; init; }
 }
 
 /// <summary>
@@ -22,9 +20,6 @@ public class DeleteLeaveTypeCommandValidator : AbstractValidator<DeleteLeaveType
 {
     public DeleteLeaveTypeCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.LeaveTypeId)
             .GreaterThan(0).WithMessage("Valid leave type ID is required");
     }
@@ -35,20 +30,16 @@ public class DeleteLeaveTypeCommandValidator : AbstractValidator<DeleteLeaveType
 /// </summary>
 public class DeleteLeaveTypeCommandHandler : IRequestHandler<DeleteLeaveTypeCommand, Result<bool>>
 {
-    private readonly ILeaveTypeRepository _leaveTypeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public DeleteLeaveTypeCommandHandler(
-        ILeaveTypeRepository leaveTypeRepository,
-        IUnitOfWork unitOfWork)
+    public DeleteLeaveTypeCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _leaveTypeRepository = leaveTypeRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(DeleteLeaveTypeCommand request, CancellationToken cancellationToken)
     {
-        var leaveType = await _leaveTypeRepository.GetByIdAsync(request.LeaveTypeId, cancellationToken);
+        var leaveType = await _unitOfWork.LeaveTypes.GetByIdAsync(request.LeaveTypeId, cancellationToken);
         if (leaveType == null)
         {
             return Result<bool>.Failure(

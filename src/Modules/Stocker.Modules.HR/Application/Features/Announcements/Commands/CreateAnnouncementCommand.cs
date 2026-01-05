@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Announcements.Commands;
@@ -11,11 +10,10 @@ namespace Stocker.Modules.HR.Application.Features.Announcements.Commands;
 /// <summary>
 /// Command to create a new announcement
 /// </summary>
-public class CreateAnnouncementCommand : IRequest<Result<AnnouncementDto>>
+public record CreateAnnouncementCommand : IRequest<Result<AnnouncementDto>>
 {
-    public Guid TenantId { get; set; }
-    public int AuthorId { get; set; }
-    public CreateAnnouncementDto AnnouncementData { get; set; } = null!;
+    public int AuthorId { get; init; }
+    public CreateAnnouncementDto AnnouncementData { get; init; } = null!;
 }
 
 /// <summary>
@@ -25,9 +23,6 @@ public class CreateAnnouncementCommandValidator : AbstractValidator<CreateAnnoun
 {
     public CreateAnnouncementCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.AuthorId)
             .GreaterThan(0).WithMessage("Author ID is required");
 
@@ -57,14 +52,10 @@ public class CreateAnnouncementCommandValidator : AbstractValidator<CreateAnnoun
 /// </summary>
 public class CreateAnnouncementCommandHandler : IRequestHandler<CreateAnnouncementCommand, Result<AnnouncementDto>>
 {
-    private readonly IAnnouncementRepository _announcementRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateAnnouncementCommandHandler(
-        IAnnouncementRepository announcementRepository,
-        IUnitOfWork unitOfWork)
+    public CreateAnnouncementCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _announcementRepository = announcementRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -91,7 +82,7 @@ public class CreateAnnouncementCommandHandler : IRequestHandler<CreateAnnounceme
             priority,
             data.TargetDepartmentId);
 
-        announcement.SetTenantId(request.TenantId);
+        announcement.SetTenantId(_unitOfWork.TenantId);
 
         if (data.ExpiryDate.HasValue)
         {
@@ -108,7 +99,7 @@ public class CreateAnnouncementCommandHandler : IRequestHandler<CreateAnnounceme
             announcement.Pin();
         }
 
-        await _announcementRepository.AddAsync(announcement, cancellationToken);
+        await _unitOfWork.Announcements.AddAsync(announcement, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = MapToDto(announcement);

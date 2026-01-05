@@ -1,6 +1,7 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Positions.Queries;
@@ -8,11 +9,10 @@ namespace Stocker.Modules.HR.Application.Features.Positions.Queries;
 /// <summary>
 /// Query to get positions with optional filtering
 /// </summary>
-public class GetPositionsQuery : IRequest<Result<List<PositionSummaryDto>>>
+public record GetPositionsQuery : IRequest<Result<List<PositionSummaryDto>>>
 {
-    public Guid TenantId { get; set; }
-    public int? DepartmentId { get; set; }
-    public bool IncludeInactive { get; set; } = false;
+    public int? DepartmentId { get; init; }
+    public bool IncludeInactive { get; init; } = false;
 }
 
 /// <summary>
@@ -20,15 +20,11 @@ public class GetPositionsQuery : IRequest<Result<List<PositionSummaryDto>>>
 /// </summary>
 public class GetPositionsQueryHandler : IRequestHandler<GetPositionsQuery, Result<List<PositionSummaryDto>>>
 {
-    private readonly IPositionRepository _positionRepository;
-    private readonly IDepartmentRepository _departmentRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetPositionsQueryHandler(
-        IPositionRepository positionRepository,
-        IDepartmentRepository departmentRepository)
+    public GetPositionsQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _positionRepository = positionRepository;
-        _departmentRepository = departmentRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<PositionSummaryDto>>> Handle(GetPositionsQuery request, CancellationToken cancellationToken)
@@ -37,11 +33,11 @@ public class GetPositionsQueryHandler : IRequestHandler<GetPositionsQuery, Resul
 
         if (request.DepartmentId.HasValue)
         {
-            positions = await _positionRepository.GetByDepartmentAsync(request.DepartmentId.Value, cancellationToken);
+            positions = await _unitOfWork.Positions.GetByDepartmentAsync(request.DepartmentId.Value, cancellationToken);
         }
         else
         {
-            positions = await _positionRepository.GetAllAsync(cancellationToken);
+            positions = await _unitOfWork.Positions.GetAllAsync(cancellationToken);
         }
 
         if (!request.IncludeInactive)
@@ -52,8 +48,8 @@ public class GetPositionsQueryHandler : IRequestHandler<GetPositionsQuery, Resul
         var positionDtos = new List<PositionSummaryDto>();
         foreach (var position in positions)
         {
-            var department = await _departmentRepository.GetByIdAsync(position.DepartmentId, cancellationToken);
-            var employeeCount = await _positionRepository.GetEmployeeCountAsync(position.Id, cancellationToken);
+            var department = await _unitOfWork.Departments.GetByIdAsync(position.DepartmentId, cancellationToken);
+            var employeeCount = await _unitOfWork.Positions.GetEmployeeCountAsync(position.Id, cancellationToken);
 
             positionDtos.Add(new PositionSummaryDto
             {

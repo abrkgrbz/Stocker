@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.JobApplications.Commands;
 using Stocker.Modules.HR.Application.Features.JobApplications.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.HR.API.Controllers;
 
@@ -17,25 +16,24 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class JobApplicationsController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public JobApplicationsController(IMediator mediator, ITenantService tenantService)
+    public JobApplicationsController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     [HttpGet]
     public async Task<ActionResult<List<JobApplicationDto>>> GetAll()
     {
         var result = await _mediator.Send(new GetJobApplicationsQuery());
-        return Ok(result);
+        if (result.IsFailure) return BadRequest(result.Error);
+        return Ok(result.Value);
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<JobApplicationDto>> GetJobApplication(int id)
     {
-        var result = await _mediator.Send(new GetJobApplicationByIdQuery { Id = id });
+        var result = await _mediator.Send(new GetJobApplicationByIdQuery(id));
         if (result.IsFailure) return NotFound(result.Error);
         return Ok(result.Value);
     }
@@ -43,11 +41,7 @@ public class JobApplicationsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<int>> Create(CreateJobApplicationCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return BadRequest("Tenant context is required");
-
-        var result = await _mediator.Send(command with { TenantId = tenantId.Value });
+        var result = await _mediator.Send(command);
         if (result.IsFailure) return BadRequest(result.Error);
         return CreatedAtAction(nameof(GetJobApplication), new { id = result.Value }, result.Value);
     }
@@ -55,11 +49,7 @@ public class JobApplicationsController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult> Update(int id, UpdateJobApplicationCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return BadRequest("Tenant context is required");
-
-        var result = await _mediator.Send(command with { TenantId = tenantId.Value, JobApplicationId = id });
+        var result = await _mediator.Send(command with { JobApplicationId = id });
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }
@@ -67,11 +57,7 @@ public class JobApplicationsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return BadRequest("Tenant context is required");
-
-        var result = await _mediator.Send(new DeleteJobApplicationCommand(tenantId.Value, id));
+        var result = await _mediator.Send(new DeleteJobApplicationCommand(id));
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }

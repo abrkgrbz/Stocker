@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 
 namespace Stocker.Modules.HR.Application.Features.CareerPaths.Queries;
 
@@ -8,16 +8,16 @@ public record GetCareerPathByIdQuery(int Id) : IRequest<CareerPathDto?>;
 
 public class GetCareerPathByIdQueryHandler : IRequestHandler<GetCareerPathByIdQuery, CareerPathDto?>
 {
-    private readonly ICareerPathRepository _repository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetCareerPathByIdQueryHandler(ICareerPathRepository repository)
+    public GetCareerPathByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<CareerPathDto?> Handle(GetCareerPathByIdQuery request, CancellationToken cancellationToken)
+    public async Task<CareerPathDto?> Handle(GetCareerPathByIdQuery request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.CareerPaths.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null) return null;
 
         return new CareerPathDto

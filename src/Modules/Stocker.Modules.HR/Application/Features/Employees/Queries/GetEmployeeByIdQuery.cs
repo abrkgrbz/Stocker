@@ -1,6 +1,7 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Employees.Queries;
@@ -8,40 +9,23 @@ namespace Stocker.Modules.HR.Application.Features.Employees.Queries;
 /// <summary>
 /// Query to get an employee by ID
 /// </summary>
-public class GetEmployeeByIdQuery : IRequest<Result<EmployeeDto>>
-{
-    public Guid TenantId { get; set; }
-    public int EmployeeId { get; set; }
-}
+public record GetEmployeeByIdQuery(int EmployeeId) : IRequest<Result<EmployeeDto>>;
 
 /// <summary>
 /// Handler for GetEmployeeByIdQuery
 /// </summary>
 public class GetEmployeeByIdQueryHandler : IRequestHandler<GetEmployeeByIdQuery, Result<EmployeeDto>>
 {
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IDepartmentRepository _departmentRepository;
-    private readonly IPositionRepository _positionRepository;
-    private readonly IShiftRepository _shiftRepository;
-    private readonly IWorkLocationRepository _workLocationRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetEmployeeByIdQueryHandler(
-        IEmployeeRepository employeeRepository,
-        IDepartmentRepository departmentRepository,
-        IPositionRepository positionRepository,
-        IShiftRepository shiftRepository,
-        IWorkLocationRepository workLocationRepository)
+    public GetEmployeeByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _employeeRepository = employeeRepository;
-        _departmentRepository = departmentRepository;
-        _positionRepository = positionRepository;
-        _shiftRepository = shiftRepository;
-        _workLocationRepository = workLocationRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<EmployeeDto>> Handle(GetEmployeeByIdQuery request, CancellationToken cancellationToken)
     {
-        var employee = await _employeeRepository.GetWithDetailsAsync(request.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetWithDetailsAsync(request.EmployeeId, cancellationToken);
         if (employee == null)
         {
             return Result<EmployeeDto>.Failure(
@@ -49,30 +33,30 @@ public class GetEmployeeByIdQueryHandler : IRequestHandler<GetEmployeeByIdQuery,
         }
 
         // Get related entity names - DepartmentId and PositionId are required (non-nullable int)
-        var department = await _departmentRepository.GetByIdAsync(employee.DepartmentId, cancellationToken);
+        var department = await _unitOfWork.Departments.GetByIdAsync(employee.DepartmentId, cancellationToken);
         var departmentName = department?.Name;
 
-        var position = await _positionRepository.GetByIdAsync(employee.PositionId, cancellationToken);
+        var position = await _unitOfWork.Positions.GetByIdAsync(employee.PositionId, cancellationToken);
         var positionTitle = position?.Title;
 
         string? managerName = null;
         if (employee.ManagerId.HasValue)
         {
-            var manager = await _employeeRepository.GetByIdAsync(employee.ManagerId.Value, cancellationToken);
+            var manager = await _unitOfWork.Employees.GetByIdAsync(employee.ManagerId.Value, cancellationToken);
             managerName = manager != null ? $"{manager.FirstName} {manager.LastName}" : null;
         }
 
         string? shiftName = null;
         if (employee.ShiftId.HasValue)
         {
-            var shift = await _shiftRepository.GetByIdAsync(employee.ShiftId.Value, cancellationToken);
+            var shift = await _unitOfWork.Shifts.GetByIdAsync(employee.ShiftId.Value, cancellationToken);
             shiftName = shift?.Name;
         }
 
         string? workLocationName = null;
         if (employee.WorkLocationId.HasValue)
         {
-            var workLocation = await _workLocationRepository.GetByIdAsync(employee.WorkLocationId.Value, cancellationToken);
+            var workLocation = await _unitOfWork.WorkLocations.GetByIdAsync(employee.WorkLocationId.Value, cancellationToken);
             workLocationName = workLocation?.Name;
         }
 

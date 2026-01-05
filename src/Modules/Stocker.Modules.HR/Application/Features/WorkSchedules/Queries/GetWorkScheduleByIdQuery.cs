@@ -1,6 +1,7 @@
+using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.WorkSchedules.Queries;
@@ -8,10 +9,18 @@ namespace Stocker.Modules.HR.Application.Features.WorkSchedules.Queries;
 /// <summary>
 /// Query to get a work schedule by ID
 /// </summary>
-public class GetWorkScheduleByIdQuery : IRequest<Result<WorkScheduleDto>>
+public record GetWorkScheduleByIdQuery(int ScheduleId) : IRequest<Result<WorkScheduleDto>>;
+
+/// <summary>
+/// Validator for GetWorkScheduleByIdQuery
+/// </summary>
+public class GetWorkScheduleByIdQueryValidator : AbstractValidator<GetWorkScheduleByIdQuery>
 {
-    public Guid TenantId { get; set; }
-    public int ScheduleId { get; set; }
+    public GetWorkScheduleByIdQueryValidator()
+    {
+        RuleFor(x => x.ScheduleId)
+            .GreaterThan(0).WithMessage("Schedule ID must be greater than 0");
+    }
 }
 
 /// <summary>
@@ -19,31 +28,24 @@ public class GetWorkScheduleByIdQuery : IRequest<Result<WorkScheduleDto>>
 /// </summary>
 public class GetWorkScheduleByIdQueryHandler : IRequestHandler<GetWorkScheduleByIdQuery, Result<WorkScheduleDto>>
 {
-    private readonly IWorkScheduleRepository _scheduleRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IShiftRepository _shiftRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetWorkScheduleByIdQueryHandler(
-        IWorkScheduleRepository scheduleRepository,
-        IEmployeeRepository employeeRepository,
-        IShiftRepository shiftRepository)
+    public GetWorkScheduleByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _scheduleRepository = scheduleRepository;
-        _employeeRepository = employeeRepository;
-        _shiftRepository = shiftRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<WorkScheduleDto>> Handle(GetWorkScheduleByIdQuery request, CancellationToken cancellationToken)
     {
-        var schedule = await _scheduleRepository.GetByIdAsync(request.ScheduleId, cancellationToken);
+        var schedule = await _unitOfWork.WorkSchedules.GetByIdAsync(request.ScheduleId, cancellationToken);
         if (schedule == null)
         {
             return Result<WorkScheduleDto>.Failure(
                 Error.NotFound("WorkSchedule.NotFound", $"Work schedule with ID {request.ScheduleId} not found"));
         }
 
-        var employee = await _employeeRepository.GetByIdAsync(schedule.EmployeeId, cancellationToken);
-        var shift = await _shiftRepository.GetByIdAsync(schedule.ShiftId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(schedule.EmployeeId, cancellationToken);
+        var shift = await _unitOfWork.Shifts.GetByIdAsync(schedule.ShiftId, cancellationToken);
 
         var dto = new WorkScheduleDto
         {

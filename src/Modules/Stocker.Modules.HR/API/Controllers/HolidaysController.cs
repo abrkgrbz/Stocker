@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.Holidays.Commands;
 using Stocker.Modules.HR.Application.Features.Holidays.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.API.Controllers;
@@ -18,12 +17,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class HolidaysController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public HolidaysController(IMediator mediator, ITenantService tenantService)
+    public HolidaysController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -37,12 +34,8 @@ public class HolidaysController : ControllerBase
         [FromQuery] bool? isRecurring = null,
         [FromQuery] bool includeInactive = false)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetHolidaysQuery
         {
-            TenantId = tenantId.Value,
             Year = year,
             IsRecurring = isRecurring,
             IncludeInactive = includeInactive
@@ -61,10 +54,7 @@ public class HolidaysController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<HolidayDto>> GetHoliday(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var query = new GetHolidayByIdQuery { TenantId = tenantId.Value, HolidayId = id };
+        var query = new GetHolidayByIdQuery(id);
         var result = await _mediator.Send(query);
 
         if (result.IsFailure)
@@ -83,10 +73,7 @@ public class HolidaysController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<ActionResult<HolidayDto>> CreateHoliday(CreateHolidayDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new CreateHolidayCommand { TenantId = tenantId.Value, HolidayData = dto };
+        var command = new CreateHolidayCommand { HolidayData = dto };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure) return BadRequest(result.Error);
@@ -102,10 +89,7 @@ public class HolidaysController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<HolidayDto>> UpdateHoliday(int id, UpdateHolidayDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new UpdateHolidayCommand { TenantId = tenantId.Value, HolidayId = id, HolidayData = dto };
+        var command = new UpdateHolidayCommand { HolidayId = id, HolidayData = dto };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -124,10 +108,7 @@ public class HolidaysController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteHoliday(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new DeleteHolidayCommand { TenantId = tenantId.Value, HolidayId = id };
+        var command = new DeleteHolidayCommand { HolidayId = id };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -136,10 +117,5 @@ public class HolidaysController : ControllerBase
             return BadRequest(result.Error);
         }
         return NoContent();
-    }
-
-    private static Error CreateTenantError()
-    {
-        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
     }
 }

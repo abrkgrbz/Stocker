@@ -1,7 +1,5 @@
-using FluentValidation;
 using MediatR;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.EmployeeSkills.Commands;
@@ -9,23 +7,9 @@ namespace Stocker.Modules.HR.Application.Features.EmployeeSkills.Commands;
 /// <summary>
 /// Command to delete an employee skill
 /// </summary>
-public record DeleteEmployeeSkillCommand(
-    Guid TenantId,
-    int EmployeeSkillId) : IRequest<Result<bool>>;
-
-/// <summary>
-/// Validator for DeleteEmployeeSkillCommand
-/// </summary>
-public class DeleteEmployeeSkillCommandValidator : AbstractValidator<DeleteEmployeeSkillCommand>
+public record DeleteEmployeeSkillCommand : IRequest<Result<bool>>
 {
-    public DeleteEmployeeSkillCommandValidator()
-    {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
-        RuleFor(x => x.EmployeeSkillId)
-            .GreaterThan(0).WithMessage("Employee Skill ID must be greater than 0");
-    }
+    public int EmployeeSkillId { get; init; }
 }
 
 /// <summary>
@@ -33,21 +17,17 @@ public class DeleteEmployeeSkillCommandValidator : AbstractValidator<DeleteEmplo
 /// </summary>
 public class DeleteEmployeeSkillCommandHandler : IRequestHandler<DeleteEmployeeSkillCommand, Result<bool>>
 {
-    private readonly IEmployeeSkillRepository _employeeSkillRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public DeleteEmployeeSkillCommandHandler(
-        IEmployeeSkillRepository employeeSkillRepository,
-        IUnitOfWork unitOfWork)
+    public DeleteEmployeeSkillCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _employeeSkillRepository = employeeSkillRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<bool>> Handle(DeleteEmployeeSkillCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(DeleteEmployeeSkillCommand request, CancellationToken cancellationToken)
     {
         // Get existing employee skill
-        var employeeSkill = await _employeeSkillRepository.GetByIdAsync(request.EmployeeSkillId, cancellationToken);
+        var employeeSkill = await _unitOfWork.EmployeeSkills.GetByIdAsync(request.EmployeeSkillId, cancellationToken);
         if (employeeSkill == null)
         {
             return Result<bool>.Failure(
@@ -55,7 +35,7 @@ public class DeleteEmployeeSkillCommandHandler : IRequestHandler<DeleteEmployeeS
         }
 
         // Remove employee skill
-        _employeeSkillRepository.Remove(employeeSkill);
+        _unitOfWork.EmployeeSkills.Remove(employeeSkill);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

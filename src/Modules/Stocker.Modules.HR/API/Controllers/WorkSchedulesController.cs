@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.WorkSchedules.Commands;
 using Stocker.Modules.HR.Application.Features.WorkSchedules.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.API.Controllers;
@@ -18,12 +17,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class WorkSchedulesController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public WorkSchedulesController(IMediator mediator, ITenantService tenantService)
+    public WorkSchedulesController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -39,12 +36,8 @@ public class WorkSchedulesController : ControllerBase
         [FromQuery] DateTime? toDate = null,
         [FromQuery] bool? isWorkDay = null)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetWorkSchedulesQuery
         {
-            TenantId = tenantId.Value,
             EmployeeId = employeeId,
             ShiftId = shiftId,
             FromDate = fromDate,
@@ -68,12 +61,8 @@ public class WorkSchedulesController : ControllerBase
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetWorkSchedulesQuery
         {
-            TenantId = tenantId.Value,
             EmployeeId = employeeId,
             FromDate = fromDate,
             ToDate = toDate
@@ -92,10 +81,7 @@ public class WorkSchedulesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<WorkScheduleDto>> GetWorkSchedule(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var query = new GetWorkScheduleByIdQuery { TenantId = tenantId.Value, ScheduleId = id };
+        var query = new GetWorkScheduleByIdQuery(id);
         var result = await _mediator.Send(query);
 
         if (result.IsFailure)
@@ -114,10 +100,7 @@ public class WorkSchedulesController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<ActionResult<WorkScheduleDto>> CreateWorkSchedule(CreateWorkScheduleDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new CreateWorkScheduleCommand { TenantId = tenantId.Value, ScheduleData = dto };
+        var command = new CreateWorkScheduleCommand { ScheduleData = dto };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure) return BadRequest(result.Error);
@@ -133,10 +116,7 @@ public class WorkSchedulesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<WorkScheduleDto>> UpdateWorkSchedule(int id, UpdateWorkScheduleDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new UpdateWorkScheduleCommand { TenantId = tenantId.Value, ScheduleId = id, ScheduleData = dto };
+        var command = new UpdateWorkScheduleCommand { ScheduleId = id, ScheduleData = dto };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -155,10 +135,7 @@ public class WorkSchedulesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteWorkSchedule(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new DeleteWorkScheduleCommand { TenantId = tenantId.Value, ScheduleId = id };
+        var command = new DeleteWorkScheduleCommand { ScheduleId = id };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -167,10 +144,5 @@ public class WorkSchedulesController : ControllerBase
             return BadRequest(result.Error);
         }
         return NoContent();
-    }
-
-    private static Error CreateTenantError()
-    {
-        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
     }
 }

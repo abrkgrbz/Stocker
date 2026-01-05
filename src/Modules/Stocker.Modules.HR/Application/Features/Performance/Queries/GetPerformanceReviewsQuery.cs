@@ -2,7 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Performance.Queries;
@@ -10,17 +10,16 @@ namespace Stocker.Modules.HR.Application.Features.Performance.Queries;
 /// <summary>
 /// Query to get performance reviews with filters
 /// </summary>
-public class GetPerformanceReviewsQuery : IRequest<Result<List<PerformanceReviewDto>>>
+public record GetPerformanceReviewsQuery : IRequest<Result<List<PerformanceReviewDto>>>
 {
-    public Guid TenantId { get; set; }
-    public int? EmployeeId { get; set; }
-    public int? ReviewerId { get; set; }
-    public int? Year { get; set; }
-    public int? Quarter { get; set; }
-    public PerformanceReviewStatus? Status { get; set; }
-    public DateTime? PeriodStart { get; set; }
-    public DateTime? PeriodEnd { get; set; }
-    public bool IncludeCriteria { get; set; } = false;
+    public int? EmployeeId { get; init; }
+    public int? ReviewerId { get; init; }
+    public int? Year { get; init; }
+    public int? Quarter { get; init; }
+    public PerformanceReviewStatus? Status { get; init; }
+    public DateTime? PeriodStart { get; init; }
+    public DateTime? PeriodEnd { get; init; }
+    public bool IncludeCriteria { get; init; } = false;
 }
 
 /// <summary>
@@ -30,9 +29,6 @@ public class GetPerformanceReviewsQueryValidator : AbstractValidator<GetPerforma
 {
     public GetPerformanceReviewsQueryValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.EmployeeId)
             .GreaterThan(0).WithMessage("Invalid employee ID")
             .When(x => x.EmployeeId.HasValue);
@@ -62,15 +58,11 @@ public class GetPerformanceReviewsQueryValidator : AbstractValidator<GetPerforma
 /// </summary>
 public class GetPerformanceReviewsQueryHandler : IRequestHandler<GetPerformanceReviewsQuery, Result<List<PerformanceReviewDto>>>
 {
-    private readonly IPerformanceReviewRepository _reviewRepository;
-    private readonly IEmployeeRepository _employeeRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetPerformanceReviewsQueryHandler(
-        IPerformanceReviewRepository reviewRepository,
-        IEmployeeRepository employeeRepository)
+    public GetPerformanceReviewsQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _reviewRepository = reviewRepository;
-        _employeeRepository = employeeRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<PerformanceReviewDto>>> Handle(GetPerformanceReviewsQuery request, CancellationToken cancellationToken)
@@ -80,60 +72,58 @@ public class GetPerformanceReviewsQueryHandler : IRequestHandler<GetPerformanceR
         // Apply filters based on query parameters
         if (request.Status.HasValue)
         {
-            reviews = await _reviewRepository.GetByStatusAsync(request.Status.Value, cancellationToken);
+            reviews = await _unitOfWork.PerformanceReviews.GetByStatusAsync(request.Status.Value, cancellationToken);
         }
         else if (request.EmployeeId.HasValue)
         {
-            reviews = await _reviewRepository.GetByEmployeeAsync(request.EmployeeId.Value, cancellationToken);
+            reviews = await _unitOfWork.PerformanceReviews.GetByEmployeeAsync(request.EmployeeId.Value, cancellationToken);
         }
         else if (request.ReviewerId.HasValue)
         {
-            reviews = await _reviewRepository.GetByReviewerAsync(request.ReviewerId.Value, cancellationToken);
+            reviews = await _unitOfWork.PerformanceReviews.GetByReviewerAsync(request.ReviewerId.Value, cancellationToken);
         }
         else if (request.Year.HasValue && request.Quarter.HasValue)
         {
-            reviews = await _reviewRepository.GetByYearAndQuarterAsync(request.Year.Value, request.Quarter.Value, cancellationToken);
+            reviews = await _unitOfWork.PerformanceReviews.GetByYearAndQuarterAsync(request.Year.Value, request.Quarter.Value, cancellationToken);
         }
         else if (request.Year.HasValue)
         {
-            reviews = await _reviewRepository.GetByYearAsync(request.Year.Value, cancellationToken);
+            reviews = await _unitOfWork.PerformanceReviews.GetByYearAsync(request.Year.Value, cancellationToken);
         }
         else if (request.PeriodStart.HasValue && request.PeriodEnd.HasValue)
         {
-            reviews = await _reviewRepository.GetByPeriodAsync(request.PeriodStart.Value, request.PeriodEnd.Value, cancellationToken);
+            reviews = await _unitOfWork.PerformanceReviews.GetByPeriodAsync(request.PeriodStart.Value, request.PeriodEnd.Value, cancellationToken);
         }
         else
         {
-            reviews = await _reviewRepository.GetAllAsync(cancellationToken);
+            reviews = await _unitOfWork.PerformanceReviews.GetAllAsync(cancellationToken);
         }
 
-        // Filter by tenant
-        reviews = reviews.Where(r => r.TenantId == request.TenantId).ToList();
-
         // Load criteria if requested
+        var reviewsList = reviews.ToList();
         if (request.IncludeCriteria)
         {
             var reviewsWithCriteria = new List<PerformanceReview>();
-            foreach (var review in reviews)
+            foreach (var review in reviewsList)
             {
-                var reviewWithCriteria = await _reviewRepository.GetWithCriteriaAsync(review.Id, cancellationToken);
+                var reviewWithCriteria = await _unitOfWork.PerformanceReviews.GetWithCriteriaAsync(review.Id, cancellationToken);
                 if (reviewWithCriteria != null)
                 {
                     reviewsWithCriteria.Add(reviewWithCriteria);
                 }
             }
-            reviews = reviewsWithCriteria;
+            reviewsList = reviewsWithCriteria;
         }
 
         // Get employee and reviewer information
-        var employeeIds = reviews.Select(r => r.EmployeeId).Distinct().ToList();
-        var reviewerIds = reviews.Select(r => r.ReviewerId).Distinct().ToList();
+        var employeeIds = reviewsList.Select(r => r.EmployeeId).Distinct().ToList();
+        var reviewerIds = reviewsList.Select(r => r.ReviewerId).Distinct().ToList();
         var allEmployeeIds = employeeIds.Union(reviewerIds).Distinct().ToList();
 
         var employees = new Dictionary<int, Employee>();
         foreach (var empId in allEmployeeIds)
         {
-            var emp = await _employeeRepository.GetByIdAsync(empId, cancellationToken);
+            var emp = await _unitOfWork.Employees.GetByIdAsync(empId, cancellationToken);
             if (emp != null)
             {
                 employees[empId] = emp;
@@ -141,7 +131,7 @@ public class GetPerformanceReviewsQueryHandler : IRequestHandler<GetPerformanceR
         }
 
         // Map to DTOs
-        var reviewDtos = reviews.Select(review => new PerformanceReviewDto
+        var reviewDtos = reviewsList.Select(review => new PerformanceReviewDto
         {
             Id = review.Id,
             EmployeeId = review.EmployeeId,

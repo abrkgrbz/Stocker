@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.Positions.Commands;
 using Stocker.Modules.HR.Application.Features.Positions.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.API.Controllers;
@@ -18,31 +17,25 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class PositionsController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public PositionsController(IMediator mediator, ITenantService tenantService)
+    public PositionsController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     /// <summary>
     /// Get all positions with optional filtering
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(List<PositionDto>), 200)]
+    [ProducesResponseType(typeof(List<PositionSummaryDto>), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
-    public async Task<ActionResult<List<PositionDto>>> GetPositions(
+    public async Task<ActionResult<List<PositionSummaryDto>>> GetPositions(
         [FromQuery] int? departmentId = null,
         [FromQuery] bool includeInactive = false)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetPositionsQuery
         {
-            TenantId = tenantId.Value,
             DepartmentId = departmentId,
             IncludeInactive = includeInactive
         };
@@ -64,16 +57,7 @@ public class PositionsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<PositionDto>> GetPosition(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var query = new GetPositionByIdQuery
-        {
-            TenantId = tenantId.Value,
-            PositionId = id
-        };
-
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(new GetPositionByIdQuery(id));
 
         if (result.IsFailure)
         {
@@ -94,12 +78,8 @@ public class PositionsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<PositionDto>> CreatePosition(CreatePositionDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new CreatePositionCommand
         {
-            TenantId = tenantId.Value,
             PositionData = dto
         };
 
@@ -121,12 +101,8 @@ public class PositionsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<PositionDto>> UpdatePosition(int id, UpdatePositionDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new UpdatePositionCommand
         {
-            TenantId = tenantId.Value,
             PositionId = id,
             PositionData = dto
         };
@@ -153,16 +129,7 @@ public class PositionsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> DeletePosition(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new DeletePositionCommand
-        {
-            TenantId = tenantId.Value,
-            PositionId = id
-        };
-
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(new DeletePositionCommand(id));
 
         if (result.IsFailure)
         {
@@ -172,10 +139,5 @@ public class PositionsController : ControllerBase
         }
 
         return NoContent();
-    }
-
-    private static Error CreateTenantError()
-    {
-        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
     }
 }

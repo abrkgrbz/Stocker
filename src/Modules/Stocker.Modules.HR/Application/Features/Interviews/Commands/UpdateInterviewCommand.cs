@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Interviews.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.Interviews.Commands;
 /// Command to update an interview
 /// </summary>
 public record UpdateInterviewCommand(
-    Guid TenantId,
     int InterviewId,
     InterviewStatus? Status = null,
     DateTime? ScheduledDateTime = null,
@@ -31,9 +29,6 @@ public class UpdateInterviewCommandValidator : AbstractValidator<UpdateInterview
 {
     public UpdateInterviewCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.InterviewId)
             .GreaterThan(0).WithMessage("Interview ID must be greater than 0");
 
@@ -58,21 +53,17 @@ public class UpdateInterviewCommandValidator : AbstractValidator<UpdateInterview
 /// </summary>
 public class UpdateInterviewCommandHandler : IRequestHandler<UpdateInterviewCommand, Result<bool>>
 {
-    private readonly IInterviewRepository _interviewRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateInterviewCommandHandler(
-        IInterviewRepository interviewRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateInterviewCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _interviewRepository = interviewRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<bool>> Handle(UpdateInterviewCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(UpdateInterviewCommand request, CancellationToken cancellationToken)
     {
         // Get existing interview
-        var interview = await _interviewRepository.GetByIdAsync(request.InterviewId, cancellationToken);
+        var interview = await _unitOfWork.Interviews.GetByIdAsync(request.InterviewId, cancellationToken);
         if (interview == null)
         {
             return Result<bool>.Failure(
@@ -111,7 +102,7 @@ public class UpdateInterviewCommandHandler : IRequestHandler<UpdateInterviewComm
         }
 
         // Save changes
-        _interviewRepository.Update(interview);
+        _unitOfWork.Interviews.Update(interview);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

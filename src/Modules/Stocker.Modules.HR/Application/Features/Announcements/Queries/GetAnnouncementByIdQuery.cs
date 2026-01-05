@@ -1,6 +1,7 @@
+using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Announcements.Queries;
@@ -8,10 +9,18 @@ namespace Stocker.Modules.HR.Application.Features.Announcements.Queries;
 /// <summary>
 /// Query to get an announcement by ID
 /// </summary>
-public class GetAnnouncementByIdQuery : IRequest<Result<AnnouncementDto>>
+public record GetAnnouncementByIdQuery(int AnnouncementId) : IRequest<Result<AnnouncementDto>>;
+
+/// <summary>
+/// Validator for GetAnnouncementByIdQuery
+/// </summary>
+public class GetAnnouncementByIdQueryValidator : AbstractValidator<GetAnnouncementByIdQuery>
 {
-    public Guid TenantId { get; set; }
-    public int AnnouncementId { get; set; }
+    public GetAnnouncementByIdQueryValidator()
+    {
+        RuleFor(x => x.AnnouncementId)
+            .GreaterThan(0).WithMessage("Announcement ID is required");
+    }
 }
 
 /// <summary>
@@ -19,20 +28,16 @@ public class GetAnnouncementByIdQuery : IRequest<Result<AnnouncementDto>>
 /// </summary>
 public class GetAnnouncementByIdQueryHandler : IRequestHandler<GetAnnouncementByIdQuery, Result<AnnouncementDto>>
 {
-    private readonly IAnnouncementRepository _announcementRepository;
-    private readonly IAnnouncementAcknowledgmentRepository _acknowledgmentRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetAnnouncementByIdQueryHandler(
-        IAnnouncementRepository announcementRepository,
-        IAnnouncementAcknowledgmentRepository acknowledgmentRepository)
+    public GetAnnouncementByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _announcementRepository = announcementRepository;
-        _acknowledgmentRepository = acknowledgmentRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<AnnouncementDto>> Handle(GetAnnouncementByIdQuery request, CancellationToken cancellationToken)
     {
-        var announcement = await _announcementRepository.GetByIdAsync(request.AnnouncementId, cancellationToken);
+        var announcement = await _unitOfWork.Announcements.GetByIdAsync(request.AnnouncementId, cancellationToken);
         if (announcement == null)
         {
             return Result<AnnouncementDto>.Failure(
@@ -40,7 +45,7 @@ public class GetAnnouncementByIdQueryHandler : IRequestHandler<GetAnnouncementBy
         }
 
         // Get acknowledgments count
-        var allAcknowledgments = await _acknowledgmentRepository.GetAllAsync(cancellationToken);
+        var allAcknowledgments = await _unitOfWork.AnnouncementAcknowledgments.GetAllAsync(cancellationToken);
         var acknowledgmentCount = allAcknowledgments.Count(a => a.AnnouncementId == request.AnnouncementId);
 
         var dto = new AnnouncementDto

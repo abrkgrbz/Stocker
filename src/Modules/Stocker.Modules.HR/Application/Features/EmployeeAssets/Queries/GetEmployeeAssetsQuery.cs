@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 
 namespace Stocker.Modules.HR.Application.Features.EmployeeAssets.Queries;
 
@@ -8,16 +8,16 @@ public record GetEmployeeAssetsQuery() : IRequest<List<EmployeeAssetDto>>;
 
 public class GetEmployeeAssetsQueryHandler : IRequestHandler<GetEmployeeAssetsQuery, List<EmployeeAssetDto>>
 {
-    private readonly IEmployeeAssetRepository _repository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetEmployeeAssetsQueryHandler(IEmployeeAssetRepository repository)
+    public GetEmployeeAssetsQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<List<EmployeeAssetDto>> Handle(GetEmployeeAssetsQuery request, CancellationToken cancellationToken)
+    public async Task<List<EmployeeAssetDto>> Handle(GetEmployeeAssetsQuery request, CancellationToken cancellationToken)
     {
-        var entities = await _repository.GetAllAsync(cancellationToken);
+        var entities = await _unitOfWork.EmployeeAssets.GetAllAsync(cancellationToken);
         return entities.Select(entity => new EmployeeAssetDto
         {
             Id = entity.Id,

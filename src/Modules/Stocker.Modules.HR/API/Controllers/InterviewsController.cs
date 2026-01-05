@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.Interviews.Commands;
 using Stocker.Modules.HR.Application.Features.Interviews.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.HR.API.Controllers;
 
@@ -17,25 +16,24 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class InterviewsController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public InterviewsController(IMediator mediator, ITenantService tenantService)
+    public InterviewsController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     [HttpGet]
     public async Task<ActionResult<List<InterviewDto>>> GetAll()
     {
         var result = await _mediator.Send(new GetInterviewsQuery());
-        return Ok(result);
+        if (result.IsFailure) return BadRequest(result.Error);
+        return Ok(result.Value);
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<InterviewDto>> GetInterview(int id)
     {
-        var result = await _mediator.Send(new GetInterviewByIdQuery { Id = id });
+        var result = await _mediator.Send(new GetInterviewByIdQuery(id));
         if (result.IsFailure) return NotFound(result.Error);
         return Ok(result.Value);
     }
@@ -43,10 +41,7 @@ public class InterviewsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<int>> Create(CreateInterviewCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return Unauthorized("Tenant context is required");
-
-        var result = await _mediator.Send(command with { TenantId = tenantId.Value });
+        var result = await _mediator.Send(command);
         if (result.IsFailure) return BadRequest(result.Error);
         return CreatedAtAction(nameof(GetInterview), new { id = result.Value }, result.Value);
     }
@@ -54,10 +49,7 @@ public class InterviewsController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult> Update(int id, UpdateInterviewCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return Unauthorized("Tenant context is required");
-
-        var result = await _mediator.Send(command with { TenantId = tenantId.Value, InterviewId = id });
+        var result = await _mediator.Send(command with { InterviewId = id });
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }
@@ -65,10 +57,7 @@ public class InterviewsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return Unauthorized("Tenant context is required");
-
-        var result = await _mediator.Send(new DeleteInterviewCommand(tenantId.Value, id));
+        var result = await _mediator.Send(new DeleteInterviewCommand(id));
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }

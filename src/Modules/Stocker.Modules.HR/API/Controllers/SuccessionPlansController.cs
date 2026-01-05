@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.SuccessionPlans.Commands;
 using Stocker.Modules.HR.Application.Features.SuccessionPlans.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.HR.API.Controllers;
 
@@ -17,12 +16,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class SuccessionPlansController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public SuccessionPlansController(IMediator mediator, ITenantService tenantService)
+    public SuccessionPlansController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     [HttpGet]
@@ -43,10 +40,7 @@ public class SuccessionPlansController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<int>> Create(CreateSuccessionPlanCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return Unauthorized();
-
-        var result = await _mediator.Send(command with { TenantId = tenantId.Value });
+        var result = await _mediator.Send(command);
         if (result.IsFailure) return BadRequest(result.Error);
 
         return CreatedAtAction(nameof(GetSuccessionPlan), new { id = result.Value }, result.Value);
@@ -55,10 +49,8 @@ public class SuccessionPlansController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult> Update(int id, UpdateSuccessionPlanCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return Unauthorized();
-
-        var result = await _mediator.Send(command with { TenantId = tenantId.Value, SuccessionPlanId = id });
+        var commandWithId = command with { SuccessionPlanId = id };
+        var result = await _mediator.Send(commandWithId);
         if (result.IsFailure) return BadRequest(result.Error);
 
         return NoContent();
@@ -67,10 +59,8 @@ public class SuccessionPlansController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return Unauthorized();
-
-        var result = await _mediator.Send(new DeleteSuccessionPlanCommand { TenantId = tenantId.Value, SuccessionPlanId = id });
+        var command = new DeleteSuccessionPlanCommand { SuccessionPlanId = id };
+        var result = await _mediator.Send(command);
         if (result.IsFailure) return BadRequest(result.Error);
 
         return NoContent();

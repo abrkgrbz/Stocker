@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Enums;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Expenses.Commands;
@@ -11,12 +10,11 @@ namespace Stocker.Modules.HR.Application.Features.Expenses.Commands;
 /// <summary>
 /// Command to reject an expense
 /// </summary>
-public class RejectExpenseCommand : IRequest<Result<ExpenseDto>>
+public record RejectExpenseCommand : IRequest<Result<ExpenseDto>>
 {
-    public Guid TenantId { get; set; }
-    public int ExpenseId { get; set; }
-    public int RejectedById { get; set; }
-    public RejectExpenseDto RejectionData { get; set; } = null!;
+    public int ExpenseId { get; init; }
+    public int RejectedById { get; init; }
+    public RejectExpenseDto RejectionData { get; init; } = null!;
 }
 
 /// <summary>
@@ -26,9 +24,6 @@ public class RejectExpenseCommandValidator : AbstractValidator<RejectExpenseComm
 {
     public RejectExpenseCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.ExpenseId)
             .GreaterThan(0).WithMessage("Valid expense ID is required");
 
@@ -49,20 +44,16 @@ public class RejectExpenseCommandValidator : AbstractValidator<RejectExpenseComm
 /// </summary>
 public class RejectExpenseCommandHandler : IRequestHandler<RejectExpenseCommand, Result<ExpenseDto>>
 {
-    private readonly IExpenseRepository _expenseRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public RejectExpenseCommandHandler(
-        IExpenseRepository expenseRepository,
-        IUnitOfWork unitOfWork)
+    public RejectExpenseCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _expenseRepository = expenseRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<ExpenseDto>> Handle(RejectExpenseCommand request, CancellationToken cancellationToken)
     {
-        var expense = await _expenseRepository.GetByIdAsync(request.ExpenseId, cancellationToken);
+        var expense = await _unitOfWork.Expenses.GetByIdAsync(request.ExpenseId, cancellationToken);
         if (expense == null)
         {
             return Result<ExpenseDto>.Failure(

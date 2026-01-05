@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.WorkLocations.Commands;
 using Stocker.Modules.HR.Application.Features.WorkLocations.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.API.Controllers;
@@ -18,12 +17,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class WorkLocationsController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public WorkLocationsController(IMediator mediator, ITenantService tenantService)
+    public WorkLocationsController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -38,12 +35,8 @@ public class WorkLocationsController : ControllerBase
         [FromQuery] bool? remoteOnly = null,
         [FromQuery] bool? withGeofencing = null)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetWorkLocationsQuery
         {
-            TenantId = tenantId.Value,
             IncludeInactive = includeInactive,
             OnlyHeadquarters = headquartersOnly,
             OnlyRemote = remoteOnly,
@@ -63,10 +56,7 @@ public class WorkLocationsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<WorkLocationDto>> GetWorkLocation(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var query = new GetWorkLocationByIdQuery { TenantId = tenantId.Value, WorkLocationId = id };
+        var query = new GetWorkLocationByIdQuery(id);
         var result = await _mediator.Send(query);
 
         if (result.IsFailure)
@@ -85,10 +75,7 @@ public class WorkLocationsController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<ActionResult<WorkLocationDto>> CreateWorkLocation(CreateWorkLocationDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new CreateWorkLocationCommand { TenantId = tenantId.Value, LocationData = dto };
+        var command = new CreateWorkLocationCommand { LocationData = dto };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure) return BadRequest(result.Error);
@@ -104,10 +91,7 @@ public class WorkLocationsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<WorkLocationDto>> UpdateWorkLocation(int id, UpdateWorkLocationDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new UpdateWorkLocationCommand { TenantId = tenantId.Value, WorkLocationId = id, LocationData = dto };
+        var command = new UpdateWorkLocationCommand { WorkLocationId = id, LocationData = dto };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -127,10 +111,7 @@ public class WorkLocationsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteWorkLocation(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new DeleteWorkLocationCommand { TenantId = tenantId.Value, WorkLocationId = id };
+        var command = new DeleteWorkLocationCommand { WorkLocationId = id };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -139,10 +120,5 @@ public class WorkLocationsController : ControllerBase
             return BadRequest(result.Error);
         }
         return NoContent();
-    }
-
-    private static Error CreateTenantError()
-    {
-        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
     }
 }

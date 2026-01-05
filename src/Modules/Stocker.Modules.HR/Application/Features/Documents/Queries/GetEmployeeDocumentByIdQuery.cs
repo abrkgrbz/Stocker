@@ -1,6 +1,7 @@
+using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Documents.Queries;
@@ -8,10 +9,18 @@ namespace Stocker.Modules.HR.Application.Features.Documents.Queries;
 /// <summary>
 /// Query to get an employee document by ID
 /// </summary>
-public class GetEmployeeDocumentByIdQuery : IRequest<Result<EmployeeDocumentDto>>
+public record GetEmployeeDocumentByIdQuery(int DocumentId) : IRequest<Result<EmployeeDocumentDto>>;
+
+/// <summary>
+/// Validator for GetEmployeeDocumentByIdQuery
+/// </summary>
+public class GetEmployeeDocumentByIdQueryValidator : AbstractValidator<GetEmployeeDocumentByIdQuery>
 {
-    public Guid TenantId { get; set; }
-    public int DocumentId { get; set; }
+    public GetEmployeeDocumentByIdQueryValidator()
+    {
+        RuleFor(x => x.DocumentId)
+            .GreaterThan(0).WithMessage("Document ID is required");
+    }
 }
 
 /// <summary>
@@ -19,16 +28,16 @@ public class GetEmployeeDocumentByIdQuery : IRequest<Result<EmployeeDocumentDto>
 /// </summary>
 public class GetEmployeeDocumentByIdQueryHandler : IRequestHandler<GetEmployeeDocumentByIdQuery, Result<EmployeeDocumentDto>>
 {
-    private readonly IEmployeeDocumentRepository _documentRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetEmployeeDocumentByIdQueryHandler(IEmployeeDocumentRepository documentRepository)
+    public GetEmployeeDocumentByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _documentRepository = documentRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<EmployeeDocumentDto>> Handle(GetEmployeeDocumentByIdQuery request, CancellationToken cancellationToken)
     {
-        var document = await _documentRepository.GetByIdAsync(request.DocumentId, cancellationToken);
+        var document = await _unitOfWork.EmployeeDocuments.GetByIdAsync(request.DocumentId, cancellationToken);
         if (document == null)
         {
             return Result<EmployeeDocumentDto>.Failure(

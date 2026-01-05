@@ -1,7 +1,7 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Enums;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Payroll.Queries;
@@ -9,14 +9,13 @@ namespace Stocker.Modules.HR.Application.Features.Payroll.Queries;
 /// <summary>
 /// Query to get payrolls with optional filtering
 /// </summary>
-public class GetPayrollsQuery : IRequest<Result<List<PayrollDto>>>
+public record GetPayrollsQuery : IRequest<Result<List<PayrollDto>>>
 {
-    public Guid TenantId { get; set; }
-    public int? EmployeeId { get; set; }
-    public int? Year { get; set; }
-    public int? Month { get; set; }
-    public PayrollStatus? Status { get; set; }
-    public int? DepartmentId { get; set; }
+    public int? EmployeeId { get; init; }
+    public int? Year { get; init; }
+    public int? Month { get; init; }
+    public PayrollStatus? Status { get; init; }
+    public int? DepartmentId { get; init; }
 }
 
 /// <summary>
@@ -24,15 +23,11 @@ public class GetPayrollsQuery : IRequest<Result<List<PayrollDto>>>
 /// </summary>
 public class GetPayrollsQueryHandler : IRequestHandler<GetPayrollsQuery, Result<List<PayrollDto>>>
 {
-    private readonly IPayrollRepository _payrollRepository;
-    private readonly IEmployeeRepository _employeeRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetPayrollsQueryHandler(
-        IPayrollRepository payrollRepository,
-        IEmployeeRepository employeeRepository)
+    public GetPayrollsQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _payrollRepository = payrollRepository;
-        _employeeRepository = employeeRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<PayrollDto>>> Handle(GetPayrollsQuery request, CancellationToken cancellationToken)
@@ -41,15 +36,15 @@ public class GetPayrollsQueryHandler : IRequestHandler<GetPayrollsQuery, Result<
 
         if (request.EmployeeId.HasValue)
         {
-            payrolls = await _payrollRepository.GetByEmployeeAsync(request.EmployeeId.Value, cancellationToken);
+            payrolls = await _unitOfWork.Payrolls.GetByEmployeeAsync(request.EmployeeId.Value, cancellationToken);
         }
         else if (request.Year.HasValue && request.Month.HasValue)
         {
-            payrolls = await _payrollRepository.GetByPeriodAsync(request.Year.Value, request.Month.Value, cancellationToken);
+            payrolls = await _unitOfWork.Payrolls.GetByPeriodAsync(request.Year.Value, request.Month.Value, cancellationToken);
         }
         else
         {
-            payrolls = await _payrollRepository.GetAllAsync(cancellationToken);
+            payrolls = await _unitOfWork.Payrolls.GetAllAsync(cancellationToken);
         }
 
         var filtered = payrolls.AsEnumerable();
@@ -65,7 +60,7 @@ public class GetPayrollsQueryHandler : IRequestHandler<GetPayrollsQuery, Result<
         }
 
         // Get all employees for mapping
-        var employees = await _employeeRepository.GetAllAsync(cancellationToken);
+        var employees = await _unitOfWork.Employees.GetAllAsync(cancellationToken);
         var employeeDict = employees.ToDictionary(e => e.Id);
 
         var dtos = filtered.Select(p =>

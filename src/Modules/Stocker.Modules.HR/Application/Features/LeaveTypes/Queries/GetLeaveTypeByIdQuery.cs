@@ -1,6 +1,7 @@
+using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.LeaveTypes.Queries;
@@ -8,10 +9,18 @@ namespace Stocker.Modules.HR.Application.Features.LeaveTypes.Queries;
 /// <summary>
 /// Query to get a leave type by ID
 /// </summary>
-public class GetLeaveTypeByIdQuery : IRequest<Result<LeaveTypeDto>>
+public record GetLeaveTypeByIdQuery(int LeaveTypeId) : IRequest<Result<LeaveTypeDto>>;
+
+/// <summary>
+/// Validator for GetLeaveTypeByIdQuery
+/// </summary>
+public class GetLeaveTypeByIdQueryValidator : AbstractValidator<GetLeaveTypeByIdQuery>
 {
-    public Guid TenantId { get; set; }
-    public int LeaveTypeId { get; set; }
+    public GetLeaveTypeByIdQueryValidator()
+    {
+        RuleFor(x => x.LeaveTypeId)
+            .GreaterThan(0).WithMessage("Valid leave type ID is required");
+    }
 }
 
 /// <summary>
@@ -19,16 +28,16 @@ public class GetLeaveTypeByIdQuery : IRequest<Result<LeaveTypeDto>>
 /// </summary>
 public class GetLeaveTypeByIdQueryHandler : IRequestHandler<GetLeaveTypeByIdQuery, Result<LeaveTypeDto>>
 {
-    private readonly ILeaveTypeRepository _leaveTypeRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetLeaveTypeByIdQueryHandler(ILeaveTypeRepository leaveTypeRepository)
+    public GetLeaveTypeByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _leaveTypeRepository = leaveTypeRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<LeaveTypeDto>> Handle(GetLeaveTypeByIdQuery request, CancellationToken cancellationToken)
     {
-        var leaveType = await _leaveTypeRepository.GetByIdAsync(request.LeaveTypeId, cancellationToken);
+        var leaveType = await _unitOfWork.LeaveTypes.GetByIdAsync(request.LeaveTypeId, cancellationToken);
         if (leaveType == null)
         {
             return Result<LeaveTypeDto>.Failure(

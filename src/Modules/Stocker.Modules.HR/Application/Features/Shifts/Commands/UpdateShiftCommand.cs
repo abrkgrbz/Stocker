@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Shifts.Commands;
@@ -10,11 +9,10 @@ namespace Stocker.Modules.HR.Application.Features.Shifts.Commands;
 /// <summary>
 /// Command to update an existing shift
 /// </summary>
-public class UpdateShiftCommand : IRequest<Result<ShiftDto>>
+public record UpdateShiftCommand : IRequest<Result<ShiftDto>>
 {
-    public Guid TenantId { get; set; }
-    public int ShiftId { get; set; }
-    public UpdateShiftDto ShiftData { get; set; } = null!;
+    public int ShiftId { get; init; }
+    public UpdateShiftDto ShiftData { get; init; } = null!;
 }
 
 /// <summary>
@@ -24,9 +22,6 @@ public class UpdateShiftCommandValidator : AbstractValidator<UpdateShiftCommand>
 {
     public UpdateShiftCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.ShiftId)
             .GreaterThan(0).WithMessage("Shift ID is required");
 
@@ -50,20 +45,16 @@ public class UpdateShiftCommandValidator : AbstractValidator<UpdateShiftCommand>
 /// </summary>
 public class UpdateShiftCommandHandler : IRequestHandler<UpdateShiftCommand, Result<ShiftDto>>
 {
-    private readonly IShiftRepository _shiftRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateShiftCommandHandler(
-        IShiftRepository shiftRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateShiftCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _shiftRepository = shiftRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<ShiftDto>> Handle(UpdateShiftCommand request, CancellationToken cancellationToken)
     {
-        var shift = await _shiftRepository.GetByIdAsync(request.ShiftId, cancellationToken);
+        var shift = await _unitOfWork.Shifts.GetByIdAsync(request.ShiftId, cancellationToken);
         if (shift == null)
         {
             return Result<ShiftDto>.Failure(
@@ -95,10 +86,11 @@ public class UpdateShiftCommandHandler : IRequestHandler<UpdateShiftCommand, Res
         }
 
         // Save changes
+        _unitOfWork.Shifts.Update(shift);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Get employee count
-        var employeeCount = await _shiftRepository.GetEmployeeCountAsync(shift.Id, cancellationToken);
+        var employeeCount = await _unitOfWork.Shifts.GetEmployeeCountAsync(shift.Id, cancellationToken);
 
         // Map to DTO
         var shiftDto = new ShiftDto

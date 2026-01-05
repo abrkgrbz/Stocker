@@ -1,7 +1,6 @@
 using FluentValidation;
 using MediatR;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Shifts.Commands;
@@ -9,11 +8,7 @@ namespace Stocker.Modules.HR.Application.Features.Shifts.Commands;
 /// <summary>
 /// Command to delete a shift
 /// </summary>
-public class DeleteShiftCommand : IRequest<Result<bool>>
-{
-    public Guid TenantId { get; set; }
-    public int ShiftId { get; set; }
-}
+public record DeleteShiftCommand(int ShiftId) : IRequest<Result<bool>>;
 
 /// <summary>
 /// Validator for DeleteShiftCommand
@@ -22,9 +17,6 @@ public class DeleteShiftCommandValidator : AbstractValidator<DeleteShiftCommand>
 {
     public DeleteShiftCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.ShiftId)
             .GreaterThan(0).WithMessage("Shift ID is required");
     }
@@ -35,20 +27,16 @@ public class DeleteShiftCommandValidator : AbstractValidator<DeleteShiftCommand>
 /// </summary>
 public class DeleteShiftCommandHandler : IRequestHandler<DeleteShiftCommand, Result<bool>>
 {
-    private readonly IShiftRepository _shiftRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public DeleteShiftCommandHandler(
-        IShiftRepository shiftRepository,
-        IUnitOfWork unitOfWork)
+    public DeleteShiftCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _shiftRepository = shiftRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(DeleteShiftCommand request, CancellationToken cancellationToken)
     {
-        var shift = await _shiftRepository.GetByIdAsync(request.ShiftId, cancellationToken);
+        var shift = await _unitOfWork.Shifts.GetByIdAsync(request.ShiftId, cancellationToken);
         if (shift == null)
         {
             return Result<bool>.Failure(
@@ -56,7 +44,7 @@ public class DeleteShiftCommandHandler : IRequestHandler<DeleteShiftCommand, Res
         }
 
         // Check if any employees are assigned to this shift
-        var employeeCount = await _shiftRepository.GetEmployeeCountAsync(request.ShiftId, cancellationToken);
+        var employeeCount = await _unitOfWork.Shifts.GetEmployeeCountAsync(request.ShiftId, cancellationToken);
         if (employeeCount > 0)
         {
             return Result<bool>.Failure(

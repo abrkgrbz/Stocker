@@ -1,6 +1,7 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Positions.Queries;
@@ -8,39 +9,31 @@ namespace Stocker.Modules.HR.Application.Features.Positions.Queries;
 /// <summary>
 /// Query to get a position by ID
 /// </summary>
-public class GetPositionByIdQuery : IRequest<Result<PositionDto>>
-{
-    public Guid TenantId { get; set; }
-    public int PositionId { get; set; }
-}
+public record GetPositionByIdQuery(int PositionId) : IRequest<Result<PositionDto>>;
 
 /// <summary>
 /// Handler for GetPositionByIdQuery
 /// </summary>
 public class GetPositionByIdQueryHandler : IRequestHandler<GetPositionByIdQuery, Result<PositionDto>>
 {
-    private readonly IPositionRepository _positionRepository;
-    private readonly IDepartmentRepository _departmentRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetPositionByIdQueryHandler(
-        IPositionRepository positionRepository,
-        IDepartmentRepository departmentRepository)
+    public GetPositionByIdQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _positionRepository = positionRepository;
-        _departmentRepository = departmentRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PositionDto>> Handle(GetPositionByIdQuery request, CancellationToken cancellationToken)
     {
-        var position = await _positionRepository.GetByIdAsync(request.PositionId, cancellationToken);
+        var position = await _unitOfWork.Positions.GetByIdAsync(request.PositionId, cancellationToken);
         if (position == null)
         {
             return Result<PositionDto>.Failure(
                 Error.NotFound("Position", $"Position with ID {request.PositionId} not found"));
         }
 
-        var department = await _departmentRepository.GetByIdAsync(position.DepartmentId, cancellationToken);
-        var employeeCount = await _positionRepository.GetEmployeeCountAsync(position.Id, cancellationToken);
+        var department = await _unitOfWork.Departments.GetByIdAsync(position.DepartmentId, cancellationToken);
+        var employeeCount = await _unitOfWork.Positions.GetEmployeeCountAsync(position.Id, cancellationToken);
 
         var positionDto = new PositionDto
         {

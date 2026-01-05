@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Attendance.Commands;
@@ -10,16 +9,15 @@ namespace Stocker.Modules.HR.Application.Features.Attendance.Commands;
 /// <summary>
 /// Command to record employee check-out
 /// </summary>
-public class RecordCheckOutCommand : IRequest<Result<AttendanceDto>>
+public record RecordCheckOutCommand : IRequest<Result<AttendanceDto>>
 {
-    public Guid TenantId { get; set; }
-    public int EmployeeId { get; set; }
-    public decimal? Latitude { get; set; }
-    public decimal? Longitude { get; set; }
-    public string? Location { get; set; }
-    public string? IpAddress { get; set; }
-    public string? DeviceInfo { get; set; }
-    public string? Notes { get; set; }
+    public int EmployeeId { get; init; }
+    public decimal? Latitude { get; init; }
+    public decimal? Longitude { get; init; }
+    public string? Location { get; init; }
+    public string? IpAddress { get; init; }
+    public string? DeviceInfo { get; init; }
+    public string? Notes { get; init; }
 }
 
 /// <summary>
@@ -29,9 +27,6 @@ public class RecordCheckOutCommandValidator : AbstractValidator<RecordCheckOutCo
 {
     public RecordCheckOutCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.EmployeeId)
             .GreaterThan(0).WithMessage("Employee ID is required");
 
@@ -50,27 +45,17 @@ public class RecordCheckOutCommandValidator : AbstractValidator<RecordCheckOutCo
 /// </summary>
 public class RecordCheckOutCommandHandler : IRequestHandler<RecordCheckOutCommand, Result<AttendanceDto>>
 {
-    private readonly IAttendanceRepository _attendanceRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IShiftRepository _shiftRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public RecordCheckOutCommandHandler(
-        IAttendanceRepository attendanceRepository,
-        IEmployeeRepository employeeRepository,
-        IShiftRepository shiftRepository,
-        IUnitOfWork unitOfWork)
+    public RecordCheckOutCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _attendanceRepository = attendanceRepository;
-        _employeeRepository = employeeRepository;
-        _shiftRepository = shiftRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<AttendanceDto>> Handle(RecordCheckOutCommand request, CancellationToken cancellationToken)
     {
         // Validate employee exists
-        var employee = await _employeeRepository.GetByIdAsync(request.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(request.EmployeeId, cancellationToken);
         if (employee == null)
         {
             return Result<AttendanceDto>.Failure(
@@ -81,7 +66,7 @@ public class RecordCheckOutCommandHandler : IRequestHandler<RecordCheckOutComman
         var currentTime = DateTime.UtcNow.TimeOfDay;
 
         // Get today's attendance record
-        var attendance = await _attendanceRepository.GetByEmployeeAndDateAsync(request.EmployeeId, today, cancellationToken);
+        var attendance = await _unitOfWork.Attendances.GetByEmployeeAndDateAsync(request.EmployeeId, today, cancellationToken);
 
         if (attendance == null)
         {
@@ -108,7 +93,7 @@ public class RecordCheckOutCommandHandler : IRequestHandler<RecordCheckOutComman
         string? shiftName = null;
         if (employee.ShiftId.HasValue)
         {
-            var shift = await _shiftRepository.GetByIdAsync(employee.ShiftId.Value, cancellationToken);
+            var shift = await _unitOfWork.Shifts.GetByIdAsync(employee.ShiftId.Value, cancellationToken);
             if (shift != null)
             {
                 expectedCheckOut = shift.EndTime;
@@ -133,7 +118,7 @@ public class RecordCheckOutCommandHandler : IRequestHandler<RecordCheckOutComman
         }
 
         // Update attendance
-        await _attendanceRepository.UpdateAsync(attendance, cancellationToken);
+        await _unitOfWork.Attendances.UpdateAsync(attendance, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Map to DTO

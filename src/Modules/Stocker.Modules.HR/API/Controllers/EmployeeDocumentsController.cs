@@ -6,7 +6,6 @@ using Stocker.Modules.HR.Application.Features.Documents.Commands;
 using Stocker.Modules.HR.Application.Features.Documents.Queries;
 using Stocker.Modules.HR.Domain.Enums;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.API.Controllers;
@@ -19,12 +18,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class EmployeeDocumentsController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public EmployeeDocumentsController(IMediator mediator, ITenantService tenantService)
+    public EmployeeDocumentsController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -40,12 +37,8 @@ public class EmployeeDocumentsController : ControllerBase
         [FromQuery] bool? isExpired = null,
         [FromQuery] bool includeInactive = false)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetEmployeeDocumentsQuery
         {
-            TenantId = tenantId.Value,
             EmployeeId = employeeId,
             DocumentType = documentType,
             IsVerified = isVerified,
@@ -69,12 +62,8 @@ public class EmployeeDocumentsController : ControllerBase
         [FromQuery] DocumentType? documentType = null,
         [FromQuery] bool includeInactive = false)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetEmployeeDocumentsQuery
         {
-            TenantId = tenantId.Value,
             EmployeeId = employeeId,
             DocumentType = documentType,
             IncludeInactive = includeInactive
@@ -93,10 +82,7 @@ public class EmployeeDocumentsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<EmployeeDocumentDto>> GetDocument(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var query = new GetEmployeeDocumentByIdQuery { TenantId = tenantId.Value, DocumentId = id };
+        var query = new GetEmployeeDocumentByIdQuery(id);
         var result = await _mediator.Send(query);
 
         if (result.IsFailure)
@@ -115,10 +101,7 @@ public class EmployeeDocumentsController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<ActionResult<EmployeeDocumentDto>> CreateDocument(CreateEmployeeDocumentDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new CreateEmployeeDocumentCommand { TenantId = tenantId.Value, DocumentData = dto };
+        var command = new CreateEmployeeDocumentCommand { DocumentData = dto };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure) return BadRequest(result.Error);
@@ -134,10 +117,7 @@ public class EmployeeDocumentsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<EmployeeDocumentDto>> UpdateDocument(int id, UpdateEmployeeDocumentDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new UpdateEmployeeDocumentCommand { TenantId = tenantId.Value, DocumentId = id, DocumentData = dto };
+        var command = new UpdateEmployeeDocumentCommand { DocumentId = id, DocumentData = dto };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -156,10 +136,7 @@ public class EmployeeDocumentsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteDocument(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new DeleteEmployeeDocumentCommand { TenantId = tenantId.Value, DocumentId = id };
+        var command = new DeleteEmployeeDocumentCommand { DocumentId = id };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -179,12 +156,8 @@ public class EmployeeDocumentsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<EmployeeDocumentDto>> VerifyDocument(int id, VerifyDocumentDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var command = new VerifyEmployeeDocumentCommand
         {
-            TenantId = tenantId.Value,
             DocumentId = id,
             VerificationData = dto
         };
@@ -196,10 +169,5 @@ public class EmployeeDocumentsController : ControllerBase
             return BadRequest(result.Error);
         }
         return Ok(result.Value);
-    }
-
-    private static Error CreateTenantError()
-    {
-        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
     }
 }

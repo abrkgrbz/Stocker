@@ -1,7 +1,7 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Enums;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Attendance.Queries;
@@ -9,11 +9,10 @@ namespace Stocker.Modules.HR.Application.Features.Attendance.Queries;
 /// <summary>
 /// Query to get daily attendance summary
 /// </summary>
-public class GetDailyAttendanceQuery : IRequest<Result<DailyAttendanceReportDto>>
+public record GetDailyAttendanceQuery : IRequest<Result<DailyAttendanceReportDto>>
 {
-    public Guid TenantId { get; set; }
-    public DateTime Date { get; set; }
-    public int? DepartmentId { get; set; }
+    public DateTime Date { get; init; }
+    public int? DepartmentId { get; init; }
 }
 
 /// <summary>
@@ -21,18 +20,11 @@ public class GetDailyAttendanceQuery : IRequest<Result<DailyAttendanceReportDto>
 /// </summary>
 public class GetDailyAttendanceQueryHandler : IRequestHandler<GetDailyAttendanceQuery, Result<DailyAttendanceReportDto>>
 {
-    private readonly IAttendanceRepository _attendanceRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IShiftRepository _shiftRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetDailyAttendanceQueryHandler(
-        IAttendanceRepository attendanceRepository,
-        IEmployeeRepository employeeRepository,
-        IShiftRepository shiftRepository)
+    public GetDailyAttendanceQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _attendanceRepository = attendanceRepository;
-        _employeeRepository = employeeRepository;
-        _shiftRepository = shiftRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<DailyAttendanceReportDto>> Handle(GetDailyAttendanceQuery request, CancellationToken cancellationToken)
@@ -44,18 +36,18 @@ public class GetDailyAttendanceQueryHandler : IRequestHandler<GetDailyAttendance
 
         if (request.DepartmentId.HasValue)
         {
-            attendances = await _attendanceRepository.GetByDepartmentAndDateAsync(
+            attendances = await _unitOfWork.Attendances.GetByDepartmentAndDateAsync(
                 request.DepartmentId.Value,
                 date,
                 cancellationToken);
         }
         else
         {
-            attendances = await _attendanceRepository.GetByDateAsync(date, cancellationToken);
+            attendances = await _unitOfWork.Attendances.GetByDateAsync(date, cancellationToken);
         }
 
         // Get all active employees for total count
-        var allEmployees = await _employeeRepository.GetActiveEmployeesAsync(cancellationToken);
+        var allEmployees = await _unitOfWork.Employees.GetActiveEmployeesAsync(cancellationToken);
 
         // Filter by department if specified
         if (request.DepartmentId.HasValue)
@@ -82,13 +74,13 @@ public class GetDailyAttendanceQueryHandler : IRequestHandler<GetDailyAttendance
         var attendanceDtos = new List<AttendanceDto>();
         foreach (var attendance in attendances)
         {
-            var employee = await _employeeRepository.GetByIdAsync(attendance.EmployeeId, cancellationToken);
+            var employee = await _unitOfWork.Employees.GetByIdAsync(attendance.EmployeeId, cancellationToken);
             if (employee == null) continue;
 
             string? shiftName = null;
             if (attendance.ShiftId.HasValue)
             {
-                var shift = await _shiftRepository.GetByIdAsync(attendance.ShiftId.Value, cancellationToken);
+                var shift = await _unitOfWork.Shifts.GetByIdAsync(attendance.ShiftId.Value, cancellationToken);
                 shiftName = shift?.Name;
             }
 

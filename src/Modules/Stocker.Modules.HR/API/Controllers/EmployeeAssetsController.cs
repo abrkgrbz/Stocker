@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.EmployeeAssets.Commands;
 using Stocker.Modules.HR.Application.Features.EmployeeAssets.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.HR.API.Controllers;
 
@@ -17,12 +16,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class EmployeeAssetsController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public EmployeeAssetsController(IMediator mediator, ITenantService tenantService)
+    public EmployeeAssetsController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -55,16 +52,12 @@ public class EmployeeAssetsController : ControllerBase
     /// Create a new employee asset
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(Guid), 201)]
+    [ProducesResponseType(typeof(int), 201)]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
-    public async Task<ActionResult<Guid>> CreateEmployeeAsset(CreateEmployeeAssetCommand command)
+    public async Task<ActionResult<int>> CreateEmployeeAsset(CreateEmployeeAssetCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant ID is required");
-
-        var commandWithTenant = command with { TenantId = tenantId.Value };
-        var result = await _mediator.Send(commandWithTenant);
+        var result = await _mediator.Send(command);
 
         if (result.IsFailure)
             return BadRequest(result.Error);
@@ -76,17 +69,14 @@ public class EmployeeAssetsController : ControllerBase
     /// Update an existing employee asset
     /// </summary>
     [HttpPut("{id}")]
-    [ProducesResponseType(typeof(Guid), 200)]
+    [ProducesResponseType(typeof(int), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     [ProducesResponseType(401)]
-    public async Task<ActionResult<Guid>> UpdateEmployeeAsset(int id, UpdateEmployeeAssetCommand command)
+    public async Task<ActionResult<int>> UpdateEmployeeAsset(int id, UpdateEmployeeAssetCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant ID is required");
-
-        var commandWithTenant = command with { TenantId = tenantId.Value, EmployeeAssetId = id };
-        var result = await _mediator.Send(commandWithTenant);
+        var commandWithId = command with { EmployeeAssetId = id };
+        var result = await _mediator.Send(commandWithId);
 
         if (result.IsFailure)
             return BadRequest(result.Error);
@@ -104,10 +94,7 @@ public class EmployeeAssetsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> DeleteEmployeeAsset(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest("Tenant ID is required");
-
-        var command = new DeleteEmployeeAssetCommand { TenantId = tenantId.Value, EmployeeAssetId = id };
+        var command = new DeleteEmployeeAssetCommand { EmployeeAssetId = id };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)

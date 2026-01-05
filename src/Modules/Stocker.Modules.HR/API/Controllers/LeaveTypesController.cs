@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.LeaveTypes.Commands;
 using Stocker.Modules.HR.Application.Features.LeaveTypes.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.API.Controllers;
@@ -18,12 +17,10 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class LeaveTypesController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public LeaveTypesController(IMediator mediator, ITenantService tenantService)
+    public LeaveTypesController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -37,12 +34,8 @@ public class LeaveTypesController : ControllerBase
         [FromQuery] bool? requiresApproval = null,
         [FromQuery] bool includeInactive = false)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
         var query = new GetLeaveTypesQuery
         {
-            TenantId = tenantId.Value,
             IsPaid = isPaid,
             RequiresApproval = requiresApproval,
             IncludeInactive = includeInactive
@@ -61,10 +54,7 @@ public class LeaveTypesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<LeaveTypeDto>> GetLeaveType(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var query = new GetLeaveTypeByIdQuery { TenantId = tenantId.Value, LeaveTypeId = id };
+        var query = new GetLeaveTypeByIdQuery(id);
         var result = await _mediator.Send(query);
 
         if (result.IsFailure)
@@ -83,10 +73,7 @@ public class LeaveTypesController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<ActionResult<LeaveTypeDto>> CreateLeaveType(CreateLeaveTypeDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new CreateLeaveTypeCommand { TenantId = tenantId.Value, LeaveTypeData = dto };
+        var command = new CreateLeaveTypeCommand { LeaveTypeData = dto };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure) return BadRequest(result.Error);
@@ -102,10 +89,7 @@ public class LeaveTypesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<LeaveTypeDto>> UpdateLeaveType(int id, UpdateLeaveTypeDto dto)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new UpdateLeaveTypeCommand { TenantId = tenantId.Value, LeaveTypeId = id, LeaveTypeData = dto };
+        var command = new UpdateLeaveTypeCommand { LeaveTypeId = id, LeaveTypeData = dto };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -124,10 +108,7 @@ public class LeaveTypesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteLeaveType(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
-
-        var command = new DeleteLeaveTypeCommand { TenantId = tenantId.Value, LeaveTypeId = id };
+        var command = new DeleteLeaveTypeCommand { LeaveTypeId = id };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -136,10 +117,5 @@ public class LeaveTypesController : ControllerBase
             return BadRequest(result.Error);
         }
         return NoContent();
-    }
-
-    private static Error CreateTenantError()
-    {
-        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
     }
 }

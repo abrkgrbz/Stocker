@@ -3,7 +3,7 @@ using MediatR;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Employees.Commands;
@@ -11,11 +11,10 @@ namespace Stocker.Modules.HR.Application.Features.Employees.Commands;
 /// <summary>
 /// Command to update an employee
 /// </summary>
-public class UpdateEmployeeCommand : IRequest<Result<EmployeeDto>>
+public record UpdateEmployeeCommand : IRequest<Result<EmployeeDto>>
 {
-    public Guid TenantId { get; set; }
-    public int EmployeeId { get; set; }
-    public UpdateEmployeeDto EmployeeData { get; set; } = null!;
+    public int EmployeeId { get; init; }
+    public UpdateEmployeeDto EmployeeData { get; init; } = null!;
 }
 
 /// <summary>
@@ -25,9 +24,6 @@ public class UpdateEmployeeCommandValidator : AbstractValidator<UpdateEmployeeCo
 {
     public UpdateEmployeeCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.EmployeeId)
             .GreaterThan(0).WithMessage("Employee ID must be greater than 0");
 
@@ -65,20 +61,10 @@ public class UpdateEmployeeCommandValidator : AbstractValidator<UpdateEmployeeCo
 /// </summary>
 public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeCommand, Result<EmployeeDto>>
 {
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IDepartmentRepository _departmentRepository;
-    private readonly IPositionRepository _positionRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdateEmployeeCommandHandler(
-        IEmployeeRepository employeeRepository,
-        IDepartmentRepository departmentRepository,
-        IPositionRepository positionRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateEmployeeCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _employeeRepository = employeeRepository;
-        _departmentRepository = departmentRepository;
-        _positionRepository = positionRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -87,7 +73,7 @@ public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeComman
         var data = request.EmployeeData;
 
         // Get existing employee
-        var employee = await _employeeRepository.GetByIdAsync(request.EmployeeId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(request.EmployeeId, cancellationToken);
         if (employee == null)
         {
             return Result<EmployeeDto>.Failure(
@@ -95,14 +81,14 @@ public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeComman
         }
 
         // Check if email already exists (for another employee)
-        if (await _employeeRepository.ExistsWithEmailAsync(data.Email, request.EmployeeId, cancellationToken))
+        if (await _unitOfWork.Employees.ExistsWithEmailAsync(data.Email, request.EmployeeId, cancellationToken))
         {
             return Result<EmployeeDto>.Failure(
                 Error.Conflict("Employee.Email", "An employee with this email already exists"));
         }
 
         // Validate department
-        var department = await _departmentRepository.GetByIdAsync(data.DepartmentId, cancellationToken);
+        var department = await _unitOfWork.Departments.GetByIdAsync(data.DepartmentId, cancellationToken);
         if (department == null)
         {
             return Result<EmployeeDto>.Failure(
@@ -110,7 +96,7 @@ public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeComman
         }
 
         // Validate position
-        var position = await _positionRepository.GetByIdAsync(data.PositionId, cancellationToken);
+        var position = await _unitOfWork.Positions.GetByIdAsync(data.PositionId, cancellationToken);
         if (position == null)
         {
             return Result<EmployeeDto>.Failure(
@@ -127,7 +113,7 @@ public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeComman
                     Error.Validation("Employee.ManagerId", "An employee cannot be their own manager"));
             }
 
-            var manager = await _employeeRepository.GetByIdAsync(data.ManagerId.Value, cancellationToken);
+            var manager = await _unitOfWork.Employees.GetByIdAsync(data.ManagerId.Value, cancellationToken);
             if (manager == null)
             {
                 return Result<EmployeeDto>.Failure(
@@ -216,7 +202,7 @@ public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeComman
         }
 
         // Save changes
-        _employeeRepository.Update(employee);
+        _unitOfWork.Employees.Update(employee);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Map to DTO

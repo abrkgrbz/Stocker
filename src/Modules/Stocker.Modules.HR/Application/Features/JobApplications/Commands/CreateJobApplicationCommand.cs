@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.JobApplications.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.JobApplications.Commands;
 /// Command to create a new job application
 /// </summary>
 public record CreateJobApplicationCommand(
-    Guid TenantId,
     string ApplicationCode,
     int JobPostingId,
     string FirstName,
@@ -32,9 +30,6 @@ public class CreateJobApplicationCommandValidator : AbstractValidator<CreateJobA
 {
     public CreateJobApplicationCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.ApplicationCode)
             .NotEmpty().WithMessage("Application code is required")
             .MaximumLength(50).WithMessage("Application code must not exceed 50 characters");
@@ -70,27 +65,17 @@ public class CreateJobApplicationCommandValidator : AbstractValidator<CreateJobA
 /// </summary>
 public class CreateJobApplicationCommandHandler : IRequestHandler<CreateJobApplicationCommand, Result<int>>
 {
-    private readonly IJobApplicationRepository _jobApplicationRepository;
-    private readonly IJobPostingRepository _jobPostingRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public CreateJobApplicationCommandHandler(
-        IJobApplicationRepository jobApplicationRepository,
-        IJobPostingRepository jobPostingRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+    public CreateJobApplicationCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _jobApplicationRepository = jobApplicationRepository;
-        _jobPostingRepository = jobPostingRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<int>> Handle(CreateJobApplicationCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(CreateJobApplicationCommand request, CancellationToken cancellationToken)
     {
         // Verify job posting exists
-        var jobPosting = await _jobPostingRepository.GetByIdAsync(request.JobPostingId, cancellationToken);
+        var jobPosting = await _unitOfWork.JobPostings.GetByIdAsync(request.JobPostingId, cancellationToken);
         if (jobPosting == null)
         {
             return Result<int>.Failure(
@@ -98,7 +83,7 @@ public class CreateJobApplicationCommandHandler : IRequestHandler<CreateJobAppli
         }
 
         // Check if application code already exists
-        var existingApplication = await _jobApplicationRepository.GetByCodeAsync(request.ApplicationCode, cancellationToken);
+        var existingApplication = await _unitOfWork.JobApplications.GetByCodeAsync(request.ApplicationCode, cancellationToken);
         if (existingApplication != null)
         {
             return Result<int>.Failure(
@@ -108,7 +93,7 @@ public class CreateJobApplicationCommandHandler : IRequestHandler<CreateJobAppli
         // Verify referred by employee if specified
         if (request.ReferredByEmployeeId.HasValue)
         {
-            var referrer = await _employeeRepository.GetByIdAsync(request.ReferredByEmployeeId.Value, cancellationToken);
+            var referrer = await _unitOfWork.Employees.GetByIdAsync(request.ReferredByEmployeeId.Value, cancellationToken);
             if (referrer == null)
             {
                 return Result<int>.Failure(
@@ -126,7 +111,7 @@ public class CreateJobApplicationCommandHandler : IRequestHandler<CreateJobAppli
             request.Source);
 
         // Set tenant ID
-        jobApplication.SetTenantId(request.TenantId);
+        jobApplication.SetTenantId(_unitOfWork.TenantId);
 
         // Set optional contact info
         if (!string.IsNullOrEmpty(request.Phone))
@@ -154,7 +139,7 @@ public class CreateJobApplicationCommandHandler : IRequestHandler<CreateJobAppli
                 null);
 
         // Save to repository
-        await _jobApplicationRepository.AddAsync(jobApplication, cancellationToken);
+        await _unitOfWork.JobApplications.AddAsync(jobApplication, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(jobApplication.Id);

@@ -1,7 +1,7 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Enums;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Documents.Queries;
@@ -9,14 +9,13 @@ namespace Stocker.Modules.HR.Application.Features.Documents.Queries;
 /// <summary>
 /// Query to get employee documents with optional filtering
 /// </summary>
-public class GetEmployeeDocumentsQuery : IRequest<Result<List<EmployeeDocumentDto>>>
+public record GetEmployeeDocumentsQuery : IRequest<Result<List<EmployeeDocumentDto>>>
 {
-    public Guid TenantId { get; set; }
-    public int? EmployeeId { get; set; }
-    public DocumentType? DocumentType { get; set; }
-    public bool? IsVerified { get; set; }
-    public bool? IsExpired { get; set; }
-    public bool IncludeInactive { get; set; }
+    public int? EmployeeId { get; init; }
+    public DocumentType? DocumentType { get; init; }
+    public bool? IsVerified { get; init; }
+    public bool? IsExpired { get; init; }
+    public bool IncludeInactive { get; init; }
 }
 
 /// <summary>
@@ -24,11 +23,11 @@ public class GetEmployeeDocumentsQuery : IRequest<Result<List<EmployeeDocumentDt
 /// </summary>
 public class GetEmployeeDocumentsQueryHandler : IRequestHandler<GetEmployeeDocumentsQuery, Result<List<EmployeeDocumentDto>>>
 {
-    private readonly IEmployeeDocumentRepository _documentRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetEmployeeDocumentsQueryHandler(IEmployeeDocumentRepository documentRepository)
+    public GetEmployeeDocumentsQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _documentRepository = documentRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<EmployeeDocumentDto>>> Handle(GetEmployeeDocumentsQuery request, CancellationToken cancellationToken)
@@ -37,11 +36,11 @@ public class GetEmployeeDocumentsQueryHandler : IRequestHandler<GetEmployeeDocum
 
         if (request.EmployeeId.HasValue)
         {
-            documents = await _documentRepository.GetByEmployeeAsync(request.EmployeeId.Value, cancellationToken);
+            documents = await _unitOfWork.EmployeeDocuments.GetByEmployeeAsync(request.EmployeeId.Value, cancellationToken);
         }
         else
         {
-            documents = await _documentRepository.GetAllAsync(cancellationToken);
+            documents = await _unitOfWork.EmployeeDocuments.GetAllAsync(cancellationToken);
         }
 
         var filtered = documents.AsEnumerable();

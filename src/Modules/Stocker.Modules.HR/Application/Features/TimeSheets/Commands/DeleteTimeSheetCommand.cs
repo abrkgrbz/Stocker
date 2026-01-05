@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.TimeSheets.Commands;
@@ -11,7 +10,6 @@ namespace Stocker.Modules.HR.Application.Features.TimeSheets.Commands;
 /// </summary>
 public record DeleteTimeSheetCommand : IRequest<Result<int>>
 {
-    public Guid TenantId { get; init; }
     public int TimeSheetId { get; init; }
 }
 
@@ -20,21 +18,17 @@ public record DeleteTimeSheetCommand : IRequest<Result<int>>
 /// </summary>
 public class DeleteTimeSheetCommandHandler : IRequestHandler<DeleteTimeSheetCommand, Result<int>>
 {
-    private readonly ITimeSheetRepository _timeSheetRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public DeleteTimeSheetCommandHandler(
-        ITimeSheetRepository timeSheetRepository,
-        IUnitOfWork unitOfWork)
+    public DeleteTimeSheetCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _timeSheetRepository = timeSheetRepository;
         _unitOfWork = unitOfWork;
     }
 
-    public async System.Threading.Tasks.Task<Result<int>> Handle(DeleteTimeSheetCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(DeleteTimeSheetCommand request, CancellationToken cancellationToken)
     {
         // Get existing timesheet
-        var timeSheet = await _timeSheetRepository.GetByIdAsync(request.TimeSheetId, cancellationToken);
+        var timeSheet = await _unitOfWork.TimeSheets.GetByIdAsync(request.TimeSheetId, cancellationToken);
         if (timeSheet == null)
         {
             return Result<int>.Failure(
@@ -55,7 +49,7 @@ public class DeleteTimeSheetCommandHandler : IRequestHandler<DeleteTimeSheetComm
         }
 
         // Soft delete
-        _timeSheetRepository.Remove(timeSheet);
+        _unitOfWork.TimeSheets.Remove(timeSheet);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(timeSheet.Id);

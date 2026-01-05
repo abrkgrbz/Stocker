@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Performance.Commands;
@@ -11,12 +10,11 @@ namespace Stocker.Modules.HR.Application.Features.Performance.Commands;
 /// <summary>
 /// Command to update a performance review
 /// </summary>
-public class UpdatePerformanceReviewCommand : IRequest<Result<PerformanceReviewDto>>
+public record UpdatePerformanceReviewCommand : IRequest<Result<PerformanceReviewDto>>
 {
-    public Guid TenantId { get; set; }
-    public int ReviewId { get; set; }
-    public UpdatePerformanceReviewDto ReviewData { get; set; } = null!;
-    public List<RateCriteriaDto>? CriteriaRatings { get; set; }
+    public int ReviewId { get; init; }
+    public UpdatePerformanceReviewDto ReviewData { get; init; } = null!;
+    public List<RateCriteriaDto>? CriteriaRatings { get; init; }
 }
 
 /// <summary>
@@ -26,9 +24,6 @@ public class UpdatePerformanceReviewCommandValidator : AbstractValidator<UpdateP
 {
     public UpdatePerformanceReviewCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.ReviewId)
             .GreaterThan(0).WithMessage("Review ID is required");
 
@@ -53,35 +48,21 @@ public class UpdatePerformanceReviewCommandValidator : AbstractValidator<UpdateP
 /// </summary>
 public class UpdatePerformanceReviewCommandHandler : IRequestHandler<UpdatePerformanceReviewCommand, Result<PerformanceReviewDto>>
 {
-    private readonly IPerformanceReviewRepository _reviewRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public UpdatePerformanceReviewCommandHandler(
-        IPerformanceReviewRepository reviewRepository,
-        IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+    public UpdatePerformanceReviewCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _reviewRepository = reviewRepository;
-        _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PerformanceReviewDto>> Handle(UpdatePerformanceReviewCommand request, CancellationToken cancellationToken)
     {
         // Get review with criteria
-        var review = await _reviewRepository.GetWithCriteriaAsync(request.ReviewId, cancellationToken);
+        var review = await _unitOfWork.PerformanceReviews.GetWithCriteriaAsync(request.ReviewId, cancellationToken);
         if (review == null)
         {
             return Result<PerformanceReviewDto>.Failure(
                 Error.NotFound("PerformanceReview", $"Performance review with ID {request.ReviewId} not found"));
-        }
-
-        // Verify tenant
-        if (review.TenantId != request.TenantId)
-        {
-            return Result<PerformanceReviewDto>.Failure(
-                Error.Forbidden("PerformanceReview.Tenant", "Access denied to this performance review"));
         }
 
         // Check if review can be updated
@@ -147,8 +128,8 @@ public class UpdatePerformanceReviewCommandHandler : IRequestHandler<UpdatePerfo
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Get employee and reviewer info
-        var employee = await _employeeRepository.GetByIdAsync(review.EmployeeId, cancellationToken);
-        var reviewer = await _employeeRepository.GetByIdAsync(review.ReviewerId, cancellationToken);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(review.EmployeeId, cancellationToken);
+        var reviewer = await _unitOfWork.Employees.GetByIdAsync(review.ReviewerId, cancellationToken);
 
         // Map to DTO
         var reviewDto = new PerformanceReviewDto

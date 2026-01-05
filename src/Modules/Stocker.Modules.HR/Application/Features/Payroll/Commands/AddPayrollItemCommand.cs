@@ -3,8 +3,7 @@ using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
 using Stocker.Modules.HR.Domain.Enums;
-using Stocker.Modules.HR.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Payroll.Commands;
@@ -12,11 +11,10 @@ namespace Stocker.Modules.HR.Application.Features.Payroll.Commands;
 /// <summary>
 /// Command to add an item to a payroll
 /// </summary>
-public class AddPayrollItemCommand : IRequest<Result<PayrollItemDto>>
+public record AddPayrollItemCommand : IRequest<Result<PayrollItemDto>>
 {
-    public Guid TenantId { get; set; }
-    public int PayrollId { get; set; }
-    public AddPayrollItemDto ItemData { get; set; } = null!;
+    public int PayrollId { get; init; }
+    public AddPayrollItemDto ItemData { get; init; } = null!;
 }
 
 /// <summary>
@@ -26,9 +24,6 @@ public class AddPayrollItemCommandValidator : AbstractValidator<AddPayrollItemCo
 {
     public AddPayrollItemCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.PayrollId)
             .GreaterThan(0).WithMessage("Valid payroll ID is required");
 
@@ -60,20 +55,16 @@ public class AddPayrollItemCommandValidator : AbstractValidator<AddPayrollItemCo
 /// </summary>
 public class AddPayrollItemCommandHandler : IRequestHandler<AddPayrollItemCommand, Result<PayrollItemDto>>
 {
-    private readonly IPayrollRepository _payrollRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public AddPayrollItemCommandHandler(
-        IPayrollRepository payrollRepository,
-        IUnitOfWork unitOfWork)
+    public AddPayrollItemCommandHandler(IHRUnitOfWork unitOfWork)
     {
-        _payrollRepository = payrollRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PayrollItemDto>> Handle(AddPayrollItemCommand request, CancellationToken cancellationToken)
     {
-        var payroll = await _payrollRepository.GetByIdAsync(request.PayrollId, cancellationToken);
+        var payroll = await _unitOfWork.Payrolls.GetByIdAsync(request.PayrollId, cancellationToken);
         if (payroll == null)
         {
             return Result<PayrollItemDto>.Failure(
@@ -109,7 +100,7 @@ public class AddPayrollItemCommandHandler : IRequestHandler<AddPayrollItemComman
             data.IsTaxable,
             0); // displayOrder - default to 0
 
-        item.SetTenantId(request.TenantId);
+        item.SetTenantId(_unitOfWork.TenantId);
 
         payroll.AddItem(item);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

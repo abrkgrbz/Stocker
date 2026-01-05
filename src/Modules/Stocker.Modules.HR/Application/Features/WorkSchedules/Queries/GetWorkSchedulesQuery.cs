@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
-using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.WorkSchedules.Queries;
@@ -8,14 +8,13 @@ namespace Stocker.Modules.HR.Application.Features.WorkSchedules.Queries;
 /// <summary>
 /// Query to get work schedules with optional filtering
 /// </summary>
-public class GetWorkSchedulesQuery : IRequest<Result<List<WorkScheduleDto>>>
+public record GetWorkSchedulesQuery : IRequest<Result<List<WorkScheduleDto>>>
 {
-    public Guid TenantId { get; set; }
-    public int? EmployeeId { get; set; }
-    public int? ShiftId { get; set; }
-    public DateTime? FromDate { get; set; }
-    public DateTime? ToDate { get; set; }
-    public bool? IsWorkDay { get; set; }
+    public int? EmployeeId { get; init; }
+    public int? ShiftId { get; init; }
+    public DateTime? FromDate { get; init; }
+    public DateTime? ToDate { get; init; }
+    public bool? IsWorkDay { get; init; }
 }
 
 /// <summary>
@@ -23,18 +22,11 @@ public class GetWorkSchedulesQuery : IRequest<Result<List<WorkScheduleDto>>>
 /// </summary>
 public class GetWorkSchedulesQueryHandler : IRequestHandler<GetWorkSchedulesQuery, Result<List<WorkScheduleDto>>>
 {
-    private readonly IWorkScheduleRepository _scheduleRepository;
-    private readonly IEmployeeRepository _employeeRepository;
-    private readonly IShiftRepository _shiftRepository;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public GetWorkSchedulesQueryHandler(
-        IWorkScheduleRepository scheduleRepository,
-        IEmployeeRepository employeeRepository,
-        IShiftRepository shiftRepository)
+    public GetWorkSchedulesQueryHandler(IHRUnitOfWork unitOfWork)
     {
-        _scheduleRepository = scheduleRepository;
-        _employeeRepository = employeeRepository;
-        _shiftRepository = shiftRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<WorkScheduleDto>>> Handle(GetWorkSchedulesQuery request, CancellationToken cancellationToken)
@@ -43,16 +35,16 @@ public class GetWorkSchedulesQueryHandler : IRequestHandler<GetWorkSchedulesQuer
 
         if (request.FromDate.HasValue && request.ToDate.HasValue)
         {
-            schedules = await _scheduleRepository.GetByDateRangeAsync(
+            schedules = await _unitOfWork.WorkSchedules.GetByDateRangeAsync(
                 request.FromDate.Value, request.ToDate.Value, cancellationToken);
         }
         else if (request.EmployeeId.HasValue)
         {
-            schedules = await _scheduleRepository.GetByEmployeeAsync(request.EmployeeId.Value, cancellationToken);
+            schedules = await _unitOfWork.WorkSchedules.GetByEmployeeAsync(request.EmployeeId.Value, cancellationToken);
         }
         else
         {
-            schedules = await _scheduleRepository.GetAllAsync(cancellationToken);
+            schedules = await _unitOfWork.WorkSchedules.GetAllAsync(cancellationToken);
         }
 
         var filtered = schedules.AsEnumerable();
@@ -84,10 +76,10 @@ public class GetWorkSchedulesQueryHandler : IRequestHandler<GetWorkSchedulesQuer
         }
 
         // Get employees and shifts for mapping
-        var employees = await _employeeRepository.GetAllAsync(cancellationToken);
+        var employees = await _unitOfWork.Employees.GetAllAsync(cancellationToken);
         var employeeDict = employees.ToDictionary(e => e.Id);
 
-        var shifts = await _shiftRepository.GetAllAsync(cancellationToken);
+        var shifts = await _unitOfWork.Shifts.GetAllAsync(cancellationToken);
         var shiftDict = shifts.ToDictionary(s => s.Id);
 
         var dtos = filtered.Select(s =>

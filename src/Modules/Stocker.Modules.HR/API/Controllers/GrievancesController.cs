@@ -5,7 +5,6 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.Grievances.Commands;
 using Stocker.Modules.HR.Application.Features.Grievances.Queries;
 using Stocker.SharedKernel.Authorization;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.HR.API.Controllers;
 
@@ -17,60 +16,66 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class GrievancesController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITenantService _tenantService;
 
-    public GrievancesController(IMediator mediator, ITenantService tenantService)
+    public GrievancesController(IMediator mediator)
     {
         _mediator = mediator;
-        _tenantService = tenantService;
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<GrievanceDto>>> GetAll()
+    [ProducesResponseType(typeof(List<GrievanceDto>), 200)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<List<GrievanceDto>>> GetAll([FromQuery] int? complainantId = null, [FromQuery] bool openOnly = false)
     {
-        var result = await _mediator.Send(new GetGrievancesQuery());
-        return Ok(result);
+        var result = await _mediator.Send(new GetGrievancesQuery { ComplainantId = complainantId, OpenOnly = openOnly });
+        if (result.IsFailure) return BadRequest(result.Error);
+        return Ok(result.Value);
     }
 
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(GrievanceDto), 200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<GrievanceDto>> GetGrievance(int id)
     {
-        var result = await _mediator.Send(new GetGrievanceByIdQuery { Id = id });
+        var result = await _mediator.Send(new GetGrievanceByIdQuery(id));
         if (result.IsFailure) return NotFound(result.Error);
         return Ok(result.Value);
     }
 
     [HttpPost]
+    [ProducesResponseType(typeof(int), 201)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<int>> Create(CreateGrievanceCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return Unauthorized("Tenant ID not found");
-
-        var result = await _mediator.Send(command with { TenantId = tenantId.Value });
+        var result = await _mediator.Send(command);
         if (result.IsFailure) return BadRequest(result.Error);
 
         return CreatedAtAction(nameof(GetGrievance), new { id = result.Value }, result.Value);
     }
 
     [HttpPut("{id}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult> Update(int id, UpdateGrievanceCommand command)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return Unauthorized("Tenant ID not found");
-
-        var result = await _mediator.Send(command with { TenantId = tenantId.Value, GrievanceId = id });
+        var result = await _mediator.Send(command with { GrievanceId = id });
         if (result.IsFailure) return BadRequest(result.Error);
 
         return NoContent();
     }
 
     [HttpDelete("{id}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
     public async Task<IActionResult> Delete(int id)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue) return Unauthorized("Tenant ID not found");
-
-        var result = await _mediator.Send(new DeleteGrievanceCommand(tenantId.Value, id));
+        var result = await _mediator.Send(new DeleteGrievanceCommand(id));
         if (result.IsFailure) return BadRequest(result.Error);
 
         return NoContent();
