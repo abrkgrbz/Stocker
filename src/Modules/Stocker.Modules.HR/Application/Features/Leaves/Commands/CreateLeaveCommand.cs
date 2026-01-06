@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using Stocker.Modules.HR.Application.Common;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
 using Stocker.Modules.HR.Interfaces;
@@ -71,7 +72,7 @@ public class CreateLeaveCommandHandler : IRequestHandler<CreateLeaveCommand, Res
         if (employee == null)
         {
             return Result<LeaveDto>.Failure(
-                Error.NotFound("Employee", $"Employee with ID {data.EmployeeId} not found"));
+                Error.NotFound("Employee", HRErrorMessages.Employee.NotFound));
         }
 
         // Validate leave type
@@ -79,20 +80,20 @@ public class CreateLeaveCommandHandler : IRequestHandler<CreateLeaveCommand, Res
         if (leaveType == null)
         {
             return Result<LeaveDto>.Failure(
-                Error.NotFound("LeaveType", $"Leave type with ID {data.LeaveTypeId} not found"));
+                Error.NotFound("LeaveType", HRErrorMessages.LeaveType.NotFound));
         }
 
         if (!leaveType.IsActive)
         {
             return Result<LeaveDto>.Failure(
-                Error.Validation("LeaveType.IsActive", "Leave type is not active"));
+                Error.Validation("LeaveType.IsActive", HRErrorMessages.LeaveType.NotActive));
         }
 
         // Check if half-day is allowed
         if (data.IsHalfDay && !leaveType.AllowHalfDay)
         {
             return Result<LeaveDto>.Failure(
-                Error.Validation("Leave.IsHalfDay", "Half-day leave is not allowed for this leave type"));
+                Error.Validation("Leave.IsHalfDay", HRErrorMessages.Leave.HalfDayNotAllowed));
         }
 
         // Check for overlapping leaves
@@ -103,7 +104,7 @@ public class CreateLeaveCommandHandler : IRequestHandler<CreateLeaveCommand, Res
             cancellationToken: cancellationToken))
         {
             return Result<LeaveDto>.Failure(
-                Error.Conflict("Leave.DateRange", "Employee already has a leave request for this date range"));
+                Error.Conflict("Leave.DateRange", HRErrorMessages.Leave.DateRangeConflict));
         }
 
         // Create the leave
@@ -132,7 +133,7 @@ public class CreateLeaveCommandHandler : IRequestHandler<CreateLeaveCommand, Res
             if (substituteEmployee == null)
             {
                 return Result<LeaveDto>.Failure(
-                    Error.NotFound("SubstituteEmployee", $"Substitute employee with ID {data.SubstituteEmployeeId} not found"));
+                    Error.NotFound("SubstituteEmployee", HRErrorMessages.Employee.SubstituteNotFound));
             }
 
             leave.SetSubstitute(data.SubstituteEmployeeId.Value, data.HandoverNotes);
@@ -152,7 +153,7 @@ public class CreateLeaveCommandHandler : IRequestHandler<CreateLeaveCommand, Res
             {
                 return Result<LeaveDto>.Failure(
                     Error.Validation("Leave.Balance",
-                        $"Insufficient leave balance. Available: {balance.Available}, Requested: {leave.TotalDays}"));
+                        string.Format(HRErrorMessages.Leave.InsufficientBalance, balance.Available, leave.TotalDays)));
             }
 
             // Add to pending balance

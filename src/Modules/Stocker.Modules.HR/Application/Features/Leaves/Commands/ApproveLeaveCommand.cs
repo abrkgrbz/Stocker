@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using Stocker.Modules.HR.Application.Common;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Enums;
 using Stocker.Modules.HR.Interfaces;
@@ -27,14 +28,14 @@ public class ApproveLeaveCommandValidator : AbstractValidator<ApproveLeaveComman
     public ApproveLeaveCommandValidator()
     {
         RuleFor(x => x.LeaveId)
-            .GreaterThan(0).WithMessage("Leave ID is required");
+            .GreaterThan(0).WithMessage("İzin ID'si gereklidir");
 
         RuleFor(x => x.ApprovedById)
-            .GreaterThan(0).WithMessage("Approver ID is required");
+            .GreaterThan(0).WithMessage("Onaylayan ID'si gereklidir");
 
         RuleFor(x => x.RejectionReason)
             .NotEmpty().When(x => !x.IsApproved)
-            .WithMessage("Rejection reason is required when rejecting a leave request");
+            .WithMessage("Red sebebi belirtilmelidir");
     }
 }
 
@@ -57,14 +58,14 @@ public class ApproveLeaveCommandHandler : IRequestHandler<ApproveLeaveCommand, R
         if (leave == null)
         {
             return Result<LeaveDto>.Failure(
-                Error.NotFound("Leave", $"Leave with ID {request.LeaveId} not found"));
+                Error.NotFound("Leave", HRErrorMessages.Leave.NotFound));
         }
 
         // Only pending leaves can be approved/rejected
         if (leave.Status != LeaveStatus.Pending)
         {
             return Result<LeaveDto>.Failure(
-                Error.Validation("Leave.Status", "Only pending leave requests can be approved or rejected"));
+                Error.Validation("Leave.Status", HRErrorMessages.Leave.OnlyPendingCanBeApproved));
         }
 
         // Validate approver
@@ -72,7 +73,7 @@ public class ApproveLeaveCommandHandler : IRequestHandler<ApproveLeaveCommand, R
         if (approver == null)
         {
             return Result<LeaveDto>.Failure(
-                Error.NotFound("Approver", $"Approver with ID {request.ApprovedById} not found"));
+                Error.NotFound("Approver", HRErrorMessages.Employee.ApproverNotFound));
         }
 
         // Get leave balance

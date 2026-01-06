@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using Stocker.Modules.HR.Application.Common;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Enums;
 using Stocker.Modules.HR.Interfaces;
@@ -72,14 +73,14 @@ public class UpdateLeaveCommandHandler : IRequestHandler<UpdateLeaveCommand, Res
         if (leave == null)
         {
             return Result<LeaveDto>.Failure(
-                Error.NotFound("Leave", $"Leave with ID {request.LeaveId} not found"));
+                Error.NotFound("Leave", HRErrorMessages.Leave.NotFound));
         }
 
         // Only pending leaves can be updated
         if (leave.Status != LeaveStatus.Pending)
         {
             return Result<LeaveDto>.Failure(
-                Error.Validation("Leave.Status", "Only pending leave requests can be updated"));
+                Error.Validation("Leave.Status", HRErrorMessages.Leave.CannotModify));
         }
 
         // Store old values for balance adjustment
@@ -92,20 +93,20 @@ public class UpdateLeaveCommandHandler : IRequestHandler<UpdateLeaveCommand, Res
         if (leaveType == null)
         {
             return Result<LeaveDto>.Failure(
-                Error.NotFound("LeaveType", $"Leave type with ID {data.LeaveTypeId} not found"));
+                Error.NotFound("LeaveType", HRErrorMessages.LeaveType.NotFound));
         }
 
         if (!leaveType.IsActive)
         {
             return Result<LeaveDto>.Failure(
-                Error.Validation("LeaveType.IsActive", "Leave type is not active"));
+                Error.Validation("LeaveType.IsActive", HRErrorMessages.LeaveType.NotActive));
         }
 
         // Check if half-day is allowed
         if (data.IsHalfDay && !leaveType.AllowHalfDay)
         {
             return Result<LeaveDto>.Failure(
-                Error.Validation("Leave.IsHalfDay", "Half-day leave is not allowed for this leave type"));
+                Error.Validation("Leave.IsHalfDay", HRErrorMessages.Leave.HalfDayNotAllowed));
         }
 
         // Check for overlapping leaves
@@ -117,7 +118,7 @@ public class UpdateLeaveCommandHandler : IRequestHandler<UpdateLeaveCommand, Res
             cancellationToken))
         {
             return Result<LeaveDto>.Failure(
-                Error.Conflict("Leave.DateRange", "Employee already has a leave request for this date range"));
+                Error.Conflict("Leave.DateRange", HRErrorMessages.Leave.DateRangeConflict));
         }
 
         // Update the leave
@@ -141,7 +142,7 @@ public class UpdateLeaveCommandHandler : IRequestHandler<UpdateLeaveCommand, Res
             if (substituteEmployee == null)
             {
                 return Result<LeaveDto>.Failure(
-                    Error.NotFound("SubstituteEmployee", $"Substitute employee with ID {data.SubstituteEmployeeId} not found"));
+                    Error.NotFound("SubstituteEmployee", HRErrorMessages.Employee.SubstituteNotFound));
             }
 
             leave.SetSubstitute(data.SubstituteEmployeeId.Value, data.HandoverNotes);
@@ -185,7 +186,7 @@ public class UpdateLeaveCommandHandler : IRequestHandler<UpdateLeaveCommand, Res
 
                 return Result<LeaveDto>.Failure(
                     Error.Validation("Leave.Balance",
-                        $"Insufficient leave balance. Available: {newBalance.Available}, Requested: {leave.TotalDays}"));
+                        string.Format(HRErrorMessages.Leave.InsufficientBalance, newBalance.Available, leave.TotalDays)));
             }
 
             newBalance.AddPending(leave.TotalDays);

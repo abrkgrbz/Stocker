@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using Stocker.Modules.HR.Application.Common;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Enums;
 using Stocker.Modules.HR.Interfaces;
@@ -24,7 +25,7 @@ public class CancelLeaveCommandValidator : AbstractValidator<CancelLeaveCommand>
     public CancelLeaveCommandValidator()
     {
         RuleFor(x => x.LeaveId)
-            .GreaterThan(0).WithMessage("Leave ID is required");
+            .GreaterThan(0).WithMessage("İzin ID'si gereklidir");
     }
 }
 
@@ -47,26 +48,26 @@ public class CancelLeaveCommandHandler : IRequestHandler<CancelLeaveCommand, Res
         if (leave == null)
         {
             return Result<LeaveDto>.Failure(
-                Error.NotFound("Leave", $"Leave with ID {request.LeaveId} not found"));
+                Error.NotFound("Leave", HRErrorMessages.Leave.NotFound));
         }
 
         // Check if leave can be cancelled
         if (leave.Status == LeaveStatus.Cancelled)
         {
             return Result<LeaveDto>.Failure(
-                Error.Validation("Leave.Status", "Leave request is already cancelled"));
+                Error.Validation("Leave.Status", HRErrorMessages.Leave.AlreadyCancelled));
         }
 
         if (leave.Status == LeaveStatus.Taken)
         {
             return Result<LeaveDto>.Failure(
-                Error.Validation("Leave.Status", "Cannot cancel leave that has already been taken"));
+                Error.Validation("Leave.Status", HRErrorMessages.Leave.AlreadyTaken));
         }
 
         if (leave.StartDate <= DateTime.UtcNow.Date && leave.Status == LeaveStatus.Approved)
         {
             return Result<LeaveDto>.Failure(
-                Error.Validation("Leave.StartDate", "Cannot cancel leave that has already started"));
+                Error.Validation("Leave.StartDate", HRErrorMessages.Leave.AlreadyStarted));
         }
 
         // Store status before cancellation
