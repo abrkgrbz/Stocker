@@ -101,7 +101,7 @@ export const showApiError = (error: any, defaultMessage: string = 'İşlem başa
 
   if (apiError) {
     // Try to extract main error message
-    errorMessage = apiError.detail || apiError.title || apiError.message || defaultMessage;
+    errorMessage = apiError.description || apiError.detail || apiError.title || apiError.message || defaultMessage;
 
     // Collect all error details
     if (apiError.errors) {
