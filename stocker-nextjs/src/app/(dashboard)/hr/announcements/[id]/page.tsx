@@ -2,22 +2,10 @@
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { Tag, Modal, Row, Col, Card, Statistic, Descriptions } from 'antd';
+import { DetailPageLayout } from '@/components/patterns';
+import { Button } from '@/components/primitives';
 import {
-  Typography,
-  Button,
-  Space,
-  Card,
-  Descriptions,
-  Tag,
-  Spin,
-  Row,
-  Col,
-  Statistic,
-  Empty,
-  Modal,
-} from 'antd';
-import {
-  ArrowLeftIcon,
   BellIcon,
   CalendarIcon,
   CheckCircleIcon,
@@ -34,12 +22,10 @@ import {
 } from '@/lib/api/hooks/useHR';
 import dayjs from 'dayjs';
 
-const { Title, Text, Paragraph } = Typography;
-
 const priorityConfig: Record<string, { color: string; label: string }> = {
-  Low: { color: 'default', label: 'Düşük' },
+  Low: { color: 'default', label: 'Dusuk' },
   Normal: { color: 'blue', label: 'Normal' },
-  High: { color: 'orange', label: 'Yüksek' },
+  High: { color: 'orange', label: 'Yuksek' },
   Urgent: { color: 'red', label: 'Acil' },
 };
 
@@ -58,10 +44,10 @@ export default function AnnouncementDetailPage() {
     if (!announcement) return;
     Modal.confirm({
       title: 'Duyuruyu Sil',
-      content: `"${announcement.title}" duyurusunu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
+      content: `"${announcement.title}" duyurusunu silmek istediginizden emin misiniz? Bu islem geri alinamaz.`,
       okText: 'Sil',
       okType: 'danger',
-      cancelText: 'İptal',
+      cancelText: 'Iptal',
       onOk: async () => {
         try {
           await deleteAnnouncement.mutateAsync(id);
@@ -104,67 +90,58 @@ export default function AnnouncementDetailPage() {
     return dayjs(announcement.expiryDate).isBefore(dayjs(), 'day');
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  if (error || !announcement) {
-    return (
-      <div className="p-6">
-        <Empty description="Duyuru bulunamadı" />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push('/hr/announcements')}>Listeye Dön</Button>
-        </div>
-      </div>
-    );
-  }
-
-  const priority = priorityConfig[announcement.priority] || priorityConfig.Normal;
+  const priority = priorityConfig[announcement?.priority || 'Normal'] || priorityConfig.Normal;
   const daysUntilExpiry = getDaysUntilExpiry();
   const expired = isExpired();
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-6">
-        <Space>
-          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/announcements')}>
-            Geri
-          </Button>
-          <div>
-            <Title level={2} style={{ margin: 0 }}>
-              {announcement.isPinned && <MapPinIcon className="w-4 h-4 mr-2 text-orange-500" />}
-              {announcement.title}
-            </Title>
-            <Space>
-              <Tag color={priority.color}>{priority.label}</Tag>
-              <Tag color={announcement.isPublished ? 'green' : 'default'}>
-                {announcement.isPublished ? 'Yayında' : 'Taslak'}
-              </Tag>
-              {expired && <Tag color="red">Süresi Dolmuş</Tag>}
-            </Space>
-          </div>
-        </Space>
-        <Space>
+    <DetailPageLayout
+      title={announcement?.title || 'Duyuru'}
+      subtitle={announcement?.isPinned ? 'Sabitlenmis Duyuru' : undefined}
+      backPath="/hr/announcements"
+      icon={<BellIcon className="w-5 h-5 text-white" />}
+      iconBgColor="bg-orange-600"
+      statusBadge={
+        announcement && (
+          <>
+            <Tag color={priority.color}>{priority.label}</Tag>
+            <Tag color={announcement.isPublished ? 'green' : 'default'}>
+              {announcement.isPublished ? 'Yayinda' : 'Taslak'}
+            </Tag>
+            {expired && <Tag color="red">Suresi Dolmus</Tag>}
+          </>
+        )
+      }
+      actions={
+        <>
           <Button
-            icon={announcement.isPublished ? <StopCircleIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />}
+            variant="secondary"
+            icon={announcement?.isPublished ? <StopCircleIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />}
             onClick={handleTogglePublish}
           >
-            {announcement.isPublished ? 'Yayından Kaldır' : 'Yayınla'}
+            {announcement?.isPublished ? 'Yayindan Kaldir' : 'Yayinla'}
           </Button>
-          <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/announcements/${id}/edit`)}>
-            Düzenle
+          <Button
+            variant="secondary"
+            icon={<PencilIcon className="w-4 h-4" />}
+            onClick={() => router.push(`/hr/announcements/${id}/edit`)}
+          >
+            Duzenle
           </Button>
-          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
+          <Button
+            variant="danger"
+            icon={<TrashIcon className="w-4 h-4" />}
+            onClick={handleDelete}
+          >
             Sil
           </Button>
-        </Space>
-      </div>
-
+        </>
+      }
+      isLoading={isLoading}
+      isError={!!error || (!isLoading && !announcement)}
+      errorMessage="Duyuru Bulunamadi"
+      errorDescription="Istenen duyuru bulunamadi veya bir hata olustu."
+    >
       <Row gutter={[24, 24]}>
         {/* Stats */}
         <Col xs={24}>
@@ -172,7 +149,7 @@ export default function AnnouncementDetailPage() {
             <Col xs={12} sm={6}>
               <Card size="small">
                 <Statistic
-                  title="Öncelik"
+                  title="Oncelik"
                   value={priority.label}
                   valueStyle={{ color: priority.color === 'red' ? '#f5222d' : priority.color === 'orange' ? '#fa8c16' : '#1890ff' }}
                 />
@@ -181,8 +158,8 @@ export default function AnnouncementDetailPage() {
             <Col xs={12} sm={6}>
               <Card size="small">
                 <Statistic
-                  title="Yayın Tarihi"
-                  value={formatDate(announcement.publishDate)}
+                  title="Yayin Tarihi"
+                  value={formatDate(announcement?.publishDate)}
                   prefix={<CalendarIcon className="w-4 h-4" />}
                 />
               </Card>
@@ -190,8 +167,8 @@ export default function AnnouncementDetailPage() {
             <Col xs={12} sm={6}>
               <Card size="small">
                 <Statistic
-                  title="Bitiş Tarihi"
-                  value={formatDate(announcement.expiryDate)}
+                  title="Bitis Tarihi"
+                  value={formatDate(announcement?.expiryDate)}
                   prefix={<CalendarIcon className="w-4 h-4" />}
                   valueStyle={{ color: expired ? '#f5222d' : undefined }}
                 />
@@ -200,9 +177,9 @@ export default function AnnouncementDetailPage() {
             <Col xs={12} sm={6}>
               <Card size="small">
                 <Statistic
-                  title="Kalan Gün"
+                  title="Kalan Gun"
                   value={daysUntilExpiry !== null ? (daysUntilExpiry >= 0 ? daysUntilExpiry : 0) : '-'}
-                  suffix={daysUntilExpiry !== null ? 'gün' : ''}
+                  suffix={daysUntilExpiry !== null ? 'gun' : ''}
                   valueStyle={{ color: expired ? '#f5222d' : daysUntilExpiry !== null && daysUntilExpiry <= 7 ? '#fa8c16' : '#52c41a' }}
                 />
               </Card>
@@ -212,10 +189,10 @@ export default function AnnouncementDetailPage() {
 
         {/* Content */}
         <Col xs={24} lg={16}>
-          <Card title="Duyuru İçeriği">
-            <Paragraph style={{ whiteSpace: 'pre-wrap', fontSize: 16 }}>
-              {announcement.content}
-            </Paragraph>
+          <Card title="Duyuru Icerigi">
+            <p className="text-slate-600 whitespace-pre-wrap text-base">
+              {announcement?.content}
+            </p>
           </Card>
         </Col>
 
@@ -223,32 +200,32 @@ export default function AnnouncementDetailPage() {
         <Col xs={24} lg={8}>
           <Card title="Duyuru Bilgileri">
             <Descriptions column={1} size="small">
-              <Descriptions.Item label="Başlık">{announcement.title}</Descriptions.Item>
-              <Descriptions.Item label="Öncelik">
+              <Descriptions.Item label="Baslik">{announcement?.title}</Descriptions.Item>
+              <Descriptions.Item label="Oncelik">
                 <Tag color={priority.color}>{priority.label}</Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="Yayın Tarihi">
-                {formatDate(announcement.publishDate)}
+              <Descriptions.Item label="Yayin Tarihi">
+                {formatDate(announcement?.publishDate)}
               </Descriptions.Item>
-              <Descriptions.Item label="Bitiş Tarihi">
-                {formatDate(announcement.expiryDate)}
+              <Descriptions.Item label="Bitis Tarihi">
+                {formatDate(announcement?.expiryDate)}
               </Descriptions.Item>
-              <Descriptions.Item label="Sabitlenmiş">
-                {announcement.isPinned ? (
+              <Descriptions.Item label="Sabitlenmis">
+                {announcement?.isPinned ? (
                   <Tag color="orange" icon={<MapPinIcon className="w-4 h-4" />}>Evet</Tag>
                 ) : (
-                  <Tag>Hayır</Tag>
+                  <Tag>Hayir</Tag>
                 )}
               </Descriptions.Item>
               <Descriptions.Item label="Durum">
-                <Tag color={announcement.isPublished ? 'green' : 'default'}>
-                  {announcement.isPublished ? 'Yayında' : 'Taslak'}
+                <Tag color={announcement?.isPublished ? 'green' : 'default'}>
+                  {announcement?.isPublished ? 'Yayinda' : 'Taslak'}
                 </Tag>
               </Descriptions.Item>
             </Descriptions>
           </Card>
         </Col>
       </Row>
-    </div>
+    </DetailPageLayout>
   );
 }

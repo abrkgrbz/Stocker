@@ -2,13 +2,9 @@
 
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Form, Input, DatePicker, InputNumber, Switch, Select, message, Spin } from 'antd';
-import { PageContainer } from '@/components/patterns';
-import {
-  ArrowLeftIcon,
-  AcademicCapIcon,
-} from '@heroicons/react/24/outline';
+import { Form, Input, DatePicker, InputNumber, Switch, Select, message } from 'antd';
+import { AcademicCapIcon } from '@heroicons/react/24/outline';
+import { FormPageLayout } from '@/components/patterns';
 import { useTraining, useUpdateTraining } from '@/lib/api/hooks/useHR';
 import type { UpdateTrainingDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
@@ -82,60 +78,28 @@ export default function EditTrainingPage() {
       };
 
       await updateTraining.mutateAsync({ id, data });
-      message.success('Eğitim başarıyla güncellendi');
+      message.success('Egitim basariyla guncellendi');
       router.push(`/hr/trainings/${id}`);
     } catch (error) {
-      message.error('Güncelleme sırasında bir hata oluştu');
+      message.error('Guncelleme sirasinda bir hata olustu');
     }
   };
 
-  if (isLoading) {
-    return (
-      <PageContainer maxWidth="3xl">
-        <div className="flex items-center justify-center py-12">
-          <Spin />
-        </div>
-      </PageContainer>
-    );
-  }
-
-  if (error || !training) {
-    return (
-      <PageContainer maxWidth="3xl">
-        <div className="text-center py-12">
-          <p className="text-slate-500">Eğitim bulunamadı</p>
-          <Link href="/hr/trainings" className="text-sm text-slate-900 hover:underline mt-2 inline-block">
-            ← Listeye Dön
-          </Link>
-        </div>
-      </PageContainer>
-    );
-  }
-
   return (
-    <PageContainer maxWidth="3xl">
-      {/* Header */}
-      <div className="mb-8">
-        <Link
-          href={`/hr/trainings/${id}`}
-          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-4"
-        >
-          <ArrowLeftIcon className="w-4 h-4" />
-          Detaya Dön
-        </Link>
-
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-            <AcademicCapIcon className="w-5 h-5 text-slate-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Eğitim Düzenle</h1>
-            <p className="text-sm text-slate-500 mt-1">{training.title}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Form Kartı */}
+    <FormPageLayout
+      title="Egitim Duzenle"
+      subtitle={training?.title || 'Yukleniyor...'}
+      icon={<AcademicCapIcon className="w-5 h-5" />}
+      cancelPath={`/hr/trainings/${id}`}
+      loading={updateTraining.isPending}
+      onSave={() => form.submit()}
+      saveButtonText="Guncelle"
+      isDataLoading={isLoading}
+      dataError={!!error || !training}
+      errorMessage="Egitim Bulunamadi"
+      errorDescription="Istenen egitim bulunamadi veya bir hata olustu."
+      maxWidth="max-w-4xl"
+    >
       <div className="bg-white border border-slate-200 rounded-xl">
         <Form
           form={form}
@@ -143,47 +107,47 @@ export default function EditTrainingPage() {
           onFinish={handleSubmit}
           className="p-6"
         >
-          {/* Eğitim Bilgileri */}
+          {/* Egitim Bilgileri */}
           <div className="mb-8">
             <h2 className="text-sm font-medium text-slate-900 mb-4 pb-2 border-b border-slate-100">
-              Eğitim Bilgileri
+              Egitim Bilgileri
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Form.Item
                 name="title"
-                label={<span className="text-sm text-slate-700">Eğitim Adı</span>}
-                rules={[{ required: true, message: 'Eğitim adı zorunludur' }]}
+                label={<span className="text-sm text-slate-700">Egitim Adi</span>}
+                rules={[{ required: true, message: 'Egitim adi zorunludur' }]}
               >
-                <Input placeholder="Eğitim adı" className="rounded-md" />
+                <Input placeholder="Egitim adi" className="rounded-md" />
               </Form.Item>
 
               <Form.Item
                 name="trainingType"
-                label={<span className="text-sm text-slate-700">Eğitim Türü</span>}
+                label={<span className="text-sm text-slate-700">Egitim Turu</span>}
               >
-                <Input placeholder="Örn: Teknik, Soft Skills" className="rounded-md" />
+                <Input placeholder="Orn: Teknik, Soft Skills" className="rounded-md" />
               </Form.Item>
 
               <Form.Item
                 name="provider"
-                label={<span className="text-sm text-slate-700">Eğitim Sağlayıcısı</span>}
+                label={<span className="text-sm text-slate-700">Egitim Saglayicisi</span>}
               >
-                <Input placeholder="Şirket veya kuruluş adı" className="rounded-md" />
+                <Input placeholder="Sirket veya kurulus adi" className="rounded-md" />
               </Form.Item>
 
               <Form.Item
                 name="instructor"
-                label={<span className="text-sm text-slate-700">Eğitmen</span>}
+                label={<span className="text-sm text-slate-700">Egitmen</span>}
               >
-                <Input placeholder="Eğitmen adı" className="rounded-md" />
+                <Input placeholder="Egitmen adi" className="rounded-md" />
               </Form.Item>
 
               <Form.Item
                 name="description"
-                label={<span className="text-sm text-slate-700">Açıklama</span>}
+                label={<span className="text-sm text-slate-700">Aciklama</span>}
                 className="md:col-span-2"
               >
-                <TextArea rows={3} placeholder="Eğitim açıklaması" className="rounded-md" />
+                <TextArea rows={3} placeholder="Egitim aciklamasi" className="rounded-md" />
               </Form.Item>
             </div>
           </div>
@@ -196,18 +160,18 @@ export default function EditTrainingPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Form.Item
                 name="dateRange"
-                label={<span className="text-sm text-slate-700">Eğitim Tarihleri</span>}
+                label={<span className="text-sm text-slate-700">Egitim Tarihleri</span>}
               >
                 <RangePicker
                   format="DD.MM.YYYY"
-                  placeholder={['Başlangıç', 'Bitiş']}
+                  placeholder={['Baslangic', 'Bitis']}
                   className="w-full rounded-md"
                 />
               </Form.Item>
 
               <Form.Item
                 name="durationHours"
-                label={<span className="text-sm text-slate-700">Süre (Saat)</span>}
+                label={<span className="text-sm text-slate-700">Sure (Saat)</span>}
               >
                 <InputNumber
                   placeholder="0"
@@ -218,17 +182,17 @@ export default function EditTrainingPage() {
 
               <Form.Item
                 name="isOnline"
-                label={<span className="text-sm text-slate-700">Online Eğitim</span>}
+                label={<span className="text-sm text-slate-700">Online Egitim</span>}
                 valuePropName="checked"
               >
-                <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
+                <Switch checkedChildren="Evet" unCheckedChildren="Hayir" />
               </Form.Item>
 
               <Form.Item
                 name="location"
                 label={<span className="text-sm text-slate-700">Konum</span>}
               >
-                <Input placeholder="Eğitim yeri" className="rounded-md" />
+                <Input placeholder="Egitim yeri" className="rounded-md" />
               </Form.Item>
 
               <Form.Item
@@ -249,7 +213,7 @@ export default function EditTrainingPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Form.Item
                 name="maxParticipants"
-                label={<span className="text-sm text-slate-700">Maks. Katılımcı</span>}
+                label={<span className="text-sm text-slate-700">Maks. Katilimci</span>}
               >
                 <InputNumber
                   placeholder="0"
@@ -274,7 +238,7 @@ export default function EditTrainingPage() {
                 label={<span className="text-sm text-slate-700">Para Birimi</span>}
               >
                 <Select
-                  placeholder="Seçin"
+                  placeholder="Secin"
                   className="w-full"
                   options={[
                     { value: 'TRY', label: 'TRY' },
@@ -286,10 +250,10 @@ export default function EditTrainingPage() {
 
               <Form.Item
                 name="isMandatory"
-                label={<span className="text-sm text-slate-700">Zorunlu Eğitim</span>}
+                label={<span className="text-sm text-slate-700">Zorunlu Egitim</span>}
                 valuePropName="checked"
               >
-                <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
+                <Switch checkedChildren="Evet" unCheckedChildren="Hayir" />
               </Form.Item>
             </div>
           </div>
@@ -305,12 +269,12 @@ export default function EditTrainingPage() {
                 label={<span className="text-sm text-slate-700">Sertifika Verilecek</span>}
                 valuePropName="checked"
               >
-                <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
+                <Switch checkedChildren="Evet" unCheckedChildren="Hayir" />
               </Form.Item>
 
               <Form.Item
                 name="certificationValidityMonths"
-                label={<span className="text-sm text-slate-700">Geçerlilik (Ay)</span>}
+                label={<span className="text-sm text-slate-700">Gecerlilik (Ay)</span>}
               >
                 <InputNumber
                   placeholder="0"
@@ -321,7 +285,7 @@ export default function EditTrainingPage() {
 
               <Form.Item
                 name="passingScore"
-                label={<span className="text-sm text-slate-700">Geçme Puanı</span>}
+                label={<span className="text-sm text-slate-700">Gecme Puani</span>}
               >
                 <InputNumber
                   placeholder="0"
@@ -341,11 +305,11 @@ export default function EditTrainingPage() {
             <div className="space-y-4">
               <Form.Item
                 name="prerequisites"
-                label={<span className="text-sm text-slate-700">Ön Koşullar</span>}
+                label={<span className="text-sm text-slate-700">On Kosullar</span>}
               >
                 <TextArea
                   rows={3}
-                  placeholder="Eğitime katılım için gerekli ön koşullar"
+                  placeholder="Egitime katilim icin gerekli on kosullar"
                   className="rounded-md"
                 />
               </Form.Item>
@@ -356,33 +320,14 @@ export default function EditTrainingPage() {
               >
                 <TextArea
                   rows={3}
-                  placeholder="Eğitim materyalleri ve kaynaklar"
+                  placeholder="Egitim materyalleri ve kaynaklar"
                   className="rounded-md"
                 />
               </Form.Item>
             </div>
           </div>
-
-          {/* Form Aksiyonları */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-            <Link href={`/hr/trainings/${id}`}>
-              <button
-                type="button"
-                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
-              >
-                İptal
-              </button>
-            </Link>
-            <button
-              type="submit"
-              disabled={updateTraining.isPending}
-              className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {updateTraining.isPending ? 'Kaydediliyor...' : 'Güncelle'}
-            </button>
-          </div>
         </Form>
       </div>
-    </PageContainer>
+    </FormPageLayout>
   );
 }

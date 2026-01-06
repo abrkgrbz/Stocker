@@ -2,36 +2,22 @@
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { Tag, Modal, Row, Col, Card, Statistic, Descriptions, Progress } from 'antd';
+import { DetailPageLayout } from '@/components/patterns';
+import { Button } from '@/components/primitives';
 import {
-  Typography,
-  Button,
-  Space,
-  Card,
-  Descriptions,
-  Tag,
-  Spin,
-  Row,
-  Col,
-  Statistic,
-  Empty,
-  Modal,
-  Progress,
-} from 'antd';
-import {
-  ArrowLeftIcon,
   CalendarIcon,
   CheckCircleIcon,
   ClockIcon,
   CursorArrowRaysIcon,
   ExclamationCircleIcon,
+  FlagIcon,
   PencilIcon,
   TrashIcon,
   UserIcon,
 } from '@heroicons/react/24/outline';
 import { usePerformanceGoal, useDeletePerformanceGoal } from '@/lib/api/hooks/useHR';
 import dayjs from 'dayjs';
-
-const { Title, Text, Paragraph } = Typography;
 
 export default function GoalDetailPage() {
   const params = useParams();
@@ -46,10 +32,10 @@ export default function GoalDetailPage() {
     if (!goal) return;
     Modal.confirm({
       title: 'Hedefi Sil',
-      content: `"${goal.title}" hedefini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
+      content: `"${goal.title}" hedefini silmek istediginizden emin misiniz? Bu islem geri alinamaz.`,
       okText: 'Sil',
       okType: 'danger',
-      cancelText: 'İptal',
+      cancelText: 'Iptal',
       onOk: async () => {
         try {
           await deleteGoal.mutateAsync(id);
@@ -63,75 +49,58 @@ export default function GoalDetailPage() {
 
   const getStatusConfig = (status?: string, isOverdue?: boolean) => {
     if (isOverdue && status !== 'Completed' && status !== 'Cancelled') {
-      return { color: 'red', text: 'Gecikmiş', icon: <ExclamationCircleIcon className="w-4 h-4" /> };
+      return { color: 'red', text: 'Gecikmis', icon: <ExclamationCircleIcon className="w-4 h-4" /> };
     }
     const statusMap: Record<string, { color: string; text: string; icon: React.ReactNode }> = {
-      NotStarted: { color: 'default', text: 'Başlamadı', icon: <ClockIcon className="w-4 h-4" /> },
+      NotStarted: { color: 'default', text: 'Baslamadi', icon: <ClockIcon className="w-4 h-4" /> },
       InProgress: { color: 'blue', text: 'Devam Ediyor', icon: <ClockIcon className="w-4 h-4" /> },
-      Completed: { color: 'green', text: 'Tamamlandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
-      Cancelled: { color: 'red', text: 'İptal', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
+      Completed: { color: 'green', text: 'Tamamlandi', icon: <CheckCircleIcon className="w-4 h-4" /> },
+      Cancelled: { color: 'red', text: 'Iptal', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
     };
     return statusMap[status || ''] || { color: 'default', text: status || '-', icon: null };
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  if (error || !goal) {
-    return (
-      <div className="p-6">
-        <Empty description="Hedef bulunamadı" />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push('/hr/goals')}>Listeye Dön</Button>
-        </div>
-      </div>
-    );
-  }
-
-  const statusConfig = getStatusConfig(goal.status, goal.isOverdue);
-  const daysRemaining = dayjs(goal.targetDate).diff(dayjs(), 'day');
+  const statusConfig = getStatusConfig(goal?.status, goal?.isOverdue);
+  const daysRemaining = goal ? dayjs(goal.targetDate).diff(dayjs(), 'day') : 0;
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-6">
-        <Space>
-          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/goals')}>
-            Geri
-          </Button>
-          <div>
-            <Title level={2} style={{ margin: 0 }}>
-              {goal.title}
-            </Title>
-            <Space>
-              <Text type="secondary">{goal.employeeName}</Text>
-              <Text type="secondary">•</Text>
-              <Text type="secondary">{goal.category || 'Genel'}</Text>
-              <Tag color={statusConfig.color} icon={statusConfig.icon}>
-                {statusConfig.text}
-              </Tag>
-            </Space>
-          </div>
-        </Space>
-        <Space>
+    <DetailPageLayout
+      title={goal?.title || 'Hedef'}
+      subtitle={`${goal?.employeeName || ''} ${goal?.category ? `- ${goal.category}` : ''}`}
+      backPath="/hr/goals"
+      icon={<FlagIcon className="w-5 h-5 text-white" />}
+      iconBgColor="bg-emerald-600"
+      statusBadge={
+        goal && (
+          <Tag color={statusConfig.color} icon={statusConfig.icon}>
+            {statusConfig.text}
+          </Tag>
+        )
+      }
+      actions={
+        <>
           <Button
+            variant="secondary"
             icon={<PencilIcon className="w-4 h-4" />}
             onClick={() => router.push(`/hr/goals/${id}/edit`)}
-            disabled={goal.status === 'Completed'}
+            disabled={goal?.status === 'Completed'}
           >
-            Düzenle
+            Duzenle
           </Button>
-          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
+          <Button
+            variant="danger"
+            icon={<TrashIcon className="w-4 h-4" />}
+            onClick={handleDelete}
+          >
             Sil
           </Button>
-        </Space>
-      </div>
-
+        </>
+      }
+      isLoading={isLoading}
+      isError={!!error || (!isLoading && !goal)}
+      errorMessage="Hedef Bulunamadi"
+      errorDescription="Istenen hedef bulunamadi veya bir hata olustu."
+    >
       <Row gutter={[24, 24]}>
         {/* Progress Card */}
         <Col xs={24}>
@@ -141,13 +110,13 @@ export default function GoalDetailPage() {
                 <div className="text-center">
                   <Progress
                     type="circle"
-                    percent={goal.progressPercentage || 0}
+                    percent={goal?.progressPercentage || 0}
                     size={150}
-                    status={goal.isOverdue ? 'exception' : undefined}
-                    strokeColor={goal.isOverdue ? '#ff4d4f' : '#7c3aed'}
+                    status={goal?.isOverdue ? 'exception' : undefined}
+                    strokeColor={goal?.isOverdue ? '#ff4d4f' : '#7c3aed'}
                   />
                   <div className="mt-4">
-                    <Text type="secondary">İlerleme</Text>
+                    <span className="text-slate-500">Ilerleme</span>
                   </div>
                 </div>
               </Col>
@@ -155,8 +124,8 @@ export default function GoalDetailPage() {
                 <Row gutter={[16, 16]}>
                   <Col span={12}>
                     <Statistic
-                      title="Başlangıç"
-                      value={dayjs(goal.startDate).format('DD.MM.YYYY')}
+                      title="Baslangic"
+                      value={goal?.startDate ? dayjs(goal.startDate).format('DD.MM.YYYY') : '-'}
                       prefix={<CalendarIcon className="w-4 h-4" />}
                       valueStyle={{ fontSize: 16 }}
                     />
@@ -164,23 +133,23 @@ export default function GoalDetailPage() {
                   <Col span={12}>
                     <Statistic
                       title="Hedef Tarih"
-                      value={dayjs(goal.targetDate).format('DD.MM.YYYY')}
+                      value={goal?.targetDate ? dayjs(goal.targetDate).format('DD.MM.YYYY') : '-'}
                       prefix={<CursorArrowRaysIcon className="w-4 h-4" />}
-                      valueStyle={{ fontSize: 16, color: goal.isOverdue ? '#ff4d4f' : undefined }}
+                      valueStyle={{ fontSize: 16, color: goal?.isOverdue ? '#ff4d4f' : undefined }}
                     />
                   </Col>
                   <Col span={12}>
                     <Statistic
-                      title="Kalan Gün"
+                      title="Kalan Gun"
                       value={daysRemaining > 0 ? daysRemaining : 0}
-                      suffix="gün"
+                      suffix="gun"
                       valueStyle={{ color: daysRemaining < 0 ? '#ff4d4f' : daysRemaining < 7 ? '#faad14' : '#52c41a' }}
                     />
                   </Col>
                   <Col span={12}>
                     <Statistic
-                      title="Ağırlık"
-                      value={goal.weight || 1}
+                      title="Agirlik"
+                      value={goal?.weight || 1}
                       valueStyle={{ fontSize: 16 }}
                     />
                   </Col>
@@ -194,20 +163,20 @@ export default function GoalDetailPage() {
         <Col xs={24} lg={12}>
           <Card title="Hedef Bilgileri">
             <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label="Çalışan">
-                <Space>
+              <Descriptions.Item label="Calisan">
+                <div className="flex items-center gap-2">
                   <UserIcon className="w-4 h-4" />
-                  {goal.employeeName}
-                </Space>
+                  {goal?.employeeName}
+                </div>
               </Descriptions.Item>
-              <Descriptions.Item label="Kategori">{goal.category || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Başlangıç Tarihi">
-                {dayjs(goal.startDate).format('DD MMMM YYYY')}
+              <Descriptions.Item label="Kategori">{goal?.category || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Baslangic Tarihi">
+                {goal?.startDate ? dayjs(goal.startDate).format('DD MMMM YYYY') : '-'}
               </Descriptions.Item>
               <Descriptions.Item label="Hedef Tarihi">
-                {dayjs(goal.targetDate).format('DD MMMM YYYY')}
+                {goal?.targetDate ? dayjs(goal.targetDate).format('DD MMMM YYYY') : '-'}
               </Descriptions.Item>
-              {goal.completedDate && (
+              {goal?.completedDate && (
                 <Descriptions.Item label="Tamamlanma Tarihi">
                   {dayjs(goal.completedDate).format('DD MMMM YYYY')}
                 </Descriptions.Item>
@@ -217,7 +186,7 @@ export default function GoalDetailPage() {
                   {statusConfig.text}
                 </Tag>
               </Descriptions.Item>
-              {goal.assignedByName && (
+              {goal?.assignedByName && (
                 <Descriptions.Item label="Atayan">{goal.assignedByName}</Descriptions.Item>
               )}
             </Descriptions>
@@ -228,31 +197,31 @@ export default function GoalDetailPage() {
         <Col xs={24} lg={12}>
           <Card title="Metrikler">
             <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label="Ölçüm Kriteri">{goal.metrics || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Hedef Değer">{goal.targetValue || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Mevcut Değer">{goal.currentValue || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Olcum Kriteri">{goal?.metrics || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Hedef Deger">{goal?.targetValue || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Mevcut Deger">{goal?.currentValue || '-'}</Descriptions.Item>
             </Descriptions>
           </Card>
         </Col>
 
         {/* Description */}
-        {goal.description && (
+        {goal?.description && (
           <Col xs={24}>
-            <Card title="Açıklama">
-              <Paragraph>{goal.description}</Paragraph>
+            <Card title="Aciklama">
+              <p className="text-slate-600">{goal.description}</p>
             </Card>
           </Col>
         )}
 
         {/* Notes */}
-        {goal.notes && (
+        {goal?.notes && (
           <Col xs={24}>
             <Card title="Notlar">
-              <Paragraph>{goal.notes}</Paragraph>
+              <p className="text-slate-600">{goal.notes}</p>
             </Card>
           </Col>
         )}
       </Row>
-    </div>
+    </DetailPageLayout>
   );
 }

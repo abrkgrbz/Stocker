@@ -2,33 +2,18 @@
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { Tag, Modal, Row, Col, Card, Statistic, Descriptions, Rate } from 'antd';
+import { DetailPageLayout } from '@/components/patterns';
+import { Button } from '@/components/primitives';
 import {
-  Typography,
-  Button,
-  Space,
-  Card,
-  Descriptions,
-  Tag,
-  Spin,
-  Row,
-  Col,
-  Statistic,
-  Empty,
-  Modal,
-  Rate,
-} from 'antd';
-import {
-  ArrowLeftIcon,
   PencilIcon,
   StarIcon,
   TrashIcon,
-  TrophyIcon,
+  ChartBarIcon,
   UserIcon,
 } from '@heroicons/react/24/outline';
 import { usePerformanceReview, useDeletePerformanceReview } from '@/lib/api/hooks/useHR';
 import dayjs from 'dayjs';
-
-const { Title, Text, Paragraph } = Typography;
 
 export default function PerformanceDetailPage() {
   const params = useParams();
@@ -42,11 +27,11 @@ export default function PerformanceDetailPage() {
   const handleDelete = () => {
     if (!review) return;
     Modal.confirm({
-      title: 'Performans Değerlendirmesini Sil',
-      content: 'Bu değerlendirmeyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
+      title: 'Performans Degerlendirmesini Sil',
+      content: 'Bu degerlendirmeyi silmek istediginizden emin misiniz? Bu islem geri alinamaz.',
       okText: 'Sil',
       okType: 'danger',
-      cancelText: 'İptal',
+      cancelText: 'Iptal',
       onOk: async () => {
         try {
           await deleteReview.mutateAsync(id);
@@ -62,69 +47,50 @@ export default function PerformanceDetailPage() {
     const statusMap: Record<string, { color: string; text: string }> = {
       Draft: { color: 'default', text: 'Taslak' },
       InProgress: { color: 'blue', text: 'Devam Ediyor' },
-      Completed: { color: 'green', text: 'Tamamlandı' },
-      Cancelled: { color: 'red', text: 'İptal' },
+      Completed: { color: 'green', text: 'Tamamlandi' },
+      Cancelled: { color: 'red', text: 'Iptal' },
     };
     return statusMap[status || ''] || { color: 'default', text: status || '-' };
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  if (error || !review) {
-    return (
-      <div className="p-6">
-        <Empty description="Değerlendirme bulunamadı" />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push('/hr/performance')}>Listeye Dön</Button>
-        </div>
-      </div>
-    );
-  }
-
-  const statusConfig = getStatusConfig(review.status);
+  const statusConfig = getStatusConfig(review?.status);
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-6">
-        <Space>
-          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/performance')}>
-            Geri
-          </Button>
-          <div>
-            <Title level={2} style={{ margin: 0 }}>
-              Performans Değerlendirme Detayı
-            </Title>
-            <Space>
-              <Text type="secondary">
-                {review.employeeName || `Çalışan #${review.employeeId}`}
-              </Text>
-              <Text type="secondary">•</Text>
-              <Text type="secondary">{review.reviewPeriod}</Text>
-              <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
-            </Space>
-          </div>
-        </Space>
-        <Space>
+    <DetailPageLayout
+      title="Performans Degerlendirme Detayi"
+      subtitle={`${review?.employeeName || `Calisan #${review?.employeeId}`} - ${review?.reviewPeriod || ''}`}
+      backPath="/hr/performance"
+      icon={<ChartBarIcon className="w-5 h-5 text-white" />}
+      iconBgColor="bg-amber-600"
+      statusBadge={
+        review && (
+          <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
+        )
+      }
+      actions={
+        <>
           <Button
+            variant="secondary"
             icon={<PencilIcon className="w-4 h-4" />}
             onClick={() => router.push(`/hr/performance/${id}/edit`)}
-            disabled={review.status === 'Completed'}
+            disabled={review?.status === 'Completed'}
           >
-            Düzenle
+            Duzenle
           </Button>
-          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
+          <Button
+            variant="danger"
+            icon={<TrashIcon className="w-4 h-4" />}
+            onClick={handleDelete}
+          >
             Sil
           </Button>
-        </Space>
-      </div>
-
+        </>
+      }
+      isLoading={isLoading}
+      isError={!!error || (!isLoading && !review)}
+      errorMessage="Degerlendirme Bulunamadi"
+      errorDescription="Istenen degerlendirme bulunamadi veya bir hata olustu."
+    >
       <Row gutter={[24, 24]}>
         {/* Stats */}
         <Col xs={24}>
@@ -133,7 +99,7 @@ export default function PerformanceDetailPage() {
               <Card size="small">
                 <Statistic
                   title="Genel Puan"
-                  value={review.overallScore || 0}
+                  value={review?.overallScore || 0}
                   prefix={<StarIcon className="w-4 h-4" />}
                   suffix="/ 10"
                   valueStyle={{ color: '#faad14' }}
@@ -143,16 +109,16 @@ export default function PerformanceDetailPage() {
             <Col xs={12} sm={6}>
               <Card size="small">
                 <div className="text-center">
-                  <Text type="secondary" className="block mb-2">Yıldız Puanı</Text>
-                  <Rate disabled value={(review.overallScore || 0) / 2} allowHalf />
+                  <span className="text-slate-500 block mb-2">Yildiz Puani</span>
+                  <Rate disabled value={(review?.overallScore || 0) / 2} allowHalf />
                 </div>
               </Card>
             </Col>
             <Col xs={12} sm={6}>
               <Card size="small">
                 <Statistic
-                  title="Dönem"
-                  value={review.reviewPeriod || '-'}
+                  title="Donem"
+                  value={review?.reviewPeriod || '-'}
                   valueStyle={{ color: '#7c3aed', fontSize: 16 }}
                 />
               </Card>
@@ -161,7 +127,7 @@ export default function PerformanceDetailPage() {
               <Card size="small">
                 <Statistic
                   title="Tarih"
-                  value={dayjs(review.reviewDate).format('DD.MM.YYYY')}
+                  value={review?.reviewDate ? dayjs(review.reviewDate).format('DD.MM.YYYY') : '-'}
                   valueStyle={{ color: '#1890ff', fontSize: 16 }}
                 />
               </Card>
@@ -171,26 +137,26 @@ export default function PerformanceDetailPage() {
 
         {/* Details */}
         <Col xs={24} lg={12}>
-          <Card title="Değerlendirme Bilgileri">
+          <Card title="Degerlendirme Bilgileri">
             <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label="Çalışan">
-                <Space>
+              <Descriptions.Item label="Calisan">
+                <div className="flex items-center gap-2">
                   <UserIcon className="w-4 h-4" />
-                  {review.employeeName || `Çalışan #${review.employeeId}`}
-                </Space>
+                  {review?.employeeName || `Calisan #${review?.employeeId}`}
+                </div>
               </Descriptions.Item>
-              <Descriptions.Item label="Değerlendiren">
-                {review.reviewerName || `Kullanıcı #${review.reviewerId}`}
+              <Descriptions.Item label="Degerlendiren">
+                {review?.reviewerName || `Kullanici #${review?.reviewerId}`}
               </Descriptions.Item>
               <Descriptions.Item label="Tarih">
-                {dayjs(review.reviewDate).format('DD MMMM YYYY')}
+                {review?.reviewDate ? dayjs(review.reviewDate).format('DD MMMM YYYY') : '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="Dönem">{review.reviewPeriod}</Descriptions.Item>
+              <Descriptions.Item label="Donem">{review?.reviewPeriod}</Descriptions.Item>
               <Descriptions.Item label="Genel Puan">
-                <Space>
-                  <Rate disabled value={(review.overallScore || 0) / 2} allowHalf style={{ fontSize: 14 }} />
-                  <span>({review.overallScore?.toFixed(1) || '-'}/10)</span>
-                </Space>
+                <div className="flex items-center gap-2">
+                  <Rate disabled value={(review?.overallScore || 0) / 2} allowHalf style={{ fontSize: 14 }} />
+                  <span>({review?.overallScore?.toFixed(1) || '-'}/10)</span>
+                </div>
               </Descriptions.Item>
               <Descriptions.Item label="Durum">
                 <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
@@ -200,41 +166,41 @@ export default function PerformanceDetailPage() {
         </Col>
 
         {/* Strengths */}
-        {review.strengths && (
+        {review?.strengths && (
           <Col xs={24} lg={12}>
-            <Card title="Güçlü Yönler">
-              <Paragraph>{review.strengths}</Paragraph>
+            <Card title="Guclu Yonler">
+              <p className="text-slate-600">{review.strengths}</p>
             </Card>
           </Col>
         )}
 
         {/* Areas for Improvement */}
-        {review.areasForImprovement && (
+        {review?.areasForImprovement && (
           <Col xs={24} lg={12}>
-            <Card title="Gelişim Alanları">
-              <Paragraph>{review.areasForImprovement}</Paragraph>
+            <Card title="Gelisim Alanlari">
+              <p className="text-slate-600">{review.areasForImprovement}</p>
             </Card>
           </Col>
         )}
 
         {/* Development Plan */}
-        {review.developmentPlan && (
+        {review?.developmentPlan && (
           <Col xs={24} lg={12}>
-            <Card title="Gelişim Planı">
-              <Paragraph>{review.developmentPlan}</Paragraph>
+            <Card title="Gelisim Plani">
+              <p className="text-slate-600">{review.developmentPlan}</p>
             </Card>
           </Col>
         )}
 
         {/* Manager Comments */}
-        {review.managerComments && (
+        {review?.managerComments && (
           <Col xs={24}>
-            <Card title="Yönetici Yorumları">
-              <Paragraph>{review.managerComments}</Paragraph>
+            <Card title="Yonetici Yorumlari">
+              <p className="text-slate-600">{review.managerComments}</p>
             </Card>
           </Col>
         )}
       </Row>
-    </div>
+    </DetailPageLayout>
   );
 }

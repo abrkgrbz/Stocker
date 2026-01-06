@@ -2,14 +2,14 @@
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Button, Card, Descriptions, Tag, Spin, Row, Col, Statistic, Divider } from 'antd';
+import { Button, Card, Descriptions, Tag, Row, Col, Statistic, Divider } from 'antd';
 import {
   ArrowDownTrayIcon,
-  ArrowLeftIcon,
   CurrencyDollarIcon,
   PrinterIcon,
 } from '@heroicons/react/24/outline';
 import { usePayslip } from '@/lib/api/hooks/useHR';
+import { DetailPageLayout } from '@/components/patterns';
 
 const statusColors: Record<string, string> = { 'Draft': 'default', 'Pending': 'processing', 'Approved': 'success', 'Paid': 'blue', 'Cancelled': 'error' };
 
@@ -17,32 +17,30 @@ export default function PayslipDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = Number(params.id);
-  const { data: payslip, isLoading } = usePayslip(id);
+  const { data: payslip, isLoading, isError } = usePayslip(id);
 
   const formatCurrency = (value: number) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value || 0);
 
-  if (isLoading) return <div className="flex items-center justify-center min-h-screen"><Spin size="large" /></div>;
-  if (!payslip) return <div className="p-6"><Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()}>Geri</Button><div className="mt-4">Bordro bulunamadi.</div></div>;
-
   return (
-    <div className="min-h-screen bg-white">
-      <div className="sticky top-0 z-50 px-8 py-4" style={{ background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(0, 0, 0, 0.06)' }}>
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-4">
-            <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()} type="text" />
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 m-0">Bordro Detayi</h1>
-              <p className="text-sm text-gray-400 m-0">{payslip.employeeName} - {payslip.periodStart ? new Date(payslip.periodStart).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }) : ''}</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button icon={<PrinterIcon className="w-4 h-4" />} onClick={() => window.print()}>Yazdir</Button>
-            <Button icon={<ArrowDownTrayIcon className="w-4 h-4" />}>PDF Indir</Button>
-          </div>
-        </div>
-      </div>
-
-      <div className="px-8 py-8 max-w-7xl mx-auto">
+    <DetailPageLayout
+      title="Bordro Detayi"
+      subtitle={payslip ? `${payslip.employeeName} - ${payslip.periodStart ? new Date(payslip.periodStart).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }) : ''}` : undefined}
+      backPath="/hr/payslips"
+      icon={<CurrencyDollarIcon className="w-6 h-6 text-white" />}
+      iconBgColor="bg-violet-600"
+      statusBadge={payslip ? <Tag color={statusColors[payslip.status]}>{payslip.status}</Tag> : undefined}
+      isLoading={isLoading}
+      isError={isError || !payslip}
+      errorMessage="Bordro Bulunamadi"
+      errorDescription="Istenen bordro kaydi bulunamadi veya bir hata olustu."
+      actions={
+        <>
+          <Button icon={<PrinterIcon className="w-4 h-4" />} onClick={() => window.print()}>Yazdir</Button>
+          <Button icon={<ArrowDownTrayIcon className="w-4 h-4" />}>PDF Indir</Button>
+        </>
+      }
+    >
+      {payslip && (
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={8}>
             <Card style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '16px', border: 'none' }} bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}>
@@ -114,7 +112,7 @@ export default function PayslipDetailPage() {
             {payslip.notes && <Card title="Notlar"><p>{payslip.notes}</p></Card>}
           </Col>
         </Row>
-      </div>
-    </div>
+      )}
+    </DetailPageLayout>
   );
 }

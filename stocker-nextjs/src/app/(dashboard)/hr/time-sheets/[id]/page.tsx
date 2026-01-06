@@ -2,15 +2,13 @@
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Button, Card, Descriptions, Tag, Spin, Row, Col, Statistic, Divider } from 'antd';
+import { Button, Card, Descriptions, Tag, Row, Col, Statistic, Divider } from 'antd';
 import {
-  ArrowLeftIcon,
-  CheckCircleIcon,
   ClockIcon,
   PencilIcon,
-  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useTimeSheet } from '@/lib/api/hooks/useHR';
+import { DetailPageLayout } from '@/components/patterns';
 
 const statusColors: Record<string, string> = { 'Draft': 'default', 'Submitted': 'processing', 'Approved': 'success', 'Rejected': 'error', 'Paid': 'blue' };
 
@@ -18,29 +16,34 @@ export default function TimeSheetDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = Number(params.id);
-  const { data: timeSheet, isLoading } = useTimeSheet(id);
+  const { data: timeSheet, isLoading, isError } = useTimeSheet(id);
 
-  if (isLoading) return <div className="flex items-center justify-center min-h-screen"><Spin size="large" /></div>;
-  if (!timeSheet) return <div className="p-6"><Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()}>Geri</Button><div className="mt-4">Puantaj bulunamadi.</div></div>;
-
-  const totalHours = (timeSheet.regularHours || 0) + (timeSheet.overtimeHours || 0);
+  const totalHours = timeSheet ? (timeSheet.regularHours || 0) + (timeSheet.overtimeHours || 0) : 0;
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="sticky top-0 z-50 px-8 py-4" style={{ background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(0, 0, 0, 0.06)' }}>
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-4">
-            <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()} type="text" />
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 m-0">Puantaj Detayi</h1>
-              <p className="text-sm text-gray-400 m-0">{timeSheet.employeeName}</p>
-            </div>
-          </div>
-          <Button type="primary" icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/time-sheets/${id}/edit`)} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Duzenle</Button>
-        </div>
-      </div>
-
-      <div className="px-8 py-8 max-w-7xl mx-auto">
+    <DetailPageLayout
+      title="Puantaj Detayi"
+      subtitle={timeSheet?.employeeName}
+      backPath="/hr/time-sheets"
+      icon={<ClockIcon className="w-6 h-6 text-white" />}
+      iconBgColor="bg-cyan-600"
+      statusBadge={timeSheet ? <Tag color={statusColors[timeSheet.status]}>{timeSheet.status}</Tag> : undefined}
+      isLoading={isLoading}
+      isError={isError || !timeSheet}
+      errorMessage="Puantaj Bulunamadi"
+      errorDescription="Istenen puantaj kaydi bulunamadi veya bir hata olustu."
+      actions={
+        <Button
+          type="primary"
+          icon={<PencilIcon className="w-4 h-4" />}
+          onClick={() => router.push(`/hr/time-sheets/${id}/edit`)}
+          style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
+        >
+          Duzenle
+        </Button>
+      }
+    >
+      {timeSheet && (
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={8}>
             <Card style={{ background: 'linear-gradient(135deg, #5ee7df 0%, #b490ca 100%)', borderRadius: '16px', border: 'none' }} bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}>
@@ -118,7 +121,7 @@ export default function TimeSheetDetailPage() {
             {timeSheet.notes && <Card title="Notlar"><p>{timeSheet.notes}</p></Card>}
           </Col>
         </Row>
-      </div>
-    </div>
+      )}
+    </DetailPageLayout>
   );
 }

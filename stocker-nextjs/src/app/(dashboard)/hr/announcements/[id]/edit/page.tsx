@@ -1,14 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Form, Input, DatePicker, Select, Switch, message, Spin } from 'antd';
-import { PageContainer } from '@/components/patterns';
-import {
-  ArrowLeftIcon,
-  BellIcon,
-} from '@heroicons/react/24/outline';
+import { Form, Input, DatePicker, Select, Switch, message } from 'antd';
+import { BellIcon } from '@heroicons/react/24/outline';
+import { FormPageLayout } from '@/components/patterns';
 import { useAnnouncement, useUpdateAnnouncement } from '@/lib/api/hooks/useHR';
 import type { UpdateAnnouncementDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
@@ -59,62 +55,28 @@ export default function EditAnnouncementPage() {
       };
 
       await updateAnnouncement.mutateAsync({ id, data });
-      message.success('Duyuru başarıyla güncellendi');
+      message.success('Duyuru basariyla guncellendi');
       router.push(`/hr/announcements/${id}`);
     } catch (error) {
-      message.error('Güncelleme sırasında bir hata oluştu');
+      message.error('Guncelleme sirasinda bir hata olustu');
     }
   };
 
-  if (isLoading) {
-    return (
-      <PageContainer maxWidth="3xl">
-        <div className="flex items-center justify-center py-12">
-          <Spin />
-        </div>
-      </PageContainer>
-    );
-  }
-
-  if (error || !announcement) {
-    return (
-      <PageContainer maxWidth="3xl">
-        <div className="text-center py-12">
-          <p className="text-slate-500">Duyuru bulunamadı</p>
-          <Link href="/hr/announcements" className="text-sm text-slate-900 hover:underline mt-2 inline-block">
-            ← Listeye Dön
-          </Link>
-        </div>
-      </PageContainer>
-    );
-  }
-
   return (
-    <PageContainer maxWidth="3xl">
-      {/* Header */}
-      <div className="mb-8">
-        <Link
-          href={`/hr/announcements/${id}`}
-          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-4"
-        >
-          <ArrowLeftIcon className="w-4 h-4" />
-          Detaya Dön
-        </Link>
-
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-            <BellIcon className="w-5 h-5 text-slate-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Duyuru Düzenle</h1>
-            <p className="text-sm text-slate-500 mt-1">
-              <span className="font-medium">{announcement.title}</span> duyurusunu düzenliyorsunuz
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Form Kartı */}
+    <FormPageLayout
+      title="Duyuru Duzenle"
+      subtitle={announcement?.title || 'Yukleniyor...'}
+      icon={<BellIcon className="w-5 h-5" />}
+      cancelPath={`/hr/announcements/${id}`}
+      loading={updateAnnouncement.isPending}
+      onSave={() => form.submit()}
+      saveButtonText="Guncelle"
+      isDataLoading={isLoading}
+      dataError={!!error || !announcement}
+      errorMessage="Duyuru Bulunamadi"
+      errorDescription="Istenen duyuru bulunamadi veya bir hata olustu."
+      maxWidth="max-w-4xl"
+    >
       <div className="bg-white border border-slate-200 rounded-xl">
         <Form
           form={form}
@@ -122,54 +84,54 @@ export default function EditAnnouncementPage() {
           onFinish={handleSubmit}
           className="p-6"
         >
-          {/* Duyuru İçeriği */}
+          {/* Duyuru Icerigi */}
           <div className="mb-8">
             <h2 className="text-sm font-medium text-slate-900 mb-4 pb-2 border-b border-slate-100">
-              Duyuru İçeriği
+              Duyuru Icerigi
             </h2>
             <div className="space-y-4">
               <Form.Item
                 name="title"
-                label={<span className="text-sm text-slate-700">Duyuru Başlığı</span>}
-                rules={[{ required: true, message: 'Başlık zorunludur' }]}
+                label={<span className="text-sm text-slate-700">Duyuru Basligi</span>}
+                rules={[{ required: true, message: 'Baslik zorunludur' }]}
               >
-                <Input placeholder="Duyuru başlığı girin" className="rounded-md" />
+                <Input placeholder="Duyuru basligi girin" className="rounded-md" />
               </Form.Item>
 
               <Form.Item
                 name="content"
-                label={<span className="text-sm text-slate-700">İçerik</span>}
-                rules={[{ required: true, message: 'İçerik zorunludur' }]}
+                label={<span className="text-sm text-slate-700">Icerik</span>}
+                rules={[{ required: true, message: 'Icerik zorunludur' }]}
               >
-                <TextArea rows={6} placeholder="Duyuru içeriğini girin" className="rounded-md" />
+                <TextArea rows={6} placeholder="Duyuru icerigini girin" className="rounded-md" />
               </Form.Item>
 
               <Form.Item
                 name="summary"
-                label={<span className="text-sm text-slate-700">Özet</span>}
+                label={<span className="text-sm text-slate-700">Ozet</span>}
               >
-                <TextArea rows={2} placeholder="Kısa özet (opsiyonel)" className="rounded-md" />
+                <TextArea rows={2} placeholder="Kisa ozet (opsiyonel)" className="rounded-md" />
               </Form.Item>
             </div>
           </div>
 
-          {/* Öncelik ve Tarihler */}
+          {/* Oncelik ve Tarihler */}
           <div className="mb-8">
             <h2 className="text-sm font-medium text-slate-900 mb-4 pb-2 border-b border-slate-100">
-              Öncelik ve Tarihler
+              Oncelik ve Tarihler
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Form.Item
                 name="priority"
-                label={<span className="text-sm text-slate-700">Öncelik</span>}
+                label={<span className="text-sm text-slate-700">Oncelik</span>}
               >
                 <Select
-                  placeholder="Öncelik seçin"
+                  placeholder="Oncelik secin"
                   className="w-full"
                   options={[
-                    { value: 'Low', label: 'Düşük' },
+                    { value: 'Low', label: 'Dusuk' },
                     { value: 'Normal', label: 'Normal' },
-                    { value: 'High', label: 'Yüksek' },
+                    { value: 'High', label: 'Yuksek' },
                     { value: 'Urgent', label: 'Acil' },
                   ]}
                 />
@@ -177,22 +139,22 @@ export default function EditAnnouncementPage() {
 
               <Form.Item
                 name="publishDate"
-                label={<span className="text-sm text-slate-700">Yayın Tarihi</span>}
+                label={<span className="text-sm text-slate-700">Yayin Tarihi</span>}
               >
                 <DatePicker
                   format="DD.MM.YYYY"
-                  placeholder="Tarih seçin"
+                  placeholder="Tarih secin"
                   className="w-full rounded-md"
                 />
               </Form.Item>
 
               <Form.Item
                 name="expiryDate"
-                label={<span className="text-sm text-slate-700">Bitiş Tarihi</span>}
+                label={<span className="text-sm text-slate-700">Bitis Tarihi</span>}
               >
                 <DatePicker
                   format="DD.MM.YYYY"
-                  placeholder="Tarih seçin"
+                  placeholder="Tarih secin"
                   className="w-full rounded-md"
                 />
               </Form.Item>
@@ -207,10 +169,10 @@ export default function EditAnnouncementPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Form.Item
                 name="isPinned"
-                label={<span className="text-sm text-slate-700">Sabitlenmiş</span>}
+                label={<span className="text-sm text-slate-700">Sabitlenmis</span>}
                 valuePropName="checked"
               >
-                <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
+                <Switch checkedChildren="Evet" unCheckedChildren="Hayir" />
               </Form.Item>
 
               <Form.Item
@@ -218,31 +180,12 @@ export default function EditAnnouncementPage() {
                 label={<span className="text-sm text-slate-700">Onay Gerekli</span>}
                 valuePropName="checked"
               >
-                <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
+                <Switch checkedChildren="Evet" unCheckedChildren="Hayir" />
               </Form.Item>
             </div>
           </div>
-
-          {/* Form Aksiyonları */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-            <Link href={`/hr/announcements/${id}`}>
-              <button
-                type="button"
-                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
-              >
-                İptal
-              </button>
-            </Link>
-            <button
-              type="submit"
-              disabled={updateAnnouncement.isPending}
-              className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {updateAnnouncement.isPending ? 'Kaydediliyor...' : 'Güncelle'}
-            </button>
-          </div>
         </Form>
       </div>
-    </PageContainer>
+    </FormPageLayout>
   );
 }

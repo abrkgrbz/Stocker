@@ -3,22 +3,17 @@
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  Typography,
   Button,
-  Space,
   Card,
   Descriptions,
   Tag,
-  Spin,
   Row,
   Col,
   Statistic,
-  Empty,
   Modal,
   message,
 } from 'antd';
 import {
-  ArrowLeftIcon,
   CalendarIcon,
   CheckCircleIcon,
   PencilIcon,
@@ -34,9 +29,8 @@ import {
   useRejectExpense,
 } from '@/lib/api/hooks/useHR';
 import { ExpenseStatus, ExpenseType } from '@/lib/api/services/hr.types';
+import { DetailPageLayout } from '@/components/patterns';
 import dayjs from 'dayjs';
-
-const { Title, Text, Paragraph } = Typography;
 
 export default function ExpenseDetailPage() {
   const params = useParams();
@@ -44,7 +38,7 @@ export default function ExpenseDetailPage() {
   const id = Number(params.id);
 
   // API Hooks
-  const { data: expense, isLoading, error } = useExpense(id);
+  const { data: expense, isLoading, isError } = useExpense(id);
   const deleteExpense = useDeleteExpense();
   const approveExpense = useApproveExpense();
   const rejectExpense = useRejectExpense();
@@ -52,11 +46,11 @@ export default function ExpenseDetailPage() {
   const handleDelete = () => {
     if (!expense) return;
     Modal.confirm({
-      title: 'Harcama Kaydını Sil',
-      content: 'Bu harcama kaydını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
+      title: 'Harcama Kaydini Sil',
+      content: 'Bu harcama kaydini silmek istediginizden emin misiniz? Bu islem geri alinamaz.',
       okText: 'Sil',
       okType: 'danger',
-      cancelText: 'İptal',
+      cancelText: 'Iptal',
       onOk: async () => {
         try {
           await deleteExpense.mutateAsync(id);
@@ -71,7 +65,7 @@ export default function ExpenseDetailPage() {
   const handleApprove = async () => {
     try {
       await approveExpense.mutateAsync({ id });
-      message.success('Harcama onaylandı');
+      message.success('Harcama onaylandi');
     } catch (error) {
       // Error handled by hook
     }
@@ -79,11 +73,11 @@ export default function ExpenseDetailPage() {
 
   const handleReject = () => {
     Modal.confirm({
-      title: 'Harcamayı Reddet',
-      content: 'Bu harcamayı reddetmek istediğinizden emin misiniz?',
+      title: 'Harcamayi Reddet',
+      content: 'Bu harcamayi reddetmek istediginizden emin misiniz?',
       okText: 'Reddet',
       okType: 'danger',
-      cancelText: 'İptal',
+      cancelText: 'Iptal',
       onOk: async () => {
         try {
           await rejectExpense.mutateAsync({ id, data: { reason: 'Reddedildi' } });
@@ -104,10 +98,10 @@ export default function ExpenseDetailPage() {
     const statusMap: Record<number, { color: string; text: string }> = {
       [ExpenseStatus.Draft]: { color: 'default', text: 'Taslak' },
       [ExpenseStatus.Pending]: { color: 'orange', text: 'Beklemede' },
-      [ExpenseStatus.Approved]: { color: 'green', text: 'Onaylandı' },
+      [ExpenseStatus.Approved]: { color: 'green', text: 'Onaylandi' },
       [ExpenseStatus.Rejected]: { color: 'red', text: 'Reddedildi' },
-      [ExpenseStatus.Paid]: { color: 'blue', text: 'Ödendi' },
-      [ExpenseStatus.Cancelled]: { color: 'default', text: 'İptal Edildi' },
+      [ExpenseStatus.Paid]: { color: 'blue', text: 'Odendi' },
+      [ExpenseStatus.Cancelled]: { color: 'default', text: 'Iptal Edildi' },
     };
     const defaultConfig = { color: 'default', text: '-' };
     if (status === undefined || status === null) return defaultConfig;
@@ -116,182 +110,160 @@ export default function ExpenseDetailPage() {
 
   const getExpenseTypeLabel = (expenseType?: ExpenseType) => {
     const typeMap: Record<ExpenseType, string> = {
-      [ExpenseType.Transportation]: 'Ulaşım',
+      [ExpenseType.Transportation]: 'Ulasim',
       [ExpenseType.Meal]: 'Yemek',
       [ExpenseType.Accommodation]: 'Konaklama',
-      [ExpenseType.Communication]: 'İletişim',
+      [ExpenseType.Communication]: 'Iletisim',
       [ExpenseType.OfficeSupplies]: 'Ofis Malzemeleri',
-      [ExpenseType.Training]: 'Eğitim',
-      [ExpenseType.Medical]: 'Sağlık',
-      [ExpenseType.Entertainment]: 'Eğlence',
-      [ExpenseType.Other]: 'Diğer',
+      [ExpenseType.Training]: 'Egitim',
+      [ExpenseType.Medical]: 'Saglik',
+      [ExpenseType.Entertainment]: 'Eglence',
+      [ExpenseType.Other]: 'Diger',
     };
     return expenseType !== undefined ? typeMap[expenseType] : '-';
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  if (error || !expense) {
-    return (
-      <div className="p-6">
-        <Empty description="Harcama kaydı bulunamadı" />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push('/hr/expenses')}>Listeye Dön</Button>
-        </div>
-      </div>
-    );
-  }
-
-  const statusConfig = getStatusConfig(expense.status);
+  const statusConfig = expense ? getStatusConfig(expense.status) : { color: 'default', text: '-' };
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-6">
-        <Space>
-          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/expenses')}>
-            Geri
-          </Button>
-          <div>
-            <Title level={2} style={{ margin: 0 }}>
-              Harcama Detayı
-            </Title>
-            <Space>
-              <Text type="secondary">
-                {expense.employeeName || `Çalışan #${expense.employeeId}`}
-              </Text>
-              <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
-            </Space>
-          </div>
-        </Space>
-        <Space>
-          {expense.status === ExpenseStatus.Pending && (
-            <>
-              <Button
-                type="primary"
-                icon={<CheckCircleIcon className="w-4 h-4" />}
-                onClick={handleApprove}
-                style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
-              >
-                Onayla
-              </Button>
-              <Button danger icon={<XCircleIcon className="w-4 h-4" />} onClick={handleReject}>
-                Reddet
-              </Button>
-            </>
+    <DetailPageLayout
+      title="Harcama Detayi"
+      subtitle={expense ? `${expense.employeeName || `Calisan #${expense.employeeId}`}` : undefined}
+      backPath="/hr/expenses"
+      icon={<WalletIcon className="w-6 h-6 text-white" />}
+      iconBgColor="bg-emerald-600"
+      statusBadge={expense ? <Tag color={statusConfig.color}>{statusConfig.text}</Tag> : undefined}
+      isLoading={isLoading}
+      isError={isError || !expense}
+      errorMessage="Harcama Kaydi Bulunamadi"
+      errorDescription="Istenen harcama kaydi bulunamadi veya bir hata olustu."
+      actions={
+        expense && (
+          <>
+            {expense.status === ExpenseStatus.Pending && (
+              <>
+                <Button
+                  type="primary"
+                  icon={<CheckCircleIcon className="w-4 h-4" />}
+                  onClick={handleApprove}
+                  style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+                >
+                  Onayla
+                </Button>
+                <Button danger icon={<XCircleIcon className="w-4 h-4" />} onClick={handleReject}>
+                  Reddet
+                </Button>
+              </>
+            )}
+            <Button
+              icon={<PencilIcon className="w-4 h-4" />}
+              onClick={() => router.push(`/hr/expenses/${id}/edit`)}
+              disabled={expense.status !== ExpenseStatus.Pending}
+            >
+              Duzenle
+            </Button>
+            <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
+              Sil
+            </Button>
+          </>
+        )
+      }
+    >
+      {expense && (
+        <Row gutter={[24, 24]}>
+          {/* Stats */}
+          <Col xs={24}>
+            <Row gutter={[16, 16]}>
+              <Col xs={12} sm={6}>
+                <Card size="small">
+                  <Statistic
+                    title="Tutar"
+                    value={expense.amount || 0}
+                    formatter={(val) => formatCurrency(Number(val))}
+                    valueStyle={{ color: '#7c3aed', fontSize: 20 }}
+                  />
+                </Card>
+              </Col>
+              <Col xs={12} sm={6}>
+                <Card size="small">
+                  <Statistic
+                    title="Kategori"
+                    value={getExpenseTypeLabel(expense.expenseType)}
+                    valueStyle={{ color: '#1890ff', fontSize: 18 }}
+                  />
+                </Card>
+              </Col>
+              <Col xs={12} sm={6}>
+                <Card size="small">
+                  <Statistic
+                    title="Tarih"
+                    value={dayjs(expense.expenseDate).format('DD.MM.YYYY')}
+                    prefix={<CalendarIcon className="w-4 h-4" />}
+                    valueStyle={{ color: '#52c41a', fontSize: 16 }}
+                  />
+                </Card>
+              </Col>
+            </Row>
+          </Col>
+
+          {/* Details */}
+          <Col xs={24} lg={16}>
+            <Card title="Harcama Bilgileri">
+              <Descriptions column={1} bordered size="small">
+                <Descriptions.Item label="Calisan">
+                  <span className="inline-flex items-center gap-2">
+                    <UserIcon className="w-4 h-4" />
+                    {expense.employeeName || `Calisan #${expense.employeeId}`}
+                  </span>
+                </Descriptions.Item>
+                <Descriptions.Item label="Aciklama">
+                  {expense.description}
+                </Descriptions.Item>
+                <Descriptions.Item label="Kategori">
+                  {getExpenseTypeLabel(expense.expenseType)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Harcama Tarihi">
+                  {dayjs(expense.expenseDate).format('DD MMMM YYYY')}
+                </Descriptions.Item>
+                <Descriptions.Item label="Tutar">
+                  <strong style={{ color: '#7c3aed' }}>{formatCurrency(expense.amount)}</strong>
+                </Descriptions.Item>
+                <Descriptions.Item label="Durum">
+                  <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
+                </Descriptions.Item>
+                {expense.approvedById && (
+                  <Descriptions.Item label="Onaylayan">
+                    {expense.approvedByName || `Kullanici #${expense.approvedById}`}
+                  </Descriptions.Item>
+                )}
+                {expense.approvedDate && (
+                  <Descriptions.Item label="Onay Tarihi">
+                    {dayjs(expense.approvedDate).format('DD.MM.YYYY HH:mm')}
+                  </Descriptions.Item>
+                )}
+              </Descriptions>
+            </Card>
+          </Col>
+
+          {/* Notes */}
+          {expense.notes && (
+            <Col xs={24} lg={16}>
+              <Card title="Notlar">
+                <p>{expense.notes}</p>
+              </Card>
+            </Col>
           )}
-          <Button
-            icon={<PencilIcon className="w-4 h-4" />}
-            onClick={() => router.push(`/hr/expenses/${id}/edit`)}
-            disabled={expense.status !== ExpenseStatus.Pending}
-          >
-            Düzenle
-          </Button>
-          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
-            Sil
-          </Button>
-        </Space>
-      </div>
 
-      <Row gutter={[24, 24]}>
-        {/* Stats */}
-        <Col xs={24}>
-          <Row gutter={[16, 16]}>
-            <Col xs={12} sm={6}>
-              <Card size="small">
-                <Statistic
-                  title="Tutar"
-                  value={expense.amount || 0}
-                  formatter={(val) => formatCurrency(Number(val))}
-                  valueStyle={{ color: '#7c3aed', fontSize: 20 }}
-                />
+          {/* Rejection Reason */}
+          {expense.rejectionReason && (
+            <Col xs={24} lg={16}>
+              <Card title="Ret Nedeni">
+                <p className="text-red-600">{expense.rejectionReason}</p>
               </Card>
             </Col>
-            <Col xs={12} sm={6}>
-              <Card size="small">
-                <Statistic
-                  title="Kategori"
-                  value={getExpenseTypeLabel(expense.expenseType)}
-                  valueStyle={{ color: '#1890ff', fontSize: 18 }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Card size="small">
-                <Statistic
-                  title="Tarih"
-                  value={dayjs(expense.expenseDate).format('DD.MM.YYYY')}
-                  prefix={<CalendarIcon className="w-4 h-4" />}
-                  valueStyle={{ color: '#52c41a', fontSize: 16 }}
-                />
-              </Card>
-            </Col>
-          </Row>
-        </Col>
-
-        {/* Details */}
-        <Col xs={24} lg={16}>
-          <Card title="Harcama Bilgileri">
-            <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label="Çalışan">
-                <Space>
-                  <UserIcon className="w-4 h-4" />
-                  {expense.employeeName || `Çalışan #${expense.employeeId}`}
-                </Space>
-              </Descriptions.Item>
-              <Descriptions.Item label="Açıklama">
-                {expense.description}
-              </Descriptions.Item>
-              <Descriptions.Item label="Kategori">
-                {getExpenseTypeLabel(expense.expenseType)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Harcama Tarihi">
-                {dayjs(expense.expenseDate).format('DD MMMM YYYY')}
-              </Descriptions.Item>
-              <Descriptions.Item label="Tutar">
-                <strong style={{ color: '#7c3aed' }}>{formatCurrency(expense.amount)}</strong>
-              </Descriptions.Item>
-              <Descriptions.Item label="Durum">
-                <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
-              </Descriptions.Item>
-              {expense.approvedById && (
-                <Descriptions.Item label="Onaylayan">
-                  {expense.approvedByName || `Kullanıcı #${expense.approvedById}`}
-                </Descriptions.Item>
-              )}
-              {expense.approvedDate && (
-                <Descriptions.Item label="Onay Tarihi">
-                  {dayjs(expense.approvedDate).format('DD.MM.YYYY HH:mm')}
-                </Descriptions.Item>
-              )}
-            </Descriptions>
-          </Card>
-        </Col>
-
-        {/* Notes */}
-        {expense.notes && (
-          <Col xs={24} lg={16}>
-            <Card title="Notlar">
-              <Paragraph>{expense.notes}</Paragraph>
-            </Card>
-          </Col>
-        )}
-
-        {/* Rejection Reason */}
-        {expense.rejectionReason && (
-          <Col xs={24} lg={16}>
-            <Card title="Ret Nedeni">
-              <Paragraph type="danger">{expense.rejectionReason}</Paragraph>
-            </Card>
-          </Col>
-        )}
-      </Row>
-    </div>
+          )}
+        </Row>
+      )}
+    </DetailPageLayout>
   );
 }

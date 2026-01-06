@@ -3,26 +3,21 @@
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  Typography,
-  Button,
-  Space,
   Card,
   Descriptions,
   Tag,
   Row,
   Col,
   Statistic,
-  Empty,
   Modal,
-  Spin,
 } from 'antd';
+import { DetailPageLayout, Badge } from '@/components/patterns';
+import { Button } from '@/components/primitives';
 import {
-  ArrowLeftIcon,
   CheckCircleIcon,
   ClockIcon,
   PencilIcon,
   StopCircleIcon,
-  StopIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -31,8 +26,6 @@ import {
   useActivateShift,
   useDeactivateShift,
 } from '@/lib/api/hooks/useHR';
-
-const { Title, Text } = Typography;
 
 export default function ShiftDetailPage() {
   const params = useParams();
@@ -48,11 +41,11 @@ export default function ShiftDetailPage() {
   const handleDelete = () => {
     if (!shift) return;
     Modal.confirm({
-      title: 'Vardiyayı Sil',
-      content: `"${shift.name}" vardiyasını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
+      title: 'Vardiyayi Sil',
+      content: `"${shift.name}" vardiyasini silmek istediginizden emin misiniz? Bu islem geri alinamaz.`,
       okText: 'Sil',
       okType: 'danger',
-      cancelText: 'İptal',
+      cancelText: 'Iptal',
       onOk: async () => {
         try {
           await deleteShift.mutateAsync(id);
@@ -107,127 +100,123 @@ export default function ShiftDetailPage() {
     return `${hours} saat ${minutes > 0 ? `${minutes} dk` : ''}`;
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  if (error || !shift) {
-    return (
-      <div className="p-6">
-        <Empty description="Vardiya bulunamadı" />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push('/hr/shifts')}>Listeye Dön</Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-6">
-        <Space>
-          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/shifts')}>
-            Geri
-          </Button>
-          <div>
-            <Title level={2} style={{ margin: 0 }}>
-              {shift.name}
-            </Title>
-            <Space>
-              <Text type="secondary">{shift.code}</Text>
-              <Tag color={shift.isActive ? 'green' : 'default'}>
-                {shift.isActive ? 'Aktif' : 'Pasif'}
-              </Tag>
-            </Space>
-          </div>
-        </Space>
-        <Space>
-          <Button
-            icon={shift.isActive ? <StopCircleIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />}
-            onClick={handleToggleActive}
-          >
-            {shift.isActive ? 'Pasifleştir' : 'Aktifleştir'}
-          </Button>
-          <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/shifts/${id}/edit`)}>
-            Düzenle
-          </Button>
-          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
-            Sil
-          </Button>
-        </Space>
-      </div>
+    <DetailPageLayout
+      title={shift?.name || 'Vardiya Detayi'}
+      subtitle={shift?.code}
+      backPath="/hr/shifts"
+      icon={<ClockIcon className="w-6 h-6 text-white" />}
+      iconBgColor="bg-blue-600"
+      statusBadge={
+        shift && (
+          <Badge variant={shift.isActive ? 'success' : 'neutral'} dot>
+            {shift.isActive ? 'Aktif' : 'Pasif'}
+          </Badge>
+        )
+      }
+      actions={
+        shift && (
+          <>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={shift.isActive ? <StopCircleIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />}
+              onClick={handleToggleActive}
+            >
+              {shift.isActive ? 'Pasiflestir' : 'Aktiflestir'}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<PencilIcon className="w-4 h-4" />}
+              onClick={() => router.push(`/hr/shifts/${id}/edit`)}
+            >
+              Duzenle
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              icon={<TrashIcon className="w-4 h-4" />}
+              onClick={handleDelete}
+            >
+              Sil
+            </Button>
+          </>
+        )
+      }
+      isLoading={isLoading}
+      isError={!!error || (!isLoading && !shift)}
+      errorMessage="Vardiya Bulunamadi"
+      errorDescription="Istenen vardiya bulunamadi veya bir hata olustu."
+    >
+      {shift && (
+        <Row gutter={[24, 24]}>
+          {/* Stats */}
+          <Col xs={24}>
+            <Row gutter={[16, 16]}>
+              <Col xs={12} sm={6}>
+                <Card size="small">
+                  <Statistic
+                    title="Baslangic"
+                    value={formatTime(shift.startTime)}
+                    prefix={<ClockIcon className="w-4 h-4" />}
+                    valueStyle={{ color: '#52c41a' }}
+                  />
+                </Card>
+              </Col>
+              <Col xs={12} sm={6}>
+                <Card size="small">
+                  <Statistic
+                    title="Bitis"
+                    value={formatTime(shift.endTime)}
+                    prefix={<ClockIcon className="w-4 h-4" />}
+                    valueStyle={{ color: '#1890ff' }}
+                  />
+                </Card>
+              </Col>
+              <Col xs={12} sm={6}>
+                <Card size="small">
+                  <Statistic
+                    title="Toplam Sure"
+                    value={calculateDuration()}
+                    valueStyle={{ color: '#7c3aed', fontSize: 20 }}
+                  />
+                </Card>
+              </Col>
+              <Col xs={12} sm={6}>
+                <Card size="small">
+                  <Statistic
+                    title="Calisma Suresi"
+                    value={calculateWorkingHours()}
+                    valueStyle={{ color: '#faad14', fontSize: 20 }}
+                  />
+                </Card>
+              </Col>
+            </Row>
+          </Col>
 
-      <Row gutter={[24, 24]}>
-        {/* Stats */}
-        <Col xs={24}>
-          <Row gutter={[16, 16]}>
-            <Col xs={12} sm={6}>
-              <Card size="small">
-                <Statistic
-                  title="Başlangıç"
-                  value={formatTime(shift.startTime)}
-                  prefix={<ClockIcon className="w-4 h-4" />}
-                  valueStyle={{ color: '#52c41a' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Card size="small">
-                <Statistic
-                  title="Bitiş"
-                  value={formatTime(shift.endTime)}
-                  prefix={<ClockIcon className="w-4 h-4" />}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Card size="small">
-                <Statistic
-                  title="Toplam Süre"
-                  value={calculateDuration()}
-                  valueStyle={{ color: '#7c3aed', fontSize: 20 }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Card size="small">
-                <Statistic
-                  title="Çalışma Süresi"
-                  value={calculateWorkingHours()}
-                  valueStyle={{ color: '#faad14', fontSize: 20 }}
-                />
-              </Card>
-            </Col>
-          </Row>
-        </Col>
-
-        {/* Details */}
-        <Col xs={24} lg={16}>
-          <Card title="Vardiya Bilgileri">
-            <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label="Vardiya Adı">{shift.name}</Descriptions.Item>
-              <Descriptions.Item label="Vardiya Kodu">{shift.code}</Descriptions.Item>
-              <Descriptions.Item label="Açıklama">{shift.description || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Başlangıç Saati">{formatTime(shift.startTime)}</Descriptions.Item>
-              <Descriptions.Item label="Bitiş Saati">{formatTime(shift.endTime)}</Descriptions.Item>
-              <Descriptions.Item label="Mola Süresi">
-                {shift.breakDurationMinutes ? `${shift.breakDurationMinutes} dakika` : '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Durum">
-                <Tag color={shift.isActive ? 'green' : 'default'}>
-                  {shift.isActive ? 'Aktif' : 'Pasif'}
-                </Tag>
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
-        </Col>
-      </Row>
-    </div>
+          {/* Details */}
+          <Col xs={24} lg={16}>
+            <Card title="Vardiya Bilgileri">
+              <Descriptions column={1} bordered size="small">
+                <Descriptions.Item label="Vardiya Adi">{shift.name}</Descriptions.Item>
+                <Descriptions.Item label="Vardiya Kodu">{shift.code}</Descriptions.Item>
+                <Descriptions.Item label="Aciklama">{shift.description || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Baslangic Saati">{formatTime(shift.startTime)}</Descriptions.Item>
+                <Descriptions.Item label="Bitis Saati">{formatTime(shift.endTime)}</Descriptions.Item>
+                <Descriptions.Item label="Mola Suresi">
+                  {shift.breakDurationMinutes ? `${shift.breakDurationMinutes} dakika` : '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Durum">
+                  <Tag color={shift.isActive ? 'green' : 'default'}>
+                    {shift.isActive ? 'Aktif' : 'Pasif'}
+                  </Tag>
+                </Descriptions.Item>
+              </Descriptions>
+            </Card>
+          </Col>
+        </Row>
+      )}
+    </DetailPageLayout>
   );
 }

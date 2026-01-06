@@ -3,21 +3,16 @@
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  Typography,
   Button,
-  Space,
   Card,
   Descriptions,
   Tag,
-  Spin,
   Row,
   Col,
   Statistic,
-  Empty,
   Modal,
 } from 'antd';
 import {
-  ArrowLeftIcon,
   CalendarIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -26,9 +21,8 @@ import {
   UserIcon,
 } from '@heroicons/react/24/outline';
 import { useWorkSchedule, useDeleteWorkSchedule } from '@/lib/api/hooks/useHR';
+import { DetailPageLayout } from '@/components/patterns';
 import dayjs from 'dayjs';
-
-const { Title, Text } = Typography;
 
 export default function WorkScheduleDetailPage() {
   const params = useParams();
@@ -36,17 +30,17 @@ export default function WorkScheduleDetailPage() {
   const id = Number(params.id);
 
   // API Hooks
-  const { data: schedule, isLoading, error } = useWorkSchedule(id);
+  const { data: schedule, isLoading, isError } = useWorkSchedule(id);
   const deleteSchedule = useDeleteWorkSchedule();
 
   const handleDelete = () => {
     if (!schedule) return;
     Modal.confirm({
-      title: 'Çalışma Programını Sil',
-      content: `Bu çalışma programı kaydını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
+      title: 'Calisma Programini Sil',
+      content: `Bu calisma programi kaydini silmek istediginizden emin misiniz? Bu islem geri alinamaz.`,
       okText: 'Sil',
       okType: 'danger',
-      cancelText: 'İptal',
+      cancelText: 'Iptal',
       onOk: async () => {
         try {
           await deleteSchedule.mutateAsync(id);
@@ -58,155 +52,137 @@ export default function WorkScheduleDetailPage() {
     });
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  if (error || !schedule) {
-    return (
-      <div className="p-6">
-        <Empty description="Çalışma programı bulunamadı" />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push('/hr/work-schedules')}>Listeye Dön</Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-6">
-        <Space>
-          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/work-schedules')}>
-            Geri
-          </Button>
-          <div>
-            <Title level={2} style={{ margin: 0 }}>
-              Çalışma Programı Detayı
-            </Title>
-            <Space>
-              <Text type="secondary">{schedule.employeeName}</Text>
-              <Text type="secondary">-</Text>
-              <Text type="secondary">{dayjs(schedule.date).format('DD.MM.YYYY')}</Text>
-              {schedule.isWorkDay ? (
-                <Tag color="green">Çalışma Günü</Tag>
-              ) : (
-                <Tag color="default">İzin Günü</Tag>
-              )}
-              {schedule.isHoliday && <Tag color="red">Tatil</Tag>}
-            </Space>
+    <DetailPageLayout
+      title="Calisma Programi Detayi"
+      subtitle={schedule ? `${schedule.employeeName} - ${dayjs(schedule.date).format('DD.MM.YYYY')}` : undefined}
+      backPath="/hr/work-schedules"
+      icon={<CalendarIcon className="w-6 h-6 text-white" />}
+      iconBgColor="bg-indigo-600"
+      statusBadge={
+        schedule && (
+          <div className="flex items-center gap-2">
+            {schedule.isWorkDay ? (
+              <Tag color="green">Calisma Gunu</Tag>
+            ) : (
+              <Tag color="default">Izin Gunu</Tag>
+            )}
+            {schedule.isHoliday && <Tag color="red">Tatil</Tag>}
           </div>
-        </Space>
-        <Space>
+        )
+      }
+      isLoading={isLoading}
+      isError={isError || !schedule}
+      errorMessage="Calisma Programi Bulunamadi"
+      errorDescription="Istenen calisma programi kaydi bulunamadi veya bir hata olustu."
+      actions={
+        <>
           <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/work-schedules/${id}/edit`)}>
-            Düzenle
+            Duzenle
           </Button>
           <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
             Sil
           </Button>
-        </Space>
-      </div>
+        </>
+      }
+    >
+      {schedule && (
+        <Row gutter={[24, 24]}>
+          {/* Stats */}
+          <Col xs={24}>
+            <Row gutter={[16, 16]}>
+              <Col xs={12} sm={6}>
+                <Card size="small">
+                  <Statistic
+                    title="Calisan"
+                    value={schedule.employeeName}
+                    prefix={<UserIcon className="w-4 h-4" />}
+                    valueStyle={{ color: '#1890ff', fontSize: 16 }}
+                  />
+                </Card>
+              </Col>
+              <Col xs={12} sm={6}>
+                <Card size="small">
+                  <Statistic
+                    title="Tarih"
+                    value={dayjs(schedule.date).format('DD.MM.YYYY')}
+                    prefix={<CalendarIcon className="w-4 h-4" />}
+                    valueStyle={{ color: '#7c3aed', fontSize: 16 }}
+                  />
+                </Card>
+              </Col>
+              <Col xs={12} sm={6}>
+                <Card size="small">
+                  <Statistic
+                    title="Vardiya"
+                    value={schedule.shiftName || '-'}
+                    prefix={<ClockIcon className="w-4 h-4" />}
+                    valueStyle={{ color: '#8b5cf6', fontSize: 16 }}
+                  />
+                </Card>
+              </Col>
+              <Col xs={12} sm={6}>
+                <Card size="small">
+                  <Statistic
+                    title="Durum"
+                    value={schedule.isWorkDay ? 'Calisma Gunu' : 'Izin'}
+                    prefix={<CheckCircleIcon className="w-4 h-4" />}
+                    valueStyle={{
+                      color: schedule.isWorkDay ? '#52c41a' : '#8c8c8c',
+                      fontSize: 16,
+                    }}
+                  />
+                </Card>
+              </Col>
+            </Row>
+          </Col>
 
-      <Row gutter={[24, 24]}>
-        {/* Stats */}
-        <Col xs={24}>
-          <Row gutter={[16, 16]}>
-            <Col xs={12} sm={6}>
-              <Card size="small">
-                <Statistic
-                  title="Çalışan"
-                  value={schedule.employeeName}
-                  prefix={<UserIcon className="w-4 h-4" />}
-                  valueStyle={{ color: '#1890ff', fontSize: 16 }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Card size="small">
-                <Statistic
-                  title="Tarih"
-                  value={dayjs(schedule.date).format('DD.MM.YYYY')}
-                  prefix={<CalendarIcon className="w-4 h-4" />}
-                  valueStyle={{ color: '#7c3aed', fontSize: 16 }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Card size="small">
-                <Statistic
-                  title="Vardiya"
-                  value={schedule.shiftName || '-'}
-                  prefix={<ClockIcon className="w-4 h-4" />}
-                  valueStyle={{ color: '#8b5cf6', fontSize: 16 }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Card size="small">
-                <Statistic
-                  title="Durum"
-                  value={schedule.isWorkDay ? 'Çalışma Günü' : 'İzin'}
-                  prefix={<CheckCircleIcon className="w-4 h-4" />}
-                  valueStyle={{
-                    color: schedule.isWorkDay ? '#52c41a' : '#8c8c8c',
-                    fontSize: 16,
-                  }}
-                />
-              </Card>
-            </Col>
-          </Row>
-        </Col>
-
-        {/* Details */}
-        <Col xs={24} lg={16}>
-          <Card title="Program Bilgileri">
-            <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label="Çalışan">{schedule.employeeName}</Descriptions.Item>
-              <Descriptions.Item label="Tarih">{dayjs(schedule.date).format('DD.MM.YYYY dddd')}</Descriptions.Item>
-              <Descriptions.Item label="Vardiya">{schedule.shiftName || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Çalışma Günü">
-                <Tag color={schedule.isWorkDay ? 'green' : 'default'}>
-                  {schedule.isWorkDay ? 'Evet' : 'Hayır'}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Tatil">
-                {schedule.isHoliday ? (
-                  <Tag color="red">{schedule.holidayName || 'Tatil'}</Tag>
-                ) : (
-                  <Tag color="default">Hayır</Tag>
+          {/* Details */}
+          <Col xs={24} lg={16}>
+            <Card title="Program Bilgileri">
+              <Descriptions column={1} bordered size="small">
+                <Descriptions.Item label="Calisan">{schedule.employeeName}</Descriptions.Item>
+                <Descriptions.Item label="Tarih">{dayjs(schedule.date).format('DD.MM.YYYY dddd')}</Descriptions.Item>
+                <Descriptions.Item label="Vardiya">{schedule.shiftName || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Calisma Gunu">
+                  <Tag color={schedule.isWorkDay ? 'green' : 'default'}>
+                    {schedule.isWorkDay ? 'Evet' : 'Hayir'}
+                  </Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="Tatil">
+                  {schedule.isHoliday ? (
+                    <Tag color="red">{schedule.holidayName || 'Tatil'}</Tag>
+                  ) : (
+                    <Tag color="default">Hayir</Tag>
+                  )}
+                </Descriptions.Item>
+                {schedule.customStartTime && (
+                  <Descriptions.Item label="Ozel Baslangic Saati">
+                    {schedule.customStartTime.substring(0, 5)}
+                  </Descriptions.Item>
                 )}
-              </Descriptions.Item>
-              {schedule.customStartTime && (
-                <Descriptions.Item label="Özel Başlangıç Saati">
-                  {schedule.customStartTime.substring(0, 5)}
-                </Descriptions.Item>
-              )}
-              {schedule.customEndTime && (
-                <Descriptions.Item label="Özel Bitiş Saati">
-                  {schedule.customEndTime.substring(0, 5)}
-                </Descriptions.Item>
-              )}
-              <Descriptions.Item label="Notlar">{schedule.notes || '-'}</Descriptions.Item>
-            </Descriptions>
-          </Card>
-        </Col>
+                {schedule.customEndTime && (
+                  <Descriptions.Item label="Ozel Bitis Saati">
+                    {schedule.customEndTime.substring(0, 5)}
+                  </Descriptions.Item>
+                )}
+                <Descriptions.Item label="Notlar">{schedule.notes || '-'}</Descriptions.Item>
+              </Descriptions>
+            </Card>
+          </Col>
 
-        {/* System Info */}
-        <Col xs={24} lg={8}>
-          <Card title="Sistem Bilgileri" size="small">
-            <Descriptions column={1} size="small">
-              <Descriptions.Item label="Oluşturulma">
-                {dayjs(schedule.createdAt).format('DD.MM.YYYY HH:mm')}
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
-        </Col>
-      </Row>
-    </div>
+          {/* System Info */}
+          <Col xs={24} lg={8}>
+            <Card title="Sistem Bilgileri" size="small">
+              <Descriptions column={1} size="small">
+                <Descriptions.Item label="Olusturulma">
+                  {dayjs(schedule.createdAt).format('DD.MM.YYYY HH:mm')}
+                </Descriptions.Item>
+              </Descriptions>
+            </Card>
+          </Col>
+        </Row>
+      )}
+    </DetailPageLayout>
   );
 }

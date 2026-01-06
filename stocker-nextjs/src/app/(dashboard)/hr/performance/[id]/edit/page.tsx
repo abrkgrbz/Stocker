@@ -2,13 +2,9 @@
 
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Form, Select, DatePicker, Input, Rate, message, Spin } from 'antd';
-import { PageContainer } from '@/components/patterns';
-import {
-  ArrowLeftIcon,
-  TrophyIcon,
-} from '@heroicons/react/24/outline';
+import { Form, Select, DatePicker, Input, Rate, message } from 'antd';
+import { TrophyIcon } from '@heroicons/react/24/outline';
+import { FormPageLayout } from '@/components/patterns';
 import { usePerformanceReview, useUpdatePerformanceReview, useEmployees } from '@/lib/api/hooks/useHR';
 import type { UpdatePerformanceReviewDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
@@ -53,75 +49,31 @@ export default function EditPerformancePage() {
       };
 
       await updateReview.mutateAsync({ id, data });
-      message.success('Değerlendirme başarıyla güncellendi');
+      message.success('Degerlendirme basariyla guncellendi');
       router.push(`/hr/performance/${id}`);
     } catch (error) {
-      message.error('Güncelleme sırasında bir hata oluştu');
+      message.error('Guncelleme sirasinda bir hata olustu');
     }
   };
 
-  if (isLoading) {
-    return (
-      <PageContainer maxWidth="3xl">
-        <div className="flex items-center justify-center py-12">
-          <Spin />
-        </div>
-      </PageContainer>
-    );
-  }
-
-  if (error || !review) {
-    return (
-      <PageContainer maxWidth="3xl">
-        <div className="text-center py-12">
-          <p className="text-slate-500">Değerlendirme bulunamadı</p>
-          <Link href="/hr/performance" className="text-sm text-slate-900 hover:underline mt-2 inline-block">
-            ← Listeye Dön
-          </Link>
-        </div>
-      </PageContainer>
-    );
-  }
-
-  if (review.status === 'Completed') {
-    return (
-      <PageContainer maxWidth="3xl">
-        <div className="text-center py-12">
-          <p className="text-slate-500">Bu değerlendirme düzenlenemez. Tamamlanmış değerlendirmeler düzenlenemez.</p>
-          <Link href={`/hr/performance/${id}`} className="text-sm text-slate-900 hover:underline mt-2 inline-block">
-            ← Detaya Dön
-          </Link>
-        </div>
-      </PageContainer>
-    );
-  }
+  // Check if review is completed (cannot edit)
+  const isCompleted = review?.status === 'Completed';
 
   return (
-    <PageContainer maxWidth="3xl">
-      {/* Header */}
-      <div className="mb-8">
-        <Link
-          href={`/hr/performance/${id}`}
-          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-4"
-        >
-          <ArrowLeftIcon className="w-4 h-4" />
-          Detaya Dön
-        </Link>
-
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-            <TrophyIcon className="w-5 h-5 text-slate-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Değerlendirme Düzenle</h1>
-            <p className="text-sm text-slate-500 mt-1">
-              {review.employeeName || `Çalışan #${review.employeeId}`} - {review.reviewPeriod}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Form Kartı */}
+    <FormPageLayout
+      title="Degerlendirme Duzenle"
+      subtitle={review ? `${review.employeeName || `Calisan #${review.employeeId}`} - ${review.reviewPeriod}` : 'Yukleniyor...'}
+      icon={<TrophyIcon className="w-5 h-5" />}
+      cancelPath={`/hr/performance/${id}`}
+      loading={updateReview.isPending}
+      onSave={() => form.submit()}
+      saveButtonText="Guncelle"
+      isDataLoading={isLoading}
+      dataError={!!error || !review || isCompleted}
+      errorMessage={isCompleted ? 'Duzenlenemez' : 'Kayit Bulunamadi'}
+      errorDescription={isCompleted ? 'Bu degerlendirme duzenlenemez. Tamamlanmis degerlendirmeler duzenlenemez.' : 'Istenen kayit bulunamadi veya bir hata olustu.'}
+      maxWidth="max-w-4xl"
+    >
       <div className="bg-white border border-slate-200 rounded-xl">
         <Form
           form={form}
@@ -129,19 +81,19 @@ export default function EditPerformancePage() {
           onFinish={handleSubmit}
           className="p-6"
         >
-          {/* Değerlendirme Bilgileri */}
+          {/* Degerlendirme Bilgileri */}
           <div className="mb-8">
             <h2 className="text-sm font-medium text-slate-900 mb-4 pb-2 border-b border-slate-100">
-              Değerlendirme Bilgileri
+              Degerlendirme Bilgileri
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Form.Item
                 name="employeeId"
-                label={<span className="text-sm text-slate-700">Çalışan</span>}
-                rules={[{ required: true, message: 'Çalışan seçimi zorunludur' }]}
+                label={<span className="text-sm text-slate-700">Calisan</span>}
+                rules={[{ required: true, message: 'Calisan secimi zorunludur' }]}
               >
                 <Select
-                  placeholder="Çalışan seçin"
+                  placeholder="Calisan secin"
                   showSearch
                   optionFilterProp="children"
                   className="w-full"
@@ -154,11 +106,11 @@ export default function EditPerformancePage() {
 
               <Form.Item
                 name="reviewerId"
-                label={<span className="text-sm text-slate-700">Değerlendiren</span>}
-                rules={[{ required: true, message: 'Değerlendiren seçimi zorunludur' }]}
+                label={<span className="text-sm text-slate-700">Degerlendiren</span>}
+                rules={[{ required: true, message: 'Degerlendiren secimi zorunludur' }]}
               >
                 <Select
-                  placeholder="Değerlendiren seçin"
+                  placeholder="Degerlendiren secin"
                   showSearch
                   optionFilterProp="children"
                   className="w-full"
@@ -171,22 +123,22 @@ export default function EditPerformancePage() {
 
               <Form.Item
                 name="reviewDate"
-                label={<span className="text-sm text-slate-700">Değerlendirme Tarihi</span>}
+                label={<span className="text-sm text-slate-700">Degerlendirme Tarihi</span>}
                 rules={[{ required: true, message: 'Tarih zorunludur' }]}
               >
                 <DatePicker
                   format="DD.MM.YYYY"
-                  placeholder="Tarih seçin"
+                  placeholder="Tarih secin"
                   className="w-full rounded-md"
                 />
               </Form.Item>
 
               <Form.Item
                 name="reviewPeriod"
-                label={<span className="text-sm text-slate-700">Değerlendirme Dönemi</span>}
-                rules={[{ required: true, message: 'Dönem zorunludur' }]}
+                label={<span className="text-sm text-slate-700">Degerlendirme Donemi</span>}
+                rules={[{ required: true, message: 'Donem zorunludur' }]}
               >
-                <Input placeholder="Örn: 2024 Q1, Yıllık 2024" className="rounded-md" />
+                <Input placeholder="Orn: 2024 Q1, Yillik 2024" className="rounded-md" />
               </Form.Item>
 
               <Form.Item
@@ -200,78 +152,59 @@ export default function EditPerformancePage() {
             </div>
           </div>
 
-          {/* Değerlendirme Detayları */}
+          {/* Degerlendirme Detaylari */}
           <div className="mb-8">
             <h2 className="text-sm font-medium text-slate-900 mb-4 pb-2 border-b border-slate-100">
-              Değerlendirme Detayları
+              Degerlendirme Detaylari
             </h2>
             <div className="space-y-4">
               <Form.Item
                 name="strengths"
-                label={<span className="text-sm text-slate-700">Güçlü Yönler</span>}
+                label={<span className="text-sm text-slate-700">Guclu Yonler</span>}
               >
                 <TextArea
                   rows={3}
-                  placeholder="Çalışanın güçlü yönlerini yazın"
+                  placeholder="Calisanin guclu yonlerini yazin"
                   className="rounded-md"
                 />
               </Form.Item>
 
               <Form.Item
                 name="areasForImprovement"
-                label={<span className="text-sm text-slate-700">Gelişim Alanları</span>}
+                label={<span className="text-sm text-slate-700">Gelisim Alanlari</span>}
               >
                 <TextArea
                   rows={3}
-                  placeholder="Geliştirilmesi gereken alanları yazın"
+                  placeholder="Gelistirilmesi gereken alanlari yazin"
                   className="rounded-md"
                 />
               </Form.Item>
 
               <Form.Item
                 name="developmentPlan"
-                label={<span className="text-sm text-slate-700">Gelişim Planı</span>}
+                label={<span className="text-sm text-slate-700">Gelisim Plani</span>}
               >
                 <TextArea
                   rows={3}
-                  placeholder="Gelişim planını yazın"
+                  placeholder="Gelisim planini yazin"
                   className="rounded-md"
                 />
               </Form.Item>
 
               <Form.Item
                 name="managerComments"
-                label={<span className="text-sm text-slate-700">Yönetici Yorumları</span>}
+                label={<span className="text-sm text-slate-700">Yonetici Yorumlari</span>}
               >
                 <TextArea
                   rows={3}
-                  placeholder="Yönetici yorumları"
+                  placeholder="Yonetici yorumlari"
                   className="rounded-md"
                 />
               </Form.Item>
             </div>
           </div>
-
-          {/* Form Aksiyonları */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-            <Link href={`/hr/performance/${id}`}>
-              <button
-                type="button"
-                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
-              >
-                İptal
-              </button>
-            </Link>
-            <button
-              type="submit"
-              disabled={updateReview.isPending}
-              className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {updateReview.isPending ? 'Kaydediliyor...' : 'Güncelle'}
-            </button>
-          </div>
         </Form>
       </div>
-    </PageContainer>
+    </FormPageLayout>
   );
 }

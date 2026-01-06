@@ -3,20 +3,17 @@
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  Typography,
-  Button,
-  Space,
   Card,
   Descriptions,
   Tag,
   Row,
   Col,
   Statistic,
-  Empty,
+  Modal,
 } from 'antd';
-import { Spinner } from '@/components/primitives';
+import { DetailPageLayout, Badge } from '@/components/patterns';
+import { Button } from '@/components/primitives';
 import {
-  ArrowLeftIcon,
   CalendarIcon,
   ClockIcon,
   PencilIcon,
@@ -25,8 +22,6 @@ import {
 import { useAttendanceById } from '@/lib/api/hooks/useHR';
 import { AttendanceStatus } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
-
-const { Title, Text } = Typography;
 
 export default function AttendanceDetailPage() {
   const params = useParams();
@@ -42,159 +37,140 @@ export default function AttendanceDetailPage() {
   };
 
   const getStatusConfig = (status?: AttendanceStatus) => {
-    const statusMap: Record<number, { color: string; text: string }> = {
-      [AttendanceStatus.Present]: { color: 'green', text: 'Mevcut' },
-      [AttendanceStatus.Absent]: { color: 'red', text: 'Yok' },
-      [AttendanceStatus.Late]: { color: 'orange', text: 'Geç' },
-      [AttendanceStatus.HalfDay]: { color: 'blue', text: 'Yarım Gün' },
-      [AttendanceStatus.OnLeave]: { color: 'purple', text: 'İzinli' },
-      [AttendanceStatus.EarlyDeparture]: { color: 'cyan', text: 'Erken Ayrılış' },
-      [AttendanceStatus.Holiday]: { color: 'gold', text: 'Tatil' },
-      [AttendanceStatus.Weekend]: { color: 'default', text: 'Hafta Sonu' },
-      [AttendanceStatus.RemoteWork]: { color: 'geekblue', text: 'Uzaktan Çalışma' },
-      [AttendanceStatus.Overtime]: { color: 'lime', text: 'Fazla Mesai' },
-      [AttendanceStatus.Training]: { color: 'magenta', text: 'Eğitim' },
-      [AttendanceStatus.FieldWork]: { color: 'volcano', text: 'Saha Çalışması' },
+    const statusMap: Record<number, { color: string; text: string; variant: 'success' | 'error' | 'warning' | 'info' | 'neutral' }> = {
+      [AttendanceStatus.Present]: { color: 'green', text: 'Mevcut', variant: 'success' },
+      [AttendanceStatus.Absent]: { color: 'red', text: 'Yok', variant: 'error' },
+      [AttendanceStatus.Late]: { color: 'orange', text: 'Gec', variant: 'warning' },
+      [AttendanceStatus.HalfDay]: { color: 'blue', text: 'Yarim Gun', variant: 'info' },
+      [AttendanceStatus.OnLeave]: { color: 'purple', text: 'Izinli', variant: 'info' },
+      [AttendanceStatus.EarlyDeparture]: { color: 'cyan', text: 'Erken Ayrilis', variant: 'warning' },
+      [AttendanceStatus.Holiday]: { color: 'gold', text: 'Tatil', variant: 'info' },
+      [AttendanceStatus.Weekend]: { color: 'default', text: 'Hafta Sonu', variant: 'neutral' },
+      [AttendanceStatus.RemoteWork]: { color: 'geekblue', text: 'Uzaktan Calisma', variant: 'info' },
+      [AttendanceStatus.Overtime]: { color: 'lime', text: 'Fazla Mesai', variant: 'warning' },
+      [AttendanceStatus.Training]: { color: 'magenta', text: 'Egitim', variant: 'info' },
+      [AttendanceStatus.FieldWork]: { color: 'volcano', text: 'Saha Calismasi', variant: 'info' },
     };
-    const defaultConfig = { color: 'default', text: '-' };
+    const defaultConfig = { color: 'default', text: '-', variant: 'neutral' as const };
     if (status === undefined || status === null) return defaultConfig;
     return statusMap[status] || defaultConfig;
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
-
-  if (error || !attendance) {
-    return (
-      <div className="p-6">
-        <Empty description="Yoklama kaydı bulunamadı" />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push('/hr/attendance')}>Listeye Dön</Button>
-        </div>
-      </div>
-    );
-  }
-
-  const statusConfig = getStatusConfig(attendance.status);
+  const statusConfig = attendance ? getStatusConfig(attendance.status) : getStatusConfig();
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-6">
-        <Space>
-          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/attendance')}>
-            Geri
+    <DetailPageLayout
+      title="Yoklama Detayi"
+      subtitle={attendance ? `${attendance.employeeName || `Calisan #${attendance.employeeId}`} - ${dayjs(attendance.date).format('DD.MM.YYYY')}` : undefined}
+      backPath="/hr/attendance"
+      icon={<ClockIcon className="w-6 h-6 text-white" />}
+      iconBgColor="bg-violet-600"
+      statusBadge={attendance ? <Badge variant={statusConfig.variant} dot>{statusConfig.text}</Badge> : undefined}
+      actions={
+        attendance && (
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={<PencilIcon className="w-4 h-4" />}
+            onClick={() => router.push(`/hr/attendance/${id}/edit`)}
+          >
+            Duzenle
           </Button>
-          <div>
-            <Title level={2} style={{ margin: 0 }}>
-              Yoklama Detayı
-            </Title>
-            <Space>
-              <Text type="secondary">
-                {attendance.employeeName || `Çalışan #${attendance.employeeId}`}
-              </Text>
-              <Text type="secondary">•</Text>
-              <Text type="secondary">{dayjs(attendance.date).format('DD.MM.YYYY')}</Text>
-              <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
-            </Space>
-          </div>
-        </Space>
-        <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/attendance/${id}/edit`)}>
-          Düzenle
-        </Button>
-      </div>
+        )
+      }
+      isLoading={isLoading}
+      isError={!!error || (!isLoading && !attendance)}
+      errorMessage="Yoklama Kaydi Bulunamadi"
+      errorDescription="Istenen yoklama kaydi bulunamadi veya bir hata olustu."
+    >
+      {attendance && (
+        <Row gutter={[24, 24]}>
+          {/* Stats */}
+          <Col xs={24}>
+            <Row gutter={[16, 16]}>
+              <Col xs={12} sm={6}>
+                <Card size="small">
+                  <Statistic
+                    title="Giris Saati"
+                    value={formatTime(attendance.checkInTime)}
+                    prefix={<ClockIcon className="w-5 h-5" />}
+                    valueStyle={{ color: '#52c41a' }}
+                  />
+                </Card>
+              </Col>
+              <Col xs={12} sm={6}>
+                <Card size="small">
+                  <Statistic
+                    title="Cikis Saati"
+                    value={formatTime(attendance.checkOutTime)}
+                    prefix={<ClockIcon className="w-5 h-5" />}
+                    valueStyle={{ color: '#1890ff' }}
+                  />
+                </Card>
+              </Col>
+              <Col xs={12} sm={6}>
+                <Card size="small">
+                  <Statistic
+                    title="Calisma Suresi"
+                    value={attendance.workedHours ? `${attendance.workedHours.toFixed(1)} saat` : '-'}
+                    valueStyle={{ color: '#7c3aed', fontSize: 20 }}
+                  />
+                </Card>
+              </Col>
+              <Col xs={12} sm={6}>
+                <Card size="small">
+                  <Statistic
+                    title="Fazla Mesai"
+                    value={attendance.overtimeHours ? `${attendance.overtimeHours.toFixed(1)} saat` : '-'}
+                    valueStyle={{ color: '#faad14', fontSize: 20 }}
+                  />
+                </Card>
+              </Col>
+            </Row>
+          </Col>
 
-      <Row gutter={[24, 24]}>
-        {/* Stats */}
-        <Col xs={24}>
-          <Row gutter={[16, 16]}>
-            <Col xs={12} sm={6}>
-              <Card size="small">
-                <Statistic
-                  title="Giriş Saati"
-                  value={formatTime(attendance.checkInTime)}
-                  prefix={<ClockIcon className="w-5 h-5" />}
-                  valueStyle={{ color: '#52c41a' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Card size="small">
-                <Statistic
-                  title="Çıkış Saati"
-                  value={formatTime(attendance.checkOutTime)}
-                  prefix={<ClockIcon className="w-5 h-5" />}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Card size="small">
-                <Statistic
-                  title="Çalışma Süresi"
-                  value={attendance.workedHours ? `${attendance.workedHours.toFixed(1)} saat` : '-'}
-                  valueStyle={{ color: '#7c3aed', fontSize: 20 }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Card size="small">
-                <Statistic
-                  title="Fazla Mesai"
-                  value={attendance.overtimeHours ? `${attendance.overtimeHours.toFixed(1)} saat` : '-'}
-                  valueStyle={{ color: '#faad14', fontSize: 20 }}
-                />
-              </Card>
-            </Col>
-          </Row>
-        </Col>
-
-        {/* Details */}
-        <Col xs={24} lg={16}>
-          <Card title="Yoklama Bilgileri">
-            <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label="Çalışan">
-                <Space>
-                  <UserIcon className="w-4 h-4" />
-                  {attendance.employeeName || `Çalışan #${attendance.employeeId}`}
-                </Space>
-              </Descriptions.Item>
-              <Descriptions.Item label="Tarih">
-                <Space>
-                  <CalendarIcon className="w-4 h-4" />
-                  {dayjs(attendance.date).format('DD MMMM YYYY, dddd')}
-                </Space>
-              </Descriptions.Item>
-              <Descriptions.Item label="Vardiya">
-                {attendance.shiftName || '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Giriş Saati">
-                {formatTime(attendance.checkInTime)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Çıkış Saati">
-                {formatTime(attendance.checkOutTime)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Çalışma Süresi">
-                {attendance.workedHours ? `${attendance.workedHours.toFixed(1)} saat` : '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Fazla Mesai">
-                {attendance.overtimeHours ? `${attendance.overtimeHours.toFixed(1)} saat` : '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Durum">
-                <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Notlar">
-                {attendance.notes || '-'}
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
-        </Col>
-      </Row>
-    </div>
+          {/* Details */}
+          <Col xs={24} lg={16}>
+            <Card title="Yoklama Bilgileri">
+              <Descriptions column={1} bordered size="small">
+                <Descriptions.Item label="Calisan">
+                  <div className="flex items-center gap-2">
+                    <UserIcon className="w-4 h-4" />
+                    {attendance.employeeName || `Calisan #${attendance.employeeId}`}
+                  </div>
+                </Descriptions.Item>
+                <Descriptions.Item label="Tarih">
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="w-4 h-4" />
+                    {dayjs(attendance.date).format('DD MMMM YYYY, dddd')}
+                  </div>
+                </Descriptions.Item>
+                <Descriptions.Item label="Vardiya">
+                  {attendance.shiftName || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Giris Saati">
+                  {formatTime(attendance.checkInTime)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Cikis Saati">
+                  {formatTime(attendance.checkOutTime)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Calisma Suresi">
+                  {attendance.workedHours ? `${attendance.workedHours.toFixed(1)} saat` : '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Fazla Mesai">
+                  {attendance.overtimeHours ? `${attendance.overtimeHours.toFixed(1)} saat` : '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Durum">
+                  <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="Notlar">
+                  {attendance.notes || '-'}
+                </Descriptions.Item>
+              </Descriptions>
+            </Card>
+          </Col>
+        </Row>
+      )}
+    </DetailPageLayout>
   );
 }

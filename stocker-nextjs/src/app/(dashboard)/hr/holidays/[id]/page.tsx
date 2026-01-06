@@ -3,21 +3,17 @@
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  Typography,
-  Button,
-  Space,
   Card,
   Descriptions,
   Tag,
-  Spin,
   Row,
   Col,
   Statistic,
-  Empty,
   Modal,
 } from 'antd';
+import { DetailPageLayout, Badge } from '@/components/patterns';
+import { Button } from '@/components/primitives';
 import {
-  ArrowLeftIcon,
   CalendarIcon,
   GiftIcon,
   PencilIcon,
@@ -25,8 +21,6 @@ import {
 } from '@heroicons/react/24/outline';
 import { useHoliday, useDeleteHoliday } from '@/lib/api/hooks/useHR';
 import dayjs from 'dayjs';
-
-const { Title, Text, Paragraph } = Typography;
 
 export default function HolidayDetailPage() {
   const params = useParams();
@@ -40,11 +34,11 @@ export default function HolidayDetailPage() {
   const handleDelete = () => {
     if (!holiday) return;
     Modal.confirm({
-      title: 'Tatil Gününü Sil',
-      content: `"${holiday.name}" tatil gününü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
+      title: 'Tatil Gununu Sil',
+      content: `"${holiday.name}" tatil gununu silmek istediginizden emin misiniz? Bu islem geri alinamaz.`,
       okText: 'Sil',
       okType: 'danger',
-      cancelText: 'İptal',
+      cancelText: 'Iptal',
       onOk: async () => {
         try {
           await deleteHoliday.mutateAsync(id);
@@ -56,120 +50,130 @@ export default function HolidayDetailPage() {
     });
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Spin size="large" />
-      </div>
-    );
-  }
+  const isPassed = holiday ? dayjs(holiday.date).isBefore(dayjs(), 'day') : false;
+  const isToday = holiday ? dayjs(holiday.date).isSame(dayjs(), 'day') : false;
+  const daysUntil = holiday ? dayjs(holiday.date).diff(dayjs(), 'day') : 0;
 
-  if (error || !holiday) {
-    return (
-      <div className="p-6">
-        <Empty description="Tatil günü bulunamadı" />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push('/hr/holidays')}>Listeye Dön</Button>
-        </div>
-      </div>
-    );
-  }
+  const getStatusVariant = (): 'success' | 'neutral' | 'info' => {
+    if (isToday) return 'success';
+    if (isPassed) return 'neutral';
+    return 'info';
+  };
 
-  const isPassed = dayjs(holiday.date).isBefore(dayjs(), 'day');
-  const isToday = dayjs(holiday.date).isSame(dayjs(), 'day');
-  const daysUntil = dayjs(holiday.date).diff(dayjs(), 'day');
+  const getStatusText = () => {
+    if (isToday) return 'Bugun';
+    if (isPassed) return 'Gecti';
+    return 'Yaklasan';
+  };
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-6">
-        <Space>
-          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/holidays')}>
-            Geri
-          </Button>
-          <div>
-            <Title level={2} style={{ margin: 0 }}>
-              {holiday.name}
-            </Title>
-            <Space>
-              <Text type="secondary">{dayjs(holiday.date).format('DD MMMM YYYY, dddd')}</Text>
-              <Tag color={isToday ? 'green' : isPassed ? 'default' : 'blue'}>
-                {isToday ? 'Bugün' : isPassed ? 'Geçti' : 'Yaklaşan'}
-              </Tag>
-              {holiday.isRecurring && <Tag color="purple">Yıllık</Tag>}
-            </Space>
+    <DetailPageLayout
+      title={holiday?.name || 'Tatil Detayi'}
+      subtitle={holiday ? dayjs(holiday.date).format('DD MMMM YYYY, dddd') : undefined}
+      backPath="/hr/holidays"
+      icon={<GiftIcon className="w-6 h-6 text-white" />}
+      iconBgColor="bg-amber-600"
+      statusBadge={
+        holiday && (
+          <div className="flex items-center gap-2">
+            <Badge variant={getStatusVariant()} dot>
+              {getStatusText()}
+            </Badge>
+            {holiday.isRecurring && (
+              <Badge variant="info" dot>Yillik</Badge>
+            )}
           </div>
-        </Space>
-        <Space>
-          <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/holidays/${id}/edit`)}>
-            Düzenle
-          </Button>
-          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
-            Sil
-          </Button>
-        </Space>
-      </div>
+        )
+      }
+      actions={
+        holiday && (
+          <>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<PencilIcon className="w-4 h-4" />}
+              onClick={() => router.push(`/hr/holidays/${id}/edit`)}
+            >
+              Duzenle
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              icon={<TrashIcon className="w-4 h-4" />}
+              onClick={handleDelete}
+            >
+              Sil
+            </Button>
+          </>
+        )
+      }
+      isLoading={isLoading}
+      isError={!!error || (!isLoading && !holiday)}
+      errorMessage="Tatil Gunu Bulunamadi"
+      errorDescription="Istenen tatil gunu bulunamadi veya bir hata olustu."
+    >
+      {holiday && (
+        <Row gutter={[24, 24]}>
+          {/* Stats */}
+          <Col xs={24}>
+            <Row gutter={[16, 16]}>
+              <Col xs={12} sm={8}>
+                <Card size="small">
+                  <Statistic
+                    title="Tarih"
+                    value={dayjs(holiday.date).format('DD.MM.YYYY')}
+                    prefix={<CalendarIcon className="w-4 h-4" />}
+                    valueStyle={{ color: '#7c3aed', fontSize: 18 }}
+                  />
+                </Card>
+              </Col>
+              <Col xs={12} sm={8}>
+                <Card size="small">
+                  <Statistic
+                    title="Gun"
+                    value={dayjs(holiday.date).format('dddd')}
+                    prefix={<GiftIcon className="w-4 h-4" />}
+                    valueStyle={{ color: '#1890ff', fontSize: 18 }}
+                  />
+                </Card>
+              </Col>
+              <Col xs={12} sm={8}>
+                <Card size="small">
+                  <Statistic
+                    title={isPassed ? 'Gecen Gun' : 'Kalan Gun'}
+                    value={isPassed ? Math.abs(daysUntil) : daysUntil}
+                    suffix="gun"
+                    valueStyle={{ color: isPassed ? '#8c8c8c' : '#52c41a' }}
+                  />
+                </Card>
+              </Col>
+            </Row>
+          </Col>
 
-      <Row gutter={[24, 24]}>
-        {/* Stats */}
-        <Col xs={24}>
-          <Row gutter={[16, 16]}>
-            <Col xs={12} sm={8}>
-              <Card size="small">
-                <Statistic
-                  title="Tarih"
-                  value={dayjs(holiday.date).format('DD.MM.YYYY')}
-                  prefix={<CalendarIcon className="w-4 h-4" />}
-                  valueStyle={{ color: '#7c3aed', fontSize: 18 }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={8}>
-              <Card size="small">
-                <Statistic
-                  title="Gün"
-                  value={dayjs(holiday.date).format('dddd')}
-                  prefix={<GiftIcon className="w-4 h-4" />}
-                  valueStyle={{ color: '#1890ff', fontSize: 18 }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={8}>
-              <Card size="small">
-                <Statistic
-                  title={isPassed ? 'Geçen Gün' : 'Kalan Gün'}
-                  value={isPassed ? Math.abs(daysUntil) : daysUntil}
-                  suffix="gün"
-                  valueStyle={{ color: isPassed ? '#8c8c8c' : '#52c41a' }}
-                />
-              </Card>
-            </Col>
-          </Row>
-        </Col>
-
-        {/* Details */}
-        <Col xs={24} lg={16}>
-          <Card title="Tatil Bilgileri">
-            <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label="Tatil Adı">{holiday.name}</Descriptions.Item>
-              <Descriptions.Item label="Tarih">
-                {dayjs(holiday.date).format('DD MMMM YYYY, dddd')}
-              </Descriptions.Item>
-              <Descriptions.Item label="Açıklama">{holiday.description || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Tür">
-                <Tag color={holiday.isRecurring ? 'purple' : 'default'}>
-                  {holiday.isRecurring ? 'Yıllık Tekrarlayan' : 'Tek Seferlik'}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Durum">
-                <Tag color={isToday ? 'green' : isPassed ? 'default' : 'blue'}>
-                  {isToday ? 'Bugün' : isPassed ? 'Geçti' : `${daysUntil} gün kaldı`}
-                </Tag>
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
-        </Col>
-      </Row>
-    </div>
+          {/* Details */}
+          <Col xs={24} lg={16}>
+            <Card title="Tatil Bilgileri">
+              <Descriptions column={1} bordered size="small">
+                <Descriptions.Item label="Tatil Adi">{holiday.name}</Descriptions.Item>
+                <Descriptions.Item label="Tarih">
+                  {dayjs(holiday.date).format('DD MMMM YYYY, dddd')}
+                </Descriptions.Item>
+                <Descriptions.Item label="Aciklama">{holiday.description || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Tur">
+                  <Tag color={holiday.isRecurring ? 'purple' : 'default'}>
+                    {holiday.isRecurring ? 'Yillik Tekrarlayan' : 'Tek Seferlik'}
+                  </Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="Durum">
+                  <Tag color={isToday ? 'green' : isPassed ? 'default' : 'blue'}>
+                    {isToday ? 'Bugun' : isPassed ? 'Gecti' : `${daysUntil} gun kaldi`}
+                  </Tag>
+                </Descriptions.Item>
+              </Descriptions>
+            </Card>
+          </Col>
+        </Row>
+      )}
+    </DetailPageLayout>
   );
 }

@@ -2,22 +2,10 @@
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { Tag, Modal, Row, Col, Card, Statistic, Descriptions, Progress } from 'antd';
+import { DetailPageLayout } from '@/components/patterns';
+import { Button } from '@/components/primitives';
 import {
-  Typography,
-  Button,
-  Space,
-  Card,
-  Descriptions,
-  Tag,
-  Spin,
-  Row,
-  Col,
-  Statistic,
-  Empty,
-  Modal,
-} from 'antd';
-import {
-  ArrowLeftIcon,
   BookOpenIcon,
   CalendarIcon,
   ClockIcon,
@@ -29,8 +17,6 @@ import {
 import { useTraining, useDeleteTraining } from '@/lib/api/hooks/useHR';
 import { TrainingStatus } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
-
-const { Title, Text, Paragraph } = Typography;
 
 export default function TrainingDetailPage() {
   const params = useParams();
@@ -44,11 +30,11 @@ export default function TrainingDetailPage() {
   const handleDelete = () => {
     if (!training) return;
     Modal.confirm({
-      title: 'Eğitimi Sil',
-      content: `"${training.title}" eğitimini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
+      title: 'Egitimi Sil',
+      content: `"${training.title}" egitimini silmek istediginizden emin misiniz? Bu islem geri alinamaz.`,
       okText: 'Sil',
       okType: 'danger',
-      cancelText: 'İptal',
+      cancelText: 'Iptal',
       onOk: async () => {
         try {
           await deleteTraining.mutateAsync(id);
@@ -67,10 +53,10 @@ export default function TrainingDetailPage() {
 
   const getStatusConfig = (status?: TrainingStatus) => {
     const statusMap: Record<number, { color: string; text: string }> = {
-      [TrainingStatus.Scheduled]: { color: 'blue', text: 'Planlandı' },
+      [TrainingStatus.Scheduled]: { color: 'blue', text: 'Planlandi' },
       [TrainingStatus.InProgress]: { color: 'green', text: 'Devam Ediyor' },
-      [TrainingStatus.Completed]: { color: 'default', text: 'Tamamlandı' },
-      [TrainingStatus.Cancelled]: { color: 'red', text: 'İptal Edildi' },
+      [TrainingStatus.Completed]: { color: 'default', text: 'Tamamlandi' },
+      [TrainingStatus.Cancelled]: { color: 'red', text: 'Iptal Edildi' },
       [TrainingStatus.Postponed]: { color: 'orange', text: 'Ertelendi' },
     };
     const defaultConfig = { color: 'default', text: '-' };
@@ -78,59 +64,47 @@ export default function TrainingDetailPage() {
     return statusMap[status] || defaultConfig;
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  if (error || !training) {
-    return (
-      <div className="p-6">
-        <Empty description="Eğitim bulunamadı" />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push('/hr/trainings')}>Listeye Dön</Button>
-        </div>
-      </div>
-    );
-  }
-
-  const statusConfig = getStatusConfig(training.status);
+  const statusConfig = getStatusConfig(training?.status);
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-6">
-        <Space>
-          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/trainings')}>
-            Geri
+    <DetailPageLayout
+      title={training?.title || 'Egitim'}
+      subtitle={`${training?.code || ''} ${training?.provider ? `- ${training.provider}` : ''}`}
+      backPath="/hr/trainings"
+      icon={<BookOpenIcon className="w-5 h-5 text-white" />}
+      iconBgColor="bg-blue-600"
+      statusBadge={
+        training && (
+          <>
+            <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
+            {training.isMandatory && <Tag color="red">Zorunlu</Tag>}
+            {training.isOnline && <Tag color="purple">Online</Tag>}
+          </>
+        )
+      }
+      actions={
+        <>
+          <Button
+            variant="secondary"
+            icon={<PencilIcon className="w-4 h-4" />}
+            onClick={() => router.push(`/hr/trainings/${id}/edit`)}
+          >
+            Duzenle
           </Button>
-          <div>
-            <Title level={2} style={{ margin: 0 }}>
-              {training.title}
-            </Title>
-            <Space>
-              <Text type="secondary">{training.code}</Text>
-              <Text type="secondary">•</Text>
-              <Text type="secondary">{training.provider || '-'}</Text>
-              <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
-              {training.isMandatory && <Tag color="red">Zorunlu</Tag>}
-              {training.isOnline && <Tag color="purple">Online</Tag>}
-            </Space>
-          </div>
-        </Space>
-        <Space>
-          <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/trainings/${id}/edit`)}>
-            Düzenle
-          </Button>
-          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
+          <Button
+            variant="danger"
+            icon={<TrashIcon className="w-4 h-4" />}
+            onClick={handleDelete}
+          >
             Sil
           </Button>
-        </Space>
-      </div>
-
+        </>
+      }
+      isLoading={isLoading}
+      isError={!!error || (!isLoading && !training)}
+      errorMessage="Egitim Bulunamadi"
+      errorDescription="Istenen egitim bulunamadi veya bir hata olustu."
+    >
       <Row gutter={[24, 24]}>
         {/* Stats */}
         <Col xs={24}>
@@ -138,9 +112,9 @@ export default function TrainingDetailPage() {
             <Col xs={12} sm={6}>
               <Card size="small">
                 <Statistic
-                  title="Katılımcı"
-                  value={training.currentParticipants || 0}
-                  suffix={`/ ${training.maxParticipants || '-'}`}
+                  title="Katilimci"
+                  value={training?.currentParticipants || 0}
+                  suffix={`/ ${training?.maxParticipants || '-'}`}
                   prefix={<UserGroupIcon className="w-4 h-4" />}
                   valueStyle={{ color: '#7c3aed' }}
                 />
@@ -149,8 +123,8 @@ export default function TrainingDetailPage() {
             <Col xs={12} sm={6}>
               <Card size="small">
                 <Statistic
-                  title="Süre"
-                  value={training.durationHours || 0}
+                  title="Sure"
+                  value={training?.durationHours || 0}
                   suffix="saat"
                   prefix={<ClockIcon className="w-4 h-4" />}
                   valueStyle={{ color: '#52c41a', fontSize: 16 }}
@@ -160,8 +134,8 @@ export default function TrainingDetailPage() {
             <Col xs={12} sm={6}>
               <Card size="small">
                 <Statistic
-                  title="Başlangıç"
-                  value={training.startDate ? dayjs(training.startDate).format('DD.MM.YYYY') : '-'}
+                  title="Baslangic"
+                  value={training?.startDate ? dayjs(training.startDate).format('DD.MM.YYYY') : '-'}
                   prefix={<CalendarIcon className="w-4 h-4" />}
                   valueStyle={{ color: '#1890ff', fontSize: 16 }}
                 />
@@ -171,7 +145,7 @@ export default function TrainingDetailPage() {
               <Card size="small">
                 <Statistic
                   title="Maliyet"
-                  value={training.cost || 0}
+                  value={training?.cost || 0}
                   formatter={(val) => formatCurrency(Number(val))}
                   valueStyle={{ color: '#faad14', fontSize: 16 }}
                 />
@@ -182,41 +156,41 @@ export default function TrainingDetailPage() {
 
         {/* Details */}
         <Col xs={24} lg={16}>
-          <Card title="Eğitim Bilgileri">
+          <Card title="Egitim Bilgileri">
             <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label="Eğitim Kodu">{training.code}</Descriptions.Item>
-              <Descriptions.Item label="Eğitim Adı">{training.title}</Descriptions.Item>
-              <Descriptions.Item label="Eğitim Türü">{training.trainingType || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Sağlayıcı">{training.provider || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Eğitmen">{training.instructor || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Açıklama">{training.description || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Başlangıç Tarihi">
-                {training.startDate ? dayjs(training.startDate).format('DD MMMM YYYY') : '-'}
+              <Descriptions.Item label="Egitim Kodu">{training?.code}</Descriptions.Item>
+              <Descriptions.Item label="Egitim Adi">{training?.title}</Descriptions.Item>
+              <Descriptions.Item label="Egitim Turu">{training?.trainingType || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Saglayici">{training?.provider || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Egitmen">{training?.instructor || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Aciklama">{training?.description || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Baslangic Tarihi">
+                {training?.startDate ? dayjs(training.startDate).format('DD MMMM YYYY') : '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="Bitiş Tarihi">
-                {training.endDate ? dayjs(training.endDate).format('DD MMMM YYYY') : '-'}
+              <Descriptions.Item label="Bitis Tarihi">
+                {training?.endDate ? dayjs(training.endDate).format('DD MMMM YYYY') : '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="Süre">{training.durationHours} saat</Descriptions.Item>
+              <Descriptions.Item label="Sure">{training?.durationHours} saat</Descriptions.Item>
               <Descriptions.Item label="Konum">
-                <Space>
+                <div className="flex items-center gap-2">
                   <MapPinIcon className="w-4 h-4" />
-                  {training.isOnline ? (
+                  {training?.isOnline ? (
                     <a href={training.onlineUrl} target="_blank" rel="noopener noreferrer">
                       {training.onlineUrl || 'Online'}
                     </a>
                   ) : (
-                    training.location || '-'
+                    training?.location || '-'
                   )}
-                </Space>
+                </div>
               </Descriptions.Item>
-              <Descriptions.Item label="Maksimum Katılımcı">
-                {training.maxParticipants || '-'}
+              <Descriptions.Item label="Maksimum Katilimci">
+                {training?.maxParticipants || '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="Mevcut Katılımcı">
-                {training.currentParticipants || 0}
+              <Descriptions.Item label="Mevcut Katilimci">
+                {training?.currentParticipants || 0}
               </Descriptions.Item>
               <Descriptions.Item label="Maliyet">
-                {formatCurrency(training.cost)} {training.currency || 'TRY'}
+                {formatCurrency(training?.cost)} {training?.currency || 'TRY'}
               </Descriptions.Item>
               <Descriptions.Item label="Durum">
                 <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
@@ -230,29 +204,29 @@ export default function TrainingDetailPage() {
           <Card title="Sertifikasyon">
             <Descriptions column={1} size="small">
               <Descriptions.Item label="Sertifika">
-                {training.hasCertification ? (
+                {training?.hasCertification ? (
                   <Tag color="green">Var</Tag>
                 ) : (
                   <Tag color="default">Yok</Tag>
                 )}
               </Descriptions.Item>
-              {training.hasCertification && (
+              {training?.hasCertification && (
                 <>
-                  <Descriptions.Item label="Geçerlilik">
+                  <Descriptions.Item label="Gecerlilik">
                     {training.certificationValidityMonths
                       ? `${training.certificationValidityMonths} ay`
                       : '-'}
                   </Descriptions.Item>
-                  <Descriptions.Item label="Geçme Puanı">
+                  <Descriptions.Item label="Gecme Puani">
                     {training.passingScore || '-'}
                   </Descriptions.Item>
                 </>
               )}
               <Descriptions.Item label="Zorunlu">
-                {training.isMandatory ? (
+                {training?.isMandatory ? (
                   <Tag color="red">Evet</Tag>
                 ) : (
-                  <Tag color="default">Hayır</Tag>
+                  <Tag color="default">Hayir</Tag>
                 )}
               </Descriptions.Item>
             </Descriptions>
@@ -260,19 +234,19 @@ export default function TrainingDetailPage() {
         </Col>
 
         {/* Prerequisites & Materials */}
-        {(training.prerequisites || training.materials) && (
+        {(training?.prerequisites || training?.materials) && (
           <Col xs={24}>
             <Card title="Ek Bilgiler">
               {training.prerequisites && (
                 <>
-                  <Text strong>Ön Koşullar:</Text>
-                  <Paragraph className="mt-2">{training.prerequisites}</Paragraph>
+                  <p className="font-medium text-slate-900 mb-2">On Kosullar:</p>
+                  <p className="text-slate-600 mb-4">{training.prerequisites}</p>
                 </>
               )}
               {training.materials && (
                 <>
-                  <Text strong>Materyaller:</Text>
-                  <Paragraph className="mt-2">{training.materials}</Paragraph>
+                  <p className="font-medium text-slate-900 mb-2">Materyaller:</p>
+                  <p className="text-slate-600">{training.materials}</p>
                 </>
               )}
             </Card>
@@ -280,14 +254,14 @@ export default function TrainingDetailPage() {
         )}
 
         {/* Notes */}
-        {training.notes && (
+        {training?.notes && (
           <Col xs={24}>
             <Card title="Notlar">
-              <Paragraph>{training.notes}</Paragraph>
+              <p className="text-slate-600">{training.notes}</p>
             </Card>
           </Col>
         )}
       </Row>
-    </div>
+    </DetailPageLayout>
   );
 }

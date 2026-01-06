@@ -2,13 +2,9 @@
 
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Form, Input, InputNumber, Switch, message, Spin } from 'antd';
-import { PageContainer } from '@/components/patterns';
-import {
-  ArrowLeftIcon,
-  DocumentTextIcon,
-} from '@heroicons/react/24/outline';
+import { Form, Input, InputNumber, Switch } from 'antd';
+import { DocumentTextIcon } from '@heroicons/react/24/outline';
+import { FormPageLayout } from '@/components/patterns';
 import { useLeaveType, useUpdateLeaveType } from '@/lib/api/hooks/useHR';
 import type { UpdateLeaveTypeDto } from '@/lib/api/services/hr.types';
 
@@ -64,246 +60,216 @@ export default function EditLeaveTypePage() {
       };
 
       await updateLeaveType.mutateAsync({ id, data });
-      message.success('İzin türü başarıyla güncellendi');
       router.push(`/hr/leave-types/${id}`);
     } catch (error) {
-      message.error('Güncelleme sırasında bir hata oluştu');
+      // Error handled by hook
     }
   };
 
-  if (isLoading) {
-    return (
-      <PageContainer maxWidth="3xl">
-        <div className="flex items-center justify-center py-12">
-          <Spin />
-        </div>
-      </PageContainer>
-    );
-  }
-
-  if (error || !leaveType) {
-    return (
-      <PageContainer maxWidth="3xl">
-        <div className="text-center py-12">
-          <p className="text-slate-500">İzin türü bulunamadı</p>
-          <Link href="/hr/leave-types" className="text-sm text-slate-900 hover:underline mt-2 inline-block">
-            ← Listeye Dön
-          </Link>
-        </div>
-      </PageContainer>
-    );
-  }
+  const subtitle = leaveType
+    ? `${leaveType.name} - ${leaveType.code}`
+    : 'Izin turu bilgilerini duzenleyin';
 
   return (
-    <PageContainer maxWidth="3xl">
-      {/* Header */}
-      <div className="mb-8">
-        <Link
-          href={`/hr/leave-types/${id}`}
-          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-4"
-        >
-          <ArrowLeftIcon className="w-4 h-4" />
-          Detaya Dön
-        </Link>
-
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-            <DocumentTextIcon className="w-5 h-5 text-slate-600" />
+    <FormPageLayout
+      title="Izin Turu Duzenle"
+      subtitle={subtitle}
+      cancelPath={`/hr/leave-types/${id}`}
+      loading={updateLeaveType.isPending}
+      onSave={() => form.submit()}
+      isDataLoading={isLoading}
+      dataError={!!error || (!isLoading && !leaveType)}
+      errorMessage="Izin Turu Bulunamadi"
+      errorDescription="Istenen izin turu bulunamadi veya bir hata olustu."
+      saveButtonText="Guncelle"
+      icon={<DocumentTextIcon className="w-5 h-5" />}
+      maxWidth="max-w-4xl"
+    >
+      <Form form={form} layout="vertical" onFinish={handleSubmit}>
+        {/* Izin Turu Bilgileri */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Izin Turu Bilgileri
+            </span>
+            <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
           </div>
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900">İzin Türü Düzenle</h1>
-            <p className="text-sm text-slate-500 mt-1">
-              <span className="font-medium">{leaveType.name}</span> - {leaveType.code}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Form Kartı */}
-      <div className="bg-white border border-slate-200 rounded-xl">
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          className="p-6"
-        >
-          {/* İzin Türü Bilgileri */}
-          <div className="mb-8">
-            <h2 className="text-sm font-medium text-slate-900 mb-4 pb-2 border-b border-slate-100">
-              İzin Türü Bilgileri
-            </h2>
+          <div className="bg-gray-50/50 rounded-xl p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Form.Item
                 name="name"
-                label={<span className="text-sm text-slate-700">İzin Türü Adı</span>}
-                rules={[{ required: true, message: 'İzin türü adı zorunludur' }]}
+                label="Izin Turu Adi"
+                rules={[{ required: true, message: 'Izin turu adi zorunludur' }]}
               >
-                <Input placeholder="Örn: Yıllık İzin, Hastalık İzni" className="rounded-md" />
+                <Input placeholder="Orn: Yillik Izin, Hastalik Izni" variant="filled" />
               </Form.Item>
 
               <div>
-                <label className="block text-sm text-slate-700 mb-2">İzin Türü Kodu</label>
+                <label className="block text-sm text-slate-700 mb-2">Izin Turu Kodu</label>
                 <div className="py-2 px-3 bg-slate-50 border border-slate-200 rounded-md text-slate-600">
-                  {leaveType.code}
+                  {leaveType?.code || '-'}
                 </div>
-                <p className="text-xs text-slate-400 mt-1">Kod değiştirilemez</p>
+                <p className="text-xs text-slate-400 mt-1">Kod degistirilemez</p>
               </div>
 
               <Form.Item
                 name="description"
-                label={<span className="text-sm text-slate-700">Açıklama</span>}
+                label="Aciklama"
                 className="md:col-span-2"
               >
-                <TextArea rows={3} placeholder="İzin türü açıklaması (opsiyonel)" className="rounded-md" />
+                <TextArea rows={3} placeholder="Izin turu aciklamasi (opsiyonel)" variant="filled" />
               </Form.Item>
             </div>
           </div>
+        </div>
 
-          {/* Gün Ayarları */}
-          <div className="mb-8">
-            <h2 className="text-sm font-medium text-slate-900 mb-4 pb-2 border-b border-slate-100">
-              Gün Ayarları
-            </h2>
+        {/* Gun Ayarlari */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Gun Ayarlari
+            </span>
+            <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
+          </div>
+          <div className="bg-gray-50/50 rounded-xl p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Form.Item
                 name="defaultDays"
-                label={<span className="text-sm text-slate-700">Varsayılan Gün</span>}
-                rules={[{ required: true, message: 'Gün sayısı zorunludur' }]}
+                label="Varsayilan Gun"
+                rules={[{ required: true, message: 'Gun sayisi zorunludur' }]}
               >
                 <InputNumber
                   placeholder="0"
-                  className="w-full rounded-md"
+                  className="w-full"
                   min={0}
                   max={365}
+                  variant="filled"
                 />
               </Form.Item>
 
               <Form.Item
                 name="maxConsecutiveDays"
-                label={<span className="text-sm text-slate-700">Maks. Ardışık Gün</span>}
+                label="Maks. Ardisik Gun"
               >
                 <InputNumber
                   placeholder="0"
-                  className="w-full rounded-md"
+                  className="w-full"
                   min={0}
+                  variant="filled"
                 />
               </Form.Item>
 
               <Form.Item
                 name="minNoticeDays"
-                label={<span className="text-sm text-slate-700">Min. Bildirim Günü</span>}
+                label="Min. Bildirim Gunu"
               >
                 <InputNumber
                   placeholder="0"
-                  className="w-full rounded-md"
+                  className="w-full"
                   min={0}
+                  variant="filled"
                 />
               </Form.Item>
             </div>
           </div>
+        </div>
 
-          {/* Devir Ayarları */}
-          <div className="mb-8">
-            <h2 className="text-sm font-medium text-slate-900 mb-4 pb-2 border-b border-slate-100">
-              Devir Ayarları
-            </h2>
+        {/* Devir Ayarlari */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Devir Ayarlari
+            </span>
+            <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
+          </div>
+          <div className="bg-gray-50/50 rounded-xl p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Form.Item
                 name="carryForward"
-                label={<span className="text-sm text-slate-700">Devir Yapılabilir</span>}
+                label="Devir Yapilabilir"
                 valuePropName="checked"
               >
-                <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
+                <Switch checkedChildren="Evet" unCheckedChildren="Hayir" />
               </Form.Item>
 
               <Form.Item
                 name="maxCarryForwardDays"
-                label={<span className="text-sm text-slate-700">Maks. Devir Günü</span>}
+                label="Maks. Devir Gunu"
               >
                 <InputNumber
                   placeholder="0"
-                  className="w-full rounded-md"
+                  className="w-full"
                   min={0}
+                  variant="filled"
                 />
               </Form.Item>
             </div>
           </div>
+        </div>
 
-          {/* Genel Ayarlar */}
-          <div className="mb-8">
-            <h2 className="text-sm font-medium text-slate-900 mb-4 pb-2 border-b border-slate-100">
+        {/* Genel Ayarlar */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
               Genel Ayarlar
-            </h2>
+            </span>
+            <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
+          </div>
+          <div className="bg-gray-50/50 rounded-xl p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Form.Item
                 name="isPaid"
-                label={<span className="text-sm text-slate-700">Ücretli İzin</span>}
+                label="Ucretli Izin"
                 valuePropName="checked"
               >
-                <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
+                <Switch checkedChildren="Evet" unCheckedChildren="Hayir" />
               </Form.Item>
 
               <Form.Item
                 name="requiresApproval"
-                label={<span className="text-sm text-slate-700">Onay Gerekli</span>}
+                label="Onay Gerekli"
                 valuePropName="checked"
               >
-                <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
+                <Switch checkedChildren="Evet" unCheckedChildren="Hayir" />
               </Form.Item>
 
               <Form.Item
                 name="requiresDocument"
-                label={<span className="text-sm text-slate-700">Belge Gerekli</span>}
+                label="Belge Gerekli"
                 valuePropName="checked"
               >
-                <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
+                <Switch checkedChildren="Evet" unCheckedChildren="Hayir" />
               </Form.Item>
 
               <Form.Item
                 name="allowHalfDay"
-                label={<span className="text-sm text-slate-700">Yarım Gün İzin</span>}
+                label="Yarim Gun Izin"
                 valuePropName="checked"
               >
-                <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
+                <Switch checkedChildren="Evet" unCheckedChildren="Hayir" />
               </Form.Item>
 
               <Form.Item
                 name="allowNegativeBalance"
-                label={<span className="text-sm text-slate-700">Negatif Bakiye</span>}
+                label="Negatif Bakiye"
                 valuePropName="checked"
               >
-                <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
+                <Switch checkedChildren="Evet" unCheckedChildren="Hayir" />
               </Form.Item>
 
               <Form.Item
                 name="color"
-                label={<span className="text-sm text-slate-700">Renk Kodu</span>}
+                label="Renk Kodu"
               >
-                <Input placeholder="#3B82F6" className="rounded-md" />
+                <Input placeholder="#3B82F6" variant="filled" />
               </Form.Item>
             </div>
           </div>
+        </div>
 
-          {/* Form Aksiyonları */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-            <Link href={`/hr/leave-types/${id}`}>
-              <button
-                type="button"
-                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
-              >
-                İptal
-              </button>
-            </Link>
-            <button
-              type="submit"
-              disabled={updateLeaveType.isPending}
-              className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {updateLeaveType.isPending ? 'Kaydediliyor...' : 'Güncelle'}
-            </button>
-          </div>
-        </Form>
-      </div>
-    </PageContainer>
+        {/* Hidden submit button for form.submit() */}
+        <button type="submit" hidden />
+      </Form>
+    </FormPageLayout>
   );
 }

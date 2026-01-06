@@ -2,27 +2,12 @@
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import {
-  Typography,
-  Button,
-  Space,
-  Card,
-  Descriptions,
-  Tag,
-  Spin,
-  Row,
-  Col,
-  Statistic,
-  Empty,
-  Modal,
-  Upload,
-  message,
-} from 'antd';
+import { Tag, Modal, Row, Col, Card, Statistic, Descriptions, Upload, message } from 'antd';
 import type { UploadProps } from 'antd';
+import { DetailPageLayout } from '@/components/patterns';
+import { Button } from '@/components/primitives';
 import {
   ArrowDownTrayIcon,
-  ArrowLeftIcon,
-  ArrowUpTrayIcon,
   CheckCircleIcon,
   ClockIcon,
   DocumentIcon,
@@ -39,27 +24,25 @@ import dayjs from 'dayjs';
 
 const { Dragger } = Upload;
 
-const { Title, Text } = Typography;
-
 // Document type labels in Turkish
 const documentTypeLabels: Record<number, string> = {
-  [DocumentType.IdentityCard]: 'Kimlik Kartı',
+  [DocumentType.IdentityCard]: 'Kimlik Karti',
   [DocumentType.Passport]: 'Pasaport',
   [DocumentType.DrivingLicense]: 'Ehliyet',
   [DocumentType.Diploma]: 'Diploma',
   [DocumentType.Certificate]: 'Sertifika',
-  [DocumentType.Resume]: 'Özgeçmiş',
-  [DocumentType.EmploymentContract]: 'İş Sözleşmesi',
-  [DocumentType.MedicalReport]: 'Sağlık Raporu',
-  [DocumentType.CriminalRecord]: 'Sabıka Kaydı',
+  [DocumentType.Resume]: 'Ozgecmis',
+  [DocumentType.EmploymentContract]: 'Is Sozlesmesi',
+  [DocumentType.MedicalReport]: 'Saglik Raporu',
+  [DocumentType.CriminalRecord]: 'Sabika Kaydi',
   [DocumentType.AddressProof]: 'Adres Belgesi',
   [DocumentType.ReferenceLetter]: 'Referans Mektubu',
   [DocumentType.SocialSecurityDocument]: 'SGK Belgesi',
   [DocumentType.BankInformation]: 'Banka Bilgileri',
-  [DocumentType.FamilyRegister]: 'Aile Kayıt Belgesi',
+  [DocumentType.FamilyRegister]: 'Aile Kayit Belgesi',
   [DocumentType.MilitaryDocument]: 'Askerlik Belgesi',
-  [DocumentType.Photo]: 'Fotoğraf',
-  [DocumentType.Other]: 'Diğer',
+  [DocumentType.Photo]: 'Fotograf',
+  [DocumentType.Other]: 'Diger',
 };
 
 export default function DocumentDetailPage() {
@@ -81,7 +64,7 @@ export default function DocumentDetailPage() {
       // Validate file size (max 10MB)
       const isLt10M = file.size / 1024 / 1024 < 10;
       if (!isLt10M) {
-        message.error('Dosya boyutu 10MB\'dan küçük olmalıdır!');
+        message.error('Dosya boyutu 10MB\'dan kucuk olmalidir!');
         return false;
       }
       return true;
@@ -89,11 +72,11 @@ export default function DocumentDetailPage() {
     customRequest: async ({ file, onSuccess, onError }) => {
       try {
         await uploadFile.mutateAsync({ id, file: file as File });
-        message.success('Dosya başarıyla yüklendi');
+        message.success('Dosya basariyla yuklendi');
         refetch();
         onSuccess?.(null);
       } catch (error) {
-        message.error('Dosya yüklenirken bir hata oluştu');
+        message.error('Dosya yuklenirken bir hata olustu');
         onError?.(error as Error);
       }
     },
@@ -103,10 +86,10 @@ export default function DocumentDetailPage() {
     if (!document) return;
     Modal.confirm({
       title: 'Belgeyi Sil',
-      content: `"${document.title}" belgesini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
+      content: `"${document.title}" belgesini silmek istediginizden emin misiniz? Bu islem geri alinamaz.`,
       okText: 'Sil',
       okType: 'danger',
-      cancelText: 'İptal',
+      cancelText: 'Iptal',
       onOk: async () => {
         try {
           await deleteDocument.mutateAsync(id);
@@ -121,10 +104,10 @@ export default function DocumentDetailPage() {
   const handleVerify = () => {
     if (!document) return;
     Modal.confirm({
-      title: 'Belgeyi Doğrula',
-      content: `"${document.title}" belgesini doğrulamak istediğinizden emin misiniz?`,
-      okText: 'Doğrula',
-      cancelText: 'İptal',
+      title: 'Belgeyi Dogrula',
+      content: `"${document.title}" belgesini dogrulamak istediginizden emin misiniz?`,
+      okText: 'Dogrula',
+      cancelText: 'Iptal',
       onOk: async () => {
         try {
           await verifyDocument.mutateAsync({ id });
@@ -134,25 +117,6 @@ export default function DocumentDetailPage() {
       },
     });
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  if (error || !document) {
-    return (
-      <div className="p-6">
-        <Empty description="Belge bulunamadı" />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push('/hr/documents')}>Listeye Dön</Button>
-        </div>
-      </div>
-    );
-  }
 
   const formatFileSize = (bytes?: number) => {
     if (!bytes) return '-';
@@ -167,54 +131,63 @@ export default function DocumentDetailPage() {
   };
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-6">
-        <Space>
-          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/documents')}>
-            Geri
-          </Button>
-          <div>
-            <Title level={2} style={{ margin: 0 }}>
-              {document.title}
-            </Title>
-            <Space>
-              <Text type="secondary">{documentTypeLabels[document.documentType]}</Text>
-              {document.isVerified ? (
-                <Tag color="green" icon={<CheckCircleIcon className="w-4 h-4" />}>Doğrulandı</Tag>
-              ) : (
-                <Tag color="default" icon={<ClockIcon className="w-4 h-4" />}>Bekliyor</Tag>
-              )}
-              {document.isExpired && (
-                <Tag color="red" icon={<ExclamationCircleIcon className="w-4 h-4" />}>Süresi Dolmuş</Tag>
-              )}
-              {document.isExpiringSoon && !document.isExpired && (
-                <Tag color="orange" icon={<ClockIcon className="w-4 h-4" />}>Süresi Dolacak</Tag>
-              )}
-            </Space>
-          </div>
-        </Space>
-        <Space>
-          {!document.isVerified && (
+    <DetailPageLayout
+      title={document?.title || 'Belge'}
+      subtitle={document ? documentTypeLabels[document.documentType] : undefined}
+      backPath="/hr/documents"
+      icon={<DocumentIcon className="w-5 h-5 text-white" />}
+      iconBgColor="bg-cyan-600"
+      statusBadge={
+        document && (
+          <>
+            {document.isVerified ? (
+              <Tag color="green" icon={<CheckCircleIcon className="w-4 h-4" />}>Dogrulandi</Tag>
+            ) : (
+              <Tag color="default" icon={<ClockIcon className="w-4 h-4" />}>Bekliyor</Tag>
+            )}
+            {document.isExpired && (
+              <Tag color="red" icon={<ExclamationCircleIcon className="w-4 h-4" />}>Suresi Dolmus</Tag>
+            )}
+            {document.isExpiringSoon && !document.isExpired && (
+              <Tag color="orange" icon={<ClockIcon className="w-4 h-4" />}>Suresi Dolacak</Tag>
+            )}
+          </>
+        )
+      }
+      actions={
+        <>
+          {document && !document.isVerified && (
             <Button
-              type="primary"
+              variant="primary"
               icon={<ShieldCheckIcon className="w-4 h-4" />}
               onClick={handleVerify}
               loading={verifyDocument.isPending}
-              style={{ background: '#52c41a', borderColor: '#52c41a' }}
+              className="!bg-emerald-600 hover:!bg-emerald-700"
             >
-              Doğrula
+              Dogrula
             </Button>
           )}
-          <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/documents/${id}/edit`)}>
-            Düzenle
+          <Button
+            variant="secondary"
+            icon={<PencilIcon className="w-4 h-4" />}
+            onClick={() => router.push(`/hr/documents/${id}/edit`)}
+          >
+            Duzenle
           </Button>
-          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
+          <Button
+            variant="danger"
+            icon={<TrashIcon className="w-4 h-4" />}
+            onClick={handleDelete}
+          >
             Sil
           </Button>
-        </Space>
-      </div>
-
+        </>
+      }
+      isLoading={isLoading}
+      isError={!!error || (!isLoading && !document)}
+      errorMessage="Belge Bulunamadi"
+      errorDescription="Istenen belge bulunamadi veya bir hata olustu."
+    >
       <Row gutter={[24, 24]}>
         {/* Stats */}
         <Col xs={24}>
@@ -222,8 +195,8 @@ export default function DocumentDetailPage() {
             <Col xs={12} sm={6}>
               <Card size="small">
                 <Statistic
-                  title="Çalışan"
-                  value={document.employeeName}
+                  title="Calisan"
+                  value={document?.employeeName}
                   prefix={<UserIcon className="w-4 h-4" />}
                   valueStyle={{ color: '#1890ff', fontSize: 16 }}
                 />
@@ -233,7 +206,7 @@ export default function DocumentDetailPage() {
               <Card size="small">
                 <Statistic
                   title="Belge No"
-                  value={document.documentNumber}
+                  value={document?.documentNumber}
                   prefix={<DocumentIcon className="w-4 h-4" />}
                   valueStyle={{ color: '#7c3aed', fontSize: 16 }}
                 />
@@ -243,7 +216,7 @@ export default function DocumentDetailPage() {
               <Card size="small">
                 <Statistic
                   title="Dosya Boyutu"
-                  value={formatFileSize(document.fileSize)}
+                  value={formatFileSize(document?.fileSize)}
                   valueStyle={{ color: '#3b82f6', fontSize: 16 }}
                 />
               </Card>
@@ -252,10 +225,10 @@ export default function DocumentDetailPage() {
               <Card size="small">
                 <Statistic
                   title="Durum"
-                  value={document.isVerified ? 'Doğrulanmış' : 'Bekliyor'}
-                  prefix={document.isVerified ? <CheckCircleIcon className="w-4 h-4" /> : <ClockIcon className="w-4 h-4" />}
+                  value={document?.isVerified ? 'Dogrulanmis' : 'Bekliyor'}
+                  prefix={document?.isVerified ? <CheckCircleIcon className="w-4 h-4" /> : <ClockIcon className="w-4 h-4" />}
                   valueStyle={{
-                    color: document.isVerified ? '#52c41a' : '#8c8c8c',
+                    color: document?.isVerified ? '#52c41a' : '#8c8c8c',
                     fontSize: 16
                   }}
                 />
@@ -268,50 +241,50 @@ export default function DocumentDetailPage() {
         <Col xs={24} lg={16}>
           <Card title="Belge Bilgileri">
             <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label="Belge Adı">{document.title}</Descriptions.Item>
-              <Descriptions.Item label="Belge Numarası">{document.documentNumber}</Descriptions.Item>
-              <Descriptions.Item label="Belge Türü">
-                <Tag color="blue">{documentTypeLabels[document.documentType]}</Tag>
+              <Descriptions.Item label="Belge Adi">{document?.title}</Descriptions.Item>
+              <Descriptions.Item label="Belge Numarasi">{document?.documentNumber}</Descriptions.Item>
+              <Descriptions.Item label="Belge Turu">
+                <Tag color="blue">{document ? documentTypeLabels[document.documentType] : '-'}</Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="Çalışan">{document.employeeName}</Descriptions.Item>
-              <Descriptions.Item label="Açıklama">{document.description || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Veren Kurum">{document.issuingAuthority || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Düzenleme Tarihi">
-                {document.issueDate ? dayjs(document.issueDate).format('DD.MM.YYYY') : '-'}
+              <Descriptions.Item label="Calisan">{document?.employeeName}</Descriptions.Item>
+              <Descriptions.Item label="Aciklama">{document?.description || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Veren Kurum">{document?.issuingAuthority || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Duzenleme Tarihi">
+                {document?.issueDate ? dayjs(document.issueDate).format('DD.MM.YYYY') : '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="Son Geçerlilik Tarihi">
-                {document.expiryDate ? (
-                  <Space>
+              <Descriptions.Item label="Son Gecerlilik Tarihi">
+                {document?.expiryDate ? (
+                  <div className="flex items-center gap-2">
                     {dayjs(document.expiryDate).format('DD.MM.YYYY')}
-                    {document.isExpired && <Tag color="red">Süresi Dolmuş</Tag>}
-                    {document.isExpiringSoon && !document.isExpired && <Tag color="orange">Yakında</Tag>}
-                  </Space>
+                    {document.isExpired && <Tag color="red">Suresi Dolmus</Tag>}
+                    {document.isExpiringSoon && !document.isExpired && <Tag color="orange">Yakinda</Tag>}
+                  </div>
                 ) : '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="Notlar">{document.notes || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Notlar">{document?.notes || '-'}</Descriptions.Item>
             </Descriptions>
           </Card>
         </Col>
 
         {/* Verification Info & File */}
         <Col xs={24} lg={8}>
-          <Space direction="vertical" style={{ width: '100%' }} size="middle">
+          <div className="space-y-4">
             {/* Verification Info */}
-            <Card title="Doğrulama Bilgileri">
+            <Card title="Dogrulama Bilgileri">
               <Descriptions column={1} size="small">
                 <Descriptions.Item label="Durum">
-                  {document.isVerified ? (
-                    <Tag color="green" icon={<CheckCircleIcon className="w-4 h-4" />}>Doğrulandı</Tag>
+                  {document?.isVerified ? (
+                    <Tag color="green" icon={<CheckCircleIcon className="w-4 h-4" />}>Dogrulandi</Tag>
                   ) : (
                     <Tag color="default" icon={<ClockIcon className="w-4 h-4" />}>Bekliyor</Tag>
                   )}
                 </Descriptions.Item>
-                {document.isVerified && (
+                {document?.isVerified && (
                   <>
-                    <Descriptions.Item label="Doğrulayan">
+                    <Descriptions.Item label="Dogrulayan">
                       {document.verifiedByName || '-'}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Doğrulama Tarihi">
+                    <Descriptions.Item label="Dogrulama Tarihi">
                       {document.verifiedDate ? dayjs(document.verifiedDate).format('DD.MM.YYYY HH:mm') : '-'}
                     </Descriptions.Item>
                   </>
@@ -321,50 +294,50 @@ export default function DocumentDetailPage() {
 
             {/* File Info */}
             <Card title="Dosya Bilgileri">
-              {document.fileName ? (
+              {document?.fileName ? (
                 <>
                   <Descriptions column={1} size="small">
-                    <Descriptions.Item label="Dosya Adı">
+                    <Descriptions.Item label="Dosya Adi">
                       {document.fileName}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Dosya Türü">
+                    <Descriptions.Item label="Dosya Turu">
                       {document.fileType || '-'}
                     </Descriptions.Item>
                     <Descriptions.Item label="Dosya Boyutu">
                       {formatFileSize(document.fileSize)}
                     </Descriptions.Item>
                   </Descriptions>
-                  <Space direction="vertical" style={{ width: '100%' }} className="mt-4">
+                  <div className="mt-4 space-y-3">
                     {document.fileUrl && (
-                      <Button
-                        type="primary"
-                        icon={<ArrowDownTrayIcon className="w-4 h-4" />}
-                        block
-                        href={document.fileUrl}
-                        target="_blank"
-                      >
-                        Dosyayı İndir
-                      </Button>
+                      <a href={document.fileUrl} target="_blank" rel="noopener noreferrer" className="block">
+                        <Button
+                          variant="primary"
+                          icon={<ArrowDownTrayIcon className="w-4 h-4" />}
+                          fullWidth
+                        >
+                          Dosyayi Indir
+                        </Button>
+                      </a>
                     )}
                     <Dragger {...uploadProps} disabled={uploadFile.isPending}>
                       <p className="ant-upload-drag-icon">
-                        <InboxIcon className="w-4 h-4" />
+                        <InboxIcon className="w-8 h-8 mx-auto text-slate-400" />
                       </p>
-                      <p className="ant-upload-text">Yeni Dosya Yükle</p>
+                      <p className="ant-upload-text">Yeni Dosya Yukle</p>
                       <p className="ant-upload-hint">
-                        Mevcut dosyayı değiştirmek için tıklayın veya sürükleyin
+                        Mevcut dosyayi degistirmek icin tiklayin veya surukleyin
                       </p>
                     </Dragger>
-                  </Space>
+                  </div>
                 </>
               ) : (
                 <Dragger {...uploadProps} disabled={uploadFile.isPending}>
                   <p className="ant-upload-drag-icon">
-                    <InboxIcon className="w-4 h-4" />
+                    <InboxIcon className="w-8 h-8 mx-auto text-slate-400" />
                   </p>
-                  <p className="ant-upload-text">Dosya Yükle</p>
+                  <p className="ant-upload-text">Dosya Yukle</p>
                   <p className="ant-upload-hint">
-                    Dosya yüklemek için tıklayın veya buraya sürükleyin (max 10MB)
+                    Dosya yuklemek icin tiklayin veya buraya surukleyin (max 10MB)
                   </p>
                 </Dragger>
               )}
@@ -373,14 +346,14 @@ export default function DocumentDetailPage() {
             {/* System Info */}
             <Card title="Sistem Bilgileri" size="small">
               <Descriptions column={1} size="small">
-                <Descriptions.Item label="Oluşturulma">
-                  {dayjs(document.createdAt).format('DD.MM.YYYY HH:mm')}
+                <Descriptions.Item label="Olusturulma">
+                  {document?.createdAt ? dayjs(document.createdAt).format('DD.MM.YYYY HH:mm') : '-'}
                 </Descriptions.Item>
               </Descriptions>
             </Card>
-          </Space>
+          </div>
         </Col>
       </Row>
-    </div>
+    </DetailPageLayout>
   );
 }

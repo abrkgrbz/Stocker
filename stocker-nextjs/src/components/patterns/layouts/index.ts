@@ -29,3 +29,8 @@ export {
   FormPageLayout,
   type FormPageLayoutProps,
 } from './FormPageLayout';
+
+export {
+  DetailPageLayout,
+  type DetailPageLayoutProps,
+} from './DetailPageLayout';
