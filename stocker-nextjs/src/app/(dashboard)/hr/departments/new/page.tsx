@@ -2,8 +2,9 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Form } from 'antd';
-import { ArrowLeftIcon, CheckIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
+import { Form } from 'antd';
+import { BuildingOfficeIcon } from '@heroicons/react/24/outline';
+import { FormPageLayout } from '@/components/patterns';
 import { DepartmentForm } from '@/components/hr';
 import { useCreateDepartment } from '@/lib/api/hooks/useHR';
 import type { CreateDepartmentDto } from '@/lib/api/services/hr.types';
@@ -23,59 +24,20 @@ export default function NewDepartmentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Glass Effect Sticky Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-4">
-            <Button
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={() => router.back()}
-              type="text"
-              className="text-gray-500 hover:text-gray-800"
-            />
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <BuildingOfficeIcon className="w-5 h-5 mr-2 inline" />
-                Yeni Departman
-              </h1>
-              <p className="text-sm text-gray-400 m-0">Yeni bir departman oluşturun</p>
-            </div>
-          </div>
-          <Space>
-            <Button onClick={() => router.push('/hr/departments')}>Vazgeç</Button>
-            <Button
-              type="primary"
-              icon={<CheckIcon className="w-4 h-4" />}
-              loading={createDepartment.isPending}
-              onClick={() => form.submit()}
-              style={{
-                background: '#1a1a1a',
-                borderColor: '#1a1a1a',
-                color: 'white',
-              }}
-            >
-              Kaydet
-            </Button>
-          </Space>
-        </div>
-      </div>
-
-      {/* Page Content */}
-      <div className="px-8 py-8 max-w-7xl mx-auto">
-        <DepartmentForm
-          form={form}
-          onFinish={handleSubmit}
-          loading={createDepartment.isPending}
-        />
-      </div>
-    </div>
+    <FormPageLayout
+      title="Yeni Departman"
+      subtitle="Yeni bir departman oluşturun"
+      icon={<BuildingOfficeIcon className="w-5 h-5" />}
+      cancelPath="/hr/departments"
+      loading={createDepartment.isPending}
+      onSave={() => form.submit()}
+      maxWidth="max-w-5xl"
+    >
+      <DepartmentForm
+        form={form}
+        onFinish={handleSubmit}
+        loading={createDepartment.isPending}
+      />
+    </FormPageLayout>
   );
 }

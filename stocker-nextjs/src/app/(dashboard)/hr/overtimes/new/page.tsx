@@ -2,12 +2,9 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Form } from 'antd';
-import {
-  ArrowLeftIcon,
-  CheckIcon,
-  ClockIcon,
-} from '@heroicons/react/24/outline';
+import { Form } from 'antd';
+import { ClockIcon } from '@heroicons/react/24/outline';
+import { FormPageLayout } from '@/components/patterns';
 import { OvertimeForm } from '@/components/hr';
 import { useCreateOvertime } from '@/lib/api/hooks/useHR';
 import type { CreateOvertimeDto } from '@/lib/api/services/hr.types';
@@ -27,59 +24,20 @@ export default function NewOvertimePage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Glass Effect Sticky Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-4">
-            <Button
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={() => router.back()}
-              type="text"
-              className="text-gray-500 hover:text-gray-800"
-            />
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <ClockIcon className="w-4 h-4 mr-2" />
-                Yeni Fazla Mesai Talebi
-              </h1>
-              <p className="text-sm text-gray-400 m-0">Yeni bir fazla mesai talebi oluşturun</p>
-            </div>
-          </div>
-          <Space>
-            <Button onClick={() => router.push('/hr/overtimes')}>Vazgeç</Button>
-            <Button
-              type="primary"
-              icon={<CheckIcon className="w-4 h-4" />}
-              loading={createOvertime.isPending}
-              onClick={() => form.submit()}
-              style={{
-                background: '#1a1a1a',
-                borderColor: '#1a1a1a',
-                color: 'white',
-              }}
-            >
-              Kaydet
-            </Button>
-          </Space>
-        </div>
-      </div>
-
-      {/* Page Content */}
-      <div className="px-8 py-8 max-w-7xl mx-auto">
-        <OvertimeForm
-          form={form}
-          onFinish={handleSubmit}
-          loading={createOvertime.isPending}
-        />
-      </div>
-    </div>
+    <FormPageLayout
+      title="Yeni Fazla Mesai Talebi"
+      subtitle="Yeni bir fazla mesai talebi oluşturun"
+      icon={<ClockIcon className="w-5 h-5" />}
+      cancelPath="/hr/overtimes"
+      loading={createOvertime.isPending}
+      onSave={() => form.submit()}
+      maxWidth="max-w-5xl"
+    >
+      <OvertimeForm
+        form={form}
+        onFinish={handleSubmit}
+        loading={createOvertime.isPending}
+      />
+    </FormPageLayout>
   );
 }

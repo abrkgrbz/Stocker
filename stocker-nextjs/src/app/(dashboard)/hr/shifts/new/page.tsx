@@ -2,8 +2,9 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Form } from 'antd';
-import { ArrowLeftIcon, CheckIcon, ClockIcon, DocumentCheckIcon } from '@heroicons/react/24/outline';
+import { Form } from 'antd';
+import { ClockIcon } from '@heroicons/react/24/outline';
+import { FormPageLayout } from '@/components/patterns';
 import { ShiftForm } from '@/components/hr';
 import { useCreateShift } from '@/lib/api/hooks/useHR';
 import type { CreateShiftDto } from '@/lib/api/services/hr.types';
@@ -19,7 +20,7 @@ export default function NewShiftPage() {
         name: values.name,
         code: values.code,
         description: values.description,
-        shiftType: values.shiftType || 0, // Default to Regular shift type
+        shiftType: values.shiftType || 0,
         startTime: values.startTime?.format('HH:mm:ss'),
         endTime: values.endTime?.format('HH:mm:ss'),
         breakStartTime: values.breakStartTime?.format('HH:mm:ss'),
@@ -42,59 +43,20 @@ export default function NewShiftPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Glass Effect Sticky Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-4">
-            <Button
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={() => router.back()}
-              type="text"
-              className="text-gray-500 hover:text-gray-800"
-            />
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <ClockIcon className="w-5 h-5 inline mr-2" />
-                Yeni Vardiya
-              </h1>
-              <p className="text-sm text-gray-400 m-0">Yeni bir vardiya tanımlayın</p>
-            </div>
-          </div>
-          <Space>
-            <Button onClick={() => router.push('/hr/shifts')}>Vazgeç</Button>
-            <Button
-              type="primary"
-              icon={<DocumentCheckIcon className="w-4 h-4" />}
-              loading={createShift.isPending}
-              onClick={() => form.submit()}
-              style={{
-                background: '#1a1a1a',
-                borderColor: '#1a1a1a',
-                color: 'white',
-              }}
-            >
-              Kaydet
-            </Button>
-          </Space>
-        </div>
-      </div>
-
-      {/* Page Content */}
-      <div className="px-8 py-8 max-w-7xl mx-auto">
-        <ShiftForm
-          form={form}
-          onFinish={handleSubmit}
-          loading={createShift.isPending}
-        />
-      </div>
-    </div>
+    <FormPageLayout
+      title="Yeni Vardiya"
+      subtitle="Yeni bir vardiya tanımlayın"
+      icon={<ClockIcon className="w-5 h-5" />}
+      cancelPath="/hr/shifts"
+      loading={createShift.isPending}
+      onSave={() => form.submit()}
+      maxWidth="max-w-5xl"
+    >
+      <ShiftForm
+        form={form}
+        onFinish={handleSubmit}
+        loading={createShift.isPending}
+      />
+    </FormPageLayout>
   );
 }

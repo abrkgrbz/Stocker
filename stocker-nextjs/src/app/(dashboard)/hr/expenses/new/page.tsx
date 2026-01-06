@@ -2,16 +2,12 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Form } from 'antd';
-import {
-  ArrowLeftIcon,
-  CheckIcon,
-  WalletIcon,
-} from '@heroicons/react/24/outline';
+import { Form } from 'antd';
+import { WalletIcon } from '@heroicons/react/24/outline';
+import { FormPageLayout } from '@/components/patterns';
 import { ExpenseForm } from '@/components/hr';
 import { useCreateExpense } from '@/lib/api/hooks/useHR';
 import type { CreateExpenseDto } from '@/lib/api/services/hr.types';
-import { ExpenseType } from '@/lib/api/services/hr.types';
 
 export default function NewExpensePage() {
   const router = useRouter();
@@ -40,59 +36,20 @@ export default function NewExpensePage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Glass Effect Sticky Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-4">
-            <Button
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={() => router.back()}
-              type="text"
-              className="text-gray-500 hover:text-gray-800"
-            />
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <WalletIcon className="w-4 h-4 mr-2" />
-                Yeni Harcama
-              </h1>
-              <p className="text-sm text-gray-400 m-0">Yeni bir harcama kaydı oluşturun</p>
-            </div>
-          </div>
-          <Space>
-            <Button onClick={() => router.push('/hr/expenses')}>Vazgeç</Button>
-            <Button
-              type="primary"
-              icon={<CheckIcon className="w-4 h-4" />}
-              loading={createExpense.isPending}
-              onClick={() => form.submit()}
-              style={{
-                background: '#1a1a1a',
-                borderColor: '#1a1a1a',
-                color: 'white',
-              }}
-            >
-              Kaydet
-            </Button>
-          </Space>
-        </div>
-      </div>
-
-      {/* Page Content */}
-      <div className="px-8 py-8 max-w-7xl mx-auto">
-        <ExpenseForm
-          form={form}
-          onFinish={handleSubmit}
-          loading={createExpense.isPending}
-        />
-      </div>
-    </div>
+    <FormPageLayout
+      title="Yeni Harcama"
+      subtitle="Yeni bir harcama kaydı oluşturun"
+      icon={<WalletIcon className="w-5 h-5" />}
+      cancelPath="/hr/expenses"
+      loading={createExpense.isPending}
+      onSave={() => form.submit()}
+      maxWidth="max-w-5xl"
+    >
+      <ExpenseForm
+        form={form}
+        onFinish={handleSubmit}
+        loading={createExpense.isPending}
+      />
+    </FormPageLayout>
   );
 }

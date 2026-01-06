@@ -2,20 +2,8 @@
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import {
-  Typography,
-  Button,
-  Space,
-  Card,
-  Descriptions,
-  Tag,
-  Row,
-  Col,
-  Statistic,
-  Empty,
-  Modal,
-  message,
-} from 'antd';
+import { Button, Tag, Empty, Modal, message } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
   ArrowLeftIcon,
   CalendarIcon,
@@ -24,8 +12,10 @@ import {
   TrashIcon,
   UserIcon,
   XCircleIcon,
+  ClockIcon,
+  PhoneIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline';
-import { Spinner } from '@/components/primitives';
 import {
   useLeave,
   useDeleteLeave,
@@ -35,7 +25,19 @@ import {
 import { LeaveStatus } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
-const { Title, Text, Paragraph } = Typography;
+const getStatusConfig = (status?: LeaveStatus) => {
+  const statusMap: Record<number, { color: string; bgColor: string; textColor: string; text: string }> = {
+    [LeaveStatus.Pending]: { color: 'orange', bgColor: 'bg-amber-50', textColor: 'text-amber-700', text: 'Beklemede' },
+    [LeaveStatus.Approved]: { color: 'green', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700', text: 'Onaylandı' },
+    [LeaveStatus.Rejected]: { color: 'red', bgColor: 'bg-red-50', textColor: 'text-red-700', text: 'Reddedildi' },
+    [LeaveStatus.Cancelled]: { color: 'default', bgColor: 'bg-slate-100', textColor: 'text-slate-500', text: 'İptal Edildi' },
+    [LeaveStatus.Taken]: { color: 'blue', bgColor: 'bg-blue-50', textColor: 'text-blue-700', text: 'Kullanıldı' },
+    [LeaveStatus.PartiallyTaken]: { color: 'cyan', bgColor: 'bg-cyan-50', textColor: 'text-cyan-700', text: 'Kısmen Kullanıldı' },
+  };
+  const defaultConfig = { color: 'default', bgColor: 'bg-slate-100', textColor: 'text-slate-500', text: '-' };
+  if (status === undefined || status === null) return defaultConfig;
+  return statusMap[status] || defaultConfig;
+};
 
 export default function LeaveDetailPage() {
   const params = useParams();
@@ -94,23 +96,9 @@ export default function LeaveDetailPage() {
     });
   };
 
-  const getStatusConfig = (status?: LeaveStatus) => {
-    const statusMap: Record<number, { color: string; text: string }> = {
-      [LeaveStatus.Pending]: { color: 'orange', text: 'Beklemede' },
-      [LeaveStatus.Approved]: { color: 'green', text: 'Onaylandı' },
-      [LeaveStatus.Rejected]: { color: 'red', text: 'Reddedildi' },
-      [LeaveStatus.Cancelled]: { color: 'default', text: 'İptal Edildi' },
-      [LeaveStatus.Taken]: { color: 'blue', text: 'Kullanıldı' },
-      [LeaveStatus.PartiallyTaken]: { color: 'cyan', text: 'Kısmen Kullanıldı' },
-    };
-    const defaultConfig = { color: 'default', text: '-' };
-    if (status === undefined || status === null) return defaultConfig;
-    return statusMap[status] || defaultConfig;
-  };
-
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
         <Spinner size="lg" />
       </div>
     );
@@ -118,9 +106,10 @@ export default function LeaveDetailPage() {
 
   if (error || !leave) {
     return (
-      <div className="p-6">
-        <Empty description="İzin talebi bulunamadı" />
-        <div className="text-center mt-4">
+      <div className="p-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-red-800 mb-2">İzin Talebi Bulunamadı</h3>
+          <p className="text-red-600 mb-4">İstenen izin talebi bulunamadı veya bir hata oluştu.</p>
           <Button onClick={() => router.push('/hr/leaves')}>Listeye Dön</Button>
         </div>
       </div>
@@ -130,157 +119,250 @@ export default function LeaveDetailPage() {
   const statusConfig = getStatusConfig(leave.status);
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-6">
-        <Space>
-          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/leaves')}>
-            Geri
-          </Button>
-          <div>
-            <Title level={2} style={{ margin: 0 }}>
-              İzin Talebi Detayı
-            </Title>
-            <Space>
-              <Text type="secondary">
-                {leave.employeeName || `Çalışan #${leave.employeeId}`}
-              </Text>
-              <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
-            </Space>
+    <div className="min-h-screen bg-slate-50">
+      {/* Glass Effect Sticky Header */}
+      <div
+        className="sticky top-0 z-50 px-8 py-4"
+        style={{
+          background: 'rgba(248, 250, 252, 0.85)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+        }}
+      >
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <Button
+              type="text"
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
+              onClick={() => router.push('/hr/leaves')}
+              className="text-slate-600 hover:text-slate-900"
+            >
+              Geri
+            </Button>
+            <div className="h-6 w-px bg-slate-200" />
+            <div className="flex items-center gap-3">
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${statusConfig.color === 'green' ? 'bg-emerald-600' : statusConfig.color === 'orange' ? 'bg-amber-500' : statusConfig.color === 'red' ? 'bg-red-500' : 'bg-slate-400'}`}>
+                <CalendarIcon className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl font-semibold text-slate-900 m-0">İzin Talebi</h1>
+                  <Tag
+                    icon={leave.status === LeaveStatus.Approved ? <CheckCircleIcon className="w-4 h-4" /> : null}
+                    className={`border-0 ${statusConfig.bgColor} ${statusConfig.textColor}`}
+                  >
+                    {statusConfig.text}
+                  </Tag>
+                </div>
+                <p className="text-sm text-slate-500 m-0">{leave.employeeName || `Çalışan #${leave.employeeId}`}</p>
+              </div>
+            </div>
           </div>
-        </Space>
-        <Space>
-          {leave.status === LeaveStatus.Pending && (
-            <>
-              <Button
-                type="primary"
-                icon={<CheckCircleIcon className="w-4 h-4" />}
-                onClick={handleApprove}
-                style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
-              >
-                Onayla
-              </Button>
-              <Button danger icon={<XCircleIcon className="w-4 h-4" />} onClick={handleReject}>
-                Reddet
-              </Button>
-            </>
-          )}
-          <Button
-            icon={<PencilIcon className="w-4 h-4" />}
-            onClick={() => router.push(`/hr/leaves/${id}/edit`)}
-            disabled={leave.status !== LeaveStatus.Pending}
-          >
-            Düzenle
-          </Button>
-          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
-            Sil
-          </Button>
-        </Space>
+          <div className="flex items-center gap-2">
+            {leave.status === LeaveStatus.Pending && (
+              <>
+                <Button
+                  type="primary"
+                  icon={<CheckCircleIcon className="w-4 h-4" />}
+                  onClick={handleApprove}
+                  style={{ backgroundColor: '#10b981', borderColor: '#10b981' }}
+                >
+                  Onayla
+                </Button>
+                <Button
+                  danger
+                  icon={<XCircleIcon className="w-4 h-4" />}
+                  onClick={handleReject}
+                >
+                  Reddet
+                </Button>
+              </>
+            )}
+            <Button
+              icon={<PencilIcon className="w-4 h-4" />}
+              onClick={() => router.push(`/hr/leaves/${id}/edit`)}
+              disabled={leave.status !== LeaveStatus.Pending}
+              className="border-slate-200 text-slate-700 hover:border-slate-300"
+            >
+              Düzenle
+            </Button>
+            <Button
+              danger
+              icon={<TrashIcon className="w-4 h-4" />}
+              onClick={handleDelete}
+            >
+              Sil
+            </Button>
+          </div>
+        </div>
       </div>
 
-      <Row gutter={[24, 24]}>
-        {/* Stats */}
-        <Col xs={24}>
-          <Row gutter={[16, 16]}>
-            <Col xs={12} sm={6}>
-              <Card size="small">
-                <Statistic
-                  title="Başlangıç"
-                  value={dayjs(leave.startDate).format('DD.MM.YYYY')}
-                  prefix={<CalendarIcon className="w-5 h-5" />}
-                  valueStyle={{ color: '#52c41a', fontSize: 18 }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Card size="small">
-                <Statistic
-                  title="Bitiş"
-                  value={dayjs(leave.endDate).format('DD.MM.YYYY')}
-                  prefix={<CalendarIcon className="w-5 h-5" />}
-                  valueStyle={{ color: '#1890ff', fontSize: 18 }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Card size="small">
-                <Statistic
-                  title="Toplam Gün"
-                  value={leave.totalDays || 0}
-                  suffix="gün"
-                  valueStyle={{ color: '#7c3aed' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Card size="small">
-                <Statistic
-                  title="İzin Türü"
-                  value={leave.leaveTypeName || '-'}
-                  valueStyle={{ color: '#faad14', fontSize: 16 }}
-                />
-              </Card>
-            </Col>
-          </Row>
-        </Col>
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-8 py-6">
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-12 gap-6 mb-6">
+          {/* Leave Info Section - Main Card */}
+          <div className="col-span-12 lg:col-span-8">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                İzin Talebi Bilgileri
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Çalışan</p>
+                  <p className="text-sm font-medium text-slate-900 flex items-center gap-1">
+                    <UserIcon className="w-4 h-4 text-slate-400" />
+                    {leave.employeeName || `Çalışan #${leave.employeeId}`}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">İzin Türü</p>
+                  <p className="text-sm font-medium text-slate-900">{leave.leaveTypeName || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Durum</p>
+                  <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Başlangıç Tarihi</p>
+                  <p className="text-sm font-medium text-emerald-600">{dayjs(leave.startDate).format('DD.MM.YYYY')}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Bitiş Tarihi</p>
+                  <p className="text-sm font-medium text-blue-600">{dayjs(leave.endDate).format('DD.MM.YYYY')}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Toplam Gün</p>
+                  <p className="text-sm font-medium text-slate-900">{leave.totalDays || 0} gün</p>
+                </div>
+                {leave.isHalfDay && (
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Yarım Gün</p>
+                    <p className="text-sm font-medium text-slate-900">{leave.isHalfDayMorning ? 'Sabah' : 'Öğleden Sonra'}</p>
+                  </div>
+                )}
+                {leave.approvedById && (
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Onaylayan</p>
+                    <p className="text-sm font-medium text-slate-900">{leave.approvedByName || `Kullanıcı #${leave.approvedById}`}</p>
+                  </div>
+                )}
+                {leave.approvedDate && (
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Onay Tarihi</p>
+                    <p className="text-sm font-medium text-slate-900">{dayjs(leave.approvedDate).format('DD.MM.YYYY HH:mm')}</p>
+                  </div>
+                )}
+              </div>
 
-        {/* Details */}
-        <Col xs={24} lg={16}>
-          <Card title="İzin Talebi Bilgileri">
-            <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label="Çalışan">
-                <Space>
-                  <UserIcon className="w-4 h-4" />
-                  {leave.employeeName || `Çalışan #${leave.employeeId}`}
-                </Space>
-              </Descriptions.Item>
-              <Descriptions.Item label="İzin Türü">
-                {leave.leaveTypeName || '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Başlangıç Tarihi">
-                {dayjs(leave.startDate).format('DD MMMM YYYY, dddd')}
-              </Descriptions.Item>
-              <Descriptions.Item label="Bitiş Tarihi">
-                {dayjs(leave.endDate).format('DD MMMM YYYY, dddd')}
-              </Descriptions.Item>
-              <Descriptions.Item label="Toplam Gün">
-                {leave.totalDays || 0} gün
-              </Descriptions.Item>
-              <Descriptions.Item label="Durum">
-                <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
-              </Descriptions.Item>
-              {leave.approvedById && (
-                <Descriptions.Item label="Onaylayan">
-                  {leave.approvedByName || `Kullanıcı #${leave.approvedById}`}
-                </Descriptions.Item>
+              {/* Reason */}
+              {leave.reason && (
+                <div className="mt-6 pt-6 border-t border-slate-100">
+                  <p className="text-xs text-slate-400 mb-2 flex items-center gap-1">
+                    <DocumentTextIcon className="w-4 h-4" />
+                    İzin Nedeni
+                  </p>
+                  <p className="text-sm text-slate-700">{leave.reason}</p>
+                </div>
               )}
-              {leave.approvedDate && (
-                <Descriptions.Item label="Onay Tarihi">
-                  {dayjs(leave.approvedDate).format('DD.MM.YYYY HH:mm')}
-                </Descriptions.Item>
+
+              {/* Rejection Reason */}
+              {leave.rejectionReason && (
+                <div className="mt-6 pt-6 border-t border-slate-100">
+                  <p className="text-xs text-red-400 mb-2">Ret Nedeni</p>
+                  <p className="text-sm text-red-600">{leave.rejectionReason}</p>
+                </div>
               )}
-            </Descriptions>
-          </Card>
-        </Col>
+            </div>
+          </div>
 
-        {/* Reason */}
-        {leave.reason && (
-          <Col xs={24} lg={16}>
-            <Card title="İzin Nedeni">
-              <Paragraph>{leave.reason}</Paragraph>
-            </Card>
-          </Col>
-        )}
+          {/* Stats Card */}
+          <div className="col-span-12 lg:col-span-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                İzin Özeti
+              </p>
+              <div className="flex flex-col items-center justify-center py-4">
+                <div className={`w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold ${statusConfig.bgColor} ${statusConfig.textColor}`}>
+                  {leave.totalDays || 0}
+                </div>
+                <p className="text-sm font-medium text-slate-700 mt-3">Gün</p>
+              </div>
+              <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500 flex items-center gap-1">
+                    <CalendarIcon className="w-4 h-4" />
+                    Başlangıç
+                  </span>
+                  <span className="font-medium text-slate-900">{dayjs(leave.startDate).format('DD MMM')}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500 flex items-center gap-1">
+                    <CalendarIcon className="w-4 h-4" />
+                    Bitiş
+                  </span>
+                  <span className="font-medium text-slate-900">{dayjs(leave.endDate).format('DD MMM')}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500 flex items-center gap-1">
+                    <ClockIcon className="w-4 h-4" />
+                    İzin Türü
+                  </span>
+                  <span className="font-medium text-slate-900">{leave.leaveTypeName || '-'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        {/* Rejection Reason */}
-        {leave.rejectionReason && (
-          <Col xs={24} lg={16}>
-            <Card title="Ret Nedeni">
-              <Paragraph type="danger">{leave.rejectionReason}</Paragraph>
-            </Card>
-          </Col>
-        )}
-      </Row>
+        {/* Additional Info Cards */}
+        <div className="grid grid-cols-12 gap-6">
+          {/* Contact During Leave */}
+          {leave.contactDuringLeave && (
+            <div className="col-span-12 md:col-span-6">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <PhoneIcon className="w-4 h-4 text-slate-400" />
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
+                    İzin Süresince İletişim
+                  </p>
+                </div>
+                <p className="text-sm text-slate-700">{leave.contactDuringLeave}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Handover Notes */}
+          {leave.handoverNotes && (
+            <div className="col-span-12 md:col-span-6">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <DocumentTextIcon className="w-4 h-4 text-slate-400" />
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
+                    Devir Notları
+                  </p>
+                </div>
+                <p className="text-sm text-slate-700">{leave.handoverNotes}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Substitute Employee */}
+          {leave.substituteEmployeeName && (
+            <div className="col-span-12 md:col-span-6">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <UserIcon className="w-4 h-4 text-slate-400" />
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
+                    Vekil Çalışan
+                  </p>
+                </div>
+                <p className="text-sm text-slate-700">{leave.substituteEmployeeName}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

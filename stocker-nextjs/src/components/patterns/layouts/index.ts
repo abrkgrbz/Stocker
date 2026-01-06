@@ -24,3 +24,8 @@ export {
   type PageLoadingProps,
   type EmptyStateProps,
 } from './PageLayout';
+
+export {
+  FormPageLayout,
+  type FormPageLayoutProps,
+} from './FormPageLayout';

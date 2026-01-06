@@ -2,12 +2,9 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Form, message } from 'antd';
-import {
-  ArrowLeftIcon,
-  CheckIcon,
-  DocumentIcon,
-} from '@heroicons/react/24/outline';
+import { Form, message } from 'antd';
+import { DocumentIcon } from '@heroicons/react/24/outline';
+import { FormPageLayout } from '@/components/patterns';
 import { DocumentForm } from '@/components/hr';
 import { useCreateDocument, useUploadDocumentFile } from '@/lib/api/hooks/useHR';
 import type { CreateEmployeeDocumentDto } from '@/lib/api/services/hr.types';
@@ -43,7 +40,7 @@ export default function NewDocumentPage() {
         try {
           await uploadFile.mutateAsync({ id: newDocument.id, file: selectedFile });
         } catch (error) {
-          message.warning('Belge oluşturuldu ancak dosya yüklenemedi. Detay sayfasından tekrar deneyebilirsiniz.');
+          message.warning('Belge olusturuldu ancak dosya yuklenemedi. Detay sayfasindan tekrar deneyebilirsiniz.');
         }
       }
 
@@ -58,60 +55,20 @@ export default function NewDocumentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Glass Effect Sticky Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-4">
-            <Button
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={() => router.back()}
-              type="text"
-              className="text-gray-500 hover:text-gray-800"
-            />
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <DocumentIcon className="w-4 h-4 mr-2" />
-                Yeni Belge
-              </h1>
-              <p className="text-sm text-gray-400 m-0">Yeni bir belge kaydı oluşturun</p>
-            </div>
-          </div>
-          <Space>
-            <Button onClick={() => router.push('/hr/documents')}>Vazgeç</Button>
-            <Button
-              type="primary"
-              icon={<CheckIcon className="w-4 h-4" />}
-              loading={isLoading}
-              onClick={() => form.submit()}
-              style={{
-                background: '#1a1a1a',
-                borderColor: '#1a1a1a',
-                color: 'white',
-              }}
-            >
-              Kaydet
-            </Button>
-          </Space>
-        </div>
-      </div>
-
-      {/* Page Content */}
-      <div className="px-8 py-8 max-w-7xl mx-auto">
-        <DocumentForm
-          form={form}
-          onFinish={handleSubmit}
-          loading={isLoading}
-          onFileChange={handleFileChange}
-        />
-      </div>
-    </div>
+    <FormPageLayout
+      title="Yeni Belge"
+      subtitle="Yeni bir belge kaydi olusturun"
+      icon={<DocumentIcon className="w-5 h-5" />}
+      cancelPath="/hr/documents"
+      loading={isLoading}
+      onSave={() => form.submit()}
+    >
+      <DocumentForm
+        form={form}
+        onFinish={handleSubmit}
+        loading={isLoading}
+        onFileChange={handleFileChange}
+      />
+    </FormPageLayout>
   );
 }
