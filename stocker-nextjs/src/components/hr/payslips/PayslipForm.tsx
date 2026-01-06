@@ -42,8 +42,8 @@ export default function PayslipForm({ form, initialValues, onFinish, loading }: 
     if (initialValues) {
       form.setFieldsValue({
         ...initialValues,
-        payPeriodStart: initialValues.payPeriodStart ? dayjs(initialValues.payPeriodStart) : undefined,
-        payPeriodEnd: initialValues.payPeriodEnd ? dayjs(initialValues.payPeriodEnd) : undefined,
+        payPeriodStart: initialValues.periodStart ? dayjs(initialValues.periodStart) : undefined,
+        payPeriodEnd: initialValues.periodEnd ? dayjs(initialValues.periodEnd) : undefined,
         paymentDate: initialValues.paymentDate ? dayjs(initialValues.paymentDate) : undefined,
       });
     } else {
