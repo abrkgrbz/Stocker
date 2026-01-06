@@ -81,13 +81,13 @@ export default function CareerPathForm({ form, initialValues, onFinish, loading 
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Durum</label>
                 <Form.Item name="status" className="mb-0">
-                  <Select options={statusOptions} placeholder="Durum" />
+                  <Select options={statusOptions} placeholder="Durum" className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Öncelik</label>
                 <Form.Item name="priority" className="mb-0">
-                  <Select options={priorityOptions} placeholder="Öncelik" />
+                  <Select options={priorityOptions} placeholder="Öncelik" className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-4">
@@ -95,7 +95,7 @@ export default function CareerPathForm({ form, initialValues, onFinish, loading 
                   <TrophyIcon className="w-4 h-4" /> İlerleme
                 </label>
                 <Form.Item name="progressPercentage" className="mb-0">
-                  <InputNumber min={0} max={100} style={{ width: '100%' }} addonAfter="%" />
+                  <InputNumber min={0} max={100} style={{ width: '100%' }} addonAfter="%" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -115,6 +115,7 @@ export default function CareerPathForm({ form, initialValues, onFinish, loading 
                     placeholder="Çalışan seçin"
                     optionFilterProp="label"
                     options={employees.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
@@ -136,6 +137,7 @@ export default function CareerPathForm({ form, initialValues, onFinish, loading 
                     optionFilterProp="label"
                     allowClear
                     options={positions.map((p: any) => ({ value: p.id, label: p.title }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
@@ -147,6 +149,7 @@ export default function CareerPathForm({ form, initialValues, onFinish, loading 
                     placeholder="Hedef pozisyon"
                     optionFilterProp="label"
                     options={positions.map((p: any) => ({ value: p.id, label: p.title }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
@@ -162,13 +165,13 @@ export default function CareerPathForm({ form, initialValues, onFinish, loading 
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Başlangıç Tarihi <span className="text-red-500">*</span></label>
                 <Form.Item name="startDate" rules={[{ required: true, message: 'Başlangıç tarihi zorunludur' }]} className="mb-0">
-                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
+                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Hedef Tarih</label>
                 <Form.Item name="targetDate" className="mb-0">
-                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
+                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -189,6 +192,7 @@ export default function CareerPathForm({ form, initialValues, onFinish, loading 
                     placeholder="Mentor seçin"
                     optionFilterProp="label"
                     options={employees.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
@@ -204,13 +208,13 @@ export default function CareerPathForm({ form, initialValues, onFinish, loading 
               <div className="col-span-12">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Gelişim Planı</label>
                 <Form.Item name="developmentPlan" className="mb-4">
-                  <TextArea rows={4} placeholder="Gelişim planı detaylarını girin..." />
+                  <TextArea rows={4} placeholder="Gelişim planı detaylarını girin..." className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none" />
                 </Form.Item>
               </div>
               <div className="col-span-12">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Notlar</label>
                 <Form.Item name="notes" className="mb-0">
-                  <TextArea rows={3} placeholder="Ek notlar..." />
+                  <TextArea rows={3} placeholder="Ek notlar..." className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none" />
                 </Form.Item>
               </div>
             </div>

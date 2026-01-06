@@ -72,13 +72,13 @@ export default function OnboardingForm({ form, initialValues, onFinish, loading 
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Durum</label>
                 <Form.Item name="status" className="mb-0">
-                  <Select options={statusOptions} placeholder="Durum" />
+                  <Select options={statusOptions} placeholder="Durum" className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Tamamlanma %</label>
                 <Form.Item name="completionPercentage" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} min={0} max={100} placeholder="Tamamlanma %" />
+                  <InputNumber style={{ width: '100%' }} min={0} max={100} placeholder="Tamamlanma %" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -98,6 +98,7 @@ export default function OnboardingForm({ form, initialValues, onFinish, loading 
                     placeholder="Çalışan seçin"
                     optionFilterProp="label"
                     options={employees.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
@@ -110,6 +111,7 @@ export default function OnboardingForm({ form, initialValues, onFinish, loading 
                     optionFilterProp="label"
                     allowClear
                     options={employees.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
@@ -122,6 +124,7 @@ export default function OnboardingForm({ form, initialValues, onFinish, loading 
                     optionFilterProp="label"
                     allowClear
                     options={employees.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
@@ -134,19 +137,20 @@ export default function OnboardingForm({ form, initialValues, onFinish, loading 
                     optionFilterProp="label"
                     allowClear
                     options={employees.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Başlangıç Tarihi <span className="text-red-500">*</span></label>
                 <Form.Item name="startDate" rules={[{ required: true, message: 'Başlangıç tarihi zorunludur' }]} className="mb-0">
-                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Başlangıç tarihi" />
+                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Başlangıç tarihi" className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Beklenen Bitiş</label>
                 <Form.Item name="expectedEndDate" className="mb-0">
-                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Beklenen bitiş" />
+                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Beklenen bitiş" className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -266,7 +270,7 @@ export default function OnboardingForm({ form, initialValues, onFinish, loading 
               Notlar
             </h3>
             <Form.Item name="notes" className="mb-0">
-              <TextArea rows={3} placeholder="Ek notlar..." />
+              <TextArea rows={3} placeholder="Ek notlar..." className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none" />
             </Form.Item>
           </div>
         </div>

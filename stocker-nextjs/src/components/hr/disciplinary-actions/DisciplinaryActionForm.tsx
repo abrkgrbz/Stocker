@@ -109,13 +109,13 @@ export default function DisciplinaryActionForm({ form, initialValues, onFinish, 
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Durum</label>
                 <Form.Item name="status" className="mb-0">
-                  <Select options={statusOptions} placeholder="Durum" />
+                  <Select options={statusOptions} placeholder="Durum" className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Şiddet</label>
                 <Form.Item name="severity" className="mb-0">
-                  <Select options={severityOptions} placeholder="Şiddet" />
+                  <Select options={severityOptions} placeholder="Şiddet" className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -135,19 +135,20 @@ export default function DisciplinaryActionForm({ form, initialValues, onFinish, 
                     placeholder="Çalışan seçin"
                     optionFilterProp="label"
                     options={employees.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">İşlem Türü <span className="text-red-500">*</span></label>
                 <Form.Item name="actionType" rules={[{ required: true, message: 'İşlem türü zorunludur' }]} className="mb-0">
-                  <Select options={actionTypeOptions} placeholder="İşlem türü" />
+                  <Select options={actionTypeOptions} placeholder="İşlem türü" className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-12">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">İhlal Türü</label>
                 <Form.Item name="violationType" className="mb-0">
-                  <Select options={violationTypeOptions} placeholder="İhlal türü" allowClear />
+                  <Select options={violationTypeOptions} placeholder="İhlal türü" allowClear className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -162,19 +163,19 @@ export default function DisciplinaryActionForm({ form, initialValues, onFinish, 
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Olay Tarihi <span className="text-red-500">*</span></label>
                 <Form.Item name="incidentDate" rules={[{ required: true, message: 'Olay tarihi zorunludur' }]} className="mb-0">
-                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
+                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Yürürlük Tarihi</label>
                 <Form.Item name="effectiveDate" className="mb-0">
-                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
+                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Bitiş Tarihi</label>
                 <Form.Item name="expiryDate" className="mb-0">
-                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
+                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -189,13 +190,13 @@ export default function DisciplinaryActionForm({ form, initialValues, onFinish, 
               <div className="col-span-12">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Genel Açıklama</label>
                 <Form.Item name="description" className="mb-4">
-                  <TextArea rows={3} placeholder="Genel açıklama..." />
+                  <TextArea rows={3} placeholder="Genel açıklama..." className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none" />
                 </Form.Item>
               </div>
               <div className="col-span-12">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Olay Açıklaması</label>
                 <Form.Item name="incidentDescription" className="mb-0">
-                  <TextArea rows={3} placeholder="Olay açıklaması..." />
+                  <TextArea rows={3} placeholder="Olay açıklaması..." className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none" />
                 </Form.Item>
               </div>
             </div>
@@ -216,13 +217,14 @@ export default function DisciplinaryActionForm({ form, initialValues, onFinish, 
                     placeholder="Soruşturmacı seçin"
                     optionFilterProp="label"
                     options={employees.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
               <div className="col-span-12">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Soruşturma Bulguları</label>
                 <Form.Item name="investigationFindings" className="mb-0">
-                  <TextArea rows={3} placeholder="Soruşturma bulguları..." />
+                  <TextArea rows={3} placeholder="Soruşturma bulguları..." className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none" />
                 </Form.Item>
               </div>
             </div>
@@ -237,19 +239,19 @@ export default function DisciplinaryActionForm({ form, initialValues, onFinish, 
               <div className="col-span-12">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Çalışan Savunması</label>
                 <Form.Item name="employeeResponse" className="mb-4">
-                  <TextArea rows={3} placeholder="Çalışan savunması..." />
+                  <TextArea rows={3} placeholder="Çalışan savunması..." className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none" />
                 </Form.Item>
               </div>
               <div className="col-span-12">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Düzeltici Eylemler</label>
                 <Form.Item name="correctiveActions" className="mb-4">
-                  <TextArea rows={3} placeholder="Düzeltici eylemler..." />
+                  <TextArea rows={3} placeholder="Düzeltici eylemler..." className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none" />
                 </Form.Item>
               </div>
               <div className="col-span-12">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Notlar</label>
                 <Form.Item name="notes" className="mb-0">
-                  <TextArea rows={3} placeholder="Ek notlar..." />
+                  <TextArea rows={3} placeholder="Ek notlar..." className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none" />
                 </Form.Item>
               </div>
             </div>

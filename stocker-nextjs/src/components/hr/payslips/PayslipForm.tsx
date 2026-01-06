@@ -83,13 +83,13 @@ export default function PayslipForm({ form, initialValues, onFinish, loading }: 
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Durum</label>
                 <Form.Item name="status" className="mb-0">
-                  <Select options={statusOptions} placeholder="Durum" />
+                  <Select options={statusOptions} placeholder="Durum" className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Ödeme Yöntemi</label>
                 <Form.Item name="paymentMethod" className="mb-0">
-                  <Select options={paymentMethodOptions} placeholder="Ödeme yöntemi" allowClear />
+                  <Select options={paymentMethodOptions} placeholder="Ödeme yöntemi" allowClear className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -109,25 +109,26 @@ export default function PayslipForm({ form, initialValues, onFinish, loading }: 
                     placeholder="Çalışan seçin"
                     optionFilterProp="label"
                     options={employees.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Dönem Başlangıç <span className="text-red-500">*</span></label>
                 <Form.Item name="payPeriodStart" rules={[{ required: true, message: 'Dönem başlangıç zorunludur' }]} className="mb-0">
-                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Dönem başlangıç" />
+                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Dönem başlangıç" className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Dönem Bitiş <span className="text-red-500">*</span></label>
                 <Form.Item name="payPeriodEnd" rules={[{ required: true, message: 'Dönem bitiş zorunludur' }]} className="mb-0">
-                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Dönem bitiş" />
+                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Dönem bitiş" className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Ödeme Tarihi</label>
                 <Form.Item name="paymentDate" className="mb-0">
-                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Ödeme tarihi" />
+                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Ödeme tarihi" className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -142,49 +143,49 @@ export default function PayslipForm({ form, initialValues, onFinish, loading }: 
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Temel Maaş <span className="text-red-500">*</span></label>
                 <Form.Item name="basicSalary" rules={[{ required: true, message: 'Temel maaş zorunludur' }]} className="mb-0">
-                  <InputNumber style={{ width: '100%' }} placeholder="Temel maaş" prefix="₺" />
+                  <InputNumber style={{ width: '100%' }} placeholder="Temel maaş" prefix="₺" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Fazla Mesai</label>
                 <Form.Item name="overtimePay" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} placeholder="Fazla mesai" prefix="₺" />
+                  <InputNumber style={{ width: '100%' }} placeholder="Fazla mesai" prefix="₺" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">İkramiye</label>
                 <Form.Item name="bonuses" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} placeholder="İkramiye" prefix="₺" />
+                  <InputNumber style={{ width: '100%' }} placeholder="İkramiye" prefix="₺" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Komisyon</label>
                 <Form.Item name="commission" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} placeholder="Komisyon" prefix="₺" />
+                  <InputNumber style={{ width: '100%' }} placeholder="Komisyon" prefix="₺" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Yemek</label>
                 <Form.Item name="mealAllowance" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} placeholder="Yemek" prefix="₺" />
+                  <InputNumber style={{ width: '100%' }} placeholder="Yemek" prefix="₺" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Ulaşım</label>
                 <Form.Item name="transportAllowance" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} placeholder="Ulaşım" prefix="₺" />
+                  <InputNumber style={{ width: '100%' }} placeholder="Ulaşım" prefix="₺" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Konut</label>
                 <Form.Item name="housingAllowance" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} placeholder="Konut" prefix="₺" />
+                  <InputNumber style={{ width: '100%' }} placeholder="Konut" prefix="₺" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-12">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Diğer Ödenekler</label>
                 <Form.Item name="otherAllowances" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} placeholder="Diğer ödenekler" prefix="₺" />
+                  <InputNumber style={{ width: '100%' }} placeholder="Diğer ödenekler" prefix="₺" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -199,49 +200,49 @@ export default function PayslipForm({ form, initialValues, onFinish, loading }: 
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Gelir Vergisi</label>
                 <Form.Item name="incomeTax" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} placeholder="Gelir vergisi" prefix="₺" />
+                  <InputNumber style={{ width: '100%' }} placeholder="Gelir vergisi" prefix="₺" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Damga Vergisi</label>
                 <Form.Item name="stampTax" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} placeholder="Damga vergisi" prefix="₺" />
+                  <InputNumber style={{ width: '100%' }} placeholder="Damga vergisi" prefix="₺" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">SGK (Çalışan)</label>
                 <Form.Item name="ssiEmployeeContribution" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} placeholder="SGK (çalışan)" prefix="₺" />
+                  <InputNumber style={{ width: '100%' }} placeholder="SGK (çalışan)" prefix="₺" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">İşsizlik (Çalışan)</label>
                 <Form.Item name="unemploymentInsuranceEmployee" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} placeholder="İşsizlik (çalışan)" prefix="₺" />
+                  <InputNumber style={{ width: '100%' }} placeholder="İşsizlik (çalışan)" prefix="₺" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Sağlık Sigortası</label>
                 <Form.Item name="healthInsurance" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} placeholder="Sağlık sigortası" prefix="₺" />
+                  <InputNumber style={{ width: '100%' }} placeholder="Sağlık sigortası" prefix="₺" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Sendika Aidatı</label>
                 <Form.Item name="unionDues" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} placeholder="Sendika aidatı" prefix="₺" />
+                  <InputNumber style={{ width: '100%' }} placeholder="Sendika aidatı" prefix="₺" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">İcra Kesintisi</label>
                 <Form.Item name="garnishments" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} placeholder="İcra kesintisi" prefix="₺" />
+                  <InputNumber style={{ width: '100%' }} placeholder="İcra kesintisi" prefix="₺" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Diğer Kesintiler</label>
                 <Form.Item name="otherDeductions" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} placeholder="Diğer kesintiler" prefix="₺" />
+                  <InputNumber style={{ width: '100%' }} placeholder="Diğer kesintiler" prefix="₺" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -256,13 +257,13 @@ export default function PayslipForm({ form, initialValues, onFinish, loading }: 
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">SGK (İşveren)</label>
                 <Form.Item name="ssiEmployerContribution" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} placeholder="SGK (işveren)" prefix="₺" />
+                  <InputNumber style={{ width: '100%' }} placeholder="SGK (işveren)" prefix="₺" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">İşsizlik (İşveren)</label>
                 <Form.Item name="unemploymentInsuranceEmployer" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} placeholder="İşsizlik (işveren)" prefix="₺" />
+                  <InputNumber style={{ width: '100%' }} placeholder="İşsizlik (işveren)" prefix="₺" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -274,7 +275,7 @@ export default function PayslipForm({ form, initialValues, onFinish, loading }: 
               Notlar
             </h3>
             <Form.Item name="notes" className="mb-0">
-              <TextArea rows={3} placeholder="Ek notlar..." />
+              <TextArea rows={3} placeholder="Ek notlar..." className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none" />
             </Form.Item>
           </div>
         </div>

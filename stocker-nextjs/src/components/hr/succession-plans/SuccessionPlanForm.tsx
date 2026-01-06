@@ -82,19 +82,19 @@ export default function SuccessionPlanForm({ form, initialValues, onFinish, load
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Durum</label>
                 <Form.Item name="status" className="mb-0">
-                  <Select options={statusOptions} placeholder="Durum" />
+                  <Select options={statusOptions} placeholder="Durum" className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Öncelik</label>
                 <Form.Item name="priority" className="mb-0">
-                  <Select options={priorityOptions} placeholder="Öncelik" />
+                  <Select options={priorityOptions} placeholder="Öncelik" className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Hazırlık Skoru (%)</label>
                 <Form.Item name="readinessScore" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} min={0} max={100} placeholder="Hazırlık skoru" />
+                  <InputNumber style={{ width: '100%' }} min={0} max={100} placeholder="Hazırlık skoru" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -114,6 +114,7 @@ export default function SuccessionPlanForm({ form, initialValues, onFinish, load
                     placeholder="Pozisyon seçin"
                     optionFilterProp="label"
                     options={positions.map((p: any) => ({ value: p.id, label: p.title }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
@@ -126,6 +127,7 @@ export default function SuccessionPlanForm({ form, initialValues, onFinish, load
                     optionFilterProp="label"
                     allowClear
                     options={departments.map((d: any) => ({ value: d.id, label: d.name }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
@@ -138,19 +140,20 @@ export default function SuccessionPlanForm({ form, initialValues, onFinish, load
                     optionFilterProp="label"
                     allowClear
                     options={employees.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Hedef Tarih</label>
                 <Form.Item name="targetDate" className="mb-0">
-                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Hedef tarih" />
+                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Hedef tarih" className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Sonraki İnceleme</label>
                 <Form.Item name="nextReviewDate" className="mb-0">
-                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Sonraki inceleme" />
+                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Sonraki inceleme" className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -171,13 +174,14 @@ export default function SuccessionPlanForm({ form, initialValues, onFinish, load
                     optionFilterProp="label"
                     allowClear
                     options={employees.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Hazırlık %</label>
                 <Form.Item name="primaryCandidateReadiness" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} min={0} max={100} placeholder="%" />
+                  <InputNumber style={{ width: '100%' }} min={0} max={100} placeholder="%" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-8">
@@ -189,13 +193,14 @@ export default function SuccessionPlanForm({ form, initialValues, onFinish, load
                     optionFilterProp="label"
                     allowClear
                     options={employees.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Hazırlık %</label>
                 <Form.Item name="secondaryCandidateReadiness" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} min={0} max={100} placeholder="%" />
+                  <InputNumber style={{ width: '100%' }} min={0} max={100} placeholder="%" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-8">
@@ -207,13 +212,14 @@ export default function SuccessionPlanForm({ form, initialValues, onFinish, load
                     optionFilterProp="label"
                     allowClear
                     options={employees.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Hazırlık %</label>
                 <Form.Item name="tertiaryCandidateReadiness" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} min={0} max={100} placeholder="%" />
+                  <InputNumber style={{ width: '100%' }} min={0} max={100} placeholder="%" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -228,19 +234,19 @@ export default function SuccessionPlanForm({ form, initialValues, onFinish, load
               <div className="col-span-12">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Kritik Yetkinlikler</label>
                 <Form.Item name="keyCompetencies" className="mb-4">
-                  <TextArea rows={3} placeholder="Kritik yetkinlikler..." />
+                  <TextArea rows={3} placeholder="Kritik yetkinlikler..." className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none" />
                 </Form.Item>
               </div>
               <div className="col-span-12">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Gelişim İhtiyaçları</label>
                 <Form.Item name="developmentNeeds" className="mb-4">
-                  <TextArea rows={3} placeholder="Gelişim ihtiyaçları..." />
+                  <TextArea rows={3} placeholder="Gelişim ihtiyaçları..." className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none" />
                 </Form.Item>
               </div>
               <div className="col-span-12">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Notlar</label>
                 <Form.Item name="notes" className="mb-0">
-                  <TextArea rows={3} placeholder="Ek notlar..." />
+                  <TextArea rows={3} placeholder="Ek notlar..." className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none" />
                 </Form.Item>
               </div>
             </div>

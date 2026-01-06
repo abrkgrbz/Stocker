@@ -83,7 +83,11 @@ export default function EmployeeSkillForm({ form, initialValues, onFinish, loadi
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Seviye</label>
                 <Form.Item name="proficiencyLevel" className="mb-0">
-                  <Select options={proficiencyOptions} placeholder="Seviye" />
+                  <Select
+                    options={proficiencyOptions}
+                    placeholder="Seviye"
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
                 </Form.Item>
               </div>
               <div className="col-span-4">
@@ -115,31 +119,40 @@ export default function EmployeeSkillForm({ form, initialValues, onFinish, loadi
                     placeholder="Çalışan seçin"
                     optionFilterProp="label"
                     options={employees.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Yetkinlik Adı <span className="text-red-500">*</span></label>
                 <Form.Item name="skillName" rules={[{ required: true, message: 'Yetkinlik adı zorunludur' }]} className="mb-0">
-                  <Input placeholder="Yetkinlik adı" />
+                  <Input
+                    placeholder="Yetkinlik adı"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Kategori</label>
                 <Form.Item name="skillCategory" className="mb-0">
-                  <Select options={categoryOptions} placeholder="Kategori" allowClear />
+                  <Select
+                    options={categoryOptions}
+                    placeholder="Kategori"
+                    allowClear
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Deneyim (Yıl)</label>
                 <Form.Item name="yearsOfExperience" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} placeholder="Deneyim (yıl)" min={0} />
+                  <InputNumber style={{ width: '100%' }} placeholder="Deneyim (yıl)" min={0} className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Son Kullanım</label>
                 <Form.Item name="lastUsedDate" className="mb-0">
-                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Son kullanım" />
+                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Son kullanım" className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -154,31 +167,31 @@ export default function EmployeeSkillForm({ form, initialValues, onFinish, loadi
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Sertifika Adı</label>
                 <Form.Item name="certificationName" className="mb-0">
-                  <Input placeholder="Sertifika adı" />
+                  <Input placeholder="Sertifika adı" className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Veren Kurum</label>
                 <Form.Item name="issuingOrganization" className="mb-0">
-                  <Input placeholder="Veren kurum" />
+                  <Input placeholder="Veren kurum" className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Sertifika Tarihi</label>
                 <Form.Item name="certificationDate" className="mb-0">
-                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Sertifika tarihi" />
+                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Sertifika tarihi" className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Geçerlilik Bitiş</label>
                 <Form.Item name="certificationExpiry" className="mb-0">
-                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Geçerlilik bitiş" />
+                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Geçerlilik bitiş" className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Sertifika ID</label>
                 <Form.Item name="credentialId" className="mb-0">
-                  <Input placeholder="Sertifika ID" />
+                  <Input placeholder="Sertifika ID" className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -190,7 +203,7 @@ export default function EmployeeSkillForm({ form, initialValues, onFinish, loadi
               Notlar
             </h3>
             <Form.Item name="notes" className="mb-0">
-              <TextArea rows={3} placeholder="Ek notlar..." />
+              <TextArea rows={3} placeholder="Ek notlar..." className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none" />
             </Form.Item>
           </div>
         </div>

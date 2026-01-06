@@ -83,13 +83,13 @@ export default function InterviewForm({ form, initialValues, onFinish, loading }
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Durum</label>
                 <Form.Item name="status" className="mb-0">
-                  <Select options={statusOptions} placeholder="Durum" />
+                  <Select options={statusOptions} placeholder="Durum" className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Mülakat Türü <span className="text-red-500">*</span></label>
                 <Form.Item name="interviewType" rules={[{ required: true, message: 'Mülakat türü zorunludur' }]} className="mb-0">
-                  <Select options={interviewTypeOptions} placeholder="Mülakat türü" />
+                  <Select options={interviewTypeOptions} placeholder="Mülakat türü" className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -109,6 +109,7 @@ export default function InterviewForm({ form, initialValues, onFinish, loading }
                     placeholder="Başvuru seçin"
                     optionFilterProp="label"
                     options={applications.map((a: any) => ({ value: a.id, label: `${a.candidateName} - ${a.positionTitle}` }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
@@ -120,6 +121,7 @@ export default function InterviewForm({ form, initialValues, onFinish, loading }
                     placeholder="Görüşmeci seçin"
                     optionFilterProp="label"
                     options={employees.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
@@ -135,25 +137,25 @@ export default function InterviewForm({ form, initialValues, onFinish, loading }
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Tarih ve Saat <span className="text-red-500">*</span></label>
                 <Form.Item name="scheduledDate" rules={[{ required: true, message: 'Tarih ve saat zorunludur' }]} className="mb-0">
-                  <DatePicker showTime style={{ width: '100%' }} format="DD.MM.YYYY HH:mm" placeholder="Tarih ve saat" />
+                  <DatePicker showTime style={{ width: '100%' }} format="DD.MM.YYYY HH:mm" placeholder="Tarih ve saat" className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Süre (dakika)</label>
                 <Form.Item name="duration" className="mb-0">
-                  <InputNumber style={{ width: '100%' }} placeholder="Süre" min={15} addonAfter="dk" />
+                  <InputNumber style={{ width: '100%' }} placeholder="Süre" min={15} addonAfter="dk" className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Konum</label>
                 <Form.Item name="location" className="mb-0">
-                  <Input placeholder="Konum" />
+                  <Input placeholder="Konum" className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Video Link</label>
                 <Form.Item name="videoLink" className="mb-0">
-                  <Input placeholder="Video link (Zoom, Teams vb.)" />
+                  <Input placeholder="Video link (Zoom, Teams vb.)" className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -165,7 +167,7 @@ export default function InterviewForm({ form, initialValues, onFinish, loading }
               Notlar
             </h3>
             <Form.Item name="notes" className="mb-0">
-              <TextArea rows={3} placeholder="Mülakat notları..." />
+              <TextArea rows={3} placeholder="Mülakat notları..." className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none" />
             </Form.Item>
           </div>
         </div>

@@ -92,13 +92,13 @@ export default function GrievanceForm({ form, initialValues, onFinish, loading }
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Durum</label>
                 <Form.Item name="status" className="mb-0">
-                  <Select options={statusOptions} placeholder="Durum" />
+                  <Select options={statusOptions} placeholder="Durum" className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Öncelik</label>
                 <Form.Item name="priority" className="mb-0">
-                  <Select options={priorityOptions} placeholder="Öncelik" />
+                  <Select options={priorityOptions} placeholder="Öncelik" className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -118,25 +118,26 @@ export default function GrievanceForm({ form, initialValues, onFinish, loading }
                     placeholder="Çalışan seçin"
                     optionFilterProp="label"
                     options={employees.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Şikayet Türü <span className="text-red-500">*</span></label>
                 <Form.Item name="grievanceType" rules={[{ required: true, message: 'Şikayet türü zorunludur' }]} className="mb-0">
-                  <Select options={grievanceTypeOptions} placeholder="Şikayet türü" />
+                  <Select options={grievanceTypeOptions} placeholder="Şikayet türü" className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Başvuru Tarihi <span className="text-red-500">*</span></label>
                 <Form.Item name="filedDate" rules={[{ required: true, message: 'Başvuru tarihi zorunludur' }]} className="mb-0">
-                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Başvuru tarihi" />
+                  <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Başvuru tarihi" className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white" />
                 </Form.Item>
               </div>
               <div className="col-span-12">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Konu <span className="text-red-500">*</span></label>
                 <Form.Item name="subject" rules={[{ required: true, message: 'Konu zorunludur' }]} className="mb-0">
-                  <Input placeholder="Konu" />
+                  <Input placeholder="Konu" className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white" />
                 </Form.Item>
               </div>
             </div>
@@ -148,7 +149,7 @@ export default function GrievanceForm({ form, initialValues, onFinish, loading }
               Açıklama
             </h3>
             <Form.Item name="description" rules={[{ required: true, message: 'Açıklama zorunludur' }]} className="mb-0">
-              <TextArea rows={4} placeholder="Şikayet açıklaması..." />
+              <TextArea rows={4} placeholder="Şikayet açıklaması..." className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none" />
             </Form.Item>
           </div>
 
@@ -167,13 +168,14 @@ export default function GrievanceForm({ form, initialValues, onFinish, loading }
                     placeholder="İncelemeye atanacak kişi"
                     optionFilterProp="label"
                     options={employees.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
               <div className="col-span-12">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Soruşturma Notları</label>
                 <Form.Item name="investigationNotes" className="mb-0">
-                  <TextArea rows={3} placeholder="Soruşturma notları..." />
+                  <TextArea rows={3} placeholder="Soruşturma notları..." className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none" />
                 </Form.Item>
               </div>
             </div>
