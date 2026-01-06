@@ -1,76 +1,143 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Table, Button, Tag, Space, Input, Card } from 'antd';
-import {
-  EyeIcon,
-  MagnifyingGlassIcon,
-  PencilIcon,
-  PlusIcon,
-  TrashIcon,
-  UserGroupIcon,
-} from '@heroicons/react/24/outline';
-import type { ColumnsType } from 'antd/es/table';
+import { UserGroupIcon, MagnifyingGlassIcon, PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
+import { Input } from '@/components/primitives/inputs';
+import { Alert } from '@/components/primitives/feedback';
+import { InterviewsStats, InterviewsTable } from '@/components/hr/interviews';
 import { useInterviews, useDeleteInterview } from '@/lib/api/hooks/useHR';
-
-interface Interview {
-  id: number;
-  jobApplicationId: number;
-  candidateName?: string;
-  interviewerName?: string;
-  interviewType: string;
-  status: string;
-  scheduledDateTime: string;
-  overallRating?: number;
-}
-
-const statusColors: Record<string, string> = { 'Scheduled': 'processing', 'Confirmed': 'cyan', 'InProgress': 'blue', 'Completed': 'success', 'Cancelled': 'error', 'NoShow': 'default', 'Rescheduled': 'warning' };
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
+import type { InterviewDto } from '@/lib/api/services/hr.types';
 
 export default function InterviewsPage() {
   const router = useRouter();
-  const { data: interviews, isLoading } = useInterviews();
-  const deleteInterview = useDeleteInterview();
-  const [searchText, setSearchText] = React.useState('');
+  const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  const filteredData = React.useMemo(() => {
-    if (!interviews) return [];
-    if (!searchText) return interviews;
-    const lower = searchText.toLowerCase();
-    return interviews.filter((item: Interview) => item.candidateName?.toLowerCase().includes(lower) || item.interviewerName?.toLowerCase().includes(lower));
-  }, [interviews, searchText]);
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
-  const handleDelete = async (id: number) => { try { await deleteInterview.mutateAsync(id); } catch (error) {} };
+  const { data: interviewsData, isLoading, error, refetch } = useInterviews();
+  const deleteInterviewMutation = useDeleteInterview();
 
-  const columns: ColumnsType<Interview> = [
-    { title: 'Aday', dataIndex: 'candidateName', key: 'candidateName', sorter: (a, b) => (a.candidateName || '').localeCompare(b.candidateName || '') },
-    { title: 'Gorusmeci', dataIndex: 'interviewerName', key: 'interviewerName' },
-    { title: 'Tur', dataIndex: 'interviewType', key: 'interviewType' },
-    { title: 'Durum', dataIndex: 'status', key: 'status', render: (status: string) => <Tag color={statusColors[status] || 'default'}>{status}</Tag> },
-    { title: 'Tarih', dataIndex: 'scheduledDateTime', key: 'scheduledDateTime', render: (date: string) => date ? new Date(date).toLocaleString('tr-TR') : '-' },
-    { title: 'Puan', dataIndex: 'overallRating', key: 'overallRating', render: (rating: number) => rating ? `${rating}/10` : '-' },
-    { title: 'Islemler', key: 'actions', render: (_, record) => (
-      <Space>
-        <Button type="text" icon={<EyeIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/interviews/${record.id}`)} />
-        <Button type="text" icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/interviews/${record.id}/edit`)} />
-        <Button type="text" danger icon={<TrashIcon className="w-4 h-4" />} onClick={() => handleDelete(record.id)} />
-      </Space>
-    )},
-  ];
+  // Client-side filtering
+  const filteredInterviews = useMemo(() => {
+    const interviews = interviewsData || [];
+    if (!debouncedSearch) return interviews;
+    const lower = debouncedSearch.toLowerCase();
+    return interviews.filter((item: InterviewDto) =>
+      item.candidateName?.toLowerCase().includes(lower) ||
+      item.interviewerName?.toLowerCase().includes(lower)
+    );
+  }, [interviewsData, debouncedSearch]);
+
+  const totalCount = filteredInterviews.length;
+
+  const handleView = (id: number) => {
+    router.push(`/hr/interviews/${id}`);
+  };
+
+  const handleEdit = (id: number) => {
+    router.push(`/hr/interviews/${id}/edit`);
+  };
+
+  const handleDelete = async (interview: InterviewDto) => {
+    try {
+      await deleteInterviewMutation.mutateAsync(interview.id);
+      showSuccess('Mülakat başarıyla silindi');
+      refetch();
+    } catch (err) {
+      showApiError(err, 'Mülakat silinemedi');
+    }
+  };
+
+  const handlePageChange = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
+  };
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2"><UserGroupIcon className="w-4 h-4" /> Mulakatlar</h1>
-          <p className="text-gray-500 mt-1">Is gorusmelerini yonetin</p>
-        </div>
-        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/interviews/new')} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Yeni Mulakat</Button>
+    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <InterviewsStats interviews={filteredInterviews} loading={isLoading} />
       </div>
-      <Card>
-        <div className="mb-4"><Input placeholder="Ara..." prefix={<MagnifyingGlassIcon className="w-4 h-4" />} value={searchText} onChange={(e) => setSearchText(e.target.value)} style={{ width: 300 }} /></div>
-        <Table columns={columns} dataSource={filteredData} rowKey="id" loading={isLoading} pagination={{ pageSize: 10 }} />
-      </Card>
-    </div>
+
+      {/* Header */}
+      <ListPageHeader
+        icon={<UserGroupIcon className="w-5 h-5" />}
+        iconColor="#7c3aed"
+        title="Mülakatlar"
+        description="İş görüşmelerini planlayın ve takip edin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Mülakat',
+          onClick: () => router.push('/hr/interviews/new'),
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      />
+
+      {error && (
+        <Alert
+          variant="error"
+          title="Mülakatlar yüklenemedi"
+          message={(error as Error).message}
+          closable
+          action={
+            <button
+              onClick={() => refetch()}
+              className="text-red-600 hover:text-red-800 font-medium"
+            >
+              Tekrar Dene
+            </button>
+          }
+          className="mt-6"
+        />
+      )}
+
+      <DataTableWrapper className="mt-6">
+        <div className="p-4 border-b border-gray-100">
+          <Input
+            placeholder="Mülakat ara... (aday adı, görüşmeci)"
+            prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
+            size="lg"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="max-w-md"
+          />
+        </div>
+
+        <InterviewsTable
+          interviews={filteredInterviews}
+          loading={isLoading}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalCount={totalCount}
+          onPageChange={handlePageChange}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      </DataTableWrapper>
+    </PageContainer>
   );
 }

@@ -1,170 +1,143 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Table, Button, Tag, Space, Input, Card } from 'antd';
-import {
-  ExclamationTriangleIcon,
-  EyeIcon,
-  MagnifyingGlassIcon,
-  PencilIcon,
-  PlusIcon,
-  TrashIcon,
-} from '@heroicons/react/24/outline';
-import type { ColumnsType } from 'antd/es/table';
+import { ExclamationTriangleIcon, MagnifyingGlassIcon, PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
+import { Input } from '@/components/primitives/inputs';
+import { Alert } from '@/components/primitives/feedback';
+import { DisciplinaryActionsStats, DisciplinaryActionsTable } from '@/components/hr/disciplinary-actions';
 import { useDisciplinaryActions, useDeleteDisciplinaryAction } from '@/lib/api/hooks/useHR';
-
-interface DisciplinaryAction {
-  id: number;
-  employeeId: number;
-  employeeName?: string;
-  actionType: string;
-  severityLevel: string;
-  status: string;
-  incidentDate: string;
-  sanctionStartDate?: string;
-  incidentDescription?: string;
-}
-
-const statusColors: Record<string, string> = {
-  'Draft': 'default',
-  'UnderInvestigation': 'processing',
-  'PendingReview': 'warning',
-  'Approved': 'success',
-  'Implemented': 'success',
-  'Appealed': 'orange',
-  'Overturned': 'error',
-  'Closed': 'default',
-};
-
-const severityColors: Record<string, string> = {
-  'Minor': 'blue',
-  'Moderate': 'orange',
-  'Major': 'red',
-  'Critical': 'magenta',
-};
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
+import type { DisciplinaryActionDto } from '@/lib/api/services/hr.types';
 
 export default function DisciplinaryActionsPage() {
   const router = useRouter();
-  const { data: actions, isLoading } = useDisciplinaryActions();
-  const deleteAction = useDeleteDisciplinaryAction();
-  const [searchText, setSearchText] = React.useState('');
+  const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  const filteredData = React.useMemo(() => {
-    if (!actions) return [];
-    if (!searchText) return actions;
-    const lower = searchText.toLowerCase();
-    return actions.filter((item: DisciplinaryAction) =>
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText]);
+
+  const { data: actionsData, isLoading, error, refetch } = useDisciplinaryActions();
+  const deleteActionMutation = useDeleteDisciplinaryAction();
+
+  // Client-side filtering
+  const filteredActions = useMemo(() => {
+    const actions = actionsData || [];
+    if (!debouncedSearch) return actions;
+    const lower = debouncedSearch.toLowerCase();
+    return actions.filter((item: DisciplinaryActionDto) =>
       item.employeeName?.toLowerCase().includes(lower) ||
       item.actionType?.toLowerCase().includes(lower)
     );
-  }, [actions, searchText]);
+  }, [actionsData, debouncedSearch]);
 
-  const handleDelete = async (id: number) => {
+  const totalCount = filteredActions.length;
+
+  const handleView = (id: number) => {
+    router.push(`/hr/disciplinary-actions/${id}`);
+  };
+
+  const handleEdit = (id: number) => {
+    router.push(`/hr/disciplinary-actions/${id}/edit`);
+  };
+
+  const handleDelete = async (action: DisciplinaryActionDto) => {
     try {
-      await deleteAction.mutateAsync(id);
-    } catch (error) {
-      // Error handled by hook
+      await deleteActionMutation.mutateAsync(action.id);
+      showSuccess('Disiplin işlemi başarıyla silindi');
+      refetch();
+    } catch (err) {
+      showApiError(err, 'Disiplin işlemi silinemedi');
     }
   };
 
-  const columns: ColumnsType<DisciplinaryAction> = [
-    {
-      title: 'Calisan',
-      dataIndex: 'employeeName',
-      key: 'employeeName',
-      sorter: (a, b) => (a.employeeName || '').localeCompare(b.employeeName || ''),
-    },
-    {
-      title: 'Islem Turu',
-      dataIndex: 'actionType',
-      key: 'actionType',
-    },
-    {
-      title: 'Siddet',
-      dataIndex: 'severityLevel',
-      key: 'severityLevel',
-      render: (severityLevel: string) => (
-        <Tag color={severityColors[severityLevel] || 'default'}>{severityLevel}</Tag>
-      ),
-    },
-    {
-      title: 'Durum',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => (
-        <Tag color={statusColors[status] || 'default'}>{status}</Tag>
-      ),
-    },
-    {
-      title: 'Olay Tarihi',
-      dataIndex: 'incidentDate',
-      key: 'incidentDate',
-      render: (date: string) => date ? new Date(date).toLocaleDateString('tr-TR') : '-',
-    },
-    {
-      title: 'Islemler',
-      key: 'actions',
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="text"
-            icon={<EyeIcon className="w-4 h-4" />}
-            onClick={() => router.push(`/hr/disciplinary-actions/${record.id}`)}
-          />
-          <Button
-            type="text"
-            icon={<PencilIcon className="w-4 h-4" />}
-            onClick={() => router.push(`/hr/disciplinary-actions/${record.id}/edit`)}
-          />
-          <Button
-            type="text"
-            danger
-            icon={<TrashIcon className="w-4 h-4" />}
-            onClick={() => handleDelete(record.id)}
-          />
-        </Space>
-      ),
-    },
-  ];
+  const handlePageChange = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
+  };
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-            <ExclamationTriangleIcon className="w-4 h-4" /> Disiplin Islemleri
-          </h1>
-          <p className="text-gray-500 mt-1">Calisan disiplin islemlerini yonetin</p>
-        </div>
-        <Button
-          type="primary"
-          icon={<PlusIcon className="w-4 h-4" />}
-          onClick={() => router.push('/hr/disciplinary-actions/new')}
-          style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
-        >
-          Yeni Disiplin Islemi
-        </Button>
+    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <DisciplinaryActionsStats actions={filteredActions} loading={isLoading} />
       </div>
 
-      <Card>
-        <div className="mb-4">
+      {/* Header */}
+      <ListPageHeader
+        icon={<ExclamationTriangleIcon className="w-5 h-5" />}
+        iconColor="#ef4444"
+        title="Disiplin İşlemleri"
+        description="Çalışan disiplin süreçlerini takip edin ve yönetin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Disiplin İşlemi',
+          onClick: () => router.push('/hr/disciplinary-actions/new'),
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      />
+
+      {error && (
+        <Alert
+          variant="error"
+          title="Disiplin işlemleri yüklenemedi"
+          message={(error as Error).message}
+          closable
+          action={
+            <button
+              onClick={() => refetch()}
+              className="text-red-600 hover:text-red-800 font-medium"
+            >
+              Tekrar Dene
+            </button>
+          }
+          className="mt-6"
+        />
+      )}
+
+      <DataTableWrapper className="mt-6">
+        <div className="p-4 border-b border-gray-100">
           <Input
-            placeholder="Ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
+            placeholder="Disiplin işlemi ara... (çalışan, işlem türü)"
+            prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
+            size="lg"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 300 }}
+            className="max-w-md"
           />
         </div>
-        <Table
-          columns={columns}
-          dataSource={filteredData}
-          rowKey="id"
+
+        <DisciplinaryActionsTable
+          actions={filteredActions}
           loading={isLoading}
-          pagination={{ pageSize: 10 }}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalCount={totalCount}
+          onPageChange={handlePageChange}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
         />
-      </Card>
-    </div>
+      </DataTableWrapper>
+    </PageContainer>
   );
 }

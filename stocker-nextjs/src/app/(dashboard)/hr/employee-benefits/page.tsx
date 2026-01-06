@@ -1,110 +1,144 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Table, Button, Tag, Space, Input, Card } from 'antd';
-import {
-  EyeIcon,
-  GiftIcon,
-  MagnifyingGlassIcon,
-  PencilIcon,
-  PlusIcon,
-  TrashIcon,
-} from '@heroicons/react/24/outline';
-import type { ColumnsType } from 'antd/es/table';
+import { GiftIcon, MagnifyingGlassIcon, PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
+import { Input } from '@/components/primitives/inputs';
+import { Alert } from '@/components/primitives/feedback';
+import { EmployeeBenefitsStats, EmployeeBenefitsTable } from '@/components/hr/employee-benefits';
 import { useEmployeeBenefits, useDeleteEmployeeBenefit } from '@/lib/api/hooks/useHR';
-
-interface EmployeeBenefit {
-  id: number;
-  employeeId: number;
-  employeeName?: string;
-  benefitType: string;
-  benefitName: string;
-  status: string;
-  startDate: string;
-  endDate?: string;
-  amount?: number;
-  currency?: string;
-}
-
-const statusColors: Record<string, string> = {
-  'Active': 'success',
-  'Pending': 'processing',
-  'Expired': 'default',
-  'Cancelled': 'error',
-  'Suspended': 'warning',
-};
-
-const benefitTypeColors: Record<string, string> = {
-  'HealthInsurance': 'red',
-  'LifeInsurance': 'magenta',
-  'DentalInsurance': 'pink',
-  'VisionInsurance': 'purple',
-  'RetirementPlan': 'blue',
-  'MealCard': 'orange',
-  'TransportAllowance': 'cyan',
-  'CompanyCar': 'geekblue',
-  'FuelCard': 'lime',
-  'GymMembership': 'green',
-  'EducationSupport': 'gold',
-  'ChildcareSupport': 'volcano',
-  'HousingAllowance': 'blue',
-  'PhoneAllowance': 'purple',
-  'Other': 'default',
-};
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
+import type { EmployeeBenefitDto } from '@/lib/api/services/hr.types';
 
 export default function EmployeeBenefitsPage() {
   const router = useRouter();
-  const { data: benefits, isLoading } = useEmployeeBenefits();
-  const deleteBenefit = useDeleteEmployeeBenefit();
-  const [searchText, setSearchText] = React.useState('');
+  const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  const filteredData = React.useMemo(() => {
-    if (!benefits) return [];
-    if (!searchText) return benefits;
-    const lower = searchText.toLowerCase();
-    return benefits.filter((item: EmployeeBenefit) =>
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText]);
+
+  const { data: benefitsData, isLoading, error, refetch } = useEmployeeBenefits();
+  const deleteBenefitMutation = useDeleteEmployeeBenefit();
+
+  // Client-side filtering
+  const filteredBenefits = useMemo(() => {
+    const benefits = benefitsData || [];
+    if (!debouncedSearch) return benefits;
+    const lower = debouncedSearch.toLowerCase();
+    return benefits.filter((item: EmployeeBenefitDto) =>
+      item.benefitName?.toLowerCase().includes(lower) ||
       item.employeeName?.toLowerCase().includes(lower) ||
-      item.benefitName?.toLowerCase().includes(lower)
+      item.benefitType?.toLowerCase().includes(lower)
     );
-  }, [benefits, searchText]);
+  }, [benefitsData, debouncedSearch]);
 
-  const handleDelete = async (id: number) => {
-    try { await deleteBenefit.mutateAsync(id); } catch (error) {}
+  const totalCount = filteredBenefits.length;
+
+  const handleView = (id: number) => {
+    router.push(`/hr/employee-benefits/${id}`);
   };
 
-  const columns: ColumnsType<EmployeeBenefit> = [
-    { title: 'Calisan', dataIndex: 'employeeName', key: 'employeeName', sorter: (a, b) => (a.employeeName || '').localeCompare(b.employeeName || '') },
-    { title: 'Yan Hakki', dataIndex: 'benefitName', key: 'benefitName' },
-    { title: 'Tur', dataIndex: 'benefitType', key: 'benefitType', render: (type: string) => <Tag color={benefitTypeColors[type] || 'default'}>{type}</Tag> },
-    { title: 'Durum', dataIndex: 'status', key: 'status', render: (status: string) => <Tag color={statusColors[status] || 'default'}>{status}</Tag> },
-    { title: 'Deger', key: 'value', render: (_, record) => record.amount ? `${record.amount} ${record.currency || 'TRY'}` : '-' },
-    { title: 'Baslangic', dataIndex: 'startDate', key: 'startDate', render: (date: string) => date ? new Date(date).toLocaleDateString('tr-TR') : '-' },
-    {
-      title: 'Islemler', key: 'actions',
-      render: (_, record) => (
-        <Space>
-          <Button type="text" icon={<EyeIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/employee-benefits/${record.id}`)} />
-          <Button type="text" icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/employee-benefits/${record.id}/edit`)} />
-          <Button type="text" danger icon={<TrashIcon className="w-4 h-4" />} onClick={() => handleDelete(record.id)} />
-        </Space>
-      ),
-    },
-  ];
+  const handleEdit = (id: number) => {
+    router.push(`/hr/employee-benefits/${id}/edit`);
+  };
+
+  const handleDelete = async (benefit: EmployeeBenefitDto) => {
+    try {
+      await deleteBenefitMutation.mutateAsync(benefit.id);
+      showSuccess('Yan hak başarıyla silindi');
+      refetch();
+    } catch (err) {
+      showApiError(err, 'Yan hak silinemedi');
+    }
+  };
+
+  const handlePageChange = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
+  };
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2"><GiftIcon className="w-4 h-4" /> Calisan Yan Haklari</h1>
-          <p className="text-gray-500 mt-1">Calisan yan haklarini yonetin</p>
-        </div>
-        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/employee-benefits/new')} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Yeni Yan Hak</Button>
+    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <EmployeeBenefitsStats benefits={filteredBenefits} loading={isLoading} />
       </div>
-      <Card>
-        <div className="mb-4"><Input placeholder="Ara..." prefix={<MagnifyingGlassIcon className="w-4 h-4" />} value={searchText} onChange={(e) => setSearchText(e.target.value)} style={{ width: 300 }} /></div>
-        <Table columns={columns} dataSource={filteredData} rowKey="id" loading={isLoading} pagination={{ pageSize: 10 }} />
-      </Card>
-    </div>
+
+      {/* Header */}
+      <ListPageHeader
+        icon={<GiftIcon className="w-5 h-5" />}
+        iconColor="#8b5cf6"
+        title="Çalışan Yan Hakları"
+        description="Çalışan yan haklarını ve sosyal haklarını yönetin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Yan Hak',
+          onClick: () => router.push('/hr/employee-benefits/new'),
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      />
+
+      {error && (
+        <Alert
+          variant="error"
+          title="Yan haklar yüklenemedi"
+          message={(error as Error).message}
+          closable
+          action={
+            <button
+              onClick={() => refetch()}
+              className="text-red-600 hover:text-red-800 font-medium"
+            >
+              Tekrar Dene
+            </button>
+          }
+          className="mt-6"
+        />
+      )}
+
+      <DataTableWrapper className="mt-6">
+        <div className="p-4 border-b border-gray-100">
+          <Input
+            placeholder="Yan hak ara... (yan hak adı, çalışan, tür)"
+            prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
+            size="lg"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="max-w-md"
+          />
+        </div>
+
+        <EmployeeBenefitsTable
+          benefits={filteredBenefits}
+          loading={isLoading}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalCount={totalCount}
+          onPageChange={handlePageChange}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      </DataTableWrapper>
+    </PageContainer>
   );
 }

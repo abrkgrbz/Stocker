@@ -1,277 +1,200 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { Select, Card, Row, Col } from 'antd';
 import {
-  Typography,
-  Button,
-  Space,
-  Card,
-  Table,
-  Tag,
-  Row,
-  Col,
-  Statistic,
-  Dropdown,
-  Modal,
-  Select,
-  Rate,
-} from 'antd';
-import {
-  EllipsisHorizontalIcon,
-  EyeIcon,
-  PencilIcon,
-  PlusIcon,
-  StarIcon,
-  TrashIcon,
+  ArrowPathIcon,
   TrophyIcon,
-  UserIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
-import type { ColumnsType } from 'antd/es/table';
 import { usePerformanceReviews, useDeletePerformanceReview, useEmployees } from '@/lib/api/hooks/useHR';
 import type { PerformanceReviewDto } from '@/lib/api/services/hr.types';
+import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
+import { Input } from '@/components/primitives/inputs';
+import { Alert } from '@/components/primitives/feedback';
+import { PerformanceStats, PerformanceTable } from '@/components/hr/performance';
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
 
-interface PerformanceReviewFilterDto {
-  employeeId?: number;
-  status?: string;
-  reviewPeriod?: string;
-}
-import dayjs from 'dayjs';
-
-const { Title } = Typography;
+const statusOptions = [
+  { value: 'Draft', label: 'Taslak' },
+  { value: 'InProgress', label: 'Devam Ediyor' },
+  { value: 'Completed', label: 'Tamamlandı' },
+  { value: 'Cancelled', label: 'İptal' },
+];
 
 export default function PerformancePage() {
   const router = useRouter();
-  const [filters, setFilters] = useState<PerformanceReviewFilterDto>({});
 
-  // API Hooks
-  const { data: reviews = [], isLoading } = usePerformanceReviews(filters.employeeId);
+  const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | undefined>();
+  const [selectedStatus, setSelectedStatus] = useState<string | undefined>();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText]);
+
+  const { data: reviews = [], isLoading, error, refetch } = usePerformanceReviews(selectedEmployeeId);
   const { data: employees = [] } = useEmployees();
   const deleteReview = useDeletePerformanceReview();
 
-  // Stats
-  const totalReviews = reviews.length;
-  const avgScore = reviews.length > 0
-    ? (reviews.reduce((sum, r) => sum + (r.overallScore || 0), 0) / reviews.length).toFixed(1)
-    : 0;
-  const pendingReviews = reviews.filter((r) => r.status === 'Draft' || r.status === 'InProgress').length;
-  const completedReviews = reviews.filter((r) => r.status === 'Completed').length;
+  const filteredReviews = useMemo(() => {
+    return reviews.filter((r: PerformanceReviewDto) => {
+      const matchesSearch =
+        !debouncedSearch ||
+        r.employeeName?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        r.reviewPeriod?.toLowerCase().includes(debouncedSearch.toLowerCase());
 
-  const handleDelete = (review: PerformanceReviewDto) => {
-    Modal.confirm({
-      title: 'Performans Değerlendirmesini Sil',
-      content: 'Bu değerlendirmeyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await deleteReview.mutateAsync(review.id);
-        } catch (error) {
-          // Error handled by hook
-        }
-      },
+      const matchesStatus = !selectedStatus || r.status === selectedStatus;
+
+      return matchesSearch && matchesStatus;
     });
+  }, [reviews, debouncedSearch, selectedStatus]);
+
+  const totalCount = filteredReviews.length;
+
+  const handleView = (id: number) => router.push(`/hr/performance/${id}`);
+  const handleEdit = (id: number) => router.push(`/hr/performance/${id}/edit`);
+
+  const handleDelete = async (review: PerformanceReviewDto) => {
+    try {
+      await deleteReview.mutateAsync(review.id);
+      showSuccess('Başarılı', 'Değerlendirme silindi');
+    } catch (err) {
+      showApiError(err, 'Değerlendirme silinirken hata oluştu');
+    }
   };
 
-  const getStatusConfig = (status?: string) => {
-    const statusMap: Record<string, { color: string; text: string }> = {
-      Draft: { color: 'default', text: 'Taslak' },
-      InProgress: { color: 'blue', text: 'Devam Ediyor' },
-      Completed: { color: 'green', text: 'Tamamlandı' },
-      Cancelled: { color: 'red', text: 'İptal' },
-    };
-    return statusMap[status || ''] || { color: 'default', text: status || '-' };
+  const clearFilters = () => {
+    setSearchText('');
+    setSelectedEmployeeId(undefined);
+    setSelectedStatus(undefined);
   };
 
-  const columns: ColumnsType<PerformanceReviewDto> = [
-    {
-      title: 'Çalışan',
-      key: 'employee',
-      render: (_, record: PerformanceReviewDto) => (
-        <Space>
-          <UserIcon className="w-4 h-4 text-violet-500" />
-          <span>{record.employeeName || `Çalışan #${record.employeeId}`}</span>
-        </Space>
-      ),
-    },
-    {
-      title: 'Dönem',
-      dataIndex: 'reviewPeriod',
-      key: 'period',
-      width: 150,
-    },
-    {
-      title: 'Tarih',
-      dataIndex: 'reviewDate',
-      key: 'date',
-      width: 120,
-      sorter: (a, b) => dayjs(a.reviewDate).unix() - dayjs(b.reviewDate).unix(),
-      render: (date: string) => dayjs(date).format('DD.MM.YYYY'),
-    },
-    {
-      title: 'Puan',
-      dataIndex: 'overallScore',
-      key: 'score',
-      width: 150,
-      render: (score: number) => (
-        <Space>
-          <Rate disabled value={score / 2} allowHalf style={{ fontSize: 14 }} />
-          <span>({score?.toFixed(1) || '-'})</span>
-        </Space>
-      ),
-    },
-    {
-      title: 'Durum',
-      dataIndex: 'status',
-      key: 'status',
-      width: 120,
-      render: (status: string) => {
-        const config = getStatusConfig(status);
-        return <Tag color={config.color}>{config.text}</Tag>;
-      },
-    },
-    {
-      title: 'İşlemler',
-      key: 'actions',
-      width: 80,
-      render: (_, record: PerformanceReviewDto) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'view',
-                icon: <EyeIcon className="w-4 h-4" />,
-                label: 'Görüntüle',
-                onClick: () => router.push(`/hr/performance/${record.id}`),
-              },
-              {
-                key: 'edit',
-                icon: <PencilIcon className="w-4 h-4" />,
-                label: 'Düzenle',
-                onClick: () => router.push(`/hr/performance/${record.id}/edit`),
-                disabled: record.status === 'Completed',
-              },
-              { type: 'divider' },
-              {
-                key: 'delete',
-                icon: <TrashIcon className="w-4 h-4" />,
-                label: 'Sil',
-                danger: true,
-                onClick: () => handleDelete(record),
-              },
-            ],
-          }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
-        </Dropdown>
-      ),
-    },
-  ];
+  const hasFilters = searchText || selectedEmployeeId || selectedStatus;
+
+  const handlePageChange = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
+  };
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2} style={{ margin: 0 }}>
-          <TrophyIcon className="w-4 h-4 mr-2" />
-          Performans Değerlendirme
-        </Title>
-        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/performance/new')}>
-          Yeni Değerlendirme
-        </Button>
+    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <PerformanceStats reviews={reviews as PerformanceReviewDto[]} loading={isLoading} />
       </div>
 
-      {/* Stats */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Değerlendirme"
-              value={totalReviews}
-              prefix={<TrophyIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#7c3aed' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Ortalama Puan"
-              value={avgScore}
-              prefix={<StarIcon className="w-4 h-4" />}
-              suffix="/ 10"
-              valueStyle={{ color: '#faad14' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Devam Eden"
-              value={pendingReviews}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Tamamlanan"
-              value={completedReviews}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Header */}
+      <ListPageHeader
+        icon={<TrophyIcon className="w-5 h-5" />}
+        iconColor="#8b5cf6"
+        title="Performans Değerlendirme"
+        description="Çalışan performans değerlendirmelerini görüntüleyin ve yönetin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Değerlendirme',
+          onClick: () => router.push('/hr/performance/new'),
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      />
 
-      {/* Filters */}
-      <Card className="mb-4">
+      {error && (
+        <Alert
+          variant="error"
+          title="Değerlendirmeler yüklenemedi"
+          message={(error as Error).message}
+          closable
+          action={
+            <button onClick={() => refetch()} className="text-red-600 hover:text-red-800 font-medium">
+              Tekrar Dene
+            </button>
+          }
+          className="mt-6"
+        />
+      )}
+
+      <Card className="mt-6 mb-4 border border-gray-100 shadow-sm">
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={12} md={8}>
+            <Input
+              placeholder="Çalışan veya dönem ara..."
+              prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
+              size="lg"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+          </Col>
+          <Col xs={24} sm={12} md={6}>
             <Select
               placeholder="Çalışan seçin"
               allowClear
               showSearch
-              optionFilterProp="children"
-              style={{ width: '100%' }}
-              onChange={(value) => setFilters((prev: PerformanceReviewFilterDto) => ({ ...prev, employeeId: value }))}
+              optionFilterProp="label"
+              style={{ width: '100%', height: '44px' }}
+              value={selectedEmployeeId}
+              onChange={setSelectedEmployeeId}
               options={employees.map((e) => ({
                 value: e.id,
                 label: e.fullName,
               }))}
             />
           </Col>
-          <Col xs={24} sm={12} md={8}>
+          <Col xs={24} sm={12} md={5}>
             <Select
               placeholder="Durum"
               allowClear
-              style={{ width: '100%' }}
-              onChange={(value) => setFilters((prev: PerformanceReviewFilterDto) => ({ ...prev, status: value }))}
-              options={[
-                { value: 'Draft', label: 'Taslak' },
-                { value: 'InProgress', label: 'Devam Ediyor' },
-                { value: 'Completed', label: 'Tamamlandı' },
-              ]}
+              style={{ width: '100%', height: '44px' }}
+              value={selectedStatus}
+              onChange={setSelectedStatus}
+              options={statusOptions}
             />
           </Col>
+          {hasFilters && (
+            <Col xs={24} sm={12} md={5}>
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-3 py-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
+              >
+                <XMarkIcon className="w-4 h-4" />
+                Temizle
+              </button>
+            </Col>
+          )}
         </Row>
       </Card>
 
-      {/* Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={reviews}
-          rowKey="id"
+      <DataTableWrapper>
+        <PerformanceTable
+          reviews={filteredReviews as PerformanceReviewDto[]}
           loading={isLoading}
-          pagination={{
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} değerlendirme`,
-          }}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalCount={totalCount}
+          onPageChange={handlePageChange}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
         />
-      </Card>
-    </div>
+      </DataTableWrapper>
+    </PageContainer>
   );
 }

@@ -1,215 +1,95 @@
 'use client';
 
-/**
- * Announcements List Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
- */
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  ArrowPathIcon,
-  BellIcon,
-  CheckCircleIcon,
-  EllipsisHorizontalIcon,
-  EyeIcon,
-  MagnifyingGlassIcon,
-  MapPinIcon,
-  PencilIcon,
-  PlusIcon,
-  TrashIcon,
-} from '@heroicons/react/24/outline';
+import { Card, Row, Col, Select } from 'antd';
+import { MagnifyingGlassIcon, BellIcon, PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
+import { Input } from '@/components/primitives/inputs';
+import { Alert } from '@/components/primitives/feedback';
+import { AnnouncementsStats, AnnouncementsTable } from '@/components/hr/announcements';
 import { useAnnouncements, useDeleteAnnouncement } from '@/lib/api/hooks/useHR';
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import type { AnnouncementDto } from '@/lib/api/services/hr.types';
-import dayjs from 'dayjs';
-import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  StatCard,
-} from '@/components/patterns';
-import { Input, Badge, Spinner } from '@/components/primitives';
-import { ConfirmModal } from '@/components/primitives/overlay';
-
-// Stats Component
-function AnnouncementsStats({
-  total,
-  published,
-  pinned,
-  loading,
-}: {
-  total: number;
-  published: number;
-  pinned: number;
-  loading: boolean;
-}) {
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        {[1, 2, 3].map((i) => (
-          <Card key={i} className="animate-pulse">
-            <div className="h-16 bg-slate-100 rounded" />
-          </Card>
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-      <StatCard
-        label="Toplam Duyuru"
-        value={total}
-        icon={<BellIcon className="w-5 h-5" />}
-      />
-      <StatCard
-        label="Yayında"
-        value={published}
-        icon={<CheckCircleIcon className="w-5 h-5" />}
-      />
-      <StatCard
-        label="Sabitlenmiş"
-        value={pinned}
-        icon={<MapPinIcon className="w-5 h-5" />}
-      />
-    </div>
-  );
-}
-
-// Priority Badge Component
-function PriorityBadge({ priority }: { priority?: string }) {
-  const config: Record<string, { variant: 'default' | 'info' | 'warning' | 'error'; text: string }> = {
-    Low: { variant: 'default', text: 'Düşük' },
-    Normal: { variant: 'info', text: 'Normal' },
-    High: { variant: 'warning', text: 'Yüksek' },
-    Urgent: { variant: 'error', text: 'Acil' },
-  };
-  const { variant, text } = config[priority || ''] || { variant: 'default' as const, text: priority || '-' };
-  return <Badge variant={variant}>{text}</Badge>;
-}
-
-// Status Badge Component
-function PublishStatusBadge({ isPublished }: { isPublished: boolean }) {
-  return (
-    <Badge variant={isPublished ? 'success' : 'default'}>
-      {isPublished ? 'Yayında' : 'Taslak'}
-    </Badge>
-  );
-}
-
-// Action Menu Component
-function ActionMenu({
-  announcement,
-  onView,
-  onEdit,
-  onDelete,
-}: {
-  announcement: AnnouncementDto;
-  onView: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
-      >
-        <EllipsisHorizontalIcon className="w-5 h-5" />
-      </button>
-      {isOpen && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 mt-1 w-40 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1">
-            <button
-              onClick={() => { onView(); setIsOpen(false); }}
-              className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-            >
-              <EyeIcon className="w-4 h-4" />
-              Görüntüle
-            </button>
-            <button
-              onClick={() => { onEdit(); setIsOpen(false); }}
-              className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-            >
-              <PencilIcon className="w-4 h-4" />
-              Düzenle
-            </button>
-            <div className="border-t border-slate-100 my-1" />
-            <button
-              onClick={() => { onDelete(); setIsOpen(false); }}
-              className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-            >
-              <TrashIcon className="w-4 h-4" />
-              Sil
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
 
 export default function AnnouncementsPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [deleteModal, setDeleteModal] = useState<{ open: boolean; announcement: AnnouncementDto | null }>({
-    open: false,
-    announcement: null,
-  });
+  const [priorityFilter, setPriorityFilter] = useState<string | undefined>();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  // Debounce search
+  // Debounce search input
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchText), 300);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setCurrentPage(1);
+    }, 500);
     return () => clearTimeout(timer);
   }, [searchText]);
 
   // API Hooks
-  const { data: announcements = [], isLoading } = useAnnouncements();
+  const { data: announcements = [], isLoading, error, refetch } = useAnnouncements();
   const deleteAnnouncement = useDeleteAnnouncement();
 
   // Filter announcements
-  const filteredAnnouncements = announcements.filter(
-    (a) =>
-      a.title.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-      a.content?.toLowerCase().includes(debouncedSearch.toLowerCase())
-  );
+  const filteredAnnouncements = useMemo(() => {
+    let result = announcements;
 
-  // Stats
-  const totalAnnouncements = announcements.length;
-  const publishedAnnouncements = announcements.filter((a) => a.isPublished).length;
-  const pinnedAnnouncements = announcements.filter((a) => a.isPinned).length;
+    if (priorityFilter) {
+      result = result.filter((a) => a.priority === priorityFilter);
+    }
 
-  const handleDelete = async () => {
-    if (!deleteModal.announcement) return;
+    if (debouncedSearch.trim()) {
+      const search = debouncedSearch.toLowerCase();
+      result = result.filter(
+        (a) =>
+          a.title?.toLowerCase().includes(search) ||
+          a.content?.toLowerCase().includes(search) ||
+          a.authorName?.toLowerCase().includes(search)
+      );
+    }
+
+    return result;
+  }, [announcements, debouncedSearch, priorityFilter]);
+
+  // Paginate
+  const paginatedAnnouncements = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredAnnouncements.slice(start, start + pageSize);
+  }, [filteredAnnouncements, currentPage, pageSize]);
+
+  const totalCount = filteredAnnouncements.length;
+
+  const handlePageChange = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
+  };
+
+  const handleDelete = async (announcement: AnnouncementDto) => {
     try {
-      await deleteAnnouncement.mutateAsync(deleteModal.announcement.id);
-      setDeleteModal({ open: false, announcement: null });
-    } catch {
-      // Error handled by hook
+      await deleteAnnouncement.mutateAsync(announcement.id);
+      showSuccess('Duyuru Silindi', `"${announcement.title}" duyurusu başarıyla silindi.`);
+    } catch (err) {
+      showApiError(err, 'Duyuru silinirken bir hata oluştu');
     }
   };
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Stats */}
-      <AnnouncementsStats
-        total={totalAnnouncements}
-        published={publishedAnnouncements}
-        pinned={pinnedAnnouncements}
-        loading={isLoading}
-      />
+    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <AnnouncementsStats announcements={announcements} loading={isLoading} />
+      </div>
 
       {/* Header */}
       <ListPageHeader
         icon={<BellIcon className="w-5 h-5" />}
-        iconColor="#7c3aed"
+        iconColor="#9333ea"
         title="Duyurular"
-        description="Şirket duyurularını yönetin"
-        itemCount={totalAnnouncements}
+        description="Şirket duyurularını yönetin ve yayınlayın"
+        itemCount={totalCount}
         primaryAction={{
           label: 'Yeni Duyuru',
           onClick: () => router.push('/hr/announcements/new'),
@@ -217,7 +97,7 @@ export default function AnnouncementsPage() {
         }}
         secondaryActions={
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => refetch()}
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
@@ -226,115 +106,62 @@ export default function AnnouncementsPage() {
         }
       />
 
-      {/* Search */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
-        <Input
-          placeholder="Duyuru ara... (başlık veya içerik)"
-          prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          size="lg"
+      {error && (
+        <Alert
+          variant="error"
+          title="Duyurular yüklenemedi"
+          message={(error as Error).message}
+          closable
+          action={
+            <button onClick={() => refetch()} className="text-red-600 hover:text-red-800 font-medium">
+              Tekrar Dene
+            </button>
+          }
+          className="mt-6"
         />
-      </div>
+      )}
 
-      {/* Table */}
-      <Card>
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Spinner size="lg" />
-          </div>
-        ) : filteredAnnouncements.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-slate-500">
-            <BellIcon className="w-12 h-12 mb-4 text-slate-300" />
-            <p className="text-lg font-medium">Duyuru bulunamadı</p>
-            <p className="text-sm">Arama kriterlerinizi değiştirin veya yeni duyuru ekleyin.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Başlık
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    İçerik
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider w-24">
-                    Öncelik
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider w-28">
-                    Tarih
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider w-24">
-                    Durum
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider w-16">
-                    İşlem
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredAnnouncements.map((announcement) => (
-                  <tr
-                    key={announcement.id}
-                    className="hover:bg-slate-50 transition-colors"
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        {announcement.isPinned && (
-                          <MapPinIcon className="w-4 h-4 text-amber-500 flex-shrink-0" />
-                        )}
-                        <button
-                          onClick={() => router.push(`/hr/announcements/${announcement.id}`)}
-                          className="text-sm font-medium text-slate-900 hover:text-violet-600 transition-colors text-left"
-                        >
-                          {announcement.title}
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="text-sm text-slate-600 truncate max-w-xs">
-                        {announcement.content}
-                      </p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <PriorityBadge priority={announcement.priority} />
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-600">
-                      {dayjs(announcement.publishDate).format('DD.MM.YYYY')}
-                    </td>
-                    <td className="px-4 py-3">
-                      <PublishStatusBadge isPublished={announcement.isPublished} />
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <ActionMenu
-                        announcement={announcement}
-                        onView={() => router.push(`/hr/announcements/${announcement.id}`)}
-                        onEdit={() => router.push(`/hr/announcements/${announcement.id}/edit`)}
-                        onDelete={() => setDeleteModal({ open: true, announcement })}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+      <Card className="mt-6 mb-4 border border-gray-100 shadow-sm">
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} md={10}>
+            <Input
+              placeholder="Duyuru ara... (başlık, içerik, yazar)"
+              prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
+              size="lg"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Select
+              placeholder="Öncelik filtrele"
+              allowClear
+              style={{ width: '100%', height: '44px' }}
+              onChange={(value) => setPriorityFilter(value)}
+              options={[
+                { value: 'Low', label: 'Düşük' },
+                { value: 'Normal', label: 'Normal' },
+                { value: 'High', label: 'Yüksek' },
+                { value: 'Urgent', label: 'Acil' },
+              ]}
+            />
+          </Col>
+        </Row>
       </Card>
 
-      {/* Delete Confirmation Modal */}
-      <ConfirmModal
-        open={deleteModal.open}
-        onClose={() => setDeleteModal({ open: false, announcement: null })}
-        onConfirm={handleDelete}
-        title="Duyuruyu Sil"
-        message={`"${deleteModal.announcement?.title}" duyurusunu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`}
-        confirmText="Sil"
-        cancelText="İptal"
-        variant="danger"
-        loading={deleteAnnouncement.isPending}
-      />
+      <DataTableWrapper>
+        <AnnouncementsTable
+          announcements={paginatedAnnouncements}
+          loading={isLoading}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalCount={totalCount}
+          onPageChange={handlePageChange}
+          onView={(id) => router.push(`/hr/announcements/${id}`)}
+          onEdit={(id) => router.push(`/hr/announcements/${id}/edit`)}
+          onDelete={handleDelete}
+        />
+      </DataTableWrapper>
     </PageContainer>
   );
 }

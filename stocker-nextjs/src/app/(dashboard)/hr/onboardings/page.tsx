@@ -1,73 +1,143 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Table, Button, Tag, Space, Input, Card, Progress } from 'antd';
-import {
-  EyeIcon,
-  MagnifyingGlassIcon,
-  PencilIcon,
-  PlusIcon,
-  RocketLaunchIcon,
-  TrashIcon,
-} from '@heroicons/react/24/outline';
-import type { ColumnsType } from 'antd/es/table';
+import { RocketLaunchIcon, MagnifyingGlassIcon, PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
+import { Input } from '@/components/primitives/inputs';
+import { Alert } from '@/components/primitives/feedback';
+import { OnboardingsStats, OnboardingsTable } from '@/components/hr/onboardings';
 import { useOnboardings, useDeleteOnboarding } from '@/lib/api/hooks/useHR';
-
-interface Onboarding {
-  id: number;
-  employeeName?: string;
-  startDate: string;
-  status: string;
-  completionPercentage?: number;
-  buddyName?: string;
-}
-
-const statusColors: Record<string, string> = { 'NotStarted': 'default', 'InProgress': 'processing', 'Completed': 'success', 'OnHold': 'warning', 'Cancelled': 'error' };
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
+import type { OnboardingDto } from '@/lib/api/services/hr.types';
 
 export default function OnboardingsPage() {
   const router = useRouter();
-  const { data: onboardings, isLoading } = useOnboardings();
-  const deleteOnboarding = useDeleteOnboarding();
-  const [searchText, setSearchText] = React.useState('');
+  const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  const filteredData = React.useMemo(() => {
-    if (!onboardings) return [];
-    if (!searchText) return onboardings;
-    const lower = searchText.toLowerCase();
-    return onboardings.filter((item: Onboarding) => item.employeeName?.toLowerCase().includes(lower) || item.buddyName?.toLowerCase().includes(lower));
-  }, [onboardings, searchText]);
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
-  const handleDelete = async (id: number) => { try { await deleteOnboarding.mutateAsync(id); } catch (error) {} };
+  const { data: onboardingsData, isLoading, error, refetch } = useOnboardings();
+  const deleteOnboardingMutation = useDeleteOnboarding();
 
-  const columns: ColumnsType<Onboarding> = [
-    { title: 'Calisan', dataIndex: 'employeeName', key: 'employeeName', sorter: (a, b) => (a.employeeName || '').localeCompare(b.employeeName || '') },
-    { title: 'Buddy', dataIndex: 'buddyName', key: 'buddyName' },
-    { title: 'Ilerleme', dataIndex: 'completionPercentage', key: 'completionPercentage', render: (val: number) => <Progress percent={val || 0} size="small" /> },
-    { title: 'Durum', dataIndex: 'status', key: 'status', render: (status: string) => <Tag color={statusColors[status] || 'default'}>{status}</Tag> },
-    { title: 'Baslangic', dataIndex: 'startDate', key: 'startDate', render: (date: string) => date ? new Date(date).toLocaleDateString('tr-TR') : '-' },
-    { title: 'Islemler', key: 'actions', render: (_, record) => (
-      <Space>
-        <Button type="text" icon={<EyeIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/onboardings/${record.id}`)} />
-        <Button type="text" icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/onboardings/${record.id}/edit`)} />
-        <Button type="text" danger icon={<TrashIcon className="w-4 h-4" />} onClick={() => handleDelete(record.id)} />
-      </Space>
-    )},
-  ];
+  // Client-side filtering
+  const filteredOnboardings = useMemo(() => {
+    const onboardings = onboardingsData || [];
+    if (!debouncedSearch) return onboardings;
+    const lower = debouncedSearch.toLowerCase();
+    return onboardings.filter((item: OnboardingDto) =>
+      item.employeeName?.toLowerCase().includes(lower) ||
+      item.buddyName?.toLowerCase().includes(lower)
+    );
+  }, [onboardingsData, debouncedSearch]);
+
+  const totalCount = filteredOnboardings.length;
+
+  const handleView = (id: number) => {
+    router.push(`/hr/onboardings/${id}`);
+  };
+
+  const handleEdit = (id: number) => {
+    router.push(`/hr/onboardings/${id}/edit`);
+  };
+
+  const handleDelete = async (onboarding: OnboardingDto) => {
+    try {
+      await deleteOnboardingMutation.mutateAsync(onboarding.id);
+      showSuccess('Onboarding süreci başarıyla silindi');
+      refetch();
+    } catch (err) {
+      showApiError(err, 'Onboarding süreci silinemedi');
+    }
+  };
+
+  const handlePageChange = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
+  };
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2"><RocketLaunchIcon className="w-4 h-4" /> Ise Alisim Surecleri</h1>
-          <p className="text-gray-500 mt-1">Yeni calisan oryantasyonlarini yonetin</p>
-        </div>
-        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/onboardings/new')} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Yeni Onboarding</Button>
+    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <OnboardingsStats onboardings={filteredOnboardings} loading={isLoading} />
       </div>
-      <Card>
-        <div className="mb-4"><Input placeholder="Ara..." prefix={<MagnifyingGlassIcon className="w-4 h-4" />} value={searchText} onChange={(e) => setSearchText(e.target.value)} style={{ width: 300 }} /></div>
-        <Table columns={columns} dataSource={filteredData} rowKey="id" loading={isLoading} pagination={{ pageSize: 10 }} />
-      </Card>
-    </div>
+
+      {/* Header */}
+      <ListPageHeader
+        icon={<RocketLaunchIcon className="w-5 h-5" />}
+        iconColor="#7c3aed"
+        title="İşe Alışım Süreçleri"
+        description="Yeni çalışan oryantasyonlarını yönetin ve takip edin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Onboarding',
+          onClick: () => router.push('/hr/onboardings/new'),
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      />
+
+      {error && (
+        <Alert
+          variant="error"
+          title="Onboarding süreçleri yüklenemedi"
+          message={(error as Error).message}
+          closable
+          action={
+            <button
+              onClick={() => refetch()}
+              className="text-red-600 hover:text-red-800 font-medium"
+            >
+              Tekrar Dene
+            </button>
+          }
+          className="mt-6"
+        />
+      )}
+
+      <DataTableWrapper className="mt-6">
+        <div className="p-4 border-b border-gray-100">
+          <Input
+            placeholder="Onboarding ara... (çalışan adı, buddy)"
+            prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
+            size="lg"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="max-w-md"
+          />
+        </div>
+
+        <OnboardingsTable
+          onboardings={filteredOnboardings}
+          loading={isLoading}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalCount={totalCount}
+          onPageChange={handlePageChange}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      </DataTableWrapper>
+    </PageContainer>
   );
 }

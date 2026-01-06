@@ -1,115 +1,144 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Table, Button, Tag, Space, Input, Card } from 'antd';
-import {
-  ComputerDesktopIcon,
-  EyeIcon,
-  MagnifyingGlassIcon,
-  PencilIcon,
-  PlusIcon,
-  TrashIcon,
-} from '@heroicons/react/24/outline';
-import type { ColumnsType } from 'antd/es/table';
+import { ComputerDesktopIcon, MagnifyingGlassIcon, PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
+import { Input } from '@/components/primitives/inputs';
+import { Alert } from '@/components/primitives/feedback';
+import { EmployeeAssetsStats, EmployeeAssetsTable } from '@/components/hr/employee-assets';
 import { useEmployeeAssets, useDeleteEmployeeAsset } from '@/lib/api/hooks/useHR';
-
-interface EmployeeAsset {
-  id: number;
-  employeeId: number;
-  employeeName?: string;
-  assetType: string;
-  assetName: string;
-  assetCode?: string;
-  serialNumber?: string;
-  status: string;
-  assignmentDate: string;
-  returnDate?: string;
-}
-
-const statusColors: Record<string, string> = {
-  'Assigned': 'processing',
-  'Available': 'success',
-  'Returned': 'default',
-  'UnderMaintenance': 'warning',
-  'Lost': 'error',
-  'Damaged': 'error',
-  'Disposed': 'default',
-};
-
-const assetTypeColors: Record<string, string> = {
-  'Laptop': 'blue',
-  'Desktop': 'cyan',
-  'Mobile': 'purple',
-  'Tablet': 'magenta',
-  'Monitor': 'geekblue',
-  'Keyboard': 'default',
-  'Mouse': 'default',
-  'Headset': 'default',
-  'Vehicle': 'orange',
-  'AccessCard': 'green',
-  'Uniform': 'lime',
-  'Tools': 'volcano',
-  'Other': 'default',
-};
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
+import type { EmployeeAssetDto } from '@/lib/api/services/hr.types';
 
 export default function EmployeeAssetsPage() {
   const router = useRouter();
-  const { data: assets, isLoading } = useEmployeeAssets();
-  const deleteAsset = useDeleteEmployeeAsset();
-  const [searchText, setSearchText] = React.useState('');
+  const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  const filteredData = React.useMemo(() => {
-    if (!assets) return [];
-    if (!searchText) return assets;
-    const lower = searchText.toLowerCase();
-    return assets.filter((item: EmployeeAsset) =>
-      item.employeeName?.toLowerCase().includes(lower) ||
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText]);
+
+  const { data: assetsData, isLoading, error, refetch } = useEmployeeAssets();
+  const deleteAssetMutation = useDeleteEmployeeAsset();
+
+  // Client-side filtering
+  const filteredAssets = useMemo(() => {
+    const assets = assetsData || [];
+    if (!debouncedSearch) return assets;
+    const lower = debouncedSearch.toLowerCase();
+    return assets.filter((item: EmployeeAssetDto) =>
       item.assetName?.toLowerCase().includes(lower) ||
-      item.assetCode?.toLowerCase().includes(lower)
+      item.assetCode?.toLowerCase().includes(lower) ||
+      item.employeeName?.toLowerCase().includes(lower)
     );
-  }, [assets, searchText]);
+  }, [assetsData, debouncedSearch]);
 
-  const handleDelete = async (id: number) => {
-    try {
-      await deleteAsset.mutateAsync(id);
-    } catch (error) {}
+  const totalCount = filteredAssets.length;
+
+  const handleView = (id: number) => {
+    router.push(`/hr/employee-assets/${id}`);
   };
 
-  const columns: ColumnsType<EmployeeAsset> = [
-    { title: 'Calisan', dataIndex: 'employeeName', key: 'employeeName', sorter: (a, b) => (a.employeeName || '').localeCompare(b.employeeName || '') },
-    { title: 'Varlik Adi', dataIndex: 'assetName', key: 'assetName' },
-    { title: 'Varlik Turu', dataIndex: 'assetType', key: 'assetType', render: (type: string) => <Tag color={assetTypeColors[type] || 'default'}>{type}</Tag> },
-    { title: 'Kod', dataIndex: 'assetCode', key: 'assetCode' },
-    { title: 'Seri No', dataIndex: 'serialNumber', key: 'serialNumber' },
-    { title: 'Durum', dataIndex: 'status', key: 'status', render: (status: string) => <Tag color={statusColors[status] || 'default'}>{status}</Tag> },
-    { title: 'Atama Tarihi', dataIndex: 'assignmentDate', key: 'assignmentDate', render: (date: string) => date ? new Date(date).toLocaleDateString('tr-TR') : '-' },
-    {
-      title: 'Islemler',
-      key: 'actions',
-      render: (_, record) => (
-        <Space>
-          <Button type="text" icon={<EyeIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/employee-assets/${record.id}`)} />
-          <Button type="text" icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/employee-assets/${record.id}/edit`)} />
-          <Button type="text" danger icon={<TrashIcon className="w-4 h-4" />} onClick={() => handleDelete(record.id)} />
-        </Space>
-      ),
-    },
-  ];
+  const handleEdit = (id: number) => {
+    router.push(`/hr/employee-assets/${id}/edit`);
+  };
+
+  const handleDelete = async (asset: EmployeeAssetDto) => {
+    try {
+      await deleteAssetMutation.mutateAsync(asset.id);
+      showSuccess('Varlık ataması başarıyla silindi');
+      refetch();
+    } catch (err) {
+      showApiError(err, 'Varlık ataması silinemedi');
+    }
+  };
+
+  const handlePageChange = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
+  };
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2"><ComputerDesktopIcon className="w-4 h-4" /> Calisan Varliklari</h1>
-          <p className="text-gray-500 mt-1">Calisanlara atanan varliklari yonetin</p>
-        </div>
-        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/employee-assets/new')} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Yeni Varlik Atama</Button>
+    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <EmployeeAssetsStats assets={filteredAssets} loading={isLoading} />
       </div>
-      <Card>
-        <div className="mb-4"><Input placeholder="Ara..." prefix={<MagnifyingGlassIcon className="w-4 h-4" />} value={searchText} onChange={(e) => setSearchText(e.target.value)} style={{ width: 300 }} /></div>
-        <Table columns={columns} dataSource={filteredData} rowKey="id" loading={isLoading} pagination={{ pageSize: 10 }} />
-      </Card>
-    </div>
+
+      {/* Header */}
+      <ListPageHeader
+        icon={<ComputerDesktopIcon className="w-5 h-5" />}
+        iconColor="#3b82f6"
+        title="Çalışan Varlıkları"
+        description="Çalışanlara atanan varlık ve ekipmanları takip edin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Varlık Ata',
+          onClick: () => router.push('/hr/employee-assets/new'),
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      />
+
+      {error && (
+        <Alert
+          variant="error"
+          title="Varlıklar yüklenemedi"
+          message={(error as Error).message}
+          closable
+          action={
+            <button
+              onClick={() => refetch()}
+              className="text-red-600 hover:text-red-800 font-medium"
+            >
+              Tekrar Dene
+            </button>
+          }
+          className="mt-6"
+        />
+      )}
+
+      <DataTableWrapper className="mt-6">
+        <div className="p-4 border-b border-gray-100">
+          <Input
+            placeholder="Varlık ara... (varlık adı, kod, çalışan)"
+            prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
+            size="lg"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="max-w-md"
+          />
+        </div>
+
+        <EmployeeAssetsTable
+          assets={filteredAssets}
+          loading={isLoading}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalCount={totalCount}
+          onPageChange={handlePageChange}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      </DataTableWrapper>
+    </PageContainer>
   );
 }

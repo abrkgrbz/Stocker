@@ -1,106 +1,144 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Table, Button, Tag, Space, Input, Card, Progress } from 'antd';
-import {
-  EyeIcon,
-  MagnifyingGlassIcon,
-  PencilIcon,
-  PlusIcon,
-  TrashIcon,
-  WrenchIcon,
-} from '@heroicons/react/24/outline';
-import type { ColumnsType } from 'antd/es/table';
+import { WrenchIcon, MagnifyingGlassIcon, PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
+import { Input } from '@/components/primitives/inputs';
+import { Alert } from '@/components/primitives/feedback';
+import { EmployeeSkillsStats, EmployeeSkillsTable } from '@/components/hr/employee-skills';
 import { useEmployeeSkills, useDeleteEmployeeSkill } from '@/lib/api/hooks/useHR';
-
-interface EmployeeSkill {
-  id: number;
-  employeeId: number;
-  skillName: string;
-  category?: string;
-  proficiencyLevel: string;
-  yearsOfExperience?: number;
-  isCertified: boolean;
-  isVerified: boolean;
-}
-
-const proficiencyColors: Record<string, string> = {
-  'Beginner': 'default',
-  'Elementary': 'blue',
-  'Intermediate': 'cyan',
-  'Advanced': 'green',
-  'Expert': 'gold',
-  'Master': 'red',
-};
-
-const proficiencyPercent: Record<string, number> = {
-  'Beginner': 16,
-  'Elementary': 33,
-  'Intermediate': 50,
-  'Advanced': 66,
-  'Expert': 83,
-  'Master': 100,
-};
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
+import type { EmployeeSkillDto } from '@/lib/api/services/hr.types';
 
 export default function EmployeeSkillsPage() {
   const router = useRouter();
-  const { data: skills, isLoading } = useEmployeeSkills();
-  const deleteSkill = useDeleteEmployeeSkill();
-  const [searchText, setSearchText] = React.useState('');
+  const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  const filteredData = React.useMemo(() => {
-    if (!skills) return [];
-    if (!searchText) return skills;
-    const lower = searchText.toLowerCase();
-    return skills.filter((item: EmployeeSkill) =>
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText]);
+
+  const { data: skillsData, isLoading, error, refetch } = useEmployeeSkills();
+  const deleteSkillMutation = useDeleteEmployeeSkill();
+
+  // Client-side filtering
+  const filteredSkills = useMemo(() => {
+    const skills = skillsData || [];
+    if (!debouncedSearch) return skills;
+    const lower = debouncedSearch.toLowerCase();
+    return skills.filter((item: EmployeeSkillDto) =>
       item.skillName?.toLowerCase().includes(lower) ||
-      item.category?.toLowerCase().includes(lower)
+      item.category?.toLowerCase().includes(lower) ||
+      item.proficiencyLevel?.toLowerCase().includes(lower)
     );
-  }, [skills, searchText]);
+  }, [skillsData, debouncedSearch]);
 
-  const handleDelete = async (id: number) => {
-    try { await deleteSkill.mutateAsync(id); } catch (error) {}
+  const totalCount = filteredSkills.length;
+
+  const handleView = (id: number) => {
+    router.push(`/hr/employee-skills/${id}`);
   };
 
-  const columns: ColumnsType<EmployeeSkill> = [
-    { title: 'Calisan', dataIndex: 'employeeId', key: 'employeeId', render: (id: number) => `Calisan #${id}` },
-    { title: 'Yetkinlik', dataIndex: 'skillName', key: 'skillName' },
-    { title: 'Kategori', dataIndex: 'category', key: 'category' },
-    { title: 'Seviye', dataIndex: 'proficiencyLevel', key: 'proficiencyLevel', render: (level: string) => (
-      <div style={{ minWidth: 120 }}>
-        <Tag color={proficiencyColors[level] || 'default'}>{level}</Tag>
-        <Progress percent={proficiencyPercent[level] || 0} size="small" showInfo={false} className="mt-1" />
-      </div>
-    )},
-    { title: 'Deneyim', dataIndex: 'yearsOfExperience', key: 'yearsOfExperience', render: (years: number) => years ? `${years} yil` : '-' },
-    { title: 'Sertifikali', dataIndex: 'isCertified', key: 'isCertified', render: (val: boolean) => val ? <Tag color="success">Evet</Tag> : <Tag>Hayir</Tag> },
-    { title: 'Dogrulanmis', dataIndex: 'isVerified', key: 'isVerified', render: (val: boolean) => val ? <Tag color="success">Evet</Tag> : <Tag>Hayir</Tag> },
-    {
-      title: 'Islemler', key: 'actions',
-      render: (_, record) => (
-        <Space>
-          <Button type="text" icon={<EyeIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/employee-skills/${record.id}`)} />
-          <Button type="text" icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/employee-skills/${record.id}/edit`)} />
-          <Button type="text" danger icon={<TrashIcon className="w-4 h-4" />} onClick={() => handleDelete(record.id)} />
-        </Space>
-      ),
-    },
-  ];
+  const handleEdit = (id: number) => {
+    router.push(`/hr/employee-skills/${id}/edit`);
+  };
+
+  const handleDelete = async (skill: EmployeeSkillDto) => {
+    try {
+      await deleteSkillMutation.mutateAsync(skill.id);
+      showSuccess('Yetkinlik başarıyla silindi');
+      refetch();
+    } catch (err) {
+      showApiError(err, 'Yetkinlik silinemedi');
+    }
+  };
+
+  const handlePageChange = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
+  };
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2"><WrenchIcon className="w-4 h-4" /> Calisan Yetkinlikleri</h1>
-          <p className="text-gray-500 mt-1">Calisan yetkinlik ve becerilerini yonetin</p>
-        </div>
-        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/employee-skills/new')} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Yeni Yetkinlik</Button>
+    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <EmployeeSkillsStats skills={filteredSkills} loading={isLoading} />
       </div>
-      <Card>
-        <div className="mb-4"><Input placeholder="Ara..." prefix={<MagnifyingGlassIcon className="w-4 h-4" />} value={searchText} onChange={(e) => setSearchText(e.target.value)} style={{ width: 300 }} /></div>
-        <Table columns={columns} dataSource={filteredData} rowKey="id" loading={isLoading} pagination={{ pageSize: 10 }} />
-      </Card>
-    </div>
+
+      {/* Header */}
+      <ListPageHeader
+        icon={<WrenchIcon className="w-5 h-5" />}
+        iconColor="#8b5cf6"
+        title="Çalışan Yetkinlikleri"
+        description="Çalışan beceri ve yetkinliklerini takip edin ve yönetin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Yetkinlik',
+          onClick: () => router.push('/hr/employee-skills/new'),
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      />
+
+      {error && (
+        <Alert
+          variant="error"
+          title="Yetkinlikler yüklenemedi"
+          message={(error as Error).message}
+          closable
+          action={
+            <button
+              onClick={() => refetch()}
+              className="text-red-600 hover:text-red-800 font-medium"
+            >
+              Tekrar Dene
+            </button>
+          }
+          className="mt-6"
+        />
+      )}
+
+      <DataTableWrapper className="mt-6">
+        <div className="p-4 border-b border-gray-100">
+          <Input
+            placeholder="Yetkinlik ara... (yetkinlik adı, kategori, çalışan)"
+            prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
+            size="lg"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="max-w-md"
+          />
+        </div>
+
+        <EmployeeSkillsTable
+          skills={filteredSkills}
+          loading={isLoading}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalCount={totalCount}
+          onPageChange={handlePageChange}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      </DataTableWrapper>
+    </PageContainer>
   );
 }

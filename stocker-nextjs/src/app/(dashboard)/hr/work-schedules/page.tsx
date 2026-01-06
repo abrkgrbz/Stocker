@@ -1,244 +1,160 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { Select, DatePicker, Card, Row, Col } from 'antd';
 import {
-  Typography,
-  Button,
-  Space,
-  Card,
-  Table,
-  Tag,
-  Row,
-  Col,
-  Statistic,
-  Dropdown,
-  Modal,
-  Select,
-  DatePicker,
-} from 'antd';
-import {
+  ArrowPathIcon,
   CalendarIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  EllipsisHorizontalIcon,
-  EyeIcon,
-  PencilIcon,
+  MagnifyingGlassIcon,
   PlusIcon,
-  TrashIcon,
-  UserIcon,
+  XMarkIcon,
+  UsersIcon,
 } from '@heroicons/react/24/outline';
-import type { ColumnsType } from 'antd/es/table';
-import { useWorkSchedules, useDeleteWorkSchedule, useEmployees, useShifts } from '@/lib/api/hooks/useHR';
+import { useWorkSchedules, useDeleteWorkSchedule, useEmployees } from '@/lib/api/hooks/useHR';
 import type { WorkScheduleDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
+import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
+import { Input } from '@/components/primitives/inputs';
+import { Alert } from '@/components/primitives/feedback';
+import { WorkSchedulesStats, WorkSchedulesTable } from '@/components/hr/work-schedules';
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
 
-const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
 export default function WorkSchedulesPage() {
   const router = useRouter();
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | undefined>(undefined);
+
+  const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | undefined>();
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
   const startDate = dateRange?.[0]?.format('YYYY-MM-DD');
   const endDate = dateRange?.[1]?.format('YYYY-MM-DD');
 
-  // API Hooks
-  const { data: schedules = [], isLoading } = useWorkSchedules(selectedEmployeeId, startDate, endDate);
+  const { data: schedules = [], isLoading, error, refetch } = useWorkSchedules(selectedEmployeeId, startDate, endDate);
   const { data: employees = [] } = useEmployees();
-  const { data: shifts = [] } = useShifts();
   const deleteSchedule = useDeleteWorkSchedule();
 
-  // Stats
-  const totalSchedules = schedules.length;
-  const workDays = schedules.filter((s) => s.isWorkDay).length;
-  const holidays = schedules.filter((s) => s.isHoliday).length;
+  const filteredSchedules = useMemo(() => {
+    if (!debouncedSearch) return schedules;
+    const lower = debouncedSearch.toLowerCase();
+    return schedules.filter((s: WorkScheduleDto) =>
+      s.employeeName?.toLowerCase().includes(lower) ||
+      s.shiftName?.toLowerCase().includes(lower)
+    );
+  }, [schedules, debouncedSearch]);
 
-  const handleDelete = (schedule: WorkScheduleDto) => {
-    Modal.confirm({
-      title: 'Çalışma Programını Sil',
-      content: `Bu çalışma programı kaydını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await deleteSchedule.mutateAsync(schedule.id);
-        } catch (error) {
-          // Error handled by hook
-        }
-      },
-    });
+  const totalCount = filteredSchedules.length;
+
+  const handleView = (id: number) => router.push(`/hr/work-schedules/${id}`);
+  const handleEdit = (id: number) => router.push(`/hr/work-schedules/${id}/edit`);
+
+  const handleDelete = async (schedule: WorkScheduleDto) => {
+    try {
+      await deleteSchedule.mutateAsync(schedule.id);
+      showSuccess('Başarılı', 'Çalışma programı silindi');
+    } catch (err) {
+      showApiError(err, 'Çalışma programı silinirken hata oluştu');
+    }
   };
 
-  const columns: ColumnsType<WorkScheduleDto> = [
-    {
-      title: 'Çalışan',
-      dataIndex: 'employeeName',
-      key: 'employeeName',
-      sorter: (a, b) => a.employeeName.localeCompare(b.employeeName),
-      render: (name: string, record: WorkScheduleDto) => (
-        <Space>
-          <UserIcon className="w-4 h-4" style={{ color: '#1890ff' }} />
-          <a onClick={() => router.push(`/hr/work-schedules/${record.id}`)}>{name}</a>
-        </Space>
-      ),
-    },
-    {
-      title: 'Tarih',
-      dataIndex: 'date',
-      key: 'date',
-      width: 120,
-      sorter: (a, b) => dayjs(a.date).unix() - dayjs(b.date).unix(),
-      render: (date: string) => dayjs(date).format('DD.MM.YYYY'),
-    },
-    {
-      title: 'Vardiya',
-      dataIndex: 'shiftName',
-      key: 'shiftName',
-      width: 150,
-      render: (name: string) => (
-        <Space>
-          <ClockIcon className="w-4 h-4 text-violet-500" />
-          {name || '-'}
-        </Space>
-      ),
-    },
-    {
-      title: 'Çalışma Günü',
-      dataIndex: 'isWorkDay',
-      key: 'isWorkDay',
-      width: 120,
-      render: (isWorkDay: boolean) => (
-        <Tag color={isWorkDay ? 'green' : 'default'}>{isWorkDay ? 'Evet' : 'Hayır'}</Tag>
-      ),
-    },
-    {
-      title: 'Tatil',
-      dataIndex: 'isHoliday',
-      key: 'isHoliday',
-      width: 100,
-      render: (isHoliday: boolean, record: WorkScheduleDto) =>
-        isHoliday ? (
-          <Tag color="red">{record.holidayName || 'Tatil'}</Tag>
-        ) : (
-          <Tag color="default">-</Tag>
-        ),
-    },
-    {
-      title: 'Özel Saatler',
-      key: 'customTime',
-      width: 150,
-      render: (_, record: WorkScheduleDto) =>
-        record.customStartTime || record.customEndTime ? (
-          <span>
-            {record.customStartTime?.substring(0, 5)} - {record.customEndTime?.substring(0, 5)}
-          </span>
-        ) : (
-          '-'
-        ),
-    },
-    {
-      title: 'İşlemler',
-      key: 'actions',
-      width: 80,
-      render: (_, record: WorkScheduleDto) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'view',
-                icon: <EyeIcon className="w-4 h-4" />,
-                label: 'Görüntüle',
-                onClick: () => router.push(`/hr/work-schedules/${record.id}`),
-              },
-              {
-                key: 'edit',
-                icon: <PencilIcon className="w-4 h-4" />,
-                label: 'Düzenle',
-                onClick: () => router.push(`/hr/work-schedules/${record.id}/edit`),
-              },
-              { type: 'divider' },
-              {
-                key: 'delete',
-                icon: <TrashIcon className="w-4 h-4" />,
-                label: 'Sil',
-                danger: true,
-                onClick: () => handleDelete(record),
-              },
-            ],
-          }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
-        </Dropdown>
-      ),
-    },
-  ];
+  const clearFilters = () => {
+    setSearchText('');
+    setSelectedEmployeeId(undefined);
+    setDateRange(null);
+  };
+
+  const hasFilters = searchText || selectedEmployeeId || dateRange;
+
+  const handlePageChange = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
+  };
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2} style={{ margin: 0 }}>
-          <CalendarIcon className="w-4 h-4 mr-2" />
-          Çalışma Programları
-        </Title>
-        <Space>
-          <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/work-schedules/new')}>
-            Yeni Program
-          </Button>
-          <Button onClick={() => router.push('/hr/work-schedules/assign')}>
-            Toplu Atama
-          </Button>
-        </Space>
+    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <WorkSchedulesStats schedules={schedules as WorkScheduleDto[]} loading={isLoading} />
       </div>
 
-      {/* Stats */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Kayıt"
-              value={totalSchedules}
-              prefix={<CalendarIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#7c3aed' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Çalışma Günü"
-              value={workDays}
-              prefix={<CheckCircleIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Tatil Günü"
-              value={holidays}
-              prefix={<CalendarIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#fa541c' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Header */}
+      <ListPageHeader
+        icon={<CalendarIcon className="w-5 h-5" />}
+        iconColor="#8b5cf6"
+        title="Çalışma Programları"
+        description="Çalışan çalışma programlarını görüntüleyin ve yönetin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Program',
+          onClick: () => router.push('/hr/work-schedules/new'),
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.push('/hr/work-schedules/assign')}
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+              title="Toplu Atama"
+            >
+              <UsersIcon className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+            >
+              <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+        }
+      />
 
-      {/* Filters */}
-      <Card className="mb-4">
+      {error && (
+        <Alert
+          variant="error"
+          title="Programlar yüklenemedi"
+          message={(error as Error).message}
+          closable
+          action={
+            <button onClick={() => refetch()} className="text-red-600 hover:text-red-800 font-medium">
+              Tekrar Dene
+            </button>
+          }
+          className="mt-6"
+        />
+      )}
+
+      <Card className="mt-6 mb-4 border border-gray-100 shadow-sm">
         <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={8}>
+          <Col xs={24} sm={12} md={6}>
+            <Input
+              placeholder="Çalışan veya vardiya ara..."
+              prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
+              size="lg"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+          </Col>
+          <Col xs={24} sm={12} md={6}>
             <Select
               placeholder="Çalışan seçin"
               allowClear
               showSearch
               optionFilterProp="label"
-              style={{ width: '100%' }}
+              style={{ width: '100%', height: '44px' }}
               value={selectedEmployeeId}
               onChange={setSelectedEmployeeId}
               options={employees.map((e) => ({
@@ -247,31 +163,42 @@ export default function WorkSchedulesPage() {
               }))}
             />
           </Col>
-          <Col xs={24} sm={12} md={8}>
+          <Col xs={24} sm={12} md={6}>
             <RangePicker
-              style={{ width: '100%' }}
+              style={{ width: '100%', height: '44px' }}
               value={dateRange}
               onChange={(dates) => setDateRange(dates)}
               format="DD.MM.YYYY"
               placeholder={['Başlangıç', 'Bitiş']}
             />
           </Col>
+          {hasFilters && (
+            <Col xs={24} sm={12} md={4}>
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-3 py-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
+              >
+                <XMarkIcon className="w-4 h-4" />
+                Temizle
+              </button>
+            </Col>
+          )}
         </Row>
       </Card>
 
-      {/* Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={schedules}
-          rowKey="id"
+      <DataTableWrapper>
+        <WorkSchedulesTable
+          schedules={filteredSchedules as WorkScheduleDto[]}
           loading={isLoading}
-          pagination={{
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} kayıt`,
-          }}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalCount={totalCount}
+          onPageChange={handlePageChange}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
         />
-      </Card>
-    </div>
+      </DataTableWrapper>
+    </PageContainer>
   );
 }

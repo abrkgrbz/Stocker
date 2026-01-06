@@ -1,35 +1,19 @@
 'use client';
 
+/**
+ * Payroll List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Standardized with CRM Customer module patterns
+ */
+
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Select, DatePicker } from 'antd';
 import {
-  Typography,
-  Button,
-  Space,
-  Card,
-  Table,
-  Tag,
-  Row,
-  Col,
-  Statistic,
-  Dropdown,
-  Modal,
-  Select,
-  DatePicker,
-  message,
-} from 'antd';
-import {
-  CheckCircleIcon,
+  ArrowPathIcon,
   CurrencyDollarIcon,
-  EllipsisHorizontalIcon,
-  EyeIcon,
-  PaperAirplaneIcon,
-  PencilIcon,
   PlusIcon,
-  UserIcon,
-  XCircleIcon,
 } from '@heroicons/react/24/outline';
-import type { ColumnsType } from 'antd/es/table';
 import {
   usePayrolls,
   useCancelPayroll,
@@ -39,318 +23,213 @@ import {
 } from '@/lib/api/hooks/useHR';
 import type { PayrollDto, PayrollFilterDto } from '@/lib/api/services/hr.types';
 import { PayrollStatus } from '@/lib/api/services/hr.types';
-import dayjs from 'dayjs';
-
-const { Title } = Typography;
+import { PayrollStats, PayrollTable } from '@/components/hr/payroll';
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
+import {
+  PageContainer,
+  ListPageHeader,
+  DataTableWrapper,
+  Card,
+} from '@/components/patterns';
+import { Alert, Spinner } from '@/components/primitives';
 
 export default function PayrollPage() {
   const router = useRouter();
   const [filters, setFilters] = useState<PayrollFilterDto>({});
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   // API Hooks
-  const { data: payrolls = [], isLoading } = usePayrolls(filters);
+  const { data: payrolls = [], isLoading, error, refetch } = usePayrolls(filters);
   const { data: employees = [] } = useEmployees();
   const cancelPayroll = useCancelPayroll();
   const approvePayroll = useApprovePayroll();
   const markPaid = useMarkPayrollPaid();
 
-  // Stats
-  const totalPayrolls = payrolls.length;
-  const pendingPayrolls = payrolls.filter((p) => p.status === PayrollStatus.PendingApproval || p.status === PayrollStatus.Draft || p.status === PayrollStatus.Calculated).length;
-  const approvedPayrolls = payrolls.filter((p) => p.status === PayrollStatus.Approved).length;
-  const totalAmount = payrolls.reduce((sum, p) => sum + (p.netSalary || 0), 0);
+  // CRUD Handlers
+  const handleView = (id: number) => {
+    router.push(`/hr/payroll/${id}`);
+  };
 
-  const handleCancel = (payroll: PayrollDto) => {
-    Modal.confirm({
-      title: 'Bordro Kaydını İptal Et',
-      content: 'Bu bordro kaydını iptal etmek istediğinizden emin misiniz?',
-      okText: 'İptal Et',
-      okType: 'danger',
-      cancelText: 'Vazgeç',
-      onOk: async () => {
-        try {
-          await cancelPayroll.mutateAsync({ id: payroll.id, reason: 'İptal edildi' });
-        } catch (error) {
-          // Error handled by hook
-        }
-      },
-    });
+  const handleEdit = (id: number) => {
+    router.push(`/hr/payroll/${id}/edit`);
   };
 
   const handleApprove = async (payroll: PayrollDto) => {
     try {
       await approvePayroll.mutateAsync({ id: payroll.id });
-      message.success('Bordro onaylandı');
-    } catch (error) {
-      // Error handled by hook
+      showSuccess('Bordro onaylandı!');
+    } catch (err) {
+      showApiError(err, 'Bordro onaylanırken bir hata oluştu');
     }
   };
 
   const handleMarkPaid = async (payroll: PayrollDto) => {
     try {
       await markPaid.mutateAsync({ id: payroll.id });
-      message.success('Bordro ödendi olarak işaretlendi');
-    } catch (error) {
-      // Error handled by hook
+      showSuccess('Bordro ödendi olarak işaretlendi!');
+    } catch (err) {
+      showApiError(err, 'İşlem sırasında bir hata oluştu');
     }
   };
 
-  const formatCurrency = (value?: number) => {
-    if (!value) return '-';
-    return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value);
+  const handleCancel = async (payroll: PayrollDto) => {
+    try {
+      await cancelPayroll.mutateAsync({ id: payroll.id, reason: 'İptal edildi' });
+      showSuccess('Bordro iptal edildi!');
+    } catch (err) {
+      showApiError(err, 'Bordro iptal edilirken bir hata oluştu');
+      throw err;
+    }
   };
 
-  const getStatusConfig = (status?: PayrollStatus) => {
-    const statusMap: Record<number, { color: string; text: string }> = {
-      [PayrollStatus.Draft]: { color: 'default', text: 'Taslak' },
-      [PayrollStatus.Calculated]: { color: 'processing', text: 'Hesaplandı' },
-      [PayrollStatus.PendingApproval]: { color: 'orange', text: 'Onay Bekliyor' },
-      [PayrollStatus.Approved]: { color: 'blue', text: 'Onaylandı' },
-      [PayrollStatus.Paid]: { color: 'green', text: 'Ödendi' },
-      [PayrollStatus.Cancelled]: { color: 'red', text: 'İptal' },
-      [PayrollStatus.Rejected]: { color: 'volcano', text: 'Reddedildi' },
-    };
-    const defaultConfig = { color: 'default', text: '-' };
-    if (status === undefined || status === null) return defaultConfig;
-    return statusMap[status] || defaultConfig;
+  // Clear filters
+  const clearFilters = () => {
+    setFilters({});
   };
-
-  const columns: ColumnsType<PayrollDto> = [
-    {
-      title: 'Çalışan',
-      key: 'employee',
-      render: (_, record: PayrollDto) => (
-        <Space>
-          <UserIcon className="w-4 h-4 text-violet-500" />
-          <span>{record.employeeName || `Çalışan #${record.employeeId}`}</span>
-        </Space>
-      ),
-    },
-    {
-      title: 'Dönem',
-      key: 'period',
-      width: 120,
-      render: (_, record: PayrollDto) => `${record.month}/${record.year}`,
-    },
-    {
-      title: 'Brüt Maaş',
-      dataIndex: 'grossSalary',
-      key: 'grossSalary',
-      width: 140,
-      render: (value: number) => formatCurrency(value),
-    },
-    {
-      title: 'Kesintiler',
-      dataIndex: 'totalDeductions',
-      key: 'deductions',
-      width: 120,
-      render: (value: number) => formatCurrency(value),
-    },
-    {
-      title: 'Net Maaş',
-      dataIndex: 'netSalary',
-      key: 'netSalary',
-      width: 140,
-      render: (value: number) => <strong>{formatCurrency(value)}</strong>,
-    },
-    {
-      title: 'Durum',
-      dataIndex: 'status',
-      key: 'status',
-      width: 120,
-      render: (status: PayrollStatus) => {
-        const config = getStatusConfig(status);
-        return <Tag color={config.color}>{config.text}</Tag>;
-      },
-    },
-    {
-      title: 'İşlemler',
-      key: 'actions',
-      width: 80,
-      render: (_, record: PayrollDto) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'view',
-                icon: <EyeIcon className="w-4 h-4" />,
-                label: 'Görüntüle',
-                onClick: () => router.push(`/hr/payroll/${record.id}`),
-              },
-              {
-                key: 'edit',
-                icon: <PencilIcon className="w-4 h-4" />,
-                label: 'Düzenle',
-                onClick: () => router.push(`/hr/payroll/${record.id}/edit`),
-                disabled: record.status === PayrollStatus.Paid,
-              },
-              { type: 'divider' },
-              ...(record.status === PayrollStatus.PendingApproval || record.status === PayrollStatus.Draft || record.status === PayrollStatus.Calculated
-                ? [
-                    {
-                      key: 'approve',
-                      icon: <CheckCircleIcon className="w-4 h-4" />,
-                      label: 'Onayla',
-                      onClick: () => handleApprove(record),
-                    },
-                  ]
-                : []),
-              ...(record.status === PayrollStatus.Approved
-                ? [
-                    {
-                      key: 'markPaid',
-                      icon: <PaperAirplaneIcon className="w-4 h-4" />,
-                      label: 'Öde',
-                      onClick: () => handleMarkPaid(record),
-                    },
-                  ]
-                : []),
-              { type: 'divider' as const },
-              {
-                key: 'cancel',
-                icon: <XCircleIcon className="w-4 h-4" />,
-                label: 'İptal Et',
-                danger: true,
-                onClick: () => handleCancel(record),
-                disabled: record.status === PayrollStatus.Paid || record.status === PayrollStatus.Cancelled,
-              },
-            ],
-          }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
-        </Dropdown>
-      ),
-    },
-  ];
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2} style={{ margin: 0 }}>
-          <CurrencyDollarIcon className="w-4 h-4 mr-2" />
-          Bordro Yönetimi
-        </Title>
-        <Space>
-          <Button onClick={() => router.push('/hr/expenses')}>Harcamalar</Button>
-          <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/payroll/new')}>
-            Yeni Bordro
-          </Button>
-        </Space>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <PayrollStats payrolls={payrolls} loading={isLoading} />
       </div>
 
-      {/* Stats */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Bordro"
-              value={totalPayrolls}
-              prefix={<CurrencyDollarIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#7c3aed' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Bekleyen"
-              value={pendingPayrolls}
-              valueStyle={{ color: '#faad14' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Onaylanan"
-              value={approvedPayrolls}
-              prefix={<CheckCircleIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Net"
-              value={totalAmount}
-              formatter={(val) => formatCurrency(Number(val))}
-              valueStyle={{ color: '#1890ff', fontSize: 18 }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Header */}
+      <ListPageHeader
+        icon={<CurrencyDollarIcon className="w-5 h-5" />}
+        iconColor="#7c3aed"
+        title="Bordro Yönetimi"
+        description="Tüm bordroları görüntüle ve yönet"
+        itemCount={payrolls.length}
+        primaryAction={{
+          label: 'Yeni Bordro',
+          onClick: () => router.push('/hr/payroll/new'),
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      />
+
+      {/* Error Alert */}
+      {error && (
+        <Alert
+          variant="error"
+          title="Bordrolar yüklenemedi"
+          message={
+            error instanceof Error
+              ? error.message
+              : 'Bordrolar getirilirken bir hata oluştu. Lütfen tekrar deneyin.'
+          }
+          closable
+          action={
+            <button
+              onClick={() => refetch()}
+              className="px-3 py-1 text-xs font-medium text-red-700 bg-red-50 rounded-md hover:bg-red-100 transition-colors"
+            >
+              Tekrar Dene
+            </button>
+          }
+          className="mb-6"
+        />
+      )}
 
       {/* Filters */}
-      <Card className="mb-4">
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={6}>
-            <Select
-              placeholder="Çalışan seçin"
-              allowClear
-              showSearch
-              optionFilterProp="children"
-              style={{ width: '100%' }}
-              onChange={(value) => setFilters((prev) => ({ ...prev, employeeId: value }))}
-              options={employees.map((e) => ({
-                value: e.id,
-                label: e.fullName,
-              }))}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <DatePicker
-              picker="month"
-              format="MM/YYYY"
-              placeholder="Dönem seçin"
-              style={{ width: '100%' }}
-              onChange={(date) => {
-                if (date) {
-                  setFilters((prev) => ({
-                    ...prev,
-                    month: date.month() + 1,
-                    year: date.year(),
-                  }));
-                } else {
-                  setFilters((prev) => ({ ...prev, month: undefined, year: undefined }));
-                }
-              }}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Select
-              placeholder="Durum"
-              allowClear
-              style={{ width: '100%' }}
-              onChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
-              options={[
-                { value: PayrollStatus.Draft, label: 'Taslak' },
-                { value: PayrollStatus.Calculated, label: 'Hesaplandı' },
-                { value: PayrollStatus.PendingApproval, label: 'Onay Bekliyor' },
-                { value: PayrollStatus.Approved, label: 'Onaylanan' },
-                { value: PayrollStatus.Paid, label: 'Ödenen' },
-                { value: PayrollStatus.Cancelled, label: 'İptal' },
-              ]}
-            />
-          </Col>
-        </Row>
-      </Card>
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Select
+            placeholder="Çalışan seçin"
+            allowClear
+            showSearch
+            optionFilterProp="children"
+            className="h-10"
+            style={{ height: 48 }}
+            value={filters.employeeId}
+            onChange={(value) => setFilters((prev) => ({ ...prev, employeeId: value }))}
+            options={employees.map((e) => ({
+              value: e.id,
+              label: e.fullName,
+            }))}
+          />
+          <DatePicker
+            picker="month"
+            format="MM/YYYY"
+            placeholder="Dönem seçin"
+            className="h-10"
+            style={{ height: 48 }}
+            onChange={(date) => {
+              if (date) {
+                setFilters((prev) => ({
+                  ...prev,
+                  month: date.month() + 1,
+                  year: date.year(),
+                }));
+              } else {
+                setFilters((prev) => ({ ...prev, month: undefined, year: undefined }));
+              }
+            }}
+          />
+          <Select
+            placeholder="Durum"
+            allowClear
+            className="h-10"
+            style={{ height: 48 }}
+            value={filters.status}
+            onChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
+            options={[
+              { value: PayrollStatus.Draft, label: 'Taslak' },
+              { value: PayrollStatus.Calculated, label: 'Hesaplandı' },
+              { value: PayrollStatus.PendingApproval, label: 'Onay Bekliyor' },
+              { value: PayrollStatus.Approved, label: 'Onaylanan' },
+              { value: PayrollStatus.Paid, label: 'Ödenen' },
+              { value: PayrollStatus.Cancelled, label: 'İptal' },
+            ]}
+          />
+          <button
+            onClick={clearFilters}
+            className="h-12 px-4 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+          >
+            Temizle
+          </button>
+        </div>
+      </div>
 
       {/* Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={payrolls}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} bordro`,
-          }}
-        />
-      </Card>
-    </div>
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spinner size="lg" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <PayrollTable
+            payrolls={payrolls}
+            loading={isLoading}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalCount={payrolls.length}
+            onPageChange={(page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            }}
+            onView={handleView}
+            onEdit={handleEdit}
+            onApprove={handleApprove}
+            onMarkPaid={handleMarkPaid}
+            onCancel={handleCancel}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }

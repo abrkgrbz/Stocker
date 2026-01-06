@@ -1,44 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Typography,
-  Button,
-  Space,
-  Card,
-  Table,
-  Tag,
-  Row,
-  Col,
-  Statistic,
-  Dropdown,
-  Modal,
-  Input,
-  Select,
-} from 'antd';
-import {
-  CheckCircleIcon,
-  ClockIcon,
-  DocumentIcon,
-  EllipsisHorizontalIcon,
-  ExclamationCircleIcon,
-  EyeIcon,
-  MagnifyingGlassIcon,
-  PencilIcon,
-  PlusIcon,
-  ShieldCheckIcon,
-  TrashIcon,
-} from '@heroicons/react/24/outline';
-import type { ColumnsType } from 'antd/es/table';
+import { Card, Row, Col, Select } from 'antd';
+import { MagnifyingGlassIcon, DocumentIcon, PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
+import { Input } from '@/components/primitives/inputs';
+import { Alert } from '@/components/primitives/feedback';
+import { DocumentsStats, DocumentsTable } from '@/components/hr/documents';
 import { useDocuments, useDeleteDocument, useEmployees } from '@/lib/api/hooks/useHR';
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import type { EmployeeDocumentDto } from '@/lib/api/services/hr.types';
 import { DocumentType } from '@/lib/api/services/hr.types';
-import dayjs from 'dayjs';
 
-const { Title } = Typography;
-
-// Document type labels in Turkish
 const documentTypeLabels: Record<number, string> = {
   [DocumentType.IdentityCard]: 'Kimlik Kartı',
   [DocumentType.Passport]: 'Pasaport',
@@ -62,224 +36,125 @@ const documentTypeLabels: Record<number, string> = {
 export default function DocumentsPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [employeeFilter, setEmployeeFilter] = useState<number | undefined>();
   const [typeFilter, setTypeFilter] = useState<number | undefined>();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
   // API Hooks
-  const { data: documents = [], isLoading } = useDocuments(employeeFilter, typeFilter);
+  const { data: documents = [], isLoading, error, refetch } = useDocuments(employeeFilter, typeFilter);
   const { data: employees = [] } = useEmployees();
   const deleteDocument = useDeleteDocument();
 
-  // Filter documents by search text
-  const filteredDocuments = documents.filter(
-    (d) =>
-      d.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      d.employeeName.toLowerCase().includes(searchText.toLowerCase()) ||
-      d.documentNumber.toLowerCase().includes(searchText.toLowerCase())
-  );
+  // Filter documents
+  const filteredDocuments = useMemo(() => {
+    if (!debouncedSearch.trim()) return documents;
+    const search = debouncedSearch.toLowerCase();
+    return documents.filter(
+      (d) =>
+        d.title?.toLowerCase().includes(search) ||
+        d.employeeName?.toLowerCase().includes(search) ||
+        d.documentNumber?.toLowerCase().includes(search)
+    );
+  }, [documents, debouncedSearch]);
 
-  // Stats
-  const totalDocuments = documents.length;
-  const verifiedDocuments = documents.filter((d) => d.isVerified).length;
-  const expiredDocuments = documents.filter((d) => d.isExpired).length;
-  const expiringSoonDocuments = documents.filter((d) => d.isExpiringSoon && !d.isExpired).length;
+  // Paginate
+  const paginatedDocuments = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredDocuments.slice(start, start + pageSize);
+  }, [filteredDocuments, currentPage, pageSize]);
 
-  const handleDelete = (document: EmployeeDocumentDto) => {
-    Modal.confirm({
-      title: 'Belgeyi Sil',
-      content: `"${document.title}" belgesini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await deleteDocument.mutateAsync(document.id);
-        } catch (error) {
-          // Error handled by hook
-        }
-      },
-    });
+  const totalCount = filteredDocuments.length;
+
+  const handlePageChange = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
   };
 
-  const columns: ColumnsType<EmployeeDocumentDto> = [
-    {
-      title: 'Belge Adı',
-      dataIndex: 'title',
-      key: 'title',
-      sorter: (a, b) => a.title.localeCompare(b.title),
-      render: (title: string, record: EmployeeDocumentDto) => (
-        <Space>
-          <DocumentIcon className="w-4 h-4 text-blue-500" />
-          <a onClick={() => router.push(`/hr/documents/${record.id}`)}>{title}</a>
-        </Space>
-      ),
-    },
-    {
-      title: 'Çalışan',
-      dataIndex: 'employeeName',
-      key: 'employeeName',
-      sorter: (a, b) => a.employeeName.localeCompare(b.employeeName),
-    },
-    {
-      title: 'Belge No',
-      dataIndex: 'documentNumber',
-      key: 'documentNumber',
-      width: 150,
-    },
-    {
-      title: 'Tür',
-      dataIndex: 'documentType',
-      key: 'documentType',
-      width: 150,
-      render: (type: DocumentType) => (
-        <Tag>{documentTypeLabels[type] || 'Bilinmiyor'}</Tag>
-      ),
-    },
-    {
-      title: 'Son Geçerlilik',
-      dataIndex: 'expiryDate',
-      key: 'expiryDate',
-      width: 130,
-      sorter: (a, b) => {
-        if (!a.expiryDate && !b.expiryDate) return 0;
-        if (!a.expiryDate) return 1;
-        if (!b.expiryDate) return -1;
-        return dayjs(a.expiryDate).unix() - dayjs(b.expiryDate).unix();
-      },
-      render: (date: string | undefined, record: EmployeeDocumentDto) => {
-        if (!date) return <span className="text-gray-400">-</span>;
-        const color = record.isExpired ? 'red' : record.isExpiringSoon ? 'orange' : 'default';
-        return <Tag color={color}>{dayjs(date).format('DD.MM.YYYY')}</Tag>;
-      },
-    },
-    {
-      title: 'Doğrulama',
-      dataIndex: 'isVerified',
-      key: 'isVerified',
-      width: 100,
-      render: (isVerified: boolean) => (
-        <Tag color={isVerified ? 'green' : 'default'} icon={isVerified ? <CheckCircleIcon className="w-4 h-4" /> : <ClockIcon className="w-4 h-4" />}>
-          {isVerified ? 'Doğrulandı' : 'Bekliyor'}
-        </Tag>
-      ),
-    },
-    {
-      title: 'İşlemler',
-      key: 'actions',
-      width: 80,
-      render: (_, record: EmployeeDocumentDto) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'view',
-                icon: <EyeIcon className="w-4 h-4" />,
-                label: 'Görüntüle',
-                onClick: () => router.push(`/hr/documents/${record.id}`),
-              },
-              {
-                key: 'edit',
-                icon: <PencilIcon className="w-4 h-4" />,
-                label: 'Düzenle',
-                onClick: () => router.push(`/hr/documents/${record.id}/edit`),
-              },
-              { type: 'divider' },
-              {
-                key: 'delete',
-                icon: <TrashIcon className="w-4 h-4" />,
-                label: 'Sil',
-                danger: true,
-                onClick: () => handleDelete(record),
-              },
-            ],
-          }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
-        </Dropdown>
-      ),
-    },
-  ];
+  const handleDelete = async (document: EmployeeDocumentDto) => {
+    try {
+      await deleteDocument.mutateAsync(document.id);
+      showSuccess('Belge Silindi', `"${document.title}" belgesi başarıyla silindi.`);
+    } catch (err) {
+      showApiError(err, 'Belge silinirken bir hata oluştu');
+    }
+  };
 
-  // Document type options for filter
   const documentTypeOptions = Object.entries(documentTypeLabels).map(([value, label]) => ({
     value: Number(value),
     label,
   }));
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2} style={{ margin: 0 }}>
-          <DocumentIcon className="w-4 h-4 mr-2" />
-          Belgeler
-        </Title>
-        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/documents/new')}>
-          Yeni Belge
-        </Button>
+    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <DocumentsStats documents={documents} loading={isLoading} />
       </div>
 
-      {/* Stats */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Belge"
-              value={totalDocuments}
-              prefix={<DocumentIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#3b82f6' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Doğrulanmış"
-              value={verifiedDocuments}
-              prefix={<ShieldCheckIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Süresi Dolacak"
-              value={expiringSoonDocuments}
-              prefix={<ClockIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#faad14' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Süresi Dolmuş"
-              value={expiredDocuments}
-              prefix={<ExclamationCircleIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#ff4d4f' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Header */}
+      <ListPageHeader
+        icon={<DocumentIcon className="w-5 h-5" />}
+        iconColor="#3b82f6"
+        title="Belgeler"
+        description="Çalışan belgelerini yönetin ve takip edin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Belge',
+          onClick: () => router.push('/hr/documents/new'),
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      />
 
-      {/* Filters */}
-      <Card className="mb-4">
+      {error && (
+        <Alert
+          variant="error"
+          title="Belgeler yüklenemedi"
+          message={(error as Error).message}
+          closable
+          action={
+            <button onClick={() => refetch()} className="text-red-600 hover:text-red-800 font-medium">
+              Tekrar Dene
+            </button>
+          }
+          className="mt-6"
+        />
+      )}
+
+      <Card className="mt-6 mb-4 border border-gray-100 shadow-sm">
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={12} md={8}>
             <Input
-              placeholder="Belge veya çalışan ara..."
-              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
+              placeholder="Belge ara... (başlık, çalışan, belge no)"
+              prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
+              size="lg"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              allowClear
             />
           </Col>
           <Col xs={24} sm={12} md={8}>
             <Select
               placeholder="Çalışan seçin"
-              style={{ width: '100%' }}
+              style={{ width: '100%', height: '44px' }}
               value={employeeFilter}
               onChange={(value) => setEmployeeFilter(value)}
               allowClear
@@ -294,7 +169,7 @@ export default function DocumentsPage() {
           <Col xs={24} sm={12} md={8}>
             <Select
               placeholder="Belge türü seçin"
-              style={{ width: '100%' }}
+              style={{ width: '100%', height: '44px' }}
               value={typeFilter}
               onChange={(value) => setTypeFilter(value)}
               allowClear
@@ -304,19 +179,19 @@ export default function DocumentsPage() {
         </Row>
       </Card>
 
-      {/* Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={filteredDocuments}
-          rowKey="id"
+      <DataTableWrapper>
+        <DocumentsTable
+          documents={paginatedDocuments}
           loading={isLoading}
-          pagination={{
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} belge`,
-          }}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalCount={totalCount}
+          onPageChange={handlePageChange}
+          onView={(id) => router.push(`/hr/documents/${id}`)}
+          onEdit={(id) => router.push(`/hr/documents/${id}/edit`)}
+          onDelete={handleDelete}
         />
-      </Card>
-    </div>
+      </DataTableWrapper>
+    </PageContainer>
   );
 }

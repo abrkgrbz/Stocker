@@ -3,32 +3,17 @@
 /**
  * Positions List Page
  * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Standardized with CRM Customer module patterns
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Table,
-  Tag,
-  Input,
-  Select,
-  Dropdown,
-  Modal,
-} from 'antd';
-import { Spinner } from '@/components/primitives';
+import { Select } from 'antd';
 import {
   ArrowPathIcon,
-  CheckCircleIcon,
-  CurrencyDollarIcon,
-  EllipsisVerticalIcon,
-  EyeIcon,
   MagnifyingGlassIcon,
-  NoSymbolIcon,
-  PencilIcon,
   PlusIcon,
   ShieldCheckIcon,
-  TrashIcon,
-  UsersIcon,
 } from '@heroicons/react/24/outline';
 import {
   usePositions,
@@ -38,13 +23,15 @@ import {
   useDeactivatePosition,
 } from '@/lib/api/hooks/useHR';
 import type { PositionDto } from '@/lib/api/services/hr.types';
-import type { ColumnsType } from 'antd/es/table';
+import { PositionsStats, PositionsTable } from '@/components/hr/positions';
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import {
   PageContainer,
   ListPageHeader,
-  Card,
   DataTableWrapper,
-} from '@/components/ui/enterprise-page';
+  Card,
+} from '@/components/patterns';
+import { Input, Alert, Spinner } from '@/components/primitives';
 
 export default function PositionsPage() {
   const router = useRouter();
@@ -69,7 +56,7 @@ export default function PositionsPage() {
   }, [searchText]);
 
   // API Hooks
-  const { data: positions = [], isLoading, refetch } = usePositions(selectedDepartment, includeInactive);
+  const { data: positions = [], isLoading, error, refetch } = usePositions(selectedDepartment, includeInactive);
   const { data: departments = [] } = useDepartments();
   const deletePosition = useDeletePosition();
   const activatePosition = useActivatePosition();
@@ -88,11 +75,6 @@ export default function PositionsPage() {
     });
   }, [positions, debouncedSearch]);
 
-  // Calculate stats
-  const totalPositions = positions.length;
-  const activePositions = positions.filter((p) => p.isActive).length;
-  const totalEmployees = positions.reduce((sum, p) => sum + (p.filledPositions || 0), 0);
-
   // CRUD Handlers
   const handleView = (id: number) => {
     router.push(`/hr/positions/${id}`);
@@ -102,32 +84,27 @@ export default function PositionsPage() {
     router.push(`/hr/positions/${id}/edit`);
   };
 
-  const handleDelete = (pos: PositionDto) => {
-    Modal.confirm({
-      title: 'Pozisyonu Sil',
-      content: `"${pos.title}" pozisyonunu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await deletePosition.mutateAsync(pos.id);
-        } catch (error) {
-          // Error handled by hook
-        }
-      },
-    });
+  const handleDelete = async (position: PositionDto) => {
+    try {
+      await deletePosition.mutateAsync(position.id);
+      showSuccess('Pozisyon başarıyla silindi!');
+    } catch (err) {
+      showApiError(err, 'Pozisyon silinirken bir hata oluştu');
+      throw err;
+    }
   };
 
-  const handleToggleActive = async (pos: PositionDto) => {
+  const handleToggleActive = async (position: PositionDto) => {
     try {
-      if (pos.isActive) {
-        await deactivatePosition.mutateAsync(pos.id);
+      if (position.isActive) {
+        await deactivatePosition.mutateAsync(position.id);
+        showSuccess('Pozisyon pasifleştirildi!');
       } else {
-        await activatePosition.mutateAsync(pos.id);
+        await activatePosition.mutateAsync(position.id);
+        showSuccess('Pozisyon aktifleştirildi!');
       }
-    } catch (error) {
-      // Error handled by hook
+    } catch (err) {
+      showApiError(err, 'İşlem sırasında bir hata oluştu');
     }
   };
 
@@ -138,156 +115,11 @@ export default function PositionsPage() {
     setIncludeInactive(false);
   };
 
-  // Format currency
-  const formatCurrency = (value?: number) => {
-    if (!value) return '-';
-    return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value);
-  };
-
-  // Table columns
-  const columns: ColumnsType<PositionDto> = [
-    {
-      title: 'Pozisyon',
-      key: 'position',
-      width: 280,
-      render: (_, record) => (
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-            <ShieldCheckIcon className="w-5 h-5" style={{ color: '#8b5cf6' }} />
-          </div>
-          <div>
-            <div className="text-sm font-medium text-slate-900">{record.title}</div>
-            <div className="text-xs text-slate-500">{record.code || '-'}</div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: 'Departman',
-      dataIndex: 'departmentName',
-      key: 'department',
-      width: 150,
-      render: (name) => <span className="text-sm text-slate-600">{name || <span className="text-slate-400">-</span>}</span>,
-    },
-    {
-      title: 'Maaş Aralığı',
-      key: 'salary',
-      width: 200,
-      render: (_, record) => {
-        if (!record.minSalary && !record.maxSalary) return <span className="text-slate-400">-</span>;
-        return (
-          <div className="flex items-center gap-1 text-xs text-slate-600">
-            <CurrencyDollarIcon className="w-3 h-3 text-slate-400" />
-            <span>{formatCurrency(record.minSalary)} - {formatCurrency(record.maxSalary)}</span>
-          </div>
-        );
-      },
-    },
-    {
-      title: 'Çalışan',
-      dataIndex: 'filledPositions',
-      key: 'employees',
-      width: 100,
-      align: 'center',
-      render: (count) => (
-        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded">
-          {count || 0}
-        </span>
-      ),
-    },
-    {
-      title: 'Durum',
-      dataIndex: 'isActive',
-      key: 'status',
-      width: 100,
-      render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'default'}>{isActive ? 'Aktif' : 'Pasif'}</Tag>
-      ),
-    },
-    {
-      title: '',
-      key: 'actions',
-      width: 60,
-      fixed: 'right',
-      render: (_, record) => {
-        const menuItems = [
-          {
-            key: 'view',
-            icon: <EyeIcon className="w-4 h-4" />,
-            label: 'Görüntüle',
-            onClick: () => handleView(record.id),
-          },
-          {
-            key: 'edit',
-            icon: <PencilIcon className="w-4 h-4" />,
-            label: 'Düzenle',
-            onClick: () => handleEdit(record.id),
-          },
-          { type: 'divider' as const },
-          {
-            key: 'toggle',
-            icon: record.isActive ? <NoSymbolIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />,
-            label: record.isActive ? 'Pasifleştir' : 'Aktifleştir',
-            onClick: () => handleToggleActive(record),
-          },
-          { type: 'divider' as const },
-          {
-            key: 'delete',
-            icon: <TrashIcon className="w-4 h-4" />,
-            label: 'Sil',
-            danger: true,
-            onClick: () => handleDelete(record),
-          },
-        ];
-
-        return (
-          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <EllipsisVerticalIcon className="w-4 h-4" />
-            </button>
-          </Dropdown>
-        );
-      },
-    },
-  ];
-
   return (
     <PageContainer maxWidth="7xl">
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Pozisyon</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalPositions}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <ShieldCheckIcon className="w-6 h-6" style={{ color: '#8b5cf6' }} />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif Pozisyon</span>
-              <div className="text-2xl font-semibold text-slate-900">{activePositions}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleIcon className="w-6 h-6" style={{ color: '#10b981' }} />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Çalışan</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalEmployees}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <UsersIcon className="w-6 h-6" style={{ color: '#3b82f6' }} />
-            </div>
-          </div>
-        </div>
+      <div className="mb-8">
+        <PositionsStats positions={positions} loading={isLoading} />
       </div>
 
       {/* Header */}
@@ -300,7 +132,7 @@ export default function PositionsPage() {
         primaryAction={{
           label: 'Yeni Pozisyon',
           onClick: () => router.push('/hr/positions/new'),
-          icon: <PlusIcon className="w-5 h-5" />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -313,29 +145,53 @@ export default function PositionsPage() {
         }
       />
 
+      {/* Error Alert */}
+      {error && (
+        <Alert
+          variant="error"
+          title="Pozisyonlar yüklenemedi"
+          message={
+            error instanceof Error
+              ? error.message
+              : 'Pozisyonlar getirilirken bir hata oluştu. Lütfen tekrar deneyin.'
+          }
+          closable
+          action={
+            <button
+              onClick={() => refetch()}
+              className="px-3 py-1 text-xs font-medium text-red-700 bg-red-50 rounded-md hover:bg-red-100 transition-colors"
+            >
+              Tekrar Dene
+            </button>
+          }
+          className="mb-6"
+        />
+      )}
+
       {/* Filters */}
       <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div className="md:col-span-2">
             <Input
-              placeholder="Pozisyon adı, kod veya açıklama ara..."
-              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
-              allowClear
+              placeholder="Pozisyon ara... (ad, kod, açıklama)"
+              prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              className="h-10"
+              size="lg"
             />
           </div>
           <Select
             placeholder="Departman"
             allowClear
             className="h-10"
+            style={{ height: 48 }}
             value={selectedDepartment}
             onChange={setSelectedDepartment}
             options={departments.map((d) => ({ value: d.id, label: d.name }))}
           />
           <Select
             className="h-10"
+            style={{ height: 48 }}
             value={includeInactive}
             onChange={setIncludeInactive}
             options={[
@@ -345,7 +201,7 @@ export default function PositionsPage() {
           />
           <button
             onClick={clearFilters}
-            className="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-md hover:bg-slate-200 transition-colors"
+            className="h-12 px-4 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
           >
             Temizle
           </button>
@@ -361,23 +217,20 @@ export default function PositionsPage() {
         </Card>
       ) : (
         <DataTableWrapper>
-          <Table
-            columns={columns}
-            dataSource={filteredPositions}
-            rowKey="id"
+          <PositionsTable
+            positions={filteredPositions}
             loading={isLoading}
-            scroll={{ x: 1000 }}
-            pagination={{
-              current: currentPage,
-              pageSize: pageSize,
-              total: filteredPositions.length,
-              showSizeChanger: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} pozisyon`,
-              onChange: (page, size) => {
-                setCurrentPage(page);
-                setPageSize(size);
-              },
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalCount={filteredPositions.length}
+            onPageChange={(page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
             }}
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onToggleActive={handleToggleActive}
           />
         </DataTableWrapper>
       )}

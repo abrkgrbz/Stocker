@@ -1,36 +1,19 @@
 'use client';
 
+/**
+ * Expenses List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Standardized with CRM Customer module patterns
+ */
+
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Select, DatePicker } from 'antd';
 import {
-  Typography,
-  Button,
-  Space,
-  Card,
-  Table,
-  Tag,
-  Row,
-  Col,
-  Statistic,
-  Dropdown,
-  Modal,
-  Select,
-  DatePicker,
-  message,
-} from 'antd';
-import {
-  CheckCircleIcon,
-  ClockIcon,
-  EllipsisHorizontalIcon,
-  EyeIcon,
-  PencilIcon,
-  PlusIcon,
-  TrashIcon,
-  UserIcon,
+  ArrowPathIcon,
   WalletIcon,
-  XCircleIcon,
+  PlusIcon,
 } from '@heroicons/react/24/outline';
-import type { ColumnsType } from 'antd/es/table';
 import {
   useExpenses,
   useDeleteExpense,
@@ -40,316 +23,212 @@ import {
 } from '@/lib/api/hooks/useHR';
 import type { ExpenseDto, ExpenseFilterDto } from '@/lib/api/services/hr.types';
 import { ExpenseStatus } from '@/lib/api/services/hr.types';
-import dayjs from 'dayjs';
+import { ExpensesStats, ExpensesTable } from '@/components/hr/expenses';
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
+import {
+  PageContainer,
+  ListPageHeader,
+  DataTableWrapper,
+  Card,
+} from '@/components/patterns';
+import { Alert, Spinner } from '@/components/primitives';
 
-const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
 export default function ExpensesPage() {
   const router = useRouter();
   const [filters, setFilters] = useState<ExpenseFilterDto>({});
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   // API Hooks
-  const { data: expenses = [], isLoading } = useExpenses(filters);
+  const { data: expenses = [], isLoading, error, refetch } = useExpenses(filters);
   const { data: employees = [] } = useEmployees();
   const deleteExpense = useDeleteExpense();
   const approveExpense = useApproveExpense();
   const rejectExpense = useRejectExpense();
 
-  // Stats
-  const totalExpenses = expenses.length;
-  const pendingExpenses = expenses.filter((e) => e.status === ExpenseStatus.Pending).length;
-  const approvedExpenses = expenses.filter((e) => e.status === ExpenseStatus.Approved).length;
-  const totalAmount = expenses.filter((e) => e.status === ExpenseStatus.Approved).reduce((sum, e) => sum + (e.amount || 0), 0);
+  // CRUD Handlers
+  const handleView = (id: number) => {
+    router.push(`/hr/expenses/${id}`);
+  };
 
-  const handleDelete = (expense: ExpenseDto) => {
-    Modal.confirm({
-      title: 'Harcama Kaydını Sil',
-      content: 'Bu harcama kaydını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await deleteExpense.mutateAsync(expense.id);
-        } catch (error) {
-          // Error handled by hook
-        }
-      },
-    });
+  const handleEdit = (id: number) => {
+    router.push(`/hr/expenses/${id}/edit`);
+  };
+
+  const handleDelete = async (expense: ExpenseDto) => {
+    try {
+      await deleteExpense.mutateAsync(expense.id);
+      showSuccess('Harcama başarıyla silindi!');
+    } catch (err) {
+      showApiError(err, 'Harcama silinirken bir hata oluştu');
+      throw err;
+    }
   };
 
   const handleApprove = async (expense: ExpenseDto) => {
     try {
       await approveExpense.mutateAsync({ id: expense.id });
-      message.success('Harcama onaylandı');
-    } catch (error) {
-      // Error handled by hook
+      showSuccess('Harcama onaylandı!');
+    } catch (err) {
+      showApiError(err, 'Harcama onaylanırken bir hata oluştu');
     }
   };
 
   const handleReject = async (expense: ExpenseDto) => {
-    Modal.confirm({
-      title: 'Harcamayı Reddet',
-      content: 'Bu harcamayı reddetmek istediğinizden emin misiniz?',
-      okText: 'Reddet',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await rejectExpense.mutateAsync({ id: expense.id, data: { reason: 'Reddedildi' } });
-          message.success('Harcama reddedildi');
-        } catch (error) {
-          // Error handled by hook
-        }
-      },
-    });
+    try {
+      await rejectExpense.mutateAsync({ id: expense.id, data: { reason: 'Reddedildi' } });
+      showSuccess('Harcama reddedildi!');
+    } catch (err) {
+      showApiError(err, 'Harcama reddedilirken bir hata oluştu');
+    }
   };
 
-  const formatCurrency = (value?: number) => {
-    if (!value) return '-';
-    return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value);
+  // Clear filters
+  const clearFilters = () => {
+    setFilters({});
   };
-
-  const getStatusConfig = (status?: string) => {
-    const statusMap: Record<string, { color: string; text: string }> = {
-      Pending: { color: 'orange', text: 'Beklemede' },
-      Approved: { color: 'green', text: 'Onaylandı' },
-      Rejected: { color: 'red', text: 'Reddedildi' },
-      Paid: { color: 'blue', text: 'Ödendi' },
-    };
-    return statusMap[status || ''] || { color: 'default', text: status || '-' };
-  };
-
-  const columns: ColumnsType<ExpenseDto> = [
-    {
-      title: 'Çalışan',
-      key: 'employee',
-      render: (_, record: ExpenseDto) => (
-        <Space>
-          <UserIcon className="w-4 h-4 text-violet-500" />
-          <span>{record.employeeName || `Çalışan #${record.employeeId}`}</span>
-        </Space>
-      ),
-    },
-    {
-      title: 'Açıklama',
-      dataIndex: 'description',
-      key: 'description',
-      ellipsis: true,
-    },
-    {
-      title: 'Kategori',
-      dataIndex: 'category',
-      key: 'category',
-      width: 120,
-    },
-    {
-      title: 'Tarih',
-      dataIndex: 'expenseDate',
-      key: 'date',
-      width: 120,
-      sorter: (a, b) => dayjs(a.expenseDate).unix() - dayjs(b.expenseDate).unix(),
-      render: (date: string) => dayjs(date).format('DD.MM.YYYY'),
-    },
-    {
-      title: 'Tutar',
-      dataIndex: 'amount',
-      key: 'amount',
-      width: 140,
-      render: (value: number) => <strong>{formatCurrency(value)}</strong>,
-    },
-    {
-      title: 'Durum',
-      dataIndex: 'status',
-      key: 'status',
-      width: 120,
-      render: (status: string) => {
-        const config = getStatusConfig(status);
-        return <Tag color={config.color}>{config.text}</Tag>;
-      },
-    },
-    {
-      title: 'İşlemler',
-      key: 'actions',
-      width: 80,
-      render: (_, record: ExpenseDto) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'view',
-                icon: <EyeIcon className="w-4 h-4" />,
-                label: 'Görüntüle',
-                onClick: () => router.push(`/hr/expenses/${record.id}`),
-              },
-              {
-                key: 'edit',
-                icon: <PencilIcon className="w-4 h-4" />,
-                label: 'Düzenle',
-                onClick: () => router.push(`/hr/expenses/${record.id}/edit`),
-                disabled: record.status !== ExpenseStatus.Pending,
-              },
-              { type: 'divider' },
-              ...(record.status === ExpenseStatus.Pending
-                ? [
-                    {
-                      key: 'approve',
-                      icon: <CheckCircleIcon className="w-4 h-4" />,
-                      label: 'Onayla',
-                      onClick: () => handleApprove(record),
-                    },
-                    {
-                      key: 'reject',
-                      icon: <XCircleIcon className="w-4 h-4" />,
-                      label: 'Reddet',
-                      onClick: () => handleReject(record),
-                    },
-                    { type: 'divider' as const },
-                  ]
-                : []),
-              {
-                key: 'delete',
-                icon: <TrashIcon className="w-4 h-4" />,
-                label: 'Sil',
-                danger: true,
-                onClick: () => handleDelete(record),
-              },
-            ],
-          }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
-        </Dropdown>
-      ),
-    },
-  ];
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2} style={{ margin: 0 }}>
-          <WalletIcon className="w-4 h-4 mr-2" />
-          Harcama Yönetimi
-        </Title>
-        <Space>
-          <Button onClick={() => router.push('/hr/payroll')}>Bordro</Button>
-          <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/expenses/new')}>
-            Yeni Harcama
-          </Button>
-        </Space>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <ExpensesStats expenses={expenses} loading={isLoading} />
       </div>
 
-      {/* Stats */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Harcama"
-              value={totalExpenses}
-              prefix={<WalletIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#7c3aed' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Bekleyen"
-              value={pendingExpenses}
-              prefix={<ClockIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#faad14' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Onaylanan"
-              value={approvedExpenses}
-              prefix={<CheckCircleIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Onaylanan Tutar"
-              value={totalAmount}
-              formatter={(val) => formatCurrency(Number(val))}
-              valueStyle={{ color: '#1890ff', fontSize: 18 }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Header */}
+      <ListPageHeader
+        icon={<WalletIcon className="w-5 h-5" />}
+        iconColor="#7c3aed"
+        title="Harcama Yönetimi"
+        description="Tüm harcamaları görüntüle ve yönet"
+        itemCount={expenses.length}
+        primaryAction={{
+          label: 'Yeni Harcama',
+          onClick: () => router.push('/hr/expenses/new'),
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      />
+
+      {/* Error Alert */}
+      {error && (
+        <Alert
+          variant="error"
+          title="Harcamalar yüklenemedi"
+          message={
+            error instanceof Error
+              ? error.message
+              : 'Harcamalar getirilirken bir hata oluştu. Lütfen tekrar deneyin.'
+          }
+          closable
+          action={
+            <button
+              onClick={() => refetch()}
+              className="px-3 py-1 text-xs font-medium text-red-700 bg-red-50 rounded-md hover:bg-red-100 transition-colors"
+            >
+              Tekrar Dene
+            </button>
+          }
+          className="mb-6"
+        />
+      )}
 
       {/* Filters */}
-      <Card className="mb-4">
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={6}>
-            <Select
-              placeholder="Çalışan seçin"
-              allowClear
-              showSearch
-              optionFilterProp="children"
-              style={{ width: '100%' }}
-              onChange={(value) => setFilters((prev) => ({ ...prev, employeeId: value }))}
-              options={employees.map((e) => ({
-                value: e.id,
-                label: e.fullName,
-              }))}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Select
-              placeholder="Durum"
-              allowClear
-              style={{ width: '100%' }}
-              onChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
-              options={[
-                { value: 'Pending', label: 'Beklemede' },
-                { value: 'Approved', label: 'Onaylanan' },
-                { value: 'Rejected', label: 'Reddedilen' },
-                { value: 'Paid', label: 'Ödenen' },
-              ]}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <RangePicker
-              style={{ width: '100%' }}
-              format="DD.MM.YYYY"
-              placeholder={['Başlangıç', 'Bitiş']}
-              onChange={(dates) => {
-                if (dates) {
-                  setFilters((prev) => ({
-                    ...prev,
-                    startDate: dates[0]?.format('YYYY-MM-DD'),
-                    endDate: dates[1]?.format('YYYY-MM-DD'),
-                  }));
-                } else {
-                  setFilters((prev) => ({ ...prev, startDate: undefined, endDate: undefined }));
-                }
-              }}
-            />
-          </Col>
-        </Row>
-      </Card>
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Select
+            placeholder="Çalışan seçin"
+            allowClear
+            showSearch
+            optionFilterProp="children"
+            className="h-10"
+            style={{ height: 48 }}
+            value={filters.employeeId}
+            onChange={(value) => setFilters((prev) => ({ ...prev, employeeId: value }))}
+            options={employees.map((e) => ({
+              value: e.id,
+              label: e.fullName,
+            }))}
+          />
+          <Select
+            placeholder="Durum"
+            allowClear
+            className="h-10"
+            style={{ height: 48 }}
+            value={filters.status}
+            onChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
+            options={[
+              { value: 'Pending', label: 'Beklemede' },
+              { value: 'Approved', label: 'Onaylanan' },
+              { value: 'Rejected', label: 'Reddedilen' },
+              { value: 'Paid', label: 'Ödenen' },
+            ]}
+          />
+          <RangePicker
+            className="h-10"
+            style={{ height: 48 }}
+            format="DD.MM.YYYY"
+            placeholder={['Başlangıç', 'Bitiş']}
+            onChange={(dates) => {
+              if (dates) {
+                setFilters((prev) => ({
+                  ...prev,
+                  startDate: dates[0]?.format('YYYY-MM-DD'),
+                  endDate: dates[1]?.format('YYYY-MM-DD'),
+                }));
+              } else {
+                setFilters((prev) => ({ ...prev, startDate: undefined, endDate: undefined }));
+              }
+            }}
+          />
+          <button
+            onClick={clearFilters}
+            className="h-12 px-4 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+          >
+            Temizle
+          </button>
+        </div>
+      </div>
 
       {/* Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={expenses}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} harcama`,
-          }}
-        />
-      </Card>
-    </div>
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spinner size="lg" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <ExpensesTable
+            expenses={expenses}
+            loading={isLoading}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalCount={expenses.length}
+            onPageChange={(page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            }}
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onApprove={handleApprove}
+            onReject={handleReject}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }

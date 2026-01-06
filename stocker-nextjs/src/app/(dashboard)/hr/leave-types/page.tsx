@@ -1,255 +1,202 @@
 'use client';
 
-import React, { useState } from 'react';
+/**
+ * Leave Types List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Standardized with CRM Customer module patterns
+ */
+
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Typography,
-  Button,
-  Space,
-  Card,
-  Table,
-  Tag,
-  Row,
-  Col,
-  Statistic,
-  Dropdown,
-  Modal,
-  Input,
-} from 'antd';
-import {
-  CheckCircleIcon,
+  ArrowPathIcon,
   DocumentTextIcon,
-  EllipsisHorizontalIcon,
-  EyeIcon,
   MagnifyingGlassIcon,
-  PencilIcon,
   PlusIcon,
-  StopCircleIcon,
-  TrashIcon,
 } from '@heroicons/react/24/outline';
-import type { ColumnsType } from 'antd/es/table';
 import { useLeaveTypes, useDeleteLeaveType, useActivateLeaveType, useDeactivateLeaveType } from '@/lib/api/hooks/useHR';
 import type { LeaveTypeDto } from '@/lib/api/services/hr.types';
-
-const { Title } = Typography;
+import { LeaveTypesStats, LeaveTypesTable } from '@/components/hr/leave-types';
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
+import {
+  PageContainer,
+  ListPageHeader,
+  DataTableWrapper,
+  Card,
+} from '@/components/patterns';
+import { Input, Alert, Spinner } from '@/components/primitives';
 
 export default function LeaveTypesPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
   // API Hooks
-  const { data: leaveTypes = [], isLoading } = useLeaveTypes();
+  const { data: leaveTypes = [], isLoading, error, refetch } = useLeaveTypes();
   const deleteLeaveType = useDeleteLeaveType();
   const activateLeaveType = useActivateLeaveType();
   const deactivateLeaveType = useDeactivateLeaveType();
 
-  // Filter leave types by search text
-  const filteredLeaveTypes = leaveTypes.filter(
-    (lt) =>
-      lt.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      lt.code?.toLowerCase().includes(searchText.toLowerCase())
-  );
+  // Filter leave types
+  const filteredLeaveTypes = useMemo(() => {
+    return leaveTypes.filter((lt) =>
+      !debouncedSearch ||
+      lt.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      lt.code?.toLowerCase().includes(debouncedSearch.toLowerCase())
+    );
+  }, [leaveTypes, debouncedSearch]);
 
-  // Stats
-  const totalTypes = leaveTypes.length;
-  const activeTypes = leaveTypes.filter((lt) => lt.isActive).length;
-  const paidTypes = leaveTypes.filter((lt) => lt.isPaid).length;
+  // CRUD Handlers
+  const handleView = (id: number) => {
+    router.push(`/hr/leave-types/${id}`);
+  };
 
-  const handleDelete = (leaveType: LeaveTypeDto) => {
-    Modal.confirm({
-      title: 'İzin Türünü Sil',
-      content: `"${leaveType.name}" izin türünü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await deleteLeaveType.mutateAsync(leaveType.id);
-        } catch (error) {
-          // Error handled by hook
-        }
-      },
-    });
+  const handleEdit = (id: number) => {
+    router.push(`/hr/leave-types/${id}/edit`);
+  };
+
+  const handleDelete = async (leaveType: LeaveTypeDto) => {
+    try {
+      await deleteLeaveType.mutateAsync(leaveType.id);
+      showSuccess('İzin türü başarıyla silindi!');
+    } catch (err) {
+      showApiError(err, 'İzin türü silinirken bir hata oluştu');
+      throw err;
+    }
   };
 
   const handleToggleActive = async (leaveType: LeaveTypeDto) => {
     try {
       if (leaveType.isActive) {
         await deactivateLeaveType.mutateAsync(leaveType.id);
+        showSuccess('İzin türü pasifleştirildi!');
       } else {
         await activateLeaveType.mutateAsync(leaveType.id);
+        showSuccess('İzin türü aktifleştirildi!');
       }
-    } catch (error) {
-      // Error handled by hook
+    } catch (err) {
+      showApiError(err, 'İşlem sırasında bir hata oluştu');
     }
   };
 
-  const columns: ColumnsType<LeaveTypeDto> = [
-    {
-      title: 'İzin Türü',
-      dataIndex: 'name',
-      key: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
-      render: (name: string, record: LeaveTypeDto) => (
-        <Space>
-          <DocumentTextIcon className="w-4 h-4 text-violet-500" />
-          <a onClick={() => router.push(`/hr/leave-types/${record.id}`)}>{name}</a>
-        </Space>
-      ),
-    },
-    {
-      title: 'Kod',
-      dataIndex: 'code',
-      key: 'code',
-      width: 100,
-    },
-    {
-      title: 'Yıllık Hak',
-      dataIndex: 'defaultDays',
-      key: 'defaultDays',
-      width: 120,
-      render: (days: number) => `${days} gün`,
-    },
-    {
-      title: 'Ücretli',
-      dataIndex: 'isPaid',
-      key: 'isPaid',
-      width: 100,
-      render: (isPaid: boolean) => (
-        <Tag color={isPaid ? 'green' : 'default'}>{isPaid ? 'Evet' : 'Hayır'}</Tag>
-      ),
-    },
-    {
-      title: 'Durum',
-      dataIndex: 'isActive',
-      key: 'isActive',
-      width: 100,
-      render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'default'}>{isActive ? 'Aktif' : 'Pasif'}</Tag>
-      ),
-    },
-    {
-      title: 'İşlemler',
-      key: 'actions',
-      width: 80,
-      render: (_, record: LeaveTypeDto) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'view',
-                icon: <EyeIcon className="w-4 h-4" />,
-                label: 'Görüntüle',
-                onClick: () => router.push(`/hr/leave-types/${record.id}`),
-              },
-              {
-                key: 'edit',
-                icon: <PencilIcon className="w-4 h-4" />,
-                label: 'Düzenle',
-                onClick: () => router.push(`/hr/leave-types/${record.id}/edit`),
-              },
-              {
-                key: 'toggle',
-                icon: record.isActive ? <StopCircleIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />,
-                label: record.isActive ? 'Pasifleştir' : 'Aktifleştir',
-                onClick: () => handleToggleActive(record),
-              },
-              { type: 'divider' },
-              {
-                key: 'delete',
-                icon: <TrashIcon className="w-4 h-4" />,
-                label: 'Sil',
-                danger: true,
-                onClick: () => handleDelete(record),
-              },
-            ],
-          }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
-        </Dropdown>
-      ),
-    },
-  ];
+  // Clear filters
+  const clearFilters = () => {
+    setSearchText('');
+  };
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2} style={{ margin: 0 }}>
-          <DocumentTextIcon className="w-4 h-4 mr-2" />
-          İzin Türleri
-        </Title>
-        <Space>
-          <Button onClick={() => router.push('/hr/leaves')}>İzin Talepleri</Button>
-          <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/leave-types/new')}>
-            Yeni İzin Türü
-          </Button>
-        </Space>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <LeaveTypesStats leaveTypes={leaveTypes} loading={isLoading} />
       </div>
 
-      {/* Stats */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Tür"
-              value={totalTypes}
-              prefix={<DocumentTextIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#7c3aed' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Aktif Tür"
-              value={activeTypes}
-              prefix={<CheckCircleIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Ücretli İzin"
-              value={paidTypes}
-              prefix={<DocumentTextIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Header */}
+      <ListPageHeader
+        icon={<DocumentTextIcon className="w-5 h-5" />}
+        iconColor="#7c3aed"
+        title="İzin Türleri"
+        description="Tüm izin türlerini görüntüle ve yönet"
+        itemCount={filteredLeaveTypes.length}
+        primaryAction={{
+          label: 'Yeni İzin Türü',
+          onClick: () => router.push('/hr/leave-types/new'),
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      />
+
+      {/* Error Alert */}
+      {error && (
+        <Alert
+          variant="error"
+          title="İzin türleri yüklenemedi"
+          message={
+            error instanceof Error
+              ? error.message
+              : 'İzin türleri getirilirken bir hata oluştu. Lütfen tekrar deneyin.'
+          }
+          closable
+          action={
+            <button
+              onClick={() => refetch()}
+              className="px-3 py-1 text-xs font-medium text-red-700 bg-red-50 rounded-md hover:bg-red-100 transition-colors"
+            >
+              Tekrar Dene
+            </button>
+          }
+          className="mb-6"
+        />
+      )}
 
       {/* Filters */}
-      <Card className="mb-4">
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={8}>
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="md:col-span-3">
             <Input
-              placeholder="İzin türü ara..."
-              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
+              placeholder="İzin türü ara... (ad, kod)"
+              prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              allowClear
+              size="lg"
             />
-          </Col>
-        </Row>
-      </Card>
+          </div>
+          <button
+            onClick={clearFilters}
+            className="h-12 px-4 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+          >
+            Temizle
+          </button>
+        </div>
+      </div>
 
       {/* Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={filteredLeaveTypes}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} izin türü`,
-          }}
-        />
-      </Card>
-    </div>
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spinner size="lg" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <LeaveTypesTable
+            leaveTypes={filteredLeaveTypes}
+            loading={isLoading}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalCount={filteredLeaveTypes.length}
+            onPageChange={(page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            }}
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onToggleActive={handleToggleActive}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }

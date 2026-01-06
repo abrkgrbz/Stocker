@@ -1,165 +1,88 @@
 'use client';
 
-import React, { useState } from 'react';
+/**
+ * Holidays List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Standardized with CRM Customer module patterns
+ */
+
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { Select } from 'antd';
 import {
-  Typography,
-  Button,
-  Space,
-  Card,
-  Table,
-  Tag,
-  Row,
-  Col,
-  Statistic,
-  Dropdown,
-  Modal,
-  Input,
-  Select,
-} from 'antd';
-import {
+  ArrowPathIcon,
   CalendarIcon,
-  EllipsisHorizontalIcon,
-  EyeIcon,
-  GiftIcon,
   MagnifyingGlassIcon,
-  PencilIcon,
   PlusIcon,
-  TrashIcon,
 } from '@heroicons/react/24/outline';
-import type { ColumnsType } from 'antd/es/table';
 import { useHolidays, useDeleteHoliday } from '@/lib/api/hooks/useHR';
 import type { HolidayDto } from '@/lib/api/services/hr.types';
+import { HolidaysStats, HolidaysTable } from '@/components/hr/holidays';
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
+import {
+  PageContainer,
+  ListPageHeader,
+  DataTableWrapper,
+  Card,
+} from '@/components/patterns';
+import { Input, Alert, Spinner } from '@/components/primitives';
 import dayjs from 'dayjs';
-
-const { Title } = Typography;
 
 export default function HolidaysPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [yearFilter, setYearFilter] = useState<number | undefined>(dayjs().year());
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText]);
+
   // API Hooks
-  const { data: holidays = [], isLoading } = useHolidays(yearFilter);
+  const { data: holidays = [], isLoading, error, refetch } = useHolidays(yearFilter);
   const deleteHoliday = useDeleteHoliday();
 
-  // Filter holidays by search text
-  const filteredHolidays = holidays.filter(
-    (h) => h.name.toLowerCase().includes(searchText.toLowerCase())
-  );
+  // Filter holidays
+  const filteredHolidays = useMemo(() => {
+    return holidays.filter((h) =>
+      !debouncedSearch ||
+      h.name.toLowerCase().includes(debouncedSearch.toLowerCase())
+    );
+  }, [holidays, debouncedSearch]);
 
-  // Stats
-  const totalHolidays = holidays.length;
-  const upcomingHolidays = holidays.filter((h) => dayjs(h.date).isAfter(dayjs())).length;
-  const passedHolidays = holidays.filter((h) => dayjs(h.date).isBefore(dayjs())).length;
-
-  const handleDelete = (holiday: HolidayDto) => {
-    Modal.confirm({
-      title: 'Tatil Gününü Sil',
-      content: `"${holiday.name}" tatil gününü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await deleteHoliday.mutateAsync(holiday.id);
-        } catch (error) {
-          // Error handled by hook
-        }
-      },
-    });
+  // CRUD Handlers
+  const handleView = (id: number) => {
+    router.push(`/hr/holidays/${id}`);
   };
 
-  const columns: ColumnsType<HolidayDto> = [
-    {
-      title: 'Tatil Adı',
-      dataIndex: 'name',
-      key: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
-      render: (name: string, record: HolidayDto) => (
-        <Space>
-          <GiftIcon className="w-4 h-4 text-violet-500" />
-          <a onClick={() => router.push(`/hr/holidays/${record.id}`)}>{name}</a>
-        </Space>
-      ),
-    },
-    {
-      title: 'Tarih',
-      dataIndex: 'date',
-      key: 'date',
-      width: 150,
-      sorter: (a, b) => dayjs(a.date).unix() - dayjs(b.date).unix(),
-      render: (date: string) => dayjs(date).format('DD MMMM YYYY'),
-    },
-    {
-      title: 'Gün',
-      dataIndex: 'date',
-      key: 'dayOfWeek',
-      width: 100,
-      render: (date: string) => dayjs(date).format('dddd'),
-    },
-    {
-      title: 'Tür',
-      dataIndex: 'isRecurring',
-      key: 'type',
-      width: 120,
-      render: (isRecurring: boolean) => (
-        <Tag color={isRecurring ? 'blue' : 'default'}>
-          {isRecurring ? 'Yıllık' : 'Tek Seferlik'}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Durum',
-      key: 'status',
-      width: 100,
-      render: (_, record: HolidayDto) => {
-        const isPassed = dayjs(record.date).isBefore(dayjs(), 'day');
-        const isToday = dayjs(record.date).isSame(dayjs(), 'day');
-        return (
-          <Tag color={isToday ? 'green' : isPassed ? 'default' : 'blue'}>
-            {isToday ? 'Bugün' : isPassed ? 'Geçti' : 'Yaklaşan'}
-          </Tag>
-        );
-      },
-    },
-    {
-      title: 'İşlemler',
-      key: 'actions',
-      width: 80,
-      render: (_, record: HolidayDto) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'view',
-                icon: <EyeIcon className="w-4 h-4" />,
-                label: 'Görüntüle',
-                onClick: () => router.push(`/hr/holidays/${record.id}`),
-              },
-              {
-                key: 'edit',
-                icon: <PencilIcon className="w-4 h-4" />,
-                label: 'Düzenle',
-                onClick: () => router.push(`/hr/holidays/${record.id}/edit`),
-              },
-              { type: 'divider' },
-              {
-                key: 'delete',
-                icon: <TrashIcon className="w-4 h-4" />,
-                label: 'Sil',
-                danger: true,
-                onClick: () => handleDelete(record),
-              },
-            ],
-          }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
-        </Dropdown>
-      ),
-    },
-  ];
+  const handleEdit = (id: number) => {
+    router.push(`/hr/holidays/${id}/edit`);
+  };
+
+  const handleDelete = async (holiday: HolidayDto) => {
+    try {
+      await deleteHoliday.mutateAsync(holiday.id);
+      showSuccess('Tatil günü başarıyla silindi!');
+    } catch (err) {
+      showApiError(err, 'Tatil günü silinirken bir hata oluştu');
+      throw err;
+    }
+  };
+
+  // Clear filters
+  const clearFilters = () => {
+    setSearchText('');
+    setYearFilter(dayjs().year());
+  };
 
   const currentYear = dayjs().year();
   const yearOptions = Array.from({ length: 5 }, (_, i) => ({
@@ -168,89 +91,113 @@ export default function HolidaysPage() {
   }));
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2} style={{ margin: 0 }}>
-          <CalendarIcon className="w-4 h-4 mr-2" />
-          Resmi Tatiller
-        </Title>
-        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/holidays/new')}>
-          Yeni Tatil
-        </Button>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <HolidaysStats holidays={holidays} loading={isLoading} />
       </div>
 
-      {/* Stats */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Tatil"
-              value={totalHolidays}
-              prefix={<CalendarIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#7c3aed' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Yaklaşan"
-              value={upcomingHolidays}
-              prefix={<GiftIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Geçen"
-              value={passedHolidays}
-              valueStyle={{ color: '#8c8c8c' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Header */}
+      <ListPageHeader
+        icon={<CalendarIcon className="w-5 h-5" />}
+        iconColor="#7c3aed"
+        title="Resmi Tatiller"
+        description="Tüm tatil günlerini görüntüle ve yönet"
+        itemCount={filteredHolidays.length}
+        primaryAction={{
+          label: 'Yeni Tatil',
+          onClick: () => router.push('/hr/holidays/new'),
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      />
+
+      {/* Error Alert */}
+      {error && (
+        <Alert
+          variant="error"
+          title="Tatiller yüklenemedi"
+          message={
+            error instanceof Error
+              ? error.message
+              : 'Tatil günleri getirilirken bir hata oluştu. Lütfen tekrar deneyin.'
+          }
+          closable
+          action={
+            <button
+              onClick={() => refetch()}
+              className="px-3 py-1 text-xs font-medium text-red-700 bg-red-50 rounded-md hover:bg-red-100 transition-colors"
+            >
+              Tekrar Dene
+            </button>
+          }
+          className="mb-6"
+        />
+      )}
 
       {/* Filters */}
-      <Card className="mb-4">
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={8}>
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="md:col-span-2">
             <Input
               placeholder="Tatil ara..."
-              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
+              prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              allowClear
+              size="lg"
             />
-          </Col>
-          <Col xs={24} sm={12} md={8}>
-            <Select
-              placeholder="Yıl seçin"
-              style={{ width: '100%' }}
-              value={yearFilter}
-              onChange={(value) => setYearFilter(value)}
-              allowClear
-              options={yearOptions}
-            />
-          </Col>
-        </Row>
-      </Card>
+          </div>
+          <Select
+            placeholder="Yıl seçin"
+            className="h-10"
+            style={{ height: 48 }}
+            value={yearFilter}
+            onChange={(value) => setYearFilter(value)}
+            allowClear
+            options={yearOptions}
+          />
+          <button
+            onClick={clearFilters}
+            className="h-12 px-4 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+          >
+            Temizle
+          </button>
+        </div>
+      </div>
 
       {/* Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={filteredHolidays}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} tatil günü`,
-          }}
-        />
-      </Card>
-    </div>
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spinner size="lg" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <HolidaysTable
+            holidays={filteredHolidays}
+            loading={isLoading}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalCount={filteredHolidays.length}
+            onPageChange={(page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            }}
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }

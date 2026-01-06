@@ -1,293 +1,178 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { Card, Row, Col } from 'antd';
 import {
-  Typography,
-  Button,
-  Space,
-  Card,
-  Table,
-  Tag,
-  Row,
-  Col,
-  Statistic,
-  Dropdown,
-  Modal,
-  Input,
-} from 'antd';
-import {
-  CheckCircleIcon,
-  EllipsisHorizontalIcon,
-  EyeIcon,
-  GlobeAltIcon,
-  HomeIcon,
-  MagnifyingGlassIcon,
+  ArrowPathIcon,
   MapPinIcon,
-  PencilIcon,
+  MagnifyingGlassIcon,
   PlusIcon,
-  StopCircleIcon,
-  TrashIcon,
-  UserGroupIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
-import type { ColumnsType } from 'antd/es/table';
 import { useWorkLocations, useDeleteWorkLocation, useActivateWorkLocation, useDeactivateWorkLocation } from '@/lib/api/hooks/useHR';
 import type { WorkLocationDto } from '@/lib/api/services/hr.types';
-
-const { Title } = Typography;
+import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
+import { Input } from '@/components/primitives/inputs';
+import { Alert } from '@/components/primitives/feedback';
+import { WorkLocationsStats, WorkLocationsTable } from '@/components/hr/work-locations';
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
 
 export default function WorkLocationsPage() {
   const router = useRouter();
-  const [searchText, setSearchText] = useState('');
 
-  // API Hooks
-  const { data: locations = [], isLoading } = useWorkLocations();
+  const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText]);
+
+  const { data: locations = [], isLoading, error, refetch } = useWorkLocations();
   const deleteLocation = useDeleteWorkLocation();
   const activateLocation = useActivateWorkLocation();
   const deactivateLocation = useDeactivateWorkLocation();
 
-  // Filter locations by search text
-  const filteredLocations = locations.filter(
-    (l) =>
-      l.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      l.code?.toLowerCase().includes(searchText.toLowerCase()) ||
-      l.city?.toLowerCase().includes(searchText.toLowerCase())
-  );
+  const filteredLocations = useMemo(() => {
+    if (!debouncedSearch) return locations;
+    const lower = debouncedSearch.toLowerCase();
+    return locations.filter(
+      (l: WorkLocationDto) =>
+        l.name.toLowerCase().includes(lower) ||
+        l.code?.toLowerCase().includes(lower) ||
+        l.city?.toLowerCase().includes(lower)
+    );
+  }, [locations, debouncedSearch]);
 
-  // Stats
-  const totalLocations = locations.length;
-  const activeLocations = locations.filter((l) => l.isActive).length;
-  const headquarters = locations.filter((l) => l.isHeadquarters).length;
-  const remoteLocations = locations.filter((l) => l.isRemote).length;
-  const totalEmployees = locations.reduce((sum, l) => sum + (l.employeeCount || 0), 0);
+  const totalCount = filteredLocations.length;
 
-  const handleDelete = (location: WorkLocationDto) => {
-    Modal.confirm({
-      title: 'Lokasyonu Sil',
-      content: `"${location.name}" lokasyonunu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await deleteLocation.mutateAsync(location.id);
-        } catch (error) {
-          // Error handled by hook
-        }
-      },
-    });
+  const handleView = (id: number) => router.push(`/hr/work-locations/${id}`);
+  const handleEdit = (id: number) => router.push(`/hr/work-locations/${id}/edit`);
+
+  const handleDelete = async (location: WorkLocationDto) => {
+    try {
+      await deleteLocation.mutateAsync(location.id);
+      showSuccess('Başarılı', 'Lokasyon silindi');
+    } catch (err) {
+      showApiError(err, 'Lokasyon silinirken hata oluştu');
+    }
   };
 
   const handleToggleActive = async (location: WorkLocationDto) => {
     try {
       if (location.isActive) {
         await deactivateLocation.mutateAsync(location.id);
+        showSuccess('Başarılı', 'Lokasyon pasifleştirildi');
       } else {
         await activateLocation.mutateAsync(location.id);
+        showSuccess('Başarılı', 'Lokasyon aktifleştirildi');
       }
-    } catch (error) {
-      // Error handled by hook
+    } catch (err) {
+      showApiError(err, 'İşlem sırasında hata oluştu');
     }
   };
 
-  const columns: ColumnsType<WorkLocationDto> = [
-    {
-      title: 'Lokasyon Adı',
-      dataIndex: 'name',
-      key: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
-      render: (name: string, record: WorkLocationDto) => (
-        <Space>
-          <MapPinIcon className="w-4 h-4" style={{ color: '#1890ff' }} />
-          <a onClick={() => router.push(`/hr/work-locations/${record.id}`)}>{name}</a>
-          {record.isHeadquarters && <Tag color="gold">Merkez</Tag>}
-          {record.isRemote && <Tag color="purple">Uzaktan</Tag>}
-        </Space>
-      ),
-    },
-    {
-      title: 'Kod',
-      dataIndex: 'code',
-      key: 'code',
-      width: 100,
-    },
-    {
-      title: 'Şehir',
-      dataIndex: 'city',
-      key: 'city',
-      width: 120,
-      render: (city: string) => city || '-',
-    },
-    {
-      title: 'Ülke',
-      dataIndex: 'country',
-      key: 'country',
-      width: 100,
-      render: (country: string) => country || '-',
-    },
-    {
-      title: 'Çalışan Sayısı',
-      dataIndex: 'employeeCount',
-      key: 'employeeCount',
-      width: 120,
-      sorter: (a, b) => (a.employeeCount || 0) - (b.employeeCount || 0),
-      render: (count: number) => count || 0,
-    },
-    {
-      title: 'Kapasite',
-      dataIndex: 'capacity',
-      key: 'capacity',
-      width: 100,
-      render: (capacity: number) => capacity || '-',
-    },
-    {
-      title: 'Durum',
-      dataIndex: 'isActive',
-      key: 'isActive',
-      width: 100,
-      render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'default'}>{isActive ? 'Aktif' : 'Pasif'}</Tag>
-      ),
-    },
-    {
-      title: 'İşlemler',
-      key: 'actions',
-      width: 80,
-      render: (_, record: WorkLocationDto) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'view',
-                icon: <EyeIcon className="w-4 h-4" />,
-                label: 'Görüntüle',
-                onClick: () => router.push(`/hr/work-locations/${record.id}`),
-              },
-              {
-                key: 'edit',
-                icon: <PencilIcon className="w-4 h-4" />,
-                label: 'Düzenle',
-                onClick: () => router.push(`/hr/work-locations/${record.id}/edit`),
-              },
-              {
-                key: 'toggle',
-                icon: record.isActive ? <StopCircleIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />,
-                label: record.isActive ? 'Pasifleştir' : 'Aktifleştir',
-                onClick: () => handleToggleActive(record),
-              },
-              { type: 'divider' },
-              {
-                key: 'delete',
-                icon: <TrashIcon className="w-4 h-4" />,
-                label: 'Sil',
-                danger: true,
-                onClick: () => handleDelete(record),
-              },
-            ],
-          }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
-        </Dropdown>
-      ),
-    },
-  ];
+  const clearFilters = () => {
+    setSearchText('');
+  };
+
+  const hasFilters = searchText;
+
+  const handlePageChange = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
+  };
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2} style={{ margin: 0 }}>
-          <MapPinIcon className="w-4 h-4 mr-2" />
-          Çalışma Lokasyonları
-        </Title>
-        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/work-locations/new')}>
-          Yeni Lokasyon
-        </Button>
+    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <WorkLocationsStats locations={locations as WorkLocationDto[]} loading={isLoading} />
       </div>
 
-      {/* Stats */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Lokasyon"
-              value={totalLocations}
-              prefix={<MapPinIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#7c3aed' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Aktif Lokasyon"
-              value={activeLocations}
-              prefix={<CheckCircleIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Merkez Ofis"
-              value={headquarters}
-              prefix={<HomeIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#faad14' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Uzaktan"
-              value={remoteLocations}
-              prefix={<GlobeAltIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#722ed1' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Çalışan"
-              value={totalEmployees}
-              prefix={<UserGroupIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Header */}
+      <ListPageHeader
+        icon={<MapPinIcon className="w-5 h-5" />}
+        iconColor="#8b5cf6"
+        title="Çalışma Lokasyonları"
+        description="Şirket lokasyonlarını görüntüleyin ve yönetin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Lokasyon',
+          onClick: () => router.push('/hr/work-locations/new'),
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      />
 
-      {/* Filters */}
-      <Card className="mb-4">
+      {error && (
+        <Alert
+          variant="error"
+          title="Lokasyonlar yüklenemedi"
+          message={(error as Error).message}
+          closable
+          action={
+            <button onClick={() => refetch()} className="text-red-600 hover:text-red-800 font-medium">
+              Tekrar Dene
+            </button>
+          }
+          className="mt-6"
+        />
+      )}
+
+      <Card className="mt-6 mb-4 border border-gray-100 shadow-sm">
         <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={8}>
+          <Col xs={24} sm={16} md={12}>
             <Input
-              placeholder="Lokasyon ara..."
-              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
+              placeholder="Lokasyon, kod veya şehir ara..."
+              prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
+              size="lg"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              allowClear
             />
           </Col>
+          {hasFilters && (
+            <Col xs={24} sm={8} md={4}>
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-3 py-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
+              >
+                <XMarkIcon className="w-4 h-4" />
+                Temizle
+              </button>
+            </Col>
+          )}
         </Row>
       </Card>
 
-      {/* Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={filteredLocations}
-          rowKey="id"
+      <DataTableWrapper>
+        <WorkLocationsTable
+          locations={filteredLocations as WorkLocationDto[]}
           loading={isLoading}
-          pagination={{
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} lokasyon`,
-          }}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalCount={totalCount}
+          onPageChange={handlePageChange}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onToggleActive={handleToggleActive}
         />
-      </Card>
-    </div>
+      </DataTableWrapper>
+    </PageContainer>
   );
 }

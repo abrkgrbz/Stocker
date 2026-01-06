@@ -1,259 +1,169 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Typography,
-  Button,
-  Space,
-  Card,
-  Table,
-  Tag,
-  Row,
-  Col,
-  Statistic,
-  Dropdown,
-  Modal,
-  Input,
-  Select,
-} from 'antd';
-import {
-  BookOpenIcon,
-  CheckCircleIcon,
-  EllipsisHorizontalIcon,
-  EyeIcon,
-  MagnifyingGlassIcon,
-  PencilIcon,
-  PlusIcon,
-  TrashIcon,
-  UserGroupIcon,
-} from '@heroicons/react/24/outline';
-import type { ColumnsType } from 'antd/es/table';
+import { Card, Row, Col, Select } from 'antd';
+import { MagnifyingGlassIcon, BookOpenIcon, PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
+import { Input } from '@/components/primitives/inputs';
+import { Alert } from '@/components/primitives/feedback';
+import { TrainingsStats, TrainingsTable } from '@/components/hr/trainings';
 import { useTrainings, useDeleteTraining } from '@/lib/api/hooks/useHR';
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import type { TrainingDto } from '@/lib/api/services/hr.types';
 import { TrainingStatus } from '@/lib/api/services/hr.types';
-import dayjs from 'dayjs';
-
-const { Title } = Typography;
 
 export default function TrainingsPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<TrainingStatus | undefined>();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
   // API Hooks
-  const { data: trainings = [], isLoading } = useTrainings();
+  const { data: trainings = [], isLoading, error, refetch } = useTrainings();
   const deleteTraining = useDeleteTraining();
 
-  // Filter trainings by search text
-  const filteredTrainings = trainings.filter(
-    (t) =>
-      t.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      t.provider?.toLowerCase().includes(searchText.toLowerCase())
-  );
+  // Filter trainings
+  const filteredTrainings = useMemo(() => {
+    let result = trainings;
 
-  // Stats
-  const totalTrainings = trainings.length;
-  const activeTrainings = trainings.filter((t) => t.status === TrainingStatus.InProgress || t.status === TrainingStatus.Scheduled).length;
-  const upcomingTrainings = trainings.filter((t) => t.status === TrainingStatus.Scheduled).length;
+    if (statusFilter !== undefined) {
+      result = result.filter((t) => t.status === statusFilter);
+    }
 
-  const handleDelete = (training: TrainingDto) => {
-    Modal.confirm({
-      title: 'Eğitimi Sil',
-      content: `"${training.title}" eğitimini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await deleteTraining.mutateAsync(training.id);
-        } catch (error) {
-          // Error handled by hook
-        }
-      },
-    });
+    if (debouncedSearch.trim()) {
+      const search = debouncedSearch.toLowerCase();
+      result = result.filter(
+        (t) =>
+          t.title?.toLowerCase().includes(search) ||
+          t.provider?.toLowerCase().includes(search) ||
+          t.description?.toLowerCase().includes(search)
+      );
+    }
+
+    return result;
+  }, [trainings, debouncedSearch, statusFilter]);
+
+  // Paginate
+  const paginatedTrainings = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredTrainings.slice(start, start + pageSize);
+  }, [filteredTrainings, currentPage, pageSize]);
+
+  const totalCount = filteredTrainings.length;
+
+  const handlePageChange = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
   };
 
-  const getStatusConfig = (status?: TrainingStatus) => {
-    const statusMap: Record<number, { color: string; text: string }> = {
-      [TrainingStatus.Scheduled]: { color: 'blue', text: 'Planlandı' },
-      [TrainingStatus.InProgress]: { color: 'green', text: 'Devam Ediyor' },
-      [TrainingStatus.Completed]: { color: 'default', text: 'Tamamlandı' },
-      [TrainingStatus.Cancelled]: { color: 'red', text: 'İptal Edildi' },
-      [TrainingStatus.Postponed]: { color: 'orange', text: 'Ertelendi' },
-    };
-    const defaultConfig = { color: 'default', text: '-' };
-    if (status === undefined || status === null) return defaultConfig;
-    return statusMap[status] || defaultConfig;
+  const handleDelete = async (training: TrainingDto) => {
+    try {
+      await deleteTraining.mutateAsync(training.id);
+      showSuccess('Eğitim Silindi', `"${training.title}" eğitimi başarıyla silindi.`);
+    } catch (err) {
+      showApiError(err, 'Eğitim silinirken bir hata oluştu');
+    }
   };
-
-  const columns: ColumnsType<TrainingDto> = [
-    {
-      title: 'Eğitim Adı',
-      dataIndex: 'title',
-      key: 'title',
-      sorter: (a, b) => a.title.localeCompare(b.title),
-      render: (title: string, record: TrainingDto) => (
-        <Space>
-          <BookOpenIcon className="w-4 h-4 text-violet-500" />
-          <a onClick={() => router.push(`/hr/trainings/${record.id}`)}>{title}</a>
-        </Space>
-      ),
-    },
-    {
-      title: 'Sağlayıcı',
-      dataIndex: 'provider',
-      key: 'provider',
-      width: 150,
-    },
-    {
-      title: 'Başlangıç',
-      dataIndex: 'startDate',
-      key: 'startDate',
-      width: 120,
-      sorter: (a, b) => dayjs(a.startDate).unix() - dayjs(b.startDate).unix(),
-      render: (date: string) => (date ? dayjs(date).format('DD.MM.YYYY') : '-'),
-    },
-    {
-      title: 'Bitiş',
-      dataIndex: 'endDate',
-      key: 'endDate',
-      width: 120,
-      render: (date: string) => (date ? dayjs(date).format('DD.MM.YYYY') : '-'),
-    },
-    {
-      title: 'Kapasite',
-      dataIndex: 'maxParticipants',
-      key: 'capacity',
-      width: 100,
-      render: (max: number, record: TrainingDto) => (
-        <span>
-          {record.currentParticipants || 0}/{max || '-'}
-        </span>
-      ),
-    },
-    {
-      title: 'Durum',
-      dataIndex: 'status',
-      key: 'status',
-      width: 120,
-      render: (status: TrainingStatus) => {
-        const config = getStatusConfig(status);
-        return <Tag color={config.color}>{config.text}</Tag>;
-      },
-    },
-    {
-      title: 'İşlemler',
-      key: 'actions',
-      width: 80,
-      render: (_, record: TrainingDto) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'view',
-                icon: <EyeIcon className="w-4 h-4" />,
-                label: 'Görüntüle',
-                onClick: () => router.push(`/hr/trainings/${record.id}`),
-              },
-              {
-                key: 'edit',
-                icon: <PencilIcon className="w-4 h-4" />,
-                label: 'Düzenle',
-                onClick: () => router.push(`/hr/trainings/${record.id}/edit`),
-              },
-              { type: 'divider' },
-              {
-                key: 'delete',
-                icon: <TrashIcon className="w-4 h-4" />,
-                label: 'Sil',
-                danger: true,
-                onClick: () => handleDelete(record),
-              },
-            ],
-          }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
-        </Dropdown>
-      ),
-    },
-  ];
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2} style={{ margin: 0 }}>
-          <BookOpenIcon className="w-4 h-4 mr-2" />
-          Eğitim Yönetimi
-        </Title>
-        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/trainings/new')}>
-          Yeni Eğitim
-        </Button>
+    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <TrainingsStats trainings={trainings} loading={isLoading} />
       </div>
 
-      {/* Stats */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Eğitim"
-              value={totalTrainings}
-              prefix={<BookOpenIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#7c3aed' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Aktif Eğitim"
-              value={activeTrainings}
-              prefix={<CheckCircleIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Yaklaşan"
-              value={upcomingTrainings}
-              prefix={<UserGroupIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Header */}
+      <ListPageHeader
+        icon={<BookOpenIcon className="w-5 h-5" />}
+        iconColor="#9333ea"
+        title="Eğitim Yönetimi"
+        description="Şirket eğitimlerini planlayın ve takip edin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Eğitim',
+          onClick: () => router.push('/hr/trainings/new'),
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      />
 
-      {/* Filters */}
-      <Card className="mb-4">
+      {error && (
+        <Alert
+          variant="error"
+          title="Eğitimler yüklenemedi"
+          message={(error as Error).message}
+          closable
+          action={
+            <button onClick={() => refetch()} className="text-red-600 hover:text-red-800 font-medium">
+              Tekrar Dene
+            </button>
+          }
+          className="mt-6"
+        />
+      )}
+
+      <Card className="mt-6 mb-4 border border-gray-100 shadow-sm">
         <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={8}>
+          <Col xs={24} sm={12} md={10}>
             <Input
-              placeholder="Eğitim ara..."
-              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
+              placeholder="Eğitim ara... (başlık, sağlayıcı)"
+              prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
+              size="lg"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
+            />
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Select
+              placeholder="Durum filtrele"
               allowClear
+              style={{ width: '100%', height: '44px' }}
+              onChange={(value) => setStatusFilter(value)}
+              options={[
+                { value: TrainingStatus.Scheduled, label: 'Planlandı' },
+                { value: TrainingStatus.InProgress, label: 'Devam Ediyor' },
+                { value: TrainingStatus.Completed, label: 'Tamamlandı' },
+                { value: TrainingStatus.Cancelled, label: 'İptal Edildi' },
+                { value: TrainingStatus.Postponed, label: 'Ertelendi' },
+              ]}
             />
           </Col>
         </Row>
       </Card>
 
-      {/* Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={filteredTrainings}
-          rowKey="id"
+      <DataTableWrapper>
+        <TrainingsTable
+          trainings={paginatedTrainings}
           loading={isLoading}
-          pagination={{
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} eğitim`,
-          }}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalCount={totalCount}
+          onPageChange={handlePageChange}
+          onView={(id) => router.push(`/hr/trainings/${id}`)}
+          onEdit={(id) => router.push(`/hr/trainings/${id}/edit`)}
+          onDelete={handleDelete}
         />
-      </Card>
-    </div>
+      </DataTableWrapper>
+    </PageContainer>
   );
 }

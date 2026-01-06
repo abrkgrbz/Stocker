@@ -1,265 +1,202 @@
 'use client';
 
-import React, { useState } from 'react';
+/**
+ * Shifts List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Standardized with CRM Customer module patterns
+ */
+
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Typography,
-  Button,
-  Space,
-  Card,
-  Table,
-  Tag,
-  Row,
-  Col,
-  Statistic,
-  Dropdown,
-  Modal,
-  Input,
-} from 'antd';
-import {
-  CheckCircleIcon,
+  ArrowPathIcon,
   ClockIcon,
-  EllipsisVerticalIcon,
-  EyeIcon,
   MagnifyingGlassIcon,
-  PencilIcon,
   PlusIcon,
-  StopIcon,
-  TrashIcon,
 } from '@heroicons/react/24/outline';
-import type { ColumnsType } from 'antd/es/table';
 import { useShifts, useDeleteShift, useActivateShift, useDeactivateShift } from '@/lib/api/hooks/useHR';
 import type { ShiftDto } from '@/lib/api/services/hr.types';
-
-const { Title } = Typography;
+import { ShiftsStats, ShiftsTable } from '@/components/hr/shifts';
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
+import {
+  PageContainer,
+  ListPageHeader,
+  DataTableWrapper,
+  Card,
+} from '@/components/patterns';
+import { Input, Alert, Spinner } from '@/components/primitives';
 
 export default function ShiftsPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
   // API Hooks
-  const { data: shifts = [], isLoading } = useShifts();
+  const { data: shifts = [], isLoading, error, refetch } = useShifts();
   const deleteShift = useDeleteShift();
   const activateShift = useActivateShift();
   const deactivateShift = useDeactivateShift();
 
-  // Filter shifts by search text
-  const filteredShifts = shifts.filter(
-    (s) =>
-      s.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      s.code?.toLowerCase().includes(searchText.toLowerCase())
-  );
+  // Filter shifts
+  const filteredShifts = useMemo(() => {
+    return shifts.filter((s) =>
+      !debouncedSearch ||
+      s.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      s.code?.toLowerCase().includes(debouncedSearch.toLowerCase())
+    );
+  }, [shifts, debouncedSearch]);
 
-  // Stats
-  const totalShifts = shifts.length;
-  const activeShifts = shifts.filter((s) => s.isActive).length;
-  const nightShifts = shifts.filter((s) => {
-    const start = parseInt(s.startTime?.split(':')[0] || '0');
-    return start >= 18 || start < 6;
-  }).length;
+  // CRUD Handlers
+  const handleView = (id: number) => {
+    router.push(`/hr/shifts/${id}`);
+  };
 
-  const handleDelete = (shift: ShiftDto) => {
-    Modal.confirm({
-      title: 'Vardiyayı Sil',
-      content: `"${shift.name}" vardiyasını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await deleteShift.mutateAsync(shift.id);
-        } catch (error) {
-          // Error handled by hook
-        }
-      },
-    });
+  const handleEdit = (id: number) => {
+    router.push(`/hr/shifts/${id}/edit`);
+  };
+
+  const handleDelete = async (shift: ShiftDto) => {
+    try {
+      await deleteShift.mutateAsync(shift.id);
+      showSuccess('Vardiya başarıyla silindi!');
+    } catch (err) {
+      showApiError(err, 'Vardiya silinirken bir hata oluştu');
+      throw err;
+    }
   };
 
   const handleToggleActive = async (shift: ShiftDto) => {
     try {
       if (shift.isActive) {
         await deactivateShift.mutateAsync(shift.id);
+        showSuccess('Vardiya pasifleştirildi!');
       } else {
         await activateShift.mutateAsync(shift.id);
+        showSuccess('Vardiya aktifleştirildi!');
       }
-    } catch (error) {
-      // Error handled by hook
+    } catch (err) {
+      showApiError(err, 'İşlem sırasında bir hata oluştu');
     }
   };
 
-  const formatTime = (time?: string) => {
-    if (!time) return '-';
-    return time.substring(0, 5);
+  // Clear filters
+  const clearFilters = () => {
+    setSearchText('');
   };
 
-  const columns: ColumnsType<ShiftDto> = [
-    {
-      title: 'Vardiya Adı',
-      dataIndex: 'name',
-      key: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
-      render: (name: string, record: ShiftDto) => (
-        <Space>
-          <ClockIcon className="w-4 h-4 text-violet-500" />
-          <a onClick={() => router.push(`/hr/shifts/${record.id}`)}>{name}</a>
-        </Space>
-      ),
-    },
-    {
-      title: 'Kod',
-      dataIndex: 'code',
-      key: 'code',
-      width: 100,
-    },
-    {
-      title: 'Başlangıç',
-      dataIndex: 'startTime',
-      key: 'startTime',
-      width: 100,
-      render: (time: string) => formatTime(time),
-    },
-    {
-      title: 'Bitiş',
-      dataIndex: 'endTime',
-      key: 'endTime',
-      width: 100,
-      render: (time: string) => formatTime(time),
-    },
-    {
-      title: 'Mola (dk)',
-      dataIndex: 'breakDurationMinutes',
-      key: 'breakDuration',
-      width: 100,
-      render: (minutes: number) => minutes || '-',
-    },
-    {
-      title: 'Durum',
-      dataIndex: 'isActive',
-      key: 'isActive',
-      width: 100,
-      render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'default'}>{isActive ? 'Aktif' : 'Pasif'}</Tag>
-      ),
-    },
-    {
-      title: 'İşlemler',
-      key: 'actions',
-      width: 80,
-      render: (_, record: ShiftDto) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'view',
-                icon: <EyeIcon className="w-4 h-4" />,
-                label: 'Görüntüle',
-                onClick: () => router.push(`/hr/shifts/${record.id}`),
-              },
-              {
-                key: 'edit',
-                icon: <PencilIcon className="w-4 h-4" />,
-                label: 'Düzenle',
-                onClick: () => router.push(`/hr/shifts/${record.id}/edit`),
-              },
-              {
-                key: 'toggle',
-                icon: record.isActive ? <StopIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />,
-                label: record.isActive ? 'Pasifleştir' : 'Aktifleştir',
-                onClick: () => handleToggleActive(record),
-              },
-              { type: 'divider' },
-              {
-                key: 'delete',
-                icon: <TrashIcon className="w-4 h-4" />,
-                label: 'Sil',
-                danger: true,
-                onClick: () => handleDelete(record),
-              },
-            ],
-          }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<EllipsisVerticalIcon className="w-4 h-4" />} />
-        </Dropdown>
-      ),
-    },
-  ];
-
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2} style={{ margin: 0 }}>
-          <ClockIcon className="w-6 h-6 mr-2 inline" />
-          Vardiya Yönetimi
-        </Title>
-        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/shifts/new')}>
-          Yeni Vardiya
-        </Button>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <ShiftsStats shifts={shifts} loading={isLoading} />
       </div>
 
-      {/* Stats */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Vardiya"
-              value={totalShifts}
-              prefix={<ClockIcon className="w-5 h-5" />}
-              valueStyle={{ color: '#7c3aed' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Aktif Vardiya"
-              value={activeShifts}
-              prefix={<CheckCircleIcon className="w-5 h-5" />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Gece Vardiyası"
-              value={nightShifts}
-              prefix={<ClockIcon className="w-5 h-5" />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Header */}
+      <ListPageHeader
+        icon={<ClockIcon className="w-5 h-5" />}
+        iconColor="#7c3aed"
+        title="Vardiya Yönetimi"
+        description="Tüm vardiyaları görüntüle ve yönet"
+        itemCount={filteredShifts.length}
+        primaryAction={{
+          label: 'Yeni Vardiya',
+          onClick: () => router.push('/hr/shifts/new'),
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      />
+
+      {/* Error Alert */}
+      {error && (
+        <Alert
+          variant="error"
+          title="Vardiyalar yüklenemedi"
+          message={
+            error instanceof Error
+              ? error.message
+              : 'Vardiyalar getirilirken bir hata oluştu. Lütfen tekrar deneyin.'
+          }
+          closable
+          action={
+            <button
+              onClick={() => refetch()}
+              className="px-3 py-1 text-xs font-medium text-red-700 bg-red-50 rounded-md hover:bg-red-100 transition-colors"
+            >
+              Tekrar Dene
+            </button>
+          }
+          className="mb-6"
+        />
+      )}
 
       {/* Filters */}
-      <Card className="mb-4">
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={8}>
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="md:col-span-3">
             <Input
-              placeholder="Vardiya ara..."
-              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
+              placeholder="Vardiya ara... (ad, kod)"
+              prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              allowClear
+              size="lg"
             />
-          </Col>
-        </Row>
-      </Card>
+          </div>
+          <button
+            onClick={clearFilters}
+            className="h-12 px-4 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+          >
+            Temizle
+          </button>
+        </div>
+      </div>
 
       {/* Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={filteredShifts}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} vardiya`,
-          }}
-        />
-      </Card>
-    </div>
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spinner size="lg" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <ShiftsTable
+            shifts={filteredShifts}
+            loading={isLoading}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalCount={filteredShifts.length}
+            onPageChange={(page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            }}
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onToggleActive={handleToggleActive}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }

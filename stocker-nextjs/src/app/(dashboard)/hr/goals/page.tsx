@@ -1,244 +1,136 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Typography,
-  Button,
-  Space,
-  Card,
-  Table,
-  Tag,
-  Row,
-  Col,
-  Statistic,
-  Dropdown,
-  Modal,
-  Select,
-  Progress,
-} from 'antd';
-import {
-  CheckCircleIcon,
-  ClockIcon,
-  CursorArrowRaysIcon,
-  EllipsisHorizontalIcon,
-  ExclamationCircleIcon,
-  EyeIcon,
-  PencilIcon,
-  PlusIcon,
-  TrashIcon,
-} from '@heroicons/react/24/outline';
-import type { ColumnsType } from 'antd/es/table';
+import { Select, Card, Row, Col } from 'antd';
+import { MagnifyingGlassIcon, CursorArrowRaysIcon, PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
+import { Input } from '@/components/primitives/inputs';
+import { Alert } from '@/components/primitives/feedback';
+import { GoalsStats, GoalsTable } from '@/components/hr/goals';
 import { usePerformanceGoals, useDeletePerformanceGoal, useEmployees } from '@/lib/api/hooks/useHR';
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import type { PerformanceGoalDto } from '@/lib/api/services/hr.types';
-import dayjs from 'dayjs';
-
-const { Title } = Typography;
 
 export default function GoalsPage() {
   const router = useRouter();
+  const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filters, setFilters] = useState<{ employeeId?: number; year?: number }>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
   // API Hooks
-  const { data: goals = [], isLoading } = usePerformanceGoals(filters.employeeId, filters.year);
+  const { data: goals = [], isLoading, error, refetch } = usePerformanceGoals(filters.employeeId, filters.year);
   const { data: employees = [] } = useEmployees();
   const deleteGoal = useDeletePerformanceGoal();
 
-  // Stats
-  const totalGoals = goals.length;
-  const completedGoals = goals.filter((g) => g.status === 'Completed').length;
-  const inProgressGoals = goals.filter((g) => g.status === 'InProgress').length;
-  const overdueGoals = goals.filter((g) => g.isOverdue).length;
+  // Filter by search text
+  const filteredGoals = useMemo(() => {
+    if (!debouncedSearch.trim()) return goals;
+    const search = debouncedSearch.toLowerCase();
+    return goals.filter(
+      (goal) =>
+        goal.title?.toLowerCase().includes(search) ||
+        goal.employeeName?.toLowerCase().includes(search) ||
+        goal.category?.toLowerCase().includes(search)
+    );
+  }, [goals, debouncedSearch]);
 
-  const handleDelete = (goal: PerformanceGoalDto) => {
-    Modal.confirm({
-      title: 'Hedefi Sil',
-      content: `"${goal.title}" hedefini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await deleteGoal.mutateAsync(goal.id);
-        } catch (error) {
-          // Error handled by hook
-        }
-      },
-    });
+  // Paginate
+  const paginatedGoals = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredGoals.slice(start, start + pageSize);
+  }, [filteredGoals, currentPage, pageSize]);
+
+  const totalCount = filteredGoals.length;
+
+  const handlePageChange = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
   };
 
-  const getStatusConfig = (status?: string, isOverdue?: boolean) => {
-    if (isOverdue && status !== 'Completed' && status !== 'Cancelled') {
-      return { color: 'red', text: 'Gecikmiş', icon: <ExclamationCircleIcon className="w-4 h-4" /> };
+  const handleDelete = async (goal: PerformanceGoalDto) => {
+    try {
+      await deleteGoal.mutateAsync(goal.id);
+      showSuccess('Hedef Silindi', `"${goal.title}" hedefi başarıyla silindi.`);
+    } catch (err) {
+      showApiError(err, 'Hedef silinirken bir hata oluştu');
     }
-    const statusMap: Record<string, { color: string; text: string; icon: React.ReactNode }> = {
-      NotStarted: { color: 'default', text: 'Başlamadı', icon: <ClockIcon className="w-4 h-4" /> },
-      InProgress: { color: 'blue', text: 'Devam Ediyor', icon: <ClockIcon className="w-4 h-4" /> },
-      Completed: { color: 'green', text: 'Tamamlandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
-      Cancelled: { color: 'red', text: 'İptal', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
-    };
-    return statusMap[status || ''] || { color: 'default', text: status || '-', icon: null };
   };
-
-  const columns: ColumnsType<PerformanceGoalDto> = [
-    {
-      title: 'Hedef',
-      key: 'title',
-      render: (_, record: PerformanceGoalDto) => (
-        <div>
-          <div className="font-medium">{record.title}</div>
-          <div className="text-xs text-gray-500">{record.employeeName}</div>
-        </div>
-      ),
-    },
-    {
-      title: 'Kategori',
-      dataIndex: 'category',
-      key: 'category',
-      width: 120,
-      render: (category: string) => category || '-',
-    },
-    {
-      title: 'İlerleme',
-      key: 'progress',
-      width: 180,
-      render: (_, record: PerformanceGoalDto) => (
-        <div>
-          <Progress
-            percent={record.progressPercentage || 0}
-            size="small"
-            status={record.isOverdue ? 'exception' : undefined}
-          />
-        </div>
-      ),
-    },
-    {
-      title: 'Hedef Tarihi',
-      dataIndex: 'targetDate',
-      key: 'targetDate',
-      width: 120,
-      sorter: (a, b) => dayjs(a.targetDate).unix() - dayjs(b.targetDate).unix(),
-      render: (date: string) => dayjs(date).format('DD.MM.YYYY'),
-    },
-    {
-      title: 'Durum',
-      key: 'status',
-      width: 130,
-      render: (_, record: PerformanceGoalDto) => {
-        const config = getStatusConfig(record.status, record.isOverdue);
-        return (
-          <Tag color={config.color} icon={config.icon}>
-            {config.text}
-          </Tag>
-        );
-      },
-    },
-    {
-      title: 'İşlemler',
-      key: 'actions',
-      width: 80,
-      render: (_, record: PerformanceGoalDto) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'view',
-                icon: <EyeIcon className="w-4 h-4" />,
-                label: 'Görüntüle',
-                onClick: () => router.push(`/hr/goals/${record.id}`),
-              },
-              {
-                key: 'edit',
-                icon: <PencilIcon className="w-4 h-4" />,
-                label: 'Düzenle',
-                onClick: () => router.push(`/hr/goals/${record.id}/edit`),
-                disabled: record.status === 'Completed',
-              },
-              { type: 'divider' },
-              {
-                key: 'delete',
-                icon: <TrashIcon className="w-4 h-4" />,
-                label: 'Sil',
-                danger: true,
-                onClick: () => handleDelete(record),
-              },
-            ],
-          }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
-        </Dropdown>
-      ),
-    },
-  ];
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2} style={{ margin: 0 }}>
-          <CursorArrowRaysIcon className="w-4 h-4 mr-2" />
-          Performans Hedefleri
-        </Title>
-        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/goals/new')}>
-          Yeni Hedef
-        </Button>
+    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <GoalsStats goals={goals} loading={isLoading} />
       </div>
 
-      {/* Stats */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Hedef"
-              value={totalGoals}
-              prefix={<CursorArrowRaysIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#7c3aed' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Devam Eden"
-              value={inProgressGoals}
-              prefix={<ClockIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Tamamlanan"
-              value={completedGoals}
-              prefix={<CheckCircleIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Gecikmiş"
-              value={overdueGoals}
-              prefix={<ExclamationCircleIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#ff4d4f' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Header */}
+      <ListPageHeader
+        icon={<CursorArrowRaysIcon className="w-5 h-5" />}
+        iconColor="#9333ea"
+        title="Performans Hedefleri"
+        description="Çalışan performans hedeflerini yönetin ve takip edin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Hedef',
+          onClick: () => router.push('/hr/goals/new'),
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      />
 
-      {/* Filters */}
-      <Card className="mb-4">
+      {error && (
+        <Alert
+          variant="error"
+          title="Hedefler yüklenemedi"
+          message={(error as Error).message}
+          closable
+          action={
+            <button onClick={() => refetch()} className="text-red-600 hover:text-red-800 font-medium">
+              Tekrar Dene
+            </button>
+          }
+          className="mt-6"
+        />
+      )}
+
+      <Card className="mt-6 mb-4 border border-gray-100 shadow-sm">
         <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} md={8}>
+            <Input
+              placeholder="Hedef ara... (başlık, çalışan, kategori)"
+              prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
+              size="lg"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+          </Col>
           <Col xs={24} sm={12} md={8}>
             <Select
               placeholder="Çalışan seçin"
               allowClear
               showSearch
               optionFilterProp="children"
-              style={{ width: '100%' }}
+              style={{ width: '100%', height: '44px' }}
               onChange={(value) => setFilters((prev) => ({ ...prev, employeeId: value }))}
               options={employees.map((e) => ({
                 value: e.id,
@@ -250,7 +142,7 @@ export default function GoalsPage() {
             <Select
               placeholder="Yıl"
               allowClear
-              style={{ width: '100%' }}
+              style={{ width: '100%', height: '44px' }}
               onChange={(value) => setFilters((prev) => ({ ...prev, year: value }))}
               options={[
                 { value: 2024, label: '2024' },
@@ -262,19 +154,19 @@ export default function GoalsPage() {
         </Row>
       </Card>
 
-      {/* Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={goals}
-          rowKey="id"
+      <DataTableWrapper>
+        <GoalsTable
+          goals={paginatedGoals}
           loading={isLoading}
-          pagination={{
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} hedef`,
-          }}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalCount={totalCount}
+          onPageChange={handlePageChange}
+          onView={(id) => router.push(`/hr/goals/${id}`)}
+          onEdit={(id) => router.push(`/hr/goals/${id}/edit`)}
+          onDelete={handleDelete}
         />
-      </Card>
-    </div>
+      </DataTableWrapper>
+    </PageContainer>
   );
 }
