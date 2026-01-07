@@ -31,7 +31,7 @@ export interface QueryOptionsResult {
   gcTime: number;
   refetchOnWindowFocus: false;
   refetchOnReconnect: false;
-  refetchOnMount: false;
+  refetchOnMount: boolean | 'always';
   retry: false;
   networkMode: 'offlineFirst';
   enabled?: boolean;
@@ -42,11 +42,12 @@ export interface QueryOptionsResult {
  */
 const CACHE_CONFIG: Record<
   QueryCategory,
-  { staleTime: number; gcTime: number }
+  { staleTime: number; gcTime: number; refetchOnMount?: boolean | 'always' }
 > = {
   list: {
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 30 * 1000, // 30 seconds - reduced to ensure fresh data after mutations
     gcTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnMount: 'always', // Always refetch on mount to get fresh data
   },
   detail: {
     staleTime: 3 * 60 * 1000, // 3 minutes
@@ -72,7 +73,7 @@ const CACHE_CONFIG: Record<
 const BASE_QUERY_OPTIONS = {
   refetchOnWindowFocus: false as const,
   refetchOnReconnect: false as const,
-  refetchOnMount: false as const,
+  refetchOnMount: false as boolean | 'always',
   retry: false as const,
   networkMode: 'offlineFirst' as const,
 };
@@ -87,6 +88,7 @@ export function createQueryOptions(category: QueryCategory, overrides?: QueryOpt
     ...BASE_QUERY_OPTIONS,
     staleTime: config.staleTime,
     gcTime: config.gcTime,
+    refetchOnMount: config.refetchOnMount ?? false,
     ...overrides,
   };
 }

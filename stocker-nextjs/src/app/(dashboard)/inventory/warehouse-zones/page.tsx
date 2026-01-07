@@ -1,277 +1,335 @@
 'use client';
 
+/**
+ * Warehouse Zones List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
 import React, { useState, useMemo } from 'react';
-import { Table, Tag, Select, Modal, Form, Input, InputNumber, Button, Space, Dropdown } from 'antd';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  Table,
+  Tag,
+  Input,
+  Select,
+  Dropdown,
+  Spin,
+} from 'antd';
 import {
   ArrowPathIcon,
-  HomeIcon,
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
+  CheckCircleIcon,
   EllipsisHorizontalIcon,
+  ExclamationTriangleIcon,
+  HomeIcon,
+  MagnifyingGlassIcon,
   MapPinIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  BeakerIcon,
+  CubeIcon,
 } from '@heroicons/react/24/outline';
 import {
   useWarehouseZones,
-  useWarehouses,
-  useCreateWarehouseZone,
-  useUpdateWarehouseZone,
   useDeleteWarehouseZone,
+  useWarehouses,
 } from '@/lib/api/hooks/useInventory';
-import type { WarehouseZoneDto, CreateWarehouseZoneDto, UpdateWarehouseZoneDto } from '@/lib/api/services/inventory.types';
-import { ZoneType } from '@/lib/api/services/inventory.types';
+import type { WarehouseZoneDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
-import { PageContainer, ListPageHeader, Card } from '@/components/patterns';
-import { showError, confirmAction } from '@/lib/utils/sweetalert';
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
+import {
+  showDeleteSuccess,
+  showError,
+  confirmDelete,
+} from '@/lib/utils/sweetalert';
+
+const zoneTypeLabels: Record<string, string> = {
+  'General': 'Genel',
+  'ColdStorage': 'Soğuk Depo',
+  'Freezer': 'Dondurucu',
+  'DryStorage': 'Kuru Depo',
+  'Hazardous': 'Tehlikeli Madde',
+  'Quarantine': 'Karantina',
+  'Returns': 'İade',
+  'Picking': 'Toplama',
+  'Shipping': 'Sevkiyat',
+  'Receiving': 'Kabul',
+  'CrossDocking': 'Cross-Docking',
+  'HighValue': 'Yüksek Değerli',
+  'Bulk': 'Toplu Depolama',
+  'Other': 'Diğer',
+};
+
+const zoneTypeColors: Record<string, string> = {
+  'General': 'default',
+  'ColdStorage': 'blue',
+  'Freezer': 'cyan',
+  'DryStorage': 'orange',
+  'Hazardous': 'red',
+  'Quarantine': 'purple',
+  'Returns': 'magenta',
+  'Picking': 'green',
+  'Shipping': 'geekblue',
+  'Receiving': 'lime',
+  'CrossDocking': 'gold',
+  'HighValue': 'volcano',
+  'Bulk': 'default',
+  'Other': 'default',
+};
 
 export default function WarehouseZonesPage() {
-  const [selectedWarehouse, setSelectedWarehouse] = useState<number | undefined>();
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedZone, setSelectedZone] = useState<WarehouseZoneDto | null>(null);
-  const [form] = Form.useForm();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialWarehouseId = searchParams.get('warehouseId');
 
-  // API Hooks
+  const [searchText, setSearchText] = useState('');
+  const [selectedWarehouse, setSelectedWarehouse] = useState<number | undefined>(
+    initialWarehouseId ? Number(initialWarehouseId) : undefined
+  );
+
   const { data: warehouses = [] } = useWarehouses();
   const { data: zones = [], isLoading, refetch } = useWarehouseZones(selectedWarehouse);
-  const createZone = useCreateWarehouseZone();
-  const updateZone = useUpdateWarehouseZone();
   const deleteZone = useDeleteWarehouseZone();
 
-  // Handlers
-  const handleCreate = () => {
-    form.resetFields();
-    setCreateModalOpen(true);
-  };
-
-  const handleEdit = (zone: WarehouseZoneDto) => {
-    setSelectedZone(zone);
-    form.setFieldsValue({
-      warehouseId: zone.warehouseId,
-      code: zone.code,
-      name: zone.name,
-      description: zone.description,
-      zoneType: zone.zoneType,
-      totalArea: zone.totalArea,
-      minTemperature: zone.minTemperature,
-      maxTemperature: zone.maxTemperature,
-      minHumidity: zone.minHumidity,
-      maxHumidity: zone.maxHumidity,
-    });
-    setEditModalOpen(true);
-  };
-
   const handleDelete = async (zone: WarehouseZoneDto) => {
-    const confirmed = await confirmAction(
-      'Bölgeyi Sil',
-      `"${zone.name}" bölgesini silmek istediğinizden emin misiniz?`,
-      'Sil'
-    );
-
+    const confirmed = await confirmDelete('Depo Bölgesi', zone.name);
     if (confirmed) {
       try {
         await deleteZone.mutateAsync(zone.id);
+        showDeleteSuccess('depo bölgesi');
       } catch (error) {
-        // Error handled by hook
+        showError('Silme işlemi başarısız');
       }
     }
   };
 
-  const handleCreateSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      const data: CreateWarehouseZoneDto = {
-        warehouseId: values.warehouseId,
-        code: values.code,
-        name: values.name,
-        description: values.description,
-        zoneType: values.zoneType || ZoneType.General,
-        totalArea: values.totalArea,
-        minTemperature: values.minTemperature,
-        maxTemperature: values.maxTemperature,
-        minHumidity: values.minHumidity,
-        maxHumidity: values.maxHumidity,
-      };
-      await createZone.mutateAsync(data);
-      setCreateModalOpen(false);
-      form.resetFields();
-    } catch (error) {
-      // Validation error
-    }
-  };
+  const filteredZones = useMemo(() => {
+    if (!searchText) return zones;
+    return zones.filter((zone) =>
+      zone.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      zone.code?.toLowerCase().includes(searchText.toLowerCase()) ||
+      zone.warehouseName?.toLowerCase().includes(searchText.toLowerCase())
+    );
+  }, [zones, searchText]);
 
-  const handleEditSubmit = async () => {
-    if (!selectedZone) return;
-    try {
-      const values = await form.validateFields();
-      const data: UpdateWarehouseZoneDto = {
-        name: values.name,
-        description: values.description,
-        zoneType: values.zoneType || ZoneType.General,
-        minTemperature: values.minTemperature,
-        maxTemperature: values.maxTemperature,
-        minHumidity: values.minHumidity,
-        maxHumidity: values.maxHumidity,
-      };
-      await updateZone.mutateAsync({ id: selectedZone.id, dto: data });
-      setEditModalOpen(false);
-      setSelectedZone(null);
-      form.resetFields();
-    } catch (error) {
-      // Validation error
-    }
-  };
+  // Calculate stats
+  const totalZones = zones.length;
+  const activeZones = zones.filter((z) => z.isActive).length;
+  const temperatureControlledZones = zones.filter((z) => z.isTemperatureControlled).length;
+  const hazardousZones = zones.filter((z) => z.isHazardous).length;
 
-  // Table columns
   const columns: ColumnsType<WarehouseZoneDto> = [
     {
-      title: 'Kod',
-      dataIndex: 'code',
-      key: 'code',
-      width: 120,
-      render: (text: string) => <span className="font-mono font-semibold text-slate-900">{text}</span>,
-    },
-    {
-      title: 'Bölge Adı',
+      title: 'Bölge',
       dataIndex: 'name',
       key: 'name',
-      width: 200,
-      render: (text: string) => <span className="font-medium text-slate-900">{text}</span>,
+      sorter: (a, b) => a.name.localeCompare(b.name),
+      render: (name: string, record) => (
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: '#10b98115' }}
+          >
+            <MapPinIcon className="w-4 h-4" style={{ color: '#10b981' }} />
+          </div>
+          <div>
+            <div className="text-sm font-medium text-slate-900">{name}</div>
+            <div className="text-xs text-slate-500">
+              Kod: {record.code}
+            </div>
+          </div>
+        </div>
+      ),
     },
     {
       title: 'Depo',
       dataIndex: 'warehouseName',
       key: 'warehouseName',
       width: 150,
-      render: (text: string) => (
-        <Tag icon={<HomeIcon className="w-3 h-3" />} color="blue">
-          {text}
+      render: (name: string) => (
+        <div className="flex items-center gap-1 text-sm text-slate-600">
+          <HomeIcon className="w-4 h-4 text-slate-400" />
+          {name || '-'}
+        </div>
+      ),
+    },
+    {
+      title: 'Bölge Tipi',
+      dataIndex: 'zoneType',
+      key: 'zoneType',
+      width: 140,
+      render: (zoneType: string) => (
+        <Tag color={zoneTypeColors[zoneType] || 'default'}>
+          {zoneTypeLabels[zoneType] || 'Bilinmeyen'}
         </Tag>
       ),
     },
     {
-      title: 'Kapasite',
-      dataIndex: 'capacity',
-      key: 'capacity',
+      title: 'Alan (m²)',
+      key: 'area',
       width: 120,
-      render: (value: number | undefined) =>
-        value !== undefined ? `${value.toLocaleString('tr-TR')} birim` : '-',
+      align: 'right',
+      render: (_, record) => (
+        <span className="text-sm text-slate-600">
+          {record.totalArea ? record.totalArea.toLocaleString('tr-TR') : '-'}
+        </span>
+      ),
     },
     {
       title: 'Sıcaklık',
-      dataIndex: 'temperature',
       key: 'temperature',
-      width: 100,
-      render: (value: number | undefined) =>
-        value !== undefined ? `${value}°C` : '-',
+      width: 130,
+      render: (_, record) => {
+        if (!record.isTemperatureControlled) {
+          return <span className="text-slate-400">-</span>;
+        }
+        const min = record.minTemperature;
+        const max = record.maxTemperature;
+        if (min !== undefined && max !== undefined) {
+          return (
+            <span className="text-sm text-blue-600 font-medium">
+              {min}°C - {max}°C
+            </span>
+          );
+        }
+        return <span className="text-slate-400">-</span>;
+      },
     },
     {
       title: 'Nem',
-      dataIndex: 'humidity',
       key: 'humidity',
+      width: 110,
+      render: (_, record) => {
+        if (!record.isHumidityControlled) {
+          return <span className="text-slate-400">-</span>;
+        }
+        const min = record.minHumidity;
+        const max = record.maxHumidity;
+        if (min !== undefined && max !== undefined) {
+          return (
+            <span className="text-sm text-cyan-600 font-medium">
+              %{min} - %{max}
+            </span>
+          );
+        }
+        return <span className="text-slate-400">-</span>;
+      },
+    },
+    {
+      title: 'Durum',
+      dataIndex: 'isActive',
+      key: 'isActive',
       width: 100,
-      render: (value: number | undefined) =>
-        value !== undefined ? `%${value}` : '-',
-    },
-    {
-      title: 'Açıklama',
-      dataIndex: 'description',
-      key: 'description',
-      ellipsis: true,
-      render: (text: string) => <span className="text-slate-500">{text || '-'}</span>,
-    },
-    {
-      title: 'İşlemler',
-      key: 'actions',
-      width: 80,
-      fixed: 'right',
-      render: (_, record) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'edit',
-                icon: <PencilIcon className="w-4 h-4" />,
-                label: 'Düzenle',
-                onClick: () => handleEdit(record),
-              },
-              {
-                key: 'delete',
-                icon: <TrashIcon className="w-4 h-4" />,
-                label: 'Sil',
-                danger: true,
-                onClick: () => handleDelete(record),
-              },
-            ],
-          }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
-        </Dropdown>
+      filters: [
+        { text: 'Aktif', value: true },
+        { text: 'Pasif', value: false },
+      ],
+      onFilter: (value, record) => record.isActive === value,
+      render: (isActive: boolean) => (
+        <Tag color={isActive ? 'green' : 'default'}>
+          {isActive ? 'Aktif' : 'Pasif'}
+        </Tag>
       ),
+    },
+    {
+      title: '',
+      key: 'actions',
+      width: 60,
+      fixed: 'right',
+      render: (_, record) => {
+        const menuItems = [
+          {
+            key: 'edit',
+            icon: <PencilIcon className="w-4 h-4" />,
+            label: 'Düzenle',
+            onClick: () => router.push(`/inventory/warehouse-zones/${record.id}/edit`),
+          },
+          { type: 'divider' as const },
+          {
+            key: 'delete',
+            icon: <TrashIcon className="w-4 h-4" />,
+            label: 'Sil',
+            danger: true,
+            onClick: () => handleDelete(record),
+          },
+        ];
+
+        return (
+          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+              <EllipsisHorizontalIcon className="w-4 h-4" />
+            </button>
+          </Dropdown>
+        );
+      },
     },
   ];
 
-  // Form content (shared between create and edit)
-  const formContent = (
-    <Form form={form} layout="vertical" className="mt-4">
-      <Form.Item
-        name="warehouseId"
-        label="Depo"
-        rules={[{ required: true, message: 'Depo seçimi gerekli' }]}
-      >
-        <Select placeholder="Depo seçin" showSearch optionFilterProp="children">
-          {warehouses.map((w) => (
-            <Select.Option key={w.id} value={w.id}>
-              {w.code} - {w.name}
-            </Select.Option>
-          ))}
-        </Select>
-      </Form.Item>
-      <div className="grid grid-cols-2 gap-4">
-        <Form.Item
-          name="code"
-          label="Bölge Kodu"
-          rules={[{ required: true, message: 'Bölge kodu gerekli' }]}
-        >
-          <Input placeholder="ZONE-A1" />
-        </Form.Item>
-        <Form.Item
-          name="name"
-          label="Bölge Adı"
-          rules={[{ required: true, message: 'Bölge adı gerekli' }]}
-        >
-          <Input placeholder="A Bloğu Zemin Kat" />
-        </Form.Item>
-      </div>
-      <Form.Item name="description" label="Açıklama">
-        <Input.TextArea rows={2} placeholder="Bölge hakkında açıklama..." />
-      </Form.Item>
-      <div className="grid grid-cols-3 gap-4">
-        <Form.Item name="capacity" label="Kapasite (birim)">
-          <InputNumber min={0} style={{ width: '100%' }} placeholder="1000" />
-        </Form.Item>
-        <Form.Item name="temperature" label="Sıcaklık (°C)">
-          <InputNumber min={-50} max={100} style={{ width: '100%' }} placeholder="20" />
-        </Form.Item>
-        <Form.Item name="humidity" label="Nem (%)">
-          <InputNumber min={0} max={100} style={{ width: '100%' }} placeholder="50" />
-        </Form.Item>
-      </div>
-    </Form>
-  );
-
   return (
-    <PageContainer>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Bölge</span>
+              <div className="text-2xl font-semibold text-slate-900">{totalZones}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+              <MapPinIcon className="w-4 h-4" style={{ color: '#10b981' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif Bölge</span>
+              <div className="text-2xl font-semibold text-slate-900">{activeZones}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#22c55e15' }}>
+              <CheckCircleIcon className="w-4 h-4" style={{ color: '#22c55e' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Sıcaklık Kontrollü</span>
+              <div className="text-2xl font-semibold text-slate-900">{temperatureControlledZones}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
+              <BeakerIcon className="w-4 h-4" style={{ color: '#3b82f6' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Tehlikeli Madde</span>
+              <div className="text-2xl font-semibold text-slate-900">{hazardousZones}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: hazardousZones > 0 ? '#ef444415' : '#f59e0b15' }}>
+              <ExclamationTriangleIcon className="w-4 h-4" style={{ color: hazardousZones > 0 ? '#ef4444' : '#f59e0b' }} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Header */}
       <ListPageHeader
-        icon={<MapPinIcon className="w-5 h-5" />}
+        icon={<MapPinIcon className="w-4 h-4" />}
         iconColor="#10b981"
         title="Depo Bölgeleri"
         description="Depolarınızdaki bölgeleri tanımlayın ve yönetin"
-        itemCount={zones.length}
+        itemCount={filteredZones.length}
         primaryAction={{
           label: 'Yeni Bölge',
-          onClick: handleCreate,
+          onClick: () => router.push(`/inventory/warehouse-zones/new${selectedWarehouse ? `?warehouseId=${selectedWarehouse}` : ''}`),
           icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
@@ -280,83 +338,59 @@ export default function WarehouseZonesPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+            <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
 
       {/* Filters */}
-      <Card className="mb-6">
-        <div className="flex flex-wrap gap-4 p-4">
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-4">
           <Select
-            placeholder="Depoya göre filtrele"
+            placeholder="Depo seçin"
             allowClear
-            style={{ width: 250 }}
+            style={{ width: 200 }}
             value={selectedWarehouse}
             onChange={setSelectedWarehouse}
-            showSearch
-            optionFilterProp="children"
-          >
-            {warehouses.map((w) => (
-              <Select.Option key={w.id} value={w.id}>
-                {w.code} - {w.name}
-              </Select.Option>
-            ))}
-          </Select>
+            options={warehouses.map((w) => ({
+              value: w.id,
+              label: w.name,
+            }))}
+          />
+          <Input
+            placeholder="Bölge ara... (ad, kod, depo)"
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ maxWidth: 400 }}
+            allowClear
+            className="h-10"
+          />
         </div>
-      </Card>
+      </div>
 
       {/* Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={zones}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            total: zones.length,
-            pageSize: 20,
-            showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
-          }}
-          scroll={{ x: 1000 }}
-        />
-      </Card>
-
-      {/* Create Modal */}
-      <Modal
-        title="Yeni Depo Bölgesi"
-        open={createModalOpen}
-        onCancel={() => {
-          setCreateModalOpen(false);
-          form.resetFields();
-        }}
-        onOk={handleCreateSubmit}
-        okText="Oluştur"
-        cancelText="İptal"
-        confirmLoading={createZone.isPending}
-        width={600}
-      >
-        {formContent}
-      </Modal>
-
-      {/* Edit Modal */}
-      <Modal
-        title="Depo Bölgesi Düzenle"
-        open={editModalOpen}
-        onCancel={() => {
-          setEditModalOpen(false);
-          setSelectedZone(null);
-          form.resetFields();
-        }}
-        onOk={handleEditSubmit}
-        okText="Kaydet"
-        cancelText="İptal"
-        confirmLoading={updateZone.isPending}
-        width={600}
-      >
-        {formContent}
-      </Modal>
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Table
+            columns={columns}
+            dataSource={filteredZones}
+            rowKey="id"
+            loading={isLoading}
+            scroll={{ x: 1100 }}
+            pagination={{
+              showSizeChanger: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} bölge`,
+            }}
+          />
+        </DataTableWrapper>
+      )}
     </PageContainer>
   );
 }

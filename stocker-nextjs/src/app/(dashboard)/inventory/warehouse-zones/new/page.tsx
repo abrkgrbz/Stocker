@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button, Space, Form } from 'antd';
 import {
   ArrowLeftIcon,
@@ -13,6 +13,8 @@ import type { CreateWarehouseZoneDto } from '@/lib/api/services/inventory.types'
 
 export default function NewWarehouseZonePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const defaultWarehouseId = searchParams.get('warehouseId');
   const [form] = Form.useForm();
   const createZone = useCreateWarehouseZone();
 
@@ -78,6 +80,7 @@ export default function NewWarehouseZonePage() {
           form={form}
           onFinish={handleSubmit}
           loading={createZone.isPending}
+          defaultWarehouseId={defaultWarehouseId ? Number(defaultWarehouseId) : undefined}
         />
       </div>
     </div>

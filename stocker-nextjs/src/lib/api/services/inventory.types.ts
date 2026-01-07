@@ -3414,22 +3414,21 @@ export interface InventoryHealthScoreDto {
 // WAREHOUSE ZONE
 // =====================================
 
-export enum ZoneType {
-  General = 1,
-  ColdStorage = 2,
-  Freezer = 3,
-  DryStorage = 4,
-  Hazardous = 5,
-  Quarantine = 6,
-  Returns = 7,
-  Picking = 8,
-  Shipping = 9,
-  Receiving = 10,
-  CrossDocking = 11,
-  HighValue = 12,
-  Bulk = 13,
-  Other = 99,
-}
+export type ZoneType =
+  | 'General'
+  | 'ColdStorage'
+  | 'Freezer'
+  | 'DryStorage'
+  | 'Hazardous'
+  | 'Quarantine'
+  | 'Returns'
+  | 'Picking'
+  | 'Shipping'
+  | 'Receiving'
+  | 'CrossDocking'
+  | 'HighValue'
+  | 'Bulk'
+  | 'Other';
 
 export interface WarehouseZoneDto {
   id: number;

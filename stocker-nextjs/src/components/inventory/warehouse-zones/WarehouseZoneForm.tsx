@@ -13,26 +13,27 @@ interface WarehouseZoneFormProps {
   initialValues?: WarehouseZoneDto;
   onFinish: (values: any) => void;
   loading?: boolean;
+  defaultWarehouseId?: number;
 }
 
 const zoneTypeOptions = [
-  { value: 1, label: 'Genel' },
-  { value: 2, label: 'Soğuk Depo' },
-  { value: 3, label: 'Dondurucu' },
-  { value: 4, label: 'Kuru Depo' },
-  { value: 5, label: 'Tehlikeli Madde' },
-  { value: 6, label: 'Karantina' },
-  { value: 7, label: 'İade' },
-  { value: 8, label: 'Toplama' },
-  { value: 9, label: 'Sevkiyat' },
-  { value: 10, label: 'Kabul' },
-  { value: 11, label: 'Cross-Docking' },
-  { value: 12, label: 'Yüksek Değerli' },
-  { value: 13, label: 'Toplu Depolama' },
-  { value: 99, label: 'Diğer' },
+  { value: 'General', label: 'Genel' },
+  { value: 'ColdStorage', label: 'Soğuk Depo' },
+  { value: 'Freezer', label: 'Dondurucu' },
+  { value: 'DryStorage', label: 'Kuru Depo' },
+  { value: 'Hazardous', label: 'Tehlikeli Madde' },
+  { value: 'Quarantine', label: 'Karantina' },
+  { value: 'Returns', label: 'İade' },
+  { value: 'Picking', label: 'Toplama' },
+  { value: 'Shipping', label: 'Sevkiyat' },
+  { value: 'Receiving', label: 'Kabul' },
+  { value: 'CrossDocking', label: 'Cross-Docking' },
+  { value: 'HighValue', label: 'Yüksek Değerli' },
+  { value: 'Bulk', label: 'Toplu Depolama' },
+  { value: 'Other', label: 'Diğer' },
 ];
 
-export default function WarehouseZoneForm({ form, initialValues, onFinish, loading }: WarehouseZoneFormProps) {
+export default function WarehouseZoneForm({ form, initialValues, onFinish, loading, defaultWarehouseId }: WarehouseZoneFormProps) {
   const [isActive, setIsActive] = useState(true);
   const [isTemperatureControlled, setIsTemperatureControlled] = useState(false);
   const [isHumidityControlled, setIsHumidityControlled] = useState(false);
@@ -55,15 +56,19 @@ export default function WarehouseZoneForm({ form, initialValues, onFinish, loadi
       setIsHazardous(initialValues.isHazardous ?? false);
       setRequiresSpecialAccess(initialValues.requiresSpecialAccess ?? false);
     } else {
-      form.setFieldsValue({
+      const initialData: Record<string, any> = {
         priority: 0,
         isDefaultPickingZone: false,
         isDefaultPutawayZone: false,
         isQuarantineZone: false,
         isReturnsZone: false,
-      });
+      };
+      if (defaultWarehouseId) {
+        initialData.warehouseId = defaultWarehouseId;
+      }
+      form.setFieldsValue(initialData);
     }
-  }, [form, initialValues]);
+  }, [form, initialValues, defaultWarehouseId]);
 
   return (
     <Form
