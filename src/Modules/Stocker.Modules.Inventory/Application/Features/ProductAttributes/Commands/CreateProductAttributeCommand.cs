@@ -72,9 +72,9 @@ public class CreateProductAttributeCommandHandler : IRequestHandler<CreateProduc
         await _unitOfWork.ProductAttributes.AddAsync(attribute, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // Add options if provided (for Select/MultiSelect types)
-        if (data.Options != null && data.Options.Any() &&
-            (data.AttributeType == AttributeType.Select || data.AttributeType == AttributeType.MultiSelect))
+        // Add options if provided (for Select/MultiSelect/Color/Size types)
+        var typesWithOptions = new[] { AttributeType.Select, AttributeType.MultiSelect, AttributeType.Color, AttributeType.Size };
+        if (data.Options != null && data.Options.Any() && typesWithOptions.Contains(data.AttributeType))
         {
             foreach (var optionData in data.Options.OrderBy(o => o.DisplayOrder))
             {
