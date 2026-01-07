@@ -47,7 +47,10 @@ public class ProductAttributeConfiguration : IEntityTypeConfiguration<ProductAtt
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(a => a.TenantId);
-        builder.HasIndex(a => new { a.TenantId, a.Code }).IsUnique();
+        // Unique constraint only for non-deleted records (filtered index)
+        builder.HasIndex(a => new { a.TenantId, a.Code })
+            .IsUnique()
+            .HasFilter("\"IsDeleted\" = false");
         builder.HasIndex(a => new { a.TenantId, a.IsActive });
     }
 }
