@@ -62,10 +62,15 @@ const mainAttributeTypes = [
 ];
 
 const otherAttributeTypes = [
-  { value: AttributeType.Number, label: 'Sayı' },
+  { value: AttributeType.TextArea, label: 'Uzun Metin' },
+  { value: AttributeType.Integer, label: 'Tam Sayı' },
+  { value: AttributeType.Decimal, label: 'Ondalık Sayı' },
   { value: AttributeType.Boolean, label: 'Evet/Hayır' },
   { value: AttributeType.Date, label: 'Tarih' },
+  { value: AttributeType.DateTime, label: 'Tarih/Saat' },
   { value: AttributeType.MultiSelect, label: 'Çoklu Seçim' },
+  { value: AttributeType.Url, label: 'URL' },
+  { value: AttributeType.File, label: 'Dosya' },
 ];
 
 const hasOptionsTypes = [
@@ -452,8 +457,8 @@ export default function NewProductAttributePage() {
                 </div>
               )}
 
-              {/* Validation for Number/Text */}
-              {attributeType === AttributeType.Number && (
+              {/* Validation for Integer/Decimal */}
+              {(attributeType === AttributeType.Integer || attributeType === AttributeType.Decimal) && (
                 <div className="bg-white border border-slate-200 rounded-xl p-6">
                   <Collapse
                     ghost

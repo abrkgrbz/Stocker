@@ -42,12 +42,17 @@ import dayjs from 'dayjs';
 
 const attributeTypeConfig: Record<AttributeType, { color: string; label: string; bgColor: string; textColor: string }> = {
   [AttributeType.Text]: { color: 'blue', label: 'Metin', bgColor: 'bg-blue-50', textColor: 'text-blue-700' },
-  [AttributeType.Number]: { color: 'cyan', label: 'Sayı', bgColor: 'bg-cyan-50', textColor: 'text-cyan-700' },
+  [AttributeType.TextArea]: { color: 'blue', label: 'Uzun Metin', bgColor: 'bg-blue-50', textColor: 'text-blue-700' },
+  [AttributeType.Integer]: { color: 'cyan', label: 'Tam Sayı', bgColor: 'bg-cyan-50', textColor: 'text-cyan-700' },
+  [AttributeType.Decimal]: { color: 'cyan', label: 'Ondalık Sayı', bgColor: 'bg-cyan-50', textColor: 'text-cyan-700' },
   [AttributeType.Boolean]: { color: 'green', label: 'Evet/Hayır', bgColor: 'bg-green-50', textColor: 'text-green-700' },
   [AttributeType.Date]: { color: 'purple', label: 'Tarih', bgColor: 'bg-purple-50', textColor: 'text-purple-700' },
+  [AttributeType.DateTime]: { color: 'purple', label: 'Tarih/Saat', bgColor: 'bg-purple-50', textColor: 'text-purple-700' },
   [AttributeType.Select]: { color: 'orange', label: 'Seçim', bgColor: 'bg-orange-50', textColor: 'text-orange-700' },
   [AttributeType.MultiSelect]: { color: 'magenta', label: 'Çoklu Seçim', bgColor: 'bg-pink-50', textColor: 'text-pink-700' },
   [AttributeType.Color]: { color: 'red', label: 'Renk', bgColor: 'bg-red-50', textColor: 'text-red-700' },
+  [AttributeType.Url]: { color: 'geekblue', label: 'URL', bgColor: 'bg-indigo-50', textColor: 'text-indigo-700' },
+  [AttributeType.File]: { color: 'volcano', label: 'Dosya', bgColor: 'bg-orange-50', textColor: 'text-orange-700' },
   [AttributeType.Size]: { color: 'gold', label: 'Beden', bgColor: 'bg-amber-50', textColor: 'text-amber-700' },
 };
 
@@ -452,7 +457,7 @@ export default function ProductAttributeDetailPage() {
                     <p className="text-sm text-slate-600">{attribute.description}</p>
                   </div>
                 )}
-                {attribute.attributeType === AttributeType.Number && (
+                {(attribute.attributeType === AttributeType.Integer || attribute.attributeType === AttributeType.Decimal) && (
                   <>
                     <div>
                       <p className="text-xs text-slate-400 mb-1">Minimum Değer</p>

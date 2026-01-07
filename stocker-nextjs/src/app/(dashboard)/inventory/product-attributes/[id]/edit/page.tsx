@@ -49,12 +49,17 @@ interface AttributeOption {
 
 const attributeTypes: { value: AttributeType; label: string; hasOptions: boolean }[] = [
   { value: AttributeType.Text, label: 'Metin', hasOptions: false },
-  { value: AttributeType.Number, label: 'Sayı', hasOptions: false },
+  { value: AttributeType.TextArea, label: 'Uzun Metin', hasOptions: false },
+  { value: AttributeType.Integer, label: 'Tam Sayı', hasOptions: false },
+  { value: AttributeType.Decimal, label: 'Ondalık Sayı', hasOptions: false },
   { value: AttributeType.Boolean, label: 'Evet/Hayır', hasOptions: false },
   { value: AttributeType.Date, label: 'Tarih', hasOptions: false },
+  { value: AttributeType.DateTime, label: 'Tarih/Saat', hasOptions: false },
   { value: AttributeType.Select, label: 'Seçim', hasOptions: true },
   { value: AttributeType.MultiSelect, label: 'Çoklu Seçim', hasOptions: true },
   { value: AttributeType.Color, label: 'Renk', hasOptions: true },
+  { value: AttributeType.Url, label: 'URL', hasOptions: false },
+  { value: AttributeType.File, label: 'Dosya', hasOptions: false },
   { value: AttributeType.Size, label: 'Beden', hasOptions: true },
 ];
 
@@ -466,7 +471,7 @@ export default function EditProductAttributePage() {
               </div>
 
               {/* Number Constraints */}
-              {attributeType === AttributeType.Number && (
+              {(attributeType === AttributeType.Integer || attributeType === AttributeType.Decimal) && (
                 <div className="bg-white border border-slate-200 rounded-xl p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <HashtagIcon className="w-4 h-4 text-slate-400" />

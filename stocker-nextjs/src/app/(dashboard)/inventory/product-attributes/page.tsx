@@ -44,12 +44,17 @@ import { showSuccess, confirmDelete } from '@/lib/utils/sweetalert';
 
 const attributeTypeConfig: Record<AttributeType, { color: string; label: string; icon: React.ReactNode }> = {
   Text: { color: 'blue', label: 'Metin', icon: <LanguageIcon className="w-4 h-4" /> },
-  Number: { color: 'cyan', label: 'Sayı', icon: <HashtagIcon className="w-4 h-4" /> },
+  TextArea: { color: 'blue', label: 'Uzun Metin', icon: <LanguageIcon className="w-4 h-4" /> },
+  Integer: { color: 'cyan', label: 'Tam Sayı', icon: <HashtagIcon className="w-4 h-4" /> },
+  Decimal: { color: 'cyan', label: 'Ondalık Sayı', icon: <HashtagIcon className="w-4 h-4" /> },
   Boolean: { color: 'green', label: 'Evet/Hayır', icon: <CheckCircleIcon className="w-4 h-4" /> },
   Date: { color: 'purple', label: 'Tarih', icon: <CalendarIcon className="w-4 h-4" /> },
+  DateTime: { color: 'purple', label: 'Tarih/Saat', icon: <CalendarIcon className="w-4 h-4" /> },
   Select: { color: 'orange', label: 'Seçim', icon: <ListBulletIcon className="w-4 h-4" /> },
   MultiSelect: { color: 'magenta', label: 'Çoklu Seçim', icon: <Squares2X2Icon className="w-4 h-4" /> },
   Color: { color: 'red', label: 'Renk', icon: <SwatchIcon className="w-4 h-4" /> },
+  Url: { color: 'geekblue', label: 'URL', icon: <LanguageIcon className="w-4 h-4" /> },
+  File: { color: 'volcano', label: 'Dosya', icon: <LanguageIcon className="w-4 h-4" /> },
   Size: { color: 'gold', label: 'Beden', icon: <ArrowsPointingOutIcon className="w-4 h-4" /> },
 };
 

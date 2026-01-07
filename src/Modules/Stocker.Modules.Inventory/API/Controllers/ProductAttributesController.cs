@@ -92,7 +92,7 @@ public class ProductAttributesController : ControllerBase
     [ProducesResponseType(typeof(ProductAttributeDto), 201)]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
-    public async Task<ActionResult<ProductAttributeDto>> CreateAttribute(CreateProductAttributeDto dto)
+    public async Task<ActionResult<ProductAttributeDto>> CreateAttribute([FromBody] CreateProductAttributeDto dto)
     {
         var tenantId = _tenantService.GetCurrentTenantId();
         if (!tenantId.HasValue) return BadRequest(CreateTenantError());
@@ -119,7 +119,7 @@ public class ProductAttributesController : ControllerBase
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
     [ProducesResponseType(404)]
-    public async Task<ActionResult<ProductAttributeDto>> UpdateAttribute(int id, UpdateProductAttributeDto dto)
+    public async Task<ActionResult<ProductAttributeDto>> UpdateAttribute(int id, [FromBody] UpdateProductAttributeDto dto)
     {
         var tenantId = _tenantService.GetCurrentTenantId();
         if (!tenantId.HasValue) return BadRequest(CreateTenantError());
@@ -183,7 +183,7 @@ public class ProductAttributesController : ControllerBase
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
     [ProducesResponseType(404)]
-    public async Task<ActionResult<ProductAttributeOptionDto>> AddOption(int attributeId, CreateProductAttributeOptionDto dto)
+    public async Task<ActionResult<ProductAttributeOptionDto>> AddOption(int attributeId, [FromBody] CreateProductAttributeOptionDto dto)
     {
         var tenantId = _tenantService.GetCurrentTenantId();
         if (!tenantId.HasValue) return BadRequest(CreateTenantError());
@@ -216,7 +216,7 @@ public class ProductAttributesController : ControllerBase
     [ProducesResponseType(401)]
     [ProducesResponseType(404)]
     public async Task<ActionResult<ProductAttributeOptionDto>> UpdateOption(
-        int attributeId, int optionId, UpdateProductAttributeOptionDto dto)
+        int attributeId, int optionId, [FromBody] UpdateProductAttributeOptionDto dto)
     {
         var tenantId = _tenantService.GetCurrentTenantId();
         if (!tenantId.HasValue) return BadRequest(CreateTenantError());

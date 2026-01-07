@@ -1475,14 +1475,23 @@ export interface QuarantineRequest {
 // PRODUCT ATTRIBUTES (EAV System)
 // =====================================
 
+/**
+ * Backend: AttributeType (AttributeType.cs)
+ * Synchronized with C# enum - uses string values for JSON serialization
+ */
 export enum AttributeType {
   Text = 'Text',
-  Number = 'Number',
+  TextArea = 'TextArea',
+  Integer = 'Integer',
+  Decimal = 'Decimal',
   Boolean = 'Boolean',
   Date = 'Date',
+  DateTime = 'DateTime',
   Select = 'Select',
   MultiSelect = 'MultiSelect',
   Color = 'Color',
+  Url = 'Url',
+  File = 'File',
   Size = 'Size'
 }
 
