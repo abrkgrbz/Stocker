@@ -388,6 +388,10 @@ export default function WarehouseZonesPage() {
               showSizeChanger: true,
               showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} bölge`,
             }}
+            onRow={(record) => ({
+              onClick: () => router.push(`/inventory/warehouse-zones/${record.id}`),
+              className: 'cursor-pointer hover:bg-slate-50',
+            })}
           />
         </DataTableWrapper>
       )}
