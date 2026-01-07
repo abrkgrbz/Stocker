@@ -125,7 +125,7 @@ export default function ProductVariantDetailPage() {
                     </span>
                   )}
                   {variant.isDefault && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-200 text-slate-700">
                       <StarIcon className="w-3 h-3" /> Varsayılan
                     </span>
                   )}
@@ -161,15 +161,15 @@ export default function ProductVariantDetailPage() {
           <div className="col-span-3">
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <CurrencyDollarIcon className="w-5 h-5 text-blue-600" />
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <CurrencyDollarIcon className="w-5 h-5 text-slate-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Satış Fiyatı
                 </p>
               </div>
               <div className="flex items-end justify-between">
-                <span className="text-3xl font-bold text-blue-600">
+                <span className="text-3xl font-bold text-slate-900">
                   {formatCurrency(variant.price, variant.priceCurrency)}
                 </span>
               </div>
@@ -197,19 +197,15 @@ export default function ProductVariantDetailPage() {
           <div className="col-span-3">
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <CurrencyDollarIcon className="w-5 h-5 text-emerald-600" />
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <CurrencyDollarIcon className="w-5 h-5 text-slate-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Kar Marjı
                 </p>
               </div>
               <div className="flex items-end justify-between">
-                <span
-                  className={`text-3xl font-bold ${
-                    margin && margin > 0 ? 'text-emerald-600' : 'text-red-600'
-                  }`}
-                >
+                <span className="text-3xl font-bold text-slate-900">
                   %{margin?.toFixed(1) || '0'}
                 </span>
               </div>
@@ -238,7 +234,7 @@ export default function ProductVariantDetailPage() {
           {/* ─────────────── MAIN CONTENT AREA ─────────────── */}
 
           {/* Variant Info Section - Left Side */}
-          <div className="col-span-7">
+          <div className="col-span-8">
             <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
                 Varyant Bilgileri
@@ -301,7 +297,7 @@ export default function ProductVariantDetailPage() {
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                 <Cog6ToothIcon className="w-4 h-4" /> Envanter Ayarları
               </p>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 flex-wrap">
                 <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${variant.trackInventory ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'}`}>
                   <CubeIcon className="w-4 h-4" />
                   <span className="text-xs font-medium">Stok Takibi</span>
@@ -313,7 +309,7 @@ export default function ProductVariantDetailPage() {
                   {variant.allowBackorder && <CheckCircleIcon className="w-3 h-3" />}
                 </div>
                 {variant.lowStockThreshold !== undefined && variant.lowStockThreshold > 0 && (
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-100 text-amber-700">
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 text-slate-600">
                     <ClockIcon className="w-4 h-4" />
                     <span className="text-xs font-medium">Düşük Stok Eşiği: {variant.lowStockThreshold}</span>
                   </div>
@@ -323,7 +319,7 @@ export default function ProductVariantDetailPage() {
           </div>
 
           {/* Right Side Cards */}
-          <div className="col-span-5 space-y-6">
+          <div className="col-span-4 space-y-6">
             {/* Parent Product Section */}
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
@@ -333,17 +329,14 @@ export default function ProductVariantDetailPage() {
                 className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"
                 onClick={() => router.push(`/inventory/products/${variant.productId}`)}
               >
-                <div className="w-12 h-12 rounded-lg bg-emerald-600 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center">
                   <ShoppingBagIcon className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-slate-900 m-0 truncate">{variant.productName}</p>
                   <p className="text-xs text-slate-500 m-0">Ana ürün detaylarını görüntüle</p>
                 </div>
-                <div className="flex items-center gap-2 text-blue-600 flex-shrink-0">
-                  <span className="text-sm">Git</span>
-                  <ChevronRightIcon className="w-4 h-4" />
-                </div>
+                <ChevronRightIcon className="w-5 h-5 text-slate-400 flex-shrink-0" />
               </div>
             </div>
 
@@ -356,7 +349,7 @@ export default function ProductVariantDetailPage() {
                 <div className="flex justify-between items-center py-2 border-b border-slate-100">
                   <span className="text-sm text-slate-600">Aktif</span>
                   {variant.isActive ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-900 text-white">
                       <CheckCircleIcon className="w-3 h-3" /> Evet
                     </span>
                   ) : (
@@ -368,7 +361,7 @@ export default function ProductVariantDetailPage() {
                 <div className="flex justify-between items-center py-2 border-b border-slate-100">
                   <span className="text-sm text-slate-600">Varsayılan Varyant</span>
                   {variant.isDefault ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-900 text-white">
                       <StarIcon className="w-3 h-3" /> Evet
                     </span>
                   ) : (
@@ -383,50 +376,57 @@ export default function ProductVariantDetailPage() {
                 </div>
               </div>
             </div>
+
+            {/* Timestamps Section */}
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Tarihler
+              </p>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
+                    <span className="text-sm text-slate-500">Oluşturulma</span>
+                  </div>
+                  <span className="text-sm font-medium text-slate-900">
+                    {variant.createdAt
+                      ? dayjs(variant.createdAt).format('DD/MM/YYYY')
+                      : '-'}
+                  </span>
+                </div>
+                {variant.updatedAt && (
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <CalendarIcon className="w-4 h-4 text-slate-400" />
+                      <span className="text-sm text-slate-500">Güncelleme</span>
+                    </div>
+                    <span className="text-sm font-medium text-slate-900">
+                      {dayjs(variant.updatedAt).format('DD/MM/YYYY')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* ─────────────── BOTTOM ROW ─────────────── */}
 
-          {/* Variant Options Section */}
-          {variant.options && variant.options.length > 0 && (
-            <div className="col-span-6">
-              <div className="bg-white border border-slate-200 rounded-xl p-6">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
-                  Özellik Değerleri ({variant.options.length})
-                </p>
-                <div className="space-y-2">
-                  {variant.options.map((option, index) => (
-                    <div
-                      key={index}
-                      className="flex justify-between items-center p-3 bg-slate-50 rounded-lg"
-                    >
-                      <span className="text-sm text-slate-600">{option.attributeName}</span>
-                      <span className="inline-flex px-3 py-1 rounded-md text-sm font-medium bg-blue-50 text-blue-700">
-                        {option.value}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Pricing Details Section */}
-          <div className={`${variant.options && variant.options.length > 0 ? 'col-span-6' : 'col-span-6'}`}>
+          <div className="col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
                 Fiyatlandırma Detayları
               </p>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                   <span className="text-sm text-slate-600">Satış Fiyatı</span>
-                  <span className="text-lg font-semibold text-blue-600">
+                  <span className="text-lg font-semibold text-slate-900">
                     {formatCurrency(variant.price, variant.priceCurrency)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                   <span className="text-sm text-slate-600">Maliyet</span>
-                  <span className="text-lg font-semibold text-slate-700">
+                  <span className="text-lg font-semibold text-slate-900">
                     {formatCurrency(variant.costPrice, variant.costPriceCurrency)}
                   </span>
                 </div>
@@ -441,11 +441,7 @@ export default function ProductVariantDetailPage() {
                 {profit !== null && (
                   <div className="flex items-center justify-between p-3 bg-slate-900 rounded-lg">
                     <span className="text-sm text-slate-300">Kar</span>
-                    <span
-                      className={`text-lg font-semibold ${
-                        profit > 0 ? 'text-emerald-400' : 'text-red-400'
-                      }`}
-                    >
+                    <span className="text-lg font-semibold text-white">
                       {formatCurrency(profit, variant.priceCurrency)} (%{margin?.toFixed(1)})
                     </span>
                   </div>
@@ -454,47 +450,42 @@ export default function ProductVariantDetailPage() {
             </div>
           </div>
 
-          {/* Timestamps Section */}
+          {/* Variant Options Section */}
           <div className="col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
-                Tarihler
+                Özellik Değerleri {variant.options && variant.options.length > 0 && `(${variant.options.length})`}
               </p>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4 text-slate-400" />
-                    <span className="text-sm text-slate-500">Oluşturulma</span>
-                  </div>
-                  <span className="text-sm font-medium text-slate-900">
-                    {variant.createdAt
-                      ? dayjs(variant.createdAt).format('DD MMMM YYYY, HH:mm')
-                      : '-'}
-                  </span>
-                </div>
-                {variant.updatedAt && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CalendarIcon className="w-4 h-4 text-slate-400" />
-                      <span className="text-sm text-slate-500">Son Güncelleme</span>
+              {variant.options && variant.options.length > 0 ? (
+                <div className="space-y-3">
+                  {variant.options.map((option, index) => (
+                    <div
+                      key={index}
+                      className="flex justify-between items-center p-3 bg-slate-50 rounded-lg"
+                    >
+                      <span className="text-sm text-slate-600">{option.attributeName}</span>
+                      <span className="inline-flex px-3 py-1 rounded-md text-sm font-medium bg-slate-200 text-slate-700">
+                        {option.value}
+                      </span>
                     </div>
-                    <span className="text-sm font-medium text-slate-900">
-                      {dayjs(variant.updatedAt).format('DD MMMM YYYY, HH:mm')}
-                    </span>
-                  </div>
-                )}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-sm text-slate-400">Özellik değeri tanımlanmamış</p>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Image Section */}
           {variant.imageUrl && (
-            <div className="col-span-6">
+            <div className="col-span-12">
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
                   Görsel
                 </p>
-                <div className="relative aspect-video rounded-xl bg-slate-50 border border-slate-100 overflow-hidden">
+                <div className="relative h-64 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden">
                   <img
                     src={variant.imageUrl}
                     alt={variant.variantName}
