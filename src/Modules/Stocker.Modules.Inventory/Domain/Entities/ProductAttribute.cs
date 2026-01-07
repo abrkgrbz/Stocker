@@ -84,7 +84,7 @@ public class ProductAttribute : BaseEntity
         if (!allowedTypes.Contains(AttributeType))
             throw new InvalidOperationException("Options can only be added to Select, MultiSelect, Color or Size attributes");
 
-        var option = new ProductAttributeOption(Id, value, label ?? value);
+        var option = new ProductAttributeOption(TenantId, Id, value, label ?? value);
         option.SetDisplayOrder(Options.Count);
         Options.Add(option);
         return option;
@@ -120,8 +120,9 @@ public class ProductAttributeOption : BaseEntity
 
     protected ProductAttributeOption() { }
 
-    public ProductAttributeOption(int productAttributeId, string value, string label)
+    public ProductAttributeOption(Guid tenantId, int productAttributeId, string value, string label)
     {
+        TenantId = tenantId;
         ProductAttributeId = productAttributeId;
         Value = value;
         Label = label;
