@@ -1,7 +1,6 @@
 using FluentValidation;
 using MediatR;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.PackagingTypes.Commands;
@@ -32,25 +31,23 @@ public class DeletePackagingTypeCommandValidator : AbstractValidator<DeletePacka
 /// </summary>
 public class DeletePackagingTypeCommandHandler : IRequestHandler<DeletePackagingTypeCommand, Result<bool>>
 {
-    private readonly IPackagingTypeRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public DeletePackagingTypeCommandHandler(IPackagingTypeRepository repository, IUnitOfWork unitOfWork)
+    public DeletePackagingTypeCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(DeletePackagingTypeCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.PackagingTypes.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
             return Result<bool>.Failure(new Error("PackagingType.NotFound", $"Packaging type with ID {request.Id} not found", ErrorType.NotFound));
         }
 
         entity.Delete("system");
-        await _repository.UpdateAsync(entity, cancellationToken);
+        await _unitOfWork.PackagingTypes.UpdateAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

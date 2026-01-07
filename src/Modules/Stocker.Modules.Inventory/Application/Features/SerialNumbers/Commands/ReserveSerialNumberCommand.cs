@@ -1,7 +1,6 @@
 using FluentValidation;
 using MediatR;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.SerialNumbers.Commands;
@@ -24,18 +23,16 @@ public class ReserveSerialNumberCommandValidator : AbstractValidator<ReserveSeri
 
 public class ReserveSerialNumberCommandHandler : IRequestHandler<ReserveSerialNumberCommand, Result<bool>>
 {
-    private readonly ISerialNumberRepository _serialNumberRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public ReserveSerialNumberCommandHandler(ISerialNumberRepository serialNumberRepository, IUnitOfWork unitOfWork)
+    public ReserveSerialNumberCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _serialNumberRepository = serialNumberRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(ReserveSerialNumberCommand request, CancellationToken cancellationToken)
     {
-        var serialNumber = await _serialNumberRepository.GetByIdAsync(request.SerialNumberId, cancellationToken);
+        var serialNumber = await _unitOfWork.SerialNumbers.GetByIdAsync(request.SerialNumberId, cancellationToken);
         if (serialNumber == null)
         {
             return Result<bool>.Failure(new Error("SerialNumber.NotFound", $"Serial number with ID {request.SerialNumberId} not found", ErrorType.NotFound));
@@ -44,7 +41,7 @@ public class ReserveSerialNumberCommandHandler : IRequestHandler<ReserveSerialNu
         try
         {
             serialNumber.Reserve(request.SalesOrderId);
-            await _serialNumberRepository.UpdateAsync(serialNumber, cancellationToken);
+            await _unitOfWork.SerialNumbers.UpdateAsync(serialNumber, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result<bool>.Success(true);
         }

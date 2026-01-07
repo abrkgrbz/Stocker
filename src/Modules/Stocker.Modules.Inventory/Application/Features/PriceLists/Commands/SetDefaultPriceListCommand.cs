@@ -1,6 +1,5 @@
 using MediatR;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.PriceLists.Commands;
@@ -13,33 +12,31 @@ public class SetDefaultPriceListCommand : IRequest<Result<bool>>
 
 public class SetDefaultPriceListCommandHandler : IRequestHandler<SetDefaultPriceListCommand, Result<bool>>
 {
-    private readonly IPriceListRepository _priceListRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public SetDefaultPriceListCommandHandler(IPriceListRepository priceListRepository, IUnitOfWork unitOfWork)
+    public SetDefaultPriceListCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _priceListRepository = priceListRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(SetDefaultPriceListCommand request, CancellationToken cancellationToken)
     {
-        var priceList = await _priceListRepository.GetByIdAsync(request.PriceListId, cancellationToken);
+        var priceList = await _unitOfWork.PriceLists.GetByIdAsync(request.PriceListId, cancellationToken);
         if (priceList == null)
         {
             return Result<bool>.Failure(new Error("PriceList.NotFound", $"Price list with ID {request.PriceListId} not found", ErrorType.NotFound));
         }
 
         // Unset current default if any
-        var currentDefault = await _priceListRepository.GetDefaultPriceListAsync(cancellationToken);
+        var currentDefault = await _unitOfWork.PriceLists.GetDefaultPriceListAsync(cancellationToken);
         if (currentDefault != null && currentDefault.Id != priceList.Id)
         {
             currentDefault.UnsetDefault();
-            await _priceListRepository.UpdateAsync(currentDefault, cancellationToken);
+            await _unitOfWork.PriceLists.UpdateAsync(currentDefault, cancellationToken);
         }
 
         priceList.SetAsDefault();
-        await _priceListRepository.UpdateAsync(priceList, cancellationToken);
+        await _unitOfWork.PriceLists.UpdateAsync(priceList, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

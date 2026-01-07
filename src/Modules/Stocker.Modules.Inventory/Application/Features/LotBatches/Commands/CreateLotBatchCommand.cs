@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.Features.LotBatches.Queries;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.LotBatches.Commands;
@@ -41,14 +40,10 @@ public class CreateLotBatchCommandValidator : AbstractValidator<CreateLotBatchCo
 
 public class CreateLotBatchCommandHandler : IRequestHandler<CreateLotBatchCommand, Result<LotBatchDto>>
 {
-    private readonly ILotBatchRepository _lotBatchRepository;
-    private readonly IProductRepository _productRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateLotBatchCommandHandler(ILotBatchRepository lotBatchRepository, IProductRepository productRepository, IUnitOfWork unitOfWork)
+    public CreateLotBatchCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _lotBatchRepository = lotBatchRepository;
-        _productRepository = productRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -56,24 +51,25 @@ public class CreateLotBatchCommandHandler : IRequestHandler<CreateLotBatchComman
     {
         var data = request.Data;
 
-        if (await _lotBatchRepository.ExistsAsync(data.LotNumber, cancellationToken))
+        if (await _unitOfWork.LotBatches.ExistsAsync(data.LotNumber, cancellationToken))
         {
             return Result<LotBatchDto>.Failure(new Error("LotBatch.DuplicateLotNumber", $"Lot batch with number '{data.LotNumber}' already exists", ErrorType.Conflict));
         }
 
-        var product = await _productRepository.GetByIdAsync(data.ProductId, cancellationToken);
+        var product = await _unitOfWork.Products.GetByIdAsync(data.ProductId, cancellationToken);
         if (product == null)
         {
             return Result<LotBatchDto>.Failure(new Error("Product.NotFound", $"Product with ID {data.ProductId} not found", ErrorType.NotFound));
         }
 
         var lotBatch = new LotBatch(data.LotNumber, data.ProductId, data.InitialQuantity, data.ExpiryDate);
+        lotBatch.SetTenantId(request.TenantId);
         lotBatch.SetSupplierInfo(data.SupplierId, data.SupplierLotNumber);
         lotBatch.SetDates(data.ManufacturedDate, data.ExpiryDate);
         lotBatch.SetCertificate(data.CertificateNumber);
         lotBatch.SetNotes(data.Notes);
 
-        await _lotBatchRepository.AddAsync(lotBatch, cancellationToken);
+        await _unitOfWork.LotBatches.AddAsync(lotBatch, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<LotBatchDto>.Success(new LotBatchDto

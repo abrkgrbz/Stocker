@@ -1,6 +1,5 @@
 using MediatR;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.PriceLists.Commands;
@@ -20,20 +19,16 @@ public class RemovePriceListItemCommand : IRequest<Result>
 /// </summary>
 public class RemovePriceListItemCommandHandler : IRequestHandler<RemovePriceListItemCommand, Result>
 {
-    private readonly IPriceListRepository _priceListRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public RemovePriceListItemCommandHandler(
-        IPriceListRepository priceListRepository,
-        IUnitOfWork unitOfWork)
+    public RemovePriceListItemCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _priceListRepository = priceListRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(RemovePriceListItemCommand request, CancellationToken cancellationToken)
     {
-        var priceList = await _priceListRepository.GetWithItemsAsync(request.PriceListId, cancellationToken);
+        var priceList = await _unitOfWork.PriceLists.GetWithItemsAsync(request.PriceListId, cancellationToken);
         if (priceList == null)
         {
             return Result.Failure(Error.NotFound("PriceList", $"Price list with ID {request.PriceListId} not found"));

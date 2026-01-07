@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.Inventory.Application.DTOs;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.PriceLists.Commands;
@@ -51,20 +50,16 @@ public class UpdatePriceListItemCommandValidator : AbstractValidator<UpdatePrice
 /// </summary>
 public class UpdatePriceListItemCommandHandler : IRequestHandler<UpdatePriceListItemCommand, Result<PriceListItemDto>>
 {
-    private readonly IPriceListRepository _priceListRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public UpdatePriceListItemCommandHandler(
-        IPriceListRepository priceListRepository,
-        IUnitOfWork unitOfWork)
+    public UpdatePriceListItemCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _priceListRepository = priceListRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PriceListItemDto>> Handle(UpdatePriceListItemCommand request, CancellationToken cancellationToken)
     {
-        var priceList = await _priceListRepository.GetWithItemsAsync(request.PriceListId, cancellationToken);
+        var priceList = await _unitOfWork.PriceLists.GetWithItemsAsync(request.PriceListId, cancellationToken);
         if (priceList == null)
         {
             return Result<PriceListItemDto>.Failure(

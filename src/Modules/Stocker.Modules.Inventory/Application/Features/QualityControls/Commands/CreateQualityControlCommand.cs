@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.QualityControls.Commands;
@@ -42,12 +41,10 @@ public class CreateQualityControlCommandValidator : AbstractValidator<CreateQual
 /// </summary>
 public class CreateQualityControlCommandHandler : IRequestHandler<CreateQualityControlCommand, Result<QualityControlDto>>
 {
-    private readonly IQualityControlRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateQualityControlCommandHandler(IQualityControlRepository repository, IUnitOfWork unitOfWork)
+    public CreateQualityControlCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
@@ -59,7 +56,7 @@ public class CreateQualityControlCommandHandler : IRequestHandler<CreateQualityC
         var qcNumber = $"QC-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..6].ToUpper()}";
 
         // Check if QC number already exists
-        var existingQc = await _repository.GetByQcNumberAsync(qcNumber, cancellationToken);
+        var existingQc = await _unitOfWork.QualityControls.GetByQcNumberAsync(qcNumber, cancellationToken);
         if (existingQc != null)
         {
             return Result<QualityControlDto>.Failure(new Error("QualityControl.DuplicateNumber", $"Quality control with number '{qcNumber}' already exists", ErrorType.Conflict));
@@ -67,6 +64,7 @@ public class CreateQualityControlCommandHandler : IRequestHandler<CreateQualityC
 
         var qcType = Enum.Parse<QualityControlType>(data.QcType);
         var entity = new QualityControl(qcNumber, data.ProductId, qcType, data.InspectedQuantity, data.Unit);
+        entity.SetTenantId(request.TenantId);
 
         entity.SetLotNumber(data.LotNumber);
         entity.SetWarehouse(data.WarehouseId);
@@ -75,7 +73,7 @@ public class CreateQualityControlCommandHandler : IRequestHandler<CreateQualityC
         entity.SetInspectionStandard(data.InspectionStandard);
         entity.SetInspectionNotes(data.InspectionNotes);
 
-        await _repository.AddAsync(entity, cancellationToken);
+        await _unitOfWork.QualityControls.AddAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new QualityControlDto

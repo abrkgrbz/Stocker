@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.Inventory.Application.DTOs;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.PriceLists.Commands;
@@ -50,30 +49,23 @@ public class AddPriceListItemCommandValidator : AbstractValidator<AddPriceListIt
 /// </summary>
 public class AddPriceListItemCommandHandler : IRequestHandler<AddPriceListItemCommand, Result<PriceListItemDto>>
 {
-    private readonly IPriceListRepository _priceListRepository;
-    private readonly IProductRepository _productRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public AddPriceListItemCommandHandler(
-        IPriceListRepository priceListRepository,
-        IProductRepository productRepository,
-        IUnitOfWork unitOfWork)
+    public AddPriceListItemCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _priceListRepository = priceListRepository;
-        _productRepository = productRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PriceListItemDto>> Handle(AddPriceListItemCommand request, CancellationToken cancellationToken)
     {
-        var priceList = await _priceListRepository.GetWithItemsAsync(request.PriceListId, cancellationToken);
+        var priceList = await _unitOfWork.PriceLists.GetWithItemsAsync(request.PriceListId, cancellationToken);
         if (priceList == null)
         {
             return Result<PriceListItemDto>.Failure(
                 Error.NotFound("PriceList", $"Price list with ID {request.PriceListId} not found"));
         }
 
-        var product = await _productRepository.GetByIdAsync(request.Data.ProductId, cancellationToken);
+        var product = await _unitOfWork.Products.GetByIdAsync(request.Data.ProductId, cancellationToken);
         if (product == null)
         {
             return Result<PriceListItemDto>.Failure(

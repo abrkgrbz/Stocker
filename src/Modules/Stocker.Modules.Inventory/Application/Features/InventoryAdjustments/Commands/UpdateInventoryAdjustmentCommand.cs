@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.InventoryAdjustments.Commands;
@@ -39,18 +38,16 @@ public class UpdateInventoryAdjustmentCommandValidator : AbstractValidator<Updat
 /// </summary>
 public class UpdateInventoryAdjustmentCommandHandler : IRequestHandler<UpdateInventoryAdjustmentCommand, Result<InventoryAdjustmentDto>>
 {
-    private readonly IInventoryAdjustmentRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public UpdateInventoryAdjustmentCommandHandler(IInventoryAdjustmentRepository repository, IUnitOfWork unitOfWork)
+    public UpdateInventoryAdjustmentCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<InventoryAdjustmentDto>> Handle(UpdateInventoryAdjustmentCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.InventoryAdjustments.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
             return Result<InventoryAdjustmentDto>.Failure(new Error("InventoryAdjustment.NotFound", $"Inventory adjustment with ID {request.Id} not found", ErrorType.NotFound));
@@ -69,7 +66,7 @@ public class UpdateInventoryAdjustmentCommandHandler : IRequestHandler<UpdateInv
         entity.SetInternalNotes(data.InternalNotes);
         entity.SetAccountingNotes(data.AccountingNotes);
 
-        await _repository.UpdateAsync(entity, cancellationToken);
+        await _unitOfWork.InventoryAdjustments.UpdateAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new InventoryAdjustmentDto

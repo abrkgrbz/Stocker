@@ -1,7 +1,6 @@
 using FluentValidation;
 using MediatR;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.SerialNumbers.Commands;
@@ -28,18 +27,16 @@ public class SellSerialNumberCommandValidator : AbstractValidator<SellSerialNumb
 
 public class SellSerialNumberCommandHandler : IRequestHandler<SellSerialNumberCommand, Result<bool>>
 {
-    private readonly ISerialNumberRepository _serialNumberRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public SellSerialNumberCommandHandler(ISerialNumberRepository serialNumberRepository, IUnitOfWork unitOfWork)
+    public SellSerialNumberCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _serialNumberRepository = serialNumberRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(SellSerialNumberCommand request, CancellationToken cancellationToken)
     {
-        var serialNumber = await _serialNumberRepository.GetByIdAsync(request.SerialNumberId, cancellationToken);
+        var serialNumber = await _unitOfWork.SerialNumbers.GetByIdAsync(request.SerialNumberId, cancellationToken);
         if (serialNumber == null)
         {
             return Result<bool>.Failure(new Error("SerialNumber.NotFound", $"Serial number with ID {request.SerialNumberId} not found", ErrorType.NotFound));
@@ -48,7 +45,7 @@ public class SellSerialNumberCommandHandler : IRequestHandler<SellSerialNumberCo
         try
         {
             serialNumber.Sell(request.CustomerId, request.SalesOrderId, request.WarrantyMonths);
-            await _serialNumberRepository.UpdateAsync(serialNumber, cancellationToken);
+            await _unitOfWork.SerialNumbers.UpdateAsync(serialNumber, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result<bool>.Success(true);
         }

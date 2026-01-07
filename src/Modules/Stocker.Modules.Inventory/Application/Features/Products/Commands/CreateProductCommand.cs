@@ -154,6 +154,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             data.UnitId,
             data.ReorderQuantity,
             data.LeadTimeDays);
+        product.SetTenantId(request.TenantId);
 
         // Set cost price and description
         var costPrice = data.CostPrice.HasValue
@@ -217,6 +218,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
 
                 // Create stock record
                 var stock = new Domain.Entities.Stock(product.Id, stockEntry.WarehouseId, stockEntry.Quantity);
+                stock.SetTenantId(request.TenantId);
                 if (stockEntry.LocationId.HasValue)
                 {
                     stock.SetLocation(stockEntry.LocationId.Value);
@@ -236,7 +238,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
                     stockEntry.Quantity,
                     product.CostPrice?.Amount ?? 0,
                     0); // userId - should get from context
-
+                movement.SetTenantId(request.TenantId);
                 movement.SetReference("InitialStock", "Initial stock entry on product creation", null);
                 await _unitOfWork.StockMovements.AddAsync(movement, cancellationToken);
             }

@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.PackagingTypes.Commands;
@@ -40,18 +39,16 @@ public class UpdatePackagingTypeCommandValidator : AbstractValidator<UpdatePacka
 /// </summary>
 public class UpdatePackagingTypeCommandHandler : IRequestHandler<UpdatePackagingTypeCommand, Result<PackagingTypeDto>>
 {
-    private readonly IPackagingTypeRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public UpdatePackagingTypeCommandHandler(IPackagingTypeRepository repository, IUnitOfWork unitOfWork)
+    public UpdatePackagingTypeCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PackagingTypeDto>> Handle(UpdatePackagingTypeCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.PackagingTypes.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
             return Result<PackagingTypeDto>.Failure(new Error("PackagingType.NotFound", $"Packaging type with ID {request.Id} not found", ErrorType.NotFound));
@@ -78,7 +75,7 @@ public class UpdatePackagingTypeCommandHandler : IRequestHandler<UpdatePackaging
         else
             entity.Deactivate();
 
-        await _repository.UpdateAsync(entity, cancellationToken);
+        await _unitOfWork.PackagingTypes.UpdateAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new PackagingTypeDto

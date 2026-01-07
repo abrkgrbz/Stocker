@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.QualityControls.Commands;
@@ -34,18 +33,16 @@ public class DeleteQualityControlCommandValidator : AbstractValidator<DeleteQual
 /// </summary>
 public class DeleteQualityControlCommandHandler : IRequestHandler<DeleteQualityControlCommand, Result<bool>>
 {
-    private readonly IQualityControlRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public DeleteQualityControlCommandHandler(IQualityControlRepository repository, IUnitOfWork unitOfWork)
+    public DeleteQualityControlCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(DeleteQualityControlCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.QualityControls.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
             return Result<bool>.Failure(new Error("QualityControl.NotFound", $"Quality control with ID {request.Id} not found", ErrorType.NotFound));
@@ -59,7 +56,7 @@ public class DeleteQualityControlCommandHandler : IRequestHandler<DeleteQualityC
 
         // Cancel instead of hard delete for audit trail
         entity.Cancel(request.CancellationReason ?? "Deleted by user");
-        await _repository.UpdateAsync(entity, cancellationToken);
+        await _unitOfWork.QualityControls.UpdateAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

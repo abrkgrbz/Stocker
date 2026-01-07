@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.PriceLists.Commands;
@@ -34,18 +33,16 @@ public class UpdatePriceListCommandValidator : AbstractValidator<UpdatePriceList
 
 public class UpdatePriceListCommandHandler : IRequestHandler<UpdatePriceListCommand, Result<PriceListDto>>
 {
-    private readonly IPriceListRepository _priceListRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public UpdatePriceListCommandHandler(IPriceListRepository priceListRepository, IUnitOfWork unitOfWork)
+    public UpdatePriceListCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _priceListRepository = priceListRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PriceListDto>> Handle(UpdatePriceListCommand request, CancellationToken cancellationToken)
     {
-        var priceList = await _priceListRepository.GetByIdAsync(request.PriceListId, cancellationToken);
+        var priceList = await _unitOfWork.PriceLists.GetByIdAsync(request.PriceListId, cancellationToken);
         if (priceList == null)
         {
             return Result<PriceListDto>.Failure(new Error("PriceList.NotFound", $"Price list with ID {request.PriceListId} not found", ErrorType.NotFound));
@@ -60,7 +57,7 @@ public class UpdatePriceListCommandHandler : IRequestHandler<UpdatePriceListComm
         priceList.SetCustomerGroup(data.CustomerGroupId);
         priceList.SetPriority(data.Priority);
 
-        await _priceListRepository.UpdateAsync(priceList, cancellationToken);
+        await _unitOfWork.PriceLists.UpdateAsync(priceList, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<PriceListDto>.Success(new PriceListDto

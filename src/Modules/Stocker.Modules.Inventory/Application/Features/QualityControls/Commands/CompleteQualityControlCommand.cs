@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.QualityControls.Commands;
@@ -45,18 +44,16 @@ public class CompleteQualityControlCommandValidator : AbstractValidator<Complete
 /// </summary>
 public class CompleteQualityControlCommandHandler : IRequestHandler<CompleteQualityControlCommand, Result<QualityControlDto>>
 {
-    private readonly IQualityControlRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CompleteQualityControlCommandHandler(IQualityControlRepository repository, IUnitOfWork unitOfWork)
+    public CompleteQualityControlCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<QualityControlDto>> Handle(CompleteQualityControlCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.QualityControls.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
             return Result<QualityControlDto>.Failure(new Error("QualityControl.NotFound", $"Quality control with ID {request.Id} not found", ErrorType.NotFound));
@@ -78,7 +75,7 @@ public class CompleteQualityControlCommandHandler : IRequestHandler<CompleteQual
             return Result<QualityControlDto>.Failure(new Error("QualityControl.InvalidOperation", ex.Message, ErrorType.Validation));
         }
 
-        await _repository.UpdateAsync(entity, cancellationToken);
+        await _unitOfWork.QualityControls.UpdateAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new QualityControlDto

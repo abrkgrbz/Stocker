@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ShelfLives.Commands;
@@ -38,12 +37,10 @@ public class CreateShelfLifeCommandValidator : AbstractValidator<CreateShelfLife
 /// </summary>
 public class CreateShelfLifeCommandHandler : IRequestHandler<CreateShelfLifeCommand, Result<ShelfLifeDto>>
 {
-    private readonly IShelfLifeRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateShelfLifeCommandHandler(IShelfLifeRepository repository, IUnitOfWork unitOfWork)
+    public CreateShelfLifeCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
@@ -52,7 +49,7 @@ public class CreateShelfLifeCommandHandler : IRequestHandler<CreateShelfLifeComm
         var data = request.Data;
 
         // Check if shelf life config already exists for product
-        var existingConfig = await _repository.GetByProductAsync(data.ProductId, cancellationToken);
+        var existingConfig = await _unitOfWork.ShelfLives.GetByProductAsync(data.ProductId, cancellationToken);
         if (existingConfig != null)
         {
             return Result<ShelfLifeDto>.Failure(new Error("ShelfLife.DuplicateProduct", $"Shelf life configuration for product {data.ProductId} already exists", ErrorType.Conflict));
@@ -60,6 +57,7 @@ public class CreateShelfLifeCommandHandler : IRequestHandler<CreateShelfLifeComm
 
         var shelfLifeType = Enum.Parse<ShelfLifeType>(data.ShelfLifeType);
         var entity = new ShelfLife(data.ProductId, data.TotalShelfLifeDays, shelfLifeType);
+        entity.SetTenantId(request.TenantId);
 
         var receivingRuleType = Enum.Parse<ShelfLifeRuleType>(data.ReceivingRuleType);
         entity.SetReceivingRules(data.MinReceivingShelfLifeDays, data.MinReceivingShelfLifePercent, receivingRuleType);
@@ -79,7 +77,7 @@ public class CreateShelfLifeCommandHandler : IRequestHandler<CreateShelfLifeComm
 
         entity.SetCustomerRules(data.HasCustomerSpecificRules, data.DefaultCustomerMinShelfLifeDays);
 
-        await _repository.AddAsync(entity, cancellationToken);
+        await _unitOfWork.ShelfLives.AddAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new ShelfLifeDto

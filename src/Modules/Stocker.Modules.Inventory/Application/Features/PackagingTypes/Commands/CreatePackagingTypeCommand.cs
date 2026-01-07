@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.PackagingTypes.Commands;
@@ -40,12 +39,10 @@ public class CreatePackagingTypeCommandValidator : AbstractValidator<CreatePacka
 /// </summary>
 public class CreatePackagingTypeCommandHandler : IRequestHandler<CreatePackagingTypeCommand, Result<PackagingTypeDto>>
 {
-    private readonly IPackagingTypeRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreatePackagingTypeCommandHandler(IPackagingTypeRepository repository, IUnitOfWork unitOfWork)
+    public CreatePackagingTypeCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
@@ -54,7 +51,7 @@ public class CreatePackagingTypeCommandHandler : IRequestHandler<CreatePackaging
         var data = request.Data;
 
         // Check if code already exists
-        var existingPackaging = await _repository.GetByCodeAsync(data.Code, cancellationToken);
+        var existingPackaging = await _unitOfWork.PackagingTypes.GetByCodeAsync(data.Code, cancellationToken);
         if (existingPackaging != null)
         {
             return Result<PackagingTypeDto>.Failure(new Error("PackagingType.DuplicateCode", $"Packaging type with code '{data.Code}' already exists", ErrorType.Conflict));
@@ -62,6 +59,7 @@ public class CreatePackagingTypeCommandHandler : IRequestHandler<CreatePackaging
 
         var category = Enum.Parse<PackagingCategory>(data.Category);
         var entity = new PackagingType(data.Code, data.Name, category);
+        entity.SetTenantId(request.TenantId);
 
         entity.SetDescription(data.Description);
         entity.SetDimensions(data.Length, data.Width, data.Height);
@@ -80,7 +78,7 @@ public class CreatePackagingTypeCommandHandler : IRequestHandler<CreatePackaging
             entity.SetBarcodeInfo(data.BarcodePrefix, barcodeType);
         }
 
-        await _repository.AddAsync(entity, cancellationToken);
+        await _unitOfWork.PackagingTypes.AddAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new PackagingTypeDto

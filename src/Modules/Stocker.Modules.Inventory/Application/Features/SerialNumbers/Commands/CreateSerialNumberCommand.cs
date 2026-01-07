@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.Features.SerialNumbers.Queries;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.SerialNumbers.Commands;
@@ -39,14 +38,10 @@ public class CreateSerialNumberCommandValidator : AbstractValidator<CreateSerial
 
 public class CreateSerialNumberCommandHandler : IRequestHandler<CreateSerialNumberCommand, Result<SerialNumberDto>>
 {
-    private readonly ISerialNumberRepository _serialNumberRepository;
-    private readonly IProductRepository _productRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateSerialNumberCommandHandler(ISerialNumberRepository serialNumberRepository, IProductRepository productRepository, IUnitOfWork unitOfWork)
+    public CreateSerialNumberCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _serialNumberRepository = serialNumberRepository;
-        _productRepository = productRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -54,24 +49,25 @@ public class CreateSerialNumberCommandHandler : IRequestHandler<CreateSerialNumb
     {
         var data = request.Data;
 
-        if (await _serialNumberRepository.ExistsAsync(data.Serial, cancellationToken))
+        if (await _unitOfWork.SerialNumbers.ExistsAsync(data.Serial, cancellationToken))
         {
             return Result<SerialNumberDto>.Failure(new Error("SerialNumber.Duplicate", $"Serial number '{data.Serial}' already exists", ErrorType.Conflict));
         }
 
-        var product = await _productRepository.GetByIdAsync(data.ProductId, cancellationToken);
+        var product = await _unitOfWork.Products.GetByIdAsync(data.ProductId, cancellationToken);
         if (product == null)
         {
             return Result<SerialNumberDto>.Failure(new Error("Product.NotFound", $"Product with ID {data.ProductId} not found", ErrorType.NotFound));
         }
 
         var serialNumber = new SerialNumber(data.Serial, data.ProductId);
+        serialNumber.SetTenantId(request.TenantId);
         serialNumber.SetWarehouse(data.WarehouseId, data.LocationId);
         serialNumber.SetManufacturedDate(data.ManufacturedDate);
         serialNumber.SetBatchInfo(data.BatchNumber, data.SupplierSerial);
         serialNumber.SetNotes(data.Notes);
 
-        await _serialNumberRepository.AddAsync(serialNumber, cancellationToken);
+        await _unitOfWork.SerialNumbers.AddAsync(serialNumber, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<SerialNumberDto>.Success(new SerialNumberDto

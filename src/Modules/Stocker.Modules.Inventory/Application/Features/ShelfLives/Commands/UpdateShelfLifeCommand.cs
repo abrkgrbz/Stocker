@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ShelfLives.Commands;
@@ -38,18 +37,16 @@ public class UpdateShelfLifeCommandValidator : AbstractValidator<UpdateShelfLife
 /// </summary>
 public class UpdateShelfLifeCommandHandler : IRequestHandler<UpdateShelfLifeCommand, Result<ShelfLifeDto>>
 {
-    private readonly IShelfLifeRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public UpdateShelfLifeCommandHandler(IShelfLifeRepository repository, IUnitOfWork unitOfWork)
+    public UpdateShelfLifeCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<ShelfLifeDto>> Handle(UpdateShelfLifeCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.ShelfLives.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
             return Result<ShelfLifeDto>.Failure(new Error("ShelfLife.NotFound", $"Shelf life configuration with ID {request.Id} not found", ErrorType.NotFound));
@@ -80,7 +77,7 @@ public class UpdateShelfLifeCommandHandler : IRequestHandler<UpdateShelfLifeComm
         else
             entity.Deactivate();
 
-        await _repository.UpdateAsync(entity, cancellationToken);
+        await _unitOfWork.ShelfLives.UpdateAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new ShelfLifeDto

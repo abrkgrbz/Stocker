@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.PriceLists.Commands;
@@ -34,12 +33,10 @@ public class CreatePriceListCommandValidator : AbstractValidator<CreatePriceList
 
 public class CreatePriceListCommandHandler : IRequestHandler<CreatePriceListCommand, Result<PriceListDto>>
 {
-    private readonly IPriceListRepository _priceListRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreatePriceListCommandHandler(IPriceListRepository priceListRepository, IUnitOfWork unitOfWork)
+    public CreatePriceListCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _priceListRepository = priceListRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -47,12 +44,13 @@ public class CreatePriceListCommandHandler : IRequestHandler<CreatePriceListComm
     {
         var data = request.Data;
 
-        if (await _priceListRepository.ExistsWithCodeAsync(data.Code, null, cancellationToken))
+        if (await _unitOfWork.PriceLists.ExistsWithCodeAsync(data.Code, null, cancellationToken))
         {
             return Result<PriceListDto>.Failure(new Error("PriceList.DuplicateCode", $"Price list with code '{data.Code}' already exists", ErrorType.Conflict));
         }
 
         var priceList = new PriceList(data.Code, data.Name, data.Currency);
+        priceList.SetTenantId(request.TenantId);
         priceList.UpdatePriceList(data.Name, data.Description, data.Currency);
 
         if (data.GlobalDiscountPercentage.HasValue)
@@ -69,7 +67,7 @@ public class CreatePriceListCommandHandler : IRequestHandler<CreatePriceListComm
 
         priceList.SetPriority(data.Priority);
 
-        await _priceListRepository.AddAsync(priceList, cancellationToken);
+        await _unitOfWork.PriceLists.AddAsync(priceList, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<PriceListDto>.Success(new PriceListDto

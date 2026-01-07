@@ -3,8 +3,7 @@ using MediatR;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.Suppliers.Commands;
@@ -39,12 +38,10 @@ public class CreateSupplierCommandValidator : AbstractValidator<CreateSupplierCo
 /// </summary>
 public class CreateSupplierCommandHandler : IRequestHandler<CreateSupplierCommand, Result<SupplierDto>>
 {
-    private readonly ISupplierRepository _supplierRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateSupplierCommandHandler(ISupplierRepository supplierRepository, IUnitOfWork unitOfWork)
+    public CreateSupplierCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _supplierRepository = supplierRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -53,7 +50,7 @@ public class CreateSupplierCommandHandler : IRequestHandler<CreateSupplierComman
         var data = request.SupplierData;
 
         // Check if supplier with same code exists
-        var existingSupplier = await _supplierRepository.GetByCodeAsync(data.Code, cancellationToken);
+        var existingSupplier = await _unitOfWork.Suppliers.GetByCodeAsync(data.Code, cancellationToken);
         if (existingSupplier != null)
         {
             return Result<SupplierDto>.Failure(new Error("Supplier.DuplicateCode", $"Supplier with code '{data.Code}' already exists", ErrorType.Conflict));
@@ -84,11 +81,12 @@ public class CreateSupplierCommandHandler : IRequestHandler<CreateSupplierComman
             address = Address.Create(data.Street, data.City, data.Country, data.PostalCode, state: data.State);
         }
 
+        supplier.SetTenantId(request.TenantId);
         supplier.UpdateSupplierInfo(data.Name, data.TaxNumber, data.TaxOffice, email, phone, address);
         supplier.SetContactInfo(data.ContactPerson, data.ContactPhone, data.ContactEmail);
         supplier.SetCreditInfo(data.CreditLimit, data.PaymentTermDays ?? 30);
 
-        await _supplierRepository.AddAsync(supplier, cancellationToken);
+        await _unitOfWork.Suppliers.AddAsync(supplier, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new SupplierDto
