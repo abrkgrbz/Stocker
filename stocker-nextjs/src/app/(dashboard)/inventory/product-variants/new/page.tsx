@@ -55,6 +55,12 @@ const currencyOptions = [
   { value: 'EUR', label: '€' },
 ];
 
+const weightUnitOptions = [
+  { value: 'kg', label: 'kg' },
+  { value: 'g', label: 'g' },
+  { value: 'lb', label: 'lb' },
+];
+
 export default function NewProductVariantPage() {
   const router = useRouter();
   const [form] = Form.useForm();
@@ -65,6 +71,8 @@ export default function NewProductVariantPage() {
   } | null>(null);
   const [variantOptions, setVariantOptions] = useState<VariantOption[]>([]);
   const [isDefault, setIsDefault] = useState(false);
+  const [trackInventory, setTrackInventory] = useState(true);
+  const [allowBackorder, setAllowBackorder] = useState(false);
 
   const { data: products = [] } = useProducts();
   const { data: attributes = [] } = useProductAttributes();
@@ -157,17 +165,22 @@ export default function NewProductVariantPage() {
         productId: selectedProduct.id,
         sku: values.sku,
         barcode: values.barcode,
-        variantName: values.name,
+        variantName: values.variantName,
         price: values.price,
         priceCurrency: values.priceCurrency || 'TRY',
         costPrice: values.costPrice,
         costPriceCurrency: values.costPriceCurrency || 'TRY',
+        compareAtPrice: values.compareAtPrice,
+        compareAtPriceCurrency: values.compareAtPriceCurrency || 'TRY',
         weight: values.weight,
+        weightUnit: values.weightUnit || 'kg',
+        dimensions: values.dimensions,
         imageUrl: values.imageUrl,
         isDefault: isDefault,
-        trackInventory: true,
-        allowBackorder: false,
-        displayOrder: 0,
+        trackInventory: trackInventory,
+        allowBackorder: allowBackorder,
+        lowStockThreshold: values.lowStockThreshold ?? 0,
+        displayOrder: values.displayOrder ?? 0,
         options: validOptions.map((opt, index) => ({
           productAttributeId: opt.productAttributeId,
           productAttributeOptionId: opt.productAttributeOptionId,
@@ -311,6 +324,8 @@ export default function NewProductVariantPage() {
           initialValues={{
             priceCurrency: 'TRY',
             costPriceCurrency: 'TRY',
+            compareAtPriceCurrency: 'TRY',
+            weightUnit: 'kg',
           }}
         >
           <Row gutter={48}>
@@ -443,7 +458,7 @@ export default function NewProductVariantPage() {
               {/* Variant Name - Hero Input */}
               <div className="mb-8">
                 <Form.Item
-                  name="name"
+                  name="variantName"
                   rules={[{ required: true, message: 'Varyant adı zorunludur' }]}
                   className="mb-0"
                 >
@@ -502,7 +517,7 @@ export default function NewProductVariantPage() {
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
                   <CurrencyDollarIcon className="w-4 h-4 mr-1" /> Fiyatlandırma
                 </Text>
-                <Row gutter={16}>
+                <Row gutter={16} className="mb-4">
                   <Col span={12}>
                     <div className="text-xs text-gray-400 mb-1">Satış Fiyatı</div>
                     <Form.Item name="price" className="mb-0">
@@ -548,6 +563,31 @@ export default function NewProductVariantPage() {
                     </Form.Item>
                   </Col>
                 </Row>
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <div className="text-xs text-gray-400 mb-1">Karşılaştırma Fiyatı</div>
+                    <Form.Item name="compareAtPrice" className="mb-0">
+                      <InputNumber
+                        style={{ width: '100%' }}
+                        min={0}
+                        precision={2}
+                        placeholder="0.00"
+                        variant="filled"
+                        size="large"
+                        addonBefore={
+                          <Form.Item name="compareAtPriceCurrency" noStyle>
+                            <Select
+                              options={currencyOptions}
+                              variant="borderless"
+                              style={{ width: 50 }}
+                            />
+                          </Form.Item>
+                        }
+                      />
+                    </Form.Item>
+                    <div className="text-xs text-gray-400 mt-1">İndirimli fiyat gösterimi için</div>
+                  </Col>
+                </Row>
               </div>
 
               {/* Advanced Settings - Collapsible */}
@@ -560,36 +600,119 @@ export default function NewProductVariantPage() {
                     key: 'advanced',
                     label: (
                       <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        <CubeIcon className="w-4 h-4 inline mr-1" /> Fiziksel Özellikler & Diğer
+                        <CubeIcon className="w-4 h-4 inline mr-1" /> Fiziksel Özellikler & Stok Ayarları
                       </Text>
                     ),
                     children: (
                       <div className="pt-2">
-                        <Row gutter={16}>
-                          <Col span={12}>
-                            <div className="text-xs text-gray-400 mb-1">Ağırlık (kg)</div>
-                            <Form.Item name="weight" className="mb-4">
-                              <InputNumber
-                                style={{ width: '100%' }}
-                                min={0}
-                                precision={3}
-                                placeholder="0.000"
-                                variant="filled"
+                        {/* Physical Properties */}
+                        <div className="mb-6">
+                          <div className="text-xs font-medium text-gray-500 mb-3">Fiziksel Özellikler</div>
+                          <Row gutter={16}>
+                            <Col span={8}>
+                              <div className="text-xs text-gray-400 mb-1">Ağırlık</div>
+                              <Form.Item name="weight" className="mb-4">
+                                <InputNumber
+                                  style={{ width: '100%' }}
+                                  min={0}
+                                  precision={3}
+                                  placeholder="0.000"
+                                  variant="filled"
+                                  size="small"
+                                />
+                              </Form.Item>
+                            </Col>
+                            <Col span={4}>
+                              <div className="text-xs text-gray-400 mb-1">Birim</div>
+                              <Form.Item name="weightUnit" className="mb-4">
+                                <Select
+                                  options={weightUnitOptions}
+                                  variant="filled"
+                                  size="small"
+                                  placeholder="kg"
+                                />
+                              </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                              <div className="text-xs text-gray-400 mb-1">Boyutlar</div>
+                              <Form.Item name="dimensions" className="mb-4">
+                                <Input
+                                  placeholder="10x20x5 cm"
+                                  variant="filled"
+                                  size="small"
+                                />
+                              </Form.Item>
+                            </Col>
+                          </Row>
+                          <Row gutter={16}>
+                            <Col span={24}>
+                              <div className="text-xs text-gray-400 mb-1">Görsel URL</div>
+                              <Form.Item name="imageUrl" className="mb-0">
+                                <Input
+                                  placeholder="https://example.com/image.jpg"
+                                  variant="filled"
+                                  size="small"
+                                />
+                              </Form.Item>
+                            </Col>
+                          </Row>
+                        </div>
+
+                        {/* Inventory Settings */}
+                        <Divider className="my-4" />
+                        <div className="mb-4">
+                          <div className="text-xs font-medium text-gray-500 mb-3">Stok Ayarları</div>
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                              <div>
+                                <div className="text-sm text-gray-700">Stok Takibi</div>
+                                <div className="text-xs text-gray-400">Stok miktarını takip et</div>
+                              </div>
+                              <Switch
+                                checked={trackInventory}
+                                onChange={setTrackInventory}
                                 size="small"
                               />
-                            </Form.Item>
-                          </Col>
-                          <Col span={24}>
-                            <div className="text-xs text-gray-400 mb-1">Görsel URL</div>
-                            <Form.Item name="imageUrl" className="mb-0">
-                              <Input
-                                placeholder="https://example.com/image.jpg"
-                                variant="filled"
+                            </div>
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                              <div>
+                                <div className="text-sm text-gray-700">Ön Siparişe İzin Ver</div>
+                                <div className="text-xs text-gray-400">Stok olmadan sipariş alınabilir</div>
+                              </div>
+                              <Switch
+                                checked={allowBackorder}
+                                onChange={setAllowBackorder}
                                 size="small"
                               />
-                            </Form.Item>
-                          </Col>
-                        </Row>
+                            </div>
+                          </div>
+                          <Row gutter={16} className="mt-4">
+                            <Col span={12}>
+                              <div className="text-xs text-gray-400 mb-1">Düşük Stok Eşiği</div>
+                              <Form.Item name="lowStockThreshold" className="mb-0">
+                                <InputNumber
+                                  style={{ width: '100%' }}
+                                  min={0}
+                                  placeholder="5"
+                                  variant="filled"
+                                  size="small"
+                                />
+                              </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                              <div className="text-xs text-gray-400 mb-1">Görüntüleme Sırası</div>
+                              <Form.Item name="displayOrder" className="mb-0">
+                                <InputNumber
+                                  style={{ width: '100%' }}
+                                  min={0}
+                                  placeholder="0"
+                                  variant="filled"
+                                  size="small"
+                                />
+                              </Form.Item>
+                            </Col>
+                          </Row>
+                        </div>
                       </div>
                     ),
                   },
