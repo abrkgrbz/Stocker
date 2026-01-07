@@ -322,6 +322,8 @@ public class Overtime : BaseEntity
     public void SetEmergency(bool isEmergency) => IsEmergency = isEmergency;
     public void SetNotes(string? notes) => Notes = notes;
     public void SetBreakMinutes(int minutes) => BreakMinutes = minutes;
+    public void SetPlannedHours(decimal hours) => PlannedHours = hours;
+    public void SetCompensatoryTimeOff(bool isCompensatoryTimeOff) => IsCompensatoryTimeOff = isCompensatoryTimeOff;
 }
 
 #region Enums

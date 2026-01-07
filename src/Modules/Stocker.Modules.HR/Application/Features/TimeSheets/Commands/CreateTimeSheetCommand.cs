@@ -13,6 +13,14 @@ public record CreateTimeSheetCommand : IRequest<Result<int>>
     public int EmployeeId { get; init; }
     public DateOnly PeriodStart { get; init; }
     public DateOnly PeriodEnd { get; init; }
+    public decimal TotalWorkHours { get; init; }
+    public decimal RegularHours { get; init; }
+    public decimal? OvertimeHours { get; init; }
+    public decimal? LeaveHours { get; init; }
+    public decimal? HolidayHours { get; init; }
+    public decimal? BillableHours { get; init; }
+    public decimal? NonBillableHours { get; init; }
+    public string? Notes { get; init; }
 }
 
 /// <summary>
@@ -61,6 +69,24 @@ public class CreateTimeSheetCommandHandler : IRequestHandler<CreateTimeSheetComm
 
         // Set tenant ID
         timeSheet.SetTenantId(_unitOfWork.TenantId);
+
+        // Set work hours
+        timeSheet.SetWorkHours(request.TotalWorkHours, request.RegularHours);
+        
+        if (request.OvertimeHours.HasValue)
+            timeSheet.SetOvertimeHours(request.OvertimeHours.Value);
+        
+        if (request.LeaveHours.HasValue)
+            timeSheet.SetLeaveHours(request.LeaveHours.Value);
+        
+        if (request.HolidayHours.HasValue)
+            timeSheet.SetHolidayHours(request.HolidayHours.Value);
+        
+        if (request.BillableHours.HasValue)
+            timeSheet.SetBillableHours(request.BillableHours.Value, request.NonBillableHours ?? 0);
+        
+        if (!string.IsNullOrEmpty(request.Notes))
+            timeSheet.SetNotes(request.Notes);
 
         // Save to repository
         await _unitOfWork.TimeSheets.AddAsync(timeSheet, cancellationToken);

@@ -389,11 +389,28 @@ public class Grievance : BaseEntity
     public void SetWitnesses(string? witnesses) => Witnesses = witnesses;
     public void SetEvidence(string? evidence) => Evidence = evidence;
     public void SetInvestigationNotes(string? notes) => InvestigationNotes = notes;
+    public void SetInvestigationFindings(string? findings) => InvestigationFindings = findings;
+    public void SetInvestigationRequired(bool required) => InvestigationRequired = required;
+    public void SetInvestigationStartDate(DateTime? date) => InvestigationStartDate = date;
+    public void SetInvestigationEndDate(DateTime? date) => InvestigationEndDate = date;
     public void SetPreventiveMeasures(string? measures) => PreventiveMeasures = measures;
+    public void SetResolution(string? resolution) => Resolution = resolution;
+    public void SetResolutionType(ResolutionType type) => ResolutionType = type;
+    public void SetActionsTaken(string? actions) => ActionsTaken = actions;
     public void SetInternalNotes(string? notes) => InternalNotes = notes;
     public void SetCategory(string? category, string? subcategory) { Category = category; Subcategory = subcategory; }
     public void SetTags(string? tags) => Tags = tags;
     public void SetPriority(GrievancePriority priority) => Priority = priority;
+    public void SetGrievanceType(GrievanceType type) => GrievanceType = type;
+    public void SetSubject(string subject) => Subject = subject;
+    public void SetDescription(string description) => Description = description;
+    public void SetEscalation(bool wasEscalated, DateTime? date, string? reason, int level) 
+    { 
+        WasEscalated = wasEscalated; 
+        EscalationDate = date; 
+        EscalationReason = reason; 
+        EscalationLevel = level; 
+    }
 }
 
 #region Enums

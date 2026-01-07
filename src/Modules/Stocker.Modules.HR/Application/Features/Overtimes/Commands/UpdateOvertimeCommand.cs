@@ -11,15 +11,28 @@ namespace Stocker.Modules.HR.Application.Features.Overtimes.Commands;
 public record UpdateOvertimeCommand : IRequest<Result<bool>>
 {
     public int OvertimeId { get; init; }
+    public string? OvertimeType { get; init; }
+    public string? Status { get; init; }
+    public DateOnly? Date { get; init; }
+    public TimeOnly? StartTime { get; init; }
+    public TimeOnly? EndTime { get; init; }
+    public decimal? PlannedHours { get; init; }
     public decimal? ActualHours { get; init; }
     public int? BreakMinutes { get; init; }
+    public decimal? PayMultiplier { get; init; }
     public int? ProjectId { get; init; }
     public string? ProjectName { get; init; }
     public string? TaskId { get; init; }
     public string? CostCenter { get; init; }
+    public string? Reason { get; init; }
+    public string? Description { get; init; }
     public string? WorkDetails { get; init; }
+    public string? ApprovalNotes { get; init; }
+    public string? RejectionReason { get; init; }
+    public bool? IsCompensatoryTimeOff { get; init; }
+    public decimal? CompensatoryHoursEarned { get; init; }
+    public decimal? CompensatoryHoursUsed { get; init; }
     public string? Notes { get; init; }
-    public OvertimeStatus? Status { get; init; }
 }
 
 /// <summary>

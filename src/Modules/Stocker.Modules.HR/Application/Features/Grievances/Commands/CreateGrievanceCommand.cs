@@ -9,19 +9,27 @@ namespace Stocker.Modules.HR.Application.Features.Grievances.Commands;
 /// <summary>
 /// Command to create a new grievance
 /// </summary>
-public record CreateGrievanceCommand(
-    int ComplainantId,
-    string GrievanceCode,
-    string Subject,
-    string Description,
-    GrievanceType GrievanceType,
-    GrievancePriority Priority = GrievancePriority.Medium,
-    DateTime? IncidentDate = null,
-    string? IncidentLocation = null,
-    int? AccusedPersonId = null,
-    bool IsAnonymous = false,
-    bool IsConfidential = false,
-    bool RetaliationProtectionRequested = false) : IRequest<Result<int>>;
+public record CreateGrievanceCommand : IRequest<Result<int>>
+{
+    public int ComplainantId { get; init; }
+    public string GrievanceCode { get; init; } = string.Empty;
+    public string Subject { get; init; } = string.Empty;
+    public string Description { get; init; } = string.Empty;
+    public string GrievanceType { get; init; } = string.Empty;
+    public string Priority { get; init; } = "Medium";
+    public DateTime? IncidentDate { get; init; }
+    public string? IncidentLocation { get; init; }
+    public int? AccusedPersonId { get; init; }
+    public string? AccusedPersonDescription { get; init; }
+    public string? Witnesses { get; init; }
+    public string? Evidence { get; init; }
+    public bool IsAnonymous { get; init; }
+    public bool IsConfidential { get; init; }
+    public bool RetaliationProtectionRequested { get; init; }
+    public string? Category { get; init; }
+    public string? Subcategory { get; init; }
+    public string? Tags { get; init; }
+}
 
 /// <summary>
 /// Validator for CreateGrievanceCommand
@@ -88,14 +96,23 @@ public class CreateGrievanceCommandHandler : IRequestHandler<CreateGrievanceComm
             }
         }
 
+        // Parse enum values
+        var grievanceType = GrievanceType.Other;
+        if (!string.IsNullOrEmpty(request.GrievanceType) && Enum.TryParse<GrievanceType>(request.GrievanceType, true, out var parsedType))
+            grievanceType = parsedType;
+
+        var priority = GrievancePriority.Medium;
+        if (!string.IsNullOrEmpty(request.Priority) && Enum.TryParse<GrievancePriority>(request.Priority, true, out var parsedPriority))
+            priority = parsedPriority;
+
         // Create the grievance
         var grievance = new Grievance(
             request.ComplainantId,
             request.GrievanceCode,
             request.Subject,
             request.Description,
-            request.GrievanceType,
-            request.Priority);
+            grievanceType,
+            priority);
 
         // Set tenant ID
         grievance.SetTenantId(_unitOfWork.TenantId);
@@ -104,10 +121,22 @@ public class CreateGrievanceCommandHandler : IRequestHandler<CreateGrievanceComm
         if (request.IncidentDate.HasValue || !string.IsNullOrEmpty(request.IncidentLocation))
             grievance.SetIncidentDetails(request.IncidentDate, request.IncidentLocation);
 
-        if (request.AccusedPersonId.HasValue)
-            grievance.SetAccusedPerson(request.AccusedPersonId, null);
+        if (request.AccusedPersonId.HasValue || !string.IsNullOrEmpty(request.AccusedPersonDescription))
+            grievance.SetAccusedPerson(request.AccusedPersonId, request.AccusedPersonDescription);
+
+        if (!string.IsNullOrEmpty(request.Witnesses))
+            grievance.SetWitnesses(request.Witnesses);
+
+        if (!string.IsNullOrEmpty(request.Evidence))
+            grievance.SetEvidence(request.Evidence);
 
         grievance.SetConfidentiality(request.IsAnonymous, request.IsConfidential, request.RetaliationProtectionRequested);
+
+        if (!string.IsNullOrEmpty(request.Category) || !string.IsNullOrEmpty(request.Subcategory))
+            grievance.SetCategory(request.Category, request.Subcategory);
+
+        if (!string.IsNullOrEmpty(request.Tags))
+            grievance.SetTags(request.Tags);
 
         // Save to repository
         await _unitOfWork.Grievances.AddAsync(grievance, cancellationToken);

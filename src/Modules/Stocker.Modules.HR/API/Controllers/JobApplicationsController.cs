@@ -61,4 +61,53 @@ public class JobApplicationsController : ControllerBase
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }
+
+    /// <summary>
+    /// Move a job application to the next stage
+    /// </summary>
+    [HttpPost("{id}/move-to-stage")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> MoveToNextStage(int id, [FromBody] MoveToStageRequest request)
+    {
+        var result = await _mediator.Send(new MoveToNextStageCommand(id, request.Stage));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Reject a job application
+    /// </summary>
+    [HttpPost("{id}/reject")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Reject(int id, [FromBody] RejectJobApplicationRequest request)
+    {
+        var result = await _mediator.Send(new RejectJobApplicationCommand(id, request.Reason, request.Category));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Hire a job applicant
+    /// </summary>
+    [HttpPost("{id}/hire")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Hire(int id, [FromBody] HireJobApplicationRequest request)
+    {
+        var result = await _mediator.Send(new HireJobApplicationCommand(id, request.HireDate));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
 }
+
+public record MoveToStageRequest(string Stage);
+public record RejectJobApplicationRequest(string Reason, string Category);
+public record HireJobApplicationRequest(DateTime HireDate);

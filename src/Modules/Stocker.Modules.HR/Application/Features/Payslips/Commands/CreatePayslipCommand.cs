@@ -18,15 +18,26 @@ public record CreatePayslipCommand : IRequest<Result<int>>
     public DateOnly PeriodStart { get; init; }
     public DateOnly PeriodEnd { get; init; }
     public DateOnly PaymentDate { get; init; }
+    // Earnings
     public decimal BaseSalary { get; init; }
-    public decimal OvertimePay { get; init; }
-    public decimal Bonus { get; init; }
-    public decimal TransportationAllowance { get; init; }
-    public decimal MealAllowance { get; init; }
+    public decimal? OvertimePay { get; init; }
+    public decimal? Bonus { get; init; }
+    public decimal? Gratuity { get; init; }
+    public decimal? Commission { get; init; }
+    public decimal? OtherEarnings { get; init; }
+    // Allowances
+    public decimal? TransportationAllowance { get; init; }
+    public decimal? MealAllowance { get; init; }
+    public decimal? HousingAllowance { get; init; }
+    public decimal? PhoneAllowance { get; init; }
+    public decimal? OtherAllowances { get; init; }
+    // Work info
     public int DaysWorked { get; init; }
     public decimal HoursWorked { get; init; }
+    // Payment info
     public string? BankName { get; init; }
     public string? Iban { get; init; }
+    public string? Notes { get; init; }
 }
 
 /// <summary>
@@ -77,19 +88,19 @@ public class CreatePayslipCommandHandler : IRequestHandler<CreatePayslipCommand,
         // Set earnings
         payslip.SetEarnings(
             request.BaseSalary,
-            request.OvertimePay,
-            request.Bonus,
-            0, // gratuity
-            0, // commission
-            0); // other earnings
+            request.OvertimePay ?? 0,
+            request.Bonus ?? 0,
+            request.Gratuity ?? 0,
+            request.Commission ?? 0,
+            request.OtherEarnings ?? 0);
 
         // Set allowances
         payslip.SetAllowances(
-            request.TransportationAllowance,
-            request.MealAllowance,
-            0, // housing
-            0, // phone
-            0); // other
+            request.TransportationAllowance ?? 0,
+            request.MealAllowance ?? 0,
+            request.HousingAllowance ?? 0,
+            request.PhoneAllowance ?? 0,
+            request.OtherAllowances ?? 0);
 
         // Set work info
         payslip.SetWorkInfo(
@@ -106,6 +117,10 @@ public class CreatePayslipCommandHandler : IRequestHandler<CreatePayslipCommand,
             request.Iban,
             PaymentMethod.BankTransfer,
             null);
+
+        // Set notes if provided
+        if (!string.IsNullOrEmpty(request.Notes))
+            payslip.SetNotes(request.Notes);
 
         // Save to repository
         await _unitOfWork.Payslips.AddAsync(payslip, cancellationToken);

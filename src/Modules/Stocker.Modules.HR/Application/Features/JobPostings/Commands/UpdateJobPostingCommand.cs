@@ -42,6 +42,7 @@ public record UpdateJobPostingCommand : IRequest<Result<bool>>
     // Salary
     public decimal? SalaryMin { get; init; }
     public decimal? SalaryMax { get; init; }
+    public string? Currency { get; init; }
     public bool ShowSalary { get; init; }
     public string SalaryPeriod { get; init; } = "Monthly";
 
@@ -157,7 +158,8 @@ public class UpdateJobPostingCommandHandler : IRequestHandler<UpdateJobPostingCo
         jobPosting.SetBenefits(request.Benefits);
 
         // Update salary range
-        jobPosting.UpdateSalaryRange(request.SalaryMin, request.SalaryMax, "TRY", request.ShowSalary, salaryPeriod);
+        var currency = request.Currency ?? "TRY";
+        jobPosting.UpdateSalaryRange(request.SalaryMin, request.SalaryMax, currency, request.ShowSalary, salaryPeriod);
 
         // Update location
         jobPosting.UpdateLocation(request.WorkLocationId, request.City, request.Country, remoteWorkType);

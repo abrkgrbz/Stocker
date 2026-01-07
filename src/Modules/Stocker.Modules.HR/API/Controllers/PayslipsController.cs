@@ -60,4 +60,66 @@ public class PayslipsController : ControllerBase
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }
+
+    /// <summary>
+    /// Send a payslip to employee
+    /// </summary>
+    [HttpPost("{id}/send")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Send(int id)
+    {
+        var result = await _mediator.Send(new SendPayslipCommand(id));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Mark a payslip as paid
+    /// </summary>
+    [HttpPost("{id}/mark-as-paid")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> MarkAsPaid(int id, [FromBody] MarkAsPaidRequest request)
+    {
+        var result = await _mediator.Send(new MarkPayslipAsPaidCommand(id, request.Amount, request.PaymentReference));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Finalize a payslip (approve)
+    /// </summary>
+    [HttpPost("{id}/finalize")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Finalize(int id)
+    {
+        var result = await _mediator.Send(new FinalizePayslipCommand(id));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Cancel a payslip (reject)
+    /// </summary>
+    [HttpPost("{id}/cancel")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Cancel(int id)
+    {
+        var result = await _mediator.Send(new CancelPayslipCommand(id));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
 }
+
+public record MarkAsPaidRequest(decimal Amount, string? PaymentReference);

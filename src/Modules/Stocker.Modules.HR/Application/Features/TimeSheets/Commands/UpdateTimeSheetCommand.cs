@@ -10,8 +10,16 @@ namespace Stocker.Modules.HR.Application.Features.TimeSheets.Commands;
 public record UpdateTimeSheetCommand : IRequest<Result<int>>
 {
     public int TimeSheetId { get; init; }
+    public string? Status { get; init; }
+    public decimal? TotalWorkHours { get; init; }
+    public decimal? RegularHours { get; init; }
+    public decimal? OvertimeHours { get; init; }
     public decimal? LeaveHours { get; init; }
     public decimal? HolidayHours { get; init; }
+    public decimal? BillableHours { get; init; }
+    public decimal? NonBillableHours { get; init; }
+    public string? ApprovalNotes { get; init; }
+    public string? RejectionReason { get; init; }
     public string? Notes { get; init; }
 }
 
@@ -45,11 +53,20 @@ public class UpdateTimeSheetCommandHandler : IRequestHandler<UpdateTimeSheetComm
         }
 
         // Update the timesheet
+        if (request.TotalWorkHours.HasValue && request.RegularHours.HasValue)
+            timeSheet.SetWorkHours(request.TotalWorkHours.Value, request.RegularHours.Value);
+
+        if (request.OvertimeHours.HasValue)
+            timeSheet.SetOvertimeHours(request.OvertimeHours.Value);
+
         if (request.LeaveHours.HasValue)
             timeSheet.SetLeaveHours(request.LeaveHours.Value);
 
         if (request.HolidayHours.HasValue)
             timeSheet.SetHolidayHours(request.HolidayHours.Value);
+
+        if (request.BillableHours.HasValue)
+            timeSheet.SetBillableHours(request.BillableHours.Value, request.NonBillableHours ?? 0);
 
         if (!string.IsNullOrEmpty(request.Notes))
             timeSheet.SetNotes(request.Notes);

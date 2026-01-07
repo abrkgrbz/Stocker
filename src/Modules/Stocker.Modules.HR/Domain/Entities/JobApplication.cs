@@ -485,6 +485,16 @@ public class JobApplication : BaseEntity
     public void SetReferredBy(int? employeeId) => ReferredByEmployeeId = employeeId;
     public void SetSourceDetail(string? detail) => SourceDetail = detail;
     public void SetAvailableStartDate(DateTime? date) => AvailableStartDate = date;
+    public void SetNoticePeriodDays(int? days) => NoticePeriodDays = days;
+    public void SetCurrency(string? currency) => Currency = currency;
+    public void SetHighestEducation(string? education)
+    {
+        if (!string.IsNullOrEmpty(education) && Enum.TryParse<EducationLevel>(education, true, out var level))
+            HighestEducation = level;
+    }
+    public void SetFirstName(string firstName) => FirstName = firstName;
+    public void SetLastName(string lastName) => LastName = lastName;
+    public void SetEmail(string email) => Email = email;
 }
 
 #region Enums

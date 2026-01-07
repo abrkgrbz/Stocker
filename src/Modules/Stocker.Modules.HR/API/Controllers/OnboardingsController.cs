@@ -61,4 +61,49 @@ public class OnboardingsController : ControllerBase
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }
+
+    /// <summary>
+    /// Start an onboarding process
+    /// </summary>
+    [HttpPost("{id}/start")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Start(int id)
+    {
+        var result = await _mediator.Send(new StartOnboardingCommand(id));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Complete an onboarding task
+    /// </summary>
+    [HttpPost("{id}/tasks/{taskId}/complete")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> CompleteTask(int id, int taskId)
+    {
+        var result = await _mediator.Send(new CompleteOnboardingTaskCommand(id, taskId));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Complete an onboarding process
+    /// </summary>
+    [HttpPost("{id}/complete")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Complete(int id)
+    {
+        var result = await _mediator.Send(new CompleteOnboardingCommand(id));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
 }

@@ -9,18 +9,53 @@ namespace Stocker.Modules.HR.Application.Features.JobApplications.Commands;
 /// <summary>
 /// Command to update a job application
 /// </summary>
-public record UpdateJobApplicationCommand(
-    int JobApplicationId,
-    ApplicationStatus? Status = null,
-    ApplicationStage? CurrentStage = null,
-    string? Phone = null,
-    string? City = null,
-    string? Country = null,
-    int? TotalExperienceYears = null,
-    decimal? ExpectedSalary = null,
-    string? Skills = null,
-    string? Notes = null,
-    int? OverallRating = null) : IRequest<Result<bool>>;
+public record UpdateJobApplicationCommand : IRequest<Result<bool>>
+{
+    public int JobApplicationId { get; init; }
+    public string? Status { get; init; }
+    public string? FirstName { get; init; }
+    public string? LastName { get; init; }
+    public string? Email { get; init; }
+    public string? Phone { get; init; }
+    public string? MobilePhone { get; init; }
+    public string? Address { get; init; }
+    public string? City { get; init; }
+    public string? Country { get; init; }
+    public string? LinkedInUrl { get; init; }
+    public string? PortfolioUrl { get; init; }
+    public int? TotalExperienceYears { get; init; }
+    public string? CurrentCompany { get; init; }
+    public string? CurrentPosition { get; init; }
+    public decimal? CurrentSalary { get; init; }
+    public decimal? ExpectedSalary { get; init; }
+    public int? NoticePeriodDays { get; init; }
+    public DateTime? AvailableStartDate { get; init; }
+    public string? HighestEducation { get; init; }
+    public string? University { get; init; }
+    public string? Major { get; init; }
+    public int? GraduationYear { get; init; }
+    public string? CoverLetter { get; init; }
+    // Evaluation
+    public int? OverallRating { get; init; }
+    public int? TechnicalScore { get; init; }
+    public int? CulturalFitScore { get; init; }
+    public string? EvaluationNotes { get; init; }
+    public string? CurrentStage { get; init; }
+    public string? RejectionReason { get; init; }
+    public string? RejectionCategory { get; init; }
+    public string? WithdrawalReason { get; init; }
+    // Offer
+    public bool? OfferExtended { get; init; }
+    public DateTime? OfferDate { get; init; }
+    public decimal? OfferedSalary { get; init; }
+    public DateTime? HireDate { get; init; }
+    // Other
+    public string? Skills { get; init; }
+    public string? Languages { get; init; }
+    public string? Notes { get; init; }
+    public string? Tags { get; init; }
+    public bool? InTalentPool { get; init; }
+}
 
 /// <summary>
 /// Validator for UpdateJobApplicationCommand
@@ -68,34 +103,117 @@ public class UpdateJobApplicationCommandHandler : IRequestHandler<UpdateJobAppli
                 Error.NotFound("JobApplication", $"Job Application with ID {request.JobApplicationId} not found"));
         }
 
+        // Update basic info
+        if (!string.IsNullOrEmpty(request.FirstName))
+            jobApplication.SetFirstName(request.FirstName);
+
+        if (!string.IsNullOrEmpty(request.LastName))
+            jobApplication.SetLastName(request.LastName);
+
+        if (!string.IsNullOrEmpty(request.Email))
+            jobApplication.SetEmail(request.Email);
+
         // Update stage if provided
-        if (request.CurrentStage.HasValue)
-            jobApplication.MoveToStage(request.CurrentStage.Value);
+        if (!string.IsNullOrEmpty(request.CurrentStage) && Enum.TryParse<ApplicationStage>(request.CurrentStage, true, out var stage))
+            jobApplication.MoveToStage(stage);
 
-        // Update contact info if provided
-        if (!string.IsNullOrEmpty(request.Phone) || !string.IsNullOrEmpty(request.City) || !string.IsNullOrEmpty(request.Country))
-            jobApplication.UpdateContactInfo(request.Phone, null, null, request.City, request.Country);
+        // Update contact info
+        if (!string.IsNullOrEmpty(request.Phone) || !string.IsNullOrEmpty(request.MobilePhone) ||
+            !string.IsNullOrEmpty(request.Address) || !string.IsNullOrEmpty(request.City) || !string.IsNullOrEmpty(request.Country))
+            jobApplication.UpdateContactInfo(
+                request.Phone ?? jobApplication.Phone, 
+                request.MobilePhone ?? jobApplication.MobilePhone, 
+                request.Address ?? jobApplication.Address, 
+                request.City ?? jobApplication.City, 
+                request.Country ?? jobApplication.Country);
 
-        // Update experience if provided
-        if (request.TotalExperienceYears.HasValue || request.ExpectedSalary.HasValue)
+        // Update online profiles
+        if (!string.IsNullOrEmpty(request.LinkedInUrl))
+            jobApplication.SetLinkedInUrl(request.LinkedInUrl);
+
+        if (!string.IsNullOrEmpty(request.PortfolioUrl))
+            jobApplication.SetPortfolioUrl(request.PortfolioUrl);
+
+        // Update experience
+        if (request.TotalExperienceYears.HasValue || !string.IsNullOrEmpty(request.CurrentCompany) ||
+            !string.IsNullOrEmpty(request.CurrentPosition) || request.CurrentSalary.HasValue ||
+            request.ExpectedSalary.HasValue || request.NoticePeriodDays.HasValue)
             jobApplication.UpdateExperience(
-                request.TotalExperienceYears,
-                null,
-                null,
-                null,
-                request.ExpectedSalary,
-                null);
+                request.TotalExperienceYears ?? jobApplication.TotalExperienceYears,
+                request.CurrentCompany ?? jobApplication.CurrentCompany,
+                request.CurrentPosition ?? jobApplication.CurrentPosition,
+                request.CurrentSalary ?? jobApplication.CurrentSalary,
+                request.ExpectedSalary ?? jobApplication.ExpectedSalary,
+                request.NoticePeriodDays ?? jobApplication.NoticePeriodDays);
 
-        // Update skills and notes
+        if (request.AvailableStartDate.HasValue)
+            jobApplication.SetAvailableStartDate(request.AvailableStartDate);
+
+        // Update education
+        if (!string.IsNullOrEmpty(request.HighestEducation))
+            jobApplication.SetHighestEducation(request.HighestEducation);
+
+        if (!string.IsNullOrEmpty(request.University) || !string.IsNullOrEmpty(request.Major) || request.GraduationYear.HasValue)
+            jobApplication.UpdateEducation(
+                jobApplication.HighestEducation,
+                request.University ?? jobApplication.University,
+                request.Major ?? jobApplication.Major,
+                request.GraduationYear ?? jobApplication.GraduationYear);
+
+        if (!string.IsNullOrEmpty(request.CoverLetter))
+            jobApplication.SetCoverLetter(request.CoverLetter);
+
+        // Update evaluation
+        if (request.OverallRating.HasValue || request.TechnicalScore.HasValue || 
+            request.CulturalFitScore.HasValue || !string.IsNullOrEmpty(request.EvaluationNotes))
+            jobApplication.Evaluate(
+                request.OverallRating ?? jobApplication.OverallRating ?? 0,
+                request.TechnicalScore ?? jobApplication.TechnicalScore,
+                request.CulturalFitScore ?? jobApplication.CulturalFitScore,
+                request.EvaluationNotes ?? jobApplication.EvaluationNotes,
+                0);
+
+        // Handle rejection
+        if (!string.IsNullOrEmpty(request.RejectionReason))
+        {
+            var rejectionCategory = RejectionCategory.Other;
+            if (!string.IsNullOrEmpty(request.RejectionCategory) && Enum.TryParse<RejectionCategory>(request.RejectionCategory, true, out var parsedCategory))
+                rejectionCategory = parsedCategory;
+            jobApplication.Reject(request.RejectionReason, rejectionCategory);
+        }
+
+        // Handle withdrawal
+        if (!string.IsNullOrEmpty(request.WithdrawalReason))
+            jobApplication.Withdraw(request.WithdrawalReason);
+
+        // Handle offer
+        if (request.OfferExtended == true && request.OfferedSalary.HasValue)
+            jobApplication.ExtendOffer(request.OfferedSalary.Value, request.OfferDate ?? DateTime.UtcNow);
+
+        if (request.HireDate.HasValue)
+            jobApplication.AcceptOffer(request.HireDate.Value);
+
+        // Update skills, languages, notes, tags
         if (!string.IsNullOrEmpty(request.Skills))
             jobApplication.SetSkills(request.Skills);
+
+        if (!string.IsNullOrEmpty(request.Languages))
+            jobApplication.SetLanguages(request.Languages);
 
         if (!string.IsNullOrEmpty(request.Notes))
             jobApplication.SetNotes(request.Notes);
 
-        // Update evaluation if rating provided
-        if (request.OverallRating.HasValue)
-            jobApplication.Evaluate(request.OverallRating.Value, null, null, request.Notes, 0);
+        if (!string.IsNullOrEmpty(request.Tags))
+            jobApplication.SetTags(request.Tags);
+
+        // Handle talent pool
+        if (request.InTalentPool.HasValue)
+        {
+            if (request.InTalentPool.Value)
+                jobApplication.AddToTalentPool();
+            else
+                jobApplication.RemoveFromTalentPool();
+        }
 
         // Save changes
         _unitOfWork.JobApplications.Update(jobApplication);

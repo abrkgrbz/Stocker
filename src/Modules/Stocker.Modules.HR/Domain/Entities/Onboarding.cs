@@ -324,6 +324,9 @@ public class Onboarding : BaseEntity
     public void ProvideLaptop() => LaptopProvided = true;
     public void ProvidePhone() => PhoneProvided = true;
     public void ProvideAccessCard() => AccessCardProvided = true;
+    public void SetLaptopProvided(bool value) => LaptopProvided = value;
+    public void SetPhoneProvided(bool value) => PhoneProvided = value;
+    public void SetAccessCardProvided(bool value) => AccessCardProvided = value;
     public void SetEquipmentNotes(string? notes) => EquipmentNotes = notes;
 
     // Account methods
@@ -331,6 +334,10 @@ public class Onboarding : BaseEntity
     public void CreateAdAccount() => AdAccountCreated = true;
     public void GrantSystemAccess() => SystemAccessGranted = true;
     public void GrantVpnAccess() => VpnAccessGranted = true;
+    public void SetEmailAccountCreated(bool value) => EmailAccountCreated = value;
+    public void SetAdAccountCreated(bool value) => AdAccountCreated = value;
+    public void SetSystemAccessGranted(bool value) => SystemAccessGranted = value;
+    public void SetVpnAccessGranted(bool value) => VpnAccessGranted = value;
 
     // Document methods
     public void SignContract() => ContractSigned = true;
@@ -338,12 +345,21 @@ public class Onboarding : BaseEntity
     public void AcknowledgePolicies() => PoliciesAcknowledged = true;
     public void ReceiveBankDetails() => BankDetailsReceived = true;
     public void ReceiveEmergencyContact() => EmergencyContactReceived = true;
+    public void SetContractSigned(bool value) => ContractSigned = value;
+    public void SetNdaSigned(bool value) => NdaSigned = value;
+    public void SetPoliciesAcknowledged(bool value) => PoliciesAcknowledged = value;
+    public void SetBankDetailsReceived(bool value) => BankDetailsReceived = value;
+    public void SetEmergencyContactReceived(bool value) => EmergencyContactReceived = value;
 
     // Training methods
     public void CompleteOrientation() => OrientationCompleted = true;
     public void CompleteSafetyTraining() => SafetyTrainingCompleted = true;
     public void CompleteComplianceTraining() => ComplianceTrainingCompleted = true;
     public void CompleteProductTraining() => ProductTrainingCompleted = true;
+    public void SetOrientationCompleted(bool value) => OrientationCompleted = value;
+    public void SetSafetyTrainingCompleted(bool value) => SafetyTrainingCompleted = value;
+    public void SetComplianceTrainingCompleted(bool value) => ComplianceTrainingCompleted = value;
+    public void SetProductTrainingCompleted(bool value) => ProductTrainingCompleted = value;
 
     // Feedback methods
     public void ReceiveWeek1Feedback(string? feedback = null)
@@ -369,10 +385,19 @@ public class Onboarding : BaseEntity
 
     public void SetManagerFeedback(string? feedback) => ManagerFeedback = feedback;
 
+    // Feedback setter methods
+    public void SetWeek1FeedbackReceived(bool value) => Week1FeedbackReceived = value;
+    public void SetMonth1FeedbackReceived(bool value) => Month1FeedbackReceived = value;
+    public void SetMonth3FeedbackReceived(bool value) => Month3FeedbackReceived = value;
+    public void SetEmployeeFeedback(string? feedback) => EmployeeFeedback = feedback;
+
     // Other methods
     public void SendWelcomeKit() => WelcomeKitSent = true;
     public void PrepareDesk() => DeskPrepared = true;
     public void CompleteTeamIntroduction() => TeamIntroductionDone = true;
+    public void SetWelcomeKitSent(bool value) => WelcomeKitSent = value;
+    public void SetDeskPrepared(bool value) => DeskPrepared = value;
+    public void SetActualEndDate(DateTime? date) => ActualEndDate = date;
     public void SetNotes(string? notes) => Notes = notes;
 }
 

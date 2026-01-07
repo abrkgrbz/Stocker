@@ -61,4 +61,37 @@ public class InterviewsController : ControllerBase
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }
+
+    /// <summary>
+    /// Complete an interview
+    /// </summary>
+    [HttpPost("{id}/complete")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Complete(int id, [FromBody] CompleteInterviewRequest? request = null)
+    {
+        var result = await _mediator.Send(new CompleteInterviewCommand(id, request?.ActualDurationMinutes));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Cancel an interview
+    /// </summary>
+    [HttpPost("{id}/cancel")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Cancel(int id, [FromBody] CancelInterviewRequest request)
+    {
+        var result = await _mediator.Send(new CancelInterviewCommand(id, request.Reason, request.CancelledBy));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
 }
+
+public record CompleteInterviewRequest(int? ActualDurationMinutes);
+public record CancelInterviewRequest(string Reason, string CancelledBy);

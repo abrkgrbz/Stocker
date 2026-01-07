@@ -236,6 +236,9 @@ public class TimeSheet : BaseEntity
     public void SetLeaveHours(decimal hours) => LeaveHours = hours;
     public void SetHolidayHours(decimal hours) => HolidayHours = hours;
     public void SetNotes(string? notes) => Notes = notes;
+    public void SetWorkHours(decimal totalWorkHours, decimal regularHours) { TotalWorkHours = totalWorkHours; RegularHours = regularHours; }
+    public void SetOvertimeHours(decimal hours) => OvertimeHours = hours;
+    public void SetBillableHours(decimal billableHours, decimal nonBillableHours) { BillableHours = billableHours; NonBillableHours = nonBillableHours; }
 }
 
 /// <summary>

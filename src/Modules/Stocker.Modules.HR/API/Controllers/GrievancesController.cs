@@ -80,4 +80,37 @@ public class GrievancesController : ControllerBase
 
         return NoContent();
     }
+
+    /// <summary>
+    /// Resolve a grievance
+    /// </summary>
+    [HttpPost("{id}/resolve")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Resolve(int id, [FromBody] ResolveGrievanceRequest request)
+    {
+        var result = await _mediator.Send(new ResolveGrievanceCommand(id, request.Resolution, request.ResolutionType, request.ActionsTaken));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Escalate a grievance
+    /// </summary>
+    [HttpPost("{id}/escalate")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Escalate(int id, [FromBody] EscalateGrievanceRequest request)
+    {
+        var result = await _mediator.Send(new EscalateGrievanceCommand(id, request.Reason));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
 }
+
+public record ResolveGrievanceRequest(string Resolution, string ResolutionType, string? ActionsTaken);
+public record EscalateGrievanceRequest(string Reason);

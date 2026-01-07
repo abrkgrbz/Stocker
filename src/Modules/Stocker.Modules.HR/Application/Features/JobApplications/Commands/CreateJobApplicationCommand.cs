@@ -9,19 +9,42 @@ namespace Stocker.Modules.HR.Application.Features.JobApplications.Commands;
 /// <summary>
 /// Command to create a new job application
 /// </summary>
-public record CreateJobApplicationCommand(
-    string ApplicationCode,
-    int JobPostingId,
-    string FirstName,
-    string LastName,
-    string Email,
-    ApplicationSource Source = ApplicationSource.Website,
-    string? Phone = null,
-    string? ResumeUrl = null,
-    string? CoverLetter = null,
-    int? ReferredByEmployeeId = null,
-    decimal? ExpectedSalary = null,
-    int? TotalExperienceYears = null) : IRequest<Result<int>>;
+public record CreateJobApplicationCommand : IRequest<Result<int>>
+{
+    public string ApplicationCode { get; init; } = string.Empty;
+    public int JobPostingId { get; init; }
+    public string FirstName { get; init; } = string.Empty;
+    public string LastName { get; init; } = string.Empty;
+    public string Email { get; init; } = string.Empty;
+    public string? Phone { get; init; }
+    public string? MobilePhone { get; init; }
+    public string? Address { get; init; }
+    public string? City { get; init; }
+    public string? Country { get; init; }
+    public string? LinkedInUrl { get; init; }
+    public string? PortfolioUrl { get; init; }
+    public int? TotalExperienceYears { get; init; }
+    public string? CurrentCompany { get; init; }
+    public string? CurrentPosition { get; init; }
+    public decimal? CurrentSalary { get; init; }
+    public decimal? ExpectedSalary { get; init; }
+    public string? Currency { get; init; }
+    public int? NoticePeriodDays { get; init; }
+    public DateTime? AvailableStartDate { get; init; }
+    public string? HighestEducation { get; init; }
+    public string? University { get; init; }
+    public string? Major { get; init; }
+    public int? GraduationYear { get; init; }
+    public string? CoverLetter { get; init; }
+    public string? ResumeUrl { get; init; }
+    public string Source { get; init; } = "Website";
+    public int? ReferredByEmployeeId { get; init; }
+    public string? SourceDetail { get; init; }
+    public string? Skills { get; init; }
+    public string? Languages { get; init; }
+    public string? Notes { get; init; }
+    public string? Tags { get; init; }
+}
 
 /// <summary>
 /// Validator for CreateJobApplicationCommand
@@ -101,6 +124,11 @@ public class CreateJobApplicationCommandHandler : IRequestHandler<CreateJobAppli
             }
         }
 
+        // Parse source
+        var source = ApplicationSource.Website;
+        if (!string.IsNullOrEmpty(request.Source) && Enum.TryParse<ApplicationSource>(request.Source, true, out var parsedSource))
+            source = parsedSource;
+
         // Create the job application
         var jobApplication = new JobApplication(
             request.ApplicationCode,
@@ -108,14 +136,25 @@ public class CreateJobApplicationCommandHandler : IRequestHandler<CreateJobAppli
             request.FirstName,
             request.LastName,
             request.Email,
-            request.Source);
+            source);
 
         // Set tenant ID
         jobApplication.SetTenantId(_unitOfWork.TenantId);
 
-        // Set optional contact info
-        if (!string.IsNullOrEmpty(request.Phone))
-            jobApplication.UpdateContactInfo(request.Phone, null, null, null, null);
+        // Set contact info
+        jobApplication.UpdateContactInfo(
+            request.Phone, 
+            request.MobilePhone, 
+            request.Address, 
+            request.City, 
+            request.Country);
+
+        // Set online profiles
+        if (!string.IsNullOrEmpty(request.LinkedInUrl))
+            jobApplication.SetLinkedInUrl(request.LinkedInUrl);
+
+        if (!string.IsNullOrEmpty(request.PortfolioUrl))
+            jobApplication.SetPortfolioUrl(request.PortfolioUrl);
 
         // Set documents
         if (!string.IsNullOrEmpty(request.ResumeUrl))
@@ -124,19 +163,48 @@ public class CreateJobApplicationCommandHandler : IRequestHandler<CreateJobAppli
         if (!string.IsNullOrEmpty(request.CoverLetter))
             jobApplication.SetCoverLetter(request.CoverLetter);
 
-        // Set referral
+        // Set referral and source detail
         if (request.ReferredByEmployeeId.HasValue)
             jobApplication.SetReferredBy(request.ReferredByEmployeeId);
 
+        if (!string.IsNullOrEmpty(request.SourceDetail))
+            jobApplication.SetSourceDetail(request.SourceDetail);
+
         // Set experience and salary expectations
-        if (request.TotalExperienceYears.HasValue || request.ExpectedSalary.HasValue)
-            jobApplication.UpdateExperience(
-                request.TotalExperienceYears,
-                null,
-                null,
-                null,
-                request.ExpectedSalary,
-                null);
+        jobApplication.UpdateExperience(
+            request.TotalExperienceYears,
+            request.CurrentCompany,
+            request.CurrentPosition,
+            request.CurrentSalary,
+            request.ExpectedSalary,
+            request.NoticePeriodDays);
+
+        if (!string.IsNullOrEmpty(request.Currency))
+            jobApplication.SetCurrency(request.Currency);
+
+        if (request.AvailableStartDate.HasValue)
+            jobApplication.SetAvailableStartDate(request.AvailableStartDate.Value);
+
+        // Set education
+        if (!string.IsNullOrEmpty(request.HighestEducation))
+            jobApplication.SetHighestEducation(request.HighestEducation);
+
+        if (!string.IsNullOrEmpty(request.University) || !string.IsNullOrEmpty(request.Major) || request.GraduationYear.HasValue)
+            jobApplication.UpdateEducation(null, request.University, request.Major, request.GraduationYear);
+
+        // Set skills and languages
+        if (!string.IsNullOrEmpty(request.Skills))
+            jobApplication.SetSkills(request.Skills);
+
+        if (!string.IsNullOrEmpty(request.Languages))
+            jobApplication.SetLanguages(request.Languages);
+
+        // Set notes and tags
+        if (!string.IsNullOrEmpty(request.Notes))
+            jobApplication.SetNotes(request.Notes);
+
+        if (!string.IsNullOrEmpty(request.Tags))
+            jobApplication.SetTags(request.Tags);
 
         // Save to repository
         await _unitOfWork.JobApplications.AddAsync(jobApplication, cancellationToken);

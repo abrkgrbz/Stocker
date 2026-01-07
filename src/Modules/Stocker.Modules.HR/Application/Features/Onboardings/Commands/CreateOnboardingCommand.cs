@@ -13,10 +13,12 @@ public record CreateOnboardingCommand : IRequest<Result<int>>
     public int EmployeeId { get; init; }
     public DateTime FirstDayOfWork { get; init; }
     public int? TemplateId { get; init; }
+    public DateTime? StartDate { get; init; }
     public DateTime? PlannedEndDate { get; init; }
     public int? BuddyId { get; init; }
     public int? HrResponsibleId { get; init; }
     public int? ItResponsibleId { get; init; }
+    public string? Notes { get; init; }
 }
 
 /// <summary>
@@ -83,6 +85,9 @@ public class CreateOnboardingCommandHandler : IRequestHandler<CreateOnboardingCo
 
         if (request.ItResponsibleId.HasValue)
             onboarding.SetItResponsible(request.ItResponsibleId);
+
+        if (!string.IsNullOrEmpty(request.Notes))
+            onboarding.SetNotes(request.Notes);
 
         // Save to repository
         await _unitOfWork.Onboardings.AddAsync(onboarding, cancellationToken);

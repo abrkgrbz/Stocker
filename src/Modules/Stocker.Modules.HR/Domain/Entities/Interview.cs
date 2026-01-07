@@ -352,6 +352,8 @@ public class Interview : BaseEntity
         Format = InterviewFormat.Video;
     }
 
+    public void SetPhoneNumber(string? phoneNumber) => PhoneNumber = phoneNumber;
+
     public void SetPhoneInterview(string phoneNumber)
     {
         PhoneNumber = phoneNumber;
@@ -359,6 +361,12 @@ public class Interview : BaseEntity
     }
 
     public void SetFormat(InterviewFormat format) => Format = format;
+    public void SetInterviewType(InterviewType type) => InterviewType = type;
+    public void SetActualTiming(DateTime? actualDateTime, int? actualDurationMinutes) 
+    { 
+        ActualDateTime = actualDateTime; 
+        ActualDurationMinutes = actualDurationMinutes; 
+    }
     public void SetTopics(string? topics) => Topics = topics;
     public void SetQuestionsToAsk(string? questions) => QuestionsToAsk = questions;
     public void SetInterviewerNotes(string? notes) => InterviewerNotes = notes;

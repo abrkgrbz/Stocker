@@ -9,18 +9,25 @@ namespace Stocker.Modules.HR.Application.Features.Interviews.Commands;
 /// <summary>
 /// Command to create a new interview
 /// </summary>
-public record CreateInterviewCommand(
-    int JobApplicationId,
-    int InterviewerId,
-    InterviewType InterviewType,
-    DateTime ScheduledDateTime,
-    int DurationMinutes = 60,
-    int Round = 1,
-    InterviewFormat Format = InterviewFormat.InPerson,
-    string? Location = null,
-    string? VideoConferenceLink = null,
-    string? Topics = null,
-    string? CandidateInstructions = null) : IRequest<Result<int>>;
+public record CreateInterviewCommand : IRequest<Result<int>>
+{
+    public int JobApplicationId { get; init; }
+    public int InterviewerId { get; init; }
+    public string InterviewType { get; init; } = string.Empty;
+    public DateTime ScheduledDateTime { get; init; }
+    public int DurationMinutes { get; init; } = 60;
+    public int Round { get; init; } = 1;
+    public string? Timezone { get; init; }
+    public string Format { get; init; } = "InPerson";
+    public string? Location { get; init; }
+    public string? MeetingRoom { get; init; }
+    public string? VideoConferenceLink { get; init; }
+    public string? VideoConferencePlatform { get; init; }
+    public string? PhoneNumber { get; init; }
+    public string? Topics { get; init; }
+    public string? QuestionsToAsk { get; init; }
+    public string? CandidateInstructions { get; init; }
+}
 
 /// <summary>
 /// Validator for CreateInterviewCommand
@@ -77,11 +84,20 @@ public class CreateInterviewCommandHandler : IRequestHandler<CreateInterviewComm
                 Error.NotFound("Employee", $"Interviewer with ID {request.InterviewerId} not found"));
         }
 
+        // Parse enum values
+        var interviewType = InterviewType.Technical;
+        if (!string.IsNullOrEmpty(request.InterviewType) && Enum.TryParse<InterviewType>(request.InterviewType, true, out var parsedType))
+            interviewType = parsedType;
+
+        var format = InterviewFormat.InPerson;
+        if (!string.IsNullOrEmpty(request.Format) && Enum.TryParse<InterviewFormat>(request.Format, true, out var parsedFormat))
+            format = parsedFormat;
+
         // Create the interview
         var interview = new Interview(
             request.JobApplicationId,
             request.InterviewerId,
-            request.InterviewType,
+            interviewType,
             request.ScheduledDateTime,
             request.DurationMinutes,
             request.Round);
@@ -90,17 +106,26 @@ public class CreateInterviewCommandHandler : IRequestHandler<CreateInterviewComm
         interview.SetTenantId(_unitOfWork.TenantId);
 
         // Set format and location
-        interview.SetFormat(request.Format);
+        interview.SetFormat(format);
 
-        if (request.Format == InterviewFormat.InPerson && !string.IsNullOrEmpty(request.Location))
-            interview.SetLocation(request.Location, null);
+        if (!string.IsNullOrEmpty(request.Timezone))
+            interview.SetTimezone(request.Timezone);
 
-        if (request.Format == InterviewFormat.Video && !string.IsNullOrEmpty(request.VideoConferenceLink))
-            interview.SetVideoConference(request.VideoConferenceLink, "Teams");
+        if (format == InterviewFormat.InPerson && (!string.IsNullOrEmpty(request.Location) || !string.IsNullOrEmpty(request.MeetingRoom)))
+            interview.SetLocation(request.Location, request.MeetingRoom);
+
+        if (format == InterviewFormat.Video && !string.IsNullOrEmpty(request.VideoConferenceLink))
+            interview.SetVideoConference(request.VideoConferenceLink, request.VideoConferencePlatform ?? "Teams");
+
+        if (format == InterviewFormat.Phone && !string.IsNullOrEmpty(request.PhoneNumber))
+            interview.SetPhoneNumber(request.PhoneNumber);
 
         // Set optional properties
         if (!string.IsNullOrEmpty(request.Topics))
             interview.SetTopics(request.Topics);
+
+        if (!string.IsNullOrEmpty(request.QuestionsToAsk))
+            interview.SetQuestionsToAsk(request.QuestionsToAsk);
 
         if (!string.IsNullOrEmpty(request.CandidateInstructions))
             interview.SetCandidateInstructions(request.CandidateInstructions);

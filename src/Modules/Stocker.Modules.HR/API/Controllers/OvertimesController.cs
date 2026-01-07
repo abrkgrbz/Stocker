@@ -60,4 +60,37 @@ public class OvertimesController : ControllerBase
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }
+
+    /// <summary>
+    /// Approve an overtime request
+    /// </summary>
+    [HttpPost("{id}/approve")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Approve(int id, [FromBody] ApproveOvertimeRequest request)
+    {
+        var result = await _mediator.Send(new ApproveOvertimeCommand(id, request.ApprovedById, request.Notes));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Reject an overtime request
+    /// </summary>
+    [HttpPost("{id}/reject")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Reject(int id, [FromBody] RejectOvertimeRequest request)
+    {
+        var result = await _mediator.Send(new RejectOvertimeCommand(id, request.RejectedById, request.Reason));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
 }
+
+public record ApproveOvertimeRequest(int ApprovedById, string? Notes);
+public record RejectOvertimeRequest(int RejectedById, string Reason);

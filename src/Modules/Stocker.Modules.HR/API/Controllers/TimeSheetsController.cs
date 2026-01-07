@@ -60,4 +60,52 @@ public class TimeSheetsController : ControllerBase
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }
+
+    /// <summary>
+    /// Submit a timesheet for approval
+    /// </summary>
+    [HttpPost("{id}/submit")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Submit(int id)
+    {
+        var result = await _mediator.Send(new SubmitTimeSheetCommand(id));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Approve a timesheet
+    /// </summary>
+    [HttpPost("{id}/approve")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Approve(int id, [FromBody] ApproveTimeSheetRequest request)
+    {
+        var result = await _mediator.Send(new ApproveTimeSheetCommand(id, request.ApprovedById, request.Notes));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Reject a timesheet
+    /// </summary>
+    [HttpPost("{id}/reject")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Reject(int id, [FromBody] RejectTimeSheetRequest request)
+    {
+        var result = await _mediator.Send(new RejectTimeSheetCommand(id, request.RejectedById, request.Reason));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
 }
+
+public record ApproveTimeSheetRequest(int ApprovedById, string? Notes);
+public record RejectTimeSheetRequest(int RejectedById, string Reason);
