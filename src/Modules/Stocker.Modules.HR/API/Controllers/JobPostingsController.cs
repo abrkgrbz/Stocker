@@ -22,13 +22,13 @@ public class JobPostingsController : ControllerBase
         _mediator = mediator;
     }
 
-        [HttpGet]
+    [HttpGet]
     [ProducesResponseType(typeof(List<JobPostingDto>), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
-    public async Task<ActionResult<List<JobPostingDto>>> GetAll()
+    public async Task<ActionResult<List<JobPostingDto>>> GetAll([FromQuery] int? departmentId = null, [FromQuery] bool openOnly = false)
     {
-        var result = await _mediator.Send(new GetJobPostingsQuery());
+        var result = await _mediator.Send(new GetJobPostingsQuery(departmentId, openOnly));
         if (result.IsFailure) return BadRequest(result.Error);
         return Ok(result.Value);
     }
