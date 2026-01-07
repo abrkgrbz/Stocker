@@ -43,13 +43,10 @@ export default function ProductVariantsPage() {
   const [variantToDelete, setVariantToDelete] = useState<ProductVariantDto | null>(null);
 
   const { data: products = [] } = useProducts();
-  const { data: variants = [], isLoading } = useProductVariants(selectedProduct || 0, includeInactive);
+  const { data: variants = [], isLoading } = useProductVariants(selectedProduct, includeInactive);
   const deleteVariant = useDeleteProductVariant();
 
-  // Show variants only when a product is selected
-  const allVariants = selectedProduct ? variants : [];
-
-  const filteredVariants = allVariants.filter((v) => {
+  const filteredVariants = variants.filter((v) => {
     const matchesSearch =
       !searchText ||
       v.variantName?.toLowerCase().includes(searchText.toLowerCase()) ||

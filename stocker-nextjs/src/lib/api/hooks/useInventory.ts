@@ -2150,11 +2150,11 @@ export function useDeleteProductAttributeOption() {
 // PRODUCT VARIANTS HOOKS
 // =====================================
 
-export function useProductVariants(productId: number, includeInactive: boolean = false) {
+export function useProductVariants(productId?: number, includeInactive: boolean = false) {
   return useQuery<ProductVariantDto[]>({
     queryKey: [...inventoryKeys.productVariants(productId), { includeInactive }],
     queryFn: () => InventoryService.getProductVariants(productId, includeInactive),
-    ...queryOptions.list({ enabled: !!productId && productId > 0 }),
+    ...queryOptions.list(),
   });
 }
 

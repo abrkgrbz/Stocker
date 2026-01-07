@@ -27,32 +27,50 @@ public class ProductVariantsController : ControllerBase
     }
 
     /// <summary>
-    /// Get all variants for a product
+    /// Get all variants, optionally filtered by product
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(List<ProductVariantDto>), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
     public async Task<ActionResult<List<ProductVariantDto>>> GetVariants(
-        [FromQuery] int productId,
+        [FromQuery] int? productId = null,
         [FromQuery] bool includeInactive = false)
     {
         var tenantId = _tenantService.GetCurrentTenantId();
         if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
-        var query = new GetProductVariantsQuery
+        // If productId is provided, get variants for that product
+        if (productId.HasValue && productId.Value > 0)
+        {
+            var query = new GetProductVariantsQuery
+            {
+                TenantId = tenantId.Value,
+                ProductId = productId.Value,
+                IncludeInactive = includeInactive
+            };
+
+            var result = await _mediator.Send(query);
+
+            if (result.IsFailure)
+                return BadRequest(result.Error);
+
+            return Ok(result.Value);
+        }
+
+        // Otherwise, get all variants
+        var allQuery = new GetAllProductVariantsQuery
         {
             TenantId = tenantId.Value,
-            ProductId = productId,
             IncludeInactive = includeInactive
         };
 
-        var result = await _mediator.Send(query);
+        var allResult = await _mediator.Send(allQuery);
 
-        if (result.IsFailure)
-            return BadRequest(result.Error);
+        if (allResult.IsFailure)
+            return BadRequest(allResult.Error);
 
-        return Ok(result.Value);
+        return Ok(allResult.Value);
     }
 
     /// <summary>

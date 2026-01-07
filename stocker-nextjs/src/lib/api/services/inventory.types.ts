@@ -1671,9 +1671,18 @@ export interface UpdateProductVariantDto {
   priceCurrency?: string;
   costPrice?: number;
   costPriceCurrency?: string;
+  compareAtPrice?: number;
+  compareAtPriceCurrency?: string;
   weight?: number;
+  weightUnit?: string;
+  dimensions?: string;
   imageUrl?: string;
   isDefault: boolean;
+  isActive: boolean;
+  trackInventory: boolean;
+  allowBackorder: boolean;
+  lowStockThreshold: number;
+  displayOrder: number;
 }
 
 export interface CreateProductVariantOptionDto {

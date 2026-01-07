@@ -104,6 +104,8 @@ public class UpdateProductVariantDto
     public string? WeightUnit { get; set; }
     public string? Dimensions { get; set; }
     public string? ImageUrl { get; set; }
+    public bool IsDefault { get; set; }
+    public bool IsActive { get; set; } = true;
     public bool TrackInventory { get; set; }
     public bool AllowBackorder { get; set; }
     public decimal LowStockThreshold { get; set; }

@@ -1288,14 +1288,18 @@ export class InventoryService {
   // =====================================
 
   /**
-   * Get all product variants
+   * Get all product variants, optionally filtered by product
    */
   static async getProductVariants(
-    productId: number,
+    productId?: number,
     includeInactive: boolean = false
   ): Promise<ProductVariantDto[]> {
+    const params: Record<string, unknown> = { includeInactive };
+    if (productId && productId > 0) {
+      params.productId = productId;
+    }
     return ApiService.get<ProductVariantDto[]>(this.getPath('product-variants'), {
-      params: { productId, includeInactive },
+      params,
     });
   }
 

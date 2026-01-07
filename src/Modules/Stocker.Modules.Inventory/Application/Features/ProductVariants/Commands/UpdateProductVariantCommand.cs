@@ -80,6 +80,18 @@ public class UpdateProductVariantCommandHandler : IRequestHandler<UpdateProductV
         variant.SetInventoryOptions(data.TrackInventory, data.AllowBackorder, data.LowStockThreshold);
         variant.SetDisplayOrder(data.DisplayOrder);
 
+        // Update status
+        if (data.IsActive)
+            variant.Activate();
+        else
+            variant.Deactivate();
+
+        // Update default status
+        if (data.IsDefault)
+            variant.SetAsDefault();
+        else
+            variant.UnsetDefault();
+
         // Update pricing
         Money? price = data.Price.HasValue ? Money.Create(data.Price.Value, data.PriceCurrency ?? "TRY") : null;
         Money? costPrice = data.CostPrice.HasValue ? Money.Create(data.CostPrice.Value, data.CostPriceCurrency ?? "TRY") : null;
