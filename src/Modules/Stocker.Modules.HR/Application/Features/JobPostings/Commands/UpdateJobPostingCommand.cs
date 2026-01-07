@@ -12,18 +12,53 @@ namespace Stocker.Modules.HR.Application.Features.JobPostings.Commands;
 public record UpdateJobPostingCommand : IRequest<Result<bool>>
 {
     public int JobPostingId { get; init; }
-    public string? Title { get; init; }
-    public string? Description { get; init; }
-    public int? NumberOfOpenings { get; init; }
-    public JobPostingStatus? Status { get; init; }
+
+    // Basic Info
+    public string Title { get; init; } = string.Empty;
+    public string Status { get; init; } = string.Empty;
+    public string EmploymentType { get; init; } = "FullTime";
+    public string ExperienceLevel { get; init; } = "MidLevel";
+
+    // Department & Position
+    public int DepartmentId { get; init; }
+    public int? PositionId { get; init; }
+    public int? HiringManagerId { get; init; }
+    public int NumberOfOpenings { get; init; } = 1;
+
+    // Location
+    public int? WorkLocationId { get; init; }
+    public string RemoteWorkType { get; init; } = "OnSite";
+    public string? City { get; init; }
+    public string? Country { get; init; }
+
+    // Job Description
+    public string Description { get; init; } = string.Empty;
     public string? Requirements { get; init; }
     public string? Responsibilities { get; init; }
+    public string? Qualifications { get; init; }
+    public string? PreferredQualifications { get; init; }
+    public string? Benefits { get; init; }
+
+    // Salary
     public decimal? SalaryMin { get; init; }
     public decimal? SalaryMax { get; init; }
+    public bool ShowSalary { get; init; }
+    public string SalaryPeriod { get; init; } = "Monthly";
+
+    // Dates
     public DateTime? ApplicationDeadline { get; init; }
-    public int? HiringManagerId { get; init; }
-    public bool? IsFeatured { get; init; }
-    public bool? IsUrgent { get; init; }
+    public DateTime? ExpectedStartDate { get; init; }
+    public DateTime? ClosedDate { get; init; }
+
+    // Publishing
+    public bool IsInternal { get; init; }
+    public bool IsFeatured { get; init; }
+    public bool IsUrgent { get; init; }
+
+    // Additional
+    public string? Tags { get; init; }
+    public string? Keywords { get; init; }
+    public string? InternalNotes { get; init; }
 }
 
 /// <summary>
@@ -37,24 +72,26 @@ public class UpdateJobPostingCommandValidator : AbstractValidator<UpdateJobPosti
             .GreaterThan(0).WithMessage("Job Posting ID must be greater than 0");
 
         RuleFor(x => x.Title)
-            .MaximumLength(200).When(x => !string.IsNullOrEmpty(x.Title))
-            .WithMessage("Title must not exceed 200 characters");
+            .NotEmpty().WithMessage("Title is required")
+            .MaximumLength(200).WithMessage("Title must not exceed 200 characters");
+
+        RuleFor(x => x.DepartmentId)
+            .GreaterThan(0).WithMessage("Department ID must be greater than 0");
 
         RuleFor(x => x.Description)
-            .MaximumLength(5000).When(x => !string.IsNullOrEmpty(x.Description))
-            .WithMessage("Description must not exceed 5000 characters");
+            .NotEmpty().WithMessage("Description is required")
+            .MaximumLength(5000).WithMessage("Description must not exceed 5000 characters");
 
         RuleFor(x => x.NumberOfOpenings)
-            .GreaterThan(0).When(x => x.NumberOfOpenings.HasValue)
-            .WithMessage("Number of openings must be greater than 0");
+            .GreaterThan(0).WithMessage("Number of openings must be greater than 0");
 
         RuleFor(x => x.SalaryMin)
             .GreaterThan(0).When(x => x.SalaryMin.HasValue)
             .WithMessage("Minimum salary must be greater than 0");
 
-        RuleFor(x => x.ApplicationDeadline)
-            .GreaterThan(DateTime.UtcNow).When(x => x.ApplicationDeadline.HasValue)
-            .WithMessage("Application deadline must be in the future");
+        RuleFor(x => x.SalaryMax)
+            .GreaterThanOrEqualTo(x => x.SalaryMin ?? 0).When(x => x.SalaryMax.HasValue && x.SalaryMin.HasValue)
+            .WithMessage("Maximum salary must be greater than or equal to minimum salary");
     }
 }
 
@@ -80,6 +117,14 @@ public class UpdateJobPostingCommandHandler : IRequestHandler<UpdateJobPostingCo
                 Error.NotFound("JobPosting", $"Job Posting with ID {request.JobPostingId} not found"));
         }
 
+        // Verify department exists
+        var department = await _unitOfWork.Departments.GetByIdAsync(request.DepartmentId, cancellationToken);
+        if (department == null)
+        {
+            return Result<bool>.Failure(
+                Error.NotFound("Department", $"Department with ID {request.DepartmentId} not found"));
+        }
+
         // Verify hiring manager if specified
         if (request.HiringManagerId.HasValue)
         {
@@ -89,36 +134,54 @@ public class UpdateJobPostingCommandHandler : IRequestHandler<UpdateJobPostingCo
                 return Result<bool>.Failure(
                     Error.NotFound("Employee", $"Hiring manager with ID {request.HiringManagerId} not found"));
             }
-            jobPosting.SetHiringManager(request.HiringManagerId);
         }
 
-        // Update basic info if provided
-        if (!string.IsNullOrEmpty(request.Title) && !string.IsNullOrEmpty(request.Description) && request.NumberOfOpenings.HasValue)
-            jobPosting.UpdateBasicInfo(request.Title, request.Description, request.NumberOfOpenings.Value);
+        // Parse enums
+        if (!Enum.TryParse<RemoteWorkType>(request.RemoteWorkType, true, out var remoteWorkType))
+            remoteWorkType = RemoteWorkType.OnSite;
 
-        // Update requirements if provided
-        if (!string.IsNullOrEmpty(request.Requirements) || !string.IsNullOrEmpty(request.Responsibilities))
-            jobPosting.UpdateRequirements(request.Requirements, request.Responsibilities, null, null);
+        if (!Enum.TryParse<SalaryPeriod>(request.SalaryPeriod, true, out var salaryPeriod))
+            salaryPeriod = SalaryPeriod.Monthly;
 
-        // Update salary range if provided
-        if (request.SalaryMin.HasValue || request.SalaryMax.HasValue)
-            jobPosting.UpdateSalaryRange(request.SalaryMin, request.SalaryMax, "TRY", false, SalaryPeriod.Monthly);
+        // Update basic info
+        jobPosting.UpdateBasicInfo(request.Title, request.Description, request.NumberOfOpenings);
 
-        // Update deadline if provided
-        if (request.ApplicationDeadline.HasValue)
-            jobPosting.SetDeadline(request.ApplicationDeadline);
+        // Update requirements
+        jobPosting.UpdateRequirements(
+            request.Requirements,
+            request.Responsibilities,
+            request.Qualifications,
+            request.PreferredQualifications);
 
-        // Update flags
-        if (request.IsFeatured.HasValue)
-            jobPosting.SetFeatured(request.IsFeatured.Value);
+        // Set benefits
+        jobPosting.SetBenefits(request.Benefits);
 
-        if (request.IsUrgent.HasValue)
-            jobPosting.SetUrgent(request.IsUrgent.Value);
+        // Update salary range
+        jobPosting.UpdateSalaryRange(request.SalaryMin, request.SalaryMax, "TRY", request.ShowSalary, salaryPeriod);
+
+        // Update location
+        jobPosting.UpdateLocation(request.WorkLocationId, request.City, request.Country, remoteWorkType);
+
+        // Update optional properties
+        jobPosting.SetHiringManager(request.HiringManagerId);
+        jobPosting.SetPosition(request.PositionId);
+        jobPosting.SetDeadline(request.ApplicationDeadline);
+        jobPosting.SetExpectedStartDate(request.ExpectedStartDate);
+
+        // Update publishing options
+        jobPosting.SetInternal(request.IsInternal);
+        jobPosting.SetFeatured(request.IsFeatured);
+        jobPosting.SetUrgent(request.IsUrgent);
+
+        // Update additional info
+        jobPosting.SetTags(request.Tags);
+        jobPosting.SetKeywords(request.Keywords);
+        jobPosting.SetInternalNotes(request.InternalNotes);
 
         // Update status if provided
-        if (request.Status.HasValue)
+        if (!string.IsNullOrEmpty(request.Status) && Enum.TryParse<JobPostingStatus>(request.Status, true, out var status))
         {
-            switch (request.Status.Value)
+            switch (status)
             {
                 case JobPostingStatus.Open:
                     jobPosting.Publish();

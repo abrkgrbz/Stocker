@@ -67,7 +67,7 @@ public class JobPostingsController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{id}")]
+        [HttpDelete("{id}")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
@@ -75,6 +75,51 @@ public class JobPostingsController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _mediator.Send(new DeleteJobPostingCommand(id));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Publish a job posting
+    /// </summary>
+    [HttpPost("{id}/publish")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Publish(int id)
+    {
+        var result = await _mediator.Send(new PublishJobPostingCommand(id));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Unpublish a job posting (put on hold)
+    /// </summary>
+    [HttpPost("{id}/unpublish")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Unpublish(int id)
+    {
+        var result = await _mediator.Send(new UnpublishJobPostingCommand(id));
+        if (result.IsFailure) return BadRequest(result.Error);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Close a job posting
+    /// </summary>
+    [HttpPost("{id}/close")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Close(int id)
+    {
+        var result = await _mediator.Send(new CloseJobPostingCommand(id));
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }
