@@ -42,17 +42,25 @@ export default function EditProductVariantPage() {
   useEffect(() => {
     if (variant) {
       form.setFieldsValue({
-        name: variant.variantName,
+        variantName: variant.variantName,
         sku: variant.sku,
         barcode: variant.barcode,
         price: variant.price,
         priceCurrency: variant.priceCurrency || 'TRY',
         costPrice: variant.costPrice,
         costPriceCurrency: variant.costPriceCurrency || 'TRY',
+        compareAtPrice: variant.compareAtPrice,
+        compareAtPriceCurrency: variant.compareAtPriceCurrency || 'TRY',
         weight: variant.weight,
+        weightUnit: variant.weightUnit || 'kg',
+        dimensions: variant.dimensions,
         imageUrl: variant.imageUrl,
         isDefault: variant.isDefault,
         isActive: variant.isActive,
+        trackInventory: variant.trackInventory,
+        allowBackorder: variant.allowBackorder,
+        lowStockThreshold: variant.lowStockThreshold,
+        displayOrder: variant.displayOrder,
       });
     }
   }, [variant, form]);
@@ -69,9 +77,18 @@ export default function EditProductVariantPage() {
         priceCurrency: values.priceCurrency || 'TRY',
         costPrice: values.costPrice,
         costPriceCurrency: values.costPriceCurrency || 'TRY',
+        compareAtPrice: values.compareAtPrice,
+        compareAtPriceCurrency: values.compareAtPriceCurrency || 'TRY',
         weight: values.weight,
+        weightUnit: values.weightUnit || 'kg',
+        dimensions: values.dimensions,
         imageUrl: values.imageUrl,
-        isDefault: values.isDefault || false,
+        isDefault: values.isDefault ?? false,
+        isActive: values.isActive ?? true,
+        trackInventory: values.trackInventory ?? true,
+        allowBackorder: values.allowBackorder ?? false,
+        lowStockThreshold: values.lowStockThreshold ?? 0,
+        displayOrder: values.displayOrder ?? 0,
       };
 
       await updateVariant.mutateAsync({ id: variantId, data });
@@ -197,7 +214,7 @@ export default function EditProductVariantPage() {
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <h3 className="text-base font-semibold text-gray-900 mb-4">Varyant Bilgileri</h3>
                 <Form.Item
-                  name="name"
+                  name="variantName"
                   label="Varyant Adı"
                   rules={[{ required: true, message: 'Varyant adı gerekli' }]}
                 >
@@ -249,9 +266,9 @@ export default function EditProductVariantPage() {
               {/* Pricing */}
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <h3 className="text-base font-semibold text-gray-900 mb-4">Fiyatlandırma</h3>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-2 mb-4">
                   <div className="col-span-2">
-                    <Form.Item name="price" label="Satış Fiyatı">
+                    <Form.Item name="price" label="Satış Fiyatı" className="mb-0">
                       <InputNumber
                         style={{ width: '100%' }}
                         min={0}
@@ -260,12 +277,34 @@ export default function EditProductVariantPage() {
                       />
                     </Form.Item>
                   </div>
-                  <Form.Item name="priceCurrency" label="Para Birimi">
+                  <Form.Item name="priceCurrency" label="Birim" className="mb-0">
                     <Select
                       options={[
-                        { value: 'TRY', label: '₺ TRY' },
-                        { value: 'USD', label: '$ USD' },
-                        { value: 'EUR', label: '€ EUR' },
+                        { value: 'TRY', label: '₺' },
+                        { value: 'USD', label: '$' },
+                        { value: 'EUR', label: '€' },
+                      ]}
+                    />
+                  </Form.Item>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  <div className="col-span-2">
+                    <Form.Item name="costPrice" label="Maliyet" className="mb-0">
+                      <InputNumber
+                        style={{ width: '100%' }}
+                        min={0}
+                        precision={2}
+                        placeholder="0.00"
+                      />
+                    </Form.Item>
+                  </div>
+                  <Form.Item name="costPriceCurrency" label="Birim" className="mb-0">
+                    <Select
+                      options={[
+                        { value: 'TRY', label: '₺' },
+                        { value: 'USD', label: '$' },
+                        { value: 'EUR', label: '€' },
                       ]}
                     />
                   </Form.Item>
@@ -273,7 +312,7 @@ export default function EditProductVariantPage() {
 
                 <div className="grid grid-cols-3 gap-2">
                   <div className="col-span-2">
-                    <Form.Item name="costPrice" label="Maliyet">
+                    <Form.Item name="compareAtPrice" label="Karşılaştırma Fiyatı" className="mb-0">
                       <InputNumber
                         style={{ width: '100%' }}
                         min={0}
@@ -282,28 +321,47 @@ export default function EditProductVariantPage() {
                       />
                     </Form.Item>
                   </div>
-                  <Form.Item name="costPriceCurrency" label="Para Birimi">
+                  <Form.Item name="compareAtPriceCurrency" label="Birim" className="mb-0">
                     <Select
                       options={[
-                        { value: 'TRY', label: '₺ TRY' },
-                        { value: 'USD', label: '$ USD' },
-                        { value: 'EUR', label: '€ EUR' },
+                        { value: 'TRY', label: '₺' },
+                        { value: 'USD', label: '$' },
+                        { value: 'EUR', label: '€' },
                       ]}
                     />
                   </Form.Item>
                 </div>
+                <Text type="secondary" className="text-xs mt-2 block">
+                  İndirimli fiyat gösterimi için karşılaştırma fiyatını girin.
+                </Text>
               </div>
 
               {/* Physical */}
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <h3 className="text-base font-semibold text-gray-900 mb-4">Fiziksel Özellikler</h3>
-                <Form.Item name="weight" label="Ağırlık (kg)" className="mb-0">
-                  <InputNumber
-                    style={{ width: '100%' }}
-                    min={0}
-                    precision={3}
-                    placeholder="0.000"
-                  />
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  <div className="col-span-2">
+                    <Form.Item name="weight" label="Ağırlık" className="mb-0">
+                      <InputNumber
+                        style={{ width: '100%' }}
+                        min={0}
+                        precision={3}
+                        placeholder="0.000"
+                      />
+                    </Form.Item>
+                  </div>
+                  <Form.Item name="weightUnit" label="Birim" className="mb-0">
+                    <Select
+                      options={[
+                        { value: 'kg', label: 'kg' },
+                        { value: 'g', label: 'g' },
+                        { value: 'lb', label: 'lb' },
+                      ]}
+                    />
+                  </Form.Item>
+                </div>
+                <Form.Item name="dimensions" label="Boyutlar" className="mb-0">
+                  <Input placeholder="10x20x5 cm" />
                 </Form.Item>
               </div>
 
@@ -311,16 +369,50 @@ export default function EditProductVariantPage() {
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <h3 className="text-base font-semibold text-gray-900 mb-4">Ayarlar</h3>
                 <div className="space-y-4">
-                  <Form.Item name="isActive" label="Aktif" valuePropName="checked" className="mb-2">
-                    <Switch />
-                  </Form.Item>
-                  <Form.Item name="isDefault" label="Varsayılan Varyant" valuePropName="checked" className="mb-0">
-                    <Switch />
-                  </Form.Item>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">Aktif</span>
+                    <Form.Item name="isActive" valuePropName="checked" className="mb-0">
+                      <Switch />
+                    </Form.Item>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">Varsayılan Varyant</span>
+                    <Form.Item name="isDefault" valuePropName="checked" className="mb-0">
+                      <Switch />
+                    </Form.Item>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">Stok Takibi</span>
+                    <Form.Item name="trackInventory" valuePropName="checked" className="mb-0">
+                      <Switch />
+                    </Form.Item>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">Ön Siparişe İzin Ver</span>
+                    <Form.Item name="allowBackorder" valuePropName="checked" className="mb-0">
+                      <Switch />
+                    </Form.Item>
+                  </div>
                 </div>
-                <Text type="secondary" className="text-xs mt-2 block">
-                  Varsayılan varyant, ürünün varsayılan gösterimi olarak kullanılır.
-                </Text>
+              </div>
+
+              {/* Stock Management */}
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 className="text-base font-semibold text-gray-900 mb-4">Stok Yönetimi</h3>
+                <Form.Item name="lowStockThreshold" label="Düşük Stok Eşiği" className="mb-4">
+                  <InputNumber
+                    style={{ width: '100%' }}
+                    min={0}
+                    placeholder="5"
+                  />
+                </Form.Item>
+                <Form.Item name="displayOrder" label="Görüntüleme Sırası" className="mb-0">
+                  <InputNumber
+                    style={{ width: '100%' }}
+                    min={0}
+                    placeholder="0"
+                  />
+                </Form.Item>
               </div>
             </div>
           </div>
