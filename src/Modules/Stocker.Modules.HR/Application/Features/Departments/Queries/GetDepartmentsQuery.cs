@@ -37,7 +37,8 @@ public class GetDepartmentsQueryHandler : IRequestHandler<GetDepartmentsQuery, R
         }
         else
         {
-            departments = await _unitOfWork.Departments.GetRootDepartmentsAsync(cancellationToken);
+            // Get all departments, not just root ones
+            departments = await _unitOfWork.Departments.GetAllAsync(cancellationToken);
         }
 
         if (!request.IncludeInactive)
