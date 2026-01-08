@@ -53,8 +53,8 @@ export default function SupplierDetailPage() {
 
     try {
       await removeProductMutation.mutateAsync({
-        supplierId,
-        productId: selectedProduct.productId,
+        supplierId: String(supplierId),
+        productId: String(selectedProduct.productId),
       });
       message.success('Ürün tedarikçiden kaldırıldı');
       setDeleteModalVisible(false);

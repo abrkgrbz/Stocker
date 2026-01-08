@@ -254,8 +254,8 @@ export const inventoryKeys = {
   // Stock Movements
   stockMovements: ['inventory', 'stock-movements'] as const,
   stockMovement: (id: number) => ['inventory', 'stock-movements', id] as const,
-  stockMovementSummary: (startDate: string, endDate: string, warehouseId?: number) =>
-    ['inventory', 'stock-movements', 'summary', startDate, endDate, warehouseId] as const,
+  stockMovementSummary: (warehouseId?: number, productId?: number, fromDate?: string, toDate?: string) =>
+    ['inventory', 'stock-movements', 'summary', warehouseId, productId, fromDate, toDate] as const,
 
   // Stock Reservations
   stockReservations: ['inventory', 'stock-reservations'] as const,
@@ -273,8 +273,8 @@ export const inventoryKeys = {
   // Price Lists
   priceLists: ['inventory', 'price-lists'] as const,
   priceList: (id: number) => ['inventory', 'price-lists', id] as const,
-  productPrice: (productId: number, priceListId?: number) =>
-    ['inventory', 'product-price', productId, priceListId] as const,
+  productPrice: (productId: number, priceListId?: number, quantity?: number) =>
+    ['inventory', 'product-price', productId, priceListId, quantity] as const,
 
   // Serial Numbers
   serialNumbers: (filter?: SerialNumberFilterDto) => ['inventory', 'serial-numbers', filter] as const,
@@ -1009,10 +1009,10 @@ export function useRemoveSupplierProduct() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ supplierId, productId }: { supplierId: number; productId: number }) =>
+    mutationFn: ({ supplierId, productId }: { supplierId: string; productId: string }) =>
       InventoryService.removeSupplierProduct(supplierId, productId),
     onSuccess: (_, { supplierId }) => {
-      queryClient.invalidateQueries({ queryKey: inventoryKeys.supplier(supplierId) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.supplier(Number(supplierId)) });
       showSuccess('Tedarikçi ürünü kaldırıldı');
     },
     onError: (error) => {
@@ -1089,12 +1089,12 @@ export function useStockMovements(
   productId?: number,
   warehouseId?: number,
   movementType?: StockMovementType,
-  startDate?: string,
-  endDate?: string
+  fromDate?: string,
+  toDate?: string
 ) {
   return useQuery<StockMovementDto[]>({
-    queryKey: [...inventoryKeys.stockMovements, { productId, warehouseId, movementType, startDate, endDate }],
-    queryFn: () => InventoryService.getStockMovements(productId, warehouseId, movementType, startDate, endDate),
+    queryKey: [...inventoryKeys.stockMovements, { productId, warehouseId, movementType, fromDate, toDate }],
+    queryFn: () => InventoryService.getStockMovements(productId, warehouseId, movementType, fromDate, toDate),
     ...queryOptions.list(),
   });
 }
@@ -1107,11 +1107,16 @@ export function useStockMovement(id: number) {
   });
 }
 
-export function useStockMovementSummary(startDate: string, endDate: string, warehouseId?: number) {
+export function useStockMovementSummary(
+  warehouseId?: number,
+  productId?: number,
+  fromDate?: string,
+  toDate?: string
+) {
   return useQuery<StockMovementSummaryDto>({
-    queryKey: inventoryKeys.stockMovementSummary(startDate, endDate, warehouseId),
-    queryFn: () => InventoryService.getStockMovementSummary(startDate, endDate, warehouseId),
-    ...queryOptions.detail({ enabled: !!startDate && !!endDate }),
+    queryKey: inventoryKeys.stockMovementSummary(warehouseId, productId, fromDate, toDate),
+    queryFn: () => InventoryService.getStockMovementSummary(warehouseId, productId, fromDate, toDate),
+    ...queryOptions.detail(),
   });
 }
 
@@ -1135,8 +1140,8 @@ export function useReverseStockMovement() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, reason }: { id: number; reason?: string }) =>
-      InventoryService.reverseStockMovement(id, reason),
+    mutationFn: ({ id, userId, description }: { id: number; userId: number; description?: string }) =>
+      InventoryService.reverseStockMovement(id, userId, description),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: inventoryKeys.stockMovements });
       queryClient.invalidateQueries({ queryKey: ['inventory', 'stock'] });
@@ -1336,8 +1341,8 @@ export function useRejectStockTransfer() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, reason }: { id: number; reason?: string }) =>
-      InventoryService.rejectStockTransfer(id, reason),
+    mutationFn: ({ id, rejectedByUserId, reason }: { id: number; rejectedByUserId: number; reason?: string }) =>
+      InventoryService.rejectStockTransfer(id, rejectedByUserId, reason),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: inventoryKeys.stockTransfer(id) });
       queryClient.invalidateQueries({ queryKey: inventoryKeys.stockTransfers });
@@ -1580,7 +1585,7 @@ export function usePriceList(id: number) {
 
 export function useProductPrice(productId: number, priceListId?: number, quantity?: number) {
   return useQuery<ProductPriceDto>({
-    queryKey: inventoryKeys.productPrice(productId, priceListId),
+    queryKey: inventoryKeys.productPrice(productId, priceListId, quantity),
     queryFn: () => InventoryService.getProductPrice(productId, priceListId, quantity),
     ...queryOptions.static({ enabled: !!productId && productId > 0 }),
   });

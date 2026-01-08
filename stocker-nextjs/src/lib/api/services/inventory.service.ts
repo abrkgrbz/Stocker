@@ -677,7 +677,7 @@ export class InventoryService {
   /**
    * Remove product from supplier (Purchase module)
    */
-  static async removeSupplierProduct(supplierId: number, productId: number): Promise<void> {
+  static async removeSupplierProduct(supplierId: string, productId: string): Promise<void> {
     return ApiService.delete<void>(this.getPath(`suppliers/${supplierId}/products/${productId}`));
   }
 
@@ -712,12 +712,12 @@ export class InventoryService {
     productId?: number,
     warehouseId?: number,
     movementType?: StockMovementType,
-    startDate?: string,
-    endDate?: string,
+    fromDate?: string,
+    toDate?: string,
     take: number = 100
   ): Promise<StockMovementDto[]> {
-    return ApiService.get<StockMovementDto[]>(this.getPath('stock/movements'), {
-      params: { productId, warehouseId, movementType, startDate, endDate, take },
+    return ApiService.get<StockMovementDto[]>(this.getPath('stock-movements'), {
+      params: { productId, warehouseId, movementType, fromDate, toDate, take },
     });
   }
 
@@ -774,20 +774,21 @@ export class InventoryService {
   /**
    * Reverse a stock movement
    */
-  static async reverseStockMovement(id: number, reason?: string): Promise<StockMovementDto> {
-    return ApiService.post<StockMovementDto>(this.getPath(`stock-movements/${id}/reverse`), { reason });
+  static async reverseStockMovement(id: number, userId: number, description?: string): Promise<number> {
+    return ApiService.post<number>(this.getPath(`stock-movements/${id}/reverse`), { userId, description });
   }
 
   /**
    * Get stock movement summary
    */
   static async getStockMovementSummary(
-    startDate: string,
-    endDate: string,
-    warehouseId?: number
+    warehouseId?: number,
+    productId?: number,
+    fromDate?: string,
+    toDate?: string
   ): Promise<StockMovementSummaryDto> {
     return ApiService.get<StockMovementSummaryDto>(this.getPath('stock-movements/summary'), {
-      params: { startDate, endDate, warehouseId },
+      params: { warehouseId, productId, fromDate, toDate },
     });
   }
 
@@ -901,8 +902,8 @@ export class InventoryService {
   /**
    * Reject a stock transfer
    */
-  static async rejectStockTransfer(id: number, reason?: string): Promise<void> {
-    return ApiService.post<void>(this.getPath(`stock-transfers/${id}/reject`), { reason });
+  static async rejectStockTransfer(id: number, rejectedByUserId: number, reason?: string): Promise<void> {
+    return ApiService.post<void>(this.getPath(`stock-transfers/${id}/reject`), { rejectedByUserId, reason });
   }
 
   /**

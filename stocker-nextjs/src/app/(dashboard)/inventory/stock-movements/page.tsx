@@ -35,6 +35,7 @@ import {
   useReverseStockMovement,
   useStockMovementSummary,
 } from '@/lib/api/hooks/useInventory';
+import { useAuth } from '@/lib/auth';
 import type { StockMovementDto, StockMovementType } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
@@ -86,6 +87,7 @@ export default function StockMovementsPage() {
   ]);
 
   // API Hooks
+  const { user } = useAuth();
   const { data: products = [] } = useProducts();
   const { data: warehouses = [] } = useWarehouses();
   const { data: movements = [], isLoading, refetch } = useStockMovements(
@@ -96,9 +98,10 @@ export default function StockMovementsPage() {
     dateRange?.[1]?.toISOString()
   );
   const { data: summary } = useStockMovementSummary(
+    selectedWarehouse,
+    selectedProduct,
     dateRange?.[0]?.toISOString() || dayjs().subtract(30, 'day').toISOString(),
-    dateRange?.[1]?.toISOString() || dayjs().toISOString(),
-    selectedWarehouse
+    dateRange?.[1]?.toISOString() || dayjs().toISOString()
   );
 
   const reverseMovement = useReverseStockMovement();
@@ -233,7 +236,11 @@ export default function StockMovementsPage() {
       cancelText: 'İptal',
       onOk: async () => {
         try {
-          await reverseMovement.mutateAsync({ id: movement.id, reason: 'Kullanıcı tarafından tersine çevrildi' });
+          await reverseMovement.mutateAsync({
+            id: movement.id,
+            userId: parseInt(user?.id || '0'),
+            description: 'Kullanıcı tarafından tersine çevrildi'
+          });
         } catch (error) {
           // Error handled by hook
         }
