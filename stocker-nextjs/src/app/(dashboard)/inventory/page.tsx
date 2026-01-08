@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button, Select, Spin, DatePicker, Drawer, Switch, Dropdown, Table, Tag, List, Progress, Tooltip, Empty } from 'antd';
 import {
   ArrowDownIcon,
@@ -111,6 +112,8 @@ const EmptyChart = ({ icon: Icon, message }: { icon: React.ComponentType<any>; m
 );
 
 export default function InventoryDashboardPage() {
+  const router = useRouter();
+
   // State for filters
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<number | undefined>(undefined);
   const [trendDays, setTrendDays] = useState<number>(30);
@@ -419,29 +422,34 @@ export default function InventoryDashboardPage() {
   const operationsMenuItems = [
     {
       key: 'count',
-      label: <Link href="/inventory/stock-counts/new">Sayım Başlat</Link>,
+      label: 'Sayım Başlat',
       icon: <ClipboardDocumentCheckIcon className="w-4 h-4" />,
+      onClick: () => router.push('/inventory/stock-counts/new'),
     },
     {
       key: 'adjustment',
-      label: <Link href="/inventory/stock-adjustments/new">Stok Düzeltme</Link>,
+      label: 'Stok Düzeltme',
       icon: <ArrowsRightLeftIcon className="w-4 h-4" />,
+      onClick: () => router.push('/inventory/stock-adjustments/new'),
     },
     { type: 'divider' as const },
     {
       key: 'excel',
-      label: <Link href="/inventory/stock">Excel İşlemleri</Link>,
+      label: 'Excel İşlemleri',
       icon: <DocumentIcon className="w-4 h-4" />,
+      onClick: () => router.push('/inventory/stock'),
     },
     {
       key: 'reports',
-      label: <Link href="/inventory/reports">Raporlar</Link>,
+      label: 'Raporlar',
       icon: <PrinterIcon className="w-4 h-4" />,
+      onClick: () => router.push('/inventory/reports'),
     },
     {
       key: 'analytics',
-      label: <Link href="/inventory/analytics">Analitik</Link>,
+      label: 'Analitik',
       icon: <Squares2X2Icon className="w-4 h-4" />,
+      onClick: () => router.push('/inventory/analytics'),
     },
   ];
 
