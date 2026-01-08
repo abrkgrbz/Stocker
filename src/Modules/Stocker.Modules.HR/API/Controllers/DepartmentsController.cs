@@ -157,4 +157,48 @@ public class DepartmentsController : ControllerBase
 
         return NoContent();
     }
+
+    /// <summary>
+    /// Activate a department
+    /// </summary>
+    [HttpPost("{id}/activate")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> ActivateDepartment(int id)
+    {
+        var result = await _mediator.Send(new ActivateDepartmentCommand(id));
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Deactivate a department
+    /// </summary>
+    [HttpPost("{id}/deactivate")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> DeactivateDepartment(int id)
+    {
+        var result = await _mediator.Send(new DeactivateDepartmentCommand(id));
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return NoContent();
+    }
 }
