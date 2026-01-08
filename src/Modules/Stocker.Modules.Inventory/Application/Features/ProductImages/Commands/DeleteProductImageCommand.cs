@@ -53,8 +53,8 @@ public class DeleteProductImageCommandHandler : IRequestHandler<DeleteProductIma
 
     public async Task<Result> Handle(DeleteProductImageCommand request, CancellationToken cancellationToken)
     {
-        // Get product with images
-        var product = await _unitOfWork.Products.GetByIdAsync(request.ProductId, cancellationToken);
+        // Get product with images (must use GetWithDetailsAsync to include Images)
+        var product = await _unitOfWork.Products.GetWithDetailsAsync(request.ProductId, cancellationToken);
         if (product == null)
         {
             return Result.Failure(

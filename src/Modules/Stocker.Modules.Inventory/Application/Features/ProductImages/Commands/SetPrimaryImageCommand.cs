@@ -47,8 +47,8 @@ public class SetPrimaryImageCommandHandler : IRequestHandler<SetPrimaryImageComm
 
     public async Task<Result> Handle(SetPrimaryImageCommand request, CancellationToken cancellationToken)
     {
-        // Get product with images
-        var product = await _unitOfWork.Products.GetByIdAsync(request.ProductId, cancellationToken);
+        // Get product with images (must use GetWithDetailsAsync to include Images)
+        var product = await _unitOfWork.Products.GetWithDetailsAsync(request.ProductId, cancellationToken);
         if (product == null)
         {
             return Result.Failure(
