@@ -1,6 +1,9 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.Inventory.Application.DTOs;
+using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.Modules.Inventory.Infrastructure.Persistence;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.Suppliers.Queries;
@@ -20,10 +23,12 @@ public class GetSupplierByIdQuery : IRequest<Result<SupplierDto>>
 public class GetSupplierByIdQueryHandler : IRequestHandler<GetSupplierByIdQuery, Result<SupplierDto>>
 {
     private readonly ISupplierRepository _supplierRepository;
+    private readonly InventoryDbContext _dbContext;
 
-    public GetSupplierByIdQueryHandler(ISupplierRepository supplierRepository)
+    public GetSupplierByIdQueryHandler(ISupplierRepository supplierRepository, InventoryDbContext dbContext)
     {
         _supplierRepository = supplierRepository;
+        _dbContext = dbContext;
     }
 
     public async Task<Result<SupplierDto>> Handle(GetSupplierByIdQuery request, CancellationToken cancellationToken)
@@ -34,6 +39,12 @@ public class GetSupplierByIdQueryHandler : IRequestHandler<GetSupplierByIdQuery,
         {
             return Result<SupplierDto>.Failure(new Error("Supplier.NotFound", $"Supplier with ID {request.SupplierId} not found", ErrorType.NotFound));
         }
+
+        // Get supplier products with product details
+        var supplierProducts = await _dbContext.Set<SupplierProduct>()
+            .Include(sp => sp.Product)
+            .Where(sp => sp.SupplierId == request.SupplierId && !sp.IsDeleted)
+            .ToListAsync(cancellationToken);
 
         var dto = new SupplierDto
         {
@@ -59,7 +70,22 @@ public class GetSupplierByIdQueryHandler : IRequestHandler<GetSupplierByIdQuery,
             IsActive = supplier.IsActive,
             CreatedAt = supplier.CreatedDate,
             UpdatedAt = supplier.UpdatedDate,
-            ProductCount = supplier.Products?.Count ?? 0
+            ProductCount = supplierProducts.Count,
+            Products = supplierProducts.Select(sp => new SupplierProductDto
+            {
+                Id = sp.Id,
+                SupplierId = sp.SupplierId,
+                ProductId = sp.ProductId,
+                ProductCode = sp.Product?.Code ?? "",
+                ProductName = sp.Product?.Name ?? "",
+                SupplierProductCode = sp.SupplierProductCode,
+                UnitCost = sp.UnitCost.Amount,
+                Currency = sp.Currency,
+                MinimumOrderQuantity = sp.MinOrderQuantity,
+                LeadTimeDays = sp.LeadTimeDays,
+                IsPreferred = sp.IsPreferred,
+                IsActive = sp.IsActive
+            }).ToList()
         };
 
         return Result<SupplierDto>.Success(dto);
