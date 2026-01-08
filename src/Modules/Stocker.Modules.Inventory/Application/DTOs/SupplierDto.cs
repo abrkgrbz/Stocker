@@ -125,9 +125,9 @@ public class CreateSupplierProductDto
     public int SupplierId { get; set; }
     public int ProductId { get; set; }
     public string? SupplierProductCode { get; set; }
-    public decimal UnitCost { get; set; }
+    public decimal UnitPrice { get; set; }
     public string Currency { get; set; } = "TRY";
-    public decimal MinimumOrderQuantity { get; set; } = 1;
+    public decimal MinOrderQuantity { get; set; } = 1;
     public int LeadTimeDays { get; set; }
     public bool IsPreferred { get; set; }
 }

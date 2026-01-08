@@ -27,7 +27,7 @@ public class AddSupplierProductCommandValidator : AbstractValidator<AddSupplierP
         RuleFor(x => x.SupplierId).GreaterThan(0);
         RuleFor(x => x.ProductData).NotNull();
         RuleFor(x => x.ProductData.ProductId).GreaterThan(0);
-        RuleFor(x => x.ProductData.UnitCost).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.ProductData.UnitPrice).GreaterThanOrEqualTo(0);
     }
 }
 
@@ -69,11 +69,11 @@ public class AddSupplierProductCommandHandler : IRequestHandler<AddSupplierProdu
         }
 
         var data = request.ProductData;
-        var unitCost = Money.Create(data.UnitCost, data.Currency);
+        var unitCost = Money.Create(data.UnitPrice, data.Currency);
         var supplierProduct = new SupplierProduct(request.SupplierId, data.ProductId, unitCost);
 
         supplierProduct.SetSupplierProductInfo(data.SupplierProductCode, null, null);
-        supplierProduct.SetOrderConstraints(data.MinimumOrderQuantity, 1, data.LeadTimeDays);
+        supplierProduct.SetOrderConstraints(data.MinOrderQuantity, 1, data.LeadTimeDays);
 
         if (data.IsPreferred)
             supplierProduct.SetAsPreferred();
@@ -116,9 +116,9 @@ public class UpdateSupplierProductCommand : IRequest<Result<SupplierProductDto>>
 public class UpdateSupplierProductDto
 {
     public string? SupplierProductCode { get; set; }
-    public decimal UnitCost { get; set; }
+    public decimal UnitPrice { get; set; }
     public string Currency { get; set; } = "TRY";
-    public decimal MinimumOrderQuantity { get; set; } = 1;
+    public decimal MinOrderQuantity { get; set; } = 1;
     public int LeadTimeDays { get; set; }
     public bool IsPreferred { get; set; }
 }
@@ -131,7 +131,7 @@ public class UpdateSupplierProductCommandValidator : AbstractValidator<UpdateSup
         RuleFor(x => x.SupplierId).GreaterThan(0);
         RuleFor(x => x.SupplierProductId).GreaterThan(0);
         RuleFor(x => x.ProductData).NotNull();
-        RuleFor(x => x.ProductData.UnitCost).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.ProductData.UnitPrice).GreaterThanOrEqualTo(0);
     }
 }
 
@@ -160,11 +160,11 @@ public class UpdateSupplierProductCommandHandler : IRequestHandler<UpdateSupplie
         var product = await _unitOfWork.Products.GetByIdAsync(supplierProduct.ProductId, cancellationToken);
 
         var data = request.ProductData;
-        var unitCost = Money.Create(data.UnitCost, data.Currency);
+        var unitCost = Money.Create(data.UnitPrice, data.Currency);
 
         supplierProduct.UpdateCost(unitCost);
         supplierProduct.SetSupplierProductInfo(data.SupplierProductCode, null, null);
-        supplierProduct.SetOrderConstraints(data.MinimumOrderQuantity, 1, data.LeadTimeDays);
+        supplierProduct.SetOrderConstraints(data.MinOrderQuantity, 1, data.LeadTimeDays);
 
         if (data.IsPreferred)
             supplierProduct.SetAsPreferred();
