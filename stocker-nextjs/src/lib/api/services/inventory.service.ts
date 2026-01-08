@@ -655,7 +655,7 @@ export class InventoryService {
    */
   static async addSupplierProduct(data: CreateSupplierProductDto): Promise<SupplierProductDto> {
     return ApiService.post<SupplierProductDto>(
-      this.getPurchasePath(`suppliers/${data.supplierId}/products`),
+      this.getPath(`suppliers/${data.supplierId}/products`),
       data
     );
   }
@@ -669,7 +669,7 @@ export class InventoryService {
     data: UpdateSupplierProductDto
   ): Promise<SupplierDto> {
     return ApiService.put<SupplierDto>(
-      this.getPurchasePath(`suppliers/${supplierId}/products/${productId}`),
+      this.getPath(`suppliers/${supplierId}/products/${productId}`),
       data
     );
   }
@@ -678,7 +678,7 @@ export class InventoryService {
    * Remove product from supplier (Purchase module)
    */
   static async removeSupplierProduct(supplierId: number, productId: number): Promise<void> {
-    return ApiService.delete<void>(this.getPurchasePath(`suppliers/${supplierId}/products/${productId}`));
+    return ApiService.delete<void>(this.getPath(`suppliers/${supplierId}/products/${productId}`));
   }
 
   // =====================================

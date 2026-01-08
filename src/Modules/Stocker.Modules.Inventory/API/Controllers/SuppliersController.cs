@@ -109,6 +109,111 @@ public class SuppliersController : ControllerBase
         return CreatedAtAction(nameof(GetSupplier), new { id = result.Value.Id }, result.Value);
     }
 
+    #region Supplier Products
+
+    /// <summary>
+    /// Add a product to supplier
+    /// </summary>
+    [HttpPost("{id}/products")]
+    [ProducesResponseType(typeof(SupplierProductDto), 201)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<SupplierProductDto>> AddProduct(int id, [FromBody] CreateSupplierProductDto dto)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        // Ensure supplierId in DTO matches route
+        dto.SupplierId = id;
+
+        var command = new AddSupplierProductCommand
+        {
+            TenantId = tenantId.Value,
+            SupplierId = id,
+            ProductData = dto
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            if (result.Error.Type == ErrorType.Conflict)
+                return Conflict(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return CreatedAtAction(nameof(GetSupplier), new { id }, result.Value);
+    }
+
+    /// <summary>
+    /// Update a supplier product
+    /// </summary>
+    [HttpPut("{id}/products/{productId}")]
+    [ProducesResponseType(typeof(SupplierProductDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<SupplierProductDto>> UpdateProduct(int id, int productId, [FromBody] UpdateSupplierProductDto dto)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new UpdateSupplierProductCommand
+        {
+            TenantId = tenantId.Value,
+            SupplierId = id,
+            SupplierProductId = productId,
+            ProductData = dto
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Remove a product from supplier
+    /// </summary>
+    [HttpDelete("{id}/products/{productId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> RemoveProduct(int id, int productId)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new RemoveSupplierProductCommand
+        {
+            TenantId = tenantId.Value,
+            SupplierId = id,
+            SupplierProductId = productId
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return NoContent();
+    }
+
+    #endregion
+
     private static Error CreateTenantError()
     {
         return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
