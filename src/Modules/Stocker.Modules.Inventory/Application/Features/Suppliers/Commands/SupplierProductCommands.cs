@@ -89,9 +89,9 @@ public class AddSupplierProductCommandHandler : IRequestHandler<AddSupplierProdu
             ProductCode = product.Code,
             ProductName = product.Name,
             SupplierProductCode = supplierProduct.SupplierProductCode,
-            UnitCost = supplierProduct.UnitCost.Amount,
+            UnitPrice = supplierProduct.UnitCost.Amount,
             Currency = supplierProduct.Currency,
-            MinimumOrderQuantity = supplierProduct.MinOrderQuantity,
+            MinOrderQuantity = supplierProduct.MinOrderQuantity,
             LeadTimeDays = supplierProduct.LeadTimeDays,
             IsPreferred = supplierProduct.IsPreferred,
             IsActive = supplierProduct.IsActive
@@ -181,9 +181,9 @@ public class UpdateSupplierProductCommandHandler : IRequestHandler<UpdateSupplie
             ProductCode = product?.Code ?? "",
             ProductName = product?.Name ?? "",
             SupplierProductCode = supplierProduct.SupplierProductCode,
-            UnitCost = supplierProduct.UnitCost.Amount,
+            UnitPrice = supplierProduct.UnitCost.Amount,
             Currency = supplierProduct.Currency,
-            MinimumOrderQuantity = supplierProduct.MinOrderQuantity,
+            MinOrderQuantity = supplierProduct.MinOrderQuantity,
             LeadTimeDays = supplierProduct.LeadTimeDays,
             IsPreferred = supplierProduct.IsPreferred,
             IsActive = supplierProduct.IsActive

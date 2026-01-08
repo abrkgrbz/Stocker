@@ -109,9 +109,9 @@ public class SupplierProductDto
     public string ProductCode { get; set; } = string.Empty;
     public string ProductName { get; set; } = string.Empty;
     public string? SupplierProductCode { get; set; }
-    public decimal UnitCost { get; set; }
+    public decimal UnitPrice { get; set; }
     public string Currency { get; set; } = string.Empty;
-    public decimal MinimumOrderQuantity { get; set; }
+    public decimal MinOrderQuantity { get; set; }
     public int LeadTimeDays { get; set; }
     public bool IsPreferred { get; set; }
     public bool IsActive { get; set; }
