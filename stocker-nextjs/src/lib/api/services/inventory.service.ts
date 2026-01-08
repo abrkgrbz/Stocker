@@ -614,12 +614,11 @@ export class InventoryService {
   // =====================================
 
   /**
-   * Get all suppliers
+   * Get all active suppliers (simple list)
+   * Note: For paginated results with filtering, use PurchaseService.getSuppliers
    */
-  static async getSuppliers(includeInactive: boolean = false): Promise<SupplierDto[]> {
-    return ApiService.get<SupplierDto[]>(this.getPurchasePath('suppliers'), {
-      params: { includeInactive },
-    });
+  static async getSuppliers(): Promise<SupplierDto[]> {
+    return ApiService.get<SupplierDto[]>(this.getPurchasePath('suppliers/active'));
   }
 
   /**

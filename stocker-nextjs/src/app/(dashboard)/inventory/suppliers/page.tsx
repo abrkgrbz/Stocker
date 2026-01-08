@@ -48,7 +48,7 @@ export default function SuppliersPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
 
-  const { data: suppliers = [], isLoading, refetch } = useSuppliers(true);
+  const { data: suppliers = [], isLoading, refetch } = useSuppliers();
   const deleteSupplier = useDeleteSupplier();
 
   const handleDelete = async (supplier: SupplierDto) => {

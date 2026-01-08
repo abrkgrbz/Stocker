@@ -28,7 +28,7 @@ const statusOptions = [
 
 export default function LotBatchForm({ form, initialValues, onFinish, loading }: LotBatchFormProps) {
   const { data: products = [] } = useProducts(true);
-  const { data: suppliers = [] } = useSuppliers(true);
+  const { data: suppliers = [] } = useSuppliers();
 
   const productOptions = products.map(p => ({
     value: p.id,

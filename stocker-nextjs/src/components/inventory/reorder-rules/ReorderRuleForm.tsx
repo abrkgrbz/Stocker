@@ -30,7 +30,7 @@ export default function ReorderRuleForm({ form, initialValues, onFinish, loading
   const { data: products = [] } = useProducts(true);
   const { data: categories = [] } = useCategories(true);
   const { data: warehouses = [] } = useWarehouses(true);
-  const { data: suppliers = [] } = useSuppliers(true);
+  const { data: suppliers = [] } = useSuppliers();
 
   const productOptions = products.map(p => ({
     value: p.id,
