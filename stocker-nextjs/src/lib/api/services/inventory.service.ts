@@ -651,17 +651,17 @@ export class InventoryService {
   }
 
   /**
-   * Add product to supplier
+   * Add product to supplier (Purchase module)
    */
   static async addSupplierProduct(data: CreateSupplierProductDto): Promise<SupplierProductDto> {
     return ApiService.post<SupplierProductDto>(
-      this.getPath(`suppliers/${data.supplierId}/products`),
+      this.getPurchasePath(`suppliers/${data.supplierId}/products`),
       data
     );
   }
 
   /**
-   * Update supplier product
+   * Update supplier product (Purchase module)
    */
   static async updateSupplierProduct(
     supplierId: string,
@@ -669,16 +669,16 @@ export class InventoryService {
     data: UpdateSupplierProductDto
   ): Promise<SupplierDto> {
     return ApiService.put<SupplierDto>(
-      this.getPath(`suppliers/${supplierId}/products/${productId}`),
+      this.getPurchasePath(`suppliers/${supplierId}/products/${productId}`),
       data
     );
   }
 
   /**
-   * Remove product from supplier
+   * Remove product from supplier (Purchase module)
    */
   static async removeSupplierProduct(supplierId: number, productId: number): Promise<void> {
-    return ApiService.delete<void>(this.getPath(`suppliers/${supplierId}/products/${productId}`));
+    return ApiService.delete<void>(this.getPurchasePath(`suppliers/${supplierId}/products/${productId}`));
   }
 
   // =====================================
