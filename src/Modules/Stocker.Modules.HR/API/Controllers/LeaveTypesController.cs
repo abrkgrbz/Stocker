@@ -118,4 +118,42 @@ public class LeaveTypesController : ControllerBase
         }
         return NoContent();
     }
+
+    /// <summary>
+    /// Activate a leave type
+    /// </summary>
+    [HttpPost("{id}/activate")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> ActivateLeaveType(int id)
+    {
+        var result = await _mediator.Send(new ActivateLeaveTypeCommand(id));
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound) return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Deactivate a leave type
+    /// </summary>
+    [HttpPost("{id}/deactivate")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> DeactivateLeaveType(int id)
+    {
+        var result = await _mediator.Send(new DeactivateLeaveTypeCommand(id));
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound) return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+        return NoContent();
+    }
 }
