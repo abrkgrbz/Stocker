@@ -904,10 +904,10 @@ export function useDeleteLocation() {
 // SUPPLIERS HOOKS
 // =====================================
 
-export function useSuppliers() {
+export function useSuppliers(includeInactive: boolean = false) {
   return useQuery<SupplierDto[]>({
-    queryKey: inventoryKeys.suppliers,
-    queryFn: () => InventoryService.getSuppliers(),
+    queryKey: [...inventoryKeys.suppliers, { includeInactive }],
+    queryFn: () => InventoryService.getSuppliers(includeInactive),
     ...queryOptions.list(),
   });
 }

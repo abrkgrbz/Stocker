@@ -610,43 +610,44 @@ export class InventoryService {
   }
 
   // =====================================
-  // SUPPLIERS (Purchase Module)
+  // SUPPLIERS
   // =====================================
 
   /**
-   * Get all active suppliers (simple list)
-   * Note: For paginated results with filtering, use PurchaseService.getSuppliers
+   * Get all suppliers
    */
-  static async getSuppliers(): Promise<SupplierDto[]> {
-    return ApiService.get<SupplierDto[]>(this.getPurchasePath('suppliers/active'));
+  static async getSuppliers(includeInactive: boolean = false): Promise<SupplierDto[]> {
+    return ApiService.get<SupplierDto[]>(this.getPath('suppliers'), {
+      params: { includeInactive },
+    });
   }
 
   /**
    * Get supplier by ID
    */
   static async getSupplier(id: number): Promise<SupplierDto> {
-    return ApiService.get<SupplierDto>(this.getPurchasePath(`suppliers/${id}`));
+    return ApiService.get<SupplierDto>(this.getPath(`suppliers/${id}`));
   }
 
   /**
    * Create a supplier
    */
   static async createSupplier(data: CreateSupplierDto): Promise<SupplierDto> {
-    return ApiService.post<SupplierDto>(this.getPurchasePath('suppliers'), data);
+    return ApiService.post<SupplierDto>(this.getPath('suppliers'), data);
   }
 
   /**
    * Update a supplier
    */
   static async updateSupplier(id: number, data: UpdateSupplierDto): Promise<SupplierDto> {
-    return ApiService.put<SupplierDto>(this.getPurchasePath(`suppliers/${id}`), data);
+    return ApiService.put<SupplierDto>(this.getPath(`suppliers/${id}`), data);
   }
 
   /**
    * Delete a supplier
    */
   static async deleteSupplier(id: number): Promise<void> {
-    return ApiService.delete<void>(this.getPurchasePath(`suppliers/${id}`));
+    return ApiService.delete<void>(this.getPath(`suppliers/${id}`));
   }
 
   /**
@@ -654,7 +655,7 @@ export class InventoryService {
    */
   static async addSupplierProduct(data: CreateSupplierProductDto): Promise<SupplierProductDto> {
     return ApiService.post<SupplierProductDto>(
-      this.getPurchasePath(`suppliers/${data.supplierId}/products`),
+      this.getPath(`suppliers/${data.supplierId}/products`),
       data
     );
   }
@@ -668,7 +669,7 @@ export class InventoryService {
     data: UpdateSupplierProductDto
   ): Promise<SupplierDto> {
     return ApiService.put<SupplierDto>(
-      this.getPurchasePath(`suppliers/${supplierId}/products/${productId}`),
+      this.getPath(`suppliers/${supplierId}/products/${productId}`),
       data
     );
   }
@@ -677,7 +678,7 @@ export class InventoryService {
    * Remove product from supplier
    */
   static async removeSupplierProduct(supplierId: number, productId: number): Promise<void> {
-    return ApiService.delete<void>(this.getPurchasePath(`suppliers/${supplierId}/products/${productId}`));
+    return ApiService.delete<void>(this.getPath(`suppliers/${supplierId}/products/${productId}`));
   }
 
   // =====================================
