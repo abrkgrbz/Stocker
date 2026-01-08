@@ -69,8 +69,8 @@ export default function NewStockAdjustmentPage() {
   const { data: locations = [] } = useLocations(selectedWarehouse);
   const { data: products = [] } = useProducts();
   const { data: currentStock, refetch: refetchStock } = useStock(
-    selectedProduct?.id,
-    selectedWarehouse
+    selectedWarehouse,
+    selectedProduct?.id
   );
   const adjustStock = useAdjustStock();
 
