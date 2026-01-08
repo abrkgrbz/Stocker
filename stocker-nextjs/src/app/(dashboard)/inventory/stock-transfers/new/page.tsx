@@ -516,8 +516,8 @@ export default function NewStockTransferPage() {
                 <span className="text-xs font-medium text-amber-700 uppercase">Kaynak Depo</span>
               </div>
               <div className="font-medium text-slate-900">{sourceWarehouse.name}</div>
-              {sourceWarehouse.address && (
-                <div className="text-sm text-slate-500 mt-1">{sourceWarehouse.address}</div>
+              {sourceWarehouse.city && (
+                <div className="text-sm text-slate-500 mt-1">{sourceWarehouse.city}</div>
               )}
             </div>
           )}
@@ -532,8 +532,8 @@ export default function NewStockTransferPage() {
                 <span className="text-xs font-medium text-emerald-700 uppercase">Hedef Depo</span>
               </div>
               <div className="font-medium text-slate-900">{destWarehouse.name}</div>
-              {destWarehouse.address && (
-                <div className="text-sm text-slate-500 mt-1">{destWarehouse.address}</div>
+              {destWarehouse.city && (
+                <div className="text-sm text-slate-500 mt-1">{destWarehouse.city}</div>
               )}
             </div>
           )}
