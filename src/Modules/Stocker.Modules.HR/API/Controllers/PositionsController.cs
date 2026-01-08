@@ -140,4 +140,48 @@ public class PositionsController : ControllerBase
 
         return NoContent();
     }
+
+    /// <summary>
+    /// Activate a position
+    /// </summary>
+    [HttpPost("{id}/activate")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> ActivatePosition(int id)
+    {
+        var result = await _mediator.Send(new ActivatePositionCommand(id));
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Deactivate a position
+    /// </summary>
+    [HttpPost("{id}/deactivate")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> DeactivatePosition(int id)
+    {
+        var result = await _mediator.Send(new DeactivatePositionCommand(id));
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return NoContent();
+    }
 }
