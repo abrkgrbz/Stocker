@@ -121,4 +121,42 @@ public class WorkLocationsController : ControllerBase
         }
         return NoContent();
     }
+
+    /// <summary>
+    /// Activate a work location
+    /// </summary>
+    [HttpPost("{id}/activate")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> ActivateWorkLocation(int id)
+    {
+        var result = await _mediator.Send(new ActivateWorkLocationCommand(id));
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound) return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Deactivate a work location
+    /// </summary>
+    [HttpPost("{id}/deactivate")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> DeactivateWorkLocation(int id)
+    {
+        var result = await _mediator.Send(new DeactivateWorkLocationCommand(id));
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound) return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+        return NoContent();
+    }
 }
