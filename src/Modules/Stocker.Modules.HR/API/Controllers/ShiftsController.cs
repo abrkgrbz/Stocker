@@ -142,4 +142,48 @@ public class ShiftsController : ControllerBase
 
         return NoContent();
     }
+
+    /// <summary>
+    /// Activate a shift
+    /// </summary>
+    [HttpPost("{id}/activate")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> ActivateShift(int id)
+    {
+        var result = await _mediator.Send(new ActivateShiftCommand(id));
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Deactivate a shift
+    /// </summary>
+    [HttpPost("{id}/deactivate")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> DeactivateShift(int id)
+    {
+        var result = await _mediator.Send(new DeactivateShiftCommand(id));
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return NoContent();
+    }
 }
