@@ -26,6 +26,7 @@ import {
   DocumentIcon,
   EllipsisHorizontalIcon,
   EyeIcon,
+  PlusIcon,
 } from '@heroicons/react/24/outline';
 import {
   useStockMovements,
@@ -482,6 +483,11 @@ export default function StockMovementsPage() {
         title="Stok Hareketleri"
         description="Tüm stok giriş, çıkış ve transferlerini görüntüleyin"
         itemCount={movements.length}
+        primaryAction={{
+          label: 'Yeni Hareket',
+          onClick: () => router.push('/inventory/stock-movements/new'),
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
         secondaryActions={
           <div className="flex items-center gap-2">
             <SavedFiltersDropdown

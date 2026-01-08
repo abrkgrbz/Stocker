@@ -1,30 +1,29 @@
 'use client';
 
-import React, { useState } from 'react';
+/**
+ * Product Bundles List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Card,
-  Button,
   Table,
-  Space,
   Tag,
   Input,
-  Typography,
   Popconfirm,
   message,
-  Dropdown,
-  Select,
+  Tooltip,
   Badge,
-  Progress,
 } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
   ArrowPathIcon,
   CheckCircleIcon,
-  EllipsisHorizontalIcon,
-  EyeIcon,
+  CurrencyDollarIcon,
   GiftIcon,
   MagnifyingGlassIcon,
-  PencilIcon,
+  PencilSquareIcon,
   PlusIcon,
   TrashIcon,
   XCircleIcon,
@@ -32,10 +31,13 @@ import {
 import { useProductBundles, useDeleteProductBundle } from '@/lib/api/hooks/useInventory';
 import type { ProductBundleDto, BundleType, BundlePricingType } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
-import type { MenuProps } from 'antd';
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
 import dayjs from 'dayjs';
-
-const { Title, Text } = Typography;
 
 const bundleTypeConfig: Record<BundleType, { color: string; label: string }> = {
   Fixed: { color: 'blue', label: 'Sabit' },
@@ -55,10 +57,8 @@ const pricingTypeConfig: Record<BundlePricingType, { label: string }> = {
 export default function ProductBundlesPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
-  const [selectedType, setSelectedType] = useState<BundleType | undefined>();
-  const [showInactive, setShowInactive] = useState(false);
 
-  const { data: bundles = [], isLoading, refetch } = useProductBundles(showInactive, !showInactive);
+  const { data: bundles = [], isLoading, refetch } = useProductBundles(true, false);
   const deleteBundle = useDeleteProductBundle();
 
   const handleDelete = async (id: number) => {
@@ -70,36 +70,21 @@ export default function ProductBundlesPage() {
     }
   };
 
-  const filteredBundles = bundles.filter((bundle) => {
-    const matchesSearch =
-      bundle.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      bundle.code.toLowerCase().includes(searchText.toLowerCase());
-    const matchesType = !selectedType || bundle.bundleType === selectedType;
-    return matchesSearch && matchesType;
-  });
+  // Calculate stats
+  const totalBundles = bundles.length;
+  const activeBundles = bundles.filter((b) => b.isActive).length;
+  const validBundles = bundles.filter((b) => b.isValid).length;
+  const totalValue = bundles.reduce((sum, b) => sum + (b.calculatedPrice || 0), 0);
 
-  const getActionMenuItems = (record: ProductBundleDto): MenuProps['items'] => [
-    {
-      key: 'view',
-      label: 'Görüntüle',
-      icon: <EyeIcon className="w-4 h-4" />,
-      onClick: () => router.push(`/inventory/product-bundles/${record.id}`),
-    },
-    {
-      key: 'edit',
-      label: 'Düzenle',
-      icon: <PencilIcon className="w-4 h-4" />,
-      onClick: () => router.push(`/inventory/product-bundles/${record.id}/edit`),
-    },
-    { type: 'divider' },
-    {
-      key: 'delete',
-      label: 'Sil',
-      icon: <TrashIcon className="w-4 h-4" />,
-      danger: true,
-      onClick: () => handleDelete(record.id),
-    },
-  ];
+  // Filter bundles
+  const filteredBundles = useMemo(() => {
+    if (!searchText) return bundles;
+    return bundles.filter((bundle) =>
+      bundle.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      bundle.code.toLowerCase().includes(searchText.toLowerCase()) ||
+      bundle.description?.toLowerCase().includes(searchText.toLowerCase())
+    );
+  }, [bundles, searchText]);
 
   const columns: ColumnsType<ProductBundleDto> = [
     {
@@ -111,13 +96,13 @@ export default function ProductBundlesPage() {
         <div className="flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ background: '#f59e0b15' }}
+            style={{ backgroundColor: '#f59e0b15' }}
           >
             <GiftIcon className="w-5 h-5" style={{ color: '#f59e0b' }} />
           </div>
           <div>
-            <div className="font-medium text-gray-900">{name}</div>
-            <div className="text-xs text-gray-400">Kod: {record.code}</div>
+            <div className="text-sm font-medium text-slate-900">{name}</div>
+            <div className="text-xs text-slate-500">Kod: {record.code}</div>
           </div>
         </div>
       ),
@@ -126,12 +111,7 @@ export default function ProductBundlesPage() {
       title: 'Tip',
       dataIndex: 'bundleType',
       key: 'bundleType',
-      width: 150,
-      filters: Object.entries(bundleTypeConfig).map(([value, config]) => ({
-        text: config.label,
-        value,
-      })),
-      onFilter: (value, record) => record.bundleType === value,
+      width: 140,
       render: (type: BundleType) => (
         <Tag color={bundleTypeConfig[type]?.color || 'default'}>
           {bundleTypeConfig[type]?.label || type}
@@ -142,37 +122,37 @@ export default function ProductBundlesPage() {
       title: 'Fiyatlandırma',
       dataIndex: 'pricingType',
       key: 'pricingType',
-      width: 150,
+      width: 140,
       render: (type: BundlePricingType) => (
-        <Text type="secondary">{pricingTypeConfig[type]?.label || type}</Text>
+        <span className="text-sm text-slate-600">{pricingTypeConfig[type]?.label || type}</span>
       ),
     },
     {
-      title: 'Ürünler',
+      title: 'Ürün Sayısı',
       dataIndex: 'items',
       key: 'items',
       width: 100,
       align: 'center',
-      sorter: (a, b) => (a.items?.length || 0) - (b.items?.length || 0),
       render: (items: ProductBundleDto['items']) => (
-        <Badge count={items?.length || 0} showZero color="#6366f1" />
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-indigo-50 text-indigo-700 rounded">
+          {items?.length || 0}
+        </span>
       ),
     },
     {
       title: 'Fiyat',
       key: 'price',
-      width: 120,
+      width: 130,
       align: 'right',
-      sorter: (a, b) => (a.calculatedPrice || 0) - (b.calculatedPrice || 0),
       render: (_, record) => (
         <div>
-          <div className="font-medium">
+          <div className="text-sm font-medium text-slate-900">
             {record.calculatedPrice?.toLocaleString('tr-TR', {
               minimumFractionDigits: 2,
             })} ₺
           </div>
           {record.discountPercentage && record.discountPercentage > 0 && (
-            <Tag color="red" className="text-xs">%{record.discountPercentage} indirim</Tag>
+            <span className="text-xs text-red-600">%{record.discountPercentage} indirim</span>
           )}
         </div>
       ),
@@ -180,10 +160,10 @@ export default function ProductBundlesPage() {
     {
       title: 'Geçerlilik',
       key: 'validity',
-      width: 150,
+      width: 130,
       render: (_, record) => {
         if (!record.validFrom && !record.validTo) {
-          return <Text type="secondary">Süresiz</Text>;
+          return <span className="text-sm text-slate-400">Süresiz</span>;
         }
         const now = dayjs();
         const validFrom = record.validFrom ? dayjs(record.validFrom) : null;
@@ -194,13 +174,9 @@ export default function ProductBundlesPage() {
         if (validTo && now.isAfter(validTo)) status = 'error';
 
         return (
-          <div className="text-xs">
-            {validFrom && <div>Başlangıç: {validFrom.format('DD/MM/YYYY')}</div>}
-            {validTo && <div>Bitiş: {validTo.format('DD/MM/YYYY')}</div>}
-            <Tag color={status === 'success' ? 'green' : status === 'warning' ? 'orange' : 'red'} className="mt-1">
-              {status === 'success' ? 'Aktif' : status === 'warning' ? 'Başlamadı' : 'Süresi Doldu'}
-            </Tag>
-          </div>
+          <Tag color={status === 'success' ? 'green' : status === 'warning' ? 'orange' : 'red'}>
+            {status === 'success' ? 'Aktif' : status === 'warning' ? 'Başlamadı' : 'Süresi Doldu'}
+          </Tag>
         );
       },
     },
@@ -209,172 +185,167 @@ export default function ProductBundlesPage() {
       dataIndex: 'isActive',
       key: 'isActive',
       width: 100,
-      align: 'center',
-      filters: [
-        { text: 'Aktif', value: true },
-        { text: 'Pasif', value: false },
-      ],
-      onFilter: (value, record) => record.isActive === value,
-      render: (isActive: boolean, record) => (
-        <Space direction="vertical" size={0} align="center">
-          <Tag color={isActive ? 'success' : 'default'}>
-            {isActive ? 'Aktif' : 'Pasif'}
-          </Tag>
-          {record.isValid ? (
-            <CheckCircleIcon className="w-3 h-3" style={{ color: '#10b981' }} />
-          ) : (
-            <XCircleIcon className="w-3 h-3" style={{ color: '#ef4444' }} />
-          )}
-        </Space>
+      render: (isActive: boolean) => (
+        <Tag color={isActive ? 'green' : 'default'}>{isActive ? 'Aktif' : 'Pasif'}</Tag>
       ),
     },
     {
       title: '',
       key: 'actions',
+      width: 100,
       align: 'right',
-      width: 50,
       render: (_, record) => (
-        <Dropdown
-          menu={{ items: getActionMenuItems(record) }}
-          trigger={['click']}
-          placement="bottomRight"
-        >
-          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
-        </Dropdown>
+        <div className="flex items-center justify-end gap-1">
+          <Tooltip title="Düzenle">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/inventory/product-bundles/${record.id}/edit`);
+              }}
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+            >
+              <PencilSquareIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
+          <Popconfirm
+            title="Paketi silmek istediğinize emin misiniz?"
+            onConfirm={(e) => {
+              e?.stopPropagation();
+              handleDelete(record.id);
+            }}
+            onCancel={(e) => e?.stopPropagation()}
+            okText="Evet"
+            cancelText="Hayır"
+          >
+            <Tooltip title="Sil">
+              <button
+                onClick={(e) => e.stopPropagation()}
+                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+              >
+                <TrashIcon className="w-4 h-4" />
+              </button>
+            </Tooltip>
+          </Popconfirm>
+        </div>
       ),
     },
   ];
 
-  // Stats
-  const activeBundles = bundles.filter((b) => b.isActive).length;
-  const validBundles = bundles.filter((b) => b.isValid).length;
-  const totalValue = bundles.reduce((sum, b) => sum + (b.calculatedPrice || 0), 0);
-
   return (
-    <div>
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <Title level={3} className="!mb-1">Ürün Paketleri</Title>
-          <Text type="secondary">Ürün paketlerini ve komboları yönetin</Text>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Paket</span>
+              <div className="text-2xl font-semibold text-slate-900">{totalBundles}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
+              <GiftIcon className="w-6 h-6" style={{ color: '#f59e0b' }} />
+            </div>
+          </div>
         </div>
-        <Space>
-          <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()}>
-            Yenile
-          </Button>
-          <Button
-            type="primary"
-            icon={<PlusIcon className="w-4 h-4" />}
-            onClick={() => router.push('/inventory/product-bundles/new')}
-            style={{ background: '#f59e0b', borderColor: '#f59e0b' }}
-          >
-            Yeni Paket
-          </Button>
-        </Space>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card size="small">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-              <GiftIcon className="w-5 h-5 text-blue-500" />
-            </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
             <div>
-              <Text type="secondary" className="text-xs">Toplam Paket</Text>
-              <div className="text-xl font-semibold">{bundles.length}</div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif Paket</span>
+              <div className="text-2xl font-semibold text-slate-900">{activeBundles}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+              <CheckCircleIcon className="w-6 h-6" style={{ color: '#10b981' }} />
             </div>
           </div>
-        </Card>
-        <Card size="small">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <CheckCircleIcon className="w-5 h-5 text-green-500" />
-            </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
             <div>
-              <Text type="secondary" className="text-xs">Aktif Paket</Text>
-              <div className="text-xl font-semibold">{activeBundles}</div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Geçerli Paket</span>
+              <div className="text-2xl font-semibold text-slate-900">{validBundles}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
+              <CheckCircleIcon className="w-6 h-6" style={{ color: '#8b5cf6' }} />
             </div>
           </div>
-        </Card>
-        <Card size="small">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-              <CheckCircleIcon className="w-5 h-5 text-purple-500" />
-            </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
             <div>
-              <Text type="secondary" className="text-xs">Geçerli Paket</Text>
-              <div className="text-xl font-semibold">{validBundles}</div>
-            </div>
-          </div>
-        </Card>
-        <Card size="small">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center">
-              <GiftIcon className="w-5 h-5 text-orange-500" />
-            </div>
-            <div>
-              <Text type="secondary" className="text-xs">Toplam Değer</Text>
-              <div className="text-xl font-semibold">
-                {totalValue.toLocaleString('tr-TR', { minimumFractionDigits: 0 })} ₺
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Değer</span>
+              <div className="text-2xl font-semibold text-slate-900">
+                {totalValue.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} ₺
               </div>
             </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
+              <CurrencyDollarIcon className="w-6 h-6" style={{ color: '#3b82f6' }} />
+            </div>
           </div>
-        </Card>
+        </div>
       </div>
 
-      {/* Filters */}
-      <Card className="mb-4">
-        <Space wrap>
+      {/* Header */}
+      <ListPageHeader
+        icon={<GiftIcon className="w-5 h-5" />}
+        iconColor="#f59e0b"
+        title="Ürün Paketleri"
+        description="Ürün paketlerini ve komboları yönetin"
+        itemCount={filteredBundles.length}
+        primaryAction={{
+          label: 'Yeni Paket',
+          onClick: () => router.push('/inventory/product-bundles/new'),
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      />
+
+      {/* Search */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <Input
             placeholder="Paket ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 250 }}
+            style={{ maxWidth: 300 }}
             allowClear
+            className="h-10"
           />
-          <Select
-            placeholder="Tip seçin"
-            allowClear
-            style={{ width: 180 }}
-            value={selectedType}
-            onChange={setSelectedType}
-            options={Object.entries(bundleTypeConfig).map(([value, config]) => ({
-              value,
-              label: config.label,
-            }))}
-          />
-          <Select
-            value={showInactive}
-            onChange={setShowInactive}
-            style={{ width: 150 }}
-            options={[
-              { value: false, label: 'Sadece Aktif' },
-              { value: true, label: 'Tümü' },
-            ]}
-          />
-        </Space>
-      </Card>
+        </div>
+      </div>
 
       {/* Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={filteredBundles}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} paket`,
-          }}
-          onRow={(record) => ({
-            onClick: () => router.push(`/inventory/product-bundles/${record.id}`),
-            style: { cursor: 'pointer' },
-          })}
-        />
-      </Card>
-    </div>
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spinner size="lg" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Table
+            columns={columns}
+            dataSource={filteredBundles}
+            rowKey="id"
+            loading={isLoading}
+            pagination={{
+              showSizeChanger: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} paket`,
+            }}
+            onRow={(record) => ({
+              onClick: () => router.push(`/inventory/product-bundles/${record.id}`),
+              style: { cursor: 'pointer' },
+            })}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }
