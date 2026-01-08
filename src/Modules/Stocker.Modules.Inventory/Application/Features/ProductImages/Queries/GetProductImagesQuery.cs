@@ -32,15 +32,15 @@ public class GetProductImagesQueryHandler : IRequestHandler<GetProductImagesQuer
 
     public async Task<Result<List<ProductImageDto>>> Handle(GetProductImagesQuery request, CancellationToken cancellationToken)
     {
-        // Verify product exists and get with images navigation property
-        var product = await _unitOfWork.Products.GetByIdAsync(request.ProductId, cancellationToken);
+        // Use GetWithDetailsAsync to include images navigation property
+        var product = await _unitOfWork.Products.GetWithDetailsAsync(request.ProductId, cancellationToken);
         if (product == null)
         {
             return Result<List<ProductImageDto>>.Failure(
                 Error.NotFound("Product", $"Product with ID {request.ProductId} not found"));
         }
 
-        // Query images using Product's navigation property
+        // Query images using Product's navigation property (already loaded)
         var imagesQuery = product.Images?.AsQueryable() ?? Enumerable.Empty<ProductImage>().AsQueryable();
 
         if (!request.IncludeInactive)
