@@ -39,7 +39,8 @@ public class GetProductByIdQueryHandler : IRequestHandler<GetProductByIdQuery, R
 
     public async Task<Result<ProductDto>> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
     {
-        var product = await _productRepository.GetByIdAsync(request.ProductId, cancellationToken);
+        // Use GetWithDetailsAsync to include Images
+        var product = await _productRepository.GetWithDetailsAsync(request.ProductId, cancellationToken);
 
         if (product == null)
         {
@@ -96,7 +97,18 @@ public class GetProductByIdQueryHandler : IRequestHandler<GetProductByIdQuery, R
             TrackLotNumbers = product.IsLotTracked,
             IsActive = product.IsActive,
             CreatedAt = product.CreatedDate,
-            UpdatedAt = product.UpdatedDate
+            UpdatedAt = product.UpdatedDate,
+            Images = product.Images?
+                .Where(i => i.IsActive)
+                .OrderBy(i => i.DisplayOrder)
+                .Select(i => new ProductImageDto
+                {
+                    Id = i.Id,
+                    ImageUrl = i.Url,
+                    AltText = i.AltText,
+                    IsPrimary = i.IsPrimary,
+                    DisplayOrder = i.DisplayOrder
+                }).ToList() ?? new List<ProductImageDto>()
         };
 
         return Result<ProductDto>.Success(productDto);
