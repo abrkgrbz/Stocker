@@ -392,3 +392,305 @@ public class GetActiveSuppliersHandler : IRequestHandler<GetActiveSuppliersQuery
         return Result<List<SupplierListDto>>.Success(suppliers);
     }
 }
+
+/// <summary>
+/// Handler for AddSupplierProductCommand
+/// </summary>
+public class AddSupplierProductHandler : IRequestHandler<AddSupplierProductCommand, Result<SupplierDto>>
+{
+    private readonly IPurchaseUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+
+    public AddSupplierProductHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
+    {
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+    }
+
+    public async Task<Result<SupplierDto>> Handle(AddSupplierProductCommand request, CancellationToken cancellationToken)
+    {
+        var tenantId = _unitOfWork.TenantId;
+
+        var supplier = await _unitOfWork.ReadRepository<Supplier>().AsQueryable()
+            .Include(s => s.Products)
+            .Include(s => s.Contacts)
+            .FirstOrDefaultAsync(s => s.Id == request.SupplierId && s.TenantId == tenantId, cancellationToken);
+
+        if (supplier == null)
+            return Result<SupplierDto>.Failure(Error.NotFound("Supplier", "Supplier not found"));
+
+        var existingProduct = supplier.Products.FirstOrDefault(p => p.ProductId == request.Product.ProductId);
+        if (existingProduct != null)
+            return Result<SupplierDto>.Failure(Error.Conflict("SupplierProduct", "Product already exists for this supplier"));
+
+        var supplierProduct = SupplierProduct.Create(
+            request.SupplierId,
+            request.Product.ProductId,
+            request.Product.UnitPrice,
+            request.Product.Currency,
+            request.Product.IsPreferred,
+            tenantId);
+
+        supplierProduct.Update(
+            request.Product.SupplierProductCode,
+            request.Product.SupplierProductName,
+            request.Product.UnitPrice,
+            request.Product.Currency,
+            request.Product.LeadTimeDays,
+            request.Product.MinOrderQuantity,
+            request.Product.IsPreferred,
+            null);
+
+        supplier.AddProduct(supplierProduct);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result<SupplierDto>.Success(_mapper.Map<SupplierDto>(supplier));
+    }
+}
+
+/// <summary>
+/// Handler for UpdateSupplierProductCommand
+/// </summary>
+public class UpdateSupplierProductHandler : IRequestHandler<UpdateSupplierProductCommand, Result<SupplierDto>>
+{
+    private readonly IPurchaseUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+
+    public UpdateSupplierProductHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
+    {
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+    }
+
+    public async Task<Result<SupplierDto>> Handle(UpdateSupplierProductCommand request, CancellationToken cancellationToken)
+    {
+        var tenantId = _unitOfWork.TenantId;
+
+        var supplier = await _unitOfWork.ReadRepository<Supplier>().AsQueryable()
+            .Include(s => s.Products)
+            .Include(s => s.Contacts)
+            .FirstOrDefaultAsync(s => s.Id == request.SupplierId && s.TenantId == tenantId, cancellationToken);
+
+        if (supplier == null)
+            return Result<SupplierDto>.Failure(Error.NotFound("Supplier", "Supplier not found"));
+
+        var supplierProduct = supplier.Products.FirstOrDefault(p => p.Id == request.ProductId);
+        if (supplierProduct == null)
+            return Result<SupplierDto>.Failure(Error.NotFound("SupplierProduct", "Supplier product not found"));
+
+        supplierProduct.Update(
+            request.Dto.SupplierProductCode ?? supplierProduct.SupplierProductCode,
+            request.Dto.SupplierProductName ?? supplierProduct.SupplierProductName,
+            request.Dto.UnitPrice ?? supplierProduct.UnitPrice,
+            request.Dto.Currency ?? supplierProduct.Currency,
+            request.Dto.LeadTimeDays ?? supplierProduct.LeadTimeDays,
+            request.Dto.MinOrderQuantity ?? supplierProduct.MinimumOrderQuantity,
+            request.Dto.IsPreferred ?? supplierProduct.IsPreferred,
+            request.Dto.Notes ?? supplierProduct.Notes);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result<SupplierDto>.Success(_mapper.Map<SupplierDto>(supplier));
+    }
+}
+
+/// <summary>
+/// Handler for RemoveSupplierProductCommand
+/// </summary>
+public class RemoveSupplierProductHandler : IRequestHandler<RemoveSupplierProductCommand, Result<SupplierDto>>
+{
+    private readonly IPurchaseUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+
+    public RemoveSupplierProductHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
+    {
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+    }
+
+    public async Task<Result<SupplierDto>> Handle(RemoveSupplierProductCommand request, CancellationToken cancellationToken)
+    {
+        var tenantId = _unitOfWork.TenantId;
+
+        var supplier = await _unitOfWork.ReadRepository<Supplier>().AsQueryable()
+            .Include(s => s.Products)
+            .Include(s => s.Contacts)
+            .FirstOrDefaultAsync(s => s.Id == request.SupplierId && s.TenantId == tenantId, cancellationToken);
+
+        if (supplier == null)
+            return Result<SupplierDto>.Failure(Error.NotFound("Supplier", "Supplier not found"));
+
+        var supplierProduct = supplier.Products.FirstOrDefault(p => p.Id == request.ProductId);
+        if (supplierProduct == null)
+            return Result<SupplierDto>.Failure(Error.NotFound("SupplierProduct", "Supplier product not found"));
+
+        supplier.RemoveProduct(request.ProductId);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result<SupplierDto>.Success(_mapper.Map<SupplierDto>(supplier));
+    }
+}
+
+/// <summary>
+/// Handler for AddSupplierContactCommand
+/// </summary>
+public class AddSupplierContactHandler : IRequestHandler<AddSupplierContactCommand, Result<SupplierDto>>
+{
+    private readonly IPurchaseUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+
+    public AddSupplierContactHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
+    {
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+    }
+
+    public async Task<Result<SupplierDto>> Handle(AddSupplierContactCommand request, CancellationToken cancellationToken)
+    {
+        var tenantId = _unitOfWork.TenantId;
+
+        var supplier = await _unitOfWork.ReadRepository<Supplier>().AsQueryable()
+            .Include(s => s.Contacts)
+            .Include(s => s.Products)
+            .FirstOrDefaultAsync(s => s.Id == request.SupplierId && s.TenantId == tenantId, cancellationToken);
+
+        if (supplier == null)
+            return Result<SupplierDto>.Failure(Error.NotFound("Supplier", "Supplier not found"));
+
+        var contact = SupplierContact.Create(
+            request.SupplierId,
+            request.Contact.Name,
+            request.Contact.Email,
+            request.Contact.Phone,
+            request.Contact.IsPrimary,
+            tenantId);
+
+        supplier.AddContact(contact);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result<SupplierDto>.Success(_mapper.Map<SupplierDto>(supplier));
+    }
+}
+
+/// <summary>
+/// Handler for RemoveSupplierContactCommand
+/// </summary>
+public class RemoveSupplierContactHandler : IRequestHandler<RemoveSupplierContactCommand, Result<SupplierDto>>
+{
+    private readonly IPurchaseUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+
+    public RemoveSupplierContactHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
+    {
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+    }
+
+    public async Task<Result<SupplierDto>> Handle(RemoveSupplierContactCommand request, CancellationToken cancellationToken)
+    {
+        var tenantId = _unitOfWork.TenantId;
+
+        var supplier = await _unitOfWork.ReadRepository<Supplier>().AsQueryable()
+            .Include(s => s.Contacts)
+            .Include(s => s.Products)
+            .FirstOrDefaultAsync(s => s.Id == request.SupplierId && s.TenantId == tenantId, cancellationToken);
+
+        if (supplier == null)
+            return Result<SupplierDto>.Failure(Error.NotFound("Supplier", "Supplier not found"));
+
+        supplier.RemoveContact(request.ContactId);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result<SupplierDto>.Success(_mapper.Map<SupplierDto>(supplier));
+    }
+}
+
+/// <summary>
+/// Handler for BlacklistSupplierCommand
+/// </summary>
+public class BlacklistSupplierHandler : IRequestHandler<BlacklistSupplierCommand, Result<SupplierDto>>
+{
+    private readonly IPurchaseUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+
+    public BlacklistSupplierHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
+    {
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+    }
+
+    public async Task<Result<SupplierDto>> Handle(BlacklistSupplierCommand request, CancellationToken cancellationToken)
+    {
+        var tenantId = _unitOfWork.TenantId;
+
+        var supplier = await _unitOfWork.Repository<Supplier>().GetByIdAsync(request.Id, cancellationToken);
+
+        if (supplier == null || supplier.TenantId != tenantId)
+            return Result<SupplierDto>.Failure(Error.NotFound("Supplier", "Supplier not found"));
+
+        supplier.Blacklist(request.Reason);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result<SupplierDto>.Success(_mapper.Map<SupplierDto>(supplier));
+    }
+}
+
+/// <summary>
+/// Handler for SetSupplierRatingCommand
+/// </summary>
+public class SetSupplierRatingHandler : IRequestHandler<SetSupplierRatingCommand, Result<SupplierDto>>
+{
+    private readonly IPurchaseUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+
+    public SetSupplierRatingHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
+    {
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+    }
+
+    public async Task<Result<SupplierDto>> Handle(SetSupplierRatingCommand request, CancellationToken cancellationToken)
+    {
+        var tenantId = _unitOfWork.TenantId;
+
+        var supplier = await _unitOfWork.Repository<Supplier>().GetByIdAsync(request.Id, cancellationToken);
+
+        if (supplier == null || supplier.TenantId != tenantId)
+            return Result<SupplierDto>.Failure(Error.NotFound("Supplier", "Supplier not found"));
+
+        supplier.SetRating(request.Rating);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result<SupplierDto>.Success(_mapper.Map<SupplierDto>(supplier));
+    }
+}
+
+/// <summary>
+/// Handler for UpdateSupplierBalanceCommand
+/// </summary>
+public class UpdateSupplierBalanceHandler : IRequestHandler<UpdateSupplierBalanceCommand, Result<SupplierDto>>
+{
+    private readonly IPurchaseUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+
+    public UpdateSupplierBalanceHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
+    {
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+    }
+
+    public async Task<Result<SupplierDto>> Handle(UpdateSupplierBalanceCommand request, CancellationToken cancellationToken)
+    {
+        var tenantId = _unitOfWork.TenantId;
+
+        var supplier = await _unitOfWork.Repository<Supplier>().GetByIdAsync(request.Id, cancellationToken);
+
+        if (supplier == null || supplier.TenantId != tenantId)
+            return Result<SupplierDto>.Failure(Error.NotFound("Supplier", "Supplier not found"));
+
+        supplier.UpdateBalance(request.Amount);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result<SupplierDto>.Success(_mapper.Map<SupplierDto>(supplier));
+    }
+}

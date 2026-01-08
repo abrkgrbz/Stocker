@@ -32,6 +32,7 @@ import type {
   CreateSupplierDto,
   UpdateSupplierDto,
   CreateSupplierProductDto,
+  UpdateSupplierProductDto,
   StockDto,
   StockAdjustmentDto,
   StockMoveDto,
@@ -977,6 +978,29 @@ export function useAddSupplierProduct() {
     },
     onError: (error) => {
       showApiError(error, 'Tedarikçi ürünü eklenemedi');
+    },
+  });
+}
+
+export function useUpdateSupplierProduct() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      supplierId,
+      productId,
+      data,
+    }: {
+      supplierId: string;
+      productId: string;
+      data: UpdateSupplierProductDto;
+    }) => InventoryService.updateSupplierProduct(supplierId, productId, data),
+    onSuccess: (_, { supplierId }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.supplier(supplierId) });
+      showSuccess('Tedarikçi ürünü güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Tedarikçi ürünü güncellenemedi');
     },
   });
 }

@@ -40,6 +40,7 @@ import type {
   SupplierListDto,
   SupplierProductDto,
   CreateSupplierProductDto,
+  UpdateSupplierProductDto,
   StockMovementDto,
   CreateStockMovementDto,
   StockMovementListDto,
@@ -643,6 +644,20 @@ export class InventoryService {
   static async addSupplierProduct(data: CreateSupplierProductDto): Promise<SupplierProductDto> {
     return ApiService.post<SupplierProductDto>(
       this.getPath(`suppliers/${data.supplierId}/products`),
+      data
+    );
+  }
+
+  /**
+   * Update supplier product
+   */
+  static async updateSupplierProduct(
+    supplierId: string,
+    productId: string,
+    data: UpdateSupplierProductDto
+  ): Promise<SupplierDto> {
+    return ApiService.put<SupplierDto>(
+      this.getPath(`suppliers/${supplierId}/products/${productId}`),
       data
     );
   }

@@ -274,6 +274,27 @@ public class SupplierProduct : TenantAggregateRoot
         product.CreatedAt = DateTime.UtcNow;
         return product;
     }
+
+    public void Update(
+        string? supplierProductCode,
+        string? supplierProductName,
+        decimal? unitPrice,
+        string? currency,
+        int? leadTimeDays,
+        decimal? minimumOrderQuantity,
+        bool isPreferred,
+        string? notes)
+    {
+        SupplierProductCode = supplierProductCode;
+        SupplierProductName = supplierProductName;
+        UnitPrice = unitPrice;
+        Currency = currency ?? Currency;
+        LeadTimeDays = leadTimeDays;
+        MinimumOrderQuantity = minimumOrderQuantity;
+        IsPreferred = isPreferred;
+        Notes = notes;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
 
 public enum SupplierType

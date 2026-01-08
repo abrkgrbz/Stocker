@@ -208,6 +208,17 @@ public class SuppliersController : ControllerBase
         return Ok(result.Value);
     }
 
+    [HttpPut("{id:guid}/products/{productId:guid}")]
+    public async Task<IActionResult> UpdateProduct(Guid id, Guid productId, [FromBody] UpdateSupplierProductDto dto)
+    {
+        var result = await _mediator.Send(new UpdateSupplierProductCommand(id, productId, dto));
+
+        if (!result.IsSuccess)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
+    }
+
     [HttpDelete("{id:guid}/products/{productId:guid}")]
     public async Task<IActionResult> RemoveProduct(Guid id, Guid productId)
     {

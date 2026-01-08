@@ -20,6 +20,8 @@ public record RemoveSupplierContactCommand(Guid SupplierId, Guid ContactId) : IR
 
 public record AddSupplierProductCommand(Guid SupplierId, CreateSupplierProductDto Product) : IRequest<Result<SupplierDto>>;
 
+public record UpdateSupplierProductCommand(Guid SupplierId, Guid ProductId, UpdateSupplierProductDto Dto) : IRequest<Result<SupplierDto>>;
+
 public record RemoveSupplierProductCommand(Guid SupplierId, Guid ProductId) : IRequest<Result<SupplierDto>>;
 
 public record UpdateSupplierBalanceCommand(Guid Id, decimal Amount) : IRequest<Result<SupplierDto>>;

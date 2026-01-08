@@ -170,6 +170,18 @@ public record CreateSupplierProductDto
     public bool IsPreferred { get; init; }
 }
 
+public record UpdateSupplierProductDto
+{
+    public string? SupplierProductCode { get; init; }
+    public string? SupplierProductName { get; init; }
+    public decimal? UnitPrice { get; init; }
+    public string? Currency { get; init; }
+    public decimal? MinOrderQuantity { get; init; }
+    public int? LeadTimeDays { get; init; }
+    public bool? IsPreferred { get; init; }
+    public string? Notes { get; init; }
+}
+
 public record SupplierSummaryDto
 {
     public int TotalSuppliers { get; init; }

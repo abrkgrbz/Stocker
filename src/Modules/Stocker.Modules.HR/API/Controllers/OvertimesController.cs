@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.Overtimes.Commands;
 using Stocker.Modules.HR.Application.Features.Overtimes.Queries;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.HR.API.Controllers;
 
@@ -16,10 +18,14 @@ namespace Stocker.Modules.HR.API.Controllers;
 public class OvertimesController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ICurrentUserService _currentUserService;
+    private readonly IHRUnitOfWork _unitOfWork;
 
-    public OvertimesController(IMediator mediator)
+    public OvertimesController(IMediator mediator, ICurrentUserService currentUserService, IHRUnitOfWork unitOfWork)
     {
         _mediator = mediator;
+        _currentUserService = currentUserService;
+        _unitOfWork = unitOfWork;
     }
 
     [HttpGet]
@@ -69,9 +75,25 @@ public class OvertimesController : ControllerBase
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     [ProducesResponseType(401)]
-    public async Task<IActionResult> Approve(int id, [FromBody] ApproveOvertimeRequest request)
+    public async Task<IActionResult> Approve(int id, [FromBody] ApproveOvertimeRequest? request = null)
     {
-        var result = await _mediator.Send(new ApproveOvertimeCommand(id, request.ApprovedById, request.Notes));
+        var approvedById = request?.ApprovedById ?? 0;
+
+        // If approvedById is not provided, get current user's employee ID
+        if (approvedById <= 0)
+        {
+            var currentUserEmail = _currentUserService.Email;
+            if (string.IsNullOrEmpty(currentUserEmail))
+                return BadRequest(new { code = "Auth", description = "Current user email not found", type = "Validation" });
+
+            var currentEmployee = await _unitOfWork.Employees.GetByEmailAsync(currentUserEmail);
+            if (currentEmployee == null)
+                return BadRequest(new { code = "Employee", description = "No employee record found for current user", type = "NotFound" });
+
+            approvedById = currentEmployee.Id;
+        }
+
+        var result = await _mediator.Send(new ApproveOvertimeCommand(id, approvedById, request?.Notes));
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }
@@ -84,13 +106,30 @@ public class OvertimesController : ControllerBase
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     [ProducesResponseType(401)]
-    public async Task<IActionResult> Reject(int id, [FromBody] RejectOvertimeRequest request)
+    public async Task<IActionResult> Reject(int id, [FromBody] RejectOvertimeRequest? request = null)
     {
-        var result = await _mediator.Send(new RejectOvertimeCommand(id, request.RejectedById, request.Reason));
+        var rejectedById = request?.RejectedById ?? 0;
+        var reason = request?.Reason ?? "Rejected";
+
+        // If rejectedById is not provided, get current user's employee ID
+        if (rejectedById <= 0)
+        {
+            var currentUserEmail = _currentUserService.Email;
+            if (string.IsNullOrEmpty(currentUserEmail))
+                return BadRequest(new { code = "Auth", description = "Current user email not found", type = "Validation" });
+
+            var currentEmployee = await _unitOfWork.Employees.GetByEmailAsync(currentUserEmail);
+            if (currentEmployee == null)
+                return BadRequest(new { code = "Employee", description = "No employee record found for current user", type = "NotFound" });
+
+            rejectedById = currentEmployee.Id;
+        }
+
+        var result = await _mediator.Send(new RejectOvertimeCommand(id, rejectedById, reason));
         if (result.IsFailure) return BadRequest(result.Error);
         return NoContent();
     }
 }
 
-public record ApproveOvertimeRequest(int ApprovedById, string? Notes);
-public record RejectOvertimeRequest(int RejectedById, string Reason);
+public record ApproveOvertimeRequest(int ApprovedById = 0, string? Notes = null);
+public record RejectOvertimeRequest(int RejectedById = 0, string Reason = "Rejected");

@@ -748,6 +748,17 @@ export interface CreateSupplierProductDto {
   isPreferred: boolean;
 }
 
+export interface UpdateSupplierProductDto {
+  supplierProductCode?: string;
+  supplierProductName?: string;
+  unitPrice?: number;
+  currency?: string;
+  minOrderQuantity?: number;
+  leadTimeDays?: number;
+  isPreferred?: boolean;
+  notes?: string;
+}
+
 // =====================================
 // STOCK MOVEMENT
 // =====================================
