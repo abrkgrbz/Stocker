@@ -90,8 +90,8 @@ public class UploadProductImageCommandHandler : IRequestHandler<UploadProductIma
 
     public async Task<Result<ProductImageDto>> Handle(UploadProductImageCommand request, CancellationToken cancellationToken)
     {
-        // Verify product exists
-        var product = await _unitOfWork.Products.GetByIdAsync(request.ProductId, cancellationToken);
+        // Use GetWithDetailsAsync to include Images navigation property
+        var product = await _unitOfWork.Products.GetWithDetailsAsync(request.ProductId, cancellationToken);
         if (product == null)
         {
             return Result<ProductImageDto>.Failure(
@@ -126,8 +126,8 @@ public class UploadProductImageCommandHandler : IRequestHandler<UploadProductIma
             request.ContentType,
             request.FileName);
 
-        // Get existing images count for display order using Product's navigation property
-        var existingImages = product.Images?.Where(i => i.IsActive).ToList() ?? new List<ProductImage>();
+        // Get existing images count for display order (Images is now loaded)
+        var existingImages = product.Images.Where(i => i.IsActive).ToList();
         var existingImagesCount = existingImages.Count;
         productImage.SetDisplayOrder(existingImagesCount);
 
@@ -144,8 +144,8 @@ public class UploadProductImageCommandHandler : IRequestHandler<UploadProductIma
             productImage.SetAsPrimary();
         }
 
-        // Add image to Product's navigation collection
-        product.Images?.Add(productImage);
+        // Add image to Product's Images collection (now properly loaded)
+        product.Images.Add(productImage);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Map to DTO
