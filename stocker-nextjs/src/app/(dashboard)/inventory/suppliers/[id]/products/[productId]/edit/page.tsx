@@ -33,7 +33,7 @@ export default function EditSupplierProductPage() {
   const updateProductMutation = useUpdateSupplierProduct();
 
   // Find the supplier product
-  const supplierProduct = supplier?.products?.find(p => p.id === productId || p.id === Number(productId));
+  const supplierProduct = supplier?.products?.find(p => String(p.id) === productId);
 
   // Set form values when data is loaded
   useEffect(() => {

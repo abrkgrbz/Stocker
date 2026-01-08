@@ -33,11 +33,11 @@ export default function AddSupplierProductPage() {
   const { data: productsData, isLoading: productsLoading } = useProducts();
   const addProductMutation = useAddSupplierProduct();
 
-  const products = productsData?.items || [];
+  const products = productsData || [];
 
   // Filter out products that are already added to this supplier
-  const existingProductIds = supplier?.products?.map(p => p.productId) || [];
-  const availableProducts = products.filter(p => !existingProductIds.includes(p.id));
+  const existingProductIds = supplier?.products?.map((p: { productId: number }) => p.productId) || [];
+  const availableProducts = products.filter((p: { id: number }) => !existingProductIds.includes(p.id));
 
   const handleSubmit = async (values: CreateSupplierProductDto) => {
     try {
@@ -126,7 +126,7 @@ export default function AddSupplierProductPage() {
                 onFinish={handleSubmit}
                 initialValues={{
                   currency: 'TRY',
-                  minimumOrderQuantity: 1,
+                  minOrderQuantity: 1,
                   leadTimeDays: 7,
                   isPreferred: false,
                 }}
@@ -144,9 +144,9 @@ export default function AddSupplierProductPage() {
                       optionFilterProp="children"
                       onChange={(value) => setSelectedProductId(value)}
                       filterOption={(input, option) =>
-                        (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                        String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                       }
-                      options={availableProducts.map((p) => ({
+                      options={availableProducts.map((p: { id: number; code: string; name: string }) => ({
                         value: p.id,
                         label: `${p.code} - ${p.name}`,
                       }))}
@@ -180,7 +180,7 @@ export default function AddSupplierProductPage() {
                       </Form.Item>
 
                       <Form.Item
-                        name="unitCost"
+                        name="unitPrice"
                         label="Birim Maliyet"
                         rules={[{ required: true, message: 'Birim maliyet giriniz' }]}
                       >
@@ -195,7 +195,7 @@ export default function AddSupplierProductPage() {
                       </Form.Item>
 
                       <Form.Item
-                        name="minimumOrderQuantity"
+                        name="minOrderQuantity"
                         label="Minimum Sipariş Miktarı"
                         rules={[{ required: true, message: 'Minimum sipariş miktarı giriniz' }]}
                       >
@@ -279,7 +279,7 @@ export default function AddSupplierProductPage() {
             <div className="bg-white rounded-xl border border-slate-200 p-6">
               <h3 className="text-base font-semibold text-slate-900 mb-4">Seçilen Ürün</h3>
               {(() => {
-                const selectedProduct = products.find(p => p.id === selectedProductId);
+                const selectedProduct = products.find((p: { id: number }) => p.id === selectedProductId);
                 if (!selectedProduct) return null;
                 return (
                   <div className="flex items-center gap-3">

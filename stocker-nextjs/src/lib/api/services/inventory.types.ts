@@ -729,21 +729,25 @@ export interface SupplierProductDto {
   productCode: string;
   productName: string;
   supplierProductCode?: string;
-  unitCost: number;
+  supplierProductName?: string;
+  unitPrice: number;
   currency: string;
-  minimumOrderQuantity: number;
+  minOrderQuantity: number;
   leadTimeDays: number;
   isPreferred: boolean;
-  isActive: boolean;
+  lastPurchaseDate?: DateTime;
+  lastPurchasePrice?: number;
+  notes?: string;
 }
 
 export interface CreateSupplierProductDto {
   supplierId: number;
   productId: number;
   supplierProductCode?: string;
-  unitCost: number;
+  supplierProductName?: string;
+  unitPrice: number;
   currency?: string;
-  minimumOrderQuantity?: number;
+  minOrderQuantity?: number;
   leadTimeDays: number;
   isPreferred: boolean;
 }

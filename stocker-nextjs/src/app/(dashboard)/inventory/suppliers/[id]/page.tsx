@@ -89,11 +89,11 @@ export default function SupplierDetailPage() {
     },
     {
       title: 'Birim Maliyet',
-      key: 'unitCost',
+      key: 'unitPrice',
       align: 'right',
       render: (_, record) => (
         <span className="font-medium text-slate-900">
-          {record.unitCost.toLocaleString('tr-TR', {
+          {record.unitPrice.toLocaleString('tr-TR', {
             style: 'currency',
             currency: record.currency || 'TRY',
           })}
@@ -102,8 +102,8 @@ export default function SupplierDetailPage() {
     },
     {
       title: 'Min. Sipariş',
-      dataIndex: 'minimumOrderQuantity',
-      key: 'minimumOrderQuantity',
+      dataIndex: 'minOrderQuantity',
+      key: 'minOrderQuantity',
       align: 'right',
       render: (qty) => <span className="text-slate-700">{qty} adet</span>,
     },
@@ -122,16 +122,9 @@ export default function SupplierDetailPage() {
           {record.isPreferred && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-900 text-white">
               <StarIcon className="w-3 h-3" />
-              Tercih
+              Tercih Edilen
             </span>
           )}
-          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-            record.isActive
-              ? 'bg-slate-900 text-white'
-              : 'bg-slate-100 text-slate-500'
-          }`}>
-            {record.isActive ? 'Aktif' : 'Pasif'}
-          </span>
         </div>
       ),
     },
@@ -147,7 +140,7 @@ export default function SupplierDetailPage() {
                 key: 'edit',
                 label: 'Düzenle',
                 icon: <PencilIcon className="w-4 h-4" />,
-                onClick: () => router.push(`/inventory/suppliers/${supplierId}/products/${record.productId}/edit`),
+                onClick: () => router.push(`/inventory/suppliers/${supplierId}/products/${record.id}/edit`),
               },
               {
                 key: 'delete',

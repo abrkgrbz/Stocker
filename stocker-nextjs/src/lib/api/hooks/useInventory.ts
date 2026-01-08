@@ -996,7 +996,7 @@ export function useUpdateSupplierProduct() {
       data: UpdateSupplierProductDto;
     }) => InventoryService.updateSupplierProduct(supplierId, productId, data),
     onSuccess: (_, { supplierId }) => {
-      queryClient.invalidateQueries({ queryKey: inventoryKeys.supplier(supplierId) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.supplier(Number(supplierId)) });
       showSuccess('Tedarikçi ürünü güncellendi');
     },
     onError: (error) => {
