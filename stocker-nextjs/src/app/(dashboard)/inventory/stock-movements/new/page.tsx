@@ -21,6 +21,9 @@ import {
   BuildingOffice2Icon,
   MapPinIcon,
   DocumentTextIcon,
+  ArrowTopRightOnSquareIcon,
+  ExclamationTriangleIcon,
+  AdjustmentsHorizontalIcon,
 } from '@heroicons/react/24/outline';
 import {
   useProducts,
@@ -31,18 +34,21 @@ import {
 import type { CreateStockMovementDto, StockMovementType } from '@/lib/api/services/inventory.types';
 import dayjs from 'dayjs';
 
-// Movement type configuration with categories
+// Movement type configuration with categories and routing
 interface MovementTypeConfigItem {
   color: string;
   label: string;
   direction: 'in' | 'out' | 'transfer';
   description: string;
   bgColor: string;
-  category: 'in' | 'out' | 'other';
+  category: 'in' | 'out' | 'adjustment' | 'transfer';
+  // If set, clicking this type redirects to another page instead of showing the form
+  redirectTo?: string;
+  redirectLabel?: string;
 }
 
 const movementTypeConfig: Record<string, MovementTypeConfigItem> = {
-  // Giriş İşlemleri
+  // === Basit Giriş İşlemleri (Direkt StockMovement API) ===
   Purchase: {
     color: '#10b981',
     label: 'Satın Alma',
@@ -75,23 +81,8 @@ const movementTypeConfig: Record<string, MovementTypeConfigItem> = {
     bgColor: '#eef2ff',
     category: 'in',
   },
-  AdjustmentIncrease: {
-    color: '#84cc16',
-    label: 'Artış Düzeltme',
-    direction: 'in',
-    description: 'Sayım fazlası düzeltme',
-    bgColor: '#f7fee7',
-    category: 'in',
-  },
-  Found: {
-    color: '#059669',
-    label: 'Bulunan',
-    direction: 'in',
-    description: 'Bulunan ürün girişi',
-    bgColor: '#ecfdf5',
-    category: 'in',
-  },
-  // Çıkış İşlemleri
+
+  // === Basit Çıkış İşlemleri (Direkt StockMovement API) ===
   Sales: {
     color: '#ef4444',
     label: 'Satış',
@@ -116,38 +107,69 @@ const movementTypeConfig: Record<string, MovementTypeConfigItem> = {
     bgColor: '#fdf2f8',
     category: 'out',
   },
+
+  // === Düzeltme İşlemleri (InventoryAdjustment API - Onay Akışı Gerekli) ===
+  AdjustmentIncrease: {
+    color: '#84cc16',
+    label: 'Artış Düzeltme',
+    direction: 'in',
+    description: 'Sayım fazlası düzeltme (onay gerekli)',
+    bgColor: '#f7fee7',
+    category: 'adjustment',
+    redirectTo: '/inventory/stock-adjustments/new?type=increase',
+    redirectLabel: 'Düzeltme Oluştur',
+  },
   AdjustmentDecrease: {
     color: '#f59e0b',
     label: 'Azalış Düzeltme',
     direction: 'out',
-    description: 'Sayım eksiği düzeltme',
+    description: 'Sayım eksiği düzeltme (onay gerekli)',
     bgColor: '#fffbeb',
-    category: 'out',
+    category: 'adjustment',
+    redirectTo: '/inventory/stock-adjustments/new?type=decrease',
+    redirectLabel: 'Düzeltme Oluştur',
   },
   Damage: {
     color: '#dc2626',
     label: 'Hasar',
     direction: 'out',
-    description: 'Hasarlı ürün çıkışı',
+    description: 'Hasarlı ürün çıkışı (onay gerekli)',
     bgColor: '#fef2f2',
-    category: 'out',
+    category: 'adjustment',
+    redirectTo: '/inventory/stock-adjustments/new?reason=damage',
+    redirectLabel: 'Düzeltme Oluştur',
   },
   Loss: {
     color: '#991b1b',
     label: 'Kayıp',
     direction: 'out',
-    description: 'Kayıp ürün çıkışı',
+    description: 'Kayıp ürün çıkışı (onay gerekli)',
     bgColor: '#fef2f2',
-    category: 'out',
+    category: 'adjustment',
+    redirectTo: '/inventory/stock-adjustments/new?reason=loss',
+    redirectLabel: 'Düzeltme Oluştur',
   },
-  // Transfer & Diğer
+  Found: {
+    color: '#059669',
+    label: 'Bulunan',
+    direction: 'in',
+    description: 'Bulunan ürün girişi (onay gerekli)',
+    bgColor: '#ecfdf5',
+    category: 'adjustment',
+    redirectTo: '/inventory/stock-adjustments/new?type=increase&reason=found',
+    redirectLabel: 'Düzeltme Oluştur',
+  },
+
+  // === Transfer İşlemleri (StockTransfer API - Onay Akışı Gerekli) ===
   Transfer: {
     color: '#3b82f6',
-    label: 'Transfer',
+    label: 'Depo Transferi',
     direction: 'transfer',
-    description: 'Depolar arası transfer',
+    description: 'Depolar arası transfer (onay gerekli)',
     bgColor: '#eff6ff',
-    category: 'other',
+    category: 'transfer',
+    redirectTo: '/inventory/stock-transfers/new',
+    redirectLabel: 'Transfer Oluştur',
   },
 };
 
@@ -155,14 +177,40 @@ const movementTypeConfig: Record<string, MovementTypeConfigItem> = {
 const groupedTypes = {
   in: Object.entries(movementTypeConfig).filter(([, v]) => v.category === 'in'),
   out: Object.entries(movementTypeConfig).filter(([, v]) => v.category === 'out'),
-  other: Object.entries(movementTypeConfig).filter(([, v]) => v.category === 'other'),
+  adjustment: Object.entries(movementTypeConfig).filter(([, v]) => v.category === 'adjustment'),
+  transfer: Object.entries(movementTypeConfig).filter(([, v]) => v.category === 'transfer'),
 };
 
 // Category labels
 const categoryLabels = {
-  in: { title: 'Stok Giriş İşlemleri', icon: ArrowUpIcon, color: '#10b981' },
-  out: { title: 'Stok Çıkış İşlemleri', icon: ArrowDownIcon, color: '#ef4444' },
-  other: { title: 'Transfer & Diğer', icon: ArrowsRightLeftIcon, color: '#3b82f6' },
+  in: {
+    title: 'Stok Giriş İşlemleri',
+    subtitle: 'Direkt kayıt',
+    icon: ArrowUpIcon,
+    color: '#10b981',
+    bgColor: '#ecfdf5',
+  },
+  out: {
+    title: 'Stok Çıkış İşlemleri',
+    subtitle: 'Direkt kayıt',
+    icon: ArrowDownIcon,
+    color: '#ef4444',
+    bgColor: '#fef2f2',
+  },
+  adjustment: {
+    title: 'Stok Düzeltmeleri',
+    subtitle: 'Onay akışı gerekli',
+    icon: AdjustmentsHorizontalIcon,
+    color: '#f59e0b',
+    bgColor: '#fffbeb',
+  },
+  transfer: {
+    title: 'Transfer İşlemleri',
+    subtitle: 'Onay akışı gerekli',
+    icon: ArrowsRightLeftIcon,
+    color: '#3b82f6',
+    bgColor: '#eff6ff',
+  },
 };
 
 // Movement type card component with keyboard support
@@ -188,6 +236,8 @@ const MovementTypeCard: React.FC<MovementTypeCardProps> = ({
     }
   };
 
+  const hasRedirect = !!config.redirectTo;
+
   return (
     <button
       key={typeKey}
@@ -197,7 +247,7 @@ const MovementTypeCard: React.FC<MovementTypeCardProps> = ({
       tabIndex={tabIndex}
       aria-pressed={isSelected}
       aria-label={`${config.label}: ${config.description}`}
-      className={`p-3 sm:p-4 rounded-xl border-2 text-left transition-all focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 ${
+      className={`p-3 sm:p-4 rounded-xl border-2 text-left transition-all focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 relative ${
         isSelected
           ? 'border-slate-900 bg-slate-50 shadow-sm'
           : 'border-slate-200 hover:border-slate-300 hover:shadow-sm bg-white'
@@ -217,6 +267,9 @@ const MovementTypeCard: React.FC<MovementTypeCardProps> = ({
           )}
         </div>
         <span className="font-medium text-slate-900 text-sm sm:text-base">{config.label}</span>
+        {hasRedirect && (
+          <ArrowTopRightOnSquareIcon className="w-3.5 h-3.5 text-slate-400 ml-auto" />
+        )}
       </div>
       <p className="text-xs text-slate-500 line-clamp-2">{config.description}</p>
     </button>
@@ -269,15 +322,24 @@ export default function NewStockMovementPage() {
     }
   };
 
-  const handleMovementTypeChange = useCallback((value: StockMovementType) => {
-    setSelectedMovementType(value);
-    form.setFieldsValue({ movementType: value });
+  const handleMovementTypeChange = useCallback((typeKey: string) => {
+    const config = movementTypeConfig[typeKey];
+
+    // If this type has a redirect, navigate there instead
+    if (config.redirectTo) {
+      router.push(config.redirectTo);
+      return;
+    }
+
+    // Otherwise, set the type and show the form
+    setSelectedMovementType(typeKey as StockMovementType);
+    form.setFieldsValue({ movementType: typeKey });
 
     // Scroll to form section after selection
     setTimeout(() => {
       formSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
-  }, [form]);
+  }, [form, router]);
 
   const handleWarehouseChange = (value: number) => {
     setSelectedWarehouseId(value);
@@ -374,20 +436,28 @@ export default function NewStockMovementPage() {
                     {/* Stok Giriş İşlemleri */}
                     <div>
                       <div className="flex items-center gap-2 mb-3">
-                        <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ backgroundColor: '#ecfdf5' }}>
+                        <div
+                          className="w-6 h-6 rounded-md flex items-center justify-center"
+                          style={{ backgroundColor: categoryLabels.in.bgColor }}
+                        >
                           <ArrowUpIcon className="w-3.5 h-3.5" style={{ color: categoryLabels.in.color }} />
                         </div>
-                        <h4 className="text-sm font-medium text-slate-700">{categoryLabels.in.title}</h4>
+                        <div>
+                          <h4 className="text-sm font-medium text-slate-700">{categoryLabels.in.title}</h4>
+                        </div>
                         <span className="text-xs text-slate-400">({groupedTypes.in.length})</span>
+                        <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full ml-auto">
+                          {categoryLabels.in.subtitle}
+                        </span>
                       </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                         {groupedTypes.in.map(([key, config]) => (
                           <MovementTypeCard
                             key={key}
                             typeKey={key}
                             config={config}
                             isSelected={selectedMovementType === key}
-                            onSelect={() => handleMovementTypeChange(key as StockMovementType)}
+                            onSelect={() => handleMovementTypeChange(key)}
                             tabIndex={++tabIndex}
                           />
                         ))}
@@ -397,11 +467,19 @@ export default function NewStockMovementPage() {
                     {/* Stok Çıkış İşlemleri */}
                     <div>
                       <div className="flex items-center gap-2 mb-3">
-                        <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ backgroundColor: '#fef2f2' }}>
+                        <div
+                          className="w-6 h-6 rounded-md flex items-center justify-center"
+                          style={{ backgroundColor: categoryLabels.out.bgColor }}
+                        >
                           <ArrowDownIcon className="w-3.5 h-3.5" style={{ color: categoryLabels.out.color }} />
                         </div>
-                        <h4 className="text-sm font-medium text-slate-700">{categoryLabels.out.title}</h4>
+                        <div>
+                          <h4 className="text-sm font-medium text-slate-700">{categoryLabels.out.title}</h4>
+                        </div>
                         <span className="text-xs text-slate-400">({groupedTypes.out.length})</span>
+                        <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full ml-auto">
+                          {categoryLabels.out.subtitle}
+                        </span>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                         {groupedTypes.out.map(([key, config]) => (
@@ -410,30 +488,71 @@ export default function NewStockMovementPage() {
                             typeKey={key}
                             config={config}
                             isSelected={selectedMovementType === key}
-                            onSelect={() => handleMovementTypeChange(key as StockMovementType)}
+                            onSelect={() => handleMovementTypeChange(key)}
                             tabIndex={++tabIndex}
                           />
                         ))}
                       </div>
                     </div>
 
-                    {/* Transfer & Diğer */}
+                    {/* Stok Düzeltmeleri (Redirect to InventoryAdjustments) */}
                     <div>
                       <div className="flex items-center gap-2 mb-3">
-                        <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ backgroundColor: '#eff6ff' }}>
-                          <ArrowsRightLeftIcon className="w-3.5 h-3.5" style={{ color: categoryLabels.other.color }} />
+                        <div
+                          className="w-6 h-6 rounded-md flex items-center justify-center"
+                          style={{ backgroundColor: categoryLabels.adjustment.bgColor }}
+                        >
+                          <AdjustmentsHorizontalIcon className="w-3.5 h-3.5" style={{ color: categoryLabels.adjustment.color }} />
                         </div>
-                        <h4 className="text-sm font-medium text-slate-700">{categoryLabels.other.title}</h4>
-                        <span className="text-xs text-slate-400">({groupedTypes.other.length})</span>
+                        <div>
+                          <h4 className="text-sm font-medium text-slate-700">{categoryLabels.adjustment.title}</h4>
+                        </div>
+                        <span className="text-xs text-slate-400">({groupedTypes.adjustment.length})</span>
+                        <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-auto flex items-center gap-1">
+                          <ExclamationTriangleIcon className="w-3 h-3" />
+                          {categoryLabels.adjustment.subtitle}
+                        </span>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                        {groupedTypes.other.map(([key, config]) => (
+                        {groupedTypes.adjustment.map(([key, config]) => (
                           <MovementTypeCard
                             key={key}
                             typeKey={key}
                             config={config}
                             isSelected={selectedMovementType === key}
-                            onSelect={() => handleMovementTypeChange(key as StockMovementType)}
+                            onSelect={() => handleMovementTypeChange(key)}
+                            tabIndex={++tabIndex}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Transfer İşlemleri (Redirect to StockTransfers) */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <div
+                          className="w-6 h-6 rounded-md flex items-center justify-center"
+                          style={{ backgroundColor: categoryLabels.transfer.bgColor }}
+                        >
+                          <ArrowsRightLeftIcon className="w-3.5 h-3.5" style={{ color: categoryLabels.transfer.color }} />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-slate-700">{categoryLabels.transfer.title}</h4>
+                        </div>
+                        <span className="text-xs text-slate-400">({groupedTypes.transfer.length})</span>
+                        <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full ml-auto flex items-center gap-1">
+                          <ExclamationTriangleIcon className="w-3 h-3" />
+                          {categoryLabels.transfer.subtitle}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                        {groupedTypes.transfer.map(([key, config]) => (
+                          <MovementTypeCard
+                            key={key}
+                            typeKey={key}
+                            config={config}
+                            isSelected={selectedMovementType === key}
+                            onSelect={() => handleMovementTypeChange(key)}
                             tabIndex={++tabIndex}
                           />
                         ))}
@@ -443,8 +562,8 @@ export default function NewStockMovementPage() {
                 </Form.Item>
               </div>
 
-              {/* Product and Details - shown after type selection */}
-              {selectedMovementType && (
+              {/* Product and Details - shown after type selection (only for direct types) */}
+              {selectedMovementType && !movementTypeConfig[selectedMovementType]?.redirectTo && (
                 <div ref={formSectionRef}>
                   {/* Document Info */}
                   <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 mb-6">
@@ -602,39 +721,6 @@ export default function NewStockMovementPage() {
                           />
                         </Form.Item>
                       )}
-
-                      {selectedWarehouseId && typeConfig?.direction === 'transfer' && (
-                        <>
-                          <Form.Item
-                            name="fromLocationId"
-                            label="Kaynak Konum"
-                          >
-                            <Select
-                              placeholder="Kaynak konum"
-                              allowClear
-                              options={locations.map(l => ({
-                                value: l.id,
-                                label: `${l.code} - ${l.name}`,
-                              }))}
-                              size="large"
-                            />
-                          </Form.Item>
-                          <Form.Item
-                            name="toLocationId"
-                            label="Hedef Konum"
-                          >
-                            <Select
-                              placeholder="Hedef konum"
-                              allowClear
-                              options={locations.map(l => ({
-                                value: l.id,
-                                label: `${l.code} - ${l.name}`,
-                              }))}
-                              size="large"
-                            />
-                          </Form.Item>
-                        </>
-                      )}
                     </div>
                   </div>
 
@@ -710,7 +796,7 @@ export default function NewStockMovementPage() {
           {/* Sidebar */}
           <div className="lg:col-span-4 space-y-6">
             {/* Selected Movement Type */}
-            {typeConfig && (
+            {typeConfig && !typeConfig.redirectTo && (
               <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6">
                 <h3 className="text-base font-semibold text-slate-900 mb-4">Hareket Türü</h3>
                 <div className="flex items-center gap-3">
@@ -794,20 +880,16 @@ export default function NewStockMovementPage() {
               <h3 className="text-sm font-semibold text-slate-900 mb-2">Bilgi</h3>
               <ul className="text-sm text-slate-600 space-y-2">
                 <li className="flex gap-2">
-                  <span className="text-slate-400">•</span>
-                  <span>Hareket türü, stok miktarının artış veya azalış yönünü belirler.</span>
+                  <span className="text-emerald-500">●</span>
+                  <span><strong>Direkt kayıt:</strong> Giriş ve çıkış işlemleri anında kaydedilir.</span>
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-slate-400">•</span>
-                  <span>Belge numarası otomatik oluşturulur, değiştirebilirsiniz.</span>
+                  <span className="text-amber-500">●</span>
+                  <span><strong>Düzeltmeler:</strong> Sayım farkları ve kayıp/hasar için onay gerekir.</span>
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-slate-400">•</span>
-                  <span>Seri ve lot numaraları takip edilen ürünler için kullanılır.</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-slate-400">•</span>
-                  <span>Referans belgesi ile hareketi ilişkilendirebilirsiniz.</span>
+                  <span className="text-blue-500">●</span>
+                  <span><strong>Transferler:</strong> Depolar arası sevkiyat için onay akışı kullanılır.</span>
                 </li>
               </ul>
             </div>
