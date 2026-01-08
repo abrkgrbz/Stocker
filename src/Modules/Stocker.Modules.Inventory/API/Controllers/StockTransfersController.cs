@@ -20,11 +20,13 @@ public class StockTransfersController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ITenantService _tenantService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public StockTransfersController(IMediator mediator, ITenantService tenantService)
+    public StockTransfersController(IMediator mediator, ITenantService tenantService, ICurrentUserService currentUserService)
     {
         _mediator = mediator;
         _tenantService = tenantService;
+        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -104,6 +106,20 @@ public class StockTransfersController : ControllerBase
     {
         var tenantId = _tenantService.GetCurrentTenantId();
         if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        // Auto-set CreatedByUserId from current user if not provided
+        if (data.CreatedByUserId == 0)
+        {
+            var currentUser = _currentUserService.GetCurrentUser();
+            if (currentUser != null)
+            {
+                data.CreatedByUserId = Math.Abs(currentUser.Id.GetHashCode() % 100000) + 1;
+            }
+            else
+            {
+                data.CreatedByUserId = 1; // Default system user
+            }
+        }
 
         var command = new CreateStockTransferCommand
         {

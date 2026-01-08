@@ -8,22 +8,19 @@ import {
   Select,
   DatePicker,
   Button,
-  Space,
-  Table,
   InputNumber,
-  AutoComplete,
-  Collapse,
-  Segmented,
+  message,
+  Card,
 } from 'antd';
 import {
   ArrowLeftIcon,
   ArrowsRightLeftIcon,
-  CalendarIcon,
-  CheckIcon,
-  DocumentTextIcon,
-  InboxIcon,
+  BuildingOffice2Icon,
+  CubeIcon,
   PlusIcon,
   TrashIcon,
+  TruckIcon,
+  CalendarDaysIcon,
 } from '@heroicons/react/24/outline';
 import {
   useWarehouses,
@@ -32,7 +29,6 @@ import {
   useCreateStockTransfer,
 } from '@/lib/api/hooks/useInventory';
 import { TransferType, type CreateStockTransferDto, type CreateStockTransferItemDto } from '@/lib/api/services/inventory.types';
-import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
@@ -43,14 +39,14 @@ interface TransferItem extends CreateStockTransferItemDto {
   productName?: string;
 }
 
-const transferTypes = [
-  { value: TransferType.Standard, label: 'Standart' },
-  { value: TransferType.Urgent, label: 'Acil' },
-  { value: TransferType.Replenishment, label: 'İkmal' },
-  { value: TransferType.Return, label: 'İade' },
-  { value: TransferType.Internal, label: 'Dahili' },
-  { value: TransferType.CrossDock, label: 'Cross-Dock' },
-  { value: TransferType.Consolidation, label: 'Konsolidasyon' },
+const transferTypeOptions = [
+  { value: TransferType.Standard, label: 'Standart', description: 'Normal depo transferi' },
+  { value: TransferType.Urgent, label: 'Acil', description: 'Öncelikli transfer' },
+  { value: TransferType.Replenishment, label: 'İkmal', description: 'Stok takviyesi' },
+  { value: TransferType.Return, label: 'İade', description: 'Ürün iadesi' },
+  { value: TransferType.Internal, label: 'Dahili', description: 'Aynı tesis içi' },
+  { value: TransferType.CrossDock, label: 'Cross-Dock', description: 'Geçiş transferi' },
+  { value: TransferType.Consolidation, label: 'Konsolidasyon', description: 'Birleştirme' },
 ];
 
 export default function NewStockTransferPage() {
@@ -59,7 +55,6 @@ export default function NewStockTransferPage() {
   const [items, setItems] = useState<TransferItem[]>([]);
   const [selectedSourceWarehouse, setSelectedSourceWarehouse] = useState<number | undefined>();
   const [selectedDestWarehouse, setSelectedDestWarehouse] = useState<number | undefined>();
-  const [transferType, setTransferType] = useState<TransferType>(TransferType.Standard);
 
   const { data: warehouses = [] } = useWarehouses();
   const { data: sourceLocations = [] } = useLocations(selectedSourceWarehouse);
@@ -100,16 +95,25 @@ export default function NewStockTransferPage() {
     );
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (values: {
+    transferNumber: string;
+    transferDate: dayjs.Dayjs;
+    sourceWarehouseId: number;
+    destinationWarehouseId: number;
+    transferType: TransferType;
+    description?: string;
+    notes?: string;
+    expectedArrivalDate?: dayjs.Dayjs;
+  }) => {
     try {
-      const values = await form.validateFields();
-
       if (items.length === 0) {
+        message.error('En az bir ürün eklemelisiniz');
         return;
       }
 
       const invalidItems = items.filter((item) => !item.productId || item.requestedQuantity <= 0);
       if (invalidItems.length > 0) {
+        message.error('Tüm ürünlerin geçerli bilgilere sahip olduğundan emin olun');
         return;
       }
 
@@ -118,11 +122,11 @@ export default function NewStockTransferPage() {
         transferDate: values.transferDate?.toISOString() || new Date().toISOString(),
         sourceWarehouseId: values.sourceWarehouseId,
         destinationWarehouseId: values.destinationWarehouseId,
-        transferType: transferType,
+        transferType: values.transferType,
         description: values.description,
         notes: values.notes,
         expectedArrivalDate: values.expectedArrivalDate?.toISOString(),
-        createdByUserId: 1,
+        createdByUserId: 0, // Will be set by backend from auth context
         items: items.map((item) => ({
           productId: item.productId,
           sourceLocationId: item.sourceLocationId,
@@ -135,154 +139,40 @@ export default function NewStockTransferPage() {
       };
 
       await createTransfer.mutateAsync(data);
+      message.success('Stok transferi oluşturuldu');
       router.push('/inventory/stock-transfers');
     } catch {
-      // Validation or API error handled
+      message.error('Transfer oluşturulurken bir hata oluştu');
     }
   };
 
-  const columns: ColumnsType<TransferItem> = [
-    {
-      title: 'Ürün',
-      dataIndex: 'productId',
-      key: 'productId',
-      width: 280,
-      render: (_, record) => (
-        <AutoComplete
-          style={{ width: '100%' }}
-          placeholder="Ürün ara..."
-          value={record.productName || ''}
-          options={products.map((p) => ({
-            value: p.id,
-            label: `${p.code} - ${p.name}`,
-          }))}
-          onSelect={(value) => handleItemChange(record.key, 'productId', value)}
-          filterOption={(inputValue, option) =>
-            option?.label?.toString().toLowerCase().includes(inputValue.toLowerCase()) || false
-          }
-          variant="filled"
-        />
-      ),
-    },
-    {
-      title: 'Kaynak Lokasyon',
-      dataIndex: 'sourceLocationId',
-      key: 'sourceLocationId',
-      width: 160,
-      render: (value, record) => (
-        <Select
-          style={{ width: '100%' }}
-          placeholder="Lokasyon"
-          value={value}
-          onChange={(val) => handleItemChange(record.key, 'sourceLocationId', val)}
-          allowClear
-          variant="filled"
-          options={sourceLocations.map((l) => ({
-            value: l.id,
-            label: l.code,
-          }))}
-        />
-      ),
-    },
-    {
-      title: 'Hedef Lokasyon',
-      dataIndex: 'destinationLocationId',
-      key: 'destinationLocationId',
-      width: 160,
-      render: (value, record) => (
-        <Select
-          style={{ width: '100%' }}
-          placeholder="Lokasyon"
-          value={value}
-          onChange={(val) => handleItemChange(record.key, 'destinationLocationId', val)}
-          allowClear
-          variant="filled"
-          options={destLocations.map((l) => ({
-            value: l.id,
-            label: l.code,
-          }))}
-        />
-      ),
-    },
-    {
-      title: 'Miktar',
-      dataIndex: 'requestedQuantity',
-      key: 'requestedQuantity',
-      width: 100,
-      render: (value, record) => (
-        <InputNumber
-          style={{ width: '100%' }}
-          min={1}
-          value={value}
-          onChange={(val) => handleItemChange(record.key, 'requestedQuantity', val || 1)}
-          variant="filled"
-        />
-      ),
-    },
-    {
-      title: 'Lot No',
-      dataIndex: 'lotNumber',
-      key: 'lotNumber',
-      width: 120,
-      render: (value, record) => (
-        <Input
-          placeholder="Lot"
-          value={value}
-          onChange={(e) => handleItemChange(record.key, 'lotNumber', e.target.value)}
-          variant="filled"
-        />
-      ),
-    },
-    {
-      title: 'Seri No',
-      dataIndex: 'serialNumber',
-      key: 'serialNumber',
-      width: 120,
-      render: (value, record) => (
-        <Input
-          placeholder="Seri"
-          value={value}
-          onChange={(e) => handleItemChange(record.key, 'serialNumber', e.target.value)}
-          variant="filled"
-        />
-      ),
-    },
-    {
-      title: '',
-      key: 'actions',
-      width: 50,
-      render: (_, record) => (
-        <Button
-          type="text"
-          danger
-          icon={<TrashIcon className="w-4 h-4" />}
-          onClick={() => handleRemoveItem(record.key)}
-        />
-      ),
-    },
-  ];
-
   const totalQuantity = items.reduce((sum, item) => sum + (item.requestedQuantity || 0), 0);
+  const sourceWarehouse = warehouses.find(w => w.id === selectedSourceWarehouse);
+  const destWarehouse = warehouses.find(w => w.id === selectedDestWarehouse);
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Glass Effect Sticky Header */}
+    <div className="space-y-6">
+      {/* Sticky Header */}
       <div
-        className="sticky top-0 z-50 px-8 py-4"
+        className="sticky top-0 z-10 -mx-6 px-6 py-4"
         style={{
           background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+          backdropFilter: 'blur(8px)',
+          borderBottom: '1px solid rgba(0,0,0,0.06)',
+          marginTop: '-24px',
+          paddingTop: '24px',
         }}
       >
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
+        <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
             <Button
               type="text"
               icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={() => router.back()}
-              className="hover:bg-gray-100"
-            />
+              onClick={() => router.push('/inventory/stock-transfers')}
+            >
+              Geri
+            </Button>
+            <div className="h-6 w-px bg-gray-200" />
             <div className="flex items-center gap-3">
               <div
                 className="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -291,273 +181,391 @@ export default function NewStockTransferPage() {
                 <ArrowsRightLeftIcon className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-semibold text-gray-900 m-0">Yeni Stok Transferi</h1>
-                <p className="text-xs text-gray-500 m-0">Depolar arası stok hareketi oluşturun</p>
+                <h1 className="text-xl font-semibold text-slate-900 m-0">Yeni Stok Transferi</h1>
+                <p className="text-sm text-slate-500 m-0">Depolar arası stok hareketi oluşturun</p>
               </div>
             </div>
           </div>
-          <Space>
-            <Button onClick={() => router.back()}>İptal</Button>
+          <div className="flex gap-2">
+            <Button onClick={() => router.push('/inventory/stock-transfers')}>
+              İptal
+            </Button>
             <Button
               type="primary"
-              icon={<CheckIcon className="w-4 h-4" />}
-              onClick={handleSubmit}
+              onClick={() => form.submit()}
               loading={createTransfer.isPending}
-              disabled={items.length === 0}
-              style={{ background: '#1a1a1a', borderColor: '#1a1a1a', color: 'white' }}
+              disabled={items.length === 0 || !selectedSourceWarehouse || !selectedDestWarehouse}
             >
-              Kaydet
+              Transfer Oluştur
             </Button>
-          </Space>
+          </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-8 py-8">
-        <Form
-          form={form}
-          layout="vertical"
-          initialValues={{
-            transferDate: dayjs(),
-          }}
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-            {/* Left Column - Transfer Info */}
-            <div className="lg:col-span-2 space-y-8">
-              {/* Transfer Number - Hero Input */}
-              <div>
+      {/* Form */}
+      <div className="grid grid-cols-12 gap-6">
+        <div className="col-span-8">
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleSubmit}
+            initialValues={{
+              transferDate: dayjs(),
+              transferType: TransferType.Standard,
+            }}
+          >
+            {/* Transfer Info Card */}
+            <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+              <h3 className="text-base font-semibold text-slate-900 mb-6">Transfer Bilgileri</h3>
+
+              <div className="grid grid-cols-2 gap-4">
                 <Form.Item
                   name="transferNumber"
+                  label="Transfer Numarası"
                   rules={[{ required: true, message: 'Transfer numarası gerekli' }]}
-                  className="mb-0"
+                  className="col-span-2"
                 >
-                  <Input
-                    placeholder="Transfer numarası girin"
-                    variant="borderless"
-                    style={{
-                      fontSize: '28px',
-                      fontWeight: 600,
-                      padding: '0',
-                      color: '#1a1a1a',
+                  <Input placeholder="TR-2024-001" size="large" />
+                </Form.Item>
+
+                <Form.Item
+                  name="transferType"
+                  label="Transfer Türü"
+                  rules={[{ required: true, message: 'Transfer türü seçiniz' }]}
+                >
+                  <Select
+                    size="large"
+                    placeholder="Tür seçin"
+                    options={transferTypeOptions.map(t => ({
+                      value: t.value,
+                      label: t.label,
+                    }))}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="transferDate"
+                  label="Transfer Tarihi"
+                  rules={[{ required: true, message: 'Tarih gerekli' }]}
+                >
+                  <DatePicker
+                    style={{ width: '100%' }}
+                    format="DD/MM/YYYY"
+                    size="large"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="sourceWarehouseId"
+                  label="Kaynak Depo"
+                  rules={[{ required: true, message: 'Kaynak depo seçiniz' }]}
+                >
+                  <Select
+                    size="large"
+                    placeholder="Kaynak depo seçin"
+                    options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+                    onChange={(value) => {
+                      setSelectedSourceWarehouse(value);
+                      // Clear items when source warehouse changes
+                      if (items.length > 0) {
+                        setItems(items.map(item => ({ ...item, sourceLocationId: undefined })));
+                      }
                     }}
                   />
                 </Form.Item>
-                <p className="text-sm text-gray-400 mt-1">Örn: TR-2024-001</p>
+
+                <Form.Item
+                  name="destinationWarehouseId"
+                  label="Hedef Depo"
+                  rules={[
+                    { required: true, message: 'Hedef depo seçiniz' },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (!value || getFieldValue('sourceWarehouseId') !== value) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(new Error('Kaynak ve hedef depo aynı olamaz'));
+                      },
+                    }),
+                  ]}
+                >
+                  <Select
+                    size="large"
+                    placeholder="Hedef depo seçin"
+                    options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+                    onChange={(value) => {
+                      setSelectedDestWarehouse(value);
+                      // Clear items when dest warehouse changes
+                      if (items.length > 0) {
+                        setItems(items.map(item => ({ ...item, destinationLocationId: undefined })));
+                      }
+                    }}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="expectedArrivalDate"
+                  label="Tahmini Varış Tarihi"
+                >
+                  <DatePicker
+                    style={{ width: '100%' }}
+                    format="DD/MM/YYYY"
+                    size="large"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="description"
+                  label="Açıklama"
+                  className="col-span-2"
+                >
+                  <TextArea rows={2} placeholder="Transfer açıklaması..." />
+                </Form.Item>
+
+                <Form.Item
+                  name="notes"
+                  label="Notlar"
+                  className="col-span-2"
+                >
+                  <TextArea rows={2} placeholder="Ek notlar..." />
+                </Form.Item>
               </div>
-
-              {/* Gradient Divider */}
-              <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent" />
-
-              {/* Transfer Type */}
-              <div>
-                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  Transfer Türü
-                </label>
-                <Segmented
-                  value={transferType}
-                  onChange={(val) => setTransferType(val as TransferType)}
-                  options={transferTypes}
-                  block
-                />
-              </div>
-
-              {/* Gradient Divider */}
-              <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent" />
-
-              {/* Warehouses */}
-              <div>
-                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  <InboxIcon className="w-4 h-4 mr-2" />
-                  Depolar
-                </label>
-
-                <div className="space-y-4">
-                  <div
-                    className="p-4 rounded-xl"
-                    style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' }}
-                  >
-                    <p className="text-xs font-medium text-amber-700 mb-2">KAYNAK DEPO</p>
-                    <Form.Item
-                      name="sourceWarehouseId"
-                      rules={[{ required: true, message: 'Kaynak depo seçiniz' }]}
-                      className="mb-0"
-                    >
-                      <Select
-                        placeholder="Depo seçin"
-                        options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
-                        onChange={setSelectedSourceWarehouse}
-                        variant="borderless"
-                        style={{ background: 'white', borderRadius: 8 }}
-                      />
-                    </Form.Item>
-                  </div>
-
-                  <div className="flex justify-center">
-                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                      <ArrowsRightLeftIcon className="w-4 h-4 text-gray-400 rotate-90" />
-                    </div>
-                  </div>
-
-                  <div
-                    className="p-4 rounded-xl"
-                    style={{ background: 'linear-gradient(135deg, #d1fae5 0%, #6ee7b7 100%)' }}
-                  >
-                    <p className="text-xs font-medium text-emerald-700 mb-2">HEDEF DEPO</p>
-                    <Form.Item
-                      name="destinationWarehouseId"
-                      rules={[{ required: true, message: 'Hedef depo seçiniz' }]}
-                      className="mb-0"
-                    >
-                      <Select
-                        placeholder="Depo seçin"
-                        options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
-                        onChange={setSelectedDestWarehouse}
-                        variant="borderless"
-                        style={{ background: 'white', borderRadius: 8 }}
-                      />
-                    </Form.Item>
-                  </div>
-                </div>
-              </div>
-
-              {/* Gradient Divider */}
-              <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent" />
-
-              {/* Dates */}
-              <div>
-                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  <CalendarIcon className="w-4 h-4 mr-2" />
-                  Tarihler
-                </label>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <Form.Item
-                    name="transferDate"
-                    label={<span className="text-gray-600 text-sm">Transfer Tarihi</span>}
-                    rules={[{ required: true, message: 'Tarih gerekli' }]}
-                  >
-                    <DatePicker
-                      style={{ width: '100%' }}
-                      format="DD/MM/YYYY"
-                      variant="filled"
-                    />
-                  </Form.Item>
-
-                  <Form.Item
-                    name="expectedArrivalDate"
-                    label={<span className="text-gray-600 text-sm">Tahmini Varış</span>}
-                  >
-                    <DatePicker
-                      style={{ width: '100%' }}
-                      format="DD/MM/YYYY"
-                      variant="filled"
-                    />
-                  </Form.Item>
-                </div>
-              </div>
-
-              {/* Notes - Collapsible */}
-              <Collapse
-                ghost
-                items={[
-                  {
-                    key: 'notes',
-                    label: (
-                      <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        <DocumentTextIcon className="w-4 h-4 mr-2" />
-                        Notlar ve Açıklama
-                      </span>
-                    ),
-                    children: (
-                      <div className="space-y-4 pt-2">
-                        <Form.Item
-                          name="description"
-                          label={<span className="text-gray-600 text-sm">Açıklama</span>}
-                        >
-                          <TextArea
-                            rows={2}
-                            placeholder="Transfer açıklaması..."
-                            variant="filled"
-                          />
-                        </Form.Item>
-
-                        <Form.Item
-                          name="notes"
-                          label={<span className="text-gray-600 text-sm">Notlar</span>}
-                        >
-                          <TextArea
-                            rows={2}
-                            placeholder="Ek notlar..."
-                            variant="filled"
-                          />
-                        </Form.Item>
-                      </div>
-                    ),
-                  },
-                ]}
-              />
             </div>
 
-            {/* Right Column - Items */}
-            <div className="lg:col-span-3">
-              {/* Summary Card */}
-              <div
-                className="p-6 rounded-2xl mb-6"
-                style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)' }}
-              >
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-sm text-blue-600 font-medium">Transfer Özeti</p>
-                    <p className="text-3xl font-bold text-blue-900 mt-1">{items.length} Kalem</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-blue-600 font-medium">Toplam Miktar</p>
-                    <p className="text-3xl font-bold text-blue-900 mt-1">{totalQuantity}</p>
-                  </div>
-                </div>
+            {/* Transfer Items Card */}
+            <div className="bg-white rounded-xl border border-slate-200 p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-base font-semibold text-slate-900 m-0">Transfer Kalemleri</h3>
+                <Button
+                  type="primary"
+                  icon={<PlusIcon className="w-4 h-4" />}
+                  onClick={handleAddItem}
+                  disabled={!selectedSourceWarehouse || !selectedDestWarehouse}
+                >
+                  Ürün Ekle
+                </Button>
               </div>
 
-              {/* Items Section */}
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    Transfer Kalemleri
-                  </label>
+              {!selectedSourceWarehouse || !selectedDestWarehouse ? (
+                <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center">
+                  <BuildingOffice2Icon className="w-10 h-10 text-gray-300 mb-3 mx-auto" />
+                  <p className="text-gray-500 font-medium">Önce depoları seçin</p>
+                  <p className="text-gray-400 text-sm mt-1">
+                    Ürün ekleyebilmek için kaynak ve hedef depoları seçmelisiniz
+                  </p>
+                </div>
+              ) : items.length === 0 ? (
+                <div
+                  className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center cursor-pointer hover:border-gray-300 hover:bg-gray-50 transition-all"
+                  onClick={handleAddItem}
+                >
+                  <CubeIcon className="w-10 h-10 text-gray-300 mb-3 mx-auto" />
+                  <p className="text-gray-500 font-medium">Henüz ürün eklenmedi</p>
+                  <p className="text-gray-400 text-sm mt-1">Transfer edilecek ürünleri ekleyin</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {items.map((item, index) => (
+                    <Card
+                      key={item.key}
+                      size="small"
+                      className="border-slate-200"
+                      title={
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs font-medium text-slate-600">
+                            {index + 1}
+                          </span>
+                          <span className="text-sm font-medium">
+                            {item.productName || 'Ürün seçiniz'}
+                          </span>
+                          {item.productCode && (
+                            <span className="text-xs text-slate-400">({item.productCode})</span>
+                          )}
+                        </div>
+                      }
+                      extra={
+                        <Button
+                          type="text"
+                          danger
+                          icon={<TrashIcon className="w-4 h-4" />}
+                          onClick={() => handleRemoveItem(item.key)}
+                        />
+                      }
+                    >
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="col-span-2">
+                          <label className="text-xs text-slate-500 mb-1 block">Ürün</label>
+                          <Select
+                            showSearch
+                            style={{ width: '100%' }}
+                            placeholder="Ürün seçiniz"
+                            value={item.productId || undefined}
+                            optionFilterProp="children"
+                            onChange={(value) => handleItemChange(item.key, 'productId', value)}
+                            filterOption={(input, option) =>
+                              String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                            }
+                            options={products.map((p) => ({
+                              value: p.id,
+                              label: `${p.code} - ${p.name}`,
+                            }))}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs text-slate-500 mb-1 block">Miktar</label>
+                          <InputNumber
+                            style={{ width: '100%' }}
+                            min={1}
+                            value={item.requestedQuantity}
+                            onChange={(val) => handleItemChange(item.key, 'requestedQuantity', val || 1)}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs text-slate-500 mb-1 block">Kaynak Lokasyon</label>
+                          <Select
+                            style={{ width: '100%' }}
+                            placeholder="Opsiyonel"
+                            value={item.sourceLocationId}
+                            onChange={(val) => handleItemChange(item.key, 'sourceLocationId', val)}
+                            allowClear
+                            options={sourceLocations.map((l) => ({
+                              value: l.id,
+                              label: l.code,
+                            }))}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs text-slate-500 mb-1 block">Hedef Lokasyon</label>
+                          <Select
+                            style={{ width: '100%' }}
+                            placeholder="Opsiyonel"
+                            value={item.destinationLocationId}
+                            onChange={(val) => handleItemChange(item.key, 'destinationLocationId', val)}
+                            allowClear
+                            options={destLocations.map((l) => ({
+                              value: l.id,
+                              label: l.code,
+                            }))}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs text-slate-500 mb-1 block">Lot No</label>
+                          <Input
+                            placeholder="Lot numarası"
+                            value={item.lotNumber}
+                            onChange={(e) => handleItemChange(item.key, 'lotNumber', e.target.value)}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs text-slate-500 mb-1 block">Seri No</label>
+                          <Input
+                            placeholder="Seri numarası"
+                            value={item.serialNumber}
+                            onChange={(e) => handleItemChange(item.key, 'serialNumber', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+
+                  {/* Add another item button at bottom */}
                   <Button
-                    type="primary"
-                    icon={<PlusIcon className="w-4 h-4" />}
+                    type="dashed"
                     onClick={handleAddItem}
-                    style={{ background: '#1a1a1a', borderColor: '#1a1a1a', color: 'white' }}
+                    block
+                    icon={<PlusIcon className="w-4 h-4" />}
+                    className="mt-4"
                   >
-                    Ürün Ekle
+                    Başka Ürün Ekle
                   </Button>
                 </div>
+              )}
+            </div>
+          </Form>
+        </div>
 
-                {items.length === 0 ? (
-                  <div
-                    className="border-2 border-dashed border-gray-200 rounded-xl p-12 text-center cursor-pointer hover:border-gray-300 hover:bg-gray-50 transition-all"
-                    onClick={handleAddItem}
-                  >
-                    <ArrowsRightLeftIcon className="w-10 h-10 text-gray-300 mb-3 mx-auto" />
-                    <p className="text-gray-500 font-medium">Henüz ürün eklenmedi</p>
-                    <p className="text-gray-400 text-sm mt-1">Transfer edilecek ürünleri ekleyin</p>
-                  </div>
-                ) : (
-                  <div className="border border-gray-100 rounded-xl overflow-hidden">
-                    <Table
-                      columns={columns}
-                      dataSource={items}
-                      rowKey="key"
-                      pagination={false}
-                      scroll={{ x: 1000 }}
-                      size="middle"
-                    />
-                  </div>
-                )}
+        {/* Sidebar */}
+        <div className="col-span-4 space-y-6">
+          {/* Transfer Summary */}
+          <div className="bg-white rounded-xl border border-slate-200 p-6">
+            <h3 className="text-base font-semibold text-slate-900 mb-4">Transfer Özeti</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">Toplam Kalem</span>
+                <span className="font-medium text-slate-900">{items.length}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">Toplam Miktar</span>
+                <span className="font-medium text-slate-900">{totalQuantity}</span>
               </div>
             </div>
           </div>
-        </Form>
+
+          {/* Source Warehouse Info */}
+          {sourceWarehouse && (
+            <div className="bg-amber-50 rounded-xl border border-amber-200 p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                  <BuildingOffice2Icon className="w-4 h-4 text-amber-600" />
+                </div>
+                <span className="text-xs font-medium text-amber-700 uppercase">Kaynak Depo</span>
+              </div>
+              <div className="font-medium text-slate-900">{sourceWarehouse.name}</div>
+              {sourceWarehouse.address && (
+                <div className="text-sm text-slate-500 mt-1">{sourceWarehouse.address}</div>
+              )}
+            </div>
+          )}
+
+          {/* Destination Warehouse Info */}
+          {destWarehouse && (
+            <div className="bg-emerald-50 rounded-xl border border-emerald-200 p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <TruckIcon className="w-4 h-4 text-emerald-600" />
+                </div>
+                <span className="text-xs font-medium text-emerald-700 uppercase">Hedef Depo</span>
+              </div>
+              <div className="font-medium text-slate-900">{destWarehouse.name}</div>
+              {destWarehouse.address && (
+                <div className="text-sm text-slate-500 mt-1">{destWarehouse.address}</div>
+              )}
+            </div>
+          )}
+
+          {/* Arrow indicator between warehouses */}
+          {sourceWarehouse && destWarehouse && (
+            <div className="flex justify-center -my-3">
+              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                <ArrowsRightLeftIcon className="w-4 h-4 text-slate-400 rotate-90" />
+              </div>
+            </div>
+          )}
+
+          {/* Help Info */}
+          <div className="bg-slate-50 rounded-xl border border-slate-200 p-6">
+            <h3 className="text-sm font-semibold text-slate-900 mb-2">Bilgi</h3>
+            <ul className="text-sm text-slate-600 space-y-2">
+              <li className="flex items-start gap-2">
+                <CalendarDaysIcon className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                <span>Transfer taslak olarak kaydedilir ve onay bekler.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <TruckIcon className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                <span>Onaylandıktan sonra sevkiyat başlatılabilir.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CubeIcon className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                <span>Lokasyon seçimi opsiyoneldir, boş bırakılabilir.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   );

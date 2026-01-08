@@ -23,7 +23,7 @@ public class CreateStockTransferCommandValidator : AbstractValidator<CreateStock
         RuleFor(x => x.Data.TransferNumber).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Data.SourceWarehouseId).NotEmpty();
         RuleFor(x => x.Data.DestinationWarehouseId).NotEmpty();
-        RuleFor(x => x.Data.CreatedByUserId).NotEmpty();
+        RuleFor(x => x.Data.CreatedByUserId).GreaterThan(0);
         RuleFor(x => x.Data.SourceWarehouseId).NotEqual(x => x.Data.DestinationWarehouseId)
             .WithMessage("Source and destination warehouses must be different");
     }
