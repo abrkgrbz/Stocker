@@ -221,4 +221,42 @@ public class ExpensesController : ControllerBase
         }
         return Ok(result.Value);
     }
+
+    /// <summary>
+    /// Delete an expense (only draft or cancelled)
+    /// </summary>
+    [HttpDelete("{id}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> DeleteExpense(int id)
+    {
+        var result = await _mediator.Send(new DeleteExpenseCommand(id));
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound) return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Cancel an expense
+    /// </summary>
+    [HttpPost("{id}/cancel")]
+    [ProducesResponseType(typeof(ExpenseDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<ActionResult<ExpenseDto>> CancelExpense(int id)
+    {
+        var result = await _mediator.Send(new CancelExpenseCommand(id));
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound) return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+        return Ok(result.Value);
+    }
 }

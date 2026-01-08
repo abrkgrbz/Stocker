@@ -170,4 +170,39 @@ public class EmployeeDocumentsController : ControllerBase
         }
         return Ok(result.Value);
     }
+
+    /// <summary>
+    /// Upload a file for an existing document
+    /// </summary>
+    [HttpPost("{id}/upload")]
+    [ProducesResponseType(typeof(EmployeeDocumentDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<ActionResult<EmployeeDocumentDto>> UploadDocument(int id, UploadDocumentFileDto dto)
+    {
+        var command = new UploadEmployeeDocumentCommand
+        {
+            DocumentId = id,
+            FileName = dto.FileName,
+            FileUrl = dto.FileUrl,
+            FileType = dto.FileType,
+            FileSizeBytes = dto.FileSizeBytes
+        };
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound) return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+        return Ok(result.Value);
+    }
+}
+
+public class UploadDocumentFileDto
+{
+    public string FileName { get; set; } = string.Empty;
+    public string FileUrl { get; set; } = string.Empty;
+    public string? FileType { get; set; }
+    public long? FileSizeBytes { get; set; }
 }
