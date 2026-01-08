@@ -80,6 +80,58 @@ public class CreateStockMovementCommandHandler : IRequestHandler<CreateStockMove
             movement.SetDescription(data.Description);
 
         await _unitOfWork.StockMovements.AddAsync(movement, cancellationToken);
+
+        // Update Stock table based on movement type
+        var stock = await _unitOfWork.Stocks.GetByProductAndWarehouseAsync(data.ProductId, data.WarehouseId, cancellationToken);
+        
+        if (stock == null)
+        {
+            // Create new stock record if it doesn't exist
+            stock = new Domain.Entities.Stock(data.ProductId, data.WarehouseId, 0);
+            stock.SetTenantId(request.TenantId);
+            if (data.ToLocationId.HasValue)
+                stock.SetLocation(data.ToLocationId);
+            if (!string.IsNullOrEmpty(data.SerialNumber))
+                stock.SetSerialNumber(data.SerialNumber);
+            if (!string.IsNullOrEmpty(data.LotNumber))
+                stock.SetLotNumber(data.LotNumber);
+            await _unitOfWork.Stocks.AddAsync(stock, cancellationToken);
+        }
+
+        // Determine if this is an incoming or outgoing movement
+        var isIncoming = data.MovementType switch
+        {
+            StockMovementType.Purchase => true,
+            StockMovementType.SalesReturn => true,
+            StockMovementType.Production => true,
+            StockMovementType.Opening => true,
+            StockMovementType.AdjustmentIncrease => true,
+            StockMovementType.Found => true,
+            StockMovementType.Sales => false,
+            StockMovementType.PurchaseReturn => false,
+            StockMovementType.Consumption => false,
+            StockMovementType.AdjustmentDecrease => false,
+            StockMovementType.Damage => false,
+            StockMovementType.Loss => false,
+            StockMovementType.Transfer => false, // Transfer handled separately
+            StockMovementType.Counting => true, // Counting adjusts to exact quantity
+            _ => throw new ArgumentException($"Unknown movement type: {data.MovementType}")
+        };
+
+        if (data.MovementType == StockMovementType.Counting)
+        {
+            // Counting sets the stock to exact quantity
+            stock.AdjustStock(data.Quantity);
+        }
+        else if (isIncoming)
+        {
+            stock.IncreaseStock(data.Quantity);
+        }
+        else
+        {
+            stock.DecreaseStock(data.Quantity);
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<StockMovementDto>.Success(new StockMovementDto
