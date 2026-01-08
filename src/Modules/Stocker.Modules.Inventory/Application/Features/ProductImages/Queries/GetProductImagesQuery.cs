@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Stocker.Modules.Inventory.Application.Contracts;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Interfaces;
@@ -20,14 +21,17 @@ public class GetProductImagesQuery : IRequest<Result<List<ProductImageDto>>>
 /// <summary>
 /// Handler for GetProductImagesQuery
 /// Uses IInventoryUnitOfWork to ensure repository and SaveChanges use the same DbContext instance
+/// Generates presigned URLs for private bucket access
 /// </summary>
 public class GetProductImagesQueryHandler : IRequestHandler<GetProductImagesQuery, Result<List<ProductImageDto>>>
 {
     private readonly IInventoryUnitOfWork _unitOfWork;
+    private readonly IProductImageStorageService _storageService;
 
-    public GetProductImagesQueryHandler(IInventoryUnitOfWork unitOfWork)
+    public GetProductImagesQueryHandler(IInventoryUnitOfWork unitOfWork, IProductImageStorageService storageService)
     {
         _unitOfWork = unitOfWork;
+        _storageService = storageService;
     }
 
     public async Task<Result<List<ProductImageDto>>> Handle(GetProductImagesQuery request, CancellationToken cancellationToken)
@@ -48,17 +52,35 @@ public class GetProductImagesQueryHandler : IRequestHandler<GetProductImagesQuer
             imagesQuery = imagesQuery.Where(i => i.IsActive);
         }
 
-        var images = imagesQuery
+        var imageEntities = imagesQuery
             .OrderBy(i => i.DisplayOrder)
-            .Select(i => new ProductImageDto
-            {
-                Id = i.Id,
-                ImageUrl = i.Url,
-                AltText = i.AltText,
-                IsPrimary = i.IsPrimary,
-                DisplayOrder = i.DisplayOrder
-            })
             .ToList();
+
+        // Generate presigned URLs for each image
+        var images = new List<ProductImageDto>();
+        foreach (var img in imageEntities)
+        {
+            var imageUrl = img.Url;
+
+            // If StoragePath is available, generate presigned URL (24 hours expiry)
+            if (!string.IsNullOrEmpty(img.StoragePath))
+            {
+                var urlResult = await _storageService.GetImageUrlAsync(img.StoragePath, TimeSpan.FromHours(24), cancellationToken);
+                if (urlResult.IsSuccess)
+                {
+                    imageUrl = urlResult.Value;
+                }
+            }
+
+            images.Add(new ProductImageDto
+            {
+                Id = img.Id,
+                ImageUrl = imageUrl,
+                AltText = img.AltText,
+                IsPrimary = img.IsPrimary,
+                DisplayOrder = img.DisplayOrder
+            });
+        }
 
         return Result<List<ProductImageDto>>.Success(images);
     }

@@ -10,6 +10,7 @@ public class ProductImage : BaseEntity
 {
     public int ProductId { get; private set; }
     public string Url { get; private set; }
+    public string? StoragePath { get; private set; }
     public string? ThumbnailUrl { get; private set; }
     public string? AltText { get; private set; }
     public string? Title { get; private set; }
@@ -27,10 +28,11 @@ public class ProductImage : BaseEntity
 
     protected ProductImage() { }
 
-    public ProductImage(int productId, string url, Guid tenantId, ImageType imageType = ImageType.Gallery)
+    public ProductImage(int productId, string url, Guid tenantId, ImageType imageType = ImageType.Gallery, string? storagePath = null)
     {
         ProductId = productId;
         Url = url;
+        StoragePath = storagePath;
         TenantId = tenantId;
         ImageType = imageType;
         DisplayOrder = 0;

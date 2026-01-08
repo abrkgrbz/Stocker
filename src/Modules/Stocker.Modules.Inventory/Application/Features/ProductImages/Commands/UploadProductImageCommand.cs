@@ -117,7 +117,7 @@ public class UploadProductImageCommandHandler : IRequestHandler<UploadProductIma
         // Create ProductImage entity with actual Guid TenantId from tenant service
         var tenantId = _tenantService.GetCurrentTenantId()
             ?? throw new InvalidOperationException("Tenant ID is not available");
-        var productImage = new ProductImage(request.ProductId, storage.Url, tenantId, request.ImageType);
+        var productImage = new ProductImage(request.ProductId, storage.Url, tenantId, request.ImageType, storage.StoragePath);
         productImage.SetMetadata(request.AltText, request.Title);
         productImage.SetFileInfo(
             storage.FileSize,
@@ -148,11 +148,22 @@ public class UploadProductImageCommandHandler : IRequestHandler<UploadProductIma
         product.Images.Add(productImage);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // Map to DTO
+        // Generate presigned URL for the response
+        var imageUrl = productImage.Url;
+        if (!string.IsNullOrEmpty(productImage.StoragePath))
+        {
+            var urlResult = await _storageService.GetImageUrlAsync(productImage.StoragePath, TimeSpan.FromHours(24), cancellationToken);
+            if (urlResult.IsSuccess)
+            {
+                imageUrl = urlResult.Value;
+            }
+        }
+
+        // Map to DTO with presigned URL
         var dto = new ProductImageDto
         {
             Id = productImage.Id,
-            ImageUrl = productImage.Url,
+            ImageUrl = imageUrl,
             AltText = productImage.AltText,
             IsPrimary = productImage.IsPrimary,
             DisplayOrder = productImage.DisplayOrder

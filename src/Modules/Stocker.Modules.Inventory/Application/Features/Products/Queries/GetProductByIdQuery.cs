@@ -1,4 +1,5 @@
 using MediatR;
+using Stocker.Modules.Inventory.Application.Contracts;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Repositories;
 using Stocker.SharedKernel.Results;
@@ -17,6 +18,7 @@ public class GetProductByIdQuery : IRequest<Result<ProductDto>>
 
 /// <summary>
 /// Handler for GetProductByIdQuery
+/// Generates presigned URLs for product images
 /// </summary>
 public class GetProductByIdQueryHandler : IRequestHandler<GetProductByIdQuery, Result<ProductDto>>
 {
@@ -24,17 +26,20 @@ public class GetProductByIdQueryHandler : IRequestHandler<GetProductByIdQuery, R
     private readonly ICategoryRepository _categoryRepository;
     private readonly IBrandRepository _brandRepository;
     private readonly IUnitRepository _unitRepository;
+    private readonly IProductImageStorageService _storageService;
 
     public GetProductByIdQueryHandler(
         IProductRepository productRepository,
         ICategoryRepository categoryRepository,
         IBrandRepository brandRepository,
-        IUnitRepository unitRepository)
+        IUnitRepository unitRepository,
+        IProductImageStorageService storageService)
     {
         _productRepository = productRepository;
         _categoryRepository = categoryRepository;
         _brandRepository = brandRepository;
         _unitRepository = unitRepository;
+        _storageService = storageService;
     }
 
     public async Task<Result<ProductDto>> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
@@ -60,6 +65,37 @@ public class GetProductByIdQueryHandler : IRequestHandler<GetProductByIdQuery, R
         if (product.UnitId.HasValue)
         {
             unit = await _unitRepository.GetByIdAsync(product.UnitId.Value, cancellationToken);
+        }
+
+        // Generate presigned URLs for images
+        var images = new List<ProductImageDto>();
+        var activeImages = product.Images?
+            .Where(i => i.IsActive)
+            .OrderBy(i => i.DisplayOrder)
+            .ToList() ?? new List<ProductImage>();
+
+        foreach (var img in activeImages)
+        {
+            var imageUrl = img.Url;
+
+            // If StoragePath is available, generate presigned URL (24 hours expiry)
+            if (!string.IsNullOrEmpty(img.StoragePath))
+            {
+                var urlResult = await _storageService.GetImageUrlAsync(img.StoragePath, TimeSpan.FromHours(24), cancellationToken);
+                if (urlResult.IsSuccess)
+                {
+                    imageUrl = urlResult.Value;
+                }
+            }
+
+            images.Add(new ProductImageDto
+            {
+                Id = img.Id,
+                ImageUrl = imageUrl,
+                AltText = img.AltText,
+                IsPrimary = img.IsPrimary,
+                DisplayOrder = img.DisplayOrder
+            });
         }
 
         var productDto = new ProductDto
@@ -98,17 +134,7 @@ public class GetProductByIdQueryHandler : IRequestHandler<GetProductByIdQuery, R
             IsActive = product.IsActive,
             CreatedAt = product.CreatedDate,
             UpdatedAt = product.UpdatedDate,
-            Images = product.Images?
-                .Where(i => i.IsActive)
-                .OrderBy(i => i.DisplayOrder)
-                .Select(i => new ProductImageDto
-                {
-                    Id = i.Id,
-                    ImageUrl = i.Url,
-                    AltText = i.AltText,
-                    IsPrimary = i.IsPrimary,
-                    DisplayOrder = i.DisplayOrder
-                }).ToList() ?? new List<ProductImageDto>()
+            Images = images
         };
 
         return Result<ProductDto>.Success(productDto);
