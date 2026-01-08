@@ -83,13 +83,26 @@ export default function StockCountDetailPage() {
   const recordCount = useCountStockCountItem();
 
   const handleStart = () => {
+    // Check if there are items to count
+    if (!stockCount?.items || stockCount.items.length === 0) {
+      Modal.warning({
+        title: 'Sayım Başlatılamıyor',
+        content: 'Sayımı başlatabilmek için önce sayım kalemleri eklemeniz gerekiyor. Lütfen sayımı düzenleyin ve en az bir ürün ekleyin.',
+      });
+      return;
+    }
+
     Modal.confirm({
       title: 'Sayımı Başlat',
       content: 'Bu sayımı başlatmak istediğinizden emin misiniz?',
       okText: 'Başlat',
       cancelText: 'İptal',
       onOk: async () => {
-        await startCount.mutateAsync({ id, countedByUserId: 1 });
+        try {
+          await startCount.mutateAsync({ id, countedByUserId: 1 });
+        } catch {
+          // Error is handled by hook's onError callback
+        }
       },
     });
   };

@@ -16,8 +16,9 @@ import {
   CalculatorIcon,
   PlusIcon,
   TrashIcon,
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline';
-import { useWarehouses, useProducts, useLocations } from '@/lib/api/hooks/useInventory';
+import { useWarehouses, useProducts, useLocations, useStock } from '@/lib/api/hooks/useInventory';
 import { StockCountType, type StockCountDto, type CreateStockCountItemDto } from '@/lib/api/services/inventory.types';
 import dayjs from 'dayjs';
 
@@ -51,6 +52,7 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
   const { data: warehouses = [] } = useWarehouses();
   const { data: products = [] } = useProducts();
   const { data: locations = [] } = useLocations(warehouseId);
+  const { data: warehouseStocks = [], isLoading: stocksLoading } = useStock(warehouseId);
 
   useEffect(() => {
     if (initialValues) {
@@ -90,6 +92,20 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
   const handleItemChange = (index: number, field: keyof CreateStockCountItemDto, value: any) => {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
+    setItems(newItems);
+  };
+
+  const handleLoadAllStocks = () => {
+    if (!warehouseStocks || warehouseStocks.length === 0) return;
+
+    const newItems: CreateStockCountItemDto[] = warehouseStocks
+      .filter(stock => stock.quantity > 0) // Only include products with stock
+      .map(stock => ({
+        productId: stock.productId,
+        systemQuantity: stock.quantity,
+        locationId: stock.locationId || undefined,
+      }));
+
     setItems(newItems);
   };
 
@@ -427,17 +443,32 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
           <div>
             <div className="flex items-center justify-between pb-2 mb-4 border-b border-slate-100">
               <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Sayım Kalemleri
+                Sayım Kalemleri {items.length > 0 && `(${items.length})`}
               </h3>
-              <Button
-                type="dashed"
-                icon={<PlusIcon className="w-4 h-4" />}
-                onClick={handleAddItem}
-                size="small"
-                className="!border-slate-300 !text-slate-600 hover:!border-slate-400"
-              >
-                Ürün Ekle
-              </Button>
+              <div className="flex gap-2">
+                {warehouseId && (
+                  <Button
+                    type="default"
+                    icon={<ArrowPathIcon className={`w-4 h-4 ${stocksLoading ? 'animate-spin' : ''}`} />}
+                    onClick={handleLoadAllStocks}
+                    size="small"
+                    loading={stocksLoading}
+                    disabled={!warehouseId || warehouseStocks.length === 0}
+                    className="!border-slate-300 !text-slate-600 hover:!border-slate-400"
+                  >
+                    Tüm Stokları Yükle ({warehouseStocks.filter(s => s.quantity > 0).length})
+                  </Button>
+                )}
+                <Button
+                  type="dashed"
+                  icon={<PlusIcon className="w-4 h-4" />}
+                  onClick={handleAddItem}
+                  size="small"
+                  className="!border-slate-300 !text-slate-600 hover:!border-slate-400"
+                >
+                  Ürün Ekle
+                </Button>
+              </div>
             </div>
 
             {items.length > 0 ? (
@@ -451,17 +482,33 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
             ) : (
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="Henüz ürün eklenmedi"
+                description={warehouseId ? "Henüz ürün eklenmedi. 'Tüm Stokları Yükle' ile depodaki stokları ekleyebilirsiniz." : "Önce bir depo seçin, ardından stokları yükleyin."}
                 className="py-8 bg-slate-50 rounded-lg border border-slate-200"
               >
-                <Button
-                  type="dashed"
-                  icon={<PlusIcon className="w-4 h-4" />}
-                  onClick={handleAddItem}
-                  className="!border-slate-300 !text-slate-600 hover:!border-slate-400"
-                >
-                  İlk Ürünü Ekle
-                </Button>
+                {warehouseId ? (
+                  <div className="flex gap-2 justify-center">
+                    <Button
+                      type="primary"
+                      icon={<ArrowPathIcon className={`w-4 h-4 ${stocksLoading ? 'animate-spin' : ''}`} />}
+                      onClick={handleLoadAllStocks}
+                      loading={stocksLoading}
+                      disabled={warehouseStocks.length === 0}
+                      style={{ background: '#1e293b', borderColor: '#1e293b' }}
+                    >
+                      Tüm Stokları Yükle
+                    </Button>
+                    <Button
+                      type="dashed"
+                      icon={<PlusIcon className="w-4 h-4" />}
+                      onClick={handleAddItem}
+                      className="!border-slate-300 !text-slate-600 hover:!border-slate-400"
+                    >
+                      Tekil Ürün Ekle
+                    </Button>
+                  </div>
+                ) : (
+                  <span className="text-slate-400 text-sm">Lütfen önce bir depo seçin</span>
+                )}
               </Empty>
             )}
           </div>
