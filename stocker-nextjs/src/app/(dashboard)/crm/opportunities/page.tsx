@@ -2,526 +2,471 @@
 
 /**
  * Opportunities List Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Monochrome design system following inventory/HR patterns
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Spin, Tag, Progress, Space, Button, Modal, message, Input } from 'antd';
+import { Table, Select, Button, Dropdown, Spin } from 'antd';
 import {
   ArrowPathIcon,
-  ArrowTrendingUpIcon,
-  ChartBarIcon,
-  CheckCircleIcon,
-  CurrencyDollarIcon,
-  ListBulletIcon,
   MagnifyingGlassIcon,
   PlusIcon,
-  Squares2X2Icon,
-  StopCircleIcon,
+  LightBulbIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
+  EyeIcon,
+  PencilSquareIcon,
+  TrashIcon,
+  EllipsisHorizontalIcon,
   TrophyIcon,
-  UserIcon,
+  NoSymbolIcon,
 } from '@heroicons/react/24/outline';
 import {
   useOpportunities,
+  useDeleteOpportunity,
   useWinOpportunity,
   useLoseOpportunity,
   usePipelines,
 } from '@/lib/api/hooks/useCRM';
-import type { OpportunityDto, OpportunityStatus } from '@/lib/api/services/crm.types';
-import dayjs from 'dayjs';
+import type { OpportunityDto } from '@/lib/api/services/crm.types';
+import { OpportunityStatus } from '@/lib/api/services/crm.types';
 import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-} from '@/components/ui/enterprise-page';
+  showDeleteSuccess,
+  showError,
+  confirmDelete,
+  confirmAction,
+  showUpdateSuccess,
+  showInfo,
+} from '@/lib/utils/sweetalert';
+import dayjs from 'dayjs';
+import type { ColumnsType } from 'antd/es/table';
 
-// Opportunity status configuration (matches backend OpportunityStatus enum)
-const statusConfig: Record<OpportunityStatus, { color: string; label: string; icon: React.ReactNode }> = {
-  Open: { color: 'blue', label: 'Açık', icon: <ChartBarIcon className="w-4 h-4" /> },
-  Won: { color: 'green', label: 'Kazanıldı', icon: <TrophyIcon className="w-4 h-4" /> },
-  Lost: { color: 'red', label: 'Kaybedildi', icon: <StopCircleIcon className="w-4 h-4" /> },
-  OnHold: { color: 'orange', label: 'Beklemede', icon: <ArrowTrendingUpIcon className="w-4 h-4" /> },
+// Monochrome opportunity status configuration
+const opportunityStatusConfig: Record<string, { color: string; bgColor: string; label: string }> = {
+  Open: { color: '#1e293b', bgColor: '#e2e8f0', label: 'Acik' },
+  Won: { color: '#334155', bgColor: '#cbd5e1', label: 'Kazanildi' },
+  Lost: { color: '#64748b', bgColor: '#f1f5f9', label: 'Kaybedildi' },
+  OnHold: { color: '#475569', bgColor: '#e2e8f0', label: 'Beklemede' },
 };
 
-// Stage configuration for kanban view
-const stageConfig: Record<string, { color: string; label: string; icon: React.ReactNode }> = {
-  Prospecting: { color: 'blue', label: 'Araştırma', icon: <ChartBarIcon className="w-4 h-4" /> },
-  Qualification: { color: 'cyan', label: 'Nitelendirme', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  NeedsAnalysis: { color: 'geekblue', label: 'İhtiyaç Analizi', icon: <ChartBarIcon className="w-4 h-4" /> },
-  Proposal: { color: 'purple', label: 'Teklif', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
-  Negotiation: { color: 'orange', label: 'Müzakere', icon: <ArrowTrendingUpIcon className="w-4 h-4" /> },
+// Monochrome priority configuration
+const priorityConfig: Record<string, { color: string; bgColor: string; label: string }> = {
+  Low: { color: '#94a3b8', bgColor: '#f8fafc', label: 'Dusuk' },
+  Medium: { color: '#64748b', bgColor: '#f1f5f9', label: 'Orta' },
+  High: { color: '#1e293b', bgColor: '#e2e8f0', label: 'Yuksek' },
 };
 
 export default function OpportunitiesPage() {
   const router = useRouter();
-  const [viewMode, setViewMode] = useState<'kanban' | 'grid'>('kanban');
+
+  // Filter state
   const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState<OpportunityStatus | undefined>();
+  const [selectedPipeline, setSelectedPipeline] = useState<string | undefined>();
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
   // API Hooks
-  const { data, isLoading, refetch } = useOpportunities();
+  const { data, isLoading, refetch } = useOpportunities({
+    page: currentPage,
+    pageSize,
+    search: debouncedSearch || undefined,
+    status: selectedStatus,
+    pipelineId: selectedPipeline,
+  });
   const { data: pipelines = [] } = usePipelines();
+  const deleteOpportunity = useDeleteOpportunity();
   const winOpportunity = useWinOpportunity();
   const loseOpportunity = useLoseOpportunity();
 
   const opportunities = data?.items || [];
+  const totalCount = data?.totalCount || 0;
 
-  // Filter opportunities by search text
-  const filteredOpportunities = searchText
-    ? opportunities.filter((o: OpportunityDto) =>
-        o.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        o.description?.toLowerCase().includes(searchText.toLowerCase()) ||
-        o.customerName?.toLowerCase().includes(searchText.toLowerCase())
-      )
-    : opportunities;
+  // Use opportunities directly (filtering is done by API)
+  const filteredOpportunities = opportunities;
 
-  // Get default pipeline's stages for kanban view
-  const defaultPipeline = pipelines.find((p: any) => p.isDefault) || pipelines[0];
-  const stages = defaultPipeline?.stages || [];
+  // Calculate stats
+  const stats = useMemo(() => {
+    const total = opportunities.length;
+    const open = opportunities.filter((o) => o.status === 'Open').length;
+    const won = opportunities.filter((o) => o.status === 'Won').length;
+    const totalValue = opportunities.filter((o) => o.status === 'Open').reduce((sum, o) => sum + o.amount, 0);
+    return { total, open, won, totalValue };
+  }, [opportunities]);
 
-  // Calculate statistics
-  const stats = {
-    total: filteredOpportunities.length,
-    totalValue: filteredOpportunities.reduce((sum: number, o: OpportunityDto) => sum + o.amount, 0),
-    avgProbability: filteredOpportunities.length > 0
-      ? filteredOpportunities.reduce((sum: number, o: OpportunityDto) => sum + o.probability, 0) / filteredOpportunities.length
-      : 0,
-    won: filteredOpportunities.filter((o: OpportunityDto) => o.status === 'Won').length,
-    wonValue: filteredOpportunities.filter((o: OpportunityDto) => o.status === 'Won').reduce((sum: number, o: OpportunityDto) => sum + o.amount, 0),
-    active: filteredOpportunities.filter((o: OpportunityDto) => o.status !== 'Won' && o.status !== 'Lost').length,
+  // CRUD Handlers
+  const handleView = (id: string) => {
+    router.push(`/crm/opportunities/${id}`);
+  };
+
+  const handleEdit = (id: string) => {
+    router.push(`/crm/opportunities/${id}/edit`);
+  };
+
+  const handleDelete = async (opp: OpportunityDto) => {
+    const confirmed = await confirmDelete('Firsat', opp.name);
+    if (confirmed) {
+      try {
+        await deleteOpportunity.mutateAsync(opp.id);
+        showDeleteSuccess('firsat');
+      } catch (error) {
+        showError('Silme islemi basarisiz');
+      }
+    }
+  };
+
+  const handleWin = async (opp: OpportunityDto) => {
+    const confirmed = await confirmAction(
+      'Firsati Kazanildi Olarak Isaretle',
+      `"${opp.name}" firsatini kazanildi olarak isaretlemek istediginizden emin misiniz?`,
+      'Kazanildi Isaretle'
+    );
+    if (confirmed) {
+      try {
+        await winOpportunity.mutateAsync({
+          id: opp.id,
+          actualAmount: opp.amount,
+          closedDate: new Date().toISOString(),
+        });
+        showUpdateSuccess('firsat', 'kazanildi olarak isaretlendi');
+      } catch (error: any) {
+        showError(error.response?.data?.detail || 'Islem basarisiz');
+      }
+    }
+  };
+
+  const handleLose = async (opp: OpportunityDto) => {
+    const confirmed = await confirmAction(
+      'Firsati Kaybedildi Olarak Isaretle',
+      `"${opp.name}" firsatini kaybedildi olarak isaretlemek istediginizden emin misiniz?`,
+      'Kaybedildi Isaretle'
+    );
+    if (confirmed) {
+      try {
+        await loseOpportunity.mutateAsync({
+          id: opp.id,
+          lostReason: 'Kullanici tarafindan kapatildi',
+          closedDate: new Date().toISOString(),
+        });
+        showInfo('Firsat Isaretlendi', 'Firsat kaybedildi olarak isaretlendi');
+      } catch (error: any) {
+        showError(error.response?.data?.detail || 'Islem basarisiz');
+      }
+    }
   };
 
   const handleCreate = () => {
     router.push('/crm/opportunities/new');
   };
 
-  const handleWin = async (opportunity: OpportunityDto) => {
-    Modal.confirm({
-      title: 'Fırsatı Kazanıldı Olarak İşaretle',
-      content: `"${opportunity.name}" fırsatını kazanıldı olarak işaretlemek istediğinizden emin misiniz?`,
-      okText: 'Kazanıldı İşaretle',
-      okType: 'primary',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await winOpportunity.mutateAsync({
-            id: opportunity.id,
-            actualAmount: opportunity.amount,
-            closedDate: new Date().toISOString(),
-          });
-          message.success('🎉 Fırsat kazanıldı!');
-        } catch (error: any) {
-          const apiError = error.response?.data;
-          const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || 'İşlem başarısız';
-          message.error(errorMessage);
-        }
+  // Clear filters
+  const clearFilters = () => {
+    setSearchText('');
+    setSelectedStatus(undefined);
+    setSelectedPipeline(undefined);
+  };
+
+  // Table columns
+  const columns: ColumnsType<OpportunityDto> = [
+    {
+      title: 'Firsat',
+      key: 'opportunity',
+      width: 280,
+      render: (_, record) => (
+        <div className="space-y-1">
+          <span
+            className="font-semibold text-slate-900 cursor-pointer hover:text-slate-600"
+            onClick={() => handleView(record.id)}
+          >
+            {record.name}
+          </span>
+          <div className="text-xs text-slate-500">
+            {record.customerName && `${record.customerName}`}
+            {record.stageName && ` - ${record.stageName}`}
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: 'Tutar',
+      dataIndex: 'amount',
+      key: 'amount',
+      width: 140,
+      align: 'right',
+      render: (amount) => (
+        <span className="font-semibold text-slate-900">
+          ₺{(amount || 0).toLocaleString('tr-TR')}
+        </span>
+      ),
+    },
+    {
+      title: 'Olasilik',
+      dataIndex: 'probability',
+      key: 'probability',
+      width: 100,
+      align: 'center',
+      render: (prob) => <span className="text-slate-600">{prob || 0}%</span>,
+    },
+    {
+      title: 'Oncelik',
+      dataIndex: 'priority',
+      key: 'priority',
+      width: 100,
+      render: (priority: string) => {
+        const config = priorityConfig[priority] || { color: '#64748b', bgColor: '#f1f5f9', label: priority };
+        return (
+          <span
+            className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium"
+            style={{ backgroundColor: config.bgColor, color: config.color }}
+          >
+            {config.label}
+          </span>
+        );
       },
-    });
-  };
-
-  const handleLose = async (opportunity: OpportunityDto) => {
-    Modal.confirm({
-      title: 'Fırsatı Kaybedildi Olarak İşaretle',
-      content: `"${opportunity.name}" fırsatını kaybedildi olarak işaretlemek istediğinizden emin misiniz?`,
-      okText: 'Kaybedildi İşaretle',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await loseOpportunity.mutateAsync({
-            id: opportunity.id,
-            lostReason: 'Kullanıcı tarafından kapatıldı',
-            closedDate: new Date().toISOString(),
-          });
-          message.info('Fırsat kaybedildi olarak işaretlendi');
-        } catch (error: any) {
-          const apiError = error.response?.data;
-          const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || 'İşlem başarısız';
-          message.error(errorMessage);
-        }
+    },
+    {
+      title: 'Tahmini Kapanis',
+      dataIndex: 'expectedCloseDate',
+      key: 'expectedCloseDate',
+      width: 140,
+      render: (date) => (
+        <span className="text-slate-600">
+          {date ? dayjs(date).format('DD/MM/YYYY') : '-'}
+        </span>
+      ),
+    },
+    {
+      title: 'Durum',
+      dataIndex: 'status',
+      key: 'status',
+      width: 120,
+      render: (status: string) => {
+        const config = opportunityStatusConfig[status] || { color: '#64748b', bgColor: '#f1f5f9', label: status };
+        return (
+          <span
+            className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium"
+            style={{ backgroundColor: config.bgColor, color: config.color }}
+          >
+            {config.label}
+          </span>
+        );
       },
-    });
-  };
-
-  // OpportunityCard Component
-  const OpportunityCard = ({ opportunity }: { opportunity: OpportunityDto }) => {
-    const config = statusConfig[opportunity.status];
-    const isActive = opportunity.status !== 'Won' && opportunity.status !== 'Lost';
-
-    return (
-      <div
-        className="bg-white border border-slate-200 rounded-lg p-5 hover:shadow-md transition-shadow cursor-pointer"
-        onClick={() => router.push(`/crm/opportunities/${opportunity.id}`)}
-      >
-        <div className="flex justify-between items-start mb-3">
-          <div className="flex-1">
-            <div className="font-medium text-slate-900 text-base mb-1">
-              {opportunity.name}
-            </div>
-            {opportunity.description && (
-              <div className="text-xs text-slate-500 mb-2">
-                {opportunity.description}
-              </div>
-            )}
-          </div>
-          <Tag color={config.color} className="ml-2">
-            {config.icon} {config.label}
-          </Tag>
-        </div>
-
-        <div className="mb-3">
-          <div className="text-2xl font-bold text-emerald-600 mb-1">
-            ₺{opportunity.amount.toLocaleString('tr-TR')}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500">Olasılık:</span>
-            <Progress
-              percent={opportunity.probability}
-              size="small"
-              className="flex-1"
-              strokeColor={{
-                '0%': '#3b82f6',
-                '100%': '#10b981',
-              }}
-            />
-          </div>
-        </div>
-
-        {opportunity.customerName && (
-          <div className="mb-2 text-xs text-slate-600 flex items-center gap-1">
-            <UserIcon className="w-4 h-4 text-slate-400" />
-            <span>{opportunity.customerName}</span>
-          </div>
-        )}
-
-        {opportunity.expectedCloseDate && (
-          <div className="mb-3 text-xs text-slate-500">
-            📅 Tahmini Kapanış: {dayjs(opportunity.expectedCloseDate).format('DD MMMM YYYY')}
-          </div>
-        )}
-
-        {isActive && (
-          <Space size="small" className="w-full">
-            <Button
-              type="primary"
-              size="small"
-              icon={<CheckCircleIcon className="w-4 h-4" />}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleWin(opportunity);
-              }}
-              block
-            >
-              Kazanıldı
-            </Button>
-            <Button
-              danger
-              size="small"
-              icon={<StopCircleIcon className="w-4 h-4" />}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleLose(opportunity);
-              }}
-              block
-            >
-              Kaybedildi
-            </Button>
-          </Space>
-        )}
-      </div>
-    );
-  };
-
-  // Group opportunities by status
-  const opportunitiesByStatus = Object.keys(statusConfig).reduce((acc, status) => {
-    acc[status as OpportunityStatus] = filteredOpportunities.filter(
-      (o: OpportunityDto) => o.status === status
-    );
-    return acc;
-  }, {} as Record<OpportunityStatus, OpportunityDto[]>);
-
-  // Group opportunities by stage for Kanban view (active opportunities only)
-  const activeOpportunities = filteredOpportunities.filter(
-    (o: OpportunityDto) => o.status !== 'Won' && o.status !== 'Lost'
-  );
-
-  const opportunitiesByStage = stages.reduce((acc: Record<string, OpportunityDto[]>, stage: any) => {
-    acc[stage.id] = activeOpportunities.filter((o: OpportunityDto) => o.stageId === stage.id);
-    return acc;
-  }, {} as Record<string, OpportunityDto[]>);
-
-  // Get closed opportunities for special columns
-  const wonOpportunities = filteredOpportunities.filter((o: OpportunityDto) => o.status === 'Won');
-  const lostOpportunities = filteredOpportunities.filter((o: OpportunityDto) => o.status === 'Lost');
-
-  // Stats Component
-  const OpportunitiesStats = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <Card>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-slate-500 text-sm font-medium mb-1">Toplam Fırsat</div>
-            <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
-          </div>
-          <div className="p-3 bg-slate-100 rounded-lg">
-            <ChartBarIcon className="w-5 h-5 text-slate-600" />
-          </div>
-        </div>
-      </Card>
-
-      <Card>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-slate-500 text-sm font-medium mb-1">Toplam Değer</div>
-            <div className="text-2xl font-bold text-emerald-600">₺{stats.totalValue.toLocaleString('tr-TR')}</div>
-          </div>
-          <div className="p-3 bg-emerald-100 rounded-lg">
-            <CurrencyDollarIcon className="w-5 h-5 text-emerald-600" />
-          </div>
-        </div>
-      </Card>
-
-      <Card>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-slate-500 text-sm font-medium mb-1">Kazanılan</div>
-            <div className="text-2xl font-bold text-green-600">{stats.won}</div>
-            <div className="text-xs text-slate-500 mt-1">₺{stats.wonValue.toLocaleString('tr-TR')}</div>
-          </div>
-          <div className="p-3 bg-green-100 rounded-lg">
-            <TrophyIcon className="w-5 h-5 text-green-600" />
-          </div>
-        </div>
-      </Card>
-
-      <Card>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-slate-500 text-sm font-medium mb-1">Ortalama Olasılık</div>
-            <div className="text-2xl font-bold text-blue-600">{stats.avgProbability.toFixed(0)}%</div>
-          </div>
-          <div className="p-3 bg-blue-100 rounded-lg">
-            <ArrowTrendingUpIcon className="w-5 h-5 text-blue-600" />
-          </div>
-        </div>
-      </Card>
-    </div>
-  );
-
-  // Kanban View Component
-  const KanbanView = () => (
-    <div className="flex gap-4 overflow-x-auto pb-4">
-      {stages.map((stage: any) => {
-        const stageOpps = opportunitiesByStage[stage.id] || [];
-        const stageAmount = stageOpps.reduce((sum: number, o: OpportunityDto) => sum + o.amount, 0);
+    },
+    {
+      title: 'Islemler',
+      key: 'actions',
+      width: 100,
+      fixed: 'right',
+      render: (_, record) => {
+        const menuItems = [
+          {
+            key: 'view',
+            icon: <EyeIcon className="w-4 h-4" />,
+            label: 'Goruntule',
+            onClick: () => handleView(record.id),
+          },
+          {
+            key: 'edit',
+            icon: <PencilSquareIcon className="w-4 h-4" />,
+            label: 'Duzenle',
+            onClick: () => handleEdit(record.id),
+          },
+          { type: 'divider' as const },
+          ...(record.status === 'Open' ? [
+            {
+              key: 'win',
+              icon: <TrophyIcon className="w-4 h-4" />,
+              label: 'Kazanildi Isaretle',
+              onClick: () => handleWin(record),
+            },
+            {
+              key: 'lose',
+              icon: <NoSymbolIcon className="w-4 h-4" />,
+              label: 'Kaybedildi Isaretle',
+              onClick: () => handleLose(record),
+            },
+            { type: 'divider' as const },
+          ] : []),
+          {
+            key: 'delete',
+            icon: <TrashIcon className="w-4 h-4" />,
+            label: 'Sil',
+            danger: true,
+            onClick: () => handleDelete(record),
+          },
+        ];
 
         return (
-          <div key={stage.id} className="flex-shrink-0" style={{ width: 320 }}>
-            <div className="bg-white border border-slate-200 rounded-lg h-full">
-              <div className="p-4 border-b border-slate-200">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: stage.color }}
-                  />
-                  <span className="font-medium text-slate-900">{stage.name}</span>
-                  <Tag className="ml-auto">{stageOpps.length}</Tag>
-                </div>
-                <div className="text-sm text-slate-500 mt-1">
-                  ₺{stageAmount.toLocaleString('tr-TR')}
-                </div>
-              </div>
-              <div className="p-3 space-y-3" style={{ maxHeight: '600px', overflowY: 'auto' }}>
-                {stageOpps.map((opportunity: OpportunityDto) => (
-                  <OpportunityCard key={opportunity.id} opportunity={opportunity} />
-                ))}
-                {stageOpps.length === 0 && (
-                  <div className="text-center text-slate-400 py-8">Fırsat yok</div>
-                )}
-              </div>
-            </div>
-          </div>
+          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+            <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} className="text-slate-600 hover:text-slate-900" />
+          </Dropdown>
         );
-      })}
-
-      {/* Won Column */}
-      <div className="flex-shrink-0" style={{ width: 320 }}>
-        <div className="bg-white border-2 border-green-400 rounded-lg h-full">
-          <div className="p-4 border-b border-green-200 bg-green-50">
-            <div className="flex items-center gap-2">
-              <TrophyIcon className="w-4 h-4 text-green-500" />
-              <span className="font-medium text-slate-900">Kazanıldı</span>
-              <Tag color="green" className="ml-auto">{wonOpportunities.length}</Tag>
-            </div>
-            <div className="text-sm text-green-600 font-medium mt-1">
-              ₺{wonOpportunities.reduce((sum: number, o: OpportunityDto) => sum + o.amount, 0).toLocaleString('tr-TR')}
-            </div>
-          </div>
-          <div className="p-3 space-y-3 bg-green-50/50" style={{ maxHeight: '600px', overflowY: 'auto' }}>
-            {wonOpportunities.map((opportunity: OpportunityDto) => (
-              <OpportunityCard key={opportunity.id} opportunity={opportunity} />
-            ))}
-            {wonOpportunities.length === 0 && (
-              <div className="text-center text-slate-400 py-8">Kazanılan fırsat yok</div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Lost Column */}
-      <div className="flex-shrink-0" style={{ width: 320 }}>
-        <div className="bg-white border-2 border-red-400 rounded-lg h-full">
-          <div className="p-4 border-b border-red-200 bg-red-50">
-            <div className="flex items-center gap-2">
-              <StopCircleIcon className="w-4 h-4 text-red-500" />
-              <span className="font-medium text-slate-900">Kaybedildi</span>
-              <Tag color="red" className="ml-auto">{lostOpportunities.length}</Tag>
-            </div>
-            <div className="text-sm text-red-600 font-medium mt-1">
-              ₺{lostOpportunities.reduce((sum: number, o: OpportunityDto) => sum + o.amount, 0).toLocaleString('tr-TR')}
-            </div>
-          </div>
-          <div className="p-3 space-y-3 bg-red-50/50" style={{ maxHeight: '600px', overflowY: 'auto' }}>
-            {lostOpportunities.map((opportunity: OpportunityDto) => (
-              <OpportunityCard key={opportunity.id} opportunity={opportunity} />
-            ))}
-            {lostOpportunities.length === 0 && (
-              <div className="text-center text-slate-400 py-8">Kaybedilen fırsat yok</div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Grid View Component (existing status-based grouping)
-  const GridView = () => (
-    <div className="space-y-6">
-      {Object.entries(opportunitiesByStatus).map(([status, opps]) => {
-        if (opps.length === 0) return null;
-        const config = statusConfig[status as OpportunityStatus];
-
-        return (
-          <div key={status}>
-            <div className="bg-white border border-slate-200 rounded-lg">
-              <div className="p-4 border-b border-slate-200">
-                <div className="flex items-center gap-2">
-                  {config.icon}
-                  <span className="font-medium text-slate-900">{config.label}</span>
-                  <Tag color={config.color}>{opps.length}</Tag>
-                </div>
-              </div>
-              <div className="p-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {opps.map((opportunity: OpportunityDto) => (
-                    <OpportunityCard key={opportunity.id} opportunity={opportunity} />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
+      },
+    },
+  ];
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Stats Cards */}
-      <div className="mb-8">
-        <OpportunitiesStats />
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+            <LightBulbIcon className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Satis Firsatlari</h1>
+            <p className="text-sm text-slate-500">Satis firsatlarinizi takip edin ve yonetin</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button
+            icon={<ArrowPathIcon className="w-4 h-4" />}
+            onClick={() => refetch()}
+            loading={isLoading}
+            className="!border-slate-300 !text-slate-700 hover:!border-slate-400"
+          >
+            Yenile
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusIcon className="w-4 h-4" />}
+            onClick={handleCreate}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+          >
+            Yeni Firsat
+          </Button>
+        </div>
       </div>
 
-      {/* Header */}
-      <ListPageHeader
-        icon={<CurrencyDollarIcon className="w-4 h-4" />}
-        iconColor="#0f172a"
-        title="Fırsatlar"
-        description="Satış fırsatlarınızı yönetin ve takip edin"
-        itemCount={filteredOpportunities.length}
-        primaryAction={{
-          label: 'Yeni Fırsat',
-          onClick: handleCreate,
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <div className="flex items-center gap-2">
-            {/* View Toggle */}
-            <div className="flex bg-slate-100 rounded-md p-0.5">
-              <button
-                onClick={() => setViewMode('kanban')}
-                className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-                  viewMode === 'kanban'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                <Squares2X2Icon className="w-4 h-4 mr-1" />
-                Kanban
-              </button>
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-                  viewMode === 'grid'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                <ListBulletIcon className="w-4 h-4 mr-1" />
-                Grid
-              </button>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-12 gap-6 mb-8">
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <LightBulbIcon className="w-5 h-5 text-slate-600" />
+              </div>
             </div>
-            <button
-              onClick={() => refetch()}
-              disabled={isLoading}
-              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-            >
-              <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </button>
+            <div className="text-2xl font-bold text-slate-900">{totalCount}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Firsat</div>
           </div>
-        }
-      />
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+                <ClockIcon className="w-5 h-5 text-slate-700" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-700">{stats.open}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Acik Firsat</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-300 flex items-center justify-center">
+                <CheckCircleIcon className="w-5 h-5 text-slate-800" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-800">{stats.won}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Kazanilan</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CurrencyDollarIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">₺{stats.totalValue.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Pipeline Degeri</div>
+          </div>
+        </div>
+      </div>
 
-      {/* Search */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
-        <Input
-          placeholder="Fırsat ara..."
-          prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          allowClear
-          className="max-w-md"
+      {/* Filters Section */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+        <div className="flex flex-wrap gap-3">
+          <div className="relative flex-1 min-w-[280px] max-w-md">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Firsat ara... (isim, musteri)"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+            />
+          </div>
+          <Select
+            placeholder="Durum"
+            allowClear
+            style={{ width: 160 }}
+            value={selectedStatus}
+            onChange={setSelectedStatus}
+            options={Object.entries(opportunityStatusConfig).map(([value, config]) => ({
+              value,
+              label: config.label,
+            }))}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
+          />
+          <Select
+            placeholder="Pipeline"
+            allowClear
+            style={{ width: 180 }}
+            value={selectedPipeline}
+            onChange={setSelectedPipeline}
+            options={pipelines.map((p) => ({ value: p.id, label: p.name }))}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
+          />
+          <Button onClick={clearFilters} className="!border-slate-300 !text-slate-600">
+            Temizle
+          </Button>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        {/* Results count */}
+        <div className="text-sm text-slate-500 mb-4">
+          {filteredOpportunities.length} firsat listeleniyor
+        </div>
+
+        <Table
+          columns={columns}
+          dataSource={filteredOpportunities}
+          rowKey="id"
+          loading={isLoading || deleteOpportunity.isPending}
+          scroll={{ x: 1100 }}
+          pagination={{
+            current: currentPage,
+            pageSize: pageSize,
+            total: totalCount,
+            showSizeChanger: true,
+            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} firsat`,
+            onChange: (page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            },
+          }}
+          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
         />
       </div>
-
-      {/* Content */}
-      {isLoading ? (
-        <Card>
-          <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
-          </div>
-        </Card>
-      ) : filteredOpportunities.length === 0 ? (
-        <Card>
-          <div className="text-center py-12">
-            <div className="text-slate-400 text-5xl mb-4">
-              <ChartBarIcon className="w-4 h-4" />
-            </div>
-            <div className="text-slate-500 mb-4">
-              {searchText ? 'Aramanızla eşleşen fırsat bulunamadı' : 'Henüz fırsat yok'}
-            </div>
-            {!searchText && (
-              <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={handleCreate}>
-                İlk Fırsatı Oluştur
-              </Button>
-            )}
-          </div>
-        </Card>
-      ) : viewMode === 'kanban' ? (
-        <KanbanView />
-      ) : (
-        <GridView />
-      )}
-    </PageContainer>
+    </div>
   );
 }

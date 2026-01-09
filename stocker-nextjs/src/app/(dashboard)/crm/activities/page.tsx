@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Button,
   Space,
   Modal,
-  Badge,
   Drawer,
   Descriptions,
   Tag,
@@ -15,7 +14,7 @@ import {
   DatePicker,
   Spin,
 } from 'antd';
-import { showSuccess, showError, showApiError } from '@/lib/utils/notifications';
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import {
   ArrowPathIcon,
   BoltIcon,
@@ -29,7 +28,6 @@ import {
   PhoneIcon,
   PlusIcon,
   TrashIcon,
-  TrophyIcon,
   UserIcon,
   UsersIcon,
   XCircleIcon,
@@ -43,154 +41,91 @@ import {
   useCompleteActivity,
   useCancelActivity,
   useRescheduleActivity,
-  useActivityStatistics,
 } from '@/lib/api/hooks/useCRM';
 import { ActivityCalendar } from '@/components/crm/activities/ActivityCalendar';
 import { ActivityModal } from '@/features/activities/components';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/patterns';
-import { Spinner } from '@/components/primitives';
 
-// Activity type configuration
-const activityConfig: Record<
+// Activity type configuration with monochrome slate palette
+const activityTypeConfig: Record<
   Activity['type'],
-  { icon: React.ReactNode; color: string; label: string; gradient: string }
+  { icon: React.ReactNode; bgColor: string; textColor: string; label: string }
 > = {
   Call: {
     icon: <PhoneIcon className="w-4 h-4" />,
-    color: 'blue',
+    bgColor: 'bg-slate-100',
+    textColor: 'text-slate-700',
     label: 'Arama',
-    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
   },
   Email: {
     icon: <EnvelopeIcon className="w-4 h-4" />,
-    color: 'cyan',
+    bgColor: 'bg-slate-200',
+    textColor: 'text-slate-800',
     label: 'E-posta',
-    gradient: 'linear-gradient(135deg, #00c6fb 0%, #005bea 100%)'
   },
   Meeting: {
     icon: <UsersIcon className="w-4 h-4" />,
-    color: 'green',
-    label: 'Toplantı',
-    gradient: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)'
+    bgColor: 'bg-slate-300',
+    textColor: 'text-slate-800',
+    label: 'Toplanti',
   },
   Task: {
     icon: <DocumentTextIcon className="w-4 h-4" />,
-    color: 'orange',
-    label: 'Görev',
-    gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+    bgColor: 'bg-slate-400',
+    textColor: 'text-white',
+    label: 'Gorev',
   },
   Note: {
     icon: <DocumentTextIcon className="w-4 h-4" />,
-    color: 'default',
+    bgColor: 'bg-slate-500',
+    textColor: 'text-white',
     label: 'Not',
-    gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
   },
   Demo: {
     icon: <DocumentTextIcon className="w-4 h-4" />,
-    color: 'geekblue',
+    bgColor: 'bg-slate-600',
+    textColor: 'text-white',
     label: 'Demo',
-    gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)'
   },
   'Follow-up': {
     icon: <PhoneIcon className="w-4 h-4" />,
-    color: 'volcano',
+    bgColor: 'bg-slate-700',
+    textColor: 'text-white',
     label: 'Takip',
-    gradient: 'linear-gradient(135deg, #ff6b6b 0%, #ffa502 100%)'
   },
 };
 
-// Status colors
-const statusColors: Record<Activity['status'], string> = {
-  Pending: 'orange',
-  Scheduled: 'blue',
-  InProgress: 'processing',
-  Completed: 'green',
-  Cancelled: 'red',
-};
-
-// Inline ActivitiesStats Component
-interface ActivitiesStatsProps {
-  activities: Activity[];
-  loading: boolean;
-}
-
-const ActivitiesStats: React.FC<ActivitiesStatsProps> = ({ activities, loading }) => {
-  const today = dayjs().format('YYYY-MM-DD');
-
-  const stats = {
-    total: activities.length,
-    today: activities.filter((a) => dayjs(a.startTime).format('YYYY-MM-DD') === today && a.status === 'Scheduled').length,
-    completed: activities.filter((a) => a.status === 'Completed').length,
-    pending: activities.filter((a) => a.status === 'Scheduled').length,
-  };
-
-  const statCards = [
-    {
-      title: 'Toplam Aktivite',
-      value: stats.total,
-      icon: <BoltIcon className="w-6 h-6" />,
-      color: 'slate',
-    },
-    {
-      title: 'Bugünün Aktiviteleri',
-      value: stats.today,
-      icon: <CalendarIcon className="w-6 h-6" />,
-      color: 'slate',
-    },
-    {
-      title: 'Tamamlanan',
-      value: stats.completed,
-      icon: <CheckCircleIcon className="w-6 h-6" />,
-      color: 'emerald',
-    },
-    {
-      title: 'Bekleyen',
-      value: stats.pending,
-      icon: <ClockIcon className="w-6 h-6" />,
-      color: 'amber',
-    },
-  ];
-
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i}>
-            <div className="flex items-center justify-center py-8">
-              <Spinner />
-            </div>
-          </Card>
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {statCards.map((stat, index) => (
-        <Card key={index} className="hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-slate-600 mb-1">{stat.title}</p>
-              <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
-            </div>
-            <div
-              className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                stat.color === 'slate' ? 'bg-slate-100 text-slate-600' :
-                stat.color === 'emerald' ? 'bg-emerald-100 text-emerald-600' :
-                stat.color === 'amber' ? 'bg-amber-100 text-amber-600' :
-                'bg-slate-100 text-slate-600'
-              }`}
-            >
-              {stat.icon}
-            </div>
-          </div>
-        </Card>
-      ))}
-    </div>
-  );
+// Status configuration with monochrome slate palette
+const activityStatusConfig: Record<
+  Activity['status'],
+  { bgColor: string; textColor: string; label: string }
+> = {
+  Pending: {
+    bgColor: 'bg-slate-100',
+    textColor: 'text-slate-600',
+    label: 'Bekliyor',
+  },
+  Scheduled: {
+    bgColor: 'bg-slate-200',
+    textColor: 'text-slate-700',
+    label: 'Planli',
+  },
+  InProgress: {
+    bgColor: 'bg-slate-400',
+    textColor: 'text-white',
+    label: 'Devam Ediyor',
+  },
+  Completed: {
+    bgColor: 'bg-slate-700',
+    textColor: 'text-white',
+    label: 'Tamamlandi',
+  },
+  Cancelled: {
+    bgColor: 'bg-slate-900',
+    textColor: 'text-white',
+    label: 'Iptal Edildi',
+  },
 };
 
 export default function ActivitiesPage() {
@@ -204,9 +139,6 @@ export default function ActivitiesPage() {
   const [ownerFilter, setOwnerFilter] = useState<'my' | 'team' | 'all'>('my');
 
   // API Hooks
-  // Note: For 'my' we would need the current user's ID, for 'team' we'd need team member IDs
-  // For now, passing null for 'my' and 'all' to get all activities
-  // TODO: Implement proper user context and team member lookup
   const filterParams = ownerFilter === 'all' ? {} : {};
   const { data, isLoading, refetch } = useActivities(filterParams);
   const createActivity = useCreateActivity();
@@ -219,18 +151,30 @@ export default function ActivitiesPage() {
   const activities = data?.items || [];
   const totalCount = data?.totalCount || 0;
 
-  const handleCreate = (date?: Dayjs) => {
+  // Calculate stats
+  const stats = useMemo(() => {
+    const today = dayjs().format('YYYY-MM-DD');
+    return {
+      total: activities.length,
+      today: activities.filter(
+        (a) => dayjs(a.startTime).format('YYYY-MM-DD') === today && a.status === 'Scheduled'
+      ).length,
+      completed: activities.filter((a) => a.status === 'Completed').length,
+      pending: activities.filter((a) => a.status === 'Scheduled').length,
+    };
+  }, [activities]);
+
+  const handleCreate = () => {
     setSelectedActivity(null);
     setQuickActionType(undefined);
     setModalOpen(true);
   };
 
   const handleQuickAction = (activityTypeName: 'Call' | 'Email' | 'Meeting') => {
-    // Map activity type names to numeric enum values
     const typeMap = {
-      'Call': 1, // Telefon Görüşmesi
-      'Email': 2, // E-posta
-      'Meeting': 3, // Toplantı
+      Call: 1,
+      Email: 2,
+      Meeting: 3,
     };
 
     setSelectedActivity(null);
@@ -252,17 +196,17 @@ export default function ActivitiesPage() {
   const handleDelete = async (id: string) => {
     Modal.confirm({
       title: 'Aktiviteyi Sil',
-      content: 'Bu aktiviteyi silmek istediğinizden emin misiniz?',
+      content: 'Bu aktiviteyi silmek istediginizden emin misiniz?',
       okText: 'Sil',
       okType: 'danger',
-      cancelText: 'İptal',
+      cancelText: 'Iptal',
       onOk: async () => {
         try {
           await deleteActivity.mutateAsync(id);
-          showSuccess('Aktivite başarıyla silindi');
+          showSuccess('Aktivite basariyla silindi');
           setDrawerOpen(false);
         } catch (error: any) {
-          showApiError(error, 'Silme işlemi başarısız');
+          showApiError(error, 'Silme islemi basarisiz');
         }
       },
     });
@@ -271,40 +215,44 @@ export default function ActivitiesPage() {
   const handleComplete = async (id: string) => {
     try {
       await completeActivity.mutateAsync({ id });
-      showSuccess('Aktivite tamamlandı olarak işaretlendi');
+      showSuccess('Aktivite tamamlandi olarak isaretlendi');
       setDrawerOpen(false);
     } catch (error: any) {
-      showApiError(error, 'İşlem başarısız');
+      showApiError(error, 'Islem basarisiz');
     }
   };
 
-  const handleCancel = (activity: Activity) => {
+  const handleCancel = () => {
     setCancelModalOpen(true);
   };
 
   const handleCancelSubmit = async (values: { reason?: string }) => {
     if (!drawerActivity) return;
-    
+
     try {
-      await cancelActivity.mutateAsync({ 
-        id: drawerActivity.id.toString(), 
-        reason: values.reason 
+      await cancelActivity.mutateAsync({
+        id: drawerActivity.id.toString(),
+        reason: values.reason,
       });
       showSuccess('Aktivite iptal edildi');
       setCancelModalOpen(false);
       setDrawerOpen(false);
     } catch (error: any) {
-      showApiError(error, 'İptal işlemi başarısız');
+      showApiError(error, 'Iptal islemi basarisiz');
     }
   };
 
-  const handleReschedule = (activity: Activity) => {
+  const handleReschedule = () => {
     setRescheduleModalOpen(true);
   };
 
-  const handleRescheduleSubmit = async (values: { startTime: Dayjs; endTime?: Dayjs; reason?: string }) => {
+  const handleRescheduleSubmit = async (values: {
+    startTime: Dayjs;
+    endTime?: Dayjs;
+    reason?: string;
+  }) => {
     if (!drawerActivity) return;
-    
+
     try {
       await rescheduleActivity.mutateAsync({
         id: drawerActivity.id.toString(),
@@ -312,71 +260,129 @@ export default function ActivitiesPage() {
         newEndDate: values.endTime?.toISOString(),
         reason: values.reason,
       });
-      showSuccess('Aktivite yeniden planlandı');
+      showSuccess('Aktivite yeniden planlandi');
       setRescheduleModalOpen(false);
       setDrawerOpen(false);
     } catch (error: any) {
-      showApiError(error, 'Yeniden planlama başarısız');
+      showApiError(error, 'Yeniden planlama basarisiz');
     }
   };
 
   const handleSubmit = async (values: any) => {
     try {
-      // ActivityModal already maps frontend fields to backend format:
-      // - title -> subject
-      // - startTime -> dueDate (as ISO string)
-      // - endTime -> duration (calculated in minutes)
-      // So we just pass the values directly
       if (selectedActivity) {
         await updateActivity.mutateAsync({ id: selectedActivity.id, data: values });
-        showSuccess('Aktivite başarıyla güncellendi');
+        showSuccess('Aktivite basariyla guncellendi');
       } else {
         await createActivity.mutateAsync(values);
-        showSuccess('Yeni aktivite oluşturuldu');
+        showSuccess('Yeni aktivite olusturuldu');
       }
       setModalOpen(false);
     } catch (error: any) {
-      showApiError(error, 'İşlem başarısız');
+      showApiError(error, 'Islem basarisiz');
     }
   };
 
-  const handleDateSelect = (start: Date, end: Date) => {
+  const handleDateSelect = () => {
     setSelectedActivity(null);
     setModalOpen(true);
   };
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Stats Cards */}
-      <div className="mb-8">
-        <ActivitiesStats activities={activities} loading={isLoading} />
-      </div>
-
-      {/* Header */}
-      <ListPageHeader
-        icon={<BoltIcon className="w-5 h-5" />}
-        iconColor="#0f172a"
-        title="Aktiviteler"
-        description="Tüm aktivitelerinizi takvimde yönetin ve takip edin"
-        itemCount={totalCount}
-        primaryAction={{
-          label: 'Yeni Aktivite',
-          onClick: handleCreate,
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+            <BoltIcon className="w-7 h-7 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Aktiviteler</h1>
+            <p className="text-sm text-slate-500">
+              Tum aktivitelerinizi takvimde yonetin ve takip edin ({totalCount} aktivite)
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
           <button
             onClick={() => refetch()}
             disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
           >
             <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
-        }
-      />
+          <Button
+            type="primary"
+            icon={<PlusIcon className="w-4 h-4" />}
+            onClick={handleCreate}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+          >
+            Yeni Aktivite
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-500">Toplam Aktivite</p>
+              <p className="text-2xl font-bold text-slate-900 mt-1">
+                {isLoading ? '-' : stats.total}
+              </p>
+            </div>
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <BoltIcon className="w-5 h-5 text-slate-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-500">Bugunun Aktiviteleri</p>
+              <p className="text-2xl font-bold text-slate-900 mt-1">
+                {isLoading ? '-' : stats.today}
+              </p>
+            </div>
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <CalendarIcon className="w-5 h-5 text-slate-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-500">Tamamlanan</p>
+              <p className="text-2xl font-bold text-slate-900 mt-1">
+                {isLoading ? '-' : stats.completed}
+              </p>
+            </div>
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <CheckCircleIcon className="w-5 h-5 text-slate-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-500">Bekleyen</p>
+              <p className="text-2xl font-bold text-slate-900 mt-1">
+                {isLoading ? '-' : stats.pending}
+              </p>
+            </div>
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <ClockIcon className="w-5 h-5 text-slate-600" />
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Filters and Quick Actions */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
         <div className="flex flex-col gap-4">
           {/* Owner Filter */}
           <div className="flex items-center gap-3">
@@ -401,7 +407,7 @@ export default function ActivitiesPage() {
                     : 'bg-white text-slate-700 hover:bg-slate-50'
                 }`}
               >
-                Satış Ekibi
+                Satis Ekibi
               </button>
               <button
                 onClick={() => setOwnerFilter('all')}
@@ -411,21 +417,21 @@ export default function ActivitiesPage() {
                     : 'bg-white text-slate-700 hover:bg-slate-50'
                 }`}
               >
-                Tüm Aktiviteler
+                Tum Aktiviteler
               </button>
             </div>
           </div>
 
           {/* Quick Action Buttons */}
           <div className="flex items-center gap-3">
-            <span className="text-slate-600 font-medium">Hızlı Ekle:</span>
+            <span className="text-slate-600 font-medium">Hizli Ekle:</span>
             <Space>
               <button
                 onClick={() => handleQuickAction('Call')}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:border-slate-400 text-slate-700 rounded-lg shadow-sm transition-all text-sm font-medium"
               >
                 <PhoneIcon className="w-4 h-4" />
-                Görüşme
+                Gorusme
               </button>
               <button
                 onClick={() => handleQuickAction('Email')}
@@ -439,7 +445,7 @@ export default function ActivitiesPage() {
                 className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:border-slate-400 text-slate-700 rounded-lg shadow-sm transition-all text-sm font-medium"
               >
                 <UsersIcon className="w-4 h-4" />
-                Toplantı
+                Toplanti
               </button>
             </Space>
           </div>
@@ -447,51 +453,57 @@ export default function ActivitiesPage() {
       </div>
 
       {/* Calendar Content */}
-      {isLoading ? (
-        <Card>
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Spinner size="lg" />
+            <Spin size="large" />
           </div>
-        </Card>
-      ) : (
-        <Card>
+        ) : (
           <ActivityCalendar
             activities={activities}
             loading={isLoading}
             onEventClick={handleEventClick}
             onDateSelect={handleDateSelect}
           />
-        </Card>
-      )}
+        )}
+      </div>
 
       {/* Activity Details Drawer */}
       <Drawer
         title={
           <div className="flex items-center gap-3">
-            {drawerActivity && (() => {
-              const config = activityConfig[drawerActivity.type] || activityConfig.Note;
-              return (
-                <>
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center text-white shadow-lg"
-                    style={{ background: config.gradient }}
-                  >
-                    {config.icon}
-                  </div>
-                  <div>
-                    <div className="font-semibold text-base">{drawerActivity.title}</div>
-                    <Space size="small">
-                      <Tag color={config.color}>
-                        {config.label}
-                      </Tag>
-                      <Tag color={statusColors[drawerActivity.status]}>
-                        {drawerActivity.status}
-                      </Tag>
-                    </Space>
-                  </div>
-                </>
-              );
-            })()}
+            {drawerActivity &&
+              (() => {
+                const typeConfig =
+                  activityTypeConfig[drawerActivity.type] || activityTypeConfig.Note;
+                const statusConfig = activityStatusConfig[drawerActivity.status];
+                return (
+                  <>
+                    <div
+                      className={`w-10 h-10 rounded-lg flex items-center justify-center ${typeConfig.bgColor} ${typeConfig.textColor}`}
+                    >
+                      {typeConfig.icon}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-base text-slate-900">
+                        {drawerActivity.title}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${typeConfig.bgColor} ${typeConfig.textColor}`}
+                        >
+                          {typeConfig.label}
+                        </span>
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${statusConfig.bgColor} ${statusConfig.textColor}`}
+                        >
+                          {statusConfig.label}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
           </div>
         }
         placement="right"
@@ -511,20 +523,23 @@ export default function ActivitiesPage() {
                 <>
                   <Button
                     icon={<ClockIcon className="w-4 h-4" />}
-                    onClick={() => handleReschedule(drawerActivity)}
+                    onClick={handleReschedule}
+                    className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
                   >
                     Yeniden Planla
                   </Button>
                   <Button
                     icon={<XCircleIcon className="w-4 h-4" />}
-                    onClick={() => handleCancel(drawerActivity)}
+                    onClick={handleCancel}
+                    className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
                   >
-                    İptal Et
+                    Iptal Et
                   </Button>
                   <Button
                     type="primary"
                     icon={<CheckCircleIcon className="w-4 h-4" />}
                     onClick={() => handleComplete(drawerActivity.id)}
+                    className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
                   >
                     Tamamla
                   </Button>
@@ -533,8 +548,9 @@ export default function ActivitiesPage() {
               <Button
                 icon={<PencilIcon className="w-4 h-4" />}
                 onClick={() => handleEdit(drawerActivity)}
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
               >
-                Düzenle
+                Duzenle
               </Button>
               <Button
                 danger
@@ -561,11 +577,13 @@ export default function ActivitiesPage() {
                   <span> - {dayjs(drawerActivity.endTime).format('HH:mm')}</span>
                 )}
               </div>
-              {dayjs(drawerActivity.startTime).isBefore(dayjs()) && drawerActivity.status === 'Scheduled' && (
-                <Tag icon={<FireIcon className="w-3 h-3" />} color="error" className="mt-2">
-                  Gecikmiş
-                </Tag>
-              )}
+              {dayjs(drawerActivity.startTime).isBefore(dayjs()) &&
+                drawerActivity.status === 'Scheduled' && (
+                  <span className="inline-flex items-center gap-1 mt-2 px-2 py-1 rounded text-xs font-medium bg-slate-900 text-white">
+                    <FireIcon className="w-3 h-3" />
+                    Gecikmis
+                  </span>
+                )}
             </div>
 
             {/* Description */}
@@ -573,7 +591,7 @@ export default function ActivitiesPage() {
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
                 <div className="flex items-center gap-2 text-slate-600 mb-2">
                   <DocumentTextIcon className="w-4 h-4" />
-                  <span className="font-semibold">Açıklama</span>
+                  <span className="font-semibold">Aciklama</span>
                 </div>
                 <p className="text-slate-900">{drawerActivity.description}</p>
               </div>
@@ -584,10 +602,10 @@ export default function ActivitiesPage() {
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
                 <div className="flex items-center gap-2 text-slate-600 mb-2">
                   <UserIcon className="w-4 h-4" />
-                  <span className="font-semibold">Müşteri</span>
+                  <span className="font-semibold">Musteri</span>
                 </div>
                 <Descriptions column={1} size="small">
-                  <Descriptions.Item label="Müşteri ID">
+                  <Descriptions.Item label="Musteri ID">
                     {drawerActivity.customerId}
                   </Descriptions.Item>
                 </Descriptions>
@@ -606,14 +624,16 @@ export default function ActivitiesPage() {
                     type="primary"
                     icon={<CheckCircleIcon className="w-4 h-4" />}
                     onClick={() => handleComplete(drawerActivity.id)}
+                    className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
                   >
-                    Tamamlandı Olarak İşaretle
+                    Tamamlandi Olarak Isaretle
                   </Button>
                   <Button
                     block
                     size="large"
                     icon={<ClockIcon className="w-4 h-4" />}
-                    onClick={() => handleReschedule(drawerActivity)}
+                    onClick={handleReschedule}
+                    className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
                   >
                     Aktiviteyi Yeniden Planla
                   </Button>
@@ -621,9 +641,10 @@ export default function ActivitiesPage() {
                     block
                     size="large"
                     icon={<XCircleIcon className="w-4 h-4" />}
-                    onClick={() => handleCancel(drawerActivity)}
+                    onClick={handleCancel}
+                    className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
                   >
-                    Aktiviteyi İptal Et
+                    Aktiviteyi Iptal Et
                   </Button>
                 </>
               )}
@@ -632,8 +653,9 @@ export default function ActivitiesPage() {
                 size="large"
                 icon={<PencilIcon className="w-4 h-4" />}
                 onClick={() => handleEdit(drawerActivity)}
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
               >
-                Aktiviteyi Düzenle
+                Aktiviteyi Duzenle
               </Button>
               <Button
                 block
@@ -666,7 +688,7 @@ export default function ActivitiesPage() {
       <Modal
         title={
           <div className="flex items-center gap-2">
-            <ClockIcon className="w-4 h-4 text-blue-600" />
+            <ClockIcon className="w-4 h-4 text-slate-600" />
             <span>Aktiviteyi Yeniden Planla</span>
           </div>
         }
@@ -684,47 +706,42 @@ export default function ActivitiesPage() {
           }}
         >
           <Form.Item
-            label="Yeni Başlangıç Zamanı"
+            label="Yeni Baslangic Zamani"
             name="startTime"
-            rules={[{ required: true, message: 'Başlangıç zamanı gerekli' }]}
+            rules={[{ required: true, message: 'Baslangic zamani gerekli' }]}
           >
             <DatePicker
               showTime
               format="DD.MM.YYYY HH:mm"
               className="w-full"
-              placeholder="Başlangıç zamanı seçin"
+              placeholder="Baslangic zamani secin"
             />
           </Form.Item>
-          <Form.Item
-            label="Yeni Bitiş Zamanı (Opsiyonel)"
-            name="endTime"
-          >
+          <Form.Item label="Yeni Bitis Zamani (Opsiyonel)" name="endTime">
             <DatePicker
               showTime
               format="DD.MM.YYYY HH:mm"
               className="w-full"
-              placeholder="Bitiş zamanı seçin"
+              placeholder="Bitis zamani secin"
             />
           </Form.Item>
-          <Form.Item
-            label="Yeniden Planlama Nedeni (Opsiyonel)"
-            name="reason"
-          >
-            <Input.TextArea
-              rows={3}
-              placeholder="Aktiviteyi neden yeniden planlıyorsunuz?"
-            />
+          <Form.Item label="Yeniden Planlama Nedeni (Opsiyonel)" name="reason">
+            <Input.TextArea rows={3} placeholder="Aktiviteyi neden yeniden planliyorsunuz?" />
           </Form.Item>
           <Form.Item className="mb-0">
             <Space className="w-full justify-end">
-              <Button onClick={() => setRescheduleModalOpen(false)}>
-                İptal
+              <Button
+                onClick={() => setRescheduleModalOpen(false)}
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+              >
+                Iptal
               </Button>
               <Button
                 type="primary"
                 htmlType="submit"
                 loading={rescheduleActivity.isPending}
                 icon={<ClockIcon className="w-4 h-4" />}
+                className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
               >
                 Yeniden Planla
               </Button>
@@ -737,8 +754,8 @@ export default function ActivitiesPage() {
       <Modal
         title={
           <div className="flex items-center gap-2">
-            <XCircleIcon className="w-4 h-4 text-red-600" />
-            <span>Aktiviteyi İptal Et</span>
+            <XCircleIcon className="w-4 h-4 text-slate-600" />
+            <span>Aktiviteyi Iptal Et</span>
           </div>
         }
         open={cancelModalOpen}
@@ -746,23 +763,17 @@ export default function ActivitiesPage() {
         footer={null}
         width={500}
       >
-        <Form
-          layout="vertical"
-          onFinish={handleCancelSubmit}
-        >
-          <Form.Item
-            label="İptal Nedeni (Opsiyonel)"
-            name="reason"
-          >
-            <Input.TextArea
-              rows={4}
-              placeholder="Aktiviteyi neden iptal ediyorsunuz?"
-            />
+        <Form layout="vertical" onFinish={handleCancelSubmit}>
+          <Form.Item label="Iptal Nedeni (Opsiyonel)" name="reason">
+            <Input.TextArea rows={4} placeholder="Aktiviteyi neden iptal ediyorsunuz?" />
           </Form.Item>
           <Form.Item className="mb-0">
             <Space className="w-full justify-end">
-              <Button onClick={() => setCancelModalOpen(false)}>
-                Vazgeç
+              <Button
+                onClick={() => setCancelModalOpen(false)}
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+              >
+                Vazgec
               </Button>
               <Button
                 danger
@@ -771,12 +782,12 @@ export default function ActivitiesPage() {
                 loading={cancelActivity.isPending}
                 icon={<XCircleIcon className="w-4 h-4" />}
               >
-                İptal Et
+                Iptal Et
               </Button>
             </Space>
           </Form.Item>
         </Form>
       </Modal>
-    </PageContainer>
+    </div>
   );
 }

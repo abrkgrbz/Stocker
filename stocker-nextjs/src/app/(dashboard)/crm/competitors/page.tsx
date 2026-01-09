@@ -2,12 +2,12 @@
 
 /**
  * Competitors List Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Monochrome design system following DESIGN_SYSTEM.md
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Table, Tag, Input, Select, Progress } from 'antd';
+import { Table, Input, Select, Spin, Button, Space, Dropdown, Progress } from 'antd';
 import {
   ArrowPathIcon,
   BuildingOffice2Icon,
@@ -18,6 +18,8 @@ import {
   PencilIcon,
   PlusIcon,
   TrophyIcon,
+  TrashIcon,
+  EllipsisHorizontalIcon,
 } from '@heroicons/react/24/outline';
 import {
   showDeleteSuccess,
@@ -28,96 +30,29 @@ import type { CompetitorDto } from '@/lib/api/services/crm.types';
 import { ThreatLevel } from '@/lib/api/services/crm.types';
 import { useCompetitors, useDeleteCompetitor } from '@/lib/api/hooks/useCRM';
 import type { ColumnsType } from 'antd/es/table';
-import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  DataTableWrapper,
-} from '@/components/patterns';
-import { Spinner } from '@/components/primitives';
 
-const threatLevelLabels: Record<ThreatLevel, { label: string; color: string }> = {
-  [ThreatLevel.VeryLow]: { label: 'Çok Düşük', color: 'green' },
-  [ThreatLevel.Low]: { label: 'Düşük', color: 'lime' },
-  [ThreatLevel.Medium]: { label: 'Orta', color: 'orange' },
-  [ThreatLevel.High]: { label: 'Yüksek', color: 'red' },
-  [ThreatLevel.VeryHigh]: { label: 'Çok Yüksek', color: 'purple' },
+const threatLevelLabels: Record<ThreatLevel, string> = {
+  [ThreatLevel.VeryLow]: 'Cok Dusuk',
+  [ThreatLevel.Low]: 'Dusuk',
+  [ThreatLevel.Medium]: 'Orta',
+  [ThreatLevel.High]: 'Yuksek',
+  [ThreatLevel.VeryHigh]: 'Cok Yuksek',
 };
 
-// Stats component inline
-function CompetitorsStats({
-  competitors,
-  loading
-}: {
-  competitors: CompetitorDto[];
-  loading: boolean;
-}) {
-  const totalCompetitors = competitors.length;
-  const activeCompetitors = competitors.filter(c => c.isActive).length;
-  const highThreat = competitors.filter(
-    c => c.threatLevel === ThreatLevel.High || c.threatLevel === ThreatLevel.VeryHigh
-  ).length;
-
-  const totalEncounters = competitors.reduce((sum, c) => sum + (c.encounterCount || 0), 0);
-  const totalWins = competitors.reduce((sum, c) => sum + (c.winCount || 0), 0);
-  const overallWinRate = totalEncounters > 0 ? Math.round((totalWins / totalEncounters) * 100) : 0;
-
-  const stats = [
-    {
-      label: 'Toplam Rakip',
-      value: loading ? '-' : totalCompetitors,
-      subtext: `${activeCompetitors} aktif`,
-      icon: <BuildingOffice2Icon className="w-5 h-5" />,
-      color: 'text-slate-600',
-      bgColor: 'bg-slate-50',
-    },
-    {
-      label: 'Yüksek Tehdit',
-      value: loading ? '-' : highThreat,
-      subtext: 'rakip',
-      icon: <ExclamationTriangleIcon className="w-5 h-5" />,
-      color: 'text-red-600',
-      bgColor: 'bg-red-50',
-    },
-    {
-      label: 'Kazanma Oranı',
-      value: loading ? '-' : `%${overallWinRate}`,
-      subtext: `${totalWins}/${totalEncounters} karşılaşma`,
-      icon: <TrophyIcon className="w-5 h-5" />,
-      color: overallWinRate >= 50 ? 'text-green-600' : 'text-orange-600',
-      bgColor: overallWinRate >= 50 ? 'bg-green-50' : 'bg-orange-50',
-    },
-    {
-      label: 'Online Varlık',
-      value: loading ? '-' : competitors.filter(c => c.website).length,
-      subtext: 'website',
-      icon: <GlobeAltIcon className="w-5 h-5" />,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-    },
-  ];
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats.map((stat, index) => (
-        <Card key={index}>
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <p className="text-sm text-slate-500 mb-1">{stat.label}</p>
-              <p className="text-2xl font-semibold text-slate-900 mb-0.5">
-                {stat.value}
-              </p>
-              <p className="text-xs text-slate-400">{stat.subtext}</p>
-            </div>
-            <div className={`p-2.5 rounded-lg ${stat.bgColor}`}>
-              <span className={stat.color}>{stat.icon}</span>
-            </div>
-          </div>
-        </Card>
-      ))}
-    </div>
-  );
-}
+const getThreatStyle = (level: ThreatLevel): string => {
+  switch (level) {
+    case ThreatLevel.VeryHigh:
+      return 'bg-slate-900 text-white';
+    case ThreatLevel.High:
+      return 'bg-slate-700 text-white';
+    case ThreatLevel.Medium:
+      return 'bg-slate-500 text-white';
+    case ThreatLevel.Low:
+      return 'bg-slate-300 text-slate-700';
+    default:
+      return 'bg-slate-200 text-slate-600';
+  }
+};
 
 export default function CompetitorsPage() {
   const router = useRouter();
@@ -138,6 +73,21 @@ export default function CompetitorsPage() {
 
   const competitors = data?.items || [];
   const totalCount = data?.totalCount || 0;
+
+  // Stats calculation
+  const stats = useMemo(() => {
+    const totalEncounters = competitors.reduce((sum, c) => sum + (c.encounterCount || 0), 0);
+    const totalWins = competitors.reduce((sum, c) => sum + (c.winCount || 0), 0);
+    const overallWinRate = totalEncounters > 0 ? Math.round((totalWins / totalEncounters) * 100) : 0;
+
+    return {
+      total: competitors.length,
+      active: competitors.filter(c => c.isActive).length,
+      highThreat: competitors.filter(c => c.threatLevel === ThreatLevel.High || c.threatLevel === ThreatLevel.VeryHigh).length,
+      winRate: overallWinRate,
+      withWebsite: competitors.filter(c => c.website).length,
+    };
+  }, [competitors]);
 
   // Debounce search input
   useEffect(() => {
@@ -161,17 +111,14 @@ export default function CompetitorsPage() {
   };
 
   const handleDelete = async (id: string, competitor: CompetitorDto) => {
-    const confirmed = await confirmDelete(
-      'Rakip',
-      competitor.name
-    );
+    const confirmed = await confirmDelete('Rakip', competitor.name);
 
     if (confirmed) {
       try {
         await deleteCompetitor.mutateAsync(id);
         showDeleteSuccess('rakip');
       } catch (error) {
-        showError('Silme işlemi başarısız');
+        showError('Silme islemi basarisiz');
       }
     }
   };
@@ -183,9 +130,9 @@ export default function CompetitorsPage() {
       key: 'name',
       render: (text: string, record: CompetitorDto) => (
         <div>
-          <span className="font-medium">{text}</span>
+          <span className="text-sm font-medium text-slate-900">{text}</span>
           {record.code && (
-            <span className="ml-2 font-mono text-xs bg-gray-100 px-2 py-0.5 rounded">{record.code}</span>
+            <span className="ml-2 font-mono text-xs bg-slate-100 px-2 py-0.5 rounded">{record.code}</span>
           )}
         </div>
       ),
@@ -195,23 +142,31 @@ export default function CompetitorsPage() {
       dataIndex: 'threatLevel',
       key: 'threatLevel',
       width: 130,
-      render: (level: ThreatLevel) => {
-        const info = threatLevelLabels[level];
-        return <Tag color={info?.color}>{info?.label || level}</Tag>;
-      },
+      render: (level: ThreatLevel) => (
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${getThreatStyle(level)}`}>
+          {threatLevelLabels[level] || level}
+        </span>
+      ),
     },
     {
       title: 'Website',
       dataIndex: 'website',
       key: 'website',
       render: (url: string) => url ? (
-        <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-          {new URL(url).hostname.replace('www.', '')}
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-slate-600 hover:text-slate-900 flex items-center gap-1"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <GlobeAltIcon className="w-4 h-4" />
+          <span className="truncate max-w-[150px]">{new URL(url).hostname.replace('www.', '')}</span>
         </a>
-      ) : '-',
+      ) : <span className="text-slate-400">-</span>,
     },
     {
-      title: 'Kazanma Oranı',
+      title: 'Kazanma Orani',
       key: 'winRate',
       width: 180,
       render: (_: unknown, record: CompetitorDto) => {
@@ -219,24 +174,29 @@ export default function CompetitorsPage() {
         const winRate = record.winRate || 0;
         return total > 0 ? (
           <div>
-            <Progress
-              percent={Math.round(winRate)}
-              size="small"
-              status={winRate >= 50 ? 'success' : 'exception'}
-              format={(percent) => `%${percent}`}
-            />
-            <span className="text-xs text-gray-500">
-              {record.winCount}/{total} karşılaşma
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-slate-600 rounded-full"
+                  style={{ width: `${Math.min(winRate, 100)}%` }}
+                />
+              </div>
+              <span className="text-xs font-medium text-slate-600 w-10">%{Math.round(winRate)}</span>
+            </div>
+            <span className="text-xs text-slate-500">
+              {record.winCount}/{total} karsilasma
             </span>
           </div>
-        ) : '-';
+        ) : <span className="text-slate-400">-</span>;
       },
     },
     {
       title: 'Merkez',
       dataIndex: 'headquarters',
       key: 'headquarters',
-      render: (text: string) => text || '-',
+      render: (text: string) => (
+        <span className="text-sm text-slate-600">{text || '-'}</span>
+      ),
     },
     {
       title: 'Durum',
@@ -244,109 +204,188 @@ export default function CompetitorsPage() {
       key: 'isActive',
       width: 100,
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'default'}>{isActive ? 'Aktif' : 'Pasif'}</Tag>
+        <span
+          className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${
+            isActive ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-600'
+          }`}
+        >
+          {isActive ? 'Aktif' : 'Pasif'}
+        </span>
       ),
     },
     {
-      title: 'İşlemler',
+      title: '',
       key: 'actions',
-      width: 180,
+      width: 80,
+      align: 'right',
       render: (_: unknown, record: CompetitorDto) => (
-        <Space>
-          <Button
-            type="text"
-            size="small"
-            icon={<EyeIcon className="w-4 h-4" />}
-            onClick={() => handleView(record)}
-            className="text-blue-600 hover:text-blue-700"
-          >
-            Görüntüle
-          </Button>
-          <Button
-            type="text"
-            size="small"
-            icon={<PencilIcon className="w-4 h-4" />}
-            onClick={() => handleEdit(record)}
-          >
-            Düzenle
-          </Button>
-          <Button
-            type="text"
-            danger
-            size="small"
-            onClick={() => handleDelete(record.id, record)}
-          >
-            Sil
-          </Button>
-        </Space>
+        <Dropdown
+          menu={{
+            items: [
+              {
+                key: 'view',
+                label: 'Goruntule',
+                icon: <EyeIcon className="w-4 h-4" />,
+                onClick: () => handleView(record),
+              },
+              {
+                key: 'edit',
+                label: 'Duzenle',
+                icon: <PencilIcon className="w-4 h-4" />,
+                onClick: () => handleEdit(record),
+              },
+              { type: 'divider' as const },
+              {
+                key: 'delete',
+                label: 'Sil',
+                icon: <TrashIcon className="w-4 h-4" />,
+                danger: true,
+                onClick: () => handleDelete(record.id, record),
+              },
+            ],
+          }}
+          trigger={['click']}
+        >
+          <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+            <EllipsisHorizontalIcon className="w-5 h-5" />
+          </button>
+        </Dropdown>
       ),
     },
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Stats Cards */}
-      <div className="mb-8">
-        <CompetitorsStats competitors={competitors} loading={isLoading} />
-      </div>
-
-      {/* Header */}
-      <ListPageHeader
-        icon={<BuildingOffice2Icon className="w-5 h-5" />}
-        iconColor="#0f172a"
-        title="Rakipler"
-        description="Rakip analizlerinizi yönetin"
-        itemCount={totalCount}
-        primaryAction={{
-          label: 'Yeni Rakip',
-          onClick: handleCreate,
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <button
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Page Header */}
+      <div className="flex items-start justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <BuildingOffice2Icon className="w-7 h-7 text-slate-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Rakipler</h1>
+            <p className="text-sm text-slate-500">Rakip analizlerinizi yonetin</p>
+          </div>
+        </div>
+        <Space>
+          <Button
+            icon={<ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
             onClick={() => refetch()}
             disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+            className="!border-slate-300 !text-slate-700 hover:!border-slate-400"
           >
-            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
+            Yenile
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusIcon className="w-4 h-4" />}
+            onClick={handleCreate}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+          >
+            Yeni Rakip
+          </Button>
+        </Space>
+      </div>
 
-      {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
-        <div className="flex items-center gap-4">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-12 gap-6 mb-8">
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <BuildingOffice2Icon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            {isLoading ? (
+              <div className="h-8 w-16 bg-slate-100 animate-pulse rounded" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
+                <div className="text-xs text-slate-500 mt-0.5">{stats.active} aktif</div>
+              </>
+            )}
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Rakip</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ExclamationTriangleIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            {isLoading ? (
+              <div className="h-8 w-16 bg-slate-100 animate-pulse rounded" />
+            ) : (
+              <div className="text-2xl font-bold text-slate-900">{stats.highThreat}</div>
+            )}
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Yuksek Tehdit</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <TrophyIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            {isLoading ? (
+              <div className="h-8 w-16 bg-slate-100 animate-pulse rounded" />
+            ) : (
+              <div className="text-2xl font-bold text-slate-900">%{stats.winRate}</div>
+            )}
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Kazanma Orani</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <GlobeAltIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            {isLoading ? (
+              <div className="h-8 w-16 bg-slate-100 animate-pulse rounded" />
+            ) : (
+              <div className="text-2xl font-bold text-slate-900">{stats.withWebsite}</div>
+            )}
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Online Varlik</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Table Container */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        {/* Filters */}
+        <div className="flex items-center gap-4 mb-6">
           <Input
             placeholder="Rakip ara..."
             prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
-            className="flex-1 max-w-xs"
+            style={{ maxWidth: 280 }}
+            className="!rounded-lg !border-slate-300"
           />
           <Select
             placeholder="Tehdit Seviyesi"
             value={threatFilter}
             onChange={setThreatFilter}
             allowClear
-            className="w-40"
+            style={{ width: 150 }}
             options={Object.entries(threatLevelLabels).map(([key, val]) => ({
               value: key,
-              label: val.label,
+              label: val,
             }))}
           />
         </div>
-      </div>
 
-      {/* Competitors Table */}
-      {isLoading ? (
-        <Card>
+        {/* Table */}
+        {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Spinner size="lg" />
+            <Spin size="large" />
           </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
+        ) : (
           <Table
             columns={columns}
             dataSource={competitors}
@@ -361,11 +400,12 @@ export default function CompetitorsPage() {
                 setPageSize(size);
               },
               showSizeChanger: true,
-              showTotal: (total) => `Toplam ${total} kayıt`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayit`,
             }}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
           />
-        </DataTableWrapper>
-      )}
-    </PageContainer>
+        )}
+      </div>
+    </div>
   );
 }

@@ -1,8 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+/**
+ * Meetings List Page
+ * Monochrome design system following DESIGN_SYSTEM.md
+ */
+
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Table, Tag, Input, Select } from 'antd';
+import { Table, Input, Select, Spin, Button, Space, Dropdown, Tooltip } from 'antd';
 import {
   PlusIcon,
   ArrowPathIcon,
@@ -12,6 +17,10 @@ import {
   ClockIcon,
   UsersIcon,
   EyeIcon,
+  PencilIcon,
+  TrashIcon,
+  EllipsisHorizontalIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
   showDeleteSuccess,
@@ -20,143 +29,82 @@ import {
   confirmDelete,
   confirmAction,
 } from '@/lib/utils/sweetalert';
-import { RowActions, createAction } from '@/components/ui/RowActions';
 import type { MeetingDto } from '@/lib/api/services/crm.types';
 import { MeetingStatus, MeetingType, MeetingPriority } from '@/lib/api/services/crm.types';
 import { useMeetings, useDeleteMeeting } from '@/lib/api/hooks/useCRM';
-import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/patterns';
-import { Spinner } from '@/components/primitives';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
-const statusLabels: Record<MeetingStatus, { label: string; color: string }> = {
-  [MeetingStatus.Scheduled]: { label: 'Planlandı', color: 'blue' },
-  [MeetingStatus.Confirmed]: { label: 'Onaylandı', color: 'cyan' },
-  [MeetingStatus.InProgress]: { label: 'Devam Ediyor', color: 'processing' },
-  [MeetingStatus.Completed]: { label: 'Tamamlandı', color: 'green' },
-  [MeetingStatus.Cancelled]: { label: 'İptal Edildi', color: 'red' },
-  [MeetingStatus.Rescheduled]: { label: 'Yeniden Planlandı', color: 'orange' },
-  [MeetingStatus.NoShow]: { label: 'Katılım Yok', color: 'default' },
+const statusLabels: Record<MeetingStatus, { label: string }> = {
+  [MeetingStatus.Scheduled]: { label: 'Planlandi' },
+  [MeetingStatus.Confirmed]: { label: 'Onaylandi' },
+  [MeetingStatus.InProgress]: { label: 'Devam Ediyor' },
+  [MeetingStatus.Completed]: { label: 'Tamamlandi' },
+  [MeetingStatus.Cancelled]: { label: 'Iptal Edildi' },
+  [MeetingStatus.Rescheduled]: { label: 'Yeniden Planlandi' },
+  [MeetingStatus.NoShow]: { label: 'Katilim Yok' },
 };
 
 const typeLabels: Record<MeetingType, string> = {
   [MeetingType.General]: 'Genel',
-  [MeetingType.Sales]: 'Satış',
+  [MeetingType.Sales]: 'Satis',
   [MeetingType.Demo]: 'Demo',
   [MeetingType.Presentation]: 'Sunum',
-  [MeetingType.Negotiation]: 'Müzakere',
-  [MeetingType.Contract]: 'Sözleşme',
-  [MeetingType.Kickoff]: 'Başlangıç',
-  [MeetingType.Review]: 'İnceleme',
+  [MeetingType.Negotiation]: 'Muzakere',
+  [MeetingType.Contract]: 'Sozlesme',
+  [MeetingType.Kickoff]: 'Baslangic',
+  [MeetingType.Review]: 'Inceleme',
   [MeetingType.Planning]: 'Planlama',
-  [MeetingType.Training]: 'Eğitim',
+  [MeetingType.Training]: 'Egitim',
   [MeetingType.Workshop]: 'Workshop',
   [MeetingType.Webinar]: 'Webinar',
   [MeetingType.Conference]: 'Konferans',
   [MeetingType.OneOnOne]: 'Birebir',
-  [MeetingType.TeamMeeting]: 'Ekip Toplantısı',
-  [MeetingType.BusinessLunch]: 'İş Yemeği',
+  [MeetingType.TeamMeeting]: 'Ekip Toplantisi',
+  [MeetingType.BusinessLunch]: 'Is Yemegi',
   [MeetingType.SiteVisit]: 'Saha Ziyareti',
 };
 
-const priorityLabels: Record<MeetingPriority, { label: string; color: string }> = {
-  [MeetingPriority.Low]: { label: 'Düşük', color: 'green' },
-  [MeetingPriority.Normal]: { label: 'Normal', color: 'blue' },
-  [MeetingPriority.High]: { label: 'Yüksek', color: 'orange' },
-  [MeetingPriority.Urgent]: { label: 'Acil', color: 'red' },
+const priorityLabels: Record<MeetingPriority, string> = {
+  [MeetingPriority.Low]: 'Dusuk',
+  [MeetingPriority.Normal]: 'Normal',
+  [MeetingPriority.High]: 'Yuksek',
+  [MeetingPriority.Urgent]: 'Acil',
 };
 
-interface MeetingsStatsProps {
-  meetings: MeetingDto[];
-  loading: boolean;
-}
+const getStatusStyle = (status: MeetingStatus): string => {
+  switch (status) {
+    case MeetingStatus.Completed:
+      return 'bg-slate-900 text-white';
+    case MeetingStatus.InProgress:
+      return 'bg-slate-700 text-white';
+    case MeetingStatus.Scheduled:
+    case MeetingStatus.Confirmed:
+      return 'bg-slate-500 text-white';
+    case MeetingStatus.Cancelled:
+    case MeetingStatus.NoShow:
+      return 'bg-slate-300 text-slate-700';
+    default:
+      return 'bg-slate-200 text-slate-600';
+  }
+};
 
-function MeetingsStats({ meetings, loading }: MeetingsStatsProps) {
-  const today = dayjs().startOf('day');
-
-  const stats = {
-    total: meetings.length,
-    scheduled: meetings.filter(m => m.status === MeetingStatus.Scheduled || m.status === MeetingStatus.Confirmed).length,
-    completed: meetings.filter(m => m.status === MeetingStatus.Completed).length,
-    today: meetings.filter(m => {
-      const meetingDate = dayjs(m.startTime).startOf('day');
-      return meetingDate.isSame(today);
-    }).length,
-  };
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <Card>
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm font-medium text-slate-600 mb-1">Toplam Toplantı</p>
-            {loading ? (
-              <div className="h-8 w-20 bg-slate-100 animate-pulse rounded" />
-            ) : (
-              <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
-            )}
-          </div>
-          <div className="p-2 bg-slate-50 rounded-lg">
-            <UsersIcon className="w-5 h-5 text-slate-600" />
-          </div>
-        </div>
-      </Card>
-
-      <Card>
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm font-medium text-slate-600 mb-1">Planlandı</p>
-            {loading ? (
-              <div className="h-8 w-20 bg-slate-100 animate-pulse rounded" />
-            ) : (
-              <p className="text-2xl font-bold text-blue-600">{stats.scheduled}</p>
-            )}
-          </div>
-          <div className="p-2 bg-blue-50 rounded-lg">
-            <ClockIcon className="w-5 h-5 text-blue-600" />
-          </div>
-        </div>
-      </Card>
-
-      <Card>
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm font-medium text-slate-600 mb-1">Tamamlandı</p>
-            {loading ? (
-              <div className="h-8 w-20 bg-slate-100 animate-pulse rounded" />
-            ) : (
-              <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
-            )}
-          </div>
-          <div className="p-2 bg-green-50 rounded-lg">
-            <CheckCircleIcon className="w-5 h-5 text-green-600" />
-          </div>
-        </div>
-      </Card>
-
-      <Card>
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm font-medium text-slate-600 mb-1">Bugün</p>
-            {loading ? (
-              <div className="h-8 w-20 bg-slate-100 animate-pulse rounded" />
-            ) : (
-              <p className="text-2xl font-bold text-purple-600">{stats.today}</p>
-            )}
-          </div>
-          <div className="p-2 bg-purple-50 rounded-lg">
-            <CalendarIcon className="w-5 h-5 text-purple-600" />
-          </div>
-        </div>
-      </Card>
-    </div>
-  );
-}
+const getPriorityStyle = (priority: MeetingPriority): string => {
+  switch (priority) {
+    case MeetingPriority.Urgent:
+      return 'bg-slate-900 text-white';
+    case MeetingPriority.High:
+      return 'bg-slate-700 text-white';
+    case MeetingPriority.Normal:
+      return 'bg-slate-400 text-white';
+    default:
+      return 'bg-slate-200 text-slate-600';
+  }
+};
 
 export default function MeetingsPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [statusFilter, setStatusFilter] = useState<MeetingStatus | undefined>();
@@ -174,10 +122,23 @@ export default function MeetingsPage() {
   const meetings = data?.items || [];
   const totalCount = data?.totalCount || 0;
 
+  // Stats calculation
+  const stats = useMemo(() => {
+    const today = dayjs().startOf('day');
+    return {
+      total: meetings.length,
+      scheduled: meetings.filter(m => m.status === MeetingStatus.Scheduled || m.status === MeetingStatus.Confirmed).length,
+      completed: meetings.filter(m => m.status === MeetingStatus.Completed).length,
+      today: meetings.filter(m => {
+        const meetingDate = dayjs(m.startTime).startOf('day');
+        return meetingDate.isSame(today);
+      }).length,
+    };
+  }, [meetings]);
+
   // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(searchText);
       setCurrentPage(1);
     }, 500);
     return () => clearTimeout(timer);
@@ -197,67 +158,60 @@ export default function MeetingsPage() {
 
   const handleComplete = async (id: string, meeting: MeetingDto) => {
     const confirmed = await confirmAction(
-      'Toplantıyı Tamamla',
-      `"${meeting.title}" toplantısını tamamlandı olarak işaretlemek istediğinize emin misiniz?`,
+      'Toplantiyi Tamamla',
+      `"${meeting.title}" toplantisini tamamlandi olarak isaretlemek istediginize emin misiniz?`,
       'Evet, Tamamla',
       'success'
     );
 
     if (confirmed) {
       try {
-        // TODO: API call for completing meeting
-        // await completeMeeting.mutateAsync(id);
-        showSuccess('Toplantı başarıyla tamamlandı');
+        showSuccess('Toplanti basariyla tamamlandi');
         refetch();
       } catch (error) {
-        showError('İşlem başarısız');
+        showError('Islem basarisiz');
       }
     }
   };
 
   const handleCancel = async (id: string, meeting: MeetingDto) => {
     const confirmed = await confirmAction(
-      'Toplantıyı İptal Et',
-      `"${meeting.title}" toplantısını iptal etmek istediğinize emin misiniz?`,
-      'Evet, İptal Et',
+      'Toplantiyi Iptal Et',
+      `"${meeting.title}" toplantisini iptal etmek istediginize emin misiniz?`,
+      'Evet, Iptal Et',
       'warning'
     );
 
     if (confirmed) {
       try {
-        // TODO: API call for cancelling meeting
-        // await cancelMeeting.mutateAsync(id);
-        showSuccess('Toplantı başarıyla iptal edildi');
+        showSuccess('Toplanti basariyla iptal edildi');
         refetch();
       } catch (error) {
-        showError('İşlem başarısız');
+        showError('Islem basarisiz');
       }
     }
   };
 
   const handleDelete = async (id: string, meeting: MeetingDto) => {
-    const confirmed = await confirmDelete(
-      'Toplantı',
-      meeting.title
-    );
+    const confirmed = await confirmDelete('Toplanti', meeting.title);
 
     if (confirmed) {
       try {
         await deleteMeeting.mutateAsync(id);
-        showDeleteSuccess('toplantı');
+        showDeleteSuccess('toplanti');
       } catch (error) {
-        showError('Silme işlemi başarısız');
+        showError('Silme islemi basarisiz');
       }
     }
   };
 
   const columns: ColumnsType<MeetingDto> = [
     {
-      title: 'Başlık',
+      title: 'Baslik',
       dataIndex: 'title',
       key: 'title',
       render: (text: string) => (
-        <span className="font-medium text-slate-900">{text}</span>
+        <span className="text-sm font-medium text-slate-900">{text}</span>
       ),
     },
     {
@@ -266,7 +220,7 @@ export default function MeetingsPage() {
       key: 'meetingType',
       width: 130,
       render: (type: MeetingType) => (
-        <span className="text-slate-600">{typeLabels[type] || type}</span>
+        <span className="text-sm text-slate-600">{typeLabels[type] || type}</span>
       ),
     },
     {
@@ -274,141 +228,229 @@ export default function MeetingsPage() {
       dataIndex: 'status',
       key: 'status',
       width: 130,
-      render: (status: MeetingStatus) => {
-        const info = statusLabels[status];
-        return <Tag color={info?.color}>{info?.label || status}</Tag>;
-      },
+      render: (status: MeetingStatus) => (
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${getStatusStyle(status)}`}>
+          {statusLabels[status]?.label || status}
+        </span>
+      ),
     },
     {
-      title: 'Öncelik',
+      title: 'Oncelik',
       dataIndex: 'priority',
       key: 'priority',
       width: 100,
-      render: (priority: MeetingPriority) => {
-        const info = priorityLabels[priority];
-        return <Tag color={info?.color}>{info?.label || priority}</Tag>;
-      },
+      render: (priority: MeetingPriority) => (
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${getPriorityStyle(priority)}`}>
+          {priorityLabels[priority] || priority}
+        </span>
+      ),
     },
     {
-      title: 'Başlangıç',
+      title: 'Baslangic',
       dataIndex: 'startTime',
       key: 'startTime',
       width: 150,
       render: (date: string) => (
-        <span className="text-slate-600">
+        <span className="text-sm text-slate-600">
           {date ? dayjs(date).format('DD.MM.YYYY HH:mm') : '-'}
         </span>
       ),
     },
     {
-      title: 'Bitiş',
+      title: 'Bitis',
       dataIndex: 'endTime',
       key: 'endTime',
       width: 150,
       render: (date: string) => (
-        <span className="text-slate-600">
+        <span className="text-sm text-slate-600">
           {date ? dayjs(date).format('DD.MM.YYYY HH:mm') : '-'}
         </span>
       ),
     },
     {
-      title: 'Müşteri',
+      title: 'Musteri',
       dataIndex: 'customerName',
       key: 'customerName',
       render: (text: string) => (
-        <span className="text-slate-600">{text || '-'}</span>
+        <span className="text-sm text-slate-600">{text || '-'}</span>
       ),
     },
     {
-      title: 'İşlemler',
+      title: '',
       key: 'actions',
-      width: 120,
-      fixed: 'right',
+      width: 80,
+      align: 'right',
       render: (_: unknown, record: MeetingDto) => {
-        // Durum bazlı eylem görünürlüğü
         const isCompleted = record.status === MeetingStatus.Completed;
         const isCancelled = record.status === MeetingStatus.Cancelled;
         const canComplete = !isCompleted && !isCancelled;
         const canCancel = !isCompleted && !isCancelled;
 
         return (
-          <RowActions
-            id={record.id}
-            quickActions={[
-              createAction.view(() => handleView(record.id)),
-              createAction.edit(() => handleEdit(record.id)),
-            ]}
-            menuActions={[
-              createAction.complete(
-                () => handleComplete(record.id, record),
+          <Dropdown
+            menu={{
+              items: [
                 {
-                  visible: canComplete,
-                  disabled: isCompleted,
-                  disabledReason: 'Bu toplantı zaten tamamlandı',
-                }
-              ),
-              createAction.cancel(
-                () => handleCancel(record.id, record),
+                  key: 'view',
+                  label: 'Goruntule',
+                  icon: <EyeIcon className="w-4 h-4" />,
+                  onClick: () => handleView(record.id),
+                },
                 {
-                  visible: canCancel,
-                  disabled: isCancelled,
-                  disabledReason: 'Bu toplantı zaten iptal edildi',
-                }
-              ),
-              createAction.delete(() => handleDelete(record.id, record)),
-            ]}
-          />
+                  key: 'edit',
+                  label: 'Duzenle',
+                  icon: <PencilIcon className="w-4 h-4" />,
+                  onClick: () => handleEdit(record.id),
+                },
+                { type: 'divider' as const },
+                ...(canComplete ? [{
+                  key: 'complete',
+                  label: 'Tamamla',
+                  icon: <CheckCircleIcon className="w-4 h-4" />,
+                  onClick: () => handleComplete(record.id, record),
+                }] : []),
+                ...(canCancel ? [{
+                  key: 'cancel',
+                  label: 'Iptal Et',
+                  icon: <XCircleIcon className="w-4 h-4" />,
+                  onClick: () => handleCancel(record.id, record),
+                }] : []),
+                { type: 'divider' as const },
+                {
+                  key: 'delete',
+                  label: 'Sil',
+                  icon: <TrashIcon className="w-4 h-4" />,
+                  danger: true,
+                  onClick: () => handleDelete(record.id, record),
+                },
+              ],
+            }}
+            trigger={['click']}
+          >
+            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+              <EllipsisHorizontalIcon className="w-5 h-5" />
+            </button>
+          </Dropdown>
         );
       },
     },
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Stats Cards */}
-      <div className="mb-8">
-        <MeetingsStats meetings={meetings} loading={isLoading} />
-      </div>
-
-      {/* Header */}
-      <ListPageHeader
-        icon={<CalendarIcon className="w-5 h-5" />}
-        iconColor="#0f172a"
-        title="Toplantılar"
-        description="Toplantıları planlayın ve takip edin"
-        itemCount={totalCount}
-        primaryAction={{
-          label: 'Yeni Toplantı',
-          onClick: handleCreate,
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <button
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Page Header */}
+      <div className="flex items-start justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <CalendarIcon className="w-7 h-7 text-slate-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Toplantilar</h1>
+            <p className="text-sm text-slate-500">Toplantilari planlayin ve takip edin</p>
+          </div>
+        </div>
+        <Space>
+          <Button
+            icon={<ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
             onClick={() => refetch()}
             disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+            className="!border-slate-300 !text-slate-700 hover:!border-slate-400"
           >
-            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
+            Yenile
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusIcon className="w-4 h-4" />}
+            onClick={handleCreate}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+          >
+            Yeni Toplanti
+          </Button>
+        </Space>
+      </div>
 
-      {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
-        <div className="flex items-center gap-4 flex-wrap">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-12 gap-6 mb-8">
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <UsersIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            {isLoading ? (
+              <div className="h-8 w-16 bg-slate-100 animate-pulse rounded" />
+            ) : (
+              <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
+            )}
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Toplanti</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ClockIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            {isLoading ? (
+              <div className="h-8 w-16 bg-slate-100 animate-pulse rounded" />
+            ) : (
+              <div className="text-2xl font-bold text-slate-900">{stats.scheduled}</div>
+            )}
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Planlandi</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CheckCircleIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            {isLoading ? (
+              <div className="h-8 w-16 bg-slate-100 animate-pulse rounded" />
+            ) : (
+              <div className="text-2xl font-bold text-slate-900">{stats.completed}</div>
+            )}
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Tamamlandi</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CalendarIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            {isLoading ? (
+              <div className="h-8 w-16 bg-slate-100 animate-pulse rounded" />
+            ) : (
+              <div className="text-2xl font-bold text-slate-900">{stats.today}</div>
+            )}
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Bugun</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Table Container */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        {/* Filters */}
+        <div className="flex items-center gap-4 flex-wrap mb-6">
           <Input
-            placeholder="Toplantı ara..."
+            placeholder="Toplanti ara..."
             prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            className="w-64"
+            style={{ maxWidth: 280 }}
             allowClear
+            className="!rounded-lg !border-slate-300"
           />
           <Select
             placeholder="Durum"
             value={statusFilter}
             onChange={setStatusFilter}
-            className="w-40"
+            style={{ width: 150 }}
             allowClear
             options={Object.entries(statusLabels).map(([key, val]) => ({
               value: key,
@@ -419,7 +461,7 @@ export default function MeetingsPage() {
             placeholder="Tip"
             value={typeFilter}
             onChange={setTypeFilter}
-            className="w-40"
+            style={{ width: 150 }}
             allowClear
             options={Object.entries(typeLabels).map(([key, val]) => ({
               value: key,
@@ -427,17 +469,13 @@ export default function MeetingsPage() {
             }))}
           />
         </div>
-      </div>
 
-      {/* Table */}
-      {isLoading ? (
-        <Card>
+        {/* Table */}
+        {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Spinner size="lg" />
+            <Spin size="large" />
           </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
+        ) : (
           <Table
             columns={columns}
             dataSource={meetings}
@@ -452,11 +490,12 @@ export default function MeetingsPage() {
                 setPageSize(size);
               },
               showSizeChanger: true,
-              showTotal: (total) => `Toplam ${total} kayıt`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} toplanti`,
             }}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
           />
-        </DataTableWrapper>
-      )}
-    </PageContainer>
+        )}
+      </div>
+    </div>
   );
 }

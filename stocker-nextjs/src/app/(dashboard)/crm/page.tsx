@@ -1,18 +1,16 @@
 'use client';
 
-/**
- * CRM Dashboard Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
- * - Clean white cards with subtle borders
- * - Minimal accent colors (only on icons)
- */
-
 import React, { useState, useEffect } from 'react';
-import { Table, List, Tag, Empty, Spin } from 'antd';
+import { Table, Spin } from 'antd';
 import {
+  ArrowTrendingUpIcon,
+  BoltIcon,
   CalendarIcon,
   ChevronRightIcon,
   CurrencyDollarIcon,
+  DocumentIcon,
+  GiftIcon,
+  GlobeAltIcon,
   PlusIcon,
   TrophyIcon,
   UserGroupIcon,
@@ -35,7 +33,6 @@ import { calculateDashboardMetrics } from '@/lib/crm';
 import { formatDate } from '@/lib/crm';
 import type { ColumnsType } from 'antd/es/table';
 import SetupWizardModal from '@/components/setup/SetupWizardModal';
-import { PageContainer } from '@/components/ui/enterprise-page';
 
 export default function CRMDashboardPage() {
   // Setup modal state
@@ -76,12 +73,22 @@ export default function CRMDashboardPage() {
   // Calculate all metrics using utility function
   const metrics = calculateDashboardMetrics({ customers, leads, deals });
 
-  // Quick navigation items - monochrome slate colors
+  // Quick navigation items
   const quickNavItems = [
-    { label: 'Müşteriler', href: '/crm/customers', icon: <UserGroupIcon className="w-4 h-4" />, count: metrics.totalCustomers },
-    { label: 'Potansiyel Müşteriler', href: '/crm/leads', icon: <UserPlusIcon className="w-4 h-4" />, count: metrics.totalLeads },
-    { label: 'Fırsatlar', href: '/crm/deals', icon: <TrophyIcon className="w-4 h-4" />, count: metrics.openDeals },
-    { label: 'Aktiviteler', href: '/crm/activities', icon: <CalendarIcon className="w-4 h-4" />, count: activities.length },
+    { label: 'Musteriler', href: '/crm/customers', icon: <UserGroupIcon className="w-5 h-5" />, count: metrics.totalCustomers },
+    { label: 'Potansiyel Musteriler', href: '/crm/leads', icon: <UserPlusIcon className="w-5 h-5" />, count: metrics.totalLeads },
+    { label: 'Firsatlar', href: '/crm/deals', icon: <TrophyIcon className="w-5 h-5" />, count: metrics.openDeals },
+    { label: 'Aktiviteler', href: '/crm/activities', icon: <CalendarIcon className="w-5 h-5" />, count: activities.length },
+  ];
+
+  // CRM modules quick links
+  const crmModules = [
+    { label: 'Segmentler', href: '/crm/segments', icon: <UserGroupIcon className="w-5 h-5" />, description: 'Musteri segmentleri' },
+    { label: 'Bolgeler', href: '/crm/territories', icon: <GlobeAltIcon className="w-5 h-5" />, description: 'Satis bolgeleri' },
+    { label: 'Is Akislari', href: '/crm/workflows', icon: <BoltIcon className="w-5 h-5" />, description: 'Otomasyon kurallari' },
+    { label: 'Sadakat Programlari', href: '/crm/loyalty-programs', icon: <GiftIcon className="w-5 h-5" />, description: 'Odul programlari' },
+    { label: 'Belgeler', href: '/crm/documents', icon: <DocumentIcon className="w-5 h-5" />, description: 'Dosya yonetimi' },
+    { label: 'Kampanyalar', href: '/crm/campaigns', icon: <ArrowTrendingUpIcon className="w-5 h-5" />, description: 'Pazarlama kampanyalari' },
   ];
 
   // Recent activities columns
@@ -109,9 +116,9 @@ export default function CRMDashboardPage() {
       key: 'status',
       render: (status) => {
         const variants: Record<string, { bg: string; text: string; label: string }> = {
-          Completed: { bg: 'bg-slate-100', text: 'text-slate-700', label: 'Tamamlandı' },
-          Scheduled: { bg: 'bg-slate-900', text: 'text-white', label: 'Planlandı' },
-          Cancelled: { bg: 'bg-slate-50', text: 'text-slate-400', label: 'İptal' },
+          Completed: { bg: 'bg-slate-100', text: 'text-slate-700', label: 'Tamamlandi' },
+          Scheduled: { bg: 'bg-slate-900', text: 'text-white', label: 'Planlandi' },
+          Cancelled: { bg: 'bg-slate-50', text: 'text-slate-400', label: 'Iptal' },
         };
         const variant = variants[status] || variants.Cancelled;
         return (
@@ -124,21 +131,26 @@ export default function CRMDashboardPage() {
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Page Header - Clean & Minimal */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900">CRM Dashboard</h1>
-            <p className="text-sm text-slate-500">Müşteri ilişkileri ve satış performansı</p>
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <UserGroupIcon className="w-6 h-6 text-slate-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900">CRM Dashboard</h1>
           </div>
-          <Link href="/crm/leads/new">
-            <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors">
-              <PlusIcon className="w-4 h-4" />
-              Yeni Lead
-            </button>
-          </Link>
+          <p className="text-sm text-slate-500 ml-13">
+            Musteri iliskileri ve satis performansi
+          </p>
         </div>
+        <Link href="/crm/leads/new">
+          <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
+            <PlusIcon className="w-4 h-4" />
+            Yeni Lead
+          </button>
+        </Link>
       </div>
 
       {/* Combined Overview Cards - Navigation + KPI */}
@@ -147,12 +159,12 @@ export default function CRMDashboardPage() {
           <Link key={item.href} href={item.href}>
             <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer group">
               <div className="flex items-center justify-between mb-3">
-                <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center">
-                  {React.cloneElement(item.icon, { className: 'text-slate-500', style: { fontSize: 16 } })}
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  {React.cloneElement(item.icon, { className: 'w-5 h-5 text-slate-600' })}
                 </div>
                 <ChevronRightIcon className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
               </div>
-              <div className="text-2xl font-semibold text-slate-900 mb-1">
+              <div className="text-2xl font-bold text-slate-900 mb-1">
                 {item.count?.toLocaleString('tr-TR') || '0'}
               </div>
               <div className="text-sm text-slate-500">{item.label}</div>
@@ -165,35 +177,53 @@ export default function CRMDashboardPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white border border-slate-200 rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-2 h-2 rounded-full bg-emerald-500" />
+            <div className="w-2 h-2 rounded-full bg-slate-900" />
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Aktif</span>
           </div>
-          <div className="text-2xl font-semibold text-slate-900">{metrics.activeCustomers.toLocaleString('tr-TR')}</div>
-          <div className="text-sm text-slate-500">Aktif Müşteri</div>
+          <div className="text-2xl font-bold text-slate-900">{metrics.activeCustomers.toLocaleString('tr-TR')}</div>
+          <div className="text-sm text-slate-500">Aktif Musteri</div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-2 h-2 rounded-full bg-slate-900" />
+            <div className="w-2 h-2 rounded-full bg-slate-700" />
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Gelir</span>
           </div>
-          <div className="text-2xl font-semibold text-slate-900">₺{metrics.totalRevenue.toLocaleString('tr-TR')}</div>
+          <div className="text-2xl font-bold text-slate-900">{metrics.totalRevenue.toLocaleString('tr-TR')} TL</div>
           <div className="text-sm text-slate-500">Toplam Gelir</div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-2 h-2 rounded-full bg-amber-500" />
+            <div className="w-2 h-2 rounded-full bg-slate-500" />
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Ortalama</span>
           </div>
-          <div className="text-2xl font-semibold text-slate-900">₺{metrics.avgCustomerValue.toLocaleString('tr-TR')}</div>
-          <div className="text-sm text-slate-500">Müşteri Değeri</div>
+          <div className="text-2xl font-bold text-slate-900">{metrics.avgCustomerValue.toLocaleString('tr-TR')} TL</div>
+          <div className="text-sm text-slate-500">Musteri Degeri</div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-2 h-2 rounded-full bg-blue-500" />
-            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Kazanılan</span>
+            <div className="w-2 h-2 rounded-full bg-slate-400" />
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Kazanilan</span>
           </div>
-          <div className="text-2xl font-semibold text-slate-900">{metrics.wonDeals.toLocaleString('tr-TR')}</div>
-          <div className="text-sm text-slate-500">Anlaşma</div>
+          <div className="text-2xl font-bold text-slate-900">{metrics.wonDeals.toLocaleString('tr-TR')}</div>
+          <div className="text-sm text-slate-500">Anlasma</div>
+        </div>
+      </div>
+
+      {/* CRM Modules Quick Links */}
+      <div className="mb-8">
+        <h2 className="text-sm font-medium text-slate-900 mb-4">CRM Modulleri</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {crmModules.map((module) => (
+            <Link key={module.href} href={module.href}>
+              <div className="bg-white border border-slate-200 rounded-xl p-4 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer group">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-slate-200 transition-colors">
+                  {React.cloneElement(module.icon, { className: 'w-5 h-5 text-slate-600' })}
+                </div>
+                <div className="text-sm font-medium text-slate-900 mb-0.5">{module.label}</div>
+                <div className="text-xs text-slate-500">{module.description}</div>
+              </div>
+            </Link>
+          ))}
         </div>
       </div>
 
@@ -235,10 +265,10 @@ export default function CRMDashboardPage() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-medium text-slate-900">Son Aktiviteler</h2>
             <Link href="/crm/activities" className="text-xs text-slate-500 hover:text-slate-700">
-              Tümünü gör →
+              Tumunu gor
             </Link>
           </div>
-          <div className="bg-white border border-slate-200 rounded-lg">
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
             {activitiesLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Spin />
@@ -250,7 +280,7 @@ export default function CRMDashboardPage() {
                 rowKey="id"
                 pagination={false}
                 size="small"
-                className="enterprise-table"
+                className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
               />
             )}
           </div>
@@ -259,28 +289,28 @@ export default function CRMDashboardPage() {
         {/* Upcoming Deals */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-medium text-slate-900">Yaklaşan Fırsatlar</h2>
+            <h2 className="text-sm font-medium text-slate-900">Yaklasan Firsatlar</h2>
             <Link href="/crm/deals" className="text-xs text-slate-500 hover:text-slate-700">
-              Tümünü gör →
+              Tumunu gor
             </Link>
           </div>
-          <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
             {dealsLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Spin />
               </div>
             ) : metrics.upcomingDeals.length === 0 ? (
               <div className="text-center py-10">
-                <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center mx-auto mb-3">
-                  <TrophyIcon className="w-4 h-4 text-slate-300" style={{ fontSize: 18 }} />
+                <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mx-auto mb-3">
+                  <TrophyIcon className="w-6 h-6 text-slate-400" />
                 </div>
-                <h3 className="text-sm font-medium text-slate-600 mb-1">Yaklaşan fırsat yok</h3>
+                <h3 className="text-sm font-medium text-slate-600 mb-1">Yaklasan firsat yok</h3>
                 <p className="text-xs text-slate-400 mb-4">
-                  Yeni fırsatlar oluşturun
+                  Yeni firsatlar olusturun
                 </p>
                 <Link href="/crm/deals/new">
-                  <button className="px-3 py-1.5 text-xs font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors">
-                    Fırsat Ekle
+                  <button className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
+                    Firsat Ekle
                   </button>
                 </Link>
               </div>
@@ -288,25 +318,25 @@ export default function CRMDashboardPage() {
               <div className="divide-y divide-slate-100">
                 {metrics.upcomingDeals.map((deal) => (
                   <Link key={deal.id} href={`/crm/deals/${deal.id}`}>
-                    <div className="flex items-center justify-between py-3 hover:bg-slate-50 -mx-4 px-4 cursor-pointer transition-colors">
+                    <div className="flex items-center justify-between py-3 hover:bg-slate-50 -mx-6 px-6 cursor-pointer transition-colors">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                          <TrophyIcon className="w-4 h-4 text-slate-500" style={{ fontSize: 14 }} />
+                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                          <TrophyIcon className="w-5 h-5 text-slate-600" />
                         </div>
                         <div>
                           <div className="text-sm font-medium text-slate-900">{deal.title}</div>
                           <div className="text-xs text-slate-500">
                             {deal.expectedCloseDate
-                              ? `Beklenen kapanış: ${formatDate(deal.expectedCloseDate)}`
+                              ? `Beklenen kapanis: ${formatDate(deal.expectedCloseDate)}`
                               : 'Tarih belirlenmedi'}
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-semibold text-slate-900">
-                          ₺{(deal.amount || 0).toLocaleString('tr-TR')}
+                          {(deal.amount || 0).toLocaleString('tr-TR')} TL
                         </div>
-                        <div className="text-xs text-slate-500">{deal.probability || 0}% olasılık</div>
+                        <div className="text-xs text-slate-500">{deal.probability || 0}% olasilik</div>
                       </div>
                     </div>
                   </Link>
@@ -319,6 +349,6 @@ export default function CRMDashboardPage() {
 
       {/* Setup Modal */}
       <SetupWizardModal open={setupModalOpen} onComplete={handleSetupComplete} />
-    </PageContainer>
+    </div>
   );
 }

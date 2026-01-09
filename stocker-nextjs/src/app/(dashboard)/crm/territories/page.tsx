@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Table, Tag, Input, Select } from 'antd';
+import { Button, Table, Tag, Input, Select, Tooltip, Spin } from 'antd';
 import {
   ArrowPathIcon,
   EyeIcon,
@@ -10,6 +10,11 @@ import {
   MagnifyingGlassIcon,
   PencilIcon,
   PlusIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  MapPinIcon,
+  UserIcon,
+  CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
 import {
   showDeleteSuccess,
@@ -19,89 +24,18 @@ import {
 import type { TerritoryDto } from '@/lib/api/services/crm.types';
 import { TerritoryType } from '@/lib/api/services/crm.types';
 import { useTerritories, useDeleteTerritory } from '@/lib/api/hooks/useCRM';
-import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/patterns';
-import { Spinner } from '@/components/primitives';
 import type { ColumnsType } from 'antd/es/table';
 
-const typeLabels: Record<TerritoryType, { label: string; color: string }> = {
-  [TerritoryType.Country]: { label: 'Ülke', color: 'blue' },
-  [TerritoryType.Region]: { label: 'Bölge', color: 'green' },
-  [TerritoryType.City]: { label: 'Şehir', color: 'cyan' },
-  [TerritoryType.District]: { label: 'İlçe', color: 'purple' },
-  [TerritoryType.PostalCode]: { label: 'Posta Kodu', color: 'orange' },
-  [TerritoryType.Custom]: { label: 'Özel', color: 'default' },
-  [TerritoryType.Industry]: { label: 'Sektör', color: 'gold' },
-  [TerritoryType.CustomerSegment]: { label: 'Müşteri Segmenti', color: 'magenta' },
+const typeLabels: Record<TerritoryType, { label: string }> = {
+  [TerritoryType.Country]: { label: 'Ulke' },
+  [TerritoryType.Region]: { label: 'Bolge' },
+  [TerritoryType.City]: { label: 'Sehir' },
+  [TerritoryType.District]: { label: 'Ilce' },
+  [TerritoryType.PostalCode]: { label: 'Posta Kodu' },
+  [TerritoryType.Custom]: { label: 'Ozel' },
+  [TerritoryType.Industry]: { label: 'Sektor' },
+  [TerritoryType.CustomerSegment]: { label: 'Musteri Segmenti' },
 };
-
-interface TerritoriesStatsProps {
-  territories: TerritoryDto[];
-  loading: boolean;
-}
-
-function TerritoriesStats({ territories, loading }: TerritoriesStatsProps) {
-  const totalTerritories = territories.length;
-  const activeTerritories = territories.filter(t => t.isActive).length;
-  const totalCustomers = territories.reduce((sum, t) => sum + (t.customerCount || 0), 0);
-  const territoriesWithReps = territories.filter(t => (t as any).assignedToId).length;
-
-  const stats = [
-    {
-      title: 'Toplam Bölge',
-      value: totalTerritories,
-      color: 'from-slate-500 to-slate-600',
-    },
-    {
-      title: 'Aktif',
-      value: activeTerritories,
-      color: 'from-emerald-500 to-emerald-600',
-    },
-    {
-      title: 'Atanan Müşteri',
-      value: totalCustomers,
-      color: 'from-blue-500 to-blue-600',
-    },
-    {
-      title: 'Atanan Temsilci',
-      value: territoriesWithReps,
-      color: 'from-purple-500 to-purple-600',
-    },
-  ];
-
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-white border border-slate-200 rounded-lg p-6 animate-pulse">
-            <div className="h-4 bg-slate-200 rounded w-24 mb-4"></div>
-            <div className="h-8 bg-slate-200 rounded w-16"></div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {stats.map((stat, index) => (
-        <div
-          key={index}
-          className="bg-white border border-slate-200 rounded-lg p-6 hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600 mb-1">{stat.title}</p>
-              <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
-            </div>
-            <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
-              <GlobeAltIcon className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export default function TerritoriesPage() {
   const router = useRouter();
@@ -123,6 +57,12 @@ export default function TerritoriesPage() {
 
   const territories = data || [];
   const totalCount = territories.length;
+
+  // Stats calculations
+  const totalTerritories = territories.length;
+  const activeTerritories = territories.filter(t => t.isActive).length;
+  const totalCustomers = territories.reduce((sum, t) => sum + (t.customerCount || 0), 0);
+  const territoriesWithReps = territories.filter(t => (t as any).assignedToId).length;
 
   // Debounce search input
   useEffect(() => {
@@ -147,16 +87,16 @@ export default function TerritoriesPage() {
 
   const handleDelete = async (id: string, territory: TerritoryDto) => {
     const confirmed = await confirmDelete(
-      'Bölge',
+      'Bolge',
       territory.name
     );
 
     if (confirmed) {
       try {
         await deleteTerritory.mutateAsync(id);
-        showDeleteSuccess('bölge');
+        showDeleteSuccess('bolge');
       } catch (error) {
-        showError('Silme işlemi başarısız');
+        showError('Silme islemi basarisiz');
       }
     }
   };
@@ -177,7 +117,7 @@ export default function TerritoriesPage() {
       key: 'code',
       width: 100,
       render: (text: string) => (
-        <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">{text}</span>
+        <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-700">{text}</span>
       ),
     },
     {
@@ -195,7 +135,11 @@ export default function TerritoriesPage() {
       width: 130,
       render: (type: TerritoryType) => {
         const info = typeLabels[type];
-        return <Tag color={info?.color}>{info?.label || type}</Tag>;
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+            {info?.label || type}
+          </span>
+        );
       },
     },
     {
@@ -207,19 +151,24 @@ export default function TerritoriesPage() {
       },
     },
     {
-      title: 'Satış Hedefi',
+      title: 'Satis Hedefi',
       dataIndex: 'salesTarget',
       key: 'salesTarget',
       width: 140,
-      render: (value: number) => <span className="text-slate-900">{formatCurrency(value)}</span>,
+      render: (value: number) => <span className="text-slate-900 font-medium">{formatCurrency(value)}</span>,
     },
     {
-      title: 'Müşteri',
+      title: 'Musteri',
       dataIndex: 'customerCount',
       key: 'customerCount',
       width: 90,
       align: 'center',
-      render: (count: number) => <span className="text-slate-900">{count || 0}</span>,
+      render: (count: number) => (
+        <div className="flex items-center justify-center gap-1">
+          <UserIcon className="w-4 h-4 text-slate-400" />
+          <span className="text-slate-900">{count || 0}</span>
+        </div>
+      ),
     },
     {
       title: 'Durum',
@@ -227,126 +176,184 @@ export default function TerritoriesPage() {
       key: 'isActive',
       width: 100,
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'default'}>{isActive ? 'Aktif' : 'Pasif'}</Tag>
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          isActive ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'
+        }`}>
+          {isActive ? (
+            <CheckCircleIcon className="w-3.5 h-3.5" />
+          ) : (
+            <XCircleIcon className="w-3.5 h-3.5" />
+          )}
+          {isActive ? 'Aktif' : 'Pasif'}
+        </span>
       ),
     },
     {
-      title: 'İşlemler',
+      title: 'Islemler',
       key: 'actions',
       width: 180,
       render: (_: unknown, record: TerritoryDto) => (
-        <Space>
-          <Button
-            type="text"
-            size="small"
-            icon={<EyeIcon className="w-4 h-4" />}
-            onClick={() => handleView(record)}
-            className="text-blue-600 hover:text-blue-700"
-          >
-            Görüntüle
-          </Button>
-          <Button
-            type="text"
-            size="small"
-            icon={<PencilIcon className="w-4 h-4" />}
-            onClick={() => handleEdit(record)}
-            className="text-slate-600 hover:text-slate-900"
-          >
-            Düzenle
-          </Button>
+        <div className="flex items-center gap-1">
+          <Tooltip title="Goruntule">
+            <Button
+              type="text"
+              size="small"
+              icon={<EyeIcon className="w-4 h-4" />}
+              onClick={() => handleView(record)}
+              className="!text-slate-600 hover:!text-slate-900"
+            />
+          </Tooltip>
+          <Tooltip title="Duzenle">
+            <Button
+              type="text"
+              size="small"
+              icon={<PencilIcon className="w-4 h-4" />}
+              onClick={() => handleEdit(record)}
+              className="!text-slate-600 hover:!text-slate-900"
+            />
+          </Tooltip>
           <Button
             type="text"
             danger
             size="small"
             onClick={() => handleDelete(record.id, record)}
+            className="!text-red-500 hover:!text-red-600"
           >
             Sil
           </Button>
-        </Space>
+        </div>
       ),
     },
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Stats Cards */}
-      <div className="mb-8">
-        <TerritoriesStats territories={territories} loading={isLoading} />
-      </div>
-
-      {/* Header */}
-      <ListPageHeader
-        icon={<GlobeAltIcon className="w-5 h-5" />}
-        iconColor="#0f172a"
-        title="Bölgeler"
-        description="Satış bölgelerini yönetin"
-        itemCount={totalCount}
-        primaryAction={{
-          label: 'Yeni Bölge',
-          onClick: handleCreate,
-          icon: <PlusIcon className="w-5 h-5" />,
-        }}
-        secondaryActions={
-          <button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-          >
-            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
-
-      {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
-        <div className="flex items-center gap-4">
-          <Input
-            placeholder="Bölge ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 200 }}
-            allowClear
-          />
-          <Select
-            placeholder="Tip"
-            value={typeFilter}
-            onChange={setTypeFilter}
-            style={{ width: 150 }}
-            allowClear
-            options={Object.entries(typeLabels).map(([key, val]) => ({
-              value: key,
-              label: val.label,
-            }))}
-          />
-          <Select
-            placeholder="Durum"
-            value={activeFilter}
-            onChange={setActiveFilter}
-            style={{ width: 120 }}
-            allowClear
-            options={[
-              { value: true, label: 'Aktif' },
-              { value: false, label: 'Pasif' },
-            ]}
-          />
-        </div>
-      </div>
-
-      {/* Table */}
-      {isLoading ? (
-        <Card>
-          <div className="flex items-center justify-center py-12">
-            <Spinner size="lg" />
+    <div className="min-h-screen bg-slate-50 p-8">
+      <Spin spinning={isLoading}>
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <GlobeAltIcon className="w-6 h-6 text-slate-600" />
+              </div>
+              <h1 className="text-2xl font-bold text-slate-900">Bolgeler</h1>
+            </div>
+            <p className="text-sm text-slate-500 ml-13">
+              Satis bolgelerini yonetin ve ekip performansini takip edin
+            </p>
           </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
+          <div className="flex items-center gap-3">
+            <Button
+              icon={<ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+            >
+              Yenile
+            </Button>
+            <Button
+              type="primary"
+              icon={<PlusIcon className="w-4 h-4" />}
+              onClick={handleCreate}
+              className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+            >
+              Yeni Bolge
+            </Button>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-12 gap-6 mb-6">
+          <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <GlobeAltIcon className="w-5 h-5 text-slate-600" />
+                </div>
+              </div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Toplam Bolge</p>
+              <p className="text-2xl font-bold text-slate-900">{totalTerritories}</p>
+            </div>
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <CheckCircleIcon className="w-5 h-5 text-slate-600" />
+                </div>
+              </div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Aktif</p>
+              <p className="text-2xl font-bold text-slate-900">{activeTerritories}</p>
+            </div>
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <UserIcon className="w-5 h-5 text-slate-600" />
+                </div>
+              </div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Atanan Musteri</p>
+              <p className="text-2xl font-bold text-slate-900">{totalCustomers.toLocaleString('tr-TR')}</p>
+            </div>
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <MapPinIcon className="w-5 h-5 text-slate-600" />
+                </div>
+              </div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Atanan Temsilci</p>
+              <p className="text-2xl font-bold text-slate-900">{territoriesWithReps}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+          <div className="flex items-center gap-4 flex-wrap">
+            <Input
+              placeholder="Bolge ara..."
+              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              style={{ width: 200 }}
+              allowClear
+            />
+            <Select
+              placeholder="Tip"
+              value={typeFilter}
+              onChange={setTypeFilter}
+              style={{ width: 150 }}
+              allowClear
+              options={Object.entries(typeLabels).map(([key, val]) => ({
+                value: key,
+                label: val.label,
+              }))}
+            />
+            <Select
+              placeholder="Durum"
+              value={activeFilter}
+              onChange={setActiveFilter}
+              style={{ width: 120 }}
+              allowClear
+              options={[
+                { value: true, label: 'Aktif' },
+                { value: false, label: 'Pasif' },
+              ]}
+            />
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
           <Table
             columns={columns}
             dataSource={territories}
             rowKey="id"
             loading={deleteTerritory.isPending}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
             pagination={{
               current: currentPage,
               pageSize,
@@ -356,11 +363,11 @@ export default function TerritoriesPage() {
                 setPageSize(size);
               },
               showSizeChanger: true,
-              showTotal: (total) => `Toplam ${total} kayıt`,
+              showTotal: (total) => `Toplam ${total} kayit`,
             }}
           />
-        </DataTableWrapper>
-      )}
-    </PageContainer>
+        </div>
+      </Spin>
+    </div>
   );
 }

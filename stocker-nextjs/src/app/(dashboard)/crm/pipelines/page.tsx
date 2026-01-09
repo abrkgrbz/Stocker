@@ -1,8 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+/**
+ * Pipelines List Page
+ * Monochrome design system following DESIGN_SYSTEM.md
+ */
+
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Table, Space, Tag, Modal, message, Avatar, Dropdown, Empty, Input } from 'antd';
+import { Table, Input, Modal, message, Avatar, Dropdown, Empty, Spin, Button, Space } from 'antd';
 import {
   ArrowPathIcon,
   CheckCircleIcon,
@@ -16,20 +21,18 @@ import {
   StarIcon,
   TrashIcon,
   XCircleIcon,
+  CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import type { ColumnsType } from 'antd/es/table';
 import type { Pipeline } from '@/lib/api/services/crm.service';
 import { usePipelines, useDeletePipeline, useActivatePipeline, useDeactivatePipeline, useCreatePipeline, useSetDefaultPipeline } from '@/lib/api/hooks/useCRM';
-import { PipelinesStats } from '@/components/crm/pipelines/PipelinesStats';
-import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/patterns';
-import { Spinner } from '@/components/primitives';
 
 const pipelineTypeLabels: Record<string, string> = {
-  Sales: 'Satış',
-  Lead: 'Potansiyel Müşteri',
-  Deal: 'Fırsat',
-  Custom: 'Özel',
+  Sales: 'Satis',
+  Lead: 'Potansiyel Musteri',
+  Deal: 'Firsat',
+  Custom: 'Ozel',
 };
 
 export default function PipelinesPage() {
@@ -46,19 +49,29 @@ export default function PipelinesPage() {
   const createPipeline = useCreatePipeline();
   const setDefaultPipeline = useSetDefaultPipeline();
 
+  // Stats calculation
+  const stats = useMemo(() => ({
+    total: pipelines.length,
+    active: pipelines.filter(p => p.isActive).length,
+    totalDeals: pipelines.reduce((sum, p) => sum + (p.dealCount || 0), 0),
+    totalValue: pipelines.reduce((sum, p) => sum + (p.totalValue || 0), 0),
+  }), [pipelines]);
+
   const handleDelete = (id: string) => {
     Modal.confirm({
       title: 'Pipeline Sil',
-      content: 'Bu pipeline\'ı silmek istediğinizden emin misiniz?',
+      content: 'Bu pipeline\'i silmek istediginizden emin misiniz?',
       okText: 'Sil',
       okType: 'danger',
-      cancelText: 'İptal',
+      cancelText: 'Iptal',
+      okButtonProps: { className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: async () => {
         try {
           await deletePipeline.mutateAsync(id);
         } catch (error: any) {
           const apiError = error.response?.data;
-          const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Silme işlemi başarısız';
+          const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Silme islemi basarisiz';
           message.error(errorMessage);
         }
       },
@@ -74,7 +87,7 @@ export default function PipelinesPage() {
       }
     } catch (error: any) {
       const apiError = error.response?.data;
-      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Islem basarisiz';
       message.error(errorMessage);
     }
   };
@@ -102,8 +115,8 @@ export default function PipelinesPage() {
         name: `${pipeline.name} (Kopya)`,
         description: pipeline.description,
         type: pipeline.type,
-        isActive: false, // Cloned pipelines start as inactive
-        isDefault: false, // Cloned pipelines are not default
+        isActive: false,
+        isDefault: false,
         stages: pipeline.stages?.map((stage) => ({
           name: stage.name,
           order: stage.order,
@@ -111,10 +124,10 @@ export default function PipelinesPage() {
         })) || [],
       };
       await createPipeline.mutateAsync(clonedData);
-      message.success('Pipeline başarıyla kopyalandı');
+      message.success('Pipeline basariyla kopyalandi');
     } catch (error: any) {
       const apiError = error.response?.data;
-      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Kopyalama işlemi başarısız';
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Kopyalama islemi basarisiz';
       message.error(errorMessage);
     }
   };
@@ -124,7 +137,7 @@ export default function PipelinesPage() {
       await setDefaultPipeline.mutateAsync(pipeline.id);
     } catch (error: any) {
       const apiError = error.response?.data;
-      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Islem basarisiz';
       message.error(errorMessage);
     }
   };
@@ -143,18 +156,14 @@ export default function PipelinesPage() {
       key: 'name',
       render: (text, record) => (
         <div className="flex items-center gap-3">
-          <Avatar
-            size={40}
-            className="bg-gradient-to-br from-slate-500 to-slate-600 flex-shrink-0"
-            icon={<FunnelIcon className="w-5 h-5" />}
-          >
-            {text.charAt(0)}
-          </Avatar>
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+            <FunnelIcon className="w-5 h-5 text-slate-600" />
+          </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <div className="font-semibold text-slate-900 truncate">{text}</div>
+              <div className="text-sm font-medium text-slate-900 truncate">{text}</div>
               {(record as any).isDefault && (
-                <StarIconSolid className="w-4 h-4 text-yellow-500 flex-shrink-0" title="Varsayılan Pipeline" />
+                <StarIconSolid className="w-4 h-4 text-slate-600 flex-shrink-0" title="Varsayilan Pipeline" />
               )}
             </div>
             {record.description && (
@@ -170,50 +179,46 @@ export default function PipelinesPage() {
       key: 'type',
       width: 150,
       render: (type) => (
-        <Tag color="blue" className="border-slate-200">
+        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-200 text-slate-700">
           {pipelineTypeLabels[type] || type}
-        </Tag>
+        </span>
       ),
     },
     {
-      title: 'Aşamalar',
+      title: 'Asamalar',
       dataIndex: 'stages',
       key: 'stages',
       width: 120,
       align: 'center',
       render: (stages, record) => (
-        <Button
-          type="link"
-          size="small"
-          icon={<EyeIcon className="w-4 h-4" />}
+        <button
           onClick={() => handleViewStages(record)}
-          className="flex items-center gap-1 text-slate-600 hover:text-slate-800"
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
         >
-          <Tag color="purple" className="m-0 border-purple-200">
-            {stages?.length || 0} Aşama
-          </Tag>
-        </Button>
+          <EyeIcon className="w-3.5 h-3.5" />
+          {stages?.length || 0} Asama
+        </button>
       ),
     },
     {
-      title: 'Fırsatlar',
+      title: 'Firsatlar',
       dataIndex: 'dealCount',
       key: 'dealCount',
       width: 100,
       align: 'center',
       render: (count) => (
-        <span className="text-slate-600 font-medium">{count || 0}</span>
+        <span className="text-sm text-slate-600 font-medium">{count || 0}</span>
       ),
     },
     {
-      title: 'Toplam Değer',
+      title: 'Toplam Deger',
       dataIndex: 'totalValue',
       key: 'totalValue',
       width: 150,
       align: 'right',
       render: (value) => (
-        <span className="text-slate-900 font-semibold">
-          ₺{(value || 0).toLocaleString('tr-TR')}
+        <span className="text-sm text-slate-900 font-semibold">
+          {(value || 0).toLocaleString('tr-TR')} TL
         </span>
       ),
     },
@@ -221,43 +226,42 @@ export default function PipelinesPage() {
       title: 'Durum',
       dataIndex: 'isActive',
       key: 'isActive',
-      width: 120,
-      render: (isActive) =>
-        isActive ? (
-          <Tag icon={<CheckCircleIcon className="w-4 h-4" />} color="success" className="border-green-200">
-            Aktif
-          </Tag>
-        ) : (
-          <Tag icon={<XCircleIcon className="w-4 h-4" />} color="default" className="border-slate-200 text-slate-500">
-            Pasif
-          </Tag>
-        ),
+      width: 100,
+      render: (isActive) => (
+        <span
+          className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${
+            isActive ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-600'
+          }`}
+        >
+          {isActive ? 'Aktif' : 'Pasif'}
+        </span>
+      ),
     },
     {
-      title: 'İşlemler',
+      title: '',
       key: 'actions',
       width: 80,
-      fixed: 'right' as const,
+      align: 'right',
       render: (_, record) => (
         <Dropdown
           menu={{
             items: [
               {
                 key: 'view',
-                label: 'Görüntüle',
+                label: 'Goruntule',
                 icon: <EyeIcon className="w-4 h-4" />,
                 onClick: () => handleView(record),
               },
               {
                 key: 'toggle',
-                label: record.isActive ? 'Pasifleştir' : 'Aktifleştir',
+                label: record.isActive ? 'Pasiflestir' : 'Aktiflestir',
                 icon: record.isActive ? <XCircleIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />,
                 onClick: () => handleToggleActive(record),
                 disabled: activatePipeline.isPending || deactivatePipeline.isPending,
               },
               {
                 key: 'setDefault',
-                label: 'Varsayılan Yap',
+                label: 'Varsayilan Yap',
                 icon: <StarIcon className="w-4 h-4" />,
                 onClick: () => handleSetDefault(record),
                 disabled: (record as any).isDefault,
@@ -265,7 +269,7 @@ export default function PipelinesPage() {
               { type: 'divider' as const },
               {
                 key: 'edit',
-                label: 'Düzenle',
+                label: 'Duzenle',
                 icon: <PencilIcon className="w-4 h-4" />,
                 onClick: () => handleEdit(record),
               },
@@ -289,69 +293,132 @@ export default function PipelinesPage() {
           }}
           trigger={['click']}
         >
-          <Button
-            type="text"
-            icon={<EllipsisHorizontalIcon className="w-5 h-5" />}
-            className="text-slate-400 hover:text-slate-600"
-          />
+          <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+            <EllipsisHorizontalIcon className="w-5 h-5" />
+          </button>
         </Dropdown>
       ),
     },
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Stats Cards */}
-      <div className="mb-8">
-        <PipelinesStats pipelines={pipelines} loading={isLoading} />
-      </div>
-
-      {/* Header */}
-      <ListPageHeader
-        icon={<FunnelIcon className="w-5 h-5" />}
-        iconColor="#0f172a"
-        title="Satış Süreçleri (Pipelines)"
-        description="Pipeline'larınızı yönetin ve yapılandırın"
-        itemCount={filteredPipelines.length}
-        primaryAction={{
-          label: 'Yeni Pipeline',
-          onClick: handleCreate,
-          icon: <PlusIcon className="w-5 h-5" />,
-        }}
-        secondaryActions={
-          <button
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Page Header */}
+      <div className="flex items-start justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <FunnelIcon className="w-7 h-7 text-slate-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Satis Surecleri (Pipelines)</h1>
+            <p className="text-sm text-slate-500">Pipeline\'larinizi yonetin ve yapilandirin</p>
+          </div>
+        </div>
+        <Space>
+          <Button
+            icon={<ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
             onClick={() => refetch()}
             disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-            title="Yenile"
+            className="!border-slate-300 !text-slate-700 hover:!border-slate-400"
           >
-            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
-
-      {/* Search */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
-        <Input
-          placeholder="Pipeline ara..."
-          prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          allowClear
-          className="max-w-md"
-          size="large"
-        />
+            Yenile
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusIcon className="w-4 h-4" />}
+            onClick={handleCreate}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+          >
+            Yeni Pipeline
+          </Button>
+        </Space>
       </div>
 
-      {/* Pipelines Table */}
-      {isLoading ? (
-        <Card>
-          <div className="flex items-center justify-center py-12">
-            <Spinner size="lg" />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-12 gap-6 mb-8">
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <FunnelIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            {isLoading ? (
+              <div className="h-8 w-16 bg-slate-100 animate-pulse rounded" />
+            ) : (
+              <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
+            )}
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Pipeline</div>
           </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CheckCircleIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            {isLoading ? (
+              <div className="h-8 w-16 bg-slate-100 animate-pulse rounded" />
+            ) : (
+              <div className="text-2xl font-bold text-slate-900">{stats.active}</div>
+            )}
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Aktif</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <StarIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            {isLoading ? (
+              <div className="h-8 w-16 bg-slate-100 animate-pulse rounded" />
+            ) : (
+              <div className="text-2xl font-bold text-slate-900">{stats.totalDeals}</div>
+            )}
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Firsat</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CurrencyDollarIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            {isLoading ? (
+              <div className="h-8 w-16 bg-slate-100 animate-pulse rounded" />
+            ) : (
+              <div className="text-2xl font-bold text-slate-900">{stats.totalValue.toLocaleString('tr-TR')} TL</div>
+            )}
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Deger</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Table Container */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        {/* Search */}
+        <div className="mb-6">
+          <Input
+            placeholder="Pipeline ara..."
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            allowClear
+            style={{ maxWidth: 400 }}
+            className="!rounded-lg !border-slate-300"
+          />
+        </div>
+
+        {/* Table */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        ) : (
           <Table
             columns={columns}
             dataSource={filteredPipelines}
@@ -359,48 +426,45 @@ export default function PipelinesPage() {
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: (total) => `Toplam ${total} pipeline`,
-              className: 'px-4',
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} pipeline`,
             }}
             locale={{
               emptyText: (
                 <Empty
-                  image={<FunnelIcon className="w-20 h-20 text-slate-300" />}
+                  image={<FunnelIcon className="w-20 h-20 text-slate-300 mx-auto" />}
                   imageStyle={{ height: 100 }}
                   description={
                     <div className="py-8">
-                      <div className="text-2xl font-bold text-slate-800 mb-4">
-                        Satış Sürecinizi Yapılandırın
+                      <div className="text-xl font-bold text-slate-800 mb-4">
+                        Satis Surecinizi Yapilandirin
                       </div>
-                      <div className="text-base text-slate-600 mb-6 max-w-2xl mx-auto leading-relaxed">
-                        Pipeline&apos;lar, fırsatlarınızın hangi aşamalardan geçeceğini tanımlar.
-                        &apos;Kurumsal Satış Süreci&apos; veya &apos;E-Ticaret Hunisi&apos; gibi
-                        özelleştirilmiş satış süreçleri oluşturun.
+                      <div className="text-sm text-slate-600 mb-6 max-w-lg mx-auto">
+                        Pipeline\'lar, firsatlarinizin hangi asamalardan gececegini tanimlar.
                       </div>
                       <Button
                         type="primary"
-                        size="large"
-                        icon={<PlusIcon className="w-5 h-5" />}
+                        icon={<PlusIcon className="w-4 h-4" />}
                         onClick={handleCreate}
-                        className="h-12 px-8 text-base font-semibold bg-slate-900 hover:bg-slate-800 border-slate-900"
+                        className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
                       >
-                        İlk Pipeline&apos;ınızı Oluşturun
+                        Ilk Pipeline\'inizi Olusturun
                       </Button>
                     </div>
                   }
                 />
               ),
             }}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
           />
-        </DataTableWrapper>
-      )}
+        )}
+      </div>
 
       {/* Stages Quick View Modal */}
       <Modal
         title={
           <div className="flex items-center gap-2">
             <FunnelIcon className="w-5 h-5 text-slate-600" />
-            <span className="text-slate-900">{viewingPipeline?.name} - Aşamalar</span>
+            <span className="text-slate-900">{viewingPipeline?.name} - Asamalar</span>
           </div>
         }
         open={stagesModalOpen}
@@ -412,7 +476,7 @@ export default function PipelinesPage() {
           <Button
             key="close"
             onClick={() => setStagesModalOpen(false)}
-            className="border-slate-300 text-slate-700 hover:border-slate-400 hover:text-slate-800"
+            className="!border-slate-300 !text-slate-700 hover:!border-slate-400"
           >
             Kapat
           </Button>,
@@ -422,7 +486,7 @@ export default function PipelinesPage() {
         {viewingPipeline?.stages && viewingPipeline.stages.length > 0 ? (
           <div className="space-y-3">
             <div className="text-sm text-slate-600 mb-4">
-              Bu pipeline <strong className="text-slate-900">{viewingPipeline.stages.length} aşamadan</strong> oluşmaktadır:
+              Bu pipeline <strong className="text-slate-900">{viewingPipeline.stages.length} asamadan</strong> olusmaktadir:
             </div>
             {viewingPipeline.stages
               .sort((a, b) => a.order - b.order)
@@ -431,31 +495,31 @@ export default function PipelinesPage() {
                   key={stage.id}
                   className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200 hover:border-slate-300 transition-colors"
                 >
-                  <div className="flex-shrink-0 w-8 h-8 bg-slate-600 text-white rounded-full flex items-center justify-center font-semibold">
+                  <div className="flex-shrink-0 w-8 h-8 bg-slate-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
                     {index + 1}
                   </div>
                   <div className="flex-1">
-                    <div className="font-semibold text-slate-900">{stage.name}</div>
+                    <div className="font-medium text-slate-900">{stage.name}</div>
                     {stage.probability !== undefined && (
                       <div className="text-xs text-slate-500 mt-1">
-                        Kazanma Olasılığı: <span className="font-medium text-slate-700">{stage.probability}%</span>
+                        Kazanma Olasiligi: <span className="font-medium text-slate-700">{stage.probability}%</span>
                       </div>
                     )}
                   </div>
-                  <Tag color="blue" className="border-slate-200">
-                    {stage.order || index + 1}. Sıra
-                  </Tag>
+                  <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-slate-200 text-slate-600">
+                    {stage.order || index + 1}. Sira
+                  </span>
                 </div>
               ))}
           </div>
         ) : (
           <Empty
             description={
-              <span className="text-slate-500">Bu pipeline için henüz aşama tanımlanmamış</span>
+              <span className="text-slate-500">Bu pipeline icin henuz asama tanimlanmamis</span>
             }
           />
         )}
       </Modal>
-    </PageContainer>
+    </div>
   );
 }

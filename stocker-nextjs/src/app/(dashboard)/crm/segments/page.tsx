@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Table, Space, Tag, Modal, message, Avatar, Dropdown, Empty, Input } from 'antd';
+import { Button, Table, Tag, Modal, message, Avatar, Dropdown, Empty, Input, Spin } from 'antd';
 import {
   ArrowDownTrayIcon,
   ArrowPathIcon,
@@ -23,26 +23,10 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import type { CustomerSegment } from '@/lib/api/services/crm.service';
 import { useCustomerSegments, useDeleteCustomerSegment, useCreateCustomerSegment } from '@/lib/api/hooks/useCRM';
-import { SegmentsStats } from '@/components/crm/segments/SegmentsStats';
-import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/patterns';
-import { Spinner } from '@/components/primitives';
 
 const segmentTypeLabels: Record<string, string> = {
   Static: 'Statik',
   Dynamic: 'Dinamik',
-};
-
-const segmentColors: Record<string, string> = {
-  blue: '#1890ff',
-  green: '#52c41a',
-  red: '#ff4d4f',
-  orange: '#fa8c16',
-  purple: '#722ed1',
-  cyan: '#13c2c2',
-  magenta: '#eb2f96',
-  volcano: '#fa541c',
-  gold: '#faad14',
-  lime: '#a0d911',
 };
 
 export default function CustomerSegmentsPage() {
@@ -65,6 +49,13 @@ export default function CustomerSegmentsPage() {
     );
   });
 
+  // Stats calculations
+  const totalSegments = segments.length;
+  const activeSegments = segments.filter(s => s.isActive).length;
+  const staticSegments = segments.filter(s => s.type === 'Static').length;
+  const dynamicSegments = segments.filter(s => s.type === 'Dynamic').length;
+  const totalMembers = segments.reduce((sum, s) => sum + (s.memberCount || 0), 0);
+
   const handleDelete = (id: string) => {
     Modal.confirm({
       title: 'Segment Sil',
@@ -77,7 +68,7 @@ export default function CustomerSegmentsPage() {
           await deleteSegment.mutateAsync(id);
         } catch (error: any) {
           const apiError = error.response?.data;
-          const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Silme işlemi başarısız';
+          const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Silme islemi basarisiz';
           message.error(errorMessage);
         }
       },
@@ -99,13 +90,13 @@ export default function CustomerSegmentsPage() {
         description: segment.description,
         type: segment.type,
         color: segment.color,
-        isActive: false, // Cloned segments start as inactive
+        isActive: false,
       };
       await createSegment.mutateAsync(clonedData as any);
-      message.success('Segment başarıyla kopyalandı');
+      message.success('Segment basariyla kopyalandi');
     } catch (error: any) {
       const apiError = error.response?.data;
-      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Kopyalama işlemi başarısız';
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Kopyalama islemi basarisiz';
       message.error(errorMessage);
     }
   };
@@ -123,12 +114,10 @@ export default function CustomerSegmentsPage() {
         throw new Error('Export failed');
       }
 
-      // Get filename from Content-Disposition header or use default
       const contentDisposition = response.headers.get('Content-Disposition');
       const filenameMatch = contentDisposition?.match(/filename="?([^"]+)"?/);
       const filename = filenameMatch?.[1] || `${segment.name}_members.csv`;
 
-      // Download the file
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -139,18 +128,16 @@ export default function CustomerSegmentsPage() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      message.success(`${segment.name} üyeleri başarıyla dışa aktarıldı`);
+      message.success(`${segment.name} uyeleri basariyla disa aktarildi`);
     } catch (error: any) {
-      message.error('CSV export işlemi başarısız oldu');
+      message.error('CSV export islemi basarisiz oldu');
       console.error('Export error:', error);
     }
   };
 
   const handleSendCampaign = (segment: CustomerSegment) => {
-    // Navigate to campaign creation with pre-selected segment
-    // Note: Campaign modal needs to be updated to accept targetSegmentId parameter
     router.push(`/crm/campaigns?createNew=true&targetSegmentId=${segment.id}&targetSegmentName=${encodeURIComponent(segment.name)}`);
-    message.success(`Kampanya oluşturma sayfasına yönlendiriliyorsunuz: ${segment.name}`);
+    message.success(`Kampanya olusturma sayfasina yonlendiriliyorsunuz: ${segment.name}`);
   };
 
   const columns: ColumnsType<CustomerSegment> = [
@@ -164,7 +151,7 @@ export default function CustomerSegmentsPage() {
             size={40}
             className="flex-shrink-0"
             style={{
-              background: `linear-gradient(135deg, ${record.color || '#1890ff'}, ${record.color || '#1890ff'}dd)`,
+              background: `linear-gradient(135deg, ${record.color || '#475569'}, ${record.color || '#475569'}dd)`,
             }}
             icon={<BuildingOffice2Icon className="w-5 h-5" />}
           >
@@ -185,20 +172,22 @@ export default function CustomerSegmentsPage() {
       key: 'type',
       width: 120,
       render: (type) => (
-        <Tag color={type === 'Dynamic' ? 'processing' : 'default'}>
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          type === 'Dynamic' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
+        }`}>
           {segmentTypeLabels[type] || type}
-        </Tag>
+        </span>
       ),
     },
     {
-      title: 'Üye Sayısı',
+      title: 'Uye Sayisi',
       dataIndex: 'memberCount',
       key: 'memberCount',
       width: 120,
       align: 'center',
       render: (count) => (
         <div className="flex items-center justify-center gap-1.5">
-          <UserIcon className="w-4 h-4 text-blue-500" />
+          <UserIcon className="w-4 h-4 text-slate-400" />
           <span className="font-medium text-slate-700">{count || 0}</span>
         </div>
       ),
@@ -208,26 +197,30 @@ export default function CustomerSegmentsPage() {
       dataIndex: 'isActive',
       key: 'isActive',
       width: 120,
-      render: (isActive) =>
-        isActive ? (
-          <Tag icon={<CheckCircleIcon className="w-4 h-4" />} color="success">
-            Aktif
-          </Tag>
-        ) : (
-          <Tag icon={<XCircleIcon className="w-4 h-4" />} color="default">
-            Pasif
-          </Tag>
-        ),
+      render: (isActive) => (
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          isActive ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'
+        }`}>
+          {isActive ? (
+            <CheckCircleIcon className="w-3.5 h-3.5" />
+          ) : (
+            <XCircleIcon className="w-3.5 h-3.5" />
+          )}
+          {isActive ? 'Aktif' : 'Pasif'}
+        </span>
+      ),
     },
     {
-      title: 'Oluşturma Tarihi',
+      title: 'Olusturma Tarihi',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 150,
-      render: (date) => new Date(date).toLocaleDateString('tr-TR'),
+      render: (date) => (
+        <span className="text-slate-600">{new Date(date).toLocaleDateString('tr-TR')}</span>
+      ),
     },
     {
-      title: 'İşlemler',
+      title: 'Islemler',
       key: 'actions',
       width: 80,
       fixed: 'right' as const,
@@ -237,13 +230,13 @@ export default function CustomerSegmentsPage() {
             items: [
               {
                 key: 'view',
-                label: 'Görüntüle',
+                label: 'Goruntule',
                 icon: <EyeIcon className="w-4 h-4" />,
                 onClick: () => router.push(`/crm/segments/${record.id}`),
               },
               {
                 key: 'edit',
-                label: 'Düzenle',
+                label: 'Duzenle',
                 icon: <PencilIcon className="w-4 h-4" />,
                 onClick: () => handleEdit(record),
               },
@@ -257,13 +250,13 @@ export default function CustomerSegmentsPage() {
               { type: 'divider' as const },
               {
                 key: 'export',
-                label: 'Üyeleri Dışa Aktar (.csv)',
+                label: 'Uyeleri Disa Aktar (.csv)',
                 icon: <ArrowDownTrayIcon className="w-4 h-4" />,
                 onClick: () => handleExport(record),
               },
               {
                 key: 'campaign',
-                label: 'Bu Segmente Kampanya Gönder',
+                label: 'Bu Segmente Kampanya Gonder',
                 icon: <EnvelopeIcon className="w-4 h-4" />,
                 onClick: () => handleSendCampaign(record),
               },
@@ -287,60 +280,130 @@ export default function CustomerSegmentsPage() {
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Stats Cards */}
-      <div className="mb-8">
-        <SegmentsStats segments={segments} loading={isLoading} />
-      </div>
-
-      {/* Header */}
-      <ListPageHeader
-        icon={<UserGroupIcon className="w-5 h-5" />}
-        iconColor="#0f172a"
-        title="Müşteri Segmentleri"
-        description="Müşteri segmentlerinizi yönetin"
-        itemCount={filteredSegments.length}
-        primaryAction={{
-          label: 'Yeni Segment',
-          onClick: handleCreate,
-          icon: <PlusIcon className="w-5 h-5" />,
-        }}
-        secondaryActions={
-          <button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-          >
-            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
-
-      {/* Search */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
-        <Input
-          placeholder="Segment ara..."
-          prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          allowClear
-          className="max-w-md !bg-slate-50 hover:!bg-slate-50 focus-within:!bg-white focus-within:!ring-2 focus-within:!ring-slate-900 focus-within:!border-transparent transition-all"
-        />
-      </div>
-
-      {/* Segments Table */}
-      {isLoading ? (
-        <Card>
-          <div className="flex items-center justify-center py-12">
-            <Spinner size="lg" />
+    <div className="min-h-screen bg-slate-50 p-8">
+      <Spin spinning={isLoading}>
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <UserGroupIcon className="w-6 h-6 text-slate-600" />
+              </div>
+              <h1 className="text-2xl font-bold text-slate-900">Musteri Segmentleri</h1>
+            </div>
+            <p className="text-sm text-slate-500 ml-13">
+              Musteri segmentlerinizi yonetin ve kampanyalarinizi hedefleyin
+            </p>
           </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
+          <div className="flex items-center gap-3">
+            <Button
+              icon={<ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+            >
+              Yenile
+            </Button>
+            <Button
+              type="primary"
+              icon={<PlusIcon className="w-4 h-4" />}
+              onClick={handleCreate}
+              className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+            >
+              Yeni Segment
+            </Button>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-12 gap-6 mb-6">
+          <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <UserGroupIcon className="w-5 h-5 text-slate-600" />
+                </div>
+              </div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Toplam Segment</p>
+              <p className="text-2xl font-bold text-slate-900">{totalSegments}</p>
+            </div>
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <CheckCircleIcon className="w-5 h-5 text-slate-600" />
+                </div>
+              </div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Aktif</p>
+              <p className="text-2xl font-bold text-slate-900">{activeSegments}</p>
+            </div>
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <BuildingOffice2Icon className="w-5 h-5 text-slate-600" />
+                </div>
+              </div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Statik</p>
+              <p className="text-2xl font-bold text-slate-900">{staticSegments}</p>
+            </div>
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <ArrowPathIcon className="w-5 h-5 text-slate-600" />
+                </div>
+              </div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Dinamik</p>
+              <p className="text-2xl font-bold text-slate-900">{dynamicSegments}</p>
+            </div>
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <UserIcon className="w-5 h-5 text-slate-600" />
+                </div>
+              </div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Toplam Uye</p>
+              <p className="text-2xl font-bold text-slate-900">{totalMembers.toLocaleString('tr-TR')}</p>
+            </div>
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <XCircleIcon className="w-5 h-5 text-slate-600" />
+                </div>
+              </div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Pasif</p>
+              <p className="text-2xl font-bold text-slate-900">{totalSegments - activeSegments}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Search/Filters */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+          <Input
+            placeholder="Segment ara..."
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            allowClear
+            className="max-w-md"
+          />
+        </div>
+
+        {/* Segments Table */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
           <Table
             columns={columns}
             dataSource={filteredSegments}
             rowKey="id"
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
@@ -353,10 +416,10 @@ export default function CustomerSegmentsPage() {
                   description={
                     <div className="py-8">
                       <div className="text-lg font-semibold text-slate-800 mb-2">
-                        Sonuç bulunamadı
+                        Sonuc bulunamadi
                       </div>
                       <div className="text-sm text-slate-500">
-                        &quot;{searchText}&quot; ile eşleşen segment bulunamadı
+                        &quot;{searchText}&quot; ile eslesen segment bulunamadi
                       </div>
                     </div>
                   }
@@ -365,37 +428,34 @@ export default function CustomerSegmentsPage() {
                 <Empty
                   image={
                     <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto">
-                      <svg className="w-10 h-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-                      </svg>
+                      <UserGroupIcon className="w-10 h-10 text-slate-400" />
                     </div>
                   }
                   imageStyle={{ height: 100 }}
                   description={
                     <div className="py-8">
                       <div className="text-2xl font-bold text-slate-800 mb-4">
-                        Müşterilerinizi Anlamlı Gruplara Ayırın
+                        Musterilerinizi Anlamli Gruplara Ayirin
                       </div>
                       <div className="text-base text-slate-600 mb-6 max-w-2xl mx-auto leading-relaxed">
-                        Müşteri Segmentleri, doğru kişilere doğru mesajı göndermenizi sağlar.
-                        &apos;İstanbul&apos;daki VIP Müşteriler&apos; veya &apos;Son 6 ayda alışveriş yapmayanlar&apos;
-                        gibi dinamik segmentler oluşturun.
+                        Musteri Segmentleri, dogru kisilere dogru mesaji gondermenizi saglar.
                       </div>
-                      <button
+                      <Button
+                        type="primary"
                         onClick={handleCreate}
-                        className="h-12 px-8 text-base font-semibold bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-colors inline-flex items-center gap-2"
+                        className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+                        icon={<PlusIcon className="w-5 h-5" />}
                       >
-                        <PlusIcon className="w-5 h-5" />
-                        İlk Segmentini Oluştur
-                      </button>
+                        Ilk Segmentini Olustur
+                      </Button>
                     </div>
                   }
                 />
               ),
             }}
           />
-        </DataTableWrapper>
-      )}
-    </PageContainer>
+        </div>
+      </Spin>
+    </div>
   );
 }

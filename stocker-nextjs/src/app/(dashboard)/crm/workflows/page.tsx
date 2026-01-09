@@ -4,11 +4,11 @@ import React, { useState, useEffect } from 'react';
 import {
   Table,
   Button,
-  Space,
   Tag,
   Empty,
   Tooltip,
   Modal,
+  Spin,
 } from 'antd';
 import {
   ArrowPathIcon,
@@ -20,6 +20,7 @@ import {
   PlayIcon,
   PlusIcon,
   TrashIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
@@ -33,8 +34,6 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/tr';
 import { useRouter } from 'next/navigation';
-import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/patterns';
-import { Spinner } from '@/components/primitives';
 
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
@@ -42,112 +41,30 @@ dayjs.locale('tr');
 const { confirm } = Modal;
 
 // Trigger type labels - Synced with backend WorkflowTriggerType enum
-const triggerTypeLabels: Record<WorkflowTriggerType, { label: string; color: string }> = {
-  Manual: { label: 'Manuel', color: 'default' },
-  EntityCreated: { label: 'Kayıt Oluşturulduğunda', color: 'blue' },
-  EntityUpdated: { label: 'Kayıt Güncellendiğinde', color: 'cyan' },
-  StatusChanged: { label: 'Durum Değiştiğinde', color: 'purple' },
-  DealStageChanged: { label: 'Anlaşma Aşaması Değiştiğinde', color: 'geekblue' },
-  Scheduled: { label: 'Zamanlanmış', color: 'orange' },
-  FieldCondition: { label: 'Alan Koşulu', color: 'volcano' },
-  AmountThreshold: { label: 'Tutar Eşiği', color: 'gold' },
-  DueDateEvent: { label: 'Vade Tarihi', color: 'magenta' },
+const triggerTypeLabels: Record<WorkflowTriggerType, { label: string }> = {
+  Manual: { label: 'Manuel' },
+  EntityCreated: { label: 'Kayit Olusturuldugunda' },
+  EntityUpdated: { label: 'Kayit Guncellendiginde' },
+  StatusChanged: { label: 'Durum Degistiginde' },
+  DealStageChanged: { label: 'Anlasma Asamasi Degistiginde' },
+  Scheduled: { label: 'Zamanlanmis' },
+  FieldCondition: { label: 'Alan Kosulu' },
+  AmountThreshold: { label: 'Tutar Esigi' },
+  DueDateEvent: { label: 'Vade Tarihi' },
 };
-
-// Action type labels
-const actionTypeLabels: Record<WorkflowActionType, string> = {
-  SendEmail: 'E-posta Gönder',
-  SendSMS: 'SMS Gönder',
-  CreateTask: 'Görev Oluştur',
-  UpdateField: 'Alan Güncelle',
-  SendNotification: 'Bildirim Gönder',
-  CallWebhook: 'Webhook Çağır',
-  CreateActivity: 'Aktivite Oluştur',
-  AssignToUser: 'Kullanıcıya Ata',
-};
-
-// Workflows stats component
-interface WorkflowsStatsProps {
-  workflows: WorkflowDto[];
-  loading: boolean;
-}
-
-function WorkflowsStats({ workflows, loading }: WorkflowsStatsProps) {
-  const stats = React.useMemo(() => {
-    const total = workflows.length;
-    const active = workflows.filter(w => w.isActive).length;
-    const totalExecutions = workflows.reduce((sum, w) => sum + (w.executionCount || 0), 0);
-    const successRate = totalExecutions > 0
-      ? Math.round((workflows.filter(w => w.executionCount > 0).length / workflows.length) * 100)
-      : 0;
-
-    return { total, active, totalExecutions, successRate };
-  }, [workflows]);
-
-  const statCards = [
-    {
-      title: 'Toplam İş Akışı',
-      value: stats.total,
-      icon: <BoltIcon className="w-6 h-6" />,
-      color: 'bg-slate-50 text-slate-700',
-    },
-    {
-      title: 'Aktif',
-      value: stats.active,
-      icon: <CheckCircleIcon className="w-6 h-6" />,
-      color: 'bg-green-50 text-green-700',
-    },
-    {
-      title: 'Çalıştırma Sayısı',
-      value: stats.totalExecutions,
-      icon: <ClockIcon className="w-6 h-6" />,
-      color: 'bg-blue-50 text-blue-700',
-    },
-    {
-      title: 'Başarı Oranı',
-      value: `${stats.successRate}%`,
-      icon: <span className="text-xl font-bold">%</span>,
-      color: 'bg-purple-50 text-purple-700',
-    },
-  ];
-
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-white border border-slate-200 rounded-lg p-6 animate-pulse">
-            <div className="h-4 bg-slate-200 rounded w-24 mb-3"></div>
-            <div className="h-8 bg-slate-200 rounded w-16"></div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {statCards.map((stat, index) => (
-        <div
-          key={index}
-          className="bg-white border border-slate-200 rounded-lg p-6 hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-slate-600">{stat.title}</span>
-            <div className={`w-10 h-10 rounded-lg ${stat.color} flex items-center justify-center`}>
-              {stat.icon}
-            </div>
-          </div>
-          <div className="text-3xl font-bold text-slate-900">{stat.value}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export default function WorkflowsPage() {
   const router = useRouter();
   const [workflows, setWorkflows] = useState<WorkflowDto[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Stats calculations
+  const totalWorkflows = workflows.length;
+  const activeWorkflows = workflows.filter(w => w.isActive).length;
+  const totalExecutions = workflows.reduce((sum, w) => sum + (w.executionCount || 0), 0);
+  const successRate = totalExecutions > 0
+    ? Math.round((workflows.filter(w => w.executionCount > 0).length / workflows.length) * 100) || 0
+    : 0;
 
   // Load all workflows
   const loadWorkflows = async () => {
@@ -157,7 +74,7 @@ export default function WorkflowsPage() {
       setWorkflows(data);
       setLoading(false);
     } catch (error) {
-      showApiError(error, 'Workflows yüklenemedi');
+      showApiError(error, 'Workflows yuklenemedi');
       setLoading(false);
     }
   };
@@ -193,10 +110,10 @@ export default function WorkflowsPage() {
   const handleDelete = (id: number) => {
     confirm({
       title: 'Workflow Sil',
-      content: 'Bu workflow\'u silmek istediğinize emin misiniz?',
+      content: 'Bu workflow\'u silmek istediginize emin misiniz?',
       okText: 'Sil',
       okType: 'danger',
-      cancelText: 'İptal',
+      cancelText: 'Iptal',
       async onOk() {
         try {
           await CRMService.deleteWorkflow(id);
@@ -222,7 +139,7 @@ export default function WorkflowsPage() {
   // Table columns
   const columns: ColumnsType<WorkflowDto> = [
     {
-      title: 'Workflow Adı',
+      title: 'Workflow Adi',
       dataIndex: 'name',
       key: 'name',
       render: (name: string, record: WorkflowDto) => (
@@ -241,16 +158,24 @@ export default function WorkflowsPage() {
       dataIndex: 'entityType',
       key: 'entityType',
       width: 120,
-      render: (entityType: string) => <Tag color="blue">{entityType}</Tag>,
+      render: (entityType: string) => (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+          {entityType}
+        </span>
+      ),
     },
     {
       title: 'Trigger',
       dataIndex: 'triggerType',
       key: 'triggerType',
-      width: 180,
+      width: 200,
       render: (triggerType: WorkflowTriggerType) => {
-        const config = triggerTypeLabels[triggerType] || { label: triggerType, color: 'default' };
-        return <Tag color={config.color}>{config.label}</Tag>;
+        const config = triggerTypeLabels[triggerType] || { label: triggerType };
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-700">
+            {config.label}
+          </span>
+        );
       },
     },
     {
@@ -259,28 +184,35 @@ export default function WorkflowsPage() {
       key: 'isActive',
       width: 100,
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'success' : 'default'} icon={isActive ? <BoltIcon className="w-4 h-4" /> : undefined}>
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          isActive ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'
+        }`}>
+          {isActive ? (
+            <BoltIcon className="w-3.5 h-3.5" />
+          ) : (
+            <XCircleIcon className="w-3.5 h-3.5" />
+          )}
           {isActive ? 'Aktif' : 'Pasif'}
-        </Tag>
+        </span>
       ),
     },
     {
-      title: 'Adımlar',
+      title: 'Adimlar',
       dataIndex: 'steps',
       key: 'steps',
       width: 100,
       render: (steps: any[]) => (
-        <span className="text-slate-600">{steps?.length || 0} adım</span>
+        <span className="text-slate-600">{steps?.length || 0} adim</span>
       ),
     },
     {
-      title: 'Çalıştırma',
+      title: 'Calistirma',
       dataIndex: 'executionCount',
       key: 'executionCount',
       width: 120,
       render: (count: number, record: WorkflowDto) => (
         <div className="flex flex-col">
-          <span className="text-slate-900">{count} kez</span>
+          <span className="text-slate-900 font-medium">{count} kez</span>
           {record.lastExecutedAt && (
             <span className="text-xs text-slate-500">
               {dayjs(record.lastExecutedAt).fromNow()}
@@ -290,18 +222,19 @@ export default function WorkflowsPage() {
       ),
     },
     {
-      title: 'İşlemler',
+      title: 'Islemler',
       key: 'actions',
-      width: 180,
+      width: 140,
       fixed: 'right',
       render: (_: any, record: WorkflowDto) => (
-        <Space size="small">
-          <Tooltip title="Detayları Görüntüle">
+        <div className="flex items-center gap-1">
+          <Tooltip title="Detaylari Goruntule">
             <Button
               type="text"
               size="small"
               icon={<EyeIcon className="w-4 h-4" />}
               onClick={() => handleView(record.id)}
+              className="!text-slate-600 hover:!text-slate-900"
             />
           </Tooltip>
           <Tooltip title={record.isActive ? 'Deaktif Et' : 'Aktif Et'}>
@@ -310,6 +243,7 @@ export default function WorkflowsPage() {
               size="small"
               icon={record.isActive ? <PauseIcon className="w-4 h-4" /> : <PlayIcon className="w-4 h-4" />}
               onClick={() => record.isActive ? handleDeactivate(record.id) : handleActivate(record.id)}
+              className="!text-slate-600 hover:!text-slate-900"
             />
           </Tooltip>
           <Tooltip title="Sil">
@@ -319,76 +253,143 @@ export default function WorkflowsPage() {
               danger
               icon={<TrashIcon className="w-4 h-4" />}
               onClick={() => handleDelete(record.id)}
+              className="!text-red-500 hover:!text-red-600"
             />
           </Tooltip>
-        </Space>
+        </div>
       ),
     },
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Stats Cards */}
-      <div className="mb-8">
-        <WorkflowsStats workflows={workflows} loading={loading} />
-      </div>
-
-      {/* Header */}
-      <ListPageHeader
-        icon={<BoltIcon className="w-5 h-5" />}
-        iconColor="#0f172a"
-        title="İş Akışları"
-        description="Otomasyon iş akışlarınızı yönetin"
-        itemCount={workflows.length}
-        primaryAction={{
-          label: 'Yeni İş Akışı',
-          onClick: handleCreate,
-          icon: <PlusIcon className="w-5 h-5" />,
-        }}
-        secondaryActions={
-          <button
-            onClick={() => loadWorkflows()}
-            disabled={loading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-          >
-            <ArrowPathIcon className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
-
-      {/* Table */}
-      {loading ? (
-        <Card>
-          <div className="flex items-center justify-center py-12">
-            <Spinner size="lg" />
+    <div className="min-h-screen bg-slate-50 p-8">
+      <Spin spinning={loading}>
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <BoltIcon className="w-6 h-6 text-slate-600" />
+              </div>
+              <h1 className="text-2xl font-bold text-slate-900">Is Akislari</h1>
+            </div>
+            <p className="text-sm text-slate-500 ml-13">
+              Otomasyon is akislarinizi yonetin ve izleyin
+            </p>
           </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
+          <div className="flex items-center gap-3">
+            <Button
+              icon={<ArrowPathIcon className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />}
+              onClick={() => loadWorkflows()}
+              disabled={loading}
+              className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+            >
+              Yenile
+            </Button>
+            <Button
+              type="primary"
+              icon={<PlusIcon className="w-4 h-4" />}
+              onClick={handleCreate}
+              className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+            >
+              Yeni Is Akisi
+            </Button>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-12 gap-6 mb-6">
+          <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <BoltIcon className="w-5 h-5 text-slate-600" />
+                </div>
+              </div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Toplam Is Akisi</p>
+              <p className="text-2xl font-bold text-slate-900">{totalWorkflows}</p>
+            </div>
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <CheckCircleIcon className="w-5 h-5 text-slate-600" />
+                </div>
+              </div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Aktif</p>
+              <p className="text-2xl font-bold text-slate-900">{activeWorkflows}</p>
+            </div>
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <ClockIcon className="w-5 h-5 text-slate-600" />
+                </div>
+              </div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Calistirma Sayisi</p>
+              <p className="text-2xl font-bold text-slate-900">{totalExecutions.toLocaleString('tr-TR')}</p>
+            </div>
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <span className="text-sm font-bold text-slate-600">%</span>
+                </div>
+              </div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Basari Orani</p>
+              <p className="text-2xl font-bold text-slate-900">{successRate}%</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
           <Table
             columns={columns}
             dataSource={workflows}
             rowKey="id"
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: (total) => `Toplam ${total} iş akışı`,
+              showTotal: (total) => `Toplam ${total} is akisi`,
             }}
             locale={{
               emptyText: (
                 <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description="Henüz iş akışı bulunmuyor"
-                >
-                  <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={handleCreate}>
-                    İlk İş Akışını Oluştur
-                  </Button>
-                </Empty>
+                  image={
+                    <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto">
+                      <BoltIcon className="w-10 h-10 text-slate-400" />
+                    </div>
+                  }
+                  imageStyle={{ height: 100 }}
+                  description={
+                    <div className="py-8">
+                      <div className="text-lg font-semibold text-slate-800 mb-2">
+                        Henuz is akisi bulunmuyor
+                      </div>
+                      <div className="text-sm text-slate-500 mb-4">
+                        Otomasyonlarinizi olusturmaya baslayin
+                      </div>
+                      <Button
+                        type="primary"
+                        icon={<PlusIcon className="w-4 h-4" />}
+                        onClick={handleCreate}
+                        className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+                      >
+                        Ilk Is Akisini Olustur
+                      </Button>
+                    </div>
+                  }
+                />
               ),
             }}
           />
-        </DataTableWrapper>
-      )}
-    </PageContainer>
+        </div>
+      </Spin>
+    </div>
   );
 }

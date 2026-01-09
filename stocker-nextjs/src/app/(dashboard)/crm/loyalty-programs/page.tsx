@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Table, Tag, Input, Select } from 'antd';
+import { Button, Table, Input, Select, Tooltip, Spin, Empty } from 'antd';
 import {
   ArrowPathIcon,
   EyeIcon,
@@ -13,6 +13,8 @@ import {
   StarIcon,
   TrophyIcon,
   UserIcon,
+  CheckCircleIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
   showDeleteSuccess,
@@ -22,96 +24,15 @@ import {
 import type { LoyaltyProgramDto } from '@/lib/api/services/crm.types';
 import { LoyaltyProgramType } from '@/lib/api/services/crm.types';
 import { useLoyaltyPrograms, useDeleteLoyaltyProgram } from '@/lib/api/hooks/useCRM';
-import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/patterns';
-import { Spinner } from '@/components/primitives';
 import type { ColumnsType } from 'antd/es/table';
 
-const programTypeLabels: Record<LoyaltyProgramType, { label: string; color: string }> = {
-  [LoyaltyProgramType.PointsBased]: { label: 'Puan Tabanlı', color: 'blue' },
-  [LoyaltyProgramType.TierBased]: { label: 'Kademe Tabanlı', color: 'purple' },
-  [LoyaltyProgramType.SpendBased]: { label: 'Harcama Tabanlı', color: 'green' },
-  [LoyaltyProgramType.Subscription]: { label: 'Abonelik', color: 'cyan' },
-  [LoyaltyProgramType.Hybrid]: { label: 'Hibrit', color: 'orange' },
+const programTypeLabels: Record<LoyaltyProgramType, { label: string }> = {
+  [LoyaltyProgramType.PointsBased]: { label: 'Puan Tabanli' },
+  [LoyaltyProgramType.TierBased]: { label: 'Kademe Tabanli' },
+  [LoyaltyProgramType.SpendBased]: { label: 'Harcama Tabanli' },
+  [LoyaltyProgramType.Subscription]: { label: 'Abonelik' },
+  [LoyaltyProgramType.Hybrid]: { label: 'Hibrit' },
 };
-
-interface LoyaltyProgramsStatsProps {
-  programs: LoyaltyProgramDto[];
-  loading: boolean;
-}
-
-function LoyaltyProgramsStats({ programs, loading }: LoyaltyProgramsStatsProps) {
-  const totalPrograms = programs.length;
-  const activePrograms = programs.filter((p) => p.isActive).length;
-  const totalMembers = programs.reduce((sum, p) => sum + ((p as any).memberCount || 0), 0);
-  const totalPoints = programs.reduce((sum, p) => sum + ((p as any).totalPointsDistributed || 0), 0);
-
-  const stats = [
-    {
-      title: 'Toplam Program',
-      value: totalPrograms,
-      icon: <GiftIcon className="w-5 h-5" />,
-      bgColor: 'bg-blue-50',
-      iconColor: 'text-blue-600',
-    },
-    {
-      title: 'Aktif',
-      value: activePrograms,
-      icon: <TrophyIcon className="w-5 h-5" />,
-      bgColor: 'bg-green-50',
-      iconColor: 'text-green-600',
-    },
-    {
-      title: 'Toplam Üye',
-      value: totalMembers.toLocaleString('tr-TR'),
-      icon: <UserIcon className="w-5 h-5" />,
-      bgColor: 'bg-purple-50',
-      iconColor: 'text-purple-600',
-    },
-    {
-      title: 'Dağıtılan Puan',
-      value: totalPoints.toLocaleString('tr-TR'),
-      icon: <StarIcon className="w-5 h-5" />,
-      bgColor: 'bg-orange-50',
-      iconColor: 'text-orange-600',
-    },
-  ];
-
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="bg-white border border-slate-200 rounded-lg p-6">
-            <div className="animate-pulse">
-              <div className="h-4 bg-slate-200 rounded w-24 mb-2"></div>
-              <div className="h-8 bg-slate-200 rounded w-32"></div>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {stats.map((stat, index) => (
-        <div
-          key={index}
-          className="bg-white border border-slate-200 rounded-lg p-6 hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600 mb-1">{stat.title}</p>
-              <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-            </div>
-            <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-              <div className={stat.iconColor}>{stat.icon}</div>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export default function LoyaltyProgramsPage() {
   const router = useRouter();
@@ -133,6 +54,12 @@ export default function LoyaltyProgramsPage() {
 
   const programs = data || [];
   const totalCount = programs.length;
+
+  // Stats calculations
+  const totalPrograms = programs.length;
+  const activePrograms = programs.filter((p) => p.isActive).length;
+  const totalMembers = programs.reduce((sum, p) => sum + ((p as any).memberCount || 0), 0);
+  const totalPoints = programs.reduce((sum, p) => sum + ((p as any).totalPointsDistributed || 0), 0);
 
   // Debounce search input
   useEffect(() => {
@@ -157,16 +84,16 @@ export default function LoyaltyProgramsPage() {
 
   const handleDelete = async (id: string, program: LoyaltyProgramDto) => {
     const confirmed = await confirmDelete(
-      'Sadakat Programı',
+      'Sadakat Programi',
       program.name
     );
 
     if (confirmed) {
       try {
         await deleteLoyaltyProgram.mutateAsync(id);
-        showDeleteSuccess('sadakat programı');
+        showDeleteSuccess('sadakat programi');
       } catch (error) {
-        showError('Silme işlemi başarısız');
+        showError('Silme islemi basarisiz');
       }
     }
   };
@@ -186,7 +113,7 @@ export default function LoyaltyProgramsPage() {
       key: 'code',
       width: 100,
       render: (text: string) => (
-        <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">{text}</span>
+        <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-700">{text}</span>
       ),
     },
     {
@@ -204,13 +131,17 @@ export default function LoyaltyProgramsPage() {
       width: 140,
       render: (type: LoyaltyProgramType) => {
         const info = programTypeLabels[type];
-        return <Tag color={info?.color}>{info?.label || type}</Tag>;
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+            {info?.label || type}
+          </span>
+        );
       },
     },
     {
       title: 'Puan/Harcama',
       key: 'pointsPerSpend',
-      width: 130,
+      width: 140,
       render: (_: unknown, record: LoyaltyProgramDto) => (
         <span className="text-slate-700">
           {record.pointsPerSpend} puan / {formatCurrency(record.spendUnit)}
@@ -218,14 +149,14 @@ export default function LoyaltyProgramsPage() {
       ),
     },
     {
-      title: 'Puan Değeri',
+      title: 'Puan Degeri',
       dataIndex: 'pointValue',
       key: 'pointValue',
       width: 120,
-      render: (value: number) => <span className="text-slate-700">{formatCurrency(value)}</span>,
+      render: (value: number) => <span className="text-slate-700 font-medium">{formatCurrency(value)}</span>,
     },
     {
-      title: 'Min. Kullanım',
+      title: 'Min. Kullanim',
       dataIndex: 'minimumRedemptionPoints',
       key: 'minimumRedemptionPoints',
       width: 120,
@@ -237,127 +168,184 @@ export default function LoyaltyProgramsPage() {
       key: 'isActive',
       width: 100,
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'default'}>{isActive ? 'Aktif' : 'Pasif'}</Tag>
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          isActive ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'
+        }`}>
+          {isActive ? (
+            <CheckCircleIcon className="w-3.5 h-3.5" />
+          ) : (
+            <XCircleIcon className="w-3.5 h-3.5" />
+          )}
+          {isActive ? 'Aktif' : 'Pasif'}
+        </span>
       ),
     },
     {
-      title: 'İşlemler',
+      title: 'Islemler',
       key: 'actions',
-      width: 180,
+      width: 140,
       render: (_: unknown, record: LoyaltyProgramDto) => (
-        <Space>
-          <Button
-            type="text"
-            size="small"
-            icon={<EyeIcon className="w-4 h-4" />}
-            onClick={() => handleView(record)}
-            className="text-blue-600 hover:text-blue-700"
-          >
-            Görüntüle
-          </Button>
-          <Button
-            type="text"
-            size="small"
-            icon={<PencilIcon className="w-4 h-4" />}
-            onClick={() => handleEdit(record)}
-            className="text-slate-600 hover:text-slate-900"
-          >
-            Düzenle
-          </Button>
+        <div className="flex items-center gap-1">
+          <Tooltip title="Goruntule">
+            <Button
+              type="text"
+              size="small"
+              icon={<EyeIcon className="w-4 h-4" />}
+              onClick={() => handleView(record)}
+              className="!text-slate-600 hover:!text-slate-900"
+            />
+          </Tooltip>
+          <Tooltip title="Duzenle">
+            <Button
+              type="text"
+              size="small"
+              icon={<PencilIcon className="w-4 h-4" />}
+              onClick={() => handleEdit(record)}
+              className="!text-slate-600 hover:!text-slate-900"
+            />
+          </Tooltip>
           <Button
             type="text"
             danger
             size="small"
             onClick={() => handleDelete(record.id, record)}
-            className="text-red-600 hover:text-red-700"
+            className="!text-red-500 hover:!text-red-600"
           >
             Sil
           </Button>
-        </Space>
+        </div>
       ),
     },
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Stats Cards */}
-      <div className="mb-8">
-        <LoyaltyProgramsStats programs={programs} loading={isLoading} />
-      </div>
-
-      {/* Header */}
-      <ListPageHeader
-        icon={<GiftIcon className="w-5 h-5" />}
-        iconColor="#0f172a"
-        title="Sadakat Programları"
-        description="Müşteri sadakat programlarını yönetin"
-        itemCount={totalCount}
-        primaryAction={{
-          label: 'Yeni Program',
-          onClick: handleCreate,
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-          >
-            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
-
-      {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
-        <div className="flex items-center gap-4 flex-wrap">
-          <Input
-            placeholder="Program ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            className="w-64"
-            allowClear
-          />
-          <Select
-            placeholder="Tip"
-            value={typeFilter}
-            onChange={setTypeFilter}
-            className="w-40"
-            allowClear
-            options={Object.entries(programTypeLabels).map(([key, val]) => ({
-              value: key,
-              label: val.label,
-            }))}
-          />
-          <Select
-            placeholder="Durum"
-            value={activeFilter}
-            onChange={setActiveFilter}
-            className="w-32"
-            allowClear
-            options={[
-              { value: true, label: 'Aktif' },
-              { value: false, label: 'Pasif' },
-            ]}
-          />
-        </div>
-      </div>
-
-      {/* Table */}
-      {isLoading ? (
-        <Card>
-          <div className="flex items-center justify-center py-12">
-            <Spinner size="lg" />
+    <div className="min-h-screen bg-slate-50 p-8">
+      <Spin spinning={isLoading}>
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <GiftIcon className="w-6 h-6 text-slate-600" />
+              </div>
+              <h1 className="text-2xl font-bold text-slate-900">Sadakat Programlari</h1>
+            </div>
+            <p className="text-sm text-slate-500 ml-13">
+              Musteri sadakat programlarini yonetin ve oduller olusturun
+            </p>
           </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
+          <div className="flex items-center gap-3">
+            <Button
+              icon={<ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+            >
+              Yenile
+            </Button>
+            <Button
+              type="primary"
+              icon={<PlusIcon className="w-4 h-4" />}
+              onClick={handleCreate}
+              className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+            >
+              Yeni Program
+            </Button>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-12 gap-6 mb-6">
+          <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <GiftIcon className="w-5 h-5 text-slate-600" />
+                </div>
+              </div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Toplam Program</p>
+              <p className="text-2xl font-bold text-slate-900">{totalPrograms}</p>
+            </div>
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <TrophyIcon className="w-5 h-5 text-slate-600" />
+                </div>
+              </div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Aktif</p>
+              <p className="text-2xl font-bold text-slate-900">{activePrograms}</p>
+            </div>
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <UserIcon className="w-5 h-5 text-slate-600" />
+                </div>
+              </div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Toplam Uye</p>
+              <p className="text-2xl font-bold text-slate-900">{totalMembers.toLocaleString('tr-TR')}</p>
+            </div>
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <StarIcon className="w-5 h-5 text-slate-600" />
+                </div>
+              </div>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Dagitilan Puan</p>
+              <p className="text-2xl font-bold text-slate-900">{totalPoints.toLocaleString('tr-TR')}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+          <div className="flex items-center gap-4 flex-wrap">
+            <Input
+              placeholder="Program ara..."
+              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="w-64"
+              allowClear
+            />
+            <Select
+              placeholder="Tip"
+              value={typeFilter}
+              onChange={setTypeFilter}
+              className="w-40"
+              allowClear
+              options={Object.entries(programTypeLabels).map(([key, val]) => ({
+                value: key,
+                label: val.label,
+              }))}
+            />
+            <Select
+              placeholder="Durum"
+              value={activeFilter}
+              onChange={setActiveFilter}
+              className="w-32"
+              allowClear
+              options={[
+                { value: true, label: 'Aktif' },
+                { value: false, label: 'Pasif' },
+              ]}
+            />
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
           <Table
             columns={columns}
             dataSource={programs}
             rowKey="id"
             loading={deleteLoyaltyProgram.isPending}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
             pagination={{
               current: currentPage,
               pageSize,
@@ -367,11 +355,41 @@ export default function LoyaltyProgramsPage() {
                 setPageSize(size);
               },
               showSizeChanger: true,
-              showTotal: (total) => `Toplam ${total} kayıt`,
+              showTotal: (total) => `Toplam ${total} kayit`,
+            }}
+            locale={{
+              emptyText: (
+                <Empty
+                  image={
+                    <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto">
+                      <GiftIcon className="w-10 h-10 text-slate-400" />
+                    </div>
+                  }
+                  imageStyle={{ height: 100 }}
+                  description={
+                    <div className="py-8">
+                      <div className="text-lg font-semibold text-slate-800 mb-2">
+                        Henuz sadakat programi bulunmuyor
+                      </div>
+                      <div className="text-sm text-slate-500 mb-4">
+                        Musterilerinizi odullendirmek icin program olusturun
+                      </div>
+                      <Button
+                        type="primary"
+                        icon={<PlusIcon className="w-4 h-4" />}
+                        onClick={handleCreate}
+                        className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+                      >
+                        Ilk Programi Olustur
+                      </Button>
+                    </div>
+                  }
+                />
+              ),
             }}
           />
-        </DataTableWrapper>
-      )}
-    </PageContainer>
+        </div>
+      </Spin>
+    </div>
   );
 }
