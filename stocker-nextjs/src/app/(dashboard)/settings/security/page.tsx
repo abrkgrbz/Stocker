@@ -2,11 +2,11 @@
 
 /**
  * Security Settings Page
- * Corporate Professional Design - Monochrome Palette
+ * Monochrome Design System - Professional Slate Palette
  * - Single global save bar (sticky bottom)
- * - Black/slate color scheme only
+ * - Slate color scheme only
  * - Dense layout with compact spacing
- * - Native toggle switches (black when active)
+ * - Native toggle switches (slate-900 when active)
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -75,7 +75,7 @@ const getScoreLabel = (score: number): string => {
   return 'Zayıf';
 };
 
-// Custom Toggle Switch Component - Black when active
+// Custom Toggle Switch Component - Slate-900 when active
 function Toggle({ checked, onChange, disabled }: { checked?: boolean; onChange?: (checked: boolean) => void; disabled?: boolean }) {
   return (
     <button
@@ -254,9 +254,9 @@ export default function SecurityPage() {
   return (
     <AdminOnly
       fallback={
-        <div className="min-h-screen bg-slate-50 p-6">
+        <div className="min-h-screen bg-slate-50 p-8">
           <div className="max-w-5xl mx-auto">
-            <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
+            <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
               <AlertCircle className="w-12 h-12 text-slate-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-slate-900 mb-2">Yetkisiz Erişim</h3>
               <p className="text-sm text-slate-500">
@@ -267,29 +267,27 @@ export default function SecurityPage() {
         </div>
       }
     >
-      <div className="min-h-screen bg-slate-50 pb-20">
-        {/* Minimal Header */}
-        <div className="bg-white border-b border-slate-200">
-          <div className="max-w-6xl mx-auto px-6 py-4">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.back()}
-                className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </button>
-              <div className="flex-1">
-                <h1 className="text-lg font-semibold text-slate-900">Güvenlik Ayarları</h1>
-                <p className="text-sm text-slate-500">Hesap güvenliği ve erişim kontrolü</p>
-              </div>
+      <div className="min-h-screen bg-slate-50 p-8 pb-24">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center gap-4 mb-8">
+            <button
+              onClick={() => router.back()}
+              className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+              <Shield className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold text-slate-900">Güvenlik Ayarları</h1>
+              <p className="text-sm text-slate-500">Hesap güvenliği ve erişim kontrolü</p>
             </div>
           </div>
-        </div>
 
-        {/* Main Content */}
-        <div className="max-w-6xl mx-auto px-6 py-6">
           {/* Compact Security Score - Horizontal Bar */}
-          <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-5 mb-6">
             <div className="flex items-center gap-6">
               {/* Score Circle - Smaller */}
               <div className="flex-shrink-0">
@@ -354,7 +352,7 @@ export default function SecurityPage() {
                 <Lock className="w-4 h-4 text-slate-500" />
                 <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Şifre Politikası</h2>
               </div>
-              <div className="bg-white border border-slate-200 rounded-lg p-4">
+              <div className="bg-white border border-slate-200 rounded-xl p-5">
                 <Form
                   form={passwordForm}
                   layout="vertical"
@@ -436,7 +434,7 @@ export default function SecurityPage() {
                 <Smartphone className="w-4 h-4 text-slate-500" />
                 <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">İki Faktörlü Doğrulama</h2>
               </div>
-              <div className="bg-white border border-slate-200 rounded-lg p-4">
+              <div className="bg-white border border-slate-200 rounded-xl p-5">
                 <Form
                   form={twoFactorForm}
                   layout="vertical"
@@ -493,7 +491,7 @@ export default function SecurityPage() {
                 <Clock className="w-4 h-4 text-slate-500" />
                 <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Oturum Yönetimi</h2>
               </div>
-              <div className="bg-white border border-slate-200 rounded-lg p-4">
+              <div className="bg-white border border-slate-200 rounded-xl p-5">
                 <Form
                   form={sessionForm}
                   layout="vertical"
@@ -542,7 +540,7 @@ export default function SecurityPage() {
                 <Key className="w-4 h-4 text-slate-500" />
                 <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">API Güvenliği</h2>
               </div>
-              <div className="bg-white border border-slate-200 rounded-lg p-4">
+              <div className="bg-white border border-slate-200 rounded-xl p-5">
                 <Form
                   form={apiForm}
                   layout="vertical"
@@ -608,12 +606,12 @@ export default function SecurityPage() {
 
         {/* Sticky Save Bar - Bottom */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50">
-          <div className="max-w-6xl mx-auto px-6 py-3">
+          <div className="max-w-6xl mx-auto px-8 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-slate-500">
                 {hasChanges ? (
                   <>
-                    <div className="w-2 h-2 bg-amber-500 rounded-full" />
+                    <div className="w-2 h-2 bg-slate-400 rounded-full" />
                     <span>Kaydedilmemiş değişiklikler var</span>
                   </>
                 ) : (
@@ -629,7 +627,7 @@ export default function SecurityPage() {
                 className={`
                   px-6 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2
                   ${hasChanges
-                    ? 'bg-slate-900 text-white hover:bg-slate-800'
+                    ? '!bg-slate-900 hover:!bg-slate-800 !border-slate-900 text-white'
                     : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                   }
                   disabled:opacity-50

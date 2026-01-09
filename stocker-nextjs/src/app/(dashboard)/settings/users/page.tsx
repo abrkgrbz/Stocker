@@ -2,10 +2,10 @@
 
 /**
  * User Management Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
- * - Clean white cards with subtle borders
- * - Stacked list layout for data
- * - Action buttons only in designated areas
+ * Monochrome Design System - Professional Slate Palette
+ * - Clean white cards with slate borders
+ * - Consistent spacing and typography
+ * - Action buttons with slate-900 primary
  */
 
 import { useState } from 'react';
@@ -58,14 +58,6 @@ import {
   type UpdateUserRequest,
 } from '@/lib/api/users';
 import { getSubscriptionInfo } from '@/lib/api/subscription';
-import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  DataTableWrapper,
-  EmptyState,
-  Badge,
-} from '@/components/ui/enterprise-page';
 
 export default function UsersPage() {
   const router = useRouter();
@@ -312,7 +304,7 @@ export default function UsersPage() {
         <div className="flex items-center gap-3">
           <div
             className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-medium ${
-              record.isActive ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-400'
+              record.isActive ? 'bg-slate-100 text-slate-700' : 'bg-slate-50 text-slate-400'
             }`}
           >
             {record.firstName[0]}{record.lastName[0]}
@@ -344,14 +336,18 @@ export default function UsersPage() {
       render: (roles: string[]) => (
         <div className="flex items-center gap-1 flex-wrap">
           {roles.length === 0 ? (
-            <Badge variant="default">Rol Yok</Badge>
+            <span className="px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-600 rounded">Rol Yok</span>
           ) : (
             <>
-              <Badge variant={roles[0] === 'FirmaYöneticisi' || roles[0] === 'Admin' ? 'error' : 'info'}>
+              <span className={`px-2 py-0.5 text-xs font-medium rounded ${
+                roles[0] === 'FirmaYöneticisi' || roles[0] === 'Admin'
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-slate-200 text-slate-700'
+              }`}>
                 {getRoleLabel(roles[0])}
-              </Badge>
+              </span>
               {roles.length > 1 && (
-                <Badge variant="default">+{roles.length - 1}</Badge>
+                <span className="px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-500 rounded">+{roles.length - 1}</span>
               )}
             </>
           )}
@@ -375,16 +371,18 @@ export default function UsersPage() {
       render: (_, record: UserListItem) => {
         if (record.status === 'PendingActivation') {
           return (
-            <Badge variant="warning">
+            <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-slate-200 text-slate-700 rounded">
               <ClockIcon className="w-3 h-3 mr-1" />
               Davet Bekleniyor
-            </Badge>
+            </span>
           );
         }
         return (
-          <Badge variant={record.isActive ? 'success' : 'default'}>
+          <span className={`px-2 py-0.5 text-xs font-medium rounded ${
+            record.isActive ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'
+          }`}>
             {record.isActive ? 'Aktif' : 'Pasif'}
-          </Badge>
+          </span>
         );
       },
     },
@@ -410,212 +408,219 @@ export default function UsersPage() {
 
   if (error) {
     return (
-      <PageContainer maxWidth="5xl">
-        <Card>
-          <EmptyState
-            icon={<UserIcon className="w-6 h-6" />}
-            title="Hata oluştu"
-            description="Kullanıcılar yüklenirken bir hata oluştu"
-          />
-        </Card>
-      </PageContainer>
+      <div className="min-h-screen bg-slate-50 p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
+            <UserIcon className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Hata oluştu</h3>
+            <p className="text-sm text-slate-500">Kullanıcılar yüklenirken bir hata oluştu</p>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-slate-50 p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+              <UsersIcon className="w-6 h-6 text-white" />
+            </div>
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam</span>
-                {subscriptionInfo && subscriptionInfo.maxUsers < 999999 && (
-                  <Tooltip title={`Paket: ${subscriptionInfo.packageName}`}>
-                    <CrownIcon className="w-3 h-3 text-amber-500" />
-                  </Tooltip>
-                )}
+              <h1 className="text-xl font-semibold text-slate-900">Kullanıcılar</h1>
+              <p className="text-sm text-slate-500">Sistem kullanıcılarını yönetin</p>
+            </div>
+          </div>
+          {isAdmin && (
+            <Tooltip
+              title={subscriptionInfo && !subscriptionInfo.canAddUser && subscriptionInfo.maxUsers < 999999
+                ? 'Kullanıcı limitine ulaşıldı. Paketinizi yükseltin.'
+                : undefined}
+            >
+              <button
+                onClick={handleCreateUser}
+                disabled={subscriptionInfo ? !subscriptionInfo.canAddUser && subscriptionInfo.maxUsers < 999999 : false}
+                className="flex items-center gap-2 px-4 py-2 !bg-slate-900 hover:!bg-slate-800 !border-slate-900 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <PaperAirplaneIcon className="w-4 h-4" />
+                Kullanıcı Davet Et
+              </button>
+            </Tooltip>
+          )}
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam</span>
+                  {subscriptionInfo && subscriptionInfo.maxUsers < 999999 && (
+                    <Tooltip title={`Paket: ${subscriptionInfo.packageName}`}>
+                      <CrownIcon className="w-3 h-3 text-slate-400" />
+                    </Tooltip>
+                  )}
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-2xl font-semibold text-slate-900">
+                    {subscriptionInfo?.currentUserCount ?? stats.total}
+                  </span>
+                  {subscriptionInfo && subscriptionInfo.maxUsers < 999999 && (
+                    <span className="text-sm text-slate-400">/ {subscriptionInfo.maxUsers}</span>
+                  )}
+                </div>
               </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-semibold text-slate-900">
-                  {subscriptionInfo?.currentUserCount ?? stats.total}
-                </span>
-                {subscriptionInfo && subscriptionInfo.maxUsers < 999999 && (
-                  <span className="text-sm text-slate-400">/ {subscriptionInfo.maxUsers}</span>
-                )}
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <UsersIcon className="w-5 h-5 text-slate-600" />
               </div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <UsersIcon className="w-5 h-5" style={{ color: '#3b82f6' }} />
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif</span>
+                <div className="text-2xl font-semibold text-slate-900">{stats.active}</div>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CheckCircleIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs text-slate-500 uppercase tracking-wide">Bekleyen</span>
+                <div className="text-2xl font-semibold text-slate-900">{stats.pending}</div>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ClockIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs text-slate-500 uppercase tracking-wide">Yönetici</span>
+                <div className="text-2xl font-semibold text-slate-900">{stats.admins}</div>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ShieldCheckIcon className="w-5 h-5 text-slate-600" />
+              </div>
             </div>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif</span>
-              <div className="text-2xl font-semibold text-slate-900">{stats.active}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleIcon className="w-5 h-5" style={{ color: '#10b981' }} />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Bekleyen</span>
-              <div className="text-2xl font-semibold text-slate-900">{stats.pending}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-              <ClockIcon className="w-5 h-5" style={{ color: '#f59e0b' }} />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Yönetici</span>
-              <div className="text-2xl font-semibold text-slate-900">{stats.admins}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#0284c715' }}>
-              <ShieldCheckIcon className="w-5 h-5" style={{ color: '#0284c7' }} />
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* User Limit Warning */}
-      {subscriptionInfo && !subscriptionInfo.canAddUser && subscriptionInfo.maxUsers < 999999 && (
-        <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-              <UsersIcon className="w-5 h-5 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-amber-900">Kullanıcı Limitine Ulaşıldı</p>
-              <p className="text-xs text-amber-700">
-                Mevcut paketiniz ({subscriptionInfo.packageName}) en fazla {subscriptionInfo.maxUsers} kullanıcıya izin vermektedir.
-                Daha fazla kullanıcı eklemek için paketinizi yükseltmeniz gerekmektedir.
-              </p>
+        {/* User Limit Warning */}
+        {subscriptionInfo && !subscriptionInfo.canAddUser && subscriptionInfo.maxUsers < 999999 && (
+          <div className="mb-6 bg-slate-100 border border-slate-200 rounded-xl p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+                <UsersIcon className="w-5 h-5 text-slate-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-900">Kullanıcı Limitine Ulaşıldı</p>
+                <p className="text-xs text-slate-600">
+                  Mevcut paketiniz ({subscriptionInfo.packageName}) en fazla {subscriptionInfo.maxUsers} kullanıcıya izin vermektedir.
+                  Daha fazla kullanıcı eklemek için paketinizi yükseltmeniz gerekmektedir.
+                </p>
+              </div>
             </div>
           </div>
+        )}
+
+        {/* Filters */}
+        <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <Input
+                placeholder="Kullanıcı ara..."
+                prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                allowClear
+                className="h-10"
+              />
+            </div>
+            <Select
+              value={filterRole}
+              onChange={setFilterRole}
+              className="w-40 h-10"
+            >
+              <Select.Option value="all">Tüm Roller</Select.Option>
+              <Select.Option value="FirmaYöneticisi">Admin</Select.Option>
+              <Select.Option value="Yönetici">Yönetici</Select.Option>
+              <Select.Option value="Kullanıcı">Kullanıcı</Select.Option>
+            </Select>
+            <Select
+              value={filterStatus}
+              onChange={setFilterStatus}
+              className="w-48 h-10"
+            >
+              <Select.Option value="all">Tüm Durumlar</Select.Option>
+              <Select.Option value="active">Aktif</Select.Option>
+              <Select.Option value="pending">Davet Bekleniyor</Select.Option>
+            </Select>
+          </div>
         </div>
-      )}
 
-      {/* Header */}
-      <ListPageHeader
-        icon={<UserIcon className="w-5 h-5" />}
-        iconColor="#3b82f6"
-        title="Kullanıcılar"
-        description="Sistem kullanıcılarını yönetin"
-        itemCount={filteredUsers.length}
-        primaryAction={
-          isAdmin
-            ? {
-                label: 'Kullanıcı Davet Et',
-                onClick: handleCreateUser,
-                icon: <PaperAirplaneIcon className="w-4 h-4" />,
-                disabled: subscriptionInfo ? !subscriptionInfo.canAddUser && subscriptionInfo.maxUsers < 999999 : false,
-                tooltip: subscriptionInfo && !subscriptionInfo.canAddUser && subscriptionInfo.maxUsers < 999999
-                  ? 'Kullanıcı limitine ulaşıldı. Paketinizi yükseltin.'
-                  : undefined,
-              }
-            : undefined
-        }
-      />
-
-      {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex-1 min-w-[200px]">
-            <Input
-              placeholder="Kullanıcı ara..."
-              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              allowClear
-              className="h-10"
+        {/* Data Table */}
+        {isLoading ? (
+          <div className="bg-white border border-slate-200 rounded-xl">
+            <div className="flex items-center justify-center py-12">
+              <Spinner size="lg" />
+            </div>
+          </div>
+        ) : filteredUsers.length === 0 ? (
+          <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
+            <UserIcon className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Kullanıcı bulunamadı</h3>
+            <p className="text-sm text-slate-500 mb-4">Arama kriterlerinizi değiştirmeyi deneyin</p>
+            {isAdmin && (
+              <button
+                onClick={handleCreateUser}
+                className="px-4 py-2 !bg-slate-900 hover:!bg-slate-800 !border-slate-900 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                Kullanıcı Oluştur
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+            <Table
+              columns={columns}
+              dataSource={filteredUsers}
+              rowKey="id"
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showTotal: (total) => (
+                  <span className="text-sm text-slate-500">Toplam {total} kullanıcı</span>
+                ),
+              }}
+              onRow={(record) => ({
+                onClick: () => handleViewDetails(record.id),
+                className: 'cursor-pointer hover:bg-slate-50',
+              })}
+              className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
             />
           </div>
-          <Select
-            value={filterRole}
-            onChange={setFilterRole}
-            className="w-40 h-10"
-          >
-            <Select.Option value="all">Tüm Roller</Select.Option>
-            <Select.Option value="FirmaYöneticisi">Admin</Select.Option>
-            <Select.Option value="Yönetici">Yönetici</Select.Option>
-            <Select.Option value="Kullanıcı">Kullanıcı</Select.Option>
-          </Select>
-          <Select
-            value={filterStatus}
-            onChange={setFilterStatus}
-            className="w-48 h-10"
-          >
-            <Select.Option value="all">Tüm Durumlar</Select.Option>
-            <Select.Option value="active">Aktif</Select.Option>
-            <Select.Option value="pending">Davet Bekleniyor</Select.Option>
-          </Select>
-        </div>
+        )}
+
+        {/* Modals */}
+        <UserModal
+          open={modalOpen}
+          user={editingUser as any}
+          onClose={() => {
+            setModalOpen(false);
+            setEditingUser(null);
+          }}
+          onSubmit={handleSubmitUser}
+        />
       </div>
-
-      {/* Data Table */}
-      {isLoading ? (
-        <Card>
-          <div className="flex items-center justify-center py-12">
-            <Spinner size="lg" />
-          </div>
-        </Card>
-      ) : filteredUsers.length === 0 ? (
-        <Card>
-          <EmptyState
-            icon={<UserIcon className="w-6 h-6" />}
-            title="Kullanıcı bulunamadı"
-            description="Arama kriterlerinizi değiştirmeyi deneyin"
-            action={
-              isAdmin
-                ? {
-                    label: 'Kullanıcı Oluştur',
-                    onClick: handleCreateUser,
-                  }
-                : undefined
-            }
-          />
-        </Card>
-      ) : (
-        <DataTableWrapper>
-          <Table
-            columns={columns}
-            dataSource={filteredUsers}
-            rowKey="id"
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showTotal: (total) => (
-                <span className="text-sm text-slate-500">Toplam {total} kullanıcı</span>
-              ),
-            }}
-            onRow={(record) => ({
-              onClick: () => handleViewDetails(record.id),
-              className: 'cursor-pointer hover:bg-slate-50',
-            })}
-            className="enterprise-table"
-          />
-        </DataTableWrapper>
-      )}
-
-      {/* Modals */}
-      <UserModal
-        open={modalOpen}
-        user={editingUser as any}
-        onClose={() => {
-          setModalOpen(false);
-          setEditingUser(null);
-        }}
-        onSubmit={handleSubmitUser}
-      />
-    </PageContainer>
+    </div>
   );
 }

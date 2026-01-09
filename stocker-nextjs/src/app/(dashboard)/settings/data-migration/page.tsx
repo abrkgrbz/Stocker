@@ -224,56 +224,57 @@ export default function DataMigrationPage() {
   const currentStepIndex = STEPS.findIndex(s => s.id === currentStep);
 
   return (
-      <div className="min-h-screen bg-slate-50">
-        {/* Header */}
-        <div className="bg-white border-b border-slate-200">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => showSessionList ? router.back() : setShowSessionList(true)}
-                  className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                </button>
-                <div>
-                  <h1 className="text-lg font-semibold text-slate-900">Veri Aktarımı</h1>
-                  <p className="text-sm text-slate-500">
-                    {showSessionList
-                      ? 'Harici ERP/CRM sistemlerinden veri aktarın'
-                      : `Adım ${currentStepIndex + 1}/${STEPS.length}: ${STEPS[currentStepIndex].label}`
-                    }
-                  </p>
-                </div>
+      <div className="min-h-screen bg-slate-50 p-8">
+        {/* Header with Icon */}
+        <div className="max-w-7xl mx-auto mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => showSessionList ? router.back() : setShowSessionList(true)}
+                className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+                <FileSpreadsheet className="w-6 h-6 text-white" />
               </div>
+              <div>
+                <h1 className="text-xl font-semibold text-slate-900">Veri Aktarimi</h1>
+                <p className="text-sm text-slate-500">
+                  {showSessionList
+                    ? 'Harici ERP/CRM sistemlerinden veri aktarin'
+                    : `Adim ${currentStepIndex + 1}/${STEPS.length}: ${STEPS[currentStepIndex].label}`
+                  }
+                </p>
+              </div>
+            </div>
 
-              {/* Actions */}
-              <div className="flex items-center gap-2">
-                {showSessionList && (
-                  <>
-                    <button
-                      onClick={() => refetchSessions()}
-                      className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
-                      title="Yenile"
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={handleStartNew}
-                      className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-md hover:bg-slate-800 transition-colors"
-                    >
-                      <FileSpreadsheet className="w-4 h-4" />
-                      Yeni Aktarım
-                    </button>
-                  </>
-                )}
-              </div>
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+              {showSessionList && (
+                <>
+                  <button
+                    onClick={() => refetchSessions()}
+                    className="p-2 text-slate-500 hover:text-slate-700 hover:bg-white border border-slate-200 rounded-lg transition-colors"
+                    title="Yenile"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={handleStartNew}
+                    className="flex items-center gap-2 px-4 py-2 !bg-slate-900 hover:!bg-slate-800 !border-slate-900 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    <FileSpreadsheet className="w-4 h-4" />
+                    Yeni Aktarim
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="max-w-7xl mx-auto">
           {showSessionList ? (
             // Session List View
             <div className="space-y-6">
@@ -283,7 +284,7 @@ export default function DataMigrationPage() {
                 </div>
               ) : sessionsError || !sessions || sessions.length === 0 ? (
                 // Empty State - show when error or no sessions
-                <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
+                <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
                   <FileSpreadsheet className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                   <h3 className="text-sm font-medium text-slate-900 mb-1">Henüz Aktarım Yok</h3>
                   <p className="text-xs text-slate-500 mb-4">
@@ -303,7 +304,7 @@ export default function DataMigrationPage() {
                   {activeSessions.length > 0 && (
                     <div>
                       <h2 className="text-sm font-medium text-slate-900 mb-3">Devam Eden Aktarımlar</h2>
-                      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+                      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
                         <div className="divide-y divide-slate-100">
                           {activeSessions.map((session) => {
                             const StatusIcon = getStatusIcon(session.status);
@@ -314,8 +315,8 @@ export default function DataMigrationPage() {
                                 className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors"
                               >
                                 <div className="flex items-center gap-3">
-                                  <div className="p-2 bg-blue-50 rounded-lg">
-                                    <FileSpreadsheet className="w-5 h-5 text-blue-600" />
+                                  <div className="p-2 bg-blue-50 rounded-xl">
+                                    <FileSpreadsheet className="w-5 h-5 text-slate-600" />
                                   </div>
                                   <div>
                                     <p className="text-sm font-medium text-slate-900">{session.sourceName}</p>
@@ -331,7 +332,7 @@ export default function DataMigrationPage() {
                                   </span>
                                   <button
                                     onClick={() => handleContinueSession(session)}
-                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
+                                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-slate-100 rounded-xl transition-colors"
                                   >
                                     Devam Et
                                     <ChevronRight className="w-4 h-4" />
@@ -349,7 +350,7 @@ export default function DataMigrationPage() {
                   {completedSessions.length > 0 && (
                     <div>
                       <h2 className="text-sm font-medium text-slate-900 mb-3">Tamamlanan Aktarımlar</h2>
-                      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+                      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
                         <div className="divide-y divide-slate-100">
                           {completedSessions.slice(0, 10).map((session) => {
                             const StatusIcon = getStatusIcon(session.status);
@@ -361,12 +362,12 @@ export default function DataMigrationPage() {
                               >
                                 <div className="flex items-center gap-3">
                                   <div className={`p-2 rounded-lg ${
-                                    session.status === 'Completed' ? 'bg-emerald-50' :
-                                    session.status === 'Failed' ? 'bg-red-50' : 'bg-slate-50'
+                                    session.status === 'Completed' ? 'bg-slate-100' :
+                                    session.status === 'Failed' ? 'bg-slate-200' : 'bg-slate-50'
                                   }`}>
                                     <FileSpreadsheet className={`w-5 h-5 ${
-                                      session.status === 'Completed' ? 'text-emerald-600' :
-                                      session.status === 'Failed' ? 'text-red-600' : 'text-slate-400'
+                                      session.status === 'Completed' ? 'text-slate-700' :
+                                      session.status === 'Failed' ? 'text-slate-900' : 'text-slate-400'
                                     }`} />
                                   </div>
                                   <div>
@@ -393,7 +394,7 @@ export default function DataMigrationPage() {
                                   </button>
                                   <button
                                     onClick={() => handleDeleteSession(sessionKey || '')}
-                                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                    className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors"
                                     title="Sil"
                                   >
                                     <Trash2 className="w-4 h-4" />
@@ -413,7 +414,7 @@ export default function DataMigrationPage() {
             // Wizard View
             <div className="space-y-6">
               {/* Step Progress */}
-              <div className="bg-white border border-slate-200 rounded-lg p-4">
+              <div className="bg-white border border-slate-200 rounded-xl p-5">
                 <div className="flex items-center justify-between">
                   {STEPS.map((step, index) => {
                     const isActive = step.id === currentStep;
@@ -428,7 +429,7 @@ export default function DataMigrationPage() {
                               isActive
                                 ? 'bg-slate-900 border-slate-900 text-white'
                                 : isCompleted
-                                  ? 'bg-emerald-500 border-emerald-500 text-white'
+                                  ? 'bg-slate-600 border-slate-600 text-white'
                                   : 'bg-white border-slate-200 text-slate-400'
                             }`}
                           >
@@ -448,7 +449,7 @@ export default function DataMigrationPage() {
                         {index < STEPS.length - 1 && (
                           <div
                             className={`flex-1 h-0.5 mx-4 ${
-                              isCompleted ? 'bg-emerald-500' : 'bg-slate-200'
+                              isCompleted ? 'bg-slate-600' : 'bg-slate-200'
                             }`}
                           />
                         )}
@@ -459,7 +460,7 @@ export default function DataMigrationPage() {
               </div>
 
               {/* Step Content */}
-              <div className="bg-white border border-slate-200 rounded-lg">
+              <div className="bg-white border border-slate-200 rounded-xl">
                 {sessionLoading ? (
                   <div className="flex items-center justify-center py-20">
                     <Spinner size="lg" />

@@ -2,16 +2,17 @@
 
 /**
  * General Settings Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
- * - Clean white cards with subtle borders
- * - Sticky action bar at bottom
- * - Minimal accent colors
+ * Monochrome Design System - Slate-based color palette
+ * - Page wrapper: min-h-screen bg-slate-50 p-8
+ * - Header icon: w-12 h-12 rounded-xl bg-slate-900 with white icon
+ * - Cards: bg-white border border-slate-200 rounded-xl
+ * - Primary button: bg-slate-900 hover:bg-slate-800
  */
 
 import { Form, Input, Switch } from 'antd';
 import {
   ArrowLeftIcon,
-  AdjustmentsHorizontalIcon,
+  Cog6ToothIcon,
   GlobeAltIcon,
   BellIcon,
 } from '@heroicons/react/24/outline';
@@ -65,27 +66,26 @@ export default function GeneralSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
-      {/* Minimal Header */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-5xl mx-auto px-6 py-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.back()}
-              className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
-            >
-              <ArrowLeftIcon className="w-4 h-4" />
-            </button>
-            <div>
-              <h1 className="text-lg font-semibold text-slate-900">Genel Ayarlar</h1>
-              <p className="text-sm text-slate-500">Şirket bilgileri ve sistem ayarlarını yapılandırın</p>
-            </div>
+    <div className="min-h-screen bg-slate-50 p-8 pb-24">
+      <div className="max-w-5xl mx-auto">
+        {/* Header with Monochrome Icon */}
+        <div className="flex items-center gap-4 mb-8">
+          <button
+            onClick={() => router.back()}
+            className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            <ArrowLeftIcon className="w-5 h-5" />
+          </button>
+          <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+            <Cog6ToothIcon className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold text-slate-900">Genel Ayarlar</h1>
+            <p className="text-sm text-slate-500">Şirket bilgileri ve sistem ayarlarını yapılandırın</p>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-5xl mx-auto px-6 py-8">
+        {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Settings Form */}
           <div className="lg:col-span-2 space-y-6">
@@ -95,9 +95,9 @@ export default function GeneralSettingsPage() {
               onFinish={handleSave}
             >
               {/* Company Info Section */}
-              <section>
+              <section className="mb-6">
                 <h2 className="text-sm font-medium text-slate-900 mb-4">Şirket Bilgileri</h2>
-                <div className="bg-white border border-slate-200 rounded-lg p-6">
+                <div className="bg-white border border-slate-200 rounded-xl p-6">
                   <Form.Item
                     name="companyName"
                     label={<span className="text-sm text-slate-600">Şirket Adı</span>}
@@ -110,9 +110,9 @@ export default function GeneralSettingsPage() {
               </section>
 
               {/* Regional Settings Section */}
-              <section>
+              <section className="mb-6">
                 <h2 className="text-sm font-medium text-slate-900 mb-4">Bölgesel Ayarlar</h2>
-                <div className="bg-white border border-slate-200 rounded-lg p-6">
+                <div className="bg-white border border-slate-200 rounded-xl p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Form.Item
                       name="timezone"
@@ -158,16 +158,13 @@ export default function GeneralSettingsPage() {
               </section>
 
               {/* Notification Settings Section */}
-              <section>
+              <section className="mb-6">
                 <h2 className="text-sm font-medium text-slate-900 mb-4">Bildirim Tercihleri</h2>
-                <div className="bg-white border border-slate-200 rounded-lg p-6">
+                <div className="bg-white border border-slate-200 rounded-xl p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center"
-                        style={{ backgroundColor: '#3b82f615' }}
-                      >
-                        <BellIcon className="w-5 h-5" style={{ color: '#3b82f6' }} />
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <BellIcon className="w-5 h-5 text-slate-600" />
                       </div>
                       <div>
                         <span className="text-sm font-medium text-slate-900 block">E-posta Bildirimleri</span>
@@ -201,24 +198,24 @@ export default function GeneralSettingsPage() {
 
       {/* Sticky Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50">
-        <div className="max-w-5xl mx-auto px-6 py-4">
+        <div className="max-w-5xl mx-auto px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-slate-500">
-              <AdjustmentsHorizontalIcon className="w-4 h-4" />
+              <Cog6ToothIcon className="w-4 h-4" />
               <span>Genel sistem ayarları</span>
             </div>
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => router.push('/settings')}
-                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
               >
                 Vazgeç
               </button>
               <button
                 type="button"
                 onClick={() => form.submit()}
-                className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
               >
                 Kaydet
               </button>

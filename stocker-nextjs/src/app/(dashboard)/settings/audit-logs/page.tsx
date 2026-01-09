@@ -2,7 +2,7 @@
 
 /**
  * Audit Logs Page
- * Corporate Professional Design - Monochrome Palette
+ * Monochrome Design System - Professional Slate Palette
  * - Compact stat cards with real-time updates
  * - Dense data table with filtering
  * - Slide-over detail panel
@@ -49,13 +49,28 @@ const getEventIcon = (event: string) => {
   return Activity;
 };
 
-// Event type badge color
+// Event type badge color - monochrome variations
 const getEventBadgeStyle = (event: string) => {
   const eventLower = event.toLowerCase();
-  if (eventLower.includes('fail') || eventLower.includes('error')) return 'bg-red-50 text-red-700 border-red-200';
-  if (eventLower.includes('success')) return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-  if (eventLower.includes('warning') || eventLower.includes('block')) return 'bg-amber-50 text-amber-700 border-amber-200';
-  return 'bg-slate-50 text-slate-600 border-slate-200';
+  if (eventLower.includes('fail') || eventLower.includes('error')) return 'bg-slate-900 text-white';
+  if (eventLower.includes('success')) return 'bg-slate-200 text-slate-700';
+  if (eventLower.includes('warning') || eventLower.includes('block')) return 'bg-slate-300 text-slate-800';
+  return 'bg-slate-100 text-slate-600';
+};
+
+// Risk level colors - monochrome
+const getMonochromeRiskColor = (level: string) => {
+  switch (level?.toLowerCase()) {
+    case 'critical':
+    case 'high':
+      return 'bg-slate-900 text-white';
+    case 'medium':
+      return 'bg-slate-400 text-white';
+    case 'low':
+      return 'bg-slate-200 text-slate-700';
+    default:
+      return 'bg-slate-100 text-slate-500';
+  }
 };
 
 // Date filter options
@@ -133,9 +148,9 @@ export default function AuditLogsPage() {
   return (
     <AdminOnly
       fallback={
-        <div className="min-h-screen bg-slate-50 p-6">
+        <div className="min-h-screen bg-slate-50 p-8">
           <div className="max-w-6xl mx-auto">
-            <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
+            <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
               <AlertCircle className="w-12 h-12 text-slate-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-slate-900 mb-2">Yetkisiz Erişim</h3>
               <p className="text-sm text-slate-500">
@@ -146,84 +161,90 @@ export default function AuditLogsPage() {
         </div>
       }
     >
-      <div className="min-h-screen bg-slate-50">
-        {/* Minimal Header */}
-        <div className="bg-white border-b border-slate-200">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => router.back()}
-                  className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                </button>
-                <div>
-                  <h1 className="text-lg font-semibold text-slate-900">Denetim Günlükleri</h1>
-                  <p className="text-sm text-slate-500">Sistem aktivitelerini izleyin</p>
-                </div>
+      <div className="min-h-screen bg-slate-50 p-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.back()}
+                className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+                <FileText className="w-6 h-6 text-white" />
               </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => refetch()}
-                  disabled={isRefetching}
-                  className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
-                  title="Yenile"
-                >
-                  <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
-                </button>
-                <button
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
-                  title="CSV İndir"
-                >
-                  <Download className="w-4 h-4" />
-                  <span className="hidden sm:inline">Dışa Aktar</span>
-                </button>
+              <div>
+                <h1 className="text-xl font-semibold text-slate-900">Denetim Günlükleri</h1>
+                <p className="text-sm text-slate-500">Sistem aktivitelerini izleyin</p>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          {/* Stats Cards - Compact */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            <div className="bg-white border border-slate-200 rounded-lg p-4">
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => refetch()}
+                disabled={isRefetching}
+                className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                title="Yenile"
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
+              </button>
+              <button
+                className="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                title="CSV İndir"
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden sm:inline">Dışa Aktar</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Toplam Olay</span>
-                <Activity className="w-4 h-4 text-slate-400" />
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <Activity className="w-4 h-4 text-slate-600" />
+                </div>
               </div>
               <div className="text-2xl font-semibold text-slate-900">
                 {statsLoading ? '...' : (statistics?.totalEvents ?? 0).toLocaleString('tr-TR')}
               </div>
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-lg p-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Başarısız Giriş</span>
-                <XCircle className="w-4 h-4 text-red-400" />
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <XCircle className="w-4 h-4 text-slate-600" />
+                </div>
               </div>
               <div className="text-2xl font-semibold text-slate-900">
                 {statsLoading ? '...' : (statistics?.failedLogins ?? 0).toLocaleString('tr-TR')}
               </div>
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-lg p-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Benzersiz Kullanıcı</span>
-                <Users className="w-4 h-4 text-slate-400" />
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <Users className="w-4 h-4 text-slate-600" />
+                </div>
               </div>
               <div className="text-2xl font-semibold text-slate-900">
                 {statsLoading ? '...' : (statistics?.uniqueUsers ?? 0).toLocaleString('tr-TR')}
               </div>
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-lg p-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Engellenen</span>
-                <Ban className="w-4 h-4 text-amber-400" />
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <Ban className="w-4 h-4 text-slate-600" />
+                </div>
               </div>
               <div className="text-2xl font-semibold text-slate-900">
                 {statsLoading ? '...' : (statistics?.blockedEvents ?? 0).toLocaleString('tr-TR')}
@@ -232,7 +253,7 @@ export default function AuditLogsPage() {
           </div>
 
           {/* Filters Bar */}
-          <div className="bg-white border border-slate-200 rounded-lg p-4 mb-4">
+          <div className="bg-white border border-slate-200 rounded-xl p-4 mb-4">
             <div className="flex flex-col sm:flex-row gap-3">
               {/* Search */}
               <div className="relative flex-1">
@@ -245,7 +266,7 @@ export default function AuditLogsPage() {
                     setSearchTerm(e.target.value);
                     setPage(1);
                   }}
-                  className="w-full h-9 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                  className="w-full h-10 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                 />
               </div>
 
@@ -258,7 +279,7 @@ export default function AuditLogsPage() {
                     setDateFilter(e.target.value);
                     setPage(1);
                   }}
-                  className="h-9 px-3 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  className="h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900"
                 >
                   {dateFilters.map((df) => (
                     <option key={df.value} value={df.value}>
@@ -271,7 +292,7 @@ export default function AuditLogsPage() {
           </div>
 
           {/* Logs Table */}
-          <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             {isLoading ? (
               <div className="flex items-center justify-center py-20">
                 <Spinner size="lg" />
@@ -307,11 +328,11 @@ export default function AuditLogsPage() {
                         {/* Event */}
                         <div className="md:col-span-3 flex items-center gap-2">
                           <IconComponent className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                          <span className={`px-2 py-0.5 text-xs font-medium rounded border ${getEventBadgeStyle(log.event)}`}>
+                          <span className={`px-2 py-0.5 text-xs font-medium rounded ${getEventBadgeStyle(log.event)}`}>
                             {getEventLabel(log.event)}
                           </span>
                           {log.blocked && (
-                            <span className="px-1.5 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded">
+                            <span className="px-1.5 py-0.5 text-xs font-medium bg-slate-900 text-white rounded">
                               Engellendi
                             </span>
                           )}
@@ -332,7 +353,7 @@ export default function AuditLogsPage() {
                         {/* Risk Level */}
                         <div className="md:col-span-2 flex items-center gap-2">
                           {log.riskLevel ? (
-                            <span className={`px-2 py-0.5 text-xs font-medium rounded border ${getRiskLevelColor(log.riskLevel)}`}>
+                            <span className={`px-2 py-0.5 text-xs font-medium rounded ${getMonochromeRiskColor(log.riskLevel)}`}>
                               {getRiskLevelLabel(log.riskLevel)}
                               {log.riskScore !== undefined && ` (${log.riskScore})`}
                             </span>
@@ -365,7 +386,7 @@ export default function AuditLogsPage() {
                     <button
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page === 1}
-                      className="px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Önceki
                     </button>
@@ -375,7 +396,7 @@ export default function AuditLogsPage() {
                     <button
                       onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                       disabled={page === totalPages}
-                      className="px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Sonraki
                     </button>
@@ -403,7 +424,7 @@ export default function AuditLogsPage() {
                   <h2 className="text-lg font-semibold text-slate-900">Olay Detayı</h2>
                   <button
                     onClick={() => setSelectedLog(null)}
-                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md"
+                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -413,7 +434,7 @@ export default function AuditLogsPage() {
                 <div className="flex-1 overflow-y-auto p-6 space-y-6">
                   {/* Event Info */}
                   <div>
-                    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md border ${getEventBadgeStyle(selectedLog.event)}`}>
+                    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg ${getEventBadgeStyle(selectedLog.event)}`}>
                       {(() => {
                         const IconComponent = getEventIcon(selectedLog.event);
                         return <IconComponent className="w-4 h-4" />;
@@ -421,7 +442,7 @@ export default function AuditLogsPage() {
                       <span className="text-sm font-medium">{getEventLabel(selectedLog.event)}</span>
                     </div>
                     {selectedLog.blocked && (
-                      <span className="ml-2 px-2 py-1 text-xs font-medium bg-red-100 text-red-700 rounded">
+                      <span className="ml-2 px-2 py-1 text-xs font-medium bg-slate-900 text-white rounded">
                         Engellendi
                       </span>
                     )}
@@ -449,7 +470,7 @@ export default function AuditLogsPage() {
                         <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Risk Seviyesi</label>
                         <div className="mt-1">
                           {selectedLog.riskLevel ? (
-                            <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded border ${getRiskLevelColor(selectedLog.riskLevel)}`}>
+                            <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${getMonochromeRiskColor(selectedLog.riskLevel)}`}>
                               {getRiskLevelLabel(selectedLog.riskLevel)}
                               {selectedLog.riskScore !== undefined && ` (${selectedLog.riskScore})`}
                             </span>
@@ -478,19 +499,14 @@ export default function AuditLogsPage() {
 
                   {/* Risk Score Visualization */}
                   {selectedLog.riskScore !== undefined && (
-                    <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="bg-slate-50 rounded-xl p-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-slate-700">Risk Skoru</span>
                         <span className="text-lg font-bold text-slate-900">{selectedLog.riskScore}/100</span>
                       </div>
                       <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full transition-all ${
-                            selectedLog.riskScore >= 80 ? 'bg-red-500' :
-                            selectedLog.riskScore >= 60 ? 'bg-orange-500' :
-                            selectedLog.riskScore >= 40 ? 'bg-amber-500' :
-                            'bg-emerald-500'
-                          }`}
+                          className="h-full rounded-full transition-all bg-slate-900"
                           style={{ width: `${selectedLog.riskScore}%` }}
                         />
                       </div>

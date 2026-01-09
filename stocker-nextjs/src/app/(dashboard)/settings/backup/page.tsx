@@ -197,9 +197,9 @@ export default function BackupPage() {
   return (
     <AdminOnly
       fallback={
-        <div className="min-h-screen bg-slate-50 p-6">
+        <div className="min-h-screen bg-slate-50 p-8">
           <div className="max-w-6xl mx-auto">
-            <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
+            <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
               <AlertCircle className="w-12 h-12 text-slate-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-slate-900 mb-2">Yetkisiz Erişim</h3>
               <p className="text-sm text-slate-500">
@@ -210,84 +210,85 @@ export default function BackupPage() {
         </div>
       }
     >
-      <div className="min-h-screen bg-slate-50">
-        {/* Minimal Header */}
-        <div className="bg-white border-b border-slate-200">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => router.back()}
-                  className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                </button>
-                <div>
-                  <h1 className="text-lg font-semibold text-slate-900">Yedekleme ve Geri Yükleme</h1>
-                  <p className="text-sm text-slate-500">Veri yedekleme ve kurtarma işlemleri</p>
-                </div>
+      <div className="min-h-screen bg-slate-50 p-8">
+        {/* Header with Icon */}
+        <div className="max-w-7xl mx-auto mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.back()}
+                className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+                <Database className="w-6 h-6 text-white" />
               </div>
+              <div>
+                <h1 className="text-xl font-semibold text-slate-900">Yedekleme ve Geri Yukleme</h1>
+                <p className="text-sm text-slate-500">Veri yedekleme ve kurtarma islemleri</p>
+              </div>
+            </div>
 
-              {/* Actions */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => refetch()}
-                  disabled={isRefetching}
-                  className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
-                  title="Yenile"
-                >
-                  <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
-                </button>
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-md hover:bg-slate-800 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Yeni Yedek
-                </button>
-              </div>
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => refetch()}
+                disabled={isRefetching}
+                className="p-2 text-slate-500 hover:text-slate-700 hover:bg-white border border-slate-200 rounded-lg transition-colors"
+                title="Yenile"
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
+              </button>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-2 px-4 py-2 !bg-slate-900 hover:!bg-slate-800 !border-slate-900 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Yeni Yedek
+              </button>
             </div>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="max-w-7xl mx-auto">
           {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            <div className="bg-white border border-slate-200 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Toplam Yedek</span>
-                <FileArchive className="w-4 h-4 text-slate-400" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Toplam Yedek</span>
+                <div className="p-2 bg-slate-100 rounded-lg"><FileArchive className="w-4 h-4 text-slate-600" /></div>
               </div>
               <div className="text-2xl font-semibold text-slate-900">
                 {statsLoading ? '...' : (statistics?.totalBackups ?? 0)}
               </div>
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Tamamlanan</span>
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Tamamlanan</span>
+                <div className="p-2 bg-slate-100 rounded-lg"><CheckCircle2 className="w-4 h-4 text-slate-600" /></div>
               </div>
               <div className="text-2xl font-semibold text-slate-900">
                 {statsLoading ? '...' : (statistics?.completedBackups ?? 0)}
               </div>
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Toplam Boyut</span>
-                <HardDrive className="w-4 h-4 text-slate-400" />
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Toplam Boyut</span>
+                <div className="p-2 bg-slate-100 rounded-lg"><HardDrive className="w-4 h-4 text-slate-600" /></div>
               </div>
               <div className="text-2xl font-semibold text-slate-900">
                 {statsLoading ? '...' : (statistics?.totalSizeFormatted || formatBytes(statistics?.totalSizeBytes ?? 0))}
               </div>
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Son Yedek</span>
-                <Calendar className="w-4 h-4 text-slate-400" />
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Son Yedek</span>
+                <div className="p-2 bg-slate-100 rounded-lg"><Calendar className="w-4 h-4 text-slate-600" /></div>
               </div>
               <div className="text-sm font-medium text-slate-900">
                 {statsLoading ? '...' : (statistics?.lastBackupDate
@@ -328,7 +329,7 @@ export default function BackupPage() {
           {activeTab === 'backups' && (
           <>
           {/* Search and Filters */}
-          <div className="bg-white border border-slate-200 rounded-lg mb-4">
+          <div className="bg-white border border-slate-200 rounded-xl mb-4">
             <div className="p-4">
               <div className="flex items-center gap-3">
                 {/* Search Input */}
@@ -342,7 +343,7 @@ export default function BackupPage() {
                       setPage(1);
                     }}
                     placeholder="Yedek adı veya açıklama ara..."
-                    className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                    className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                   />
                 </div>
 
@@ -369,7 +370,7 @@ export default function BackupPage() {
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className="flex items-center gap-1 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+                    className="flex items-center gap-1 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
                   >
                     <X className="w-4 h-4" />
                     Temizle
@@ -382,7 +383,7 @@ export default function BackupPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-slate-200">
                   {/* Status Filter */}
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-medium text-slate-500 uppercase tracking-widerr mb-1">
                       Durum
                     </label>
                     <select
@@ -391,7 +392,7 @@ export default function BackupPage() {
                         setStatusFilter(e.target.value);
                         setPage(1);
                       }}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
                     >
                       <option value="">Tümü</option>
                       <option value="Completed">Tamamlandı</option>
@@ -403,7 +404,7 @@ export default function BackupPage() {
 
                   {/* Type Filter */}
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-medium text-slate-500 uppercase tracking-widerr mb-1">
                       Tür
                     </label>
                     <select
@@ -412,7 +413,7 @@ export default function BackupPage() {
                         setTypeFilter(e.target.value);
                         setPage(1);
                       }}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
                     >
                       <option value="">Tümü</option>
                       <option value="Full">Tam Yedek</option>
@@ -423,7 +424,7 @@ export default function BackupPage() {
 
                   {/* From Date */}
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-medium text-slate-500 uppercase tracking-widerr mb-1">
                       Başlangıç Tarihi
                     </label>
                     <input
@@ -433,13 +434,13 @@ export default function BackupPage() {
                         setFromDate(e.target.value);
                         setPage(1);
                       }}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
                     />
                   </div>
 
                   {/* To Date */}
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-medium text-slate-500 uppercase tracking-widerr mb-1">
                       Bitiş Tarihi
                     </label>
                     <input
@@ -449,7 +450,7 @@ export default function BackupPage() {
                         setToDate(e.target.value);
                         setPage(1);
                       }}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
                     />
                   </div>
                 </div>
@@ -497,7 +498,7 @@ export default function BackupPage() {
           </div>
 
           {/* Backups Table */}
-          <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             {isLoading ? (
               <div className="flex items-center justify-center py-20">
                 <Spinner size="lg" />
@@ -516,7 +517,7 @@ export default function BackupPage() {
                 {hasActiveFilters ? (
                   <button
                     onClick={clearFilters}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-slate-700 border border-slate-300 text-sm font-medium rounded-md hover:bg-slate-50 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-slate-700 border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors"
                   >
                     <X className="w-4 h-4" />
                     Filtreleri Temizle
@@ -524,7 +525,7 @@ export default function BackupPage() {
                 ) : (
                   <button
                     onClick={() => setShowCreateModal(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-md hover:bg-slate-800 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                     İlk Yedeği Oluştur
@@ -534,7 +535,7 @@ export default function BackupPage() {
             ) : (
               <>
                 {/* Table Header */}
-                <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 bg-slate-50 border-b border-slate-200 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 bg-slate-50 border-b border-slate-200 text-xs font-medium text-slate-500 uppercase tracking-widerr">
                   <div className="col-span-3">Yedek Adı</div>
                   <div className="col-span-2">Tür</div>
                   <div className="col-span-2">Durum</div>
@@ -576,10 +577,10 @@ export default function BackupPage() {
                         {/* Status */}
                         <div className="md:col-span-2 flex items-center gap-2">
                           <StatusIcon className={`w-4 h-4 ${
-                            backup.status === 'Completed' ? 'text-emerald-500' :
-                            backup.status === 'Failed' ? 'text-red-500' :
-                            backup.status === 'InProgress' ? 'text-blue-500' :
-                            'text-amber-500'
+                            backup.status === 'Completed' ? 'text-slate-600' :
+                            backup.status === 'Failed' ? 'text-slate-900' :
+                            backup.status === 'InProgress' ? 'text-slate-500' :
+                            'text-slate-400'
                           }`} />
                           <span className={`px-2 py-0.5 text-xs font-medium rounded border ${getStatusColor(backup.status)}`}>
                             {getStatusLabel(backup.status)}
@@ -612,7 +613,7 @@ export default function BackupPage() {
                             <button
                               onClick={() => handleDownload(backup)}
                               disabled={downloadBackup.isPending}
-                              className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors disabled:opacity-50"
+                              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors disabled:opacity-50"
                               title="İndir"
                             >
                               <Download className="w-4 h-4" />
@@ -621,7 +622,7 @@ export default function BackupPage() {
                           {backup.isRestorable && (
                             <button
                               onClick={() => setShowRestoreModal(backup)}
-                              className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors"
                               title="Geri Yükle"
                             >
                               <RotateCcw className="w-4 h-4" />
@@ -630,7 +631,7 @@ export default function BackupPage() {
                           {backup.status === 'Completed' && (
                             <button
                               onClick={() => setShowDeleteModal(backup)}
-                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                              className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors"
                               title="Sil"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -708,7 +709,7 @@ export default function BackupPage() {
                       value={createForm.backupName}
                       onChange={(e) => setCreateForm({ ...createForm, backupName: e.target.value })}
                       placeholder="Örn: Günlük Yedek 27.12.2024"
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                     />
                   </div>
 
@@ -720,7 +721,7 @@ export default function BackupPage() {
                     <select
                       value={createForm.backupType}
                       onChange={(e) => setCreateForm({ ...createForm, backupType: e.target.value as 'Full' | 'Incremental' | 'Differential' })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
                     >
                       <option value="Full">Tam Yedek</option>
                       <option value="Incremental">Artımlı</option>
@@ -805,7 +806,7 @@ export default function BackupPage() {
                       onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
                       placeholder="İsteğe bağlı açıklama..."
                       rows={2}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent resize-none"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent resize-none"
                     />
                   </div>
                 </div>
@@ -814,14 +815,14 @@ export default function BackupPage() {
                 <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
                   <button
                     onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
                   >
                     İptal
                   </button>
                   <button
                     onClick={handleCreateBackup}
                     disabled={!createForm.backupName.trim() || createBackup.isPending}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-md hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {createBackup.isPending ? (
                       <>
@@ -848,15 +849,15 @@ export default function BackupPage() {
               <div className="fixed inset-0 bg-black/30" onClick={() => setShowRestoreModal(null)} />
               <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6">
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 p-2 bg-amber-100 rounded-full">
-                    <AlertTriangle className="w-6 h-6 text-amber-600" />
+                  <div className="flex-shrink-0 p-2 bg-slate-200 rounded-full">
+                    <AlertTriangle className="w-6 h-6 text-slate-700" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-slate-900">Geri Yüklemeyi Onayla</h3>
                     <p className="mt-2 text-sm text-slate-600">
                       <strong>{showRestoreModal.backupName}</strong> yedeğinden geri yükleme yapmak istediğinizden emin misiniz?
                     </p>
-                    <p className="mt-2 text-sm text-red-600">
+                    <p className="mt-2 text-sm text-slate-900">
                       Bu işlem mevcut verilerin üzerine yazacaktır!
                     </p>
                   </div>
@@ -865,14 +866,14 @@ export default function BackupPage() {
                 <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
                   <button
                     onClick={() => setShowRestoreModal(null)}
-                    className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
                   >
                     İptal
                   </button>
                   <button
                     onClick={handleRestoreBackup}
                     disabled={restoreBackup.isPending}
-                    className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-md hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-700 text-white text-sm font-medium rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {restoreBackup.isPending ? (
                       <>
@@ -899,15 +900,15 @@ export default function BackupPage() {
               <div className="fixed inset-0 bg-black/30" onClick={() => setShowDeleteModal(null)} />
               <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6">
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 p-2 bg-red-100 rounded-full">
-                    <Trash2 className="w-6 h-6 text-red-600" />
+                  <div className="flex-shrink-0 p-2 bg-slate-100 rounded-full">
+                    <Trash2 className="w-6 h-6 text-slate-900" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-slate-900">Yedeği Sil</h3>
                     <p className="mt-2 text-sm text-slate-600">
                       <strong>{showDeleteModal.backupName}</strong> yedeğini silmek istediğinizden emin misiniz?
                     </p>
-                    <p className="mt-2 text-sm text-red-600">
+                    <p className="mt-2 text-sm text-slate-900">
                       Bu işlem geri alınamaz!
                     </p>
                   </div>
@@ -916,14 +917,14 @@ export default function BackupPage() {
                 <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
                   <button
                     onClick={() => setShowDeleteModal(null)}
-                    className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
                   >
                     İptal
                   </button>
                   <button
                     onClick={handleDeleteBackup}
                     disabled={deleteBackup.isPending}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 !bg-slate-900 hover:!bg-slate-800 !border-slate-900 text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {deleteBackup.isPending ? (
                       <>
@@ -968,9 +969,9 @@ export default function BackupPage() {
                     {(() => {
                       const StatusIcon = getStatusIcon(selectedBackup.status);
                       return <StatusIcon className={`w-5 h-5 ${
-                        selectedBackup.status === 'Completed' ? 'text-emerald-500' :
-                        selectedBackup.status === 'Failed' ? 'text-red-500' :
-                        'text-amber-500'
+                        selectedBackup.status === 'Completed' ? 'text-slate-600' :
+                        selectedBackup.status === 'Failed' ? 'text-slate-900' :
+                        'text-slate-400'
                       }`} />;
                     })()}
                     <span className={`px-3 py-1 text-sm font-medium rounded border ${getStatusColor(selectedBackup.status)}`}>
@@ -981,24 +982,24 @@ export default function BackupPage() {
                   {/* Basic Info */}
                   <div className="space-y-4">
                     <div>
-                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Yedek Adı</label>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-widerr">Yedek Adı</label>
                       <p className="mt-1 text-sm text-slate-900 font-medium">{selectedBackup.backupName}</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Tür</label>
+                        <label className="text-xs font-medium text-slate-500 uppercase tracking-widerr">Tür</label>
                         <p className="mt-1 text-sm text-slate-900">{getBackupTypeLabel(selectedBackup.backupType)}</p>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Boyut</label>
+                        <label className="text-xs font-medium text-slate-500 uppercase tracking-widerr">Boyut</label>
                         <p className="mt-1 text-sm text-slate-900">{selectedBackup.sizeFormatted || formatBytes(selectedBackup.sizeInBytes)}</p>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Oluşturulma</label>
+                        <label className="text-xs font-medium text-slate-500 uppercase tracking-widerr">Oluşturulma</label>
                         <p className="mt-1 text-sm text-slate-900">
                           {new Date(selectedBackup.createdAt).toLocaleDateString('tr-TR', {
                             day: 'numeric',
@@ -1010,30 +1011,30 @@ export default function BackupPage() {
                         </p>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Oluşturan</label>
+                        <label className="text-xs font-medium text-slate-500 uppercase tracking-widerr">Oluşturan</label>
                         <p className="mt-1 text-sm text-slate-900">{selectedBackup.createdBy}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Content Info */}
-                  <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="bg-slate-50 rounded-xl p-5">
                     <h4 className="text-sm font-medium text-slate-700 mb-3">İçerik</h4>
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Database className={`w-4 h-4 ${selectedBackup.includesDatabase ? 'text-emerald-500' : 'text-slate-300'}`} />
+                        <Database className={`w-4 h-4 ${selectedBackup.includesDatabase ? 'text-slate-600' : 'text-slate-300'}`} />
                         <span className={`text-sm ${selectedBackup.includesDatabase ? 'text-slate-700' : 'text-slate-400'}`}>
                           Veritabanı {selectedBackup.includesDatabase ? 'dahil' : 'dahil değil'}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <FileArchive className={`w-4 h-4 ${selectedBackup.includesFiles ? 'text-emerald-500' : 'text-slate-300'}`} />
+                        <FileArchive className={`w-4 h-4 ${selectedBackup.includesFiles ? 'text-slate-600' : 'text-slate-300'}`} />
                         <span className={`text-sm ${selectedBackup.includesFiles ? 'text-slate-700' : 'text-slate-400'}`}>
                           Dosyalar {selectedBackup.includesFiles ? 'dahil' : 'dahil değil'}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Settings className={`w-4 h-4 ${selectedBackup.includesConfiguration ? 'text-emerald-500' : 'text-slate-300'}`} />
+                        <Settings className={`w-4 h-4 ${selectedBackup.includesConfiguration ? 'text-slate-600' : 'text-slate-300'}`} />
                         <span className={`text-sm ${selectedBackup.includesConfiguration ? 'text-slate-700' : 'text-slate-400'}`}>
                           Ayarlar {selectedBackup.includesConfiguration ? 'dahil' : 'dahil değil'}
                         </span>
@@ -1042,17 +1043,17 @@ export default function BackupPage() {
                   </div>
 
                   {/* Security Info */}
-                  <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="bg-slate-50 rounded-xl p-5">
                     <h4 className="text-sm font-medium text-slate-700 mb-3">Güvenlik</h4>
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <CheckCircle2 className={`w-4 h-4 ${selectedBackup.isCompressed ? 'text-emerald-500' : 'text-slate-300'}`} />
+                        <CheckCircle2 className={`w-4 h-4 ${selectedBackup.isCompressed ? 'text-slate-600' : 'text-slate-300'}`} />
                         <span className={`text-sm ${selectedBackup.isCompressed ? 'text-slate-700' : 'text-slate-400'}`}>
                           {selectedBackup.isCompressed ? 'Sıkıştırılmış' : 'Sıkıştırılmamış'}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Shield className={`w-4 h-4 ${selectedBackup.isEncrypted ? 'text-emerald-500' : 'text-slate-300'}`} />
+                        <Shield className={`w-4 h-4 ${selectedBackup.isEncrypted ? 'text-slate-600' : 'text-slate-300'}`} />
                         <span className={`text-sm ${selectedBackup.isEncrypted ? 'text-slate-700' : 'text-slate-400'}`}>
                           {selectedBackup.isEncrypted ? 'Şifrelenmiş' : 'Şifrelenmemiş'}
                         </span>
@@ -1063,7 +1064,7 @@ export default function BackupPage() {
                   {/* Description */}
                   {selectedBackup.description && (
                     <div>
-                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Açıklama</label>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-widerr">Açıklama</label>
                       <p className="mt-1 text-sm text-slate-600">{selectedBackup.description}</p>
                     </div>
                   )}
@@ -1075,7 +1076,7 @@ export default function BackupPage() {
                     <button
                       onClick={() => handleDownload(selectedBackup)}
                       disabled={downloadBackup.isPending}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-md hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors"
                     >
                       <Download className="w-4 h-4" />
                       İndir
@@ -1087,7 +1088,7 @@ export default function BackupPage() {
                         setSelectedBackup(null);
                         setShowRestoreModal(selectedBackup);
                       }}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-md hover:bg-amber-700 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
                     >
                       <RotateCcw className="w-4 h-4" />
                       Geri Yükle
@@ -1099,7 +1100,7 @@ export default function BackupPage() {
                         setSelectedBackup(null);
                         setShowDeleteModal(selectedBackup);
                       }}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 !bg-slate-900 hover:!bg-slate-800 !border-slate-900 text-white text-sm font-medium rounded-lg transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                       Sil
