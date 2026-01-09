@@ -32,7 +32,7 @@ public class StockRepository : BaseRepository<Stock>, IStockRepository
             .Where(s => !s.IsDeleted &&
                    s.ProductId == productId &&
                    s.WarehouseId == warehouseId &&
-                   s.LocationId == locationId)
+                   (locationId == null ? s.LocationId == null : s.LocationId == locationId))
             .FirstOrDefaultAsync(cancellationToken);
     }
 
