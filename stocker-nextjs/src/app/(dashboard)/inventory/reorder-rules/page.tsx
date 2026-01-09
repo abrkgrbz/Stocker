@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Table, Tag, Select, Modal, Form, Input, InputNumber, Button, Switch, Dropdown, Tooltip } from 'antd';
+import { useRouter } from 'next/navigation';
+import { Table, Tag, Select, Button, Dropdown } from 'antd';
 import {
   ArrowPathIcon,
   ArrowsRightLeftIcon,
@@ -13,22 +14,18 @@ import {
   StopIcon,
   EllipsisHorizontalIcon,
   BoltIcon,
+  EyeIcon,
 } from '@heroicons/react/24/outline';
 import {
   useReorderRules,
-  useProducts,
-  useCategories,
   useWarehouses,
-  useSuppliers,
-  useCreateReorderRule,
-  useUpdateReorderRule,
   useDeleteReorderRule,
   useActivateReorderRule,
   usePauseReorderRule,
   useDisableReorderRule,
   useExecuteReorderRule,
 } from '@/lib/api/hooks/useInventory';
-import type { ReorderRuleDto, CreateReorderRuleDto, ReorderRuleStatus } from '@/lib/api/services/inventory.types';
+import type { ReorderRuleDto, ReorderRuleStatus } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { PageContainer, ListPageHeader, Card } from '@/components/patterns';
@@ -41,21 +38,13 @@ const statusConfig: Record<ReorderRuleStatus, { color: string; label: string }> 
 };
 
 export default function ReorderRulesPage() {
+  const router = useRouter();
   const [selectedStatus, setSelectedStatus] = useState<ReorderRuleStatus | undefined>();
   const [selectedWarehouse, setSelectedWarehouse] = useState<number | undefined>();
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedRule, setSelectedRule] = useState<ReorderRuleDto | null>(null);
-  const [form] = Form.useForm();
 
   // API Hooks
-  const { data: products = [] } = useProducts();
-  const { data: categories = [] } = useCategories();
   const { data: warehouses = [] } = useWarehouses();
-  const { data: suppliers = [] } = useSuppliers();
   const { data: rules = [], isLoading, refetch } = useReorderRules(undefined, undefined, selectedWarehouse, selectedStatus);
-  const createRule = useCreateReorderRule();
-  const updateRule = useUpdateReorderRule();
   const deleteRule = useDeleteReorderRule();
   const activateRule = useActivateReorderRule();
   const pauseRule = usePauseReorderRule();
@@ -72,34 +61,6 @@ export default function ReorderRulesPage() {
   }, [rules]);
 
   // Handlers
-  const handleCreate = () => {
-    form.resetFields();
-    setCreateModalOpen(true);
-  };
-
-  const handleEdit = (rule: ReorderRuleDto) => {
-    setSelectedRule(rule);
-    form.setFieldsValue({
-      name: rule.name,
-      description: rule.description,
-      productId: rule.productId,
-      categoryId: rule.categoryId,
-      warehouseId: rule.warehouseId,
-      supplierId: rule.supplierId,
-      triggerBelowQuantity: rule.triggerBelowQuantity,
-      triggerBelowDaysOfStock: rule.triggerBelowDaysOfStock,
-      triggerOnForecast: rule.triggerOnForecast,
-      forecastLeadTimeDays: rule.forecastLeadTimeDays,
-      fixedReorderQuantity: rule.fixedReorderQuantity,
-      reorderUpToQuantity: rule.reorderUpToQuantity,
-      useEconomicOrderQuantity: rule.useEconomicOrderQuantity,
-      minimumOrderQuantity: rule.minimumOrderQuantity,
-      maximumOrderQuantity: rule.maximumOrderQuantity,
-      requiresApproval: rule.requiresApproval,
-    });
-    setEditModalOpen(true);
-  };
-
   const handleDelete = async (rule: ReorderRuleDto) => {
     const confirmed = await confirmAction(
       'Kuralı Sil',
@@ -156,70 +117,6 @@ export default function ReorderRulesPage() {
     }
   };
 
-  const handleCreateSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      const data: CreateReorderRuleDto = {
-        name: values.name,
-        description: values.description,
-        productId: values.productId,
-        categoryId: values.categoryId,
-        warehouseId: values.warehouseId,
-        supplierId: values.supplierId,
-        triggerBelowQuantity: values.triggerBelowQuantity,
-        triggerBelowDaysOfStock: values.triggerBelowDaysOfStock,
-        triggerOnForecast: values.triggerOnForecast || false,
-        forecastLeadTimeDays: values.forecastLeadTimeDays,
-        fixedReorderQuantity: values.fixedReorderQuantity,
-        reorderUpToQuantity: values.reorderUpToQuantity,
-        useEconomicOrderQuantity: values.useEconomicOrderQuantity || false,
-        minimumOrderQuantity: values.minimumOrderQuantity,
-        maximumOrderQuantity: values.maximumOrderQuantity,
-        requiresApproval: values.requiresApproval || false,
-        roundToPackSize: false,
-        isScheduled: false,
-      };
-      await createRule.mutateAsync(data);
-      setCreateModalOpen(false);
-      form.resetFields();
-    } catch (error) {
-      // Validation error
-    }
-  };
-
-  const handleEditSubmit = async () => {
-    if (!selectedRule) return;
-    try {
-      const values = await form.validateFields();
-      const data: CreateReorderRuleDto = {
-        name: values.name,
-        description: values.description,
-        productId: values.productId,
-        categoryId: values.categoryId,
-        warehouseId: values.warehouseId,
-        supplierId: values.supplierId,
-        triggerBelowQuantity: values.triggerBelowQuantity,
-        triggerBelowDaysOfStock: values.triggerBelowDaysOfStock,
-        triggerOnForecast: values.triggerOnForecast || false,
-        forecastLeadTimeDays: values.forecastLeadTimeDays,
-        fixedReorderQuantity: values.fixedReorderQuantity,
-        reorderUpToQuantity: values.reorderUpToQuantity,
-        useEconomicOrderQuantity: values.useEconomicOrderQuantity || false,
-        minimumOrderQuantity: values.minimumOrderQuantity,
-        maximumOrderQuantity: values.maximumOrderQuantity,
-        requiresApproval: values.requiresApproval || false,
-        roundToPackSize: false,
-        isScheduled: false,
-      };
-      await updateRule.mutateAsync({ id: selectedRule.id, dto: data });
-      setEditModalOpen(false);
-      setSelectedRule(null);
-      form.resetFields();
-    } catch (error) {
-      // Validation error
-    }
-  };
-
   // Table columns
   const columns: ColumnsType<ReorderRuleDto> = [
     {
@@ -227,7 +124,17 @@ export default function ReorderRulesPage() {
       dataIndex: 'name',
       key: 'name',
       width: 200,
-      render: (text: string) => <span className="font-medium text-slate-900">{text}</span>,
+      render: (text: string, record) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/inventory/reorder-rules/${record.id}`);
+          }}
+          className="font-medium text-slate-900 hover:text-blue-600 transition-colors text-left"
+        >
+          {text}
+        </button>
+      ),
     },
     {
       title: 'Kapsam',
@@ -346,12 +253,18 @@ export default function ReorderRulesPage() {
       width: 80,
       fixed: 'right',
       render: (_, record) => {
-        const items = [
+        const items: any[] = [
+          {
+            key: 'view',
+            icon: <EyeIcon className="w-4 h-4" />,
+            label: 'Görüntüle',
+            onClick: () => router.push(`/inventory/reorder-rules/${record.id}`),
+          },
           {
             key: 'edit',
             icon: <PencilIcon className="w-4 h-4" />,
             label: 'Düzenle',
-            onClick: () => handleEdit(record),
+            onClick: () => router.push(`/inventory/reorder-rules/${record.id}/edit`),
           },
           {
             key: 'execute',
@@ -368,7 +281,6 @@ export default function ReorderRulesPage() {
             icon: <PauseIcon className="w-4 h-4" />,
             label: 'Duraklat',
             onClick: () => handlePause(record),
-            disabled: false,
           });
         }
 
@@ -378,7 +290,6 @@ export default function ReorderRulesPage() {
             icon: <PlayIcon className="w-4 h-4" />,
             label: 'Aktifleştir',
             onClick: () => handleActivate(record),
-            disabled: false,
           });
         }
 
@@ -388,7 +299,6 @@ export default function ReorderRulesPage() {
             icon: <StopIcon className="w-4 h-4" />,
             label: 'Devre Dışı Bırak',
             onClick: () => handleDisable(record),
-            disabled: false,
           });
         }
 
@@ -398,9 +308,12 @@ export default function ReorderRulesPage() {
             icon: <PlayIcon className="w-4 h-4" />,
             label: 'Aktifleştir',
             onClick: () => handleActivate(record),
-            disabled: false,
           });
         }
+
+        items.push({
+          type: 'divider',
+        });
 
         items.push({
           key: 'delete',
@@ -408,119 +321,20 @@ export default function ReorderRulesPage() {
           label: 'Sil',
           danger: true,
           onClick: () => handleDelete(record),
-          disabled: false,
-        } as any);
+        });
 
         return (
           <Dropdown menu={{ items }} trigger={['click']}>
-            <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
+            <Button
+              type="text"
+              icon={<EllipsisHorizontalIcon className="w-4 h-4" />}
+              onClick={(e) => e.stopPropagation()}
+            />
           </Dropdown>
         );
       },
     },
   ];
-
-  // Form content
-  const formContent = (
-    <Form form={form} layout="vertical" className="mt-4">
-      <Form.Item
-        name="name"
-        label="Kural Adı"
-        rules={[{ required: true, message: 'Kural adı gerekli' }]}
-      >
-        <Input placeholder="Düşük stok uyarısı - A kategorisi" />
-      </Form.Item>
-      <Form.Item name="description" label="Açıklama">
-        <Input.TextArea rows={2} placeholder="Kural hakkında açıklama..." />
-      </Form.Item>
-
-      <div className="text-sm font-medium text-slate-700 mb-2">Kapsam (Boş bırakılırsa tümüne uygulanır)</div>
-      <div className="grid grid-cols-2 gap-4">
-        <Form.Item name="productId" label="Ürün">
-          <Select placeholder="Ürün seçin" allowClear showSearch optionFilterProp="children">
-            {products.map((p) => (
-              <Select.Option key={p.id} value={p.id}>
-                {p.code} - {p.name}
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
-        <Form.Item name="categoryId" label="Kategori">
-          <Select placeholder="Kategori seçin" allowClear showSearch optionFilterProp="children">
-            {categories.map((c) => (
-              <Select.Option key={c.id} value={c.id}>
-                {c.name}
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <Form.Item name="warehouseId" label="Depo">
-          <Select placeholder="Depo seçin" allowClear showSearch optionFilterProp="children">
-            {warehouses.map((w) => (
-              <Select.Option key={w.id} value={w.id}>
-                {w.code} - {w.name}
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
-        <Form.Item name="supplierId" label="Tedarikçi">
-          <Select placeholder="Tedarikçi seçin" allowClear showSearch optionFilterProp="children">
-            {suppliers.map((s) => (
-              <Select.Option key={s.id} value={s.id}>
-                {s.code} - {s.name}
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
-      </div>
-
-      <div className="text-sm font-medium text-slate-700 mb-2">Tetikleyici Koşullar</div>
-      <div className="grid grid-cols-2 gap-4">
-        <Form.Item name="triggerBelowQuantity" label="Miktar altına düşünce">
-          <InputNumber min={0} style={{ width: '100%' }} placeholder="10" />
-        </Form.Item>
-        <Form.Item name="triggerBelowDaysOfStock" label="Gün cinsinden stok altına düşünce">
-          <InputNumber min={0} style={{ width: '100%' }} placeholder="7" />
-        </Form.Item>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <Form.Item name="triggerOnForecast" label="Tahmine göre tetikle" valuePropName="checked">
-          <Switch />
-        </Form.Item>
-        <Form.Item name="forecastLeadTimeDays" label="Tahmin süresi (gün)">
-          <InputNumber min={1} style={{ width: '100%' }} placeholder="14" />
-        </Form.Item>
-      </div>
-
-      <div className="text-sm font-medium text-slate-700 mb-2">Sipariş Miktarı</div>
-      <div className="grid grid-cols-2 gap-4">
-        <Form.Item name="reorderQuantity" label="Sipariş miktarı">
-          <InputNumber min={1} style={{ width: '100%' }} placeholder="100" />
-        </Form.Item>
-        <Form.Item name="reorderUpToQuantity" label="Hedef miktar">
-          <InputNumber min={1} style={{ width: '100%' }} placeholder="500" />
-        </Form.Item>
-      </div>
-      <div className="grid grid-cols-3 gap-4">
-        <Form.Item name="useDynamicQuantity" label="Dinamik miktar" valuePropName="checked">
-          <Switch />
-        </Form.Item>
-        <Form.Item name="minReorderQuantity" label="Min miktar">
-          <InputNumber min={1} style={{ width: '100%' }} placeholder="50" />
-        </Form.Item>
-        <Form.Item name="maxReorderQuantity" label="Max miktar">
-          <InputNumber min={1} style={{ width: '100%' }} placeholder="500" />
-        </Form.Item>
-      </div>
-
-      <div className="text-sm font-medium text-slate-700 mb-2">Onay</div>
-      <Form.Item name="requiresApproval" label="Onay gerekli" valuePropName="checked">
-        <Switch />
-      </Form.Item>
-    </Form>
-  );
 
   return (
     <PageContainer>
@@ -532,7 +346,7 @@ export default function ReorderRulesPage() {
         itemCount={stats.total}
         primaryAction={{
           label: 'Yeni Kural',
-          onClick: handleCreate,
+          onClick: () => router.push('/inventory/reorder-rules/new'),
           icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
@@ -614,43 +428,12 @@ export default function ReorderRulesPage() {
             showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
           }}
           scroll={{ x: 1400 }}
+          onRow={(record) => ({
+            onClick: () => router.push(`/inventory/reorder-rules/${record.id}`),
+            className: 'cursor-pointer hover:bg-slate-50',
+          })}
         />
       </Card>
-
-      {/* Create Modal */}
-      <Modal
-        title="Yeni Yeniden Sipariş Kuralı"
-        open={createModalOpen}
-        onCancel={() => {
-          setCreateModalOpen(false);
-          form.resetFields();
-        }}
-        onOk={handleCreateSubmit}
-        okText="Oluştur"
-        cancelText="İptal"
-        confirmLoading={createRule.isPending}
-        width={700}
-      >
-        {formContent}
-      </Modal>
-
-      {/* Edit Modal */}
-      <Modal
-        title="Yeniden Sipariş Kuralı Düzenle"
-        open={editModalOpen}
-        onCancel={() => {
-          setEditModalOpen(false);
-          setSelectedRule(null);
-          form.resetFields();
-        }}
-        onOk={handleEditSubmit}
-        okText="Kaydet"
-        cancelText="İptal"
-        confirmLoading={updateRule.isPending}
-        width={700}
-      >
-        {formContent}
-      </Modal>
     </PageContainer>
   );
 }
