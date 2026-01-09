@@ -18,6 +18,8 @@ public class UserDto
     public string LastName { get; set; } = string.Empty;
     public string? Phone { get; set; }
     public List<string> Roles { get; set; } = new();
+    public Guid? DepartmentId { get; set; }
+    public Guid? BranchId { get; set; }
     public string? Department { get; set; }
     public string? Branch { get; set; }
     public bool IsActive { get; set; }

@@ -88,6 +88,19 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
             }
         }
 
+        // Parse department and branch IDs if provided
+        Guid? departmentId = null;
+        if (!string.IsNullOrWhiteSpace(request.Department) && Guid.TryParse(request.Department, out var parsedDepartmentId))
+        {
+            departmentId = parsedDepartmentId;
+        }
+
+        Guid? branchId = null;
+        if (!string.IsNullOrWhiteSpace(request.Branch) && Guid.TryParse(request.Branch, out var parsedBranchId))
+        {
+            branchId = parsedBranchId;
+        }
+
         // Use invitation factory method - creates user in PendingActivation status
         var user = TenantUser.CreateForInvitation(
             request.TenantId,
@@ -96,7 +109,9 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
             request.FirstName,
             request.LastName,
             phone: phone,
-            title: request.CreatedBy
+            title: request.CreatedBy,
+            departmentId: departmentId,
+            branchId: branchId
         );
 
         var createdUser = await _userRepository.CreateTenantUserAsync(user, cancellationToken);
@@ -175,8 +190,10 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
             FirstName = createdUser.FirstName,
             LastName = createdUser.LastName,
             Phone = createdUser.Phone?.Value,
-            Department = request.Department ?? "Default",
-            Branch = request.Branch ?? "Merkez",
+            DepartmentId = createdUser.DepartmentId,
+            BranchId = createdUser.BranchId,
+            Department = departmentId.HasValue ? request.Department : null,
+            Branch = branchId.HasValue ? request.Branch : null,
             Roles = assignedRoleNames,
             IsActive = createdUser.Status == TenantUserStatus.Active,
             CreatedDate = createdUser.CreatedAt
