@@ -54,10 +54,10 @@ export default function OnboardingsPage() {
   const handleDelete = async (onboarding: OnboardingDto) => {
     try {
       await deleteOnboardingMutation.mutateAsync(onboarding.id);
-      showSuccess('Onboarding süreci başarıyla silindi');
+      showSuccess('Onboarding sureci basariyla silindi');
       refetch();
     } catch (err) {
-      showApiError(err, 'Onboarding süreci silinemedi');
+      showApiError(err, 'Onboarding sureci silinemedi');
     }
   };
 
@@ -67,7 +67,7 @@ export default function OnboardingsPage() {
   };
 
   return (
-    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+    <div className="min-h-screen bg-slate-50 p-8">
       {/* Stats Cards */}
       <div className="mb-8">
         <OnboardingsStats onboardings={filteredOnboardings} loading={isLoading} />
@@ -76,9 +76,9 @@ export default function OnboardingsPage() {
       {/* Header */}
       <ListPageHeader
         icon={<RocketLaunchIcon className="w-5 h-5" />}
-        iconColor="#7c3aed"
-        title="İşe Alışım Süreçleri"
-        description="Yeni çalışan oryantasyonlarını yönetin ve takip edin"
+        iconColor="#64748b"
+        title="Ise Alisim Surecleri"
+        description="Yeni calisan oryantasyonlarini yonetin ve takip edin"
         itemCount={totalCount}
         primaryAction={{
           label: 'Yeni Onboarding',
@@ -99,13 +99,13 @@ export default function OnboardingsPage() {
       {error && (
         <Alert
           variant="error"
-          title="Onboarding süreçleri yüklenemedi"
+          title="Onboarding surecleri yuklenemedi"
           message={(error as Error).message}
           closable
           action={
             <button
               onClick={() => refetch()}
-              className="text-red-600 hover:text-red-800 font-medium"
+              className="text-slate-700 hover:text-slate-900 font-medium"
             >
               Tekrar Dene
             </button>
@@ -114,10 +114,10 @@ export default function OnboardingsPage() {
         />
       )}
 
-      <DataTableWrapper className="mt-6">
-        <div className="p-4 border-b border-gray-100">
+      <div className="bg-white border border-slate-200 rounded-xl mt-6">
+        <div className="p-4 border-b border-slate-100">
           <Input
-            placeholder="Onboarding ara... (çalışan adı, buddy)"
+            placeholder="Onboarding ara... (calisan adi, buddy)"
             prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
             size="lg"
             value={searchText}
@@ -137,7 +137,7 @@ export default function OnboardingsPage() {
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
-      </DataTableWrapper>
-    </PageContainer>
+      </div>
+    </div>
   );
 }

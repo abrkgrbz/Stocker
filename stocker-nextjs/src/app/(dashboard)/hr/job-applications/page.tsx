@@ -55,10 +55,10 @@ export default function JobApplicationsPage() {
   const handleDelete = async (application: JobApplicationDto) => {
     try {
       await deleteApplicationMutation.mutateAsync(application.id);
-      showSuccess('Başvuru başarıyla silindi');
+      showSuccess('Basvuru basariyla silindi');
       refetch();
     } catch (err) {
-      showApiError(err, 'Başvuru silinemedi');
+      showApiError(err, 'Basvuru silinemedi');
     }
   };
 
@@ -68,7 +68,7 @@ export default function JobApplicationsPage() {
   };
 
   return (
-    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+    <div className="min-h-screen bg-slate-50 p-8">
       {/* Stats Cards */}
       <div className="mb-8">
         <JobApplicationsStats applications={filteredApplications} loading={isLoading} />
@@ -77,12 +77,12 @@ export default function JobApplicationsPage() {
       {/* Header */}
       <ListPageHeader
         icon={<DocumentTextIcon className="w-5 h-5" />}
-        iconColor="#3b82f6"
-        title="İş Başvuruları"
-        description="Aday başvurularını takip edin ve değerlendirin"
+        iconColor="#64748b"
+        title="Is Basvurulari"
+        description="Aday basvurularini takip edin ve degerlendirin"
         itemCount={totalCount}
         primaryAction={{
-          label: 'Yeni Başvuru',
+          label: 'Yeni Basvuru',
           onClick: () => router.push('/hr/job-applications/new'),
           icon: <PlusIcon className="w-4 h-4" />,
         }}
@@ -100,13 +100,13 @@ export default function JobApplicationsPage() {
       {error && (
         <Alert
           variant="error"
-          title="Başvurular yüklenemedi"
+          title="Basvurular yuklenemedi"
           message={(error as Error).message}
           closable
           action={
             <button
               onClick={() => refetch()}
-              className="text-red-600 hover:text-red-800 font-medium"
+              className="text-slate-700 hover:text-slate-900 font-medium"
             >
               Tekrar Dene
             </button>
@@ -115,10 +115,10 @@ export default function JobApplicationsPage() {
         />
       )}
 
-      <DataTableWrapper className="mt-6">
-        <div className="p-4 border-b border-gray-100">
+      <div className="bg-white border border-slate-200 rounded-xl mt-6">
+        <div className="p-4 border-b border-slate-100">
           <Input
-            placeholder="Başvuru ara... (aday adı, pozisyon, e-posta)"
+            placeholder="Basvuru ara... (aday adi, pozisyon, e-posta)"
             prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
             size="lg"
             value={searchText}
@@ -138,7 +138,7 @@ export default function JobApplicationsPage() {
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
-      </DataTableWrapper>
-    </PageContainer>
+      </div>
+    </div>
   );
 }

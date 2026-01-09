@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Table, Tag, Dropdown, Modal, Progress } from 'antd';
+import { Table, Dropdown, Modal, Progress } from 'antd';
 import type { TableColumnsType } from 'antd';
 import {
   EllipsisHorizontalIcon,
@@ -9,9 +9,6 @@ import {
   PencilIcon,
   TrashIcon,
   CursorArrowRaysIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  ExclamationCircleIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import type { PerformanceGoalDto } from '@/lib/api/services/hr.types';
@@ -31,15 +28,15 @@ interface GoalsTableProps {
 
 const getStatusConfig = (status?: string, isOverdue?: boolean) => {
   if (isOverdue && status !== 'Completed' && status !== 'Cancelled') {
-    return { color: 'red', text: 'Gecikmiş', icon: <ExclamationCircleIcon className="w-4 h-4" /> };
+    return { bg: 'bg-slate-900', text: 'text-white', label: 'Geckmis' };
   }
-  const statusMap: Record<string, { color: string; text: string; icon: React.ReactNode }> = {
-    NotStarted: { color: 'default', text: 'Başlamadı', icon: <ClockIcon className="w-4 h-4" /> },
-    InProgress: { color: 'blue', text: 'Devam Ediyor', icon: <ClockIcon className="w-4 h-4" /> },
-    Completed: { color: 'green', text: 'Tamamlandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
-    Cancelled: { color: 'red', text: 'İptal', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
+  const statusMap: Record<string, { bg: string; text: string; label: string }> = {
+    NotStarted: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Baslamadi' },
+    InProgress: { bg: 'bg-slate-200', text: 'text-slate-700', label: 'Devam Ediyor' },
+    Completed: { bg: 'bg-slate-900', text: 'text-white', label: 'Tamamlandi' },
+    Cancelled: { bg: 'bg-slate-300', text: 'text-slate-600', label: 'Iptal' },
   };
-  return statusMap[status || ''] || { color: 'default', text: status || '-', icon: null };
+  return statusMap[status || ''] || { bg: 'bg-slate-100', text: 'text-slate-600', label: status || '-' };
 };
 
 export function GoalsTable({
@@ -63,17 +60,14 @@ export function GoalsTable({
       width: 250,
       render: (_, record) => (
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: '#7c3aed15' }}
-          >
-            <CursorArrowRaysIcon className="w-5 h-5" style={{ color: '#7c3aed' }} />
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <CursorArrowRaysIcon className="w-5 h-5 text-slate-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-gray-900 truncate">
+            <div className="font-semibold text-slate-900 truncate">
               {record.title}
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-slate-500">
               {record.employeeName}
             </div>
           </div>
@@ -90,14 +84,15 @@ export function GoalsTable({
       ),
     },
     {
-      title: 'İlerleme',
+      title: 'Ilerleme',
       key: 'progress',
       width: 180,
       render: (_, record) => (
         <Progress
           percent={record.progressPercentage || 0}
           size="small"
-          status={record.isOverdue ? 'exception' : undefined}
+          strokeColor="#1e293b"
+          trailColor="#e2e8f0"
         />
       ),
     },
@@ -116,17 +111,17 @@ export function GoalsTable({
       key: 'status',
       width: 130,
       filters: [
-        { text: 'Başlamadı', value: 'NotStarted' },
+        { text: 'Baslamadi', value: 'NotStarted' },
         { text: 'Devam Ediyor', value: 'InProgress' },
-        { text: 'Tamamlandı', value: 'Completed' },
+        { text: 'Tamamlandi', value: 'Completed' },
       ],
       onFilter: (value, record) => record.status === value,
       render: (_, record) => {
         const config = getStatusConfig(record.status, record.isOverdue);
         return (
-          <Tag color={config.color} icon={config.icon}>
-            {config.text}
-          </Tag>
+          <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${config.bg} ${config.text}`}>
+            {config.label}
+          </span>
         );
       },
     },
@@ -141,13 +136,13 @@ export function GoalsTable({
             items: [
               {
                 key: 'view',
-                label: 'Görüntüle',
+                label: 'Goruntule',
                 icon: <EyeIcon className="w-4 h-4" />,
                 onClick: () => onView(record.id),
               },
               {
                 key: 'edit',
-                label: 'Düzenle',
+                label: 'Duzenle',
                 icon: <PencilIcon className="w-4 h-4" />,
                 onClick: () => onEdit(record.id),
                 disabled: record.status === 'Completed',
@@ -162,18 +157,18 @@ export function GoalsTable({
                   e.domEvent.stopPropagation();
                   Modal.confirm({
                     title: 'Hedefi Sil',
-                    icon: <ExclamationTriangleIcon className="w-6 h-6 text-red-500" />,
+                    icon: <ExclamationTriangleIcon className="w-6 h-6 text-slate-900" />,
                     content: (
                       <div>
                         <p className="text-slate-600">
-                          "{record.title}" hedefini silmek istediğinize emin misiniz?
+                          "{record.title}" hedefini silmek istediginize emin misiniz?
                         </p>
-                        <p className="text-sm text-slate-500 mt-2">Bu işlem geri alınamaz.</p>
+                        <p className="text-sm text-slate-500 mt-2">Bu islem geri alinamaz.</p>
                       </div>
                     ),
                     okText: 'Sil',
                     okButtonProps: { danger: true },
-                    cancelText: 'İptal',
+                    cancelText: 'Iptal',
                     onOk: async () => {
                       if (onDelete) {
                         await onDelete(record);
@@ -226,14 +221,17 @@ export function GoalsTable({
       scroll={{ x: 1000 }}
       onRow={(record) => ({
         onClick: () => onView(record.id),
-        className: 'cursor-pointer hover:bg-gray-50',
+        className: 'cursor-pointer hover:bg-slate-50',
       })}
+      className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200"
       locale={{
         emptyText: (
           <div className="text-center py-16">
-            <div className="text-6xl mb-4">🎯</div>
-            <h3 className="text-2xl font-bold text-gray-700 mb-2">Hedef Bulunamadı</h3>
-            <p className="text-gray-500">Arama kriterlerinize uygun performans hedefi bulunamadı</p>
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+              <CursorArrowRaysIcon className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-700 mb-2">Hedef Bulunamadi</h3>
+            <p className="text-slate-500">Arama kriterlerinize uygun performans hedefi bulunamadi</p>
           </div>
         ),
       }}

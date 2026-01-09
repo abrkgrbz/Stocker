@@ -2,11 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, Row, Col, Select } from 'antd';
+import { Select } from 'antd';
 import { MagnifyingGlassIcon, BookOpenIcon, PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
-import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
-import { Input } from '@/components/primitives/inputs';
-import { Alert } from '@/components/primitives/feedback';
 import { TrainingsStats, TrainingsTable } from '@/components/hr/trainings';
 import { useTrainings, useDeleteTraining } from '@/lib/api/hooks/useHR';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
@@ -71,87 +68,107 @@ export default function TrainingsPage() {
   const handleDelete = async (training: TrainingDto) => {
     try {
       await deleteTraining.mutateAsync(training.id);
-      showSuccess('Eğitim Silindi', `"${training.title}" eğitimi başarıyla silindi.`);
+      showSuccess('Egitim Silindi', `"${training.title}" egitimi basariyla silindi.`);
     } catch (err) {
-      showApiError(err, 'Eğitim silinirken bir hata oluştu');
+      showApiError(err, 'Egitim silinirken bir hata olustu');
     }
   };
 
   return (
-    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <BookOpenIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Egitim Yonetimi</h1>
+              <p className="text-sm text-slate-500">Sirket egitimlerini planlayin ve takip edin</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={() => router.push('/hr/trainings/new')}
+            className="flex items-center gap-2 px-4 py-2 !bg-slate-900 hover:!bg-slate-800 text-white rounded-lg transition-colors"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Yeni Egitim
+          </button>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div className="mb-8">
         <TrainingsStats trainings={trainings} loading={isLoading} />
       </div>
 
-      {/* Header */}
-      <ListPageHeader
-        icon={<BookOpenIcon className="w-5 h-5" />}
-        iconColor="#9333ea"
-        title="Eğitim Yönetimi"
-        description="Şirket eğitimlerini planlayın ve takip edin"
-        itemCount={totalCount}
-        primaryAction={{
-          label: 'Yeni Eğitim',
-          onClick: () => router.push('/hr/trainings/new'),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-          >
-            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
-
+      {/* Error Alert */}
       {error && (
-        <Alert
-          variant="error"
-          title="Eğitimler yüklenemedi"
-          message={(error as Error).message}
-          closable
-          action={
-            <button onClick={() => refetch()} className="text-red-600 hover:text-red-800 font-medium">
+        <div className="mb-6 p-4 bg-white border border-slate-200 rounded-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-slate-900">Egitimler yuklenemedi</p>
+              <p className="text-sm text-slate-500">{(error as Error).message}</p>
+            </div>
+            <button
+              onClick={() => refetch()}
+              className="px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+            >
               Tekrar Dene
             </button>
-          }
-          className="mt-6"
-        />
+          </div>
+        </div>
       )}
 
-      <Card className="mt-6 mb-4 border border-gray-100 shadow-sm">
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={10}>
-            <Input
-              placeholder="Eğitim ara... (başlık, sağlayıcı)"
-              prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
-              size="lg"
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={6}>
+      {/* Filters Card */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5 mb-6">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex-1 min-w-[280px] max-w-md">
+            <div className="relative">
+              <MagnifyingGlassIcon className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Egitim ara... (baslik, saglayici)"
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="w-48">
             <Select
               placeholder="Durum filtrele"
               allowClear
-              style={{ width: '100%', height: '44px' }}
+              style={{ width: '100%', height: '42px' }}
               onChange={(value) => setStatusFilter(value)}
+              className="[&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg"
               options={[
-                { value: TrainingStatus.Scheduled, label: 'Planlandı' },
+                { value: TrainingStatus.Scheduled, label: 'Planlandi' },
                 { value: TrainingStatus.InProgress, label: 'Devam Ediyor' },
-                { value: TrainingStatus.Completed, label: 'Tamamlandı' },
-                { value: TrainingStatus.Cancelled, label: 'İptal Edildi' },
+                { value: TrainingStatus.Completed, label: 'Tamamlandi' },
+                { value: TrainingStatus.Cancelled, label: 'Iptal Edildi' },
                 { value: TrainingStatus.Postponed, label: 'Ertelendi' },
               ]}
             />
-          </Col>
-        </Row>
-      </Card>
+          </div>
+          <div className="text-sm text-slate-500">
+            {totalCount} kayit
+          </div>
+        </div>
+      </div>
 
-      <DataTableWrapper>
+      {/* Table Card */}
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         <TrainingsTable
           trainings={paginatedTrainings}
           loading={isLoading}
@@ -163,7 +180,7 @@ export default function TrainingsPage() {
           onEdit={(id) => router.push(`/hr/trainings/${id}/edit`)}
           onDelete={handleDelete}
         />
-      </DataTableWrapper>
-    </PageContainer>
+      </div>
+    </div>
   );
 }

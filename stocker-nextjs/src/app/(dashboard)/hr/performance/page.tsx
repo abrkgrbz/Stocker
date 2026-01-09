@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Select, Card, Row, Col } from 'antd';
+import { Select } from 'antd';
 import {
   ArrowPathIcon,
   TrophyIcon,
@@ -12,17 +12,14 @@ import {
 } from '@heroicons/react/24/outline';
 import { usePerformanceReviews, useDeletePerformanceReview, useEmployees } from '@/lib/api/hooks/useHR';
 import type { PerformanceReviewDto } from '@/lib/api/services/hr.types';
-import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
-import { Input } from '@/components/primitives/inputs';
-import { Alert } from '@/components/primitives/feedback';
 import { PerformanceStats, PerformanceTable } from '@/components/hr/performance';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
 
 const statusOptions = [
   { value: 'Draft', label: 'Taslak' },
   { value: 'InProgress', label: 'Devam Ediyor' },
-  { value: 'Completed', label: 'Tamamlandı' },
-  { value: 'Cancelled', label: 'İptal' },
+  { value: 'Completed', label: 'Tamamlandi' },
+  { value: 'Cancelled', label: 'Iptal' },
 ];
 
 export default function PerformancePage() {
@@ -68,9 +65,9 @@ export default function PerformancePage() {
   const handleDelete = async (review: PerformanceReviewDto) => {
     try {
       await deleteReview.mutateAsync(review.id);
-      showSuccess('Başarılı', 'Değerlendirme silindi');
+      showSuccess('Basarili', 'Degerlendirme silindi');
     } catch (err) {
-      showApiError(err, 'Değerlendirme silinirken hata oluştu');
+      showApiError(err, 'Degerlendirme silinirken hata olustu');
     }
   };
 
@@ -88,101 +85,120 @@ export default function PerformancePage() {
   };
 
   return (
-    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <TrophyIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Performans Degerlendirme</h1>
+              <p className="text-sm text-slate-500">Calisan performans degerlendirmelerini goruntuyleyin ve yonetin</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={() => router.push('/hr/performance/new')}
+            className="flex items-center gap-2 px-4 py-2 !bg-slate-900 hover:!bg-slate-800 text-white rounded-lg transition-colors"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Yeni Degerlendirme
+          </button>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div className="mb-8">
         <PerformanceStats reviews={reviews as PerformanceReviewDto[]} loading={isLoading} />
       </div>
 
-      {/* Header */}
-      <ListPageHeader
-        icon={<TrophyIcon className="w-5 h-5" />}
-        iconColor="#8b5cf6"
-        title="Performans Değerlendirme"
-        description="Çalışan performans değerlendirmelerini görüntüleyin ve yönetin"
-        itemCount={totalCount}
-        primaryAction={{
-          label: 'Yeni Değerlendirme',
-          onClick: () => router.push('/hr/performance/new'),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-          >
-            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
-
+      {/* Error Alert */}
       {error && (
-        <Alert
-          variant="error"
-          title="Değerlendirmeler yüklenemedi"
-          message={(error as Error).message}
-          closable
-          action={
-            <button onClick={() => refetch()} className="text-red-600 hover:text-red-800 font-medium">
+        <div className="mb-6 p-4 bg-white border border-slate-200 rounded-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-slate-900">Degerlendirmeler yuklenemedi</p>
+              <p className="text-sm text-slate-500">{(error as Error).message}</p>
+            </div>
+            <button
+              onClick={() => refetch()}
+              className="px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+            >
               Tekrar Dene
             </button>
-          }
-          className="mt-6"
-        />
+          </div>
+        </div>
       )}
 
-      <Card className="mt-6 mb-4 border border-gray-100 shadow-sm">
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={8}>
-            <Input
-              placeholder="Çalışan veya dönem ara..."
-              prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
-              size="lg"
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={6}>
+      {/* Filters Card */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5 mb-6">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex-1 min-w-[240px] max-w-sm">
+            <div className="relative">
+              <MagnifyingGlassIcon className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Calisan veya donem ara..."
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="w-48">
             <Select
-              placeholder="Çalışan seçin"
+              placeholder="Calisan secin"
               allowClear
               showSearch
               optionFilterProp="label"
-              style={{ width: '100%', height: '44px' }}
+              style={{ width: '100%', height: '42px' }}
               value={selectedEmployeeId}
               onChange={setSelectedEmployeeId}
+              className="[&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg"
               options={employees.map((e) => ({
                 value: e.id,
                 label: e.fullName,
               }))}
             />
-          </Col>
-          <Col xs={24} sm={12} md={5}>
+          </div>
+          <div className="w-40">
             <Select
               placeholder="Durum"
               allowClear
-              style={{ width: '100%', height: '44px' }}
+              style={{ width: '100%', height: '42px' }}
               value={selectedStatus}
               onChange={setSelectedStatus}
+              className="[&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg"
               options={statusOptions}
             />
-          </Col>
+          </div>
           {hasFilters && (
-            <Col xs={24} sm={12} md={5}>
-              <button
-                onClick={clearFilters}
-                className="flex items-center gap-1 px-3 py-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
-              >
-                <XMarkIcon className="w-4 h-4" />
-                Temizle
-              </button>
-            </Col>
+            <button
+              onClick={clearFilters}
+              className="flex items-center gap-1 px-3 py-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <XMarkIcon className="w-4 h-4" />
+              Temizle
+            </button>
           )}
-        </Row>
-      </Card>
+          <div className="text-sm text-slate-500 ml-auto">
+            {totalCount} kayit
+          </div>
+        </div>
+      </div>
 
-      <DataTableWrapper>
+      {/* Table Card */}
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         <PerformanceTable
           reviews={filteredReviews as PerformanceReviewDto[]}
           loading={isLoading}
@@ -194,7 +210,7 @@ export default function PerformancePage() {
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
-      </DataTableWrapper>
-    </PageContainer>
+      </div>
+    </div>
   );
 }

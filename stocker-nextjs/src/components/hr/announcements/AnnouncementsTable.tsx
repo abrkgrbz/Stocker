@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Table, Tag, Dropdown, Modal } from 'antd';
+import { Table, Dropdown, Modal } from 'antd';
 import type { TableColumnsType } from 'antd';
 import {
   EllipsisHorizontalIcon,
@@ -27,11 +27,18 @@ interface AnnouncementsTableProps {
   onDelete?: (announcement: AnnouncementDto) => Promise<void>;
 }
 
-const priorityConfig: Record<string, { color: string; text: string }> = {
-  Low: { color: 'default', text: 'Düşük' },
-  Normal: { color: 'blue', text: 'Normal' },
-  High: { color: 'orange', text: 'Yüksek' },
-  Urgent: { color: 'red', text: 'Acil' },
+const priorityStyles: Record<string, string> = {
+  Low: 'bg-slate-100 text-slate-600',
+  Normal: 'bg-slate-200 text-slate-700',
+  High: 'bg-slate-500 text-white',
+  Urgent: 'bg-slate-900 text-white',
+};
+
+const priorityLabels: Record<string, string> = {
+  Low: 'Dusuk',
+  Normal: 'Normal',
+  High: 'Yuksek',
+  Urgent: 'Acil',
 };
 
 export function AnnouncementsTable({
@@ -55,18 +62,15 @@ export function AnnouncementsTable({
       width: 300,
       render: (_, record) => (
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: '#7c3aed15' }}
-          >
-            <BellIcon className="w-5 h-5" style={{ color: '#7c3aed' }} />
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <BellIcon className="w-5 h-5 text-slate-500" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-gray-900 truncate flex items-center gap-2">
-              {record.isPinned && <MapPinIcon className="w-4 h-4 text-amber-500 flex-shrink-0" />}
+            <div className="font-semibold text-slate-900 truncate flex items-center gap-2">
+              {record.isPinned && <MapPinIcon className="w-4 h-4 text-slate-500 flex-shrink-0" />}
               {record.title}
             </div>
-            <div className="text-xs text-gray-500 truncate">
+            <div className="text-xs text-slate-400 truncate">
               {record.content?.substring(0, 60)}...
             </div>
           </div>
@@ -83,24 +87,25 @@ export function AnnouncementsTable({
       ),
     },
     {
-      title: 'Öncelik',
+      title: 'Oncelik',
       dataIndex: 'priority',
       key: 'priority',
       width: 100,
       filters: [
-        { text: 'Düşük', value: 'Low' },
+        { text: 'Dusuk', value: 'Low' },
         { text: 'Normal', value: 'Normal' },
-        { text: 'Yüksek', value: 'High' },
+        { text: 'Yuksek', value: 'High' },
         { text: 'Acil', value: 'Urgent' },
       ],
       onFilter: (value, record) => record.priority === value,
-      render: (priority: string) => {
-        const config = priorityConfig[priority] || { color: 'default', text: priority };
-        return <Tag color={config.color}>{config.text}</Tag>;
-      },
+      render: (priority: string) => (
+        <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${priorityStyles[priority] || 'bg-slate-100 text-slate-600'}`}>
+          {priorityLabels[priority] || priority}
+        </span>
+      ),
     },
     {
-      title: 'Yayın Tarihi',
+      title: 'Yayin Tarihi',
       dataIndex: 'publishDate',
       key: 'publishDate',
       width: 120,
@@ -115,7 +120,7 @@ export function AnnouncementsTable({
       key: 'target',
       width: 130,
       render: (dept: string) => (
-        <span className="text-sm text-slate-600">{dept || 'Tüm Şirket'}</span>
+        <span className="text-sm text-slate-600">{dept || 'Tum Sirket'}</span>
       ),
     },
     {
@@ -123,14 +128,16 @@ export function AnnouncementsTable({
       key: 'status',
       width: 100,
       filters: [
-        { text: 'Yayında', value: 'published' },
+        { text: 'Yayinda', value: 'published' },
         { text: 'Taslak', value: 'draft' },
       ],
       onFilter: (value, record) => value === 'published' ? record.isPublished : !record.isPublished,
       render: (_, record) => (
-        <Tag color={record.isPublished ? 'green' : 'default'}>
-          {record.isPublished ? 'Yayında' : 'Taslak'}
-        </Tag>
+        <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${
+          record.isPublished ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
+        }`}>
+          {record.isPublished ? 'Yayinda' : 'Taslak'}
+        </span>
       ),
     },
     {
@@ -144,13 +151,13 @@ export function AnnouncementsTable({
             items: [
               {
                 key: 'view',
-                label: 'Görüntüle',
+                label: 'Goruntule',
                 icon: <EyeIcon className="w-4 h-4" />,
                 onClick: () => onView(record.id),
               },
               {
                 key: 'edit',
-                label: 'Düzenle',
+                label: 'Duzenle',
                 icon: <PencilIcon className="w-4 h-4" />,
                 onClick: () => onEdit(record.id),
               },
@@ -164,18 +171,18 @@ export function AnnouncementsTable({
                   e.domEvent.stopPropagation();
                   Modal.confirm({
                     title: 'Duyuruyu Sil',
-                    icon: <ExclamationTriangleIcon className="w-6 h-6 text-red-500" />,
+                    icon: <ExclamationTriangleIcon className="w-6 h-6 text-slate-700" />,
                     content: (
                       <div>
                         <p className="text-slate-600">
-                          "{record.title}" duyurusunu silmek istediğinize emin misiniz?
+                          "{record.title}" duyurusunu silmek istediginize emin misiniz?
                         </p>
-                        <p className="text-sm text-slate-500 mt-2">Bu işlem geri alınamaz.</p>
+                        <p className="text-sm text-slate-500 mt-2">Bu islem geri alinamaz.</p>
                       </div>
                     ),
                     okText: 'Sil',
                     okButtonProps: { danger: true },
-                    cancelText: 'İptal',
+                    cancelText: 'Iptal',
                     onOk: async () => {
                       if (onDelete) {
                         await onDelete(record);
@@ -228,14 +235,17 @@ export function AnnouncementsTable({
       scroll={{ x: 1100 }}
       onRow={(record) => ({
         onClick: () => onView(record.id),
-        className: 'cursor-pointer hover:bg-gray-50',
+        className: 'cursor-pointer hover:bg-slate-50',
       })}
+      className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
       locale={{
         emptyText: (
           <div className="text-center py-16">
-            <div className="text-6xl mb-4">📢</div>
-            <h3 className="text-2xl font-bold text-gray-700 mb-2">Duyuru Bulunamadı</h3>
-            <p className="text-gray-500">Arama kriterlerinize uygun duyuru bulunamadı</p>
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+              <BellIcon className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-700 mb-1">Duyuru Bulunamadi</h3>
+            <p className="text-slate-500 text-sm">Arama kriterlerinize uygun duyuru bulunamadi</p>
           </div>
         ),
       }}

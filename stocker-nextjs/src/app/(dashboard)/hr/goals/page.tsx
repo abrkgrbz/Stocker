@@ -2,11 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Select, Card, Row, Col } from 'antd';
+import { Button, Select } from 'antd';
 import { MagnifyingGlassIcon, CursorArrowRaysIcon, PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
-import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
-import { Input } from '@/components/primitives/inputs';
-import { Alert } from '@/components/primitives/feedback';
 import { GoalsStats, GoalsTable } from '@/components/hr/goals';
 import { usePerformanceGoals, useDeletePerformanceGoal, useEmployees } from '@/lib/api/hooks/useHR';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
@@ -62,99 +59,106 @@ export default function GoalsPage() {
   const handleDelete = async (goal: PerformanceGoalDto) => {
     try {
       await deleteGoal.mutateAsync(goal.id);
-      showSuccess('Hedef Silindi', `"${goal.title}" hedefi başarıyla silindi.`);
+      showSuccess('Hedef Silindi', `"${goal.title}" hedefi basariyla silindi.`);
     } catch (err) {
-      showApiError(err, 'Hedef silinirken bir hata oluştu');
+      showApiError(err, 'Hedef silinirken bir hata olustu');
     }
   };
 
   return (
-    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+    <div className="min-h-screen bg-slate-50 p-8">
       {/* Stats Cards */}
       <div className="mb-8">
         <GoalsStats goals={goals} loading={isLoading} />
       </div>
 
       {/* Header */}
-      <ListPageHeader
-        icon={<CursorArrowRaysIcon className="w-5 h-5" />}
-        iconColor="#9333ea"
-        title="Performans Hedefleri"
-        description="Çalışan performans hedeflerini yönetin ve takip edin"
-        itemCount={totalCount}
-        primaryAction={{
-          label: 'Yeni Hedef',
-          onClick: () => router.push('/hr/goals/new'),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <button
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <CursorArrowRaysIcon className="w-5 h-5 text-slate-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold text-slate-900">Performans Hedefleri</h1>
+            <p className="text-sm text-slate-500">Calisan performans hedeflerini yonetin ve takip edin</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-slate-500">{totalCount} hedef</span>
+          <Button
+            icon={<ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
             onClick={() => refetch()}
             disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+            className="!border-slate-300 !text-slate-600 hover:!text-slate-900 hover:!border-slate-400"
+          />
+          <Button
+            type="primary"
+            icon={<PlusIcon className="w-4 h-4" />}
+            onClick={() => router.push('/hr/goals/new')}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
           >
-            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
+            Yeni Hedef
+          </Button>
+        </div>
+      </div>
 
       {error && (
-        <Alert
-          variant="error"
-          title="Hedefler yüklenemedi"
-          message={(error as Error).message}
-          closable
-          action={
-            <button onClick={() => refetch()} className="text-red-600 hover:text-red-800 font-medium">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-slate-900">Hedefler yuklenemedi</p>
+              <p className="text-sm text-slate-500">{(error as Error).message}</p>
+            </div>
+            <Button onClick={() => refetch()} className="!border-slate-300 !text-slate-700">
               Tekrar Dene
-            </button>
-          }
-          className="mt-6"
-        />
+            </Button>
+          </div>
+        </div>
       )}
 
-      <Card className="mt-6 mb-4 border border-gray-100 shadow-sm">
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={8}>
-            <Input
-              placeholder="Hedef ara... (başlık, çalışan, kategori)"
-              prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
-              size="lg"
+      {/* Filters Card */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="relative">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Hedef ara... (baslik, calisan, kategori)"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
             />
-          </Col>
-          <Col xs={24} sm={12} md={8}>
-            <Select
-              placeholder="Çalışan seçin"
-              allowClear
-              showSearch
-              optionFilterProp="children"
-              style={{ width: '100%', height: '44px' }}
-              onChange={(value) => setFilters((prev) => ({ ...prev, employeeId: value }))}
-              options={employees.map((e) => ({
-                value: e.id,
-                label: e.fullName,
-              }))}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={8}>
-            <Select
-              placeholder="Yıl"
-              allowClear
-              style={{ width: '100%', height: '44px' }}
-              onChange={(value) => setFilters((prev) => ({ ...prev, year: value }))}
-              options={[
-                { value: 2024, label: '2024' },
-                { value: 2025, label: '2025' },
-                { value: 2026, label: '2026' },
-              ]}
-            />
-          </Col>
-        </Row>
-      </Card>
+          </div>
+          <Select
+            placeholder="Calisan secin"
+            allowClear
+            showSearch
+            optionFilterProp="children"
+            style={{ width: '100%' }}
+            onChange={(value) => setFilters((prev) => ({ ...prev, employeeId: value }))}
+            options={employees.map((e) => ({
+              value: e.id,
+              label: e.fullName,
+            }))}
+            className="[&_.ant-select-selector]:!rounded-lg [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!h-[42px] [&_.ant-select-selection-search-input]:!h-[40px]"
+          />
+          <Select
+            placeholder="Yil"
+            allowClear
+            style={{ width: '100%' }}
+            onChange={(value) => setFilters((prev) => ({ ...prev, year: value }))}
+            options={[
+              { value: 2024, label: '2024' },
+              { value: 2025, label: '2025' },
+              { value: 2026, label: '2026' },
+            ]}
+            className="[&_.ant-select-selector]:!rounded-lg [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!h-[42px]"
+          />
+        </div>
+      </div>
 
-      <DataTableWrapper>
+      {/* Table Card */}
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         <GoalsTable
           goals={paginatedGoals}
           loading={isLoading}
@@ -166,7 +170,7 @@ export default function GoalsPage() {
           onEdit={(id) => router.push(`/hr/goals/${id}/edit`)}
           onDelete={handleDelete}
         />
-      </DataTableWrapper>
-    </PageContainer>
+      </div>
+    </div>
   );
 }

@@ -3,9 +3,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { WrenchIcon, MagnifyingGlassIcon, PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
-import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
-import { Input } from '@/components/primitives/inputs';
-import { Alert } from '@/components/primitives/feedback';
 import { EmployeeSkillsStats, EmployeeSkillsTable } from '@/components/hr/employee-skills';
 import { useEmployeeSkills, useDeleteEmployeeSkill } from '@/lib/api/hooks/useHR';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
@@ -55,7 +52,7 @@ export default function EmployeeSkillsPage() {
   const handleDelete = async (skill: EmployeeSkillDto) => {
     try {
       await deleteSkillMutation.mutateAsync(skill.id);
-      showSuccess('Yetkinlik başarıyla silindi');
+      showSuccess('Yetkinlik basariyla silindi');
       refetch();
     } catch (err) {
       showApiError(err, 'Yetkinlik silinemedi');
@@ -68,63 +65,80 @@ export default function EmployeeSkillsPage() {
   };
 
   return (
-    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <WrenchIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Calisan Yetkinlikleri</h1>
+              <p className="text-sm text-slate-500">Calisan beceri ve yetkinliklerini takip edin ve yonetin</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={() => router.push('/hr/employee-skills/new')}
+            className="flex items-center gap-2 px-4 py-2 !bg-slate-900 hover:!bg-slate-800 text-white rounded-lg transition-colors"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Yeni Yetkinlik
+          </button>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div className="mb-8">
         <EmployeeSkillsStats skills={filteredSkills} loading={isLoading} />
       </div>
 
-      {/* Header */}
-      <ListPageHeader
-        icon={<WrenchIcon className="w-5 h-5" />}
-        iconColor="#8b5cf6"
-        title="Çalışan Yetkinlikleri"
-        description="Çalışan beceri ve yetkinliklerini takip edin ve yönetin"
-        itemCount={totalCount}
-        primaryAction={{
-          label: 'Yeni Yetkinlik',
-          onClick: () => router.push('/hr/employee-skills/new'),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-          >
-            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
-
+      {/* Error Alert */}
       {error && (
-        <Alert
-          variant="error"
-          title="Yetkinlikler yüklenemedi"
-          message={(error as Error).message}
-          closable
-          action={
+        <div className="mb-6 p-4 bg-white border border-slate-200 rounded-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-slate-900">Yetkinlikler yuklenemedi</p>
+              <p className="text-sm text-slate-500">{(error as Error).message}</p>
+            </div>
             <button
               onClick={() => refetch()}
-              className="text-red-600 hover:text-red-800 font-medium"
+              className="px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
             >
               Tekrar Dene
             </button>
-          }
-          className="mt-6"
-        />
+          </div>
+        </div>
       )}
 
-      <DataTableWrapper className="mt-6">
-        <div className="p-4 border-b border-gray-100">
-          <Input
-            placeholder="Yetkinlik ara... (yetkinlik adı, kategori, çalışan)"
-            prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
-            size="lg"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            className="max-w-md"
-          />
+      {/* Table Card with Search */}
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        {/* Search Bar */}
+        <div className="p-5 border-b border-slate-100">
+          <div className="flex items-center justify-between">
+            <div className="relative max-w-md w-full">
+              <MagnifyingGlassIcon className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Yetkinlik ara... (yetkinlik adi, kategori, calisan)"
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+            </div>
+            <div className="text-sm text-slate-500">
+              {totalCount} kayit
+            </div>
+          </div>
         </div>
 
         <EmployeeSkillsTable
@@ -138,7 +152,7 @@ export default function EmployeeSkillsPage() {
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
-      </DataTableWrapper>
-    </PageContainer>
+      </div>
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Table, Tag, Dropdown, Modal } from 'antd';
+import { Table, Dropdown, Modal } from 'antd';
 import type { TableColumnsType } from 'antd';
 import {
   EllipsisHorizontalIcon,
@@ -25,52 +25,34 @@ interface DisciplinaryActionsTableProps {
   onDelete?: (action: DisciplinaryActionDto) => Promise<void>;
 }
 
-const statusColors: Record<string, string> = {
-  Draft: 'default',
-  UnderInvestigation: 'processing',
-  PendingReview: 'warning',
-  Approved: 'success',
-  Implemented: 'success',
-  Appealed: 'orange',
-  Overturned: 'error',
-  Closed: 'default',
+const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
+  Draft: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Taslak' },
+  UnderInvestigation: { bg: 'bg-slate-300', text: 'text-slate-700', label: 'Sorusturmada' },
+  PendingReview: { bg: 'bg-slate-400', text: 'text-white', label: 'Inceleme Bekliyor' },
+  Approved: { bg: 'bg-slate-700', text: 'text-white', label: 'Onaylandi' },
+  Implemented: { bg: 'bg-slate-900', text: 'text-white', label: 'Uygulandi' },
+  Appealed: { bg: 'bg-slate-500', text: 'text-white', label: 'Itiraz Edildi' },
+  Overturned: { bg: 'bg-slate-200', text: 'text-slate-700', label: 'Iptal Edildi' },
+  Closed: { bg: 'bg-slate-100', text: 'text-slate-500', label: 'Kapatildi' },
 };
 
-const statusLabels: Record<string, string> = {
-  Draft: 'Taslak',
-  UnderInvestigation: 'Soruşturmada',
-  PendingReview: 'İnceleme Bekliyor',
-  Approved: 'Onaylandı',
-  Implemented: 'Uygulandı',
-  Appealed: 'İtiraz Edildi',
-  Overturned: 'İptal Edildi',
-  Closed: 'Kapatıldı',
-};
-
-const severityColors: Record<string, string> = {
-  Minor: 'blue',
-  Moderate: 'orange',
-  Major: 'red',
-  Critical: 'magenta',
-};
-
-const severityLabels: Record<string, string> = {
-  Minor: 'Hafif',
-  Moderate: 'Orta',
-  Major: 'Ağır',
-  Critical: 'Kritik',
+const severityConfig: Record<string, { bg: string; text: string; label: string }> = {
+  Minor: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Hafif' },
+  Moderate: { bg: 'bg-slate-300', text: 'text-slate-700', label: 'Orta' },
+  Major: { bg: 'bg-slate-700', text: 'text-white', label: 'Agir' },
+  Critical: { bg: 'bg-slate-900', text: 'text-white', label: 'Kritik' },
 };
 
 const actionTypeLabels: Record<string, string> = {
-  VerbalWarning: 'Sözlü Uyarı',
-  WrittenWarning: 'Yazılı Uyarı',
-  FinalWarning: 'Son Uyarı',
-  Suspension: 'Uzaklaştırma',
-  Demotion: 'Kademe İndirimi',
-  Termination: 'İş Akdi Feshi',
-  ProbationExtension: 'Deneme Süresi Uzatma',
-  TrainingRequired: 'Eğitim Gerekli',
-  Other: 'Diğer',
+  VerbalWarning: 'Sozlu Uyari',
+  WrittenWarning: 'Yazili Uyari',
+  FinalWarning: 'Son Uyari',
+  Suspension: 'Uzaklastirma',
+  Demotion: 'Kademe Indirimi',
+  Termination: 'Is Akdi Feshi',
+  ProbationExtension: 'Deneme Suresi Uzatma',
+  TrainingRequired: 'Egitim Gerekli',
+  Other: 'Diger',
 };
 
 export function DisciplinaryActionsTable({
@@ -88,23 +70,20 @@ export function DisciplinaryActionsTable({
 
   const columns: TableColumnsType<DisciplinaryActionDto> = [
     {
-      title: 'İşlem',
+      title: 'Islem',
       key: 'action',
       fixed: 'left',
       width: 250,
       render: (_, record) => (
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: '#ef444415' }}
-          >
-            <ExclamationTriangleIcon className="w-5 h-5" style={{ color: '#ef4444' }} />
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <ExclamationTriangleIcon className="w-5 h-5 text-slate-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-gray-900 truncate">
+            <div className="font-semibold text-slate-900 truncate">
               {actionTypeLabels[record.actionType] || record.actionType}
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-slate-500">
               {record.actionCode}
             </div>
           </div>
@@ -112,7 +91,7 @@ export function DisciplinaryActionsTable({
       ),
     },
     {
-      title: 'Çalışan',
+      title: 'Calisan',
       dataIndex: 'employeeName',
       key: 'employeeName',
       width: 150,
@@ -122,16 +101,19 @@ export function DisciplinaryActionsTable({
       ),
     },
     {
-      title: 'Şiddet',
+      title: 'Siddet',
       key: 'severity',
       width: 100,
-      filters: Object.entries(severityLabels).map(([value, label]) => ({ text: label, value })),
+      filters: Object.entries(severityConfig).map(([value, config]) => ({ text: config.label, value })),
       onFilter: (value, record) => record.severityLevel === value,
-      render: (_, record) => (
-        <Tag color={severityColors[record.severityLevel] || 'default'}>
-          {severityLabels[record.severityLevel] || record.severityLevel}
-        </Tag>
-      ),
+      render: (_, record) => {
+        const config = severityConfig[record.severityLevel] || { bg: 'bg-slate-100', text: 'text-slate-600', label: record.severityLevel };
+        return (
+          <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${config.bg} ${config.text}`}>
+            {config.label}
+          </span>
+        );
+      },
     },
     {
       title: 'Olay Tarihi',
@@ -147,13 +129,16 @@ export function DisciplinaryActionsTable({
       title: 'Durum',
       key: 'status',
       width: 140,
-      filters: Object.entries(statusLabels).map(([value, label]) => ({ text: label, value })),
+      filters: Object.entries(statusConfig).map(([value, config]) => ({ text: config.label, value })),
       onFilter: (value, record) => record.status === value,
-      render: (_, record) => (
-        <Tag color={statusColors[record.status] || 'default'}>
-          {statusLabels[record.status] || record.status}
-        </Tag>
-      ),
+      render: (_, record) => {
+        const config = statusConfig[record.status] || { bg: 'bg-slate-100', text: 'text-slate-600', label: record.status };
+        return (
+          <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${config.bg} ${config.text}`}>
+            {config.label}
+          </span>
+        );
+      },
     },
     {
       title: 'Eylemler',
@@ -166,13 +151,13 @@ export function DisciplinaryActionsTable({
             items: [
               {
                 key: 'view',
-                label: 'Görüntüle',
+                label: 'Goruntule',
                 icon: <EyeIcon className="w-4 h-4" />,
                 onClick: () => onView(record.id),
               },
               {
                 key: 'edit',
-                label: 'Düzenle',
+                label: 'Duzenle',
                 icon: <PencilIcon className="w-4 h-4" />,
                 onClick: () => onEdit(record.id),
               },
@@ -185,19 +170,19 @@ export function DisciplinaryActionsTable({
                 onClick: (e: { domEvent: { stopPropagation: () => void } }) => {
                   e.domEvent.stopPropagation();
                   Modal.confirm({
-                    title: 'Disiplin İşlemini Sil',
-                    icon: <ExclamationTriangleIcon className="w-6 h-6 text-red-500" />,
+                    title: 'Disiplin Islemini Sil',
+                    icon: <ExclamationTriangleIcon className="w-6 h-6 text-slate-900" />,
                     content: (
                       <div>
                         <p className="text-slate-600">
-                          Bu disiplin işlemini silmek istediğinize emin misiniz?
+                          Bu disiplin islemini silmek istediginize emin misiniz?
                         </p>
-                        <p className="text-sm text-slate-500 mt-2">Bu işlem geri alınamaz.</p>
+                        <p className="text-sm text-slate-500 mt-2">Bu islem geri alinamaz.</p>
                       </div>
                     ),
                     okText: 'Sil',
                     okButtonProps: { danger: true },
-                    cancelText: 'İptal',
+                    cancelText: 'Iptal',
                     onOk: async () => {
                       if (onDelete) {
                         await onDelete(record);
@@ -243,21 +228,24 @@ export function DisciplinaryActionsTable({
         onShowSizeChange: onPageChange,
         showSizeChanger: true,
         showQuickJumper: true,
-        showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} işlem`,
+        showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} islem`,
         pageSizeOptions: ['10', '20', '50', '100'],
         position: ['bottomCenter'],
       }}
       scroll={{ x: 1000 }}
       onRow={(record) => ({
         onClick: () => onView(record.id),
-        className: 'cursor-pointer hover:bg-gray-50',
+        className: 'cursor-pointer hover:bg-slate-50',
       })}
+      className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200"
       locale={{
         emptyText: (
           <div className="text-center py-16">
-            <div className="text-6xl mb-4">⚖️</div>
-            <h3 className="text-2xl font-bold text-gray-700 mb-2">Disiplin İşlemi Bulunamadı</h3>
-            <p className="text-gray-500">Arama kriterlerinize uygun disiplin işlemi bulunamadı</p>
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+              <ExclamationTriangleIcon className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-700 mb-2">Disiplin Islemi Bulunamadi</h3>
+            <p className="text-slate-500">Arama kriterlerinize uygun disiplin islemi bulunamadi</p>
           </div>
         ),
       }}

@@ -64,40 +64,40 @@ export default function JobPostingsPage() {
   const handleDelete = async (posting: JobPostingDto) => {
     try {
       await deletePostingMutation.mutateAsync(posting.id);
-      showSuccess('İş ilanı başarıyla silindi');
+      showSuccess('Is ilani basariyla silindi');
       refetch();
     } catch (err) {
-      showApiError(err, 'İş ilanı silinemedi');
+      showApiError(err, 'Is ilani silinemedi');
     }
   };
 
   const handlePublish = async (posting: JobPostingDto) => {
     try {
       await publishPostingMutation.mutateAsync(posting.id);
-      showSuccess('İş ilanı yayınlandı');
+      showSuccess('Is ilani yayinlandi');
       refetch();
     } catch (err) {
-      showApiError(err, 'İş ilanı yayınlanamadı');
+      showApiError(err, 'Is ilani yayinlanamadi');
     }
   };
 
   const handleUnpublish = async (posting: JobPostingDto) => {
     try {
       await unpublishPostingMutation.mutateAsync(posting.id);
-      showSuccess('İş ilanı yayından kaldırıldı');
+      showSuccess('Is ilani yayindan kaldirildi');
       refetch();
     } catch (err) {
-      showApiError(err, 'İş ilanı yayından kaldırılamadı');
+      showApiError(err, 'Is ilani yayindan kaldirilamadi');
     }
   };
 
   const handleClose = async (posting: JobPostingDto) => {
     try {
       await closePostingMutation.mutateAsync(posting.id);
-      showSuccess('İş ilanı kapatıldı');
+      showSuccess('Is ilani kapatildi');
       refetch();
     } catch (err) {
-      showApiError(err, 'İş ilanı kapatılamadı');
+      showApiError(err, 'Is ilani kapatilmadi');
     }
   };
 
@@ -107,7 +107,7 @@ export default function JobPostingsPage() {
   };
 
   return (
-    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+    <div className="min-h-screen bg-slate-50 p-8">
       {/* Stats Cards */}
       <div className="mb-8">
         <JobPostingsStats postings={filteredPostings} loading={isLoading} />
@@ -116,12 +116,12 @@ export default function JobPostingsPage() {
       {/* Header */}
       <ListPageHeader
         icon={<DocumentTextIcon className="w-5 h-5" />}
-        iconColor="#8b5cf6"
-        title="İş İlanları"
-        description="Açık pozisyonları ve iş ilanlarını yönetin"
+        iconColor="#64748b"
+        title="Is Ilanlari"
+        description="Acik pozisyonlari ve is ilanlarini yonetin"
         itemCount={totalCount}
         primaryAction={{
-          label: 'Yeni İlan',
+          label: 'Yeni Ilan',
           onClick: () => router.push('/hr/job-postings/new'),
           icon: <PlusIcon className="w-4 h-4" />,
         }}
@@ -139,13 +139,13 @@ export default function JobPostingsPage() {
       {error && (
         <Alert
           variant="error"
-          title="İş ilanları yüklenemedi"
+          title="Is ilanlari yuklenemedi"
           message={(error as Error).message}
           closable
           action={
             <button
               onClick={() => refetch()}
-              className="text-red-600 hover:text-red-800 font-medium"
+              className="text-slate-700 hover:text-slate-900 font-medium"
             >
               Tekrar Dene
             </button>
@@ -154,10 +154,10 @@ export default function JobPostingsPage() {
         />
       )}
 
-      <DataTableWrapper className="mt-6">
-        <div className="p-4 border-b border-gray-100">
+      <div className="bg-white border border-slate-200 rounded-xl mt-6">
+        <div className="p-4 border-b border-slate-100">
           <Input
-            placeholder="İş ilanı ara... (başlık, kod, departman)"
+            placeholder="Is ilani ara... (baslik, kod, departman)"
             prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
             size="lg"
             value={searchText}
@@ -180,7 +180,7 @@ export default function JobPostingsPage() {
           onUnpublish={handleUnpublish}
           onClose={handleClose}
         />
-      </DataTableWrapper>
-    </PageContainer>
+      </div>
+    </div>
   );
 }

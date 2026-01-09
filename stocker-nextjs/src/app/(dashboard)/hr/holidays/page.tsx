@@ -2,13 +2,12 @@
 
 /**
  * Holidays List Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
- * Standardized with CRM Customer module patterns
+ * Monochrome design system following inventory page patterns
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Select } from 'antd';
+import { Select, Table } from 'antd';
 import {
   ArrowPathIcon,
   CalendarIcon,
@@ -19,13 +18,6 @@ import { useHolidays, useDeleteHoliday } from '@/lib/api/hooks/useHR';
 import type { HolidayDto } from '@/lib/api/services/hr.types';
 import { HolidaysStats, HolidaysTable } from '@/components/hr/holidays';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
-import {
-  PageContainer,
-  ListPageHeader,
-  DataTableWrapper,
-  Card,
-} from '@/components/patterns';
-import { Input, Alert, Spinner } from '@/components/primitives';
 import dayjs from 'dayjs';
 
 export default function HolidaysPage() {
@@ -71,9 +63,9 @@ export default function HolidaysPage() {
   const handleDelete = async (holiday: HolidayDto) => {
     try {
       await deleteHoliday.mutateAsync(holiday.id);
-      showSuccess('Tatil günü başarıyla silindi!');
+      showSuccess('Tatil gunu basariyla silindi!');
     } catch (err) {
-      showApiError(err, 'Tatil günü silinirken bir hata oluştu');
+      showApiError(err, 'Tatil gunu silinirken bir hata olustu');
       throw err;
     }
   };
@@ -91,25 +83,22 @@ export default function HolidaysPage() {
   }));
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Stats Cards */}
-      <div className="mb-8">
-        <HolidaysStats holidays={holidays} loading={isLoading} />
-      </div>
-
+    <div className="min-h-screen bg-slate-50 p-8">
       {/* Header */}
-      <ListPageHeader
-        icon={<CalendarIcon className="w-5 h-5" />}
-        iconColor="#7c3aed"
-        title="Resmi Tatiller"
-        description="Tüm tatil günlerini görüntüle ve yönet"
-        itemCount={filteredHolidays.length}
-        primaryAction={{
-          label: 'Yeni Tatil',
-          onClick: () => router.push('/hr/holidays/new'),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <CalendarIcon className="w-5 h-5 text-slate-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Resmi Tatiller</h1>
+            <p className="text-sm text-slate-500">
+              {filteredHolidays.length} tatil gunu
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
           <button
             onClick={() => refetch()}
             disabled={isLoading}
@@ -117,48 +106,61 @@ export default function HolidaysPage() {
           >
             <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
-        }
-      />
+          <button
+            onClick={() => router.push('/hr/holidays/new')}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Yeni Tatil
+          </button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="mb-6">
+        <HolidaysStats holidays={holidays} loading={isLoading} />
+      </div>
 
       {/* Error Alert */}
       {error && (
-        <Alert
-          variant="error"
-          title="Tatiller yüklenemedi"
-          message={
-            error instanceof Error
-              ? error.message
-              : 'Tatil günleri getirilirken bir hata oluştu. Lütfen tekrar deneyin.'
-          }
-          closable
-          action={
+        <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-900">Tatiller yuklenemedi</p>
+              <p className="text-sm text-slate-500">
+                {error instanceof Error
+                  ? error.message
+                  : 'Tatil gunleri getirilirken bir hata olustu. Lutfen tekrar deneyin.'}
+              </p>
+            </div>
             <button
               onClick={() => refetch()}
-              className="px-3 py-1 text-xs font-medium text-red-700 bg-red-50 rounded-md hover:bg-red-100 transition-colors"
+              className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 rounded-md hover:bg-slate-200 transition-colors"
             >
               Tekrar Dene
             </button>
-          }
-          className="mb-6"
-        />
+          </div>
+        </div>
       )}
 
       {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+      <div className="bg-white border border-slate-200 rounded-xl p-5 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-2">
-            <Input
-              placeholder="Tatil ara..."
-              prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              size="lg"
-            />
+            <div className="relative">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Tatil ara..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+              />
+            </div>
           </div>
           <Select
-            placeholder="Yıl seçin"
-            className="h-10"
-            style={{ height: 48 }}
+            placeholder="Yil secin"
+            className="h-12 [&_.ant-select-selector]:!h-12 [&_.ant-select-selector]:!py-2 [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selection-item]:!leading-8"
             value={yearFilter}
             onChange={(value) => setYearFilter(value)}
             allowClear
@@ -174,14 +176,12 @@ export default function HolidaysPage() {
       </div>
 
       {/* Table */}
-      {isLoading ? (
-        <Card>
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Spinner size="lg" />
+            <div className="w-8 h-8 border-2 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
           </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
+        ) : (
           <HolidaysTable
             holidays={filteredHolidays}
             loading={isLoading}
@@ -196,8 +196,8 @@ export default function HolidaysPage() {
             onEdit={handleEdit}
             onDelete={handleDelete}
           />
-        </DataTableWrapper>
-      )}
-    </PageContainer>
+        )}
+      </div>
+    </div>
   );
 }

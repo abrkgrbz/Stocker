@@ -3,9 +3,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { StarIcon, MagnifyingGlassIcon, PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
-import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
-import { Input } from '@/components/primitives/inputs';
-import { Alert } from '@/components/primitives/feedback';
 import { SuccessionPlansStats, SuccessionPlansTable } from '@/components/hr/succession-plans';
 import { useSuccessionPlans, useDeleteSuccessionPlan } from '@/lib/api/hooks/useHR';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
@@ -55,10 +52,10 @@ export default function SuccessionPlansPage() {
   const handleDelete = async (plan: SuccessionPlanDto) => {
     try {
       await deletePlanMutation.mutateAsync(plan.id);
-      showSuccess('Yedekleme planı başarıyla silindi');
+      showSuccess('Yedekleme plani basariyla silindi');
       refetch();
     } catch (err) {
-      showApiError(err, 'Yedekleme planı silinemedi');
+      showApiError(err, 'Yedekleme plani silinemedi');
     }
   };
 
@@ -68,63 +65,80 @@ export default function SuccessionPlansPage() {
   };
 
   return (
-    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <StarIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Yedekleme Planlari</h1>
+              <p className="text-sm text-slate-500">Kritik pozisyonlar icin yedekleme planlarini yonetin</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={() => router.push('/hr/succession-plans/new')}
+            className="flex items-center gap-2 px-4 py-2 !bg-slate-900 hover:!bg-slate-800 text-white rounded-lg transition-colors"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Yeni Plan
+          </button>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div className="mb-8">
         <SuccessionPlansStats plans={filteredPlans} loading={isLoading} />
       </div>
 
-      {/* Header */}
-      <ListPageHeader
-        icon={<StarIcon className="w-5 h-5" />}
-        iconColor="#f59e0b"
-        title="Yedekleme Planları"
-        description="Kritik pozisyonlar için yedekleme planlarını yönetin"
-        itemCount={totalCount}
-        primaryAction={{
-          label: 'Yeni Plan',
-          onClick: () => router.push('/hr/succession-plans/new'),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-          >
-            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
-
+      {/* Error Alert */}
       {error && (
-        <Alert
-          variant="error"
-          title="Yedekleme planları yüklenemedi"
-          message={(error as Error).message}
-          closable
-          action={
+        <div className="mb-6 p-4 bg-white border border-slate-200 rounded-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-slate-900">Yedekleme planlari yuklenemedi</p>
+              <p className="text-sm text-slate-500">{(error as Error).message}</p>
+            </div>
             <button
               onClick={() => refetch()}
-              className="text-red-600 hover:text-red-800 font-medium"
+              className="px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
             >
               Tekrar Dene
             </button>
-          }
-          className="mt-6"
-        />
+          </div>
+        </div>
       )}
 
-      <DataTableWrapper className="mt-6">
-        <div className="p-4 border-b border-gray-100">
-          <Input
-            placeholder="Plan ara... (pozisyon, departman, mevcut kişi)"
-            prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
-            size="lg"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            className="max-w-md"
-          />
+      {/* Table Card with Search */}
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        {/* Search Bar */}
+        <div className="p-5 border-b border-slate-100">
+          <div className="flex items-center justify-between">
+            <div className="relative max-w-md w-full">
+              <MagnifyingGlassIcon className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Plan ara... (pozisyon, departman, mevcut kisi)"
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+            </div>
+            <div className="text-sm text-slate-500">
+              {totalCount} kayit
+            </div>
+          </div>
         </div>
 
         <SuccessionPlansTable
@@ -138,7 +152,7 @@ export default function SuccessionPlansPage() {
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
-      </DataTableWrapper>
-    </PageContainer>
+      </div>
+    </div>
   );
 }

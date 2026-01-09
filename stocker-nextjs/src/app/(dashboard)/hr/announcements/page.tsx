@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, Row, Col, Select } from 'antd';
+import { Select } from 'antd';
 import { MagnifyingGlassIcon, BellIcon, PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
 import { Input } from '@/components/primitives/inputs';
@@ -70,14 +70,14 @@ export default function AnnouncementsPage() {
   const handleDelete = async (announcement: AnnouncementDto) => {
     try {
       await deleteAnnouncement.mutateAsync(announcement.id);
-      showSuccess('Duyuru Silindi', `"${announcement.title}" duyurusu başarıyla silindi.`);
+      showSuccess('Duyuru Silindi', `"${announcement.title}" duyurusu basariyla silindi.`);
     } catch (err) {
-      showApiError(err, 'Duyuru silinirken bir hata oluştu');
+      showApiError(err, 'Duyuru silinirken bir hata olustu');
     }
   };
 
   return (
-    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+    <div className="min-h-screen bg-slate-50 p-8">
       {/* Stats Cards */}
       <div className="mb-8">
         <AnnouncementsStats announcements={announcements} loading={isLoading} />
@@ -86,9 +86,9 @@ export default function AnnouncementsPage() {
       {/* Header */}
       <ListPageHeader
         icon={<BellIcon className="w-5 h-5" />}
-        iconColor="#9333ea"
+        iconColor="#64748b"
         title="Duyurular"
-        description="Şirket duyurularını yönetin ve yayınlayın"
+        description="Sirket duyurularini yonetin ve yayinlayin"
         itemCount={totalCount}
         primaryAction={{
           label: 'Yeni Duyuru',
@@ -109,11 +109,11 @@ export default function AnnouncementsPage() {
       {error && (
         <Alert
           variant="error"
-          title="Duyurular yüklenemedi"
+          title="Duyurular yuklenemedi"
           message={(error as Error).message}
           closable
           action={
-            <button onClick={() => refetch()} className="text-red-600 hover:text-red-800 font-medium">
+            <button onClick={() => refetch()} className="text-slate-700 hover:text-slate-900 font-medium">
               Tekrar Dene
             </button>
           }
@@ -121,35 +121,34 @@ export default function AnnouncementsPage() {
         />
       )}
 
-      <Card className="mt-6 mb-4 border border-gray-100 shadow-sm">
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={10}>
+      <div className="bg-white border border-slate-200 rounded-xl p-4 mt-6 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="md:col-span-2">
             <Input
-              placeholder="Duyuru ara... (başlık, içerik, yazar)"
+              placeholder="Duyuru ara... (baslik, icerik, yazar)"
               prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
               size="lg"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
             />
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Select
-              placeholder="Öncelik filtrele"
-              allowClear
-              style={{ width: '100%', height: '44px' }}
-              onChange={(value) => setPriorityFilter(value)}
-              options={[
-                { value: 'Low', label: 'Düşük' },
-                { value: 'Normal', label: 'Normal' },
-                { value: 'High', label: 'Yüksek' },
-                { value: 'Urgent', label: 'Acil' },
-              ]}
-            />
-          </Col>
-        </Row>
-      </Card>
+          </div>
+          <Select
+            placeholder="Oncelik filtrele"
+            allowClear
+            style={{ width: '100%', height: '44px' }}
+            onChange={(value) => setPriorityFilter(value)}
+            options={[
+              { value: 'Low', label: 'Dusuk' },
+              { value: 'Normal', label: 'Normal' },
+              { value: 'High', label: 'Yuksek' },
+              { value: 'Urgent', label: 'Acil' },
+            ]}
+            className="[&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg"
+          />
+        </div>
+      </div>
 
-      <DataTableWrapper>
+      <div className="bg-white border border-slate-200 rounded-xl">
         <AnnouncementsTable
           announcements={paginatedAnnouncements}
           loading={isLoading}
@@ -161,7 +160,7 @@ export default function AnnouncementsPage() {
           onEdit={(id) => router.push(`/hr/announcements/${id}/edit`)}
           onDelete={handleDelete}
         />
-      </DataTableWrapper>
-    </PageContainer>
+      </div>
+    </div>
   );
 }

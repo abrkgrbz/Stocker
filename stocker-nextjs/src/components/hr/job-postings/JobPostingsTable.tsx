@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Table, Tag, Dropdown, Modal, Tooltip } from 'antd';
+import { Table, Dropdown, Modal, Tooltip } from 'antd';
 import type { TableColumnsType } from 'antd';
 import {
   EllipsisHorizontalIcon,
@@ -34,27 +34,27 @@ interface JobPostingsTableProps {
   onClose?: (posting: JobPostingDto) => Promise<void>;
 }
 
-const statusColors: Record<string, string> = {
-  Draft: 'default',
-  Published: 'success',
-  Closed: 'error',
-  OnHold: 'warning',
-  Filled: 'processing',
+const statusStyles: Record<string, string> = {
+  Draft: 'bg-slate-100 text-slate-600',
+  Published: 'bg-slate-900 text-white',
+  Closed: 'bg-slate-200 text-slate-500',
+  OnHold: 'bg-slate-300 text-slate-700',
+  Filled: 'bg-slate-700 text-white',
 };
 
 const statusLabels: Record<string, string> = {
   Draft: 'Taslak',
-  Published: 'Yayında',
-  Closed: 'Kapalı',
+  Published: 'Yayinda',
+  Closed: 'Kapali',
   OnHold: 'Beklemede',
   Filled: 'Dolu',
 };
 
 const employmentTypeLabels: Record<string, string> = {
-  FullTime: 'Tam Zamanlı',
-  PartTime: 'Yarı Zamanlı',
-  Contract: 'Sözleşmeli',
-  Temporary: 'Geçici',
+  FullTime: 'Tam Zamanli',
+  PartTime: 'Yari Zamanli',
+  Contract: 'Sozlesmeli',
+  Temporary: 'Gecici',
   Intern: 'Stajyer',
   Freelance: 'Serbest',
 };
@@ -88,34 +88,31 @@ export function JobPostingsTable({
 
   const columns: TableColumnsType<JobPostingDto> = [
     {
-      title: 'İlan',
+      title: 'Ilan',
       key: 'posting',
       fixed: 'left',
       width: 300,
       render: (_, record) => (
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: '#7c3aed15' }}
-          >
-            <DocumentTextIcon className="w-5 h-5" style={{ color: '#7c3aed' }} />
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <DocumentTextIcon className="w-5 h-5 text-slate-500" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-gray-900 truncate flex items-center gap-1">
+            <div className="font-semibold text-slate-900 truncate flex items-center gap-1">
               {record.title}
               {record.isUrgent && (
                 <Tooltip title="Acil">
-                  <FireIcon className="w-4 h-4 text-red-500" />
+                  <FireIcon className="w-4 h-4 text-slate-700" />
                 </Tooltip>
               )}
               {record.isFeatured && (
-                <Tooltip title="Öne Çıkan">
-                  <MapPinIcon className="w-4 h-4 text-amber-500" />
+                <Tooltip title="One Cikan">
+                  <MapPinIcon className="w-4 h-4 text-slate-500" />
                 </Tooltip>
               )}
             </div>
-            <div className="text-xs text-gray-500">
-              {record.postingCode} • {employmentTypeLabels[record.employmentType] || record.employmentType}
+            <div className="text-xs text-slate-400">
+              {record.postingCode} - {employmentTypeLabels[record.employmentType] || record.employmentType}
             </div>
           </div>
         </div>
@@ -136,22 +133,26 @@ export function JobPostingsTable({
       width: 130,
       render: (_, record) => (
         <div>
-          <Tag color={record.remoteWorkType === 'Remote' ? 'green' : record.remoteWorkType === 'Hybrid' ? 'blue' : 'default'}>
+          <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${
+            record.remoteWorkType === 'Remote' ? 'bg-slate-900 text-white' :
+            record.remoteWorkType === 'Hybrid' ? 'bg-slate-200 text-slate-700' :
+            'bg-slate-100 text-slate-600'
+          }`}>
             {remoteLabels[record.remoteWorkType] || record.remoteWorkType}
-          </Tag>
+          </span>
           {record.city && (
-            <div className="text-xs text-gray-400 mt-1">{record.city}</div>
+            <div className="text-xs text-slate-400 mt-1">{record.city}</div>
           )}
         </div>
       ),
     },
     {
-      title: 'Maaş Aralığı',
+      title: 'Maas Araligi',
       key: 'salary',
       width: 150,
       render: (_, record) => {
         if (!record.showSalary || (!record.salaryMin && !record.salaryMax)) {
-          return <span className="text-gray-400">Belirtilmedi</span>;
+          return <span className="text-slate-400">Belirtilmedi</span>;
         }
         return (
           <span className="text-sm text-slate-700">
@@ -161,26 +162,28 @@ export function JobPostingsTable({
       },
     },
     {
-      title: 'Başvuru',
+      title: 'Basvuru',
       dataIndex: 'totalApplications',
       key: 'applications',
       width: 80,
       align: 'center',
       sorter: (a, b) => (a.totalApplications || 0) - (b.totalApplications || 0),
       render: (count: number) => (
-        <Tag color="blue">{count || 0}</Tag>
+        <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded bg-slate-100 text-slate-700">
+          {count || 0}
+        </span>
       ),
     },
     {
-      title: 'Son Başvuru',
+      title: 'Son Basvuru',
       dataIndex: 'applicationDeadline',
       key: 'deadline',
       width: 110,
       render: (date: string) => {
-        if (!date) return <span className="text-gray-400">-</span>;
+        if (!date) return <span className="text-slate-400">-</span>;
         const isExpired = dayjs(date).isBefore(dayjs());
         return (
-          <span className={`text-sm ${isExpired ? 'text-red-600' : 'text-slate-600'}`}>
+          <span className={`text-sm ${isExpired ? 'text-slate-900 font-medium' : 'text-slate-600'}`}>
             {dayjs(date).format('DD.MM.YYYY')}
           </span>
         );
@@ -193,9 +196,9 @@ export function JobPostingsTable({
       filters: Object.entries(statusLabels).map(([value, label]) => ({ text: label, value })),
       onFilter: (value, record) => record.status === value,
       render: (_, record) => (
-        <Tag color={statusColors[record.status] || 'default'}>
+        <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${statusStyles[record.status] || 'bg-slate-100 text-slate-600'}`}>
           {statusLabels[record.status] || record.status}
-        </Tag>
+        </span>
       ),
     },
     {
@@ -207,13 +210,13 @@ export function JobPostingsTable({
         const menuItems: any[] = [
           {
             key: 'view',
-            label: 'Görüntüle',
+            label: 'Goruntule',
             icon: <EyeIcon className="w-4 h-4" />,
             onClick: () => onView(record.id),
           },
           {
             key: 'edit',
-            label: 'Düzenle',
+            label: 'Duzenle',
             icon: <PencilIcon className="w-4 h-4" />,
             onClick: () => onEdit(record.id),
           },
@@ -223,7 +226,7 @@ export function JobPostingsTable({
         if (record.status === 'Draft' && onPublish) {
           menuItems.push({
             key: 'publish',
-            label: 'Yayınla',
+            label: 'Yayinla',
             icon: <PaperAirplaneIcon className="w-4 h-4" />,
             onClick: () => onPublish(record),
           });
@@ -231,7 +234,7 @@ export function JobPostingsTable({
           if (onUnpublish) {
             menuItems.push({
               key: 'unpublish',
-              label: 'Yayından Kaldır',
+              label: 'Yayindan Kaldir',
               icon: <EyeSlashIcon className="w-4 h-4" />,
               onClick: () => onUnpublish(record),
             });
@@ -239,7 +242,7 @@ export function JobPostingsTable({
           if (onClose) {
             menuItems.push({
               key: 'close',
-              label: 'İlanı Kapat',
+              label: 'Ilani Kapat',
               icon: <StopCircleIcon className="w-4 h-4" />,
               onClick: () => onClose(record),
             });
@@ -255,19 +258,19 @@ export function JobPostingsTable({
           onClick: (e: { domEvent: { stopPropagation: () => void } }) => {
             e.domEvent.stopPropagation();
             Modal.confirm({
-              title: 'İş İlanını Sil',
-              icon: <ExclamationTriangleIcon className="w-6 h-6 text-red-500" />,
+              title: 'Is Ilanini Sil',
+              icon: <ExclamationTriangleIcon className="w-6 h-6 text-slate-700" />,
               content: (
                 <div>
                   <p className="text-slate-600">
-                    "{record.title}" ilanını silmek istediğinize emin misiniz?
+                    "{record.title}" ilanini silmek istediginize emin misiniz?
                   </p>
-                  <p className="text-sm text-slate-500 mt-2">Bu işlem geri alınamaz.</p>
+                  <p className="text-sm text-slate-500 mt-2">Bu islem geri alinamaz.</p>
                 </div>
               ),
               okText: 'Sil',
               okButtonProps: { danger: true },
-              cancelText: 'İptal',
+              cancelText: 'Iptal',
               onOk: async () => {
                 if (onDelete) {
                   await onDelete(record);
@@ -320,14 +323,17 @@ export function JobPostingsTable({
       scroll={{ x: 1300 }}
       onRow={(record) => ({
         onClick: () => onView(record.id),
-        className: 'cursor-pointer hover:bg-gray-50',
+        className: 'cursor-pointer hover:bg-slate-50',
       })}
+      className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
       locale={{
         emptyText: (
           <div className="text-center py-16">
-            <div className="text-6xl mb-4">📄</div>
-            <h3 className="text-2xl font-bold text-gray-700 mb-2">İş İlanı Bulunamadı</h3>
-            <p className="text-gray-500">Arama kriterlerinize uygun iş ilanı bulunamadı</p>
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+              <DocumentTextIcon className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-700 mb-1">Is Ilani Bulunamadi</h3>
+            <p className="text-slate-500 text-sm">Arama kriterlerinize uygun is ilani bulunamadi</p>
           </div>
         ),
       }}

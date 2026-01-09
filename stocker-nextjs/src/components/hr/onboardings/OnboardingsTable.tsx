@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Table, Tag, Dropdown, Modal, Progress } from 'antd';
+import { Table, Dropdown, Modal, Progress } from 'antd';
 import type { TableColumnsType } from 'antd';
 import {
   EllipsisHorizontalIcon,
@@ -26,20 +26,20 @@ interface OnboardingsTableProps {
   onDelete?: (onboarding: OnboardingDto) => Promise<void>;
 }
 
-const statusColors: Record<string, string> = {
-  NotStarted: 'default',
-  InProgress: 'processing',
-  Completed: 'success',
-  OnHold: 'warning',
-  Cancelled: 'error',
+const statusStyles: Record<string, string> = {
+  NotStarted: 'bg-slate-100 text-slate-600',
+  InProgress: 'bg-slate-300 text-slate-700',
+  Completed: 'bg-slate-900 text-white',
+  OnHold: 'bg-slate-200 text-slate-600',
+  Cancelled: 'bg-slate-200 text-slate-500',
 };
 
 const statusLabels: Record<string, string> = {
-  NotStarted: 'Başlamadı',
+  NotStarted: 'Baslamadi',
   InProgress: 'Devam Ediyor',
-  Completed: 'Tamamlandı',
+  Completed: 'Tamamlandi',
   OnHold: 'Beklemede',
-  Cancelled: 'İptal Edildi',
+  Cancelled: 'Iptal Edildi',
 };
 
 export function OnboardingsTable({
@@ -57,24 +57,21 @@ export function OnboardingsTable({
 
   const columns: TableColumnsType<OnboardingDto> = [
     {
-      title: 'Çalışan',
+      title: 'Calisan',
       key: 'employee',
       fixed: 'left',
       width: 250,
       render: (_, record) => (
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: '#7c3aed15' }}
-          >
-            <RocketLaunchIcon className="w-5 h-5" style={{ color: '#7c3aed' }} />
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <RocketLaunchIcon className="w-5 h-5 text-slate-500" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-gray-900 truncate">
+            <div className="font-semibold text-slate-900 truncate">
               {record.employeeName}
             </div>
-            <div className="text-xs text-gray-500">
-              {record.templateName || 'Standart Süreç'}
+            <div className="text-xs text-slate-400">
+              {record.templateName || 'Standart Surec'}
             </div>
           </div>
         </div>
@@ -90,7 +87,7 @@ export function OnboardingsTable({
       ),
     },
     {
-      title: 'İlerleme',
+      title: 'Ilerleme',
       key: 'progress',
       width: 180,
       render: (_, record) => (
@@ -98,16 +95,18 @@ export function OnboardingsTable({
           <Progress
             percent={record.completionPercentage}
             size="small"
+            strokeColor="#1e293b"
+            trailColor="#e2e8f0"
             status={record.status === 'Completed' ? 'success' : 'active'}
           />
-          <div className="text-xs text-gray-400 mt-1">
-            {record.completedTasks}/{record.totalTasks} görev
+          <div className="text-xs text-slate-400 mt-1">
+            {record.completedTasks}/{record.totalTasks} gorev
           </div>
         </div>
       ),
     },
     {
-      title: 'Başlangıç',
+      title: 'Baslangic',
       dataIndex: 'startDate',
       key: 'startDate',
       width: 120,
@@ -123,9 +122,9 @@ export function OnboardingsTable({
       filters: Object.entries(statusLabels).map(([value, label]) => ({ text: label, value })),
       onFilter: (value, record) => record.status === value,
       render: (_, record) => (
-        <Tag color={statusColors[record.status] || 'default'}>
+        <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${statusStyles[record.status] || 'bg-slate-100 text-slate-600'}`}>
           {statusLabels[record.status] || record.status}
-        </Tag>
+        </span>
       ),
     },
     {
@@ -139,13 +138,13 @@ export function OnboardingsTable({
             items: [
               {
                 key: 'view',
-                label: 'Görüntüle',
+                label: 'Goruntule',
                 icon: <EyeIcon className="w-4 h-4" />,
                 onClick: () => onView(record.id),
               },
               {
                 key: 'edit',
-                label: 'Düzenle',
+                label: 'Duzenle',
                 icon: <PencilIcon className="w-4 h-4" />,
                 onClick: () => onEdit(record.id),
               },
@@ -158,19 +157,19 @@ export function OnboardingsTable({
                 onClick: (e: { domEvent: { stopPropagation: () => void } }) => {
                   e.domEvent.stopPropagation();
                   Modal.confirm({
-                    title: 'Onboarding Sürecini Sil',
-                    icon: <ExclamationTriangleIcon className="w-6 h-6 text-red-500" />,
+                    title: 'Onboarding Surecini Sil',
+                    icon: <ExclamationTriangleIcon className="w-6 h-6 text-slate-700" />,
                     content: (
                       <div>
                         <p className="text-slate-600">
-                          Bu onboarding sürecini silmek istediğinize emin misiniz?
+                          Bu onboarding surecini silmek istediginize emin misiniz?
                         </p>
-                        <p className="text-sm text-slate-500 mt-2">Bu işlem geri alınamaz.</p>
+                        <p className="text-sm text-slate-500 mt-2">Bu islem geri alinamaz.</p>
                       </div>
                     ),
                     okText: 'Sil',
                     okButtonProps: { danger: true },
-                    cancelText: 'İptal',
+                    cancelText: 'Iptal',
                     onOk: async () => {
                       if (onDelete) {
                         await onDelete(record);
@@ -216,21 +215,24 @@ export function OnboardingsTable({
         onShowSizeChange: onPageChange,
         showSizeChanger: true,
         showQuickJumper: true,
-        showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} süreç`,
+        showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} surec`,
         pageSizeOptions: ['10', '20', '50', '100'],
         position: ['bottomCenter'],
       }}
       scroll={{ x: 1000 }}
       onRow={(record) => ({
         onClick: () => onView(record.id),
-        className: 'cursor-pointer hover:bg-gray-50',
+        className: 'cursor-pointer hover:bg-slate-50',
       })}
+      className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
       locale={{
         emptyText: (
           <div className="text-center py-16">
-            <div className="text-6xl mb-4">🚀</div>
-            <h3 className="text-2xl font-bold text-gray-700 mb-2">Onboarding Bulunamadı</h3>
-            <p className="text-gray-500">Arama kriterlerinize uygun onboarding süreci bulunamadı</p>
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+              <RocketLaunchIcon className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-700 mb-1">Onboarding Bulunamadi</h3>
+            <p className="text-slate-500 text-sm">Arama kriterlerinize uygun onboarding sureci bulunamadi</p>
           </div>
         ),
       }}

@@ -1,8 +1,13 @@
 'use client';
 
+/**
+ * Work Schedules List Page
+ * Monochrome design system following inventory page patterns
+ */
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Select, DatePicker, Card, Row, Col } from 'antd';
+import { Select, DatePicker } from 'antd';
 import {
   ArrowPathIcon,
   CalendarIcon,
@@ -14,9 +19,6 @@ import {
 import { useWorkSchedules, useDeleteWorkSchedule, useEmployees } from '@/lib/api/hooks/useHR';
 import type { WorkScheduleDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
-import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
-import { Input } from '@/components/primitives/inputs';
-import { Alert } from '@/components/primitives/feedback';
 import { WorkSchedulesStats, WorkSchedulesTable } from '@/components/hr/work-schedules';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
 
@@ -64,9 +66,9 @@ export default function WorkSchedulesPage() {
   const handleDelete = async (schedule: WorkScheduleDto) => {
     try {
       await deleteSchedule.mutateAsync(schedule.id);
-      showSuccess('Başarılı', 'Çalışma programı silindi');
+      showSuccess('Basarili', 'Calisma programi silindi');
     } catch (err) {
-      showApiError(err, 'Çalışma programı silinirken hata oluştu');
+      showApiError(err, 'Calisma programi silinirken hata olustu');
     }
   };
 
@@ -84,121 +86,134 @@ export default function WorkSchedulesPage() {
   };
 
   return (
-    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <CalendarIcon className="w-5 h-5 text-slate-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Calisma Programlari</h1>
+            <p className="text-sm text-slate-500">
+              {totalCount} program
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push('/hr/work-schedules/assign')}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+            title="Toplu Atama"
+          >
+            <UsersIcon className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={() => router.push('/hr/work-schedules/new')}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Yeni Program
+          </button>
+        </div>
+      </div>
+
       {/* Stats Cards */}
-      <div className="mb-8">
+      <div className="mb-6">
         <WorkSchedulesStats schedules={schedules as WorkScheduleDto[]} loading={isLoading} />
       </div>
 
-      {/* Header */}
-      <ListPageHeader
-        icon={<CalendarIcon className="w-5 h-5" />}
-        iconColor="#8b5cf6"
-        title="Çalışma Programları"
-        description="Çalışan çalışma programlarını görüntüleyin ve yönetin"
-        itemCount={totalCount}
-        primaryAction={{
-          label: 'Yeni Program',
-          onClick: () => router.push('/hr/work-schedules/new'),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => router.push('/hr/work-schedules/assign')}
-              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
-              title="Toplu Atama"
-            >
-              <UsersIcon className="w-5 h-5" />
-            </button>
+      {/* Error Alert */}
+      {error && (
+        <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-900">Programlar yuklenemedi</p>
+              <p className="text-sm text-slate-500">{(error as Error).message}</p>
+            </div>
             <button
               onClick={() => refetch()}
-              disabled={isLoading}
-              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+              className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 rounded-md hover:bg-slate-200 transition-colors"
             >
-              <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-        }
-      />
-
-      {error && (
-        <Alert
-          variant="error"
-          title="Programlar yüklenemedi"
-          message={(error as Error).message}
-          closable
-          action={
-            <button onClick={() => refetch()} className="text-red-600 hover:text-red-800 font-medium">
               Tekrar Dene
             </button>
-          }
-          className="mt-6"
-        />
+          </div>
+        </div>
       )}
 
-      <Card className="mt-6 mb-4 border border-gray-100 shadow-sm">
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={6}>
-            <Input
-              placeholder="Çalışan veya vardiya ara..."
-              prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
-              size="lg"
+      {/* Filters */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="relative">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Calisan veya vardiya ara..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
             />
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Select
-              placeholder="Çalışan seçin"
-              allowClear
-              showSearch
-              optionFilterProp="label"
-              style={{ width: '100%', height: '44px' }}
-              value={selectedEmployeeId}
-              onChange={setSelectedEmployeeId}
-              options={employees.map((e) => ({
-                value: e.id,
-                label: e.fullName,
-              }))}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <RangePicker
-              style={{ width: '100%', height: '44px' }}
-              value={dateRange}
-              onChange={(dates) => setDateRange(dates)}
-              format="DD.MM.YYYY"
-              placeholder={['Başlangıç', 'Bitiş']}
-            />
-          </Col>
+          </div>
+          <Select
+            placeholder="Calisan secin"
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            className="h-12 [&_.ant-select-selector]:!h-12 [&_.ant-select-selector]:!py-2 [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selection-item]:!leading-8"
+            value={selectedEmployeeId}
+            onChange={setSelectedEmployeeId}
+            options={employees.map((e) => ({
+              value: e.id,
+              label: e.fullName,
+            }))}
+          />
+          <RangePicker
+            className="h-12 [&_.ant-picker-input_input]:!py-2 !border-slate-200"
+            value={dateRange}
+            onChange={(dates) => setDateRange(dates)}
+            format="DD.MM.YYYY"
+            placeholder={['Baslangic', 'Bitis']}
+          />
           {hasFilters && (
-            <Col xs={24} sm={12} md={4}>
-              <button
-                onClick={clearFilters}
-                className="flex items-center gap-1 px-3 py-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
-              >
-                <XMarkIcon className="w-4 h-4" />
-                Temizle
-              </button>
-            </Col>
+            <button
+              onClick={clearFilters}
+              className="flex items-center justify-center gap-1 h-12 px-4 text-sm text-slate-500 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+            >
+              <XMarkIcon className="w-4 h-4" />
+              Temizle
+            </button>
           )}
-        </Row>
-      </Card>
+        </div>
+      </div>
 
-      <DataTableWrapper>
-        <WorkSchedulesTable
-          schedules={filteredSchedules as WorkScheduleDto[]}
-          loading={isLoading}
-          currentPage={currentPage}
-          pageSize={pageSize}
-          totalCount={totalCount}
-          onPageChange={handlePageChange}
-          onView={handleView}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-      </DataTableWrapper>
-    </PageContainer>
+      {/* Table */}
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-8 h-8 border-2 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
+          </div>
+        ) : (
+          <WorkSchedulesTable
+            schedules={filteredSchedules as WorkScheduleDto[]}
+            loading={isLoading}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalCount={totalCount}
+            onPageChange={handlePageChange}
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        )}
+      </div>
+    </div>
   );
 }

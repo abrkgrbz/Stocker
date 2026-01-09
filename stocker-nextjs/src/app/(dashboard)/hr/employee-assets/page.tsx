@@ -2,10 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from 'antd';
 import { ComputerDesktopIcon, MagnifyingGlassIcon, PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
-import { PageContainer, ListPageHeader, DataTableWrapper } from '@/components/patterns';
-import { Input } from '@/components/primitives/inputs';
-import { Alert } from '@/components/primitives/feedback';
 import { EmployeeAssetsStats, EmployeeAssetsTable } from '@/components/hr/employee-assets';
 import { useEmployeeAssets, useDeleteEmployeeAsset } from '@/lib/api/hooks/useHR';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
@@ -55,10 +53,10 @@ export default function EmployeeAssetsPage() {
   const handleDelete = async (asset: EmployeeAssetDto) => {
     try {
       await deleteAssetMutation.mutateAsync(asset.id);
-      showSuccess('Varlık ataması başarıyla silindi');
+      showSuccess('Varlik atamasi basariyla silindi');
       refetch();
     } catch (err) {
-      showApiError(err, 'Varlık ataması silinemedi');
+      showApiError(err, 'Varlik atamasi silinemedi');
     }
   };
 
@@ -68,63 +66,69 @@ export default function EmployeeAssetsPage() {
   };
 
   return (
-    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+    <div className="min-h-screen bg-slate-50 p-8">
       {/* Stats Cards */}
       <div className="mb-8">
         <EmployeeAssetsStats assets={filteredAssets} loading={isLoading} />
       </div>
 
       {/* Header */}
-      <ListPageHeader
-        icon={<ComputerDesktopIcon className="w-5 h-5" />}
-        iconColor="#3b82f6"
-        title="Çalışan Varlıkları"
-        description="Çalışanlara atanan varlık ve ekipmanları takip edin"
-        itemCount={totalCount}
-        primaryAction={{
-          label: 'Yeni Varlık Ata',
-          onClick: () => router.push('/hr/employee-assets/new'),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <button
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <ComputerDesktopIcon className="w-5 h-5 text-slate-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold text-slate-900">Calisan Varliklari</h1>
+            <p className="text-sm text-slate-500">Calisanlara atanan varlik ve ekipmanlari takip edin</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-slate-500">{totalCount} varlik</span>
+          <Button
+            icon={<ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
             onClick={() => refetch()}
             disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+            className="!border-slate-300 !text-slate-600 hover:!text-slate-900 hover:!border-slate-400"
+          />
+          <Button
+            type="primary"
+            icon={<PlusIcon className="w-4 h-4" />}
+            onClick={() => router.push('/hr/employee-assets/new')}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
           >
-            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
+            Yeni Varlik Ata
+          </Button>
+        </div>
+      </div>
 
       {error && (
-        <Alert
-          variant="error"
-          title="Varlıklar yüklenemedi"
-          message={(error as Error).message}
-          closable
-          action={
-            <button
-              onClick={() => refetch()}
-              className="text-red-600 hover:text-red-800 font-medium"
-            >
+        <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-slate-900">Varliklar yuklenemedi</p>
+              <p className="text-sm text-slate-500">{(error as Error).message}</p>
+            </div>
+            <Button onClick={() => refetch()} className="!border-slate-300 !text-slate-700">
               Tekrar Dene
-            </button>
-          }
-          className="mt-6"
-        />
+            </Button>
+          </div>
+        </div>
       )}
 
-      <DataTableWrapper className="mt-6">
-        <div className="p-4 border-b border-gray-100">
-          <Input
-            placeholder="Varlık ara... (varlık adı, kod, çalışan)"
-            prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
-            size="lg"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            className="max-w-md"
-          />
+      {/* Table Card */}
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="p-5 border-b border-slate-100">
+          <div className="relative max-w-md">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Varlik ara... (varlik adi, kod, calisan)"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+            />
+          </div>
         </div>
 
         <EmployeeAssetsTable
@@ -138,7 +142,7 @@ export default function EmployeeAssetsPage() {
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
-      </DataTableWrapper>
-    </PageContainer>
+      </div>
+    </div>
   );
 }

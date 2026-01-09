@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Table, Tag, Dropdown, Modal, Rate } from 'antd';
+import { Table, Dropdown, Modal, Rate } from 'antd';
 import type { TableColumnsType } from 'antd';
 import {
   EllipsisHorizontalIcon,
@@ -26,33 +26,33 @@ interface InterviewsTableProps {
   onDelete?: (interview: InterviewDto) => Promise<void>;
 }
 
-const statusColors: Record<string, string> = {
-  Scheduled: 'processing',
-  Confirmed: 'cyan',
-  InProgress: 'blue',
-  Completed: 'success',
-  Cancelled: 'error',
-  NoShow: 'default',
-  Rescheduled: 'warning',
+const statusStyles: Record<string, string> = {
+  Scheduled: 'bg-slate-200 text-slate-700',
+  Confirmed: 'bg-slate-300 text-slate-700',
+  InProgress: 'bg-slate-500 text-white',
+  Completed: 'bg-slate-900 text-white',
+  Cancelled: 'bg-slate-200 text-slate-500',
+  NoShow: 'bg-slate-100 text-slate-400',
+  Rescheduled: 'bg-slate-300 text-slate-600',
 };
 
 const statusLabels: Record<string, string> = {
-  Scheduled: 'Planlandı',
-  Confirmed: 'Onaylandı',
+  Scheduled: 'Planlandi',
+  Confirmed: 'Onaylandi',
   InProgress: 'Devam Ediyor',
-  Completed: 'Tamamlandı',
-  Cancelled: 'İptal Edildi',
+  Completed: 'Tamamlandi',
+  Cancelled: 'Iptal Edildi',
   NoShow: 'Gelmedi',
-  Rescheduled: 'Yeniden Planlandı',
+  Rescheduled: 'Yeniden Planlandi',
 };
 
 const interviewTypeLabels: Record<string, string> = {
   Phone: 'Telefon',
   Video: 'Video',
-  InPerson: 'Yüz Yüze',
+  InPerson: 'Yuz Yuze',
   Panel: 'Panel',
   Technical: 'Teknik',
-  HR: 'İK',
+  HR: 'IK',
   Final: 'Final',
   Group: 'Grup',
 };
@@ -72,23 +72,20 @@ export function InterviewsTable({
 
   const columns: TableColumnsType<InterviewDto> = [
     {
-      title: 'Mülakat',
+      title: 'Mulakat',
       key: 'interview',
       fixed: 'left',
       width: 250,
       render: (_, record) => (
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: '#7c3aed15' }}
-          >
-            <UserGroupIcon className="w-5 h-5" style={{ color: '#7c3aed' }} />
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <UserGroupIcon className="w-5 h-5 text-slate-500" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-gray-900 truncate">
+            <div className="font-semibold text-slate-900 truncate">
               {record.candidateName}
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-slate-400">
               {interviewTypeLabels[record.interviewType] || record.interviewType}
             </div>
           </div>
@@ -96,7 +93,7 @@ export function InterviewsTable({
       ),
     },
     {
-      title: 'Görüşmeci',
+      title: 'Gorusmeci',
       dataIndex: 'interviewerName',
       key: 'interviewerName',
       width: 150,
@@ -113,7 +110,7 @@ export function InterviewsTable({
       render: (date: string) => (
         <div>
           <div className="text-sm text-slate-700">{dayjs(date).format('DD.MM.YYYY')}</div>
-          <div className="text-xs text-gray-400">{dayjs(date).format('HH:mm')}</div>
+          <div className="text-xs text-slate-400">{dayjs(date).format('HH:mm')}</div>
         </div>
       ),
     },
@@ -123,7 +120,7 @@ export function InterviewsTable({
       key: 'overallRating',
       width: 120,
       render: (rating: number) => (
-        rating ? <Rate disabled value={rating / 2} allowHalf /> : <span className="text-gray-400">-</span>
+        rating ? <Rate disabled value={rating / 2} allowHalf /> : <span className="text-slate-400">-</span>
       ),
     },
     {
@@ -133,9 +130,9 @@ export function InterviewsTable({
       filters: Object.entries(statusLabels).map(([value, label]) => ({ text: label, value })),
       onFilter: (value, record) => record.status === value,
       render: (_, record) => (
-        <Tag color={statusColors[record.status] || 'default'}>
+        <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${statusStyles[record.status] || 'bg-slate-100 text-slate-600'}`}>
           {statusLabels[record.status] || record.status}
-        </Tag>
+        </span>
       ),
     },
     {
@@ -149,13 +146,13 @@ export function InterviewsTable({
             items: [
               {
                 key: 'view',
-                label: 'Görüntüle',
+                label: 'Goruntule',
                 icon: <EyeIcon className="w-4 h-4" />,
                 onClick: () => onView(record.id),
               },
               {
                 key: 'edit',
-                label: 'Düzenle',
+                label: 'Duzenle',
                 icon: <PencilIcon className="w-4 h-4" />,
                 onClick: () => onEdit(record.id),
               },
@@ -168,19 +165,19 @@ export function InterviewsTable({
                 onClick: (e: { domEvent: { stopPropagation: () => void } }) => {
                   e.domEvent.stopPropagation();
                   Modal.confirm({
-                    title: 'Mülakatı Sil',
-                    icon: <ExclamationTriangleIcon className="w-6 h-6 text-red-500" />,
+                    title: 'Mulakati Sil',
+                    icon: <ExclamationTriangleIcon className="w-6 h-6 text-slate-700" />,
                     content: (
                       <div>
                         <p className="text-slate-600">
-                          Bu mülakatı silmek istediğinize emin misiniz?
+                          Bu mulakati silmek istediginize emin misiniz?
                         </p>
-                        <p className="text-sm text-slate-500 mt-2">Bu işlem geri alınamaz.</p>
+                        <p className="text-sm text-slate-500 mt-2">Bu islem geri alinamaz.</p>
                       </div>
                     ),
                     okText: 'Sil',
                     okButtonProps: { danger: true },
-                    cancelText: 'İptal',
+                    cancelText: 'Iptal',
                     onOk: async () => {
                       if (onDelete) {
                         await onDelete(record);
@@ -226,21 +223,24 @@ export function InterviewsTable({
         onShowSizeChange: onPageChange,
         showSizeChanger: true,
         showQuickJumper: true,
-        showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} mülakat`,
+        showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} mulakat`,
         pageSizeOptions: ['10', '20', '50', '100'],
         position: ['bottomCenter'],
       }}
       scroll={{ x: 1000 }}
       onRow={(record) => ({
         onClick: () => onView(record.id),
-        className: 'cursor-pointer hover:bg-gray-50',
+        className: 'cursor-pointer hover:bg-slate-50',
       })}
+      className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
       locale={{
         emptyText: (
           <div className="text-center py-16">
-            <div className="text-6xl mb-4">🎤</div>
-            <h3 className="text-2xl font-bold text-gray-700 mb-2">Mülakat Bulunamadı</h3>
-            <p className="text-gray-500">Arama kriterlerinize uygun mülakat bulunamadı</p>
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+              <UserGroupIcon className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-700 mb-1">Mulakat Bulunamadi</h3>
+            <p className="text-slate-500 text-sm">Arama kriterlerinize uygun mulakat bulunamadi</p>
           </div>
         ),
       }}

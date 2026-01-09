@@ -2,11 +2,11 @@
 
 /**
  * HR Dashboard Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Monochrome design system following inventory page patterns
  */
 
 import React, { useMemo } from 'react';
-import { Table, Tag, List, Empty, Spin } from 'antd';
+import { Table, List, Empty, Spin } from 'antd';
 import {
   ArrowPathIcon,
   BellIcon,
@@ -48,18 +48,13 @@ import {
   CartesianGrid,
   Tooltip as RechartsTooltip,
 } from 'recharts';
-import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-} from '@/components/ui/enterprise-page';
 
-// Color palette
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+// Monochrome color palette
+const MONOCHROME_COLORS = ['#1e293b', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1', '#e2e8f0', '#f1f5f9'];
 
 // Format currency
 const formatCurrency = (value: number | undefined | null): string => {
-  if (value === undefined || value === null) return '₺0';
+  if (value === undefined || value === null) return '0 TL';
   return new Intl.NumberFormat('tr-TR', {
     style: 'currency',
     currency: 'TRY',
@@ -68,21 +63,13 @@ const formatCurrency = (value: number | undefined | null): string => {
   }).format(value);
 };
 
-// Status configs
-const leaveStatusConfig: Record<string, { color: string; label: string }> = {
-  Pending: { color: 'processing', label: 'Beklemede' },
-  Approved: { color: 'green', label: 'Onaylandı' },
-  Rejected: { color: 'red', label: 'Reddedildi' },
-  Cancelled: { color: 'default', label: 'İptal' },
-};
-
-const attendanceStatusConfig: Record<string, { color: string; label: string }> = {
-  Present: { color: 'green', label: 'Mevcut' },
-  Absent: { color: 'red', label: 'Yok' },
-  Late: { color: 'orange', label: 'Geç' },
-  HalfDay: { color: 'blue', label: 'Yarım Gün' },
-  OnLeave: { color: 'purple', label: 'İzinli' },
-};
+// Empty State Component
+const EmptyChart = ({ icon: Icon, message }: { icon: React.ComponentType<any>; message: string }) => (
+  <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-slate-400">
+    <Icon className="w-10 h-10 mb-3" />
+    <span className="text-sm">{message}</span>
+  </div>
+);
 
 export default function HRDashboardPage() {
   // Fetch HR data
@@ -139,7 +126,7 @@ export default function HRDashboardPage() {
   const departmentDistribution = useMemo(() => {
     const deptMap = new Map<string, number>();
     employees.forEach((e: any) => {
-      const deptName = e.departmentName || 'Belirtilmemiş';
+      const deptName = e.departmentName || 'Belirtilmemis';
       deptMap.set(deptName, (deptMap.get(deptName) || 0) + 1);
     });
     return Array.from(deptMap.entries())
@@ -152,14 +139,14 @@ export default function HRDashboardPage() {
   const employmentTypeDistribution = useMemo(() => {
     const typeMap = new Map<string, number>();
     const typeLabels: Record<string, string> = {
-      FullTime: 'Tam Zamanlı',
-      PartTime: 'Yarı Zamanlı',
-      Contract: 'Sözleşmeli',
+      FullTime: 'Tam Zamanli',
+      PartTime: 'Yari Zamanli',
+      Contract: 'Sozlesmeli',
       Intern: 'Stajyer',
-      Temporary: 'Geçici',
+      Temporary: 'Gecici',
     };
     employees.forEach((e: any) => {
-      const type = typeLabels[e.employmentType] || e.employmentType || 'Belirtilmemiş';
+      const type = typeLabels[e.employmentType] || e.employmentType || 'Belirtilmemis';
       typeMap.set(type, (typeMap.get(type) || 0) + 1);
     });
     return Array.from(typeMap.entries()).map(([name, value]) => ({ name, value }));
@@ -176,17 +163,17 @@ export default function HRDashboardPage() {
   // Pending leaves columns
   const pendingLeavesColumns: ColumnsType<any> = [
     {
-      title: 'Çalışan',
+      title: 'Calisan',
       dataIndex: 'employeeName',
       key: 'employeeName',
       render: (text: string, record: any) => (
         <Link href={`/hr/leaves/${record.id}`}>
-          <span className="text-sm font-medium text-slate-900 hover:text-violet-600">{text}</span>
+          <span className="text-sm font-medium text-slate-900 hover:text-slate-700">{text}</span>
         </Link>
       ),
     },
     {
-      title: 'İzin Türü',
+      title: 'Izin Turu',
       dataIndex: 'leaveTypeName',
       key: 'leaveTypeName',
       render: (text: string) => <span className="text-sm text-slate-600">{text}</span>,
@@ -205,8 +192,23 @@ export default function HRDashboardPage() {
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => {
-        const config = leaveStatusConfig[status] || { color: 'default', label: status };
-        return <Tag color={config.color}>{config.label}</Tag>;
+        const statusStyles: Record<string, string> = {
+          Pending: 'bg-slate-100 text-slate-700',
+          Approved: 'bg-slate-900 text-white',
+          Rejected: 'bg-slate-200 text-slate-600',
+          Cancelled: 'bg-slate-50 text-slate-400',
+        };
+        const statusLabels: Record<string, string> = {
+          Pending: 'Beklemede',
+          Approved: 'Onaylandi',
+          Rejected: 'Reddedildi',
+          Cancelled: 'Iptal',
+        };
+        return (
+          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${statusStyles[status] || 'bg-slate-100 text-slate-600'}`}>
+            {statusLabels[status] || status}
+          </span>
+        );
       },
     },
   ];
@@ -214,19 +216,19 @@ export default function HRDashboardPage() {
   // Today's attendance columns
   const attendanceColumns: ColumnsType<any> = [
     {
-      title: 'Çalışan',
+      title: 'Calisan',
       dataIndex: 'employeeName',
       key: 'employeeName',
       render: (text: string) => <span className="text-sm font-medium text-slate-900">{text}</span>,
     },
     {
-      title: 'Giriş',
+      title: 'Giris',
       dataIndex: 'checkInTime',
       key: 'checkInTime',
       render: (time: string) => <span className="text-sm text-slate-600">{time ? time.substring(0, 5) : '-'}</span>,
     },
     {
-      title: 'Çıkış',
+      title: 'Cikis',
       dataIndex: 'checkOutTime',
       key: 'checkOutTime',
       render: (time: string) => <span className="text-sm text-slate-600">{time ? time.substring(0, 5) : '-'}</span>,
@@ -236,371 +238,414 @@ export default function HRDashboardPage() {
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => {
-        const config = attendanceStatusConfig[status] || { color: 'default', label: status };
-        return <Tag color={config.color}>{config.label}</Tag>;
+        const statusStyles: Record<string, string> = {
+          Present: 'bg-slate-900 text-white',
+          Absent: 'bg-slate-200 text-slate-600',
+          Late: 'bg-slate-100 text-slate-700',
+          HalfDay: 'bg-slate-100 text-slate-600',
+          OnLeave: 'bg-slate-50 text-slate-500',
+        };
+        const statusLabels: Record<string, string> = {
+          Present: 'Mevcut',
+          Absent: 'Yok',
+          Late: 'Gec',
+          HalfDay: 'Yarim Gun',
+          OnLeave: 'Izinli',
+        };
+        return (
+          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${statusStyles[status] || 'bg-slate-100 text-slate-600'}`}>
+            {statusLabels[status] || status}
+          </span>
+        );
       },
     },
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
+    <div className="min-h-screen bg-slate-50 p-8">
       {/* Header */}
-      <ListPageHeader
-        icon={<IdentificationIcon className="w-4 h-4" />}
-        iconColor="#7c3aed"
-        title="İnsan Kaynakları"
-        description="İK yönetim paneli ve genel bakış"
-        secondaryActions={
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => refetchEmployees()}
-              disabled={isLoading}
-              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-            >
-              <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </button>
-            <Link href="/hr/employees">
-              <button className="px-3 py-2 text-sm font-medium text-white bg-violet-600 rounded-md hover:bg-violet-700 transition-colors flex items-center gap-2">
-                <UserGroupIcon className="w-4 h-4" />
-                Çalışanlar
-              </button>
-            </Link>
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <IdentificationIcon className="w-5 h-5 text-slate-600" />
           </div>
-        }
-      />
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Insan Kaynaklari</h1>
+            <p className="text-sm text-slate-500">IK yonetim paneli ve genel bakis</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => refetchEmployees()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+          <Link href="/hr/employees">
+            <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
+              <UserGroupIcon className="w-4 h-4" />
+              Calisanlar
+            </button>
+          </Link>
+        </div>
+      </div>
 
       {/* Main Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Çalışan</span>
-              <div className="text-2xl font-semibold text-slate-900">{employeesLoading ? '-' : totalEmployees}</div>
-              <span className="text-xs text-slate-400">{activeEmployees} aktif</span>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <UserGroupIcon className="w-4 h-4 text-blue-500" />
+      <div className="grid grid-cols-12 gap-6 mb-6">
+        <div className="col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Toplam Calisan</p>
+            <div className="flex items-end justify-between">
+              <span className="text-3xl font-bold text-slate-900">{employeesLoading ? '-' : totalEmployees}</span>
+              <span className="text-sm text-slate-400">{activeEmployees} aktif</span>
             </div>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Departmanlar</span>
-              <div className="text-2xl font-semibold text-slate-900">{departmentsLoading ? '-' : totalDepartments}</div>
-              <span className="text-xs text-slate-400">{activeDepartments} aktif</span>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <BuildingLibraryIcon className="w-4 h-4" style={{ color: '#10b981' }} />
+        <div className="col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Departmanlar</p>
+            <div className="flex items-end justify-between">
+              <span className="text-3xl font-bold text-slate-900">{departmentsLoading ? '-' : totalDepartments}</span>
+              <span className="text-sm text-slate-400">{activeDepartments} aktif</span>
             </div>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Pozisyonlar</span>
-              <div className="text-2xl font-semibold text-slate-900">{positionsLoading ? '-' : positions.length}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <IdentificationIcon className="w-4 h-4 text-violet-500" />
+        <div className="col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Pozisyonlar</p>
+            <div className="flex items-end justify-between">
+              <span className="text-3xl font-bold text-slate-900">{positionsLoading ? '-' : positions.length}</span>
             </div>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Bu Ay Bordro</span>
-              <div className="text-2xl font-semibold text-slate-900">{payrollsLoading ? '-' : formatCurrency(totalPayrollAmount)}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-              <CurrencyDollarIcon className="w-4 h-4" style={{ color: '#f59e0b' }} />
+        <div className="col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Bu Ay Bordro</p>
+            <div className="flex items-end justify-between">
+              <span className="text-3xl font-bold text-slate-900">{payrollsLoading ? '-' : formatCurrency(totalPayrollAmount)}</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Alert Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <Link href="/hr/leaves?status=Pending">
-          <div className={`bg-white border rounded-lg p-4 hover:shadow-sm transition-shadow cursor-pointer ${pendingLeaves > 0 ? 'border-orange-200' : 'border-slate-200'}`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${pendingLeaves > 0 ? 'bg-orange-50' : 'bg-slate-50'}`}>
-                  <CalendarIcon className={`w-5 h-5 ${pendingLeaves > 0 ? 'text-orange-500' : 'text-slate-400'}`} />
+      <div className="grid grid-cols-12 gap-6 mb-6">
+        <div className="col-span-4">
+          <Link href="/hr/leaves?status=Pending">
+            <div className={`bg-white border rounded-xl p-5 hover:shadow-md transition-all cursor-pointer ${
+              pendingLeaves > 0 ? 'border-slate-300' : 'border-slate-200'
+            }`}>
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                  pendingLeaves > 0 ? 'bg-slate-900' : 'bg-slate-100'
+                }`}>
+                  <CalendarIcon className={`w-5 h-5 ${pendingLeaves > 0 ? 'text-white' : 'text-slate-400'}`} />
                 </div>
-                <div>
-                  <div className="text-lg font-semibold text-slate-900">{pendingLeaves}</div>
-                  <div className="text-sm text-slate-500">Bekleyen İzin Talebi</div>
+                <div className="flex-1">
+                  <div className="text-2xl font-bold text-slate-900">{pendingLeaves}</div>
+                  <div className="text-sm text-slate-500">Bekleyen Izin Talebi</div>
                 </div>
+                {pendingLeaves > 0 && (
+                  <span className="px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded">
+                    Onay Bekliyor
+                  </span>
+                )}
               </div>
-              {pendingLeaves > 0 && <Tag color="orange">Onay Bekliyor</Tag>}
             </div>
-          </div>
-        </Link>
-        <Link href="/hr/trainings">
-          <div className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-sm transition-shadow cursor-pointer">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${activeTrainings > 0 ? 'bg-blue-50' : 'bg-slate-50'}`}>
-                  <BookOpenIcon className={`w-5 h-5 ${activeTrainings > 0 ? 'text-blue-500' : 'text-slate-400'}`} />
+          </Link>
+        </div>
+        <div className="col-span-4">
+          <Link href="/hr/trainings">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-md transition-all cursor-pointer">
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                  activeTrainings > 0 ? 'bg-slate-700' : 'bg-slate-100'
+                }`}>
+                  <BookOpenIcon className={`w-5 h-5 ${activeTrainings > 0 ? 'text-white' : 'text-slate-400'}`} />
                 </div>
-                <div>
-                  <div className="text-lg font-semibold text-slate-900">{activeTrainings}</div>
-                  <div className="text-sm text-slate-500">Aktif Eğitim</div>
+                <div className="flex-1">
+                  <div className="text-2xl font-bold text-slate-900">{activeTrainings}</div>
+                  <div className="text-sm text-slate-500">Aktif Egitim</div>
                 </div>
+                {activeTrainings > 0 && (
+                  <span className="px-2 py-1 text-xs font-medium bg-slate-100 text-slate-600 rounded">
+                    Devam Ediyor
+                  </span>
+                )}
               </div>
-              {activeTrainings > 0 && <Tag color="blue">Devam Ediyor</Tag>}
             </div>
-          </div>
-        </Link>
-        <Link href="/hr/announcements">
-          <div className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-sm transition-shadow cursor-pointer">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${activeAnnouncements > 0 ? 'bg-purple-50' : 'bg-slate-50'}`}>
-                  <BellIcon className={`w-5 h-5 ${activeAnnouncements > 0 ? 'text-purple-500' : 'text-slate-400'}`} />
+          </Link>
+        </div>
+        <div className="col-span-4">
+          <Link href="/hr/announcements">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-md transition-all cursor-pointer">
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                  activeAnnouncements > 0 ? 'bg-slate-500' : 'bg-slate-100'
+                }`}>
+                  <BellIcon className={`w-5 h-5 ${activeAnnouncements > 0 ? 'text-white' : 'text-slate-400'}`} />
                 </div>
-                <div>
-                  <div className="text-lg font-semibold text-slate-900">{activeAnnouncements}</div>
+                <div className="flex-1">
+                  <div className="text-2xl font-bold text-slate-900">{activeAnnouncements}</div>
                   <div className="text-sm text-slate-500">Aktif Duyuru</div>
                 </div>
+                {pinnedAnnouncements.length > 0 && (
+                  <span className="px-2 py-1 text-xs font-medium bg-slate-100 text-slate-600 rounded">
+                    {pinnedAnnouncements.length} Sabitlenmis
+                  </span>
+                )}
               </div>
-              {pinnedAnnouncements.length > 0 && <Tag color="purple">{pinnedAnnouncements.length} Sabitlenmiş</Tag>}
             </div>
-          </div>
-        </Link>
+          </Link>
+        </div>
       </div>
 
       {/* Today's Attendance Summary */}
-      <Card className="mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-            <ClockIcon className="w-4 h-4" style={{ color: '#10b981' }} />
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+            <ClockIcon className="w-4 h-4 text-slate-600" />
           </div>
-          <h3 className="text-base font-semibold text-slate-900">Bugünkü Yoklama Özeti</h3>
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Bugunku Yoklama Ozeti</p>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-3 bg-slate-50 rounded-lg">
-            <CheckCircleIcon className="w-5 h-5 text-green-500 mb-1" />
-            <div className="text-xl font-semibold text-slate-900">{presentToday}</div>
+        <div className="grid grid-cols-4 gap-4">
+          <div className="text-center p-4 bg-slate-50 rounded-xl">
+            <CheckCircleIcon className="w-5 h-5 text-slate-700 mx-auto mb-2" />
+            <div className="text-xl font-bold text-slate-900">{presentToday}</div>
             <div className="text-xs text-slate-500">Mevcut</div>
           </div>
-          <div className="text-center p-3 bg-slate-50 rounded-lg">
-            <ExclamationTriangleIcon className="w-5 h-5 text-red-500 mb-1" />
-            <div className="text-xl font-semibold text-slate-900">{absentToday}</div>
+          <div className="text-center p-4 bg-slate-50 rounded-xl">
+            <ExclamationTriangleIcon className="w-5 h-5 text-slate-500 mx-auto mb-2" />
+            <div className="text-xl font-bold text-slate-900">{absentToday}</div>
             <div className="text-xs text-slate-500">Yok</div>
           </div>
-          <div className="text-center p-3 bg-slate-50 rounded-lg">
-            <ClockIcon className="w-5 h-5 text-orange-500 mb-1" />
-            <div className="text-xl font-semibold text-slate-900">{lateToday}</div>
-            <div className="text-xs text-slate-500">Geç Kalan</div>
+          <div className="text-center p-4 bg-slate-50 rounded-xl">
+            <ClockIcon className="w-5 h-5 text-slate-400 mx-auto mb-2" />
+            <div className="text-xl font-bold text-slate-900">{lateToday}</div>
+            <div className="text-xs text-slate-500">Gec Kalan</div>
           </div>
-          <div className="text-center p-3 bg-slate-50 rounded-lg">
-            <UserGroupIcon className="w-5 h-5 text-blue-500 mb-1" />
-            <div className="text-xl font-semibold text-slate-900">
+          <div className="text-center p-4 bg-slate-50 rounded-xl">
+            <UserGroupIcon className="w-5 h-5 text-slate-600 mx-auto mb-2" />
+            <div className="text-xl font-bold text-slate-900">
               {activeEmployees > 0 ? ((presentToday + lateToday) / activeEmployees * 100).toFixed(1) : 0}%
             </div>
-            <div className="text-xs text-slate-500">Katılım Oranı</div>
+            <div className="text-xs text-slate-500">Katilim Orani</div>
           </div>
         </div>
-      </Card>
+      </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-12 gap-6 mb-6">
         {/* Department Distribution */}
-        <Card>
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <BuildingLibraryIcon className="w-4 h-4 text-blue-500" />
+        <div className="col-span-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                <BuildingLibraryIcon className="w-4 h-4 text-slate-600" />
+              </div>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Departman Dagilimi</p>
             </div>
-            <h3 className="text-base font-semibold text-slate-900">Departman Dağılımı</h3>
+            {departmentDistribution.length > 0 ? (
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={departmentDistribution} layout="vertical" margin={{ left: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis type="number" tick={{ fontSize: 11, fill: '#64748b' }} />
+                  <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 11, fill: '#64748b' }} />
+                  <RechartsTooltip />
+                  <Bar dataKey="value" name="Calisan Sayisi" fill="#1e293b" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <EmptyChart icon={BuildingLibraryIcon} message="Veri yok" />
+            )}
           </div>
-          {departmentDistribution.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={departmentDistribution} layout="vertical" margin={{ left: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis type="number" tick={{ fontSize: 11, fill: '#64748b' }} />
-                <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 11, fill: '#64748b' }} />
-                <RechartsTooltip />
-                <Bar dataKey="value" name="Çalışan Sayısı" fill="#3b82f6" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <Empty description="Veri yok" />
-          )}
-        </Card>
+        </div>
 
         {/* Employment Type Distribution */}
-        <Card>
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <UserIcon className="w-4 h-4 text-violet-500" />
+        <div className="col-span-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                <UserIcon className="w-4 h-4 text-slate-600" />
+              </div>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Calisma Turu Dagilimi</p>
             </div>
-            <h3 className="text-base font-semibold text-slate-900">Çalışma Türü Dağılımı</h3>
+            {employmentTypeDistribution.length > 0 ? (
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie
+                    data={employmentTypeDistribution}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    dataKey="value"
+                    label={(props: any) => `${props.name}: ${props.value}`}
+                  >
+                    {employmentTypeDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={MONOCHROME_COLORS[index % MONOCHROME_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <EmptyChart icon={UserIcon} message="Veri yok" />
+            )}
           </div>
-          {employmentTypeDistribution.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={employmentTypeDistribution}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  dataKey="value"
-                  label={(props: any) => `${props.name}: ${props.value}`}
-                >
-                  {employmentTypeDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <RechartsTooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <Empty description="Veri yok" />
-          )}
-        </Card>
+        </div>
       </div>
 
       {/* Bottom Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-12 gap-6">
         {/* Pending Leaves */}
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-                <CalendarIcon className="w-4 h-4" style={{ color: '#f59e0b' }} />
+        <div className="col-span-4">
+          <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <CalendarIcon className="w-4 h-4 text-slate-600" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Son Izin Talepleri</p>
               </div>
-              <h3 className="text-base font-semibold text-slate-900">Son İzin Talepleri</h3>
+              <Link href="/hr/leaves" className="text-xs text-slate-500 hover:text-slate-900">
+                Tumunu Gor
+              </Link>
             </div>
-            <Link href="/hr/leaves" className="text-xs text-violet-600 hover:text-violet-700 font-medium">
-              Tümünü Gör →
-            </Link>
+            {recentLeaves.length > 0 ? (
+              <Table
+                columns={pendingLeavesColumns}
+                dataSource={recentLeaves}
+                rowKey="id"
+                pagination={false}
+                size="small"
+                loading={leavesLoading}
+                className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
+              />
+            ) : (
+              <EmptyChart icon={CalendarIcon} message="Izin talebi yok" />
+            )}
           </div>
-          {recentLeaves.length > 0 ? (
-            <Table
-              columns={pendingLeavesColumns}
-              dataSource={recentLeaves}
-              rowKey="id"
-              pagination={false}
-              size="small"
-              loading={leavesLoading}
-              className="enterprise-table"
-            />
-          ) : (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="İzin talebi yok" />
-          )}
-        </Card>
+        </div>
 
         {/* Today's Attendance */}
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-                <ClockIcon className="w-4 h-4" style={{ color: '#10b981' }} />
+        <div className="col-span-4">
+          <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <ClockIcon className="w-4 h-4 text-slate-600" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Bugunku Yoklama</p>
               </div>
-              <h3 className="text-base font-semibold text-slate-900">Bugünkü Yoklama</h3>
+              <Link href="/hr/attendance" className="text-xs text-slate-500 hover:text-slate-900">
+                Tumunu Gor
+              </Link>
             </div>
-            <Link href="/hr/attendance" className="text-xs text-violet-600 hover:text-violet-700 font-medium">
-              Tümünü Gör →
-            </Link>
+            {todayAttendances.length > 0 ? (
+              <Table
+                columns={attendanceColumns}
+                dataSource={todayAttendances.slice(0, 5)}
+                rowKey="id"
+                pagination={false}
+                size="small"
+                loading={attendancesLoading}
+                className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
+              />
+            ) : (
+              <EmptyChart icon={ClockIcon} message="Bugun yoklama kaydi yok" />
+            )}
           </div>
-          {todayAttendances.length > 0 ? (
-            <Table
-              columns={attendanceColumns}
-              dataSource={todayAttendances.slice(0, 5)}
-              rowKey="id"
-              pagination={false}
-              size="small"
-              loading={attendancesLoading}
-              className="enterprise-table"
-            />
-          ) : (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Bugün yoklama kaydı yok" />
-          )}
-        </Card>
+        </div>
 
         {/* Upcoming Holidays */}
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#ef444415' }}>
-                <GiftIcon className="w-4 h-4" style={{ color: '#ef4444' }} />
+        <div className="col-span-4">
+          <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <GiftIcon className="w-4 h-4 text-slate-600" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Yaklasan Tatiller</p>
               </div>
-              <h3 className="text-base font-semibold text-slate-900">Yaklaşan Tatiller</h3>
+              <Link href="/hr/holidays" className="text-xs text-slate-500 hover:text-slate-900">
+                Tumunu Gor
+              </Link>
             </div>
-            <Link href="/hr/holidays" className="text-xs text-violet-600 hover:text-violet-700 font-medium">
-              Tümünü Gör →
-            </Link>
-          </div>
-          {upcomingHolidays.length > 0 ? (
-            <List
-              dataSource={upcomingHolidays}
-              loading={holidaysLoading}
-              renderItem={(holiday: any) => {
-                const daysUntil = dayjs(holiday.date).diff(dayjs(), 'day');
-                return (
-                  <List.Item className="!px-0 !py-2">
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-50">
-                          <GiftIcon className="w-4 h-4 text-red-500" />
+            {upcomingHolidays.length > 0 ? (
+              <List
+                dataSource={upcomingHolidays}
+                loading={holidaysLoading}
+                renderItem={(holiday: any) => {
+                  const daysUntil = dayjs(holiday.date).diff(dayjs(), 'day');
+                  return (
+                    <List.Item className="!px-0 !py-3 !border-b !border-slate-100 last:!border-0">
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-100">
+                            <GiftIcon className="w-4 h-4 text-slate-600" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-slate-900">{holiday.name}</div>
+                            <div className="text-xs text-slate-500">{dayjs(holiday.date).format('DD MMMM YYYY')}</div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="text-sm font-medium text-slate-900">{holiday.name}</div>
-                          <div className="text-xs text-slate-500">{dayjs(holiday.date).format('DD MMMM YYYY')}</div>
-                        </div>
+                        <span className={`px-2 py-1 text-xs font-medium rounded ${
+                          daysUntil <= 7 ? 'bg-slate-900 text-white' :
+                          daysUntil <= 30 ? 'bg-slate-200 text-slate-700' :
+                          'bg-slate-100 text-slate-600'
+                        }`}>
+                          {daysUntil} gun
+                        </span>
                       </div>
-                      <Tag color={daysUntil <= 7 ? 'red' : daysUntil <= 30 ? 'orange' : 'blue'}>
-                        {daysUntil} gün
-                      </Tag>
-                    </div>
-                  </List.Item>
-                );
-              }}
-            />
-          ) : (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Yaklaşan tatil yok" />
-          )}
-        </Card>
+                    </List.Item>
+                  );
+                }}
+              />
+            ) : (
+              <EmptyChart icon={GiftIcon} message="Yaklasan tatil yok" />
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Pinned Announcements */}
       {pinnedAnnouncements.length > 0 && (
-        <Card className="mt-6">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <BellIcon className="w-4 h-4 text-violet-500" />
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mt-6">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+              <BellIcon className="w-4 h-4 text-slate-600" />
             </div>
-            <h3 className="text-base font-semibold text-slate-900">Sabitlenmiş Duyurular</h3>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Sabitlenmis Duyurular</p>
           </div>
           <List
             dataSource={pinnedAnnouncements}
             loading={announcementsLoading}
             renderItem={(announcement: any) => {
-              const priorityColors: Record<string, string> = {
-                Low: 'default',
-                Normal: 'blue',
-                High: 'orange',
-                Urgent: 'red',
+              const priorityStyles: Record<string, string> = {
+                Low: 'bg-slate-50 text-slate-500',
+                Normal: 'bg-slate-100 text-slate-600',
+                High: 'bg-slate-200 text-slate-700',
+                Urgent: 'bg-slate-900 text-white',
               };
               return (
-                <List.Item className="!px-0">
-                  <div className="flex items-start gap-3 w-full">
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-purple-50 shrink-0">
-                      <BellIcon className="w-4 h-4 text-purple-500" />
+                <List.Item className="!px-0 !py-4 !border-b !border-slate-100 last:!border-0">
+                  <div className="flex items-start gap-4 w-full">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-slate-100 shrink-0">
+                      <BellIcon className="w-4 h-4 text-slate-600" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <Link href={`/hr/announcements/${announcement.id}`}>
-                        <div className="text-sm font-medium text-slate-900 hover:text-violet-600">{announcement.title}</div>
+                        <div className="text-sm font-medium text-slate-900 hover:text-slate-700">{announcement.title}</div>
                       </Link>
                       <div className="text-sm text-slate-500 line-clamp-2 mt-1">
                         {announcement.content?.substring(0, 150)}...
                       </div>
                       <div className="flex items-center gap-2 mt-2">
-                        <Tag color={priorityColors[announcement.priority] || 'default'}>
+                        <span className={`px-2 py-1 text-xs font-medium rounded ${priorityStyles[announcement.priority] || 'bg-slate-100 text-slate-600'}`}>
                           {announcement.priority}
-                        </Tag>
+                        </span>
                         <span className="text-xs text-slate-400">
                           {dayjs(announcement.publishDate).format('DD.MM.YYYY')}
                         </span>
@@ -611,8 +656,8 @@ export default function HRDashboardPage() {
               );
             }}
           />
-        </Card>
+        </div>
       )}
-    </PageContainer>
+    </div>
   );
 }

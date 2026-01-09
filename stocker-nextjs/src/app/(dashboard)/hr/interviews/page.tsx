@@ -54,10 +54,10 @@ export default function InterviewsPage() {
   const handleDelete = async (interview: InterviewDto) => {
     try {
       await deleteInterviewMutation.mutateAsync(interview.id);
-      showSuccess('Mülakat başarıyla silindi');
+      showSuccess('Mulakat basariyla silindi');
       refetch();
     } catch (err) {
-      showApiError(err, 'Mülakat silinemedi');
+      showApiError(err, 'Mulakat silinemedi');
     }
   };
 
@@ -67,7 +67,7 @@ export default function InterviewsPage() {
   };
 
   return (
-    <PageContainer maxWidth="7xl" className="bg-slate-50 min-h-screen">
+    <div className="min-h-screen bg-slate-50 p-8">
       {/* Stats Cards */}
       <div className="mb-8">
         <InterviewsStats interviews={filteredInterviews} loading={isLoading} />
@@ -76,12 +76,12 @@ export default function InterviewsPage() {
       {/* Header */}
       <ListPageHeader
         icon={<UserGroupIcon className="w-5 h-5" />}
-        iconColor="#7c3aed"
-        title="Mülakatlar"
-        description="İş görüşmelerini planlayın ve takip edin"
+        iconColor="#64748b"
+        title="Mulakatlar"
+        description="Is gorusmelerini planlayin ve takip edin"
         itemCount={totalCount}
         primaryAction={{
-          label: 'Yeni Mülakat',
+          label: 'Yeni Mulakat',
           onClick: () => router.push('/hr/interviews/new'),
           icon: <PlusIcon className="w-4 h-4" />,
         }}
@@ -99,13 +99,13 @@ export default function InterviewsPage() {
       {error && (
         <Alert
           variant="error"
-          title="Mülakatlar yüklenemedi"
+          title="Mulakatlar yuklenemedi"
           message={(error as Error).message}
           closable
           action={
             <button
               onClick={() => refetch()}
-              className="text-red-600 hover:text-red-800 font-medium"
+              className="text-slate-700 hover:text-slate-900 font-medium"
             >
               Tekrar Dene
             </button>
@@ -114,10 +114,10 @@ export default function InterviewsPage() {
         />
       )}
 
-      <DataTableWrapper className="mt-6">
-        <div className="p-4 border-b border-gray-100">
+      <div className="bg-white border border-slate-200 rounded-xl mt-6">
+        <div className="p-4 border-b border-slate-100">
           <Input
-            placeholder="Mülakat ara... (aday adı, görüşmeci)"
+            placeholder="Mulakat ara... (aday adi, gorusmeci)"
             prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
             size="lg"
             value={searchText}
@@ -137,7 +137,7 @@ export default function InterviewsPage() {
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
-      </DataTableWrapper>
-    </PageContainer>
+      </div>
+    </div>
   );
 }
