@@ -6,13 +6,14 @@ import {
   Table,
   Input,
   Space,
-  Tag,
   Select,
-  Switch,
   Avatar,
   Modal,
   Dropdown,
   Checkbox,
+  Button,
+  Spin,
+  Tabs,
 } from 'antd';
 import {
   ArchiveBoxIcon,
@@ -27,12 +28,8 @@ import {
   Squares2X2Icon,
   TrashIcon,
   XCircleIcon,
+  InboxIcon,
 } from '@heroicons/react/24/outline';
-import {
-  PageContainer,
-  ListPageHeader,
-  DataTableWrapper,
-} from '@/components/ui/enterprise-page';
 import { useProducts, useProductVariants, useDeleteProductVariant } from '@/lib/api/hooks/useInventory';
 import type { ProductVariantDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
@@ -41,13 +38,14 @@ export default function ProductVariantsPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<number | undefined>();
-  const [includeInactive, setIncludeInactive] = useState(false);
+  const [activeTab, setActiveTab] = useState('all');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [variantToDelete, setVariantToDelete] = useState<ProductVariantDto | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
+  const includeInactive = activeTab === 'all';
   const { data: products = [] } = useProducts();
-  const { data: variants = [], isLoading } = useProductVariants(selectedProduct, includeInactive);
+  const { data: variants = [], isLoading, refetch } = useProductVariants(selectedProduct, includeInactive);
   const deleteVariant = useDeleteProductVariant();
 
   const filteredVariants = useMemo(() => {
@@ -110,7 +108,7 @@ export default function ProductVariantsPage() {
               <span>{record.sku}</span>
               {record.barcode && (
                 <>
-                  <span className="mx-1">•</span>
+                  <span className="mx-1">-</span>
                   <span>{record.barcode}</span>
                 </>
               )}
@@ -120,7 +118,7 @@ export default function ProductVariantsPage() {
       ),
     },
     {
-      title: 'Ürün',
+      title: 'Urun',
       key: 'product',
       width: 180,
       render: (_, record) => (
@@ -175,18 +173,19 @@ export default function ProductVariantsPage() {
       key: 'status',
       width: 140,
       render: (_, record) => (
-        <Space direction="vertical" size={4}>
-          <Tag
-            icon={record.isActive ? <CheckCircleIcon className="w-3 h-3" /> : <XCircleIcon className="w-3 h-3" />}
-            color={record.isActive ? 'success' : 'default'}
-            className="m-0"
-          >
+        <div className="flex flex-col gap-1">
+          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium ${
+            record.isActive ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-600'
+          }`}>
+            {record.isActive ? <CheckCircleIcon className="w-3 h-3" /> : <XCircleIcon className="w-3 h-3" />}
             {record.isActive ? 'Aktif' : 'Pasif'}
-          </Tag>
+          </span>
           {record.isDefault && (
-            <Tag color="blue" className="m-0">Varsayılan</Tag>
+            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
+              Varsayilan
+            </span>
           )}
-        </Space>
+        </div>
       ),
     },
     {
@@ -201,13 +200,13 @@ export default function ProductVariantsPage() {
               {
                 key: 'view',
                 icon: <EyeIcon className="w-4 h-4" />,
-                label: 'Görüntüle',
+                label: 'Goruntule',
                 onClick: () => router.push(`/inventory/product-variants/${record.id}`),
               },
               {
                 key: 'edit',
                 icon: <PencilIcon className="w-4 h-4" />,
-                label: 'Düzenle',
+                label: 'Duzenle',
                 onClick: () => router.push(`/inventory/product-variants/${record.id}/edit`),
               },
               { type: 'divider' },
@@ -239,167 +238,206 @@ export default function ProductVariantsPage() {
     onChange: (keys: React.Key[]) => setSelectedRowKeys(keys),
   };
 
+  const tabItems = [
+    {
+      key: 'active',
+      label: (
+        <span className="flex items-center gap-2">
+          <CheckCircleIcon className="w-4 h-4" />
+          Aktif
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
+            {stats.active}
+          </span>
+        </span>
+      ),
+    },
+    {
+      key: 'all',
+      label: (
+        <span className="flex items-center gap-2">
+          <InboxIcon className="w-4 h-4" />
+          Tumu
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
+            {stats.total}
+          </span>
+        </span>
+      ),
+    },
+  ];
+
   return (
-    <PageContainer maxWidth="6xl">
+    <div className="min-h-screen bg-slate-50 p-8">
       {/* Header */}
-      <ListPageHeader
-        icon={<Squares2X2Icon className="w-5 h-5" />}
-        iconColor="#8b5cf6"
-        title="Ürün Varyantları"
-        description="SKU ve barkod bazlı ürün çeşitleri"
-        itemCount={stats.total}
-        primaryAction={{
-          label: 'Yeni Varyant',
-          icon: <PlusIcon className="w-4 h-4" />,
-          onClick: () => router.push('/inventory/product-variants/new'),
-        }}
-      />
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
+              <Squares2X2Icon className="w-5 h-5 text-white" />
+            </div>
+            Urun Varyantlari
+          </h1>
+          <p className="text-slate-500 mt-1">SKU ve barkod bazli urun cesitleri</p>
+        </div>
+        <Space>
+          <Button
+            icon={<QrCodeIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+          >
+            Yenile
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusIcon className="w-4 h-4" />}
+            onClick={() => router.push('/inventory/product-variants/new')}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+          >
+            Yeni Varyant
+          </Button>
+        </Space>
+      </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Varyant</span>
-              <div className="text-2xl font-semibold text-slate-900">{stats.total}</div>
-            </div>
-            <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: '#8b5cf615' }}
-            >
-              <Squares2X2Icon className="w-5 h-5" style={{ color: '#8b5cf6' }} />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif</span>
-              <div className="text-2xl font-semibold text-emerald-600">{stats.active}</div>
-            </div>
-            <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: '#10b98115' }}
-            >
-              <CheckCircleIcon className="w-5 h-5" style={{ color: '#10b981' }} />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Stok</span>
-              <div className="text-2xl font-semibold text-blue-600">{stats.totalStock.toLocaleString('tr-TR')}</div>
-            </div>
-            <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: '#3b82f615' }}
-            >
-              <ArchiveBoxIcon className="w-5 h-5" style={{ color: '#3b82f6' }} />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Değer</span>
-              <div className="text-2xl font-semibold text-amber-600">
-                {stats.totalValue.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}
+      <div className="grid grid-cols-12 gap-6 mb-8">
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <Squares2X2Icon className="w-5 h-5 text-slate-600" />
               </div>
             </div>
-            <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: '#f59e0b15' }}
-            >
-              <CurrencyDollarIcon className="w-5 h-5" style={{ color: '#f59e0b' }} />
+            <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Toplam Varyant
+            </div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
+                <CheckCircleIcon className="w-5 h-5 text-white" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.active}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Aktif
+            </div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ArchiveBoxIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.totalStock.toLocaleString('tr-TR')}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Toplam Stok
+            </div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CurrencyDollarIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">
+              {stats.totalValue.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}
+            </div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Toplam Deger
             </div>
           </div>
         </div>
       </div>
 
-      {/* Filters & Table */}
-      <DataTableWrapper>
+      {/* Main Content Card */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        {/* Tabs */}
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={tabItems}
+          className="mb-6 [&_.ant-tabs-tab]:!text-slate-600 [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:!text-slate-900 [&_.ant-tabs-ink-bar]:!bg-slate-900"
+        />
+
         {/* Filter Bar */}
-        <div className="p-4 border-b border-slate-200">
-          <div className="flex flex-wrap items-center gap-4">
-            <Input
-              placeholder="Varyant, SKU veya barkod ara..."
-              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="w-64"
-              allowClear
-            />
-            <Select
-              placeholder="Ürün filtrele"
-              className="w-56"
-              allowClear
-              showSearch
-              optionFilterProp="label"
-              value={selectedProduct}
-              onChange={setSelectedProduct}
-              options={products.map((p) => ({
-                value: p.id,
-                label: `${p.code} - ${p.name}`,
-              }))}
-            />
-            <div className="flex items-center gap-2 ml-auto">
-              <Checkbox
-                checked={includeInactive}
-                onChange={(e) => setIncludeInactive(e.target.checked)}
-              >
-                <span className="text-sm text-slate-600">Pasifleri göster</span>
-              </Checkbox>
-            </div>
-          </div>
+        <div className="flex flex-wrap items-center gap-4 mb-6">
+          <Input
+            placeholder="Varyant, SKU veya barkod ara..."
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ maxWidth: 280 }}
+            allowClear
+            className="[&_.ant-input]:!border-slate-300 [&_.ant-input]:!rounded-lg"
+          />
+          <Select
+            placeholder="Urun filtrele"
+            style={{ width: 220 }}
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            value={selectedProduct}
+            onChange={setSelectedProduct}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
+            options={products.map((p) => ({
+              value: p.id,
+              label: `${p.code} - ${p.name}`,
+            }))}
+          />
         </div>
 
         {/* Bulk Actions Bar */}
         {selectedRowKeys.length > 0 && (
-          <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+          <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg mb-4 flex items-center justify-between">
             <span className="text-sm text-slate-600">
-              {selectedRowKeys.length} varyant seçildi
+              {selectedRowKeys.length} varyant secildi
             </span>
-            <Space size="small">
-              <button
-                onClick={() => setSelectedRowKeys([])}
-                className="text-sm text-slate-500 hover:text-slate-700"
-              >
-                Seçimi temizle
-              </button>
-            </Space>
+            <button
+              onClick={() => setSelectedRowKeys([])}
+              className="text-sm text-slate-500 hover:text-slate-700"
+            >
+              Secimi temizle
+            </button>
           </div>
         )}
 
         {/* Table */}
-        <Table
-          columns={columns}
-          dataSource={filteredVariants}
-          rowKey="id"
-          loading={isLoading}
-          rowSelection={rowSelection}
-          onRow={(record) => ({
-            onClick: () => router.push(`/inventory/product-variants/${record.id}`),
-            className: 'cursor-pointer hover:bg-slate-50',
-          })}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => (
-              <span className="text-sm text-slate-500">Toplam {total} varyant</span>
-            ),
-          }}
-          locale={{ emptyText: 'Varyant bulunamadı' }}
-          className="[&_.ant-table-thead>tr>th]:bg-slate-50 [&_.ant-table-thead>tr>th]:text-slate-600 [&_.ant-table-thead>tr>th]:font-medium [&_.ant-table-thead>tr>th]:text-xs [&_.ant-table-thead>tr>th]:uppercase [&_.ant-table-thead>tr>th]:tracking-wide"
-        />
-      </DataTableWrapper>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        ) : (
+          <Table
+            columns={columns}
+            dataSource={filteredVariants}
+            rowKey="id"
+            loading={isLoading}
+            rowSelection={rowSelection}
+            onRow={(record) => ({
+              onClick: () => router.push(`/inventory/product-variants/${record.id}`),
+              className: 'cursor-pointer',
+            })}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} varyant`,
+            }}
+            locale={{ emptyText: 'Varyant bulunamadi' }}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
+          />
+        )}
+      </div>
 
       {/* Delete Modal */}
       <Modal
-        title="Varyantı Sil"
+        title={<span className="text-slate-900 font-semibold">Varyanti Sil</span>}
         open={deleteModalOpen}
         onCancel={() => {
           setDeleteModalOpen(false);
@@ -407,16 +445,17 @@ export default function ProductVariantsPage() {
         }}
         onOk={handleDelete}
         okText="Sil"
-        cancelText="İptal"
+        cancelText="Iptal"
         okButtonProps={{ danger: true, loading: deleteVariant.isPending }}
+        cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
       >
         <p className="text-slate-600">
-          <strong className="text-slate-900">{variantToDelete?.variantName}</strong> varyantını silmek istediğinize emin misiniz?
+          <strong className="text-slate-900">{variantToDelete?.variantName}</strong> varyantini silmek istediginize emin misiniz?
         </p>
         <p className="text-slate-500 text-sm mt-2">
           SKU: {variantToDelete?.sku}
         </p>
       </Modal>
-    </PageContainer>
+    </div>
   );
 }

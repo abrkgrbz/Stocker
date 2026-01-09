@@ -4,13 +4,14 @@ import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Table,
-  Tag,
   Input,
   Select,
   Dropdown,
   Tooltip,
   Spin,
-  Badge,
+  Button,
+  Space,
+  Tabs,
 } from 'antd';
 import {
   ArrowPathIcon,
@@ -30,32 +31,27 @@ import {
   SwatchIcon,
   TagIcon,
   TrashIcon,
+  InboxIcon,
 } from '@heroicons/react/24/outline';
 import { useProductAttributes, useDeleteProductAttribute } from '@/lib/api/hooks/useInventory';
 import type { ProductAttributeDetailDto, AttributeType } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
-import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  DataTableWrapper,
-} from '@/components/ui/enterprise-page';
 import { showSuccess, confirmDelete } from '@/lib/utils/sweetalert';
 
-const attributeTypeConfig: Record<AttributeType, { color: string; label: string; icon: React.ReactNode }> = {
-  Text: { color: 'blue', label: 'Metin', icon: <LanguageIcon className="w-4 h-4" /> },
-  TextArea: { color: 'blue', label: 'Uzun Metin', icon: <LanguageIcon className="w-4 h-4" /> },
-  Integer: { color: 'cyan', label: 'Tam Sayı', icon: <HashtagIcon className="w-4 h-4" /> },
-  Decimal: { color: 'cyan', label: 'Ondalık Sayı', icon: <HashtagIcon className="w-4 h-4" /> },
-  Boolean: { color: 'green', label: 'Evet/Hayır', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  Date: { color: 'purple', label: 'Tarih', icon: <CalendarIcon className="w-4 h-4" /> },
-  DateTime: { color: 'purple', label: 'Tarih/Saat', icon: <CalendarIcon className="w-4 h-4" /> },
-  Select: { color: 'orange', label: 'Seçim', icon: <ListBulletIcon className="w-4 h-4" /> },
-  MultiSelect: { color: 'magenta', label: 'Çoklu Seçim', icon: <Squares2X2Icon className="w-4 h-4" /> },
-  Color: { color: 'red', label: 'Renk', icon: <SwatchIcon className="w-4 h-4" /> },
-  Url: { color: 'geekblue', label: 'URL', icon: <LanguageIcon className="w-4 h-4" /> },
-  File: { color: 'volcano', label: 'Dosya', icon: <LanguageIcon className="w-4 h-4" /> },
-  Size: { color: 'gold', label: 'Beden', icon: <ArrowsPointingOutIcon className="w-4 h-4" /> },
+const attributeTypeConfig: Record<AttributeType, { label: string; icon: React.ReactNode }> = {
+  Text: { label: 'Metin', icon: <LanguageIcon className="w-4 h-4" /> },
+  TextArea: { label: 'Uzun Metin', icon: <LanguageIcon className="w-4 h-4" /> },
+  Integer: { label: 'Tam Sayi', icon: <HashtagIcon className="w-4 h-4" /> },
+  Decimal: { label: 'Ondalik Sayi', icon: <HashtagIcon className="w-4 h-4" /> },
+  Boolean: { label: 'Evet/Hayir', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Date: { label: 'Tarih', icon: <CalendarIcon className="w-4 h-4" /> },
+  DateTime: { label: 'Tarih/Saat', icon: <CalendarIcon className="w-4 h-4" /> },
+  Select: { label: 'Secim', icon: <ListBulletIcon className="w-4 h-4" /> },
+  MultiSelect: { label: 'Coklu Secim', icon: <Squares2X2Icon className="w-4 h-4" /> },
+  Color: { label: 'Renk', icon: <SwatchIcon className="w-4 h-4" /> },
+  Url: { label: 'URL', icon: <LanguageIcon className="w-4 h-4" /> },
+  File: { label: 'Dosya', icon: <LanguageIcon className="w-4 h-4" /> },
+  Size: { label: 'Beden', icon: <ArrowsPointingOutIcon className="w-4 h-4" /> },
 };
 
 export default function ProductAttributesPage() {
@@ -63,11 +59,12 @@ export default function ProductAttributesPage() {
   const [searchText, setSearchText] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedType, setSelectedType] = useState<AttributeType | undefined>();
-  const [showInactive, setShowInactive] = useState(false);
+  const [activeTab, setActiveTab] = useState('active');
   const [filterableOnly, setFilterableOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+  const showInactive = activeTab === 'all';
   const { data: attributes = [], isLoading, refetch } = useProductAttributes(showInactive, filterableOnly);
   const deleteAttribute = useDeleteProductAttribute();
 
@@ -81,11 +78,11 @@ export default function ProductAttributesPage() {
   }, [searchText]);
 
   const handleDelete = async (record: ProductAttributeDetailDto) => {
-    const confirmed = await confirmDelete('Özellik', record.name);
+    const confirmed = await confirmDelete('Ozellik', record.name);
     if (confirmed) {
       try {
         await deleteAttribute.mutateAsync(record.id);
-        showSuccess('Başarılı', 'Özellik silindi');
+        showSuccess('Basarili', 'Ozellik silindi');
       } catch {
         // Error handled by hook
       }
@@ -104,25 +101,25 @@ export default function ProductAttributesPage() {
   }, [attributes, debouncedSearch, selectedType]);
 
   // Stats
-  const activeAttributes = attributes.filter((a) => a.isActive).length;
-  const filterableAttributes = attributes.filter((a) => a.isFilterable).length;
-  const totalOptions = attributes.reduce((sum, a) => sum + (a.options?.length || 0), 0);
+  const stats = {
+    total: attributes.length,
+    active: attributes.filter((a) => a.isActive).length,
+    filterable: attributes.filter((a) => a.isFilterable).length,
+    totalOptions: attributes.reduce((sum, a) => sum + (a.options?.length || 0), 0),
+  };
 
   const columns: ColumnsType<ProductAttributeDetailDto> = [
     {
-      title: 'Özellik',
+      title: 'Ozellik',
       key: 'name',
       render: (_, record) => (
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: '#8b5cf615' }}
-          >
-            <TagIcon className="w-4 h-4 text-violet-500" />
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <TagIcon className="w-5 h-5 text-slate-600" />
           </div>
           <div>
             <div
-              className="text-sm font-medium text-violet-600 cursor-pointer hover:text-violet-800"
+              className="text-sm font-medium text-slate-900 cursor-pointer hover:text-slate-600"
               onClick={() => router.push(`/inventory/product-attributes/${record.id}`)}
             >
               {record.name}
@@ -140,9 +137,10 @@ export default function ProductAttributesPage() {
       render: (type: AttributeType) => {
         const config = attributeTypeConfig[type];
         return (
-          <Tag color={config?.color || 'default'} icon={config?.icon}>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
+            {config?.icon}
             {config?.label || type}
-          </Tag>
+          </span>
         );
       },
     },
@@ -158,38 +156,45 @@ export default function ProductAttributesPage() {
       ),
     },
     {
-      title: 'Seçenekler',
+      title: 'Secenekler',
       dataIndex: 'options',
       key: 'options',
       width: 100,
       align: 'center',
       render: (options: ProductAttributeDetailDto['options']) => (
-        <Badge
-          count={options?.length || 0}
-          showZero
-          style={{ backgroundColor: options?.length ? '#8b5cf6' : '#94a3b8' }}
-        />
+        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium ${
+          options?.length ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-600'
+        }`}>
+          {options?.length || 0}
+        </span>
       ),
     },
     {
-      title: 'Özellikler',
+      title: 'Ozellikler',
       key: 'features',
       width: 220,
       render: (_, record) => (
         <div className="flex items-center gap-1 flex-wrap">
           {record.isRequired && (
             <Tooltip title="Zorunlu Alan">
-              <Tag color="red" style={{ margin: 0 }}>Zorunlu</Tag>
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-300 text-slate-800">
+                Zorunlu
+              </span>
             </Tooltip>
           )}
           {record.isFilterable && (
             <Tooltip title="Filtrelenebilir">
-              <Tag color="blue" icon={<FunnelIcon className="w-4 h-4" />} style={{ margin: 0 }}>Filtre</Tag>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-slate-200 text-slate-700">
+                <FunnelIcon className="w-3 h-3" />
+                Filtre
+              </span>
             </Tooltip>
           )}
           {record.isVisible && (
-            <Tooltip title="Müşterilere Görünür">
-              <Tag color="green" style={{ margin: 0 }}>Görünür</Tag>
+            <Tooltip title="Musterilere Gorunur">
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
+                Gorunur
+              </span>
             </Tooltip>
           )}
           {!record.isRequired && !record.isFilterable && !record.isVisible && (
@@ -199,7 +204,7 @@ export default function ProductAttributesPage() {
       ),
     },
     {
-      title: 'Sıra',
+      title: 'Sira',
       dataIndex: 'displayOrder',
       key: 'displayOrder',
       width: 80,
@@ -214,9 +219,11 @@ export default function ProductAttributesPage() {
       width: 100,
       align: 'center',
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'default'}>
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${
+          isActive ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-600'
+        }`}>
           {isActive ? 'Aktif' : 'Pasif'}
-        </Tag>
+        </span>
       ),
     },
     {
@@ -229,13 +236,13 @@ export default function ProductAttributesPage() {
           {
             key: 'view',
             icon: <EyeIcon className="w-4 h-4" />,
-            label: 'Görüntüle',
+            label: 'Goruntule',
             onClick: () => router.push(`/inventory/product-attributes/${record.id}`),
           },
           {
             key: 'edit',
             icon: <PencilIcon className="w-4 h-4" />,
-            label: 'Düzenle',
+            label: 'Duzenle',
             onClick: () => router.push(`/inventory/product-attributes/${record.id}/edit`),
           },
           { type: 'divider' as const },
@@ -259,97 +266,150 @@ export default function ProductAttributesPage() {
     },
   ];
 
+  const tabItems = [
+    {
+      key: 'active',
+      label: (
+        <span className="flex items-center gap-2">
+          <CheckCircleIcon className="w-4 h-4" />
+          Aktif
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
+            {stats.active}
+          </span>
+        </span>
+      ),
+    },
+    {
+      key: 'all',
+      label: (
+        <span className="flex items-center gap-2">
+          <InboxIcon className="w-4 h-4" />
+          Tumu
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
+            {stats.total}
+          </span>
+        </span>
+      ),
+    },
+  ];
+
   return (
-    <PageContainer maxWidth="7xl">
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
+              <TagIcon className="w-5 h-5 text-white" />
+            </div>
+            Urun Ozellikleri
+          </h1>
+          <p className="text-slate-500 mt-1">Urun ozelliklerini ve varyant seceneklerini yonetin</p>
+        </div>
+        <Space>
+          <Button
+            icon={<ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+          >
+            Yenile
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusIcon className="w-4 h-4" />}
+            onClick={() => router.push('/inventory/product-attributes/new')}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+          >
+            Yeni Ozellik
+          </Button>
+        </Space>
+      </div>
+
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Özellik</span>
-              <div className="text-2xl font-semibold text-slate-900">{attributes.length}</div>
+      <div className="grid grid-cols-12 gap-6 mb-8">
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <TagIcon className="w-5 h-5 text-slate-600" />
+              </div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <TagIcon className="w-4 h-4 text-violet-500" />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif Özellik</span>
-              <div className="text-2xl font-semibold text-slate-900">{activeAttributes}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
+            <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Toplam Ozellik
             </div>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Filtrelenebilir</span>
-              <div className="text-2xl font-semibold text-slate-900">{filterableAttributes}</div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
+                <CheckCircleIcon className="w-5 h-5 text-white" />
+              </div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <FunnelIcon className="w-4 h-4 text-blue-500" />
+            <div className="text-2xl font-bold text-slate-900">{stats.active}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Aktif Ozellik
             </div>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Seçenek</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalOptions}</div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <FunnelIcon className="w-5 h-5 text-slate-600" />
+              </div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-              <ListBulletIcon className="w-4 h-4" style={{ color: '#f59e0b' }} />
+            <div className="text-2xl font-bold text-slate-900">{stats.filterable}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Filtrelenebilir
+            </div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ListBulletIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.totalOptions}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Toplam Secenek
             </div>
           </div>
         </div>
       </div>
 
-      {/* Header */}
-      <ListPageHeader
-        icon={<TagIcon className="w-4 h-4" />}
-        iconColor="#8b5cf6"
-        title="Ürün Özellikleri"
-        description="Ürün özelliklerini ve varyant seçeneklerini yönetin"
-        itemCount={filteredAttributes.length}
-        primaryAction={{
-          label: 'Yeni Özellik',
-          onClick: () => router.push('/inventory/product-attributes/new'),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-          >
-            <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
+      {/* Main Content Card */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        {/* Tabs */}
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={tabItems}
+          className="mb-6 [&_.ant-tabs-tab]:!text-slate-600 [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:!text-slate-900 [&_.ant-tabs-ink-bar]:!bg-slate-900"
+        />
 
-      {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+        {/* Filters */}
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center mb-6">
           <Input
-            placeholder="Özellik adı veya kodu ara..."
+            placeholder="Ozellik adi veya kodu ara..."
             prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
             style={{ maxWidth: 280 }}
-            className="h-10"
+            className="[&_.ant-input]:!border-slate-300 [&_.ant-input]:!rounded-lg"
           />
           <Select
-            placeholder="Tip seçin"
+            placeholder="Tip secin"
             allowClear
             style={{ width: 160 }}
             value={selectedType}
             onChange={setSelectedType}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
             options={Object.entries(attributeTypeConfig).map(([value, config]) => ({
               value,
               label: (
@@ -364,27 +424,18 @@ export default function ProductAttributesPage() {
             value={filterableOnly}
             onChange={setFilterableOnly}
             style={{ width: 180 }}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
             options={[
-              { value: false, label: 'Tüm Özellikler' },
+              { value: false, label: 'Tum Ozellikler' },
               { value: true, label: 'Sadece Filtrelenebilir' },
             ]}
           />
-          <Select
-            value={showInactive}
-            onChange={setShowInactive}
-            style={{ width: 140 }}
-            options={[
-              { value: false, label: 'Sadece Aktif' },
-              { value: true, label: 'Tümü' },
-            ]}
-          />
-          {(searchText || selectedType || filterableOnly || showInactive) && (
+          {(searchText || selectedType || filterableOnly) && (
             <button
               onClick={() => {
                 setSearchText('');
                 setSelectedType(undefined);
                 setFilterableOnly(false);
-                setShowInactive(false);
               }}
               className="ml-auto px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
             >
@@ -392,17 +443,13 @@ export default function ProductAttributesPage() {
             </button>
           )}
         </div>
-      </div>
 
-      {/* Table */}
-      {isLoading ? (
-        <Card>
+        {/* Table */}
+        {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Spin size="large" />
           </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
+        ) : (
           <Table
             columns={columns}
             dataSource={filteredAttributes}
@@ -414,7 +461,7 @@ export default function ProductAttributesPage() {
               pageSize: pageSize,
               total: filteredAttributes.length,
               showSizeChanger: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} özellik`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} ozellik`,
               onChange: (page, size) => {
                 setCurrentPage(page);
                 setPageSize(size);
@@ -424,9 +471,10 @@ export default function ProductAttributesPage() {
               onClick: () => router.push(`/inventory/product-attributes/${record.id}`),
               style: { cursor: 'pointer' },
             })}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
           />
-        </DataTableWrapper>
-      )}
-    </PageContainer>
+        )}
+      </div>
+    </div>
   );
 }

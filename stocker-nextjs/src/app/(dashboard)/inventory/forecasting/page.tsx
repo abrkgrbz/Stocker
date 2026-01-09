@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import {
   Table,
-  Tag,
   Button,
   Space,
   Select,
@@ -16,6 +15,7 @@ import {
   Descriptions,
   Spin,
   Empty,
+  Tag,
 } from 'antd';
 import {
   ArrowDownIcon,
@@ -60,10 +60,10 @@ const MONOCHROME_COLORS = ['#1e293b', '#334155', '#475569', '#64748b', '#94a3b8'
 
 // Risk level helpers
 const getRiskLevel = (daysUntilStockout: number, leadTime: number) => {
-  if (daysUntilStockout <= 0) return { color: 'red', text: 'Stokta Yok', icon: <ExclamationCircleIcon className="w-4 h-4" /> };
-  if (daysUntilStockout < leadTime) return { color: 'red', text: 'Yüksek Risk', icon: <ExclamationTriangleIcon className="w-4 h-4" /> };
-  if (daysUntilStockout < leadTime * 2) return { color: 'orange', text: 'Orta Risk', icon: <ClockIcon className="w-4 h-4" /> };
-  return { color: 'green', text: 'Düşük Risk', icon: <CheckCircleIcon className="w-4 h-4" /> };
+  if (daysUntilStockout <= 0) return { color: 'red', text: 'Stokta Yok', icon: <ExclamationCircleIcon className="w-4 h-4" />, className: 'bg-slate-900 text-white' };
+  if (daysUntilStockout < leadTime) return { color: 'red', text: 'Yüksek Risk', icon: <ExclamationTriangleIcon className="w-4 h-4" />, className: 'bg-slate-700 text-white' };
+  if (daysUntilStockout < leadTime * 2) return { color: 'orange', text: 'Orta Risk', icon: <ClockIcon className="w-4 h-4" />, className: 'bg-slate-400 text-white' };
+  return { color: 'green', text: 'Düşük Risk', icon: <CheckCircleIcon className="w-4 h-4" />, className: 'bg-slate-200 text-slate-700' };
 };
 
 const getTrendIcon = (trend: number) => {
@@ -72,14 +72,15 @@ const getTrendIcon = (trend: number) => {
   return <MinusIcon className="w-4 h-4 text-slate-400" />;
 };
 
-const getStatusColor = (status: ReorderSuggestionStatus) => {
+// Status badge classes (monochrome)
+const getStatusBadgeClass = (status: ReorderSuggestionStatus) => {
   switch (status) {
-    case 'Pending': return 'processing';
-    case 'Approved': return 'success';
-    case 'Rejected': return 'error';
-    case 'Ordered': return 'cyan';
-    case 'Expired': return 'default';
-    default: return 'default';
+    case 'Pending': return 'bg-slate-100 text-slate-600';
+    case 'Approved': return 'bg-slate-900 text-white';
+    case 'Rejected': return 'bg-slate-300 text-slate-700';
+    case 'Ordered': return 'bg-slate-700 text-white';
+    case 'Expired': return 'bg-slate-200 text-slate-500';
+    default: return 'bg-slate-100 text-slate-600';
   }
 };
 
@@ -193,7 +194,7 @@ export default function ForecastingPage() {
       key: 'risk',
       render: (_, record) => {
         const risk = getRiskLevel(record.estimatedDaysUntilStockout, record.leadTimeDays);
-        return <Tag color={risk.color}>{risk.text}</Tag>;
+        return <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${risk.className}`}>{risk.text}</span>;
       },
     },
     {
@@ -277,7 +278,7 @@ export default function ForecastingPage() {
       dataIndex: 'status',
       key: 'status',
       render: (status: ReorderSuggestionStatus) => (
-        <Badge status={getStatusColor(status) as any} text={getStatusText(status)} />
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(status)}`}>{getStatusText(status)}</span>
       ),
     },
     {
@@ -339,7 +340,7 @@ export default function ForecastingPage() {
       dataIndex: 'recommendedMinStock',
       key: 'recommendedMinStock',
       render: (value: number, record) => (
-        <span className={value !== record.currentMinStock ? 'text-amber-600' : 'text-slate-700'}>
+        <span className={value !== record.currentMinStock ? 'text-slate-700' : 'text-slate-700'}>
           {value.toFixed(0)}
         </span>
       ),
@@ -355,7 +356,7 @@ export default function ForecastingPage() {
       dataIndex: 'recommendedReorderLevel',
       key: 'recommendedReorderLevel',
       render: (value: number, record) => (
-        <span className={value !== record.currentReorderLevel ? 'text-amber-600' : 'text-slate-700'}>
+        <span className={value !== record.currentReorderLevel ? 'text-slate-700' : 'text-slate-700'}>
           {value.toFixed(0)}
         </span>
       ),
@@ -365,7 +366,7 @@ export default function ForecastingPage() {
       key: 'reduction',
       render: (_, record) => (
         record.inventoryReductionPercent > 0 ? (
-          <Tag color="green">{record.inventoryReductionPercent.toFixed(1)}%</Tag>
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-900 text-white">{record.inventoryReductionPercent.toFixed(1)}%</span>
         ) : (
           <Tag color="orange">{Math.abs(record.inventoryReductionPercent).toFixed(1)}% artış</Tag>
         )
@@ -377,7 +378,7 @@ export default function ForecastingPage() {
       key: 'estimatedAnnualSavings',
       render: (value: number) => (
         value > 0 ? (
-          <span className="text-emerald-600 font-medium">{value.toLocaleString('tr-TR')} TRY</span>
+          <span className="text-slate-900 font-medium">{value.toLocaleString('tr-TR')} TRY</span>
         ) : '-'
       ),
     },
@@ -417,12 +418,12 @@ export default function ForecastingPage() {
                 <div className="col-span-12 sm:col-span-6 lg:col-span-3">
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
-                        <ShoppingCartIcon className="w-5 h-5 text-amber-600" />
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <ShoppingCartIcon className="w-5 h-5 text-slate-600" />
                       </div>
                     </div>
                     <p className="text-xs text-slate-500 mb-1">Sipariş Gerekli</p>
-                    <p className={`text-2xl font-bold ${forecastSummary.productsNeedingReorder > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
+                    <p className={`text-2xl font-bold ${forecastSummary.productsNeedingReorder > 0 ? 'text-slate-700' : 'text-slate-900'}`}>
                       {forecastSummary.productsNeedingReorder}
                     </p>
                   </div>
@@ -430,12 +431,12 @@ export default function ForecastingPage() {
                 <div className="col-span-12 sm:col-span-6 lg:col-span-3">
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
-                        <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <ExclamationTriangleIcon className="w-5 h-5 text-slate-600" />
                       </div>
                     </div>
                     <p className="text-xs text-slate-500 mb-1">Risk Altında</p>
-                    <p className={`text-2xl font-bold ${forecastSummary.productsAtRisk > 0 ? 'text-red-600' : 'text-slate-900'}`}>
+                    <p className={`text-2xl font-bold ${forecastSummary.productsAtRisk > 0 ? 'text-slate-700' : 'text-slate-900'}`}>
                       {forecastSummary.productsAtRisk}
                     </p>
                   </div>
@@ -443,12 +444,12 @@ export default function ForecastingPage() {
                 <div className="col-span-12 sm:col-span-6 lg:col-span-3">
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
-                        <ExclamationCircleIcon className="w-5 h-5 text-red-600" />
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <ExclamationCircleIcon className="w-5 h-5 text-slate-600" />
                       </div>
                     </div>
                     <p className="text-xs text-slate-500 mb-1">Stokta Yok</p>
-                    <p className={`text-2xl font-bold ${forecastSummary.productsInStockout > 0 ? 'text-red-600' : 'text-slate-900'}`}>
+                    <p className={`text-2xl font-bold ${forecastSummary.productsInStockout > 0 ? 'text-slate-700' : 'text-slate-900'}`}>
                       {forecastSummary.productsInStockout}
                     </p>
                   </div>
@@ -463,7 +464,7 @@ export default function ForecastingPage() {
                     <div className="grid grid-cols-3 gap-4">
                       <div>
                         <p className="text-sm text-slate-500 mb-1">Yüksek Risk</p>
-                        <p className="text-xl font-bold text-red-600 mb-2">{forecastSummary.highRiskProducts}</p>
+                        <p className="text-xl font-bold text-slate-900 mb-2">{forecastSummary.highRiskProducts}</p>
                         <Progress
                           percent={forecastSummary.totalProductsAnalyzed > 0
                             ? Math.round((forecastSummary.highRiskProducts / forecastSummary.totalProductsAnalyzed) * 100)
@@ -475,7 +476,7 @@ export default function ForecastingPage() {
                       </div>
                       <div>
                         <p className="text-sm text-slate-500 mb-1">Orta Risk</p>
-                        <p className="text-xl font-bold text-amber-600 mb-2">{forecastSummary.mediumRiskProducts}</p>
+                        <p className="text-xl font-bold text-slate-700 mb-2">{forecastSummary.mediumRiskProducts}</p>
                         <Progress
                           percent={forecastSummary.totalProductsAnalyzed > 0
                             ? Math.round((forecastSummary.mediumRiskProducts / forecastSummary.totalProductsAnalyzed) * 100)
@@ -487,7 +488,7 @@ export default function ForecastingPage() {
                       </div>
                       <div>
                         <p className="text-sm text-slate-500 mb-1">Düşük Risk</p>
-                        <p className="text-xl font-bold text-emerald-600 mb-2">{forecastSummary.lowRiskProducts}</p>
+                        <p className="text-xl font-bold text-slate-500 mb-2">{forecastSummary.lowRiskProducts}</p>
                         <Progress
                           percent={forecastSummary.totalProductsAnalyzed > 0
                             ? Math.round((forecastSummary.lowRiskProducts / forecastSummary.totalProductsAnalyzed) * 100)
@@ -541,7 +542,7 @@ export default function ForecastingPage() {
                         dataIndex: 'productsNeedingReorder',
                         key: 'productsNeedingReorder',
                         render: (value: number) => (
-                          <Tag color={value > 0 ? 'orange' : 'green'}>{value}</Tag>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${value > 0 ? "bg-slate-700 text-white" : "bg-slate-200 text-slate-600"}`}>{value}</span>
                         ),
                       },
                       {
@@ -642,8 +643,8 @@ export default function ForecastingPage() {
             {suggestions && (
               <div className="flex-1">
                 <Space>
-                  <Tag color="blue">Bekleyen: {suggestions.pendingCount}</Tag>
-                  <Tag color="green">Onaylanan: {suggestions.approvedCount}</Tag>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-slate-700 text-white">Bekleyen: {suggestions.pendingCount}</span>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-slate-900 text-white">Onaylanan: {suggestions.approvedCount}</span>
                   <Tag>Toplam Değer: {suggestions.totalPendingValue.toLocaleString('tr-TR')} TRY</Tag>
                 </Space>
               </div>
@@ -859,7 +860,7 @@ export default function ForecastingPage() {
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 mb-1">Önerilen Emniyet Stoğu</p>
-                    <p className={`text-xl font-bold ${safetyStock.recommendedSafetyStock !== safetyStock.currentSafetyStock ? 'text-amber-600' : 'text-slate-900'}`}>
+                    <p className={`text-xl font-bold ${safetyStock.recommendedSafetyStock !== safetyStock.currentSafetyStock ? 'text-slate-700' : 'text-slate-900'}`}>
                       {safetyStock.recommendedSafetyStock.toFixed(0)}
                     </p>
                   </div>

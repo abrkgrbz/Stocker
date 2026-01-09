@@ -2,14 +2,13 @@
 
 /**
  * Stock Adjustments Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Monochrome design system following DESIGN_SYSTEM.md
  */
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Table,
-  Tag,
   Input,
   Select,
   Modal,
@@ -18,6 +17,8 @@ import {
   Tabs,
   Dropdown,
   Spin,
+  Button,
+  Space,
 } from 'antd';
 import {
   ArrowPathIcon,
@@ -26,10 +27,8 @@ import {
   ClockIcon,
   DocumentTextIcon,
   EllipsisHorizontalIcon,
-  ExclamationTriangleIcon,
   MagnifyingGlassIcon,
   MinusCircleIcon,
-  PencilIcon,
   PlusCircleIcon,
   PlusIcon,
   TrashIcon,
@@ -41,15 +40,9 @@ import {
   useAdjustStock,
   useStockMovements,
 } from '@/lib/api/hooks/useInventory';
-import type { ProductDto, StockAdjustmentDto, StockMovementDto } from '@/lib/api/services/inventory.types';
+import type { StockAdjustmentDto, StockMovementDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  DataTableWrapper,
-} from '@/components/ui/enterprise-page';
 import {
   showSuccess,
   showError,
@@ -82,21 +75,15 @@ interface PendingAdjustment {
   reviewNotes?: string;
 }
 
-const statusConfig: Record<AdjustmentStatus, { color: string; label: string; icon: React.ReactNode }> = {
-  Pending: { color: 'warning', label: 'Beklemede', icon: <ClockIcon className="w-4 h-4" /> },
-  Approved: { color: 'success', label: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  Rejected: { color: 'error', label: 'Reddedildi', icon: <XMarkIcon className="w-4 h-4" /> },
-};
-
 const adjustmentReasons = [
-  { value: 'counting_difference', label: 'Sayım Farkı' },
-  { value: 'damage', label: 'Hasar/Kırık' },
-  { value: 'expiry', label: 'Son Kullanma Tarihi Geçmiş' },
-  { value: 'theft_loss', label: 'Hırsızlık/Kayıp' },
-  { value: 'system_error', label: 'Sistem Hatası Düzeltme' },
-  { value: 'return', label: 'İade Düzeltmesi' },
+  { value: 'counting_difference', label: 'Sayim Farki' },
+  { value: 'damage', label: 'Hasar/Kirik' },
+  { value: 'expiry', label: 'Son Kullanma Tarihi Gecmis' },
+  { value: 'theft_loss', label: 'Hirsizlik/Kayip' },
+  { value: 'system_error', label: 'Sistem Hatasi Duzeltme' },
+  { value: 'return', label: 'Iade Duzeltmesi' },
   { value: 'bonus', label: 'Promosyon/Bonus' },
-  { value: 'other', label: 'Diğer' },
+  { value: 'other', label: 'Diger' },
 ];
 
 export default function StockAdjustmentsPage() {
@@ -182,7 +169,7 @@ export default function StockAdjustmentsPage() {
       const warehouse = warehouses.find((w) => w.id === values.warehouseId);
 
       if (!product || !warehouse) {
-        showError('Ürün veya depo bulunamadı');
+        showError('Urun veya depo bulunamadi');
         return;
       }
 
@@ -204,14 +191,14 @@ export default function StockAdjustmentsPage() {
         notes: values.notes,
         status: 'Pending',
         createdAt: new Date().toISOString(),
-        createdBy: 'Kullanıcı',
+        createdBy: 'Kullanici',
       };
 
       setPendingAdjustments((prev) => [newAdjustment, ...prev]);
       setCreateModalOpen(false);
-      showSuccess('Başarılı', 'Stok düzeltme talebi oluşturuldu ve onay bekliyor');
+      showSuccess('Basarili', 'Stok duzeltme talebi olusturuldu ve onay bekliyor');
     } catch {
-      showError('Form doğrulama hatası');
+      showError('Form dogrulama hatasi');
     }
   };
 
@@ -221,7 +208,7 @@ export default function StockAdjustmentsPage() {
       const product = products.find((p) => p.id === values.productId);
 
       if (!product) {
-        showError('Ürün bulunamadı');
+        showError('Urun bulunamadi');
         return;
       }
 
@@ -236,7 +223,7 @@ export default function StockAdjustmentsPage() {
       await adjustStock.mutateAsync(adjustmentData);
       setCreateModalOpen(false);
       refetchProducts();
-      showSuccess('Başarılı', 'Stok düzeltmesi başarıyla uygulandı');
+      showSuccess('Basarili', 'Stok duzeltmesi basariyla uygulandi');
     } catch {
       // Error handled by mutation
     }
@@ -278,7 +265,7 @@ export default function StockAdjustmentsPage() {
 
       setReviewModalOpen(false);
       refetchProducts();
-      showSuccess('Başarılı', 'Stok düzeltmesi onaylandı ve uygulandı');
+      showSuccess('Basarili', 'Stok duzeltmesi onaylandi ve uygulandi');
     } catch {
       // Error handled by mutation
     }
@@ -288,7 +275,7 @@ export default function StockAdjustmentsPage() {
     if (!selectedAdjustment) return;
 
     if (!reviewNotes.trim()) {
-      showWarning('Uyarı', 'Reddetme sebebi girmelisiniz');
+      showWarning('Uyari', 'Reddetme sebebi girmelisiniz');
       return;
     }
 
@@ -307,29 +294,26 @@ export default function StockAdjustmentsPage() {
     );
 
     setReviewModalOpen(false);
-    showInfo('Bilgi', 'Stok düzeltme talebi reddedildi');
+    showInfo('Bilgi', 'Stok duzeltme talebi reddedildi');
   };
 
   const handleDeletePending = (id: string) => {
     setPendingAdjustments((prev) => prev.filter((adj) => adj.id !== id));
-    showSuccess('Başarılı', 'Talep silindi');
+    showSuccess('Basarili', 'Talep silindi');
   };
 
   // Pending adjustments columns
   const pendingColumns: ColumnsType<PendingAdjustment> = [
     {
-      title: 'Ürün',
+      title: 'Urun',
       key: 'product',
       render: (_, record) => (
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: record.difference > 0 ? '#10b98115' : '#ef444415' }}
-          >
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
             {record.difference > 0 ? (
-              <PlusCircleIcon className="w-4 h-4 text-emerald-500" />
+              <PlusCircleIcon className="w-4 h-4 text-slate-600" />
             ) : (
-              <MinusCircleIcon className="w-4 h-4 text-red-500" />
+              <MinusCircleIcon className="w-4 h-4 text-slate-600" />
             )}
           </div>
           <div>
@@ -369,7 +353,7 @@ export default function StockAdjustmentsPage() {
       width: 100,
       align: 'right',
       render: (diff) => (
-        <span className={`text-sm font-medium ${diff > 0 ? 'text-green-600' : diff < 0 ? 'text-red-600' : 'text-slate-500'}`}>
+        <span className={`text-sm font-medium ${diff > 0 ? 'text-slate-900' : diff < 0 ? 'text-slate-700' : 'text-slate-500'}`}>
           {diff > 0 ? '+' : ''}{diff.toLocaleString('tr-TR')}
         </span>
       ),
@@ -397,11 +381,19 @@ export default function StockAdjustmentsPage() {
       key: 'status',
       width: 110,
       render: (status: AdjustmentStatus) => {
-        const config = statusConfig[status];
+        const statusStyles: Record<AdjustmentStatus, { bg: string; text: string; label: string }> = {
+          Pending: { bg: 'bg-slate-200', text: 'text-slate-700', label: 'Beklemede' },
+          Approved: { bg: 'bg-slate-900', text: 'text-white', label: 'Onaylandi' },
+          Rejected: { bg: 'bg-slate-400', text: 'text-white', label: 'Reddedildi' },
+        };
+        const style = statusStyles[status];
         return (
-          <Tag color={config.color} icon={config.icon}>
-            {config.label}
-          </Tag>
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${style.bg} ${style.text}`}>
+            {status === 'Pending' && <ClockIcon className="w-3 h-3" />}
+            {status === 'Approved' && <CheckCircleIcon className="w-3 h-3" />}
+            {status === 'Rejected' && <XMarkIcon className="w-3 h-3" />}
+            {style.label}
+          </span>
         );
       },
     },
@@ -415,7 +407,7 @@ export default function StockAdjustmentsPage() {
           {
             key: 'review',
             icon: <CheckIcon className="w-4 h-4" />,
-            label: 'İncele ve Onayla',
+            label: 'Incele ve Onayla',
             onClick: () => handleReviewClick(record),
           },
           { type: 'divider' as const },
@@ -456,18 +448,15 @@ export default function StockAdjustmentsPage() {
       render: (date) => <span className="text-sm text-slate-500">{dayjs(date).format('DD.MM.YYYY HH:mm')}</span>,
     },
     {
-      title: 'Ürün',
+      title: 'Urun',
       key: 'product',
       render: (_, record) => (
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: record.movementType === 'AdjustmentIncrease' ? '#10b98115' : '#ef444415' }}
-          >
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
             {record.movementType === 'AdjustmentIncrease' ? (
-              <PlusCircleIcon className="w-4 h-4 text-emerald-500" />
+              <PlusCircleIcon className="w-4 h-4 text-slate-600" />
             ) : (
-              <MinusCircleIcon className="w-4 h-4 text-red-500" />
+              <MinusCircleIcon className="w-4 h-4 text-slate-600" />
             )}
           </div>
           <div>
@@ -485,14 +474,16 @@ export default function StockAdjustmentsPage() {
       render: (name) => <span className="text-sm text-slate-600">{name}</span>,
     },
     {
-      title: 'Tür',
+      title: 'Tur',
       dataIndex: 'movementType',
       key: 'movementType',
       width: 100,
       render: (type) => (
-        <Tag color={type === 'AdjustmentIncrease' ? 'success' : 'error'}>
-          {type === 'AdjustmentIncrease' ? 'Artış' : 'Azalış'}
-        </Tag>
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${
+          type === 'AdjustmentIncrease' ? 'bg-slate-200 text-slate-700' : 'bg-slate-100 text-slate-600'
+        }`}>
+          {type === 'AdjustmentIncrease' ? 'Artis' : 'Azalis'}
+        </span>
       ),
     },
     {
@@ -502,13 +493,13 @@ export default function StockAdjustmentsPage() {
       width: 100,
       align: 'right',
       render: (qty, record) => (
-        <span className={`text-sm font-medium ${record.movementType === 'AdjustmentIncrease' ? 'text-green-600' : 'text-red-600'}`}>
+        <span className="text-sm font-medium text-slate-900">
           {record.movementType === 'AdjustmentIncrease' ? '+' : '-'}{qty.toLocaleString('tr-TR')}
         </span>
       ),
     },
     {
-      title: 'Açıklama',
+      title: 'Aciklama',
       dataIndex: 'description',
       key: 'description',
       ellipsis: true,
@@ -581,101 +572,94 @@ export default function StockAdjustmentsPage() {
       label: (
         <span className="flex items-center gap-2">
           <ClockIcon className="w-4 h-4" />
-          Geçmiş
+          Gecmis
         </span>
       ),
     },
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Stok Duzeltme</h1>
+          <p className="text-slate-500 mt-1">Stok miktarlarini duzeltin ve onay sureclerini yonetin</p>
+        </div>
+        <Space>
+          <Button
+            icon={<ArrowPathIcon className="w-4 h-4" />}
+            onClick={() => refetchProducts()}
+            disabled={productsLoading}
+            className="!border-slate-300 !text-slate-700 hover:!border-slate-400"
+          >
+            Yenile
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusIcon className="w-4 h-4" />}
+            onClick={handleCreateAdjustment}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+          >
+            Yeni Duzeltme
+          </Button>
+        </Space>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Bekleyen</span>
-              <div className="text-2xl font-semibold text-slate-900">{stats.pending}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: stats.pending > 0 ? '#f59e0b15' : '#64748b15' }}>
-              <ClockIcon className="w-4 h-4" style={{ color: stats.pending > 0 ? '#f59e0b' : '#64748b' }} />
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <ClockIcon className="w-5 h-5 text-slate-600" />
             </div>
           </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.pending}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Bekleyen</div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Onaylanan</span>
-              <div className="text-2xl font-semibold text-slate-900">{stats.approved}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+              <CheckCircleIcon className="w-5 h-5 text-slate-700" />
             </div>
           </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.approved}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Onaylanan</div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Reddedilen</span>
-              <div className="text-2xl font-semibold text-slate-900">{stats.rejected}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: stats.rejected > 0 ? '#ef444415' : '#64748b15' }}>
-              <XMarkIcon className="w-4 h-4" style={{ color: stats.rejected > 0 ? '#ef4444' : '#64748b' }} />
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-300 flex items-center justify-center">
+              <XMarkIcon className="w-5 h-5 text-slate-800" />
             </div>
           </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.rejected}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Reddedilen</div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Artış</span>
-              <div className="text-2xl font-semibold text-green-600">+{stats.totalIncrease.toLocaleString('tr-TR')}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <PlusCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <PlusCircleIcon className="w-5 h-5 text-slate-600" />
             </div>
           </div>
+          <div className="text-2xl font-bold text-slate-900">+{stats.totalIncrease.toLocaleString('tr-TR')}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Artis</div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Azalış</span>
-              <div className="text-2xl font-semibold text-red-600">-{stats.totalDecrease.toLocaleString('tr-TR')}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-red-500/10">
-              <MinusCircleIcon className="w-4 h-4 text-red-500" />
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <MinusCircleIcon className="w-5 h-5 text-slate-600" />
             </div>
           </div>
+          <div className="text-2xl font-bold text-slate-900">-{stats.totalDecrease.toLocaleString('tr-TR')}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Azalis</div>
         </div>
       </div>
 
-      {/* Header */}
-      <ListPageHeader
-        icon={<PencilIcon className="w-4 h-4" />}
-        iconColor="#8b5cf6"
-        title="Stok Düzeltme"
-        description="Stok miktarlarını düzeltin ve onay süreçlerini yönetin"
-        itemCount={filteredPendingAdjustments.length}
-        primaryAction={{
-          label: 'Yeni Düzeltme',
-          onClick: handleCreateAdjustment,
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <button
-            onClick={() => refetchProducts()}
-            disabled={productsLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-          >
-            <ArrowPathIcon className={`w-4 h-4 ${productsLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
-
       {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
           <Select
-            placeholder="Depo seçin"
+            placeholder="Depo secin"
             allowClear
             style={{ width: 200 }}
             value={selectedWarehouse}
@@ -684,29 +668,35 @@ export default function StockAdjustmentsPage() {
               value: w.id,
               label: w.name,
             }))}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           />
           <Input
-            placeholder="Ürün ara... (ad, kod)"
+            placeholder="Urun ara... (ad, kod)"
             prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ maxWidth: 400 }}
             allowClear
-            className="h-10"
+            className="!rounded-lg !border-slate-300"
           />
         </div>
       </div>
 
       {/* Tabs and Table */}
       {productsLoading || movementsLoading ? (
-        <Card>
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
           <div className="flex items-center justify-center py-12">
             <Spin size="large" />
           </div>
-        </Card>
+        </div>
       ) : (
-        <DataTableWrapper>
-          <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <Tabs
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            items={tabItems}
+            className="mb-6 [&_.ant-tabs-tab]:!text-slate-600 [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:!text-slate-900 [&_.ant-tabs-ink-bar]:!bg-slate-900"
+          />
 
           {activeTab !== 'history' ? (
             <Table
@@ -717,8 +707,9 @@ export default function StockAdjustmentsPage() {
               scroll={{ x: 1200 }}
               pagination={{
                 showSizeChanger: true,
-                showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
+                showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayit`,
               }}
+              className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
             />
           ) : (
             <Table
@@ -729,23 +720,24 @@ export default function StockAdjustmentsPage() {
               scroll={{ x: 1200 }}
               pagination={{
                 showSizeChanger: true,
-                showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
+                showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayit`,
               }}
+              className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
             />
           )}
-        </DataTableWrapper>
+        </div>
       )}
 
       {/* Create Adjustment Modal */}
       <Modal
         title={
           <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <PlusIcon className="w-4 h-4 text-violet-500" />
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <PlusIcon className="w-4 h-4 text-slate-600" />
             </div>
             <div>
-              <div className="text-lg font-semibold text-slate-900">Yeni Stok Düzeltme</div>
-              <div className="text-sm text-slate-500">Stok miktarını düzeltin</div>
+              <div className="text-lg font-semibold text-slate-900">Yeni Stok Duzeltme</div>
+              <div className="text-sm text-slate-500">Stok miktarini duzeltin</div>
             </div>
           </div>
         }
@@ -757,20 +749,20 @@ export default function StockAdjustmentsPage() {
               onClick={() => setCreateModalOpen(false)}
               className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
             >
-              İptal
+              Iptal
             </button>
             <button
               onClick={handleSubmitAdjustment}
               className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
             >
-              Onaya Gönder
+              Onaya Gonder
             </button>
             <button
               onClick={handleDirectAdjustment}
               disabled={adjustStock.isPending}
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-50"
             >
-              {adjustStock.isPending ? 'Uygulanıyor...' : 'Direkt Uygula'}
+              {adjustStock.isPending ? 'Uygulaniyor...' : 'Direkt Uygula'}
             </button>
           </div>
         }
@@ -780,12 +772,12 @@ export default function StockAdjustmentsPage() {
           <div className="grid grid-cols-2 gap-4">
             <Form.Item
               name="productId"
-              label="Ürün"
-              rules={[{ required: true, message: 'Ürün seçiniz' }]}
+              label={<span className="text-slate-700 font-medium">Urun</span>}
+              rules={[{ required: true, message: 'Urun seciniz' }]}
             >
               <Select
                 showSearch
-                placeholder="Ürün ara ve seç"
+                placeholder="Urun ara ve sec"
                 filterOption={(input, option) =>
                   (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                 }
@@ -793,16 +785,18 @@ export default function StockAdjustmentsPage() {
                   value: p.id,
                   label: `${p.code} - ${p.name}`,
                 }))}
+                className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
               />
             </Form.Item>
             <Form.Item
               name="warehouseId"
-              label="Depo"
-              rules={[{ required: true, message: 'Depo seçiniz' }]}
+              label={<span className="text-slate-700 font-medium">Depo</span>}
+              rules={[{ required: true, message: 'Depo seciniz' }]}
             >
               <Select
-                placeholder="Depo seçin"
+                placeholder="Depo secin"
                 options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+                className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
               />
             </Form.Item>
           </div>
@@ -821,7 +815,7 @@ export default function StockAdjustmentsPage() {
                       <div className="text-xl font-semibold text-slate-900">{product.totalStockQuantity}</div>
                     </div>
                     <div>
-                      <span className="text-xs text-slate-500 uppercase tracking-wide">Kullanılabilir</span>
+                      <span className="text-xs text-slate-500 uppercase tracking-wide">Kullanilabilir</span>
                       <div className="text-xl font-semibold text-slate-900">{product.availableStockQuantity}</div>
                     </div>
                     <div>
@@ -837,41 +831,42 @@ export default function StockAdjustmentsPage() {
           <div className="grid grid-cols-2 gap-4">
             <Form.Item
               name="newQuantity"
-              label="Yeni Miktar"
+              label={<span className="text-slate-700 font-medium">Yeni Miktar</span>}
               rules={[
                 { required: true, message: 'Yeni miktar giriniz' },
-                { type: 'number', min: 0, message: 'Miktar 0 veya daha büyük olmalı' },
+                { type: 'number', min: 0, message: 'Miktar 0 veya daha buyuk olmali' },
               ]}
             >
               <InputNumber
                 style={{ width: '100%' }}
                 min={0}
-                placeholder="Yeni stok miktarını girin"
+                placeholder="Yeni stok miktari"
+                className="!rounded-lg"
               />
             </Form.Item>
             <Form.Item
               name="reason"
-              label="Düzeltme Sebebi"
-              rules={[{ required: true, message: 'Sebep seçiniz' }]}
+              label={<span className="text-slate-700 font-medium">Duzeltme Sebebi</span>}
+              rules={[{ required: true, message: 'Sebep seciniz' }]}
             >
               <Select
-                placeholder="Sebep seçin"
+                placeholder="Sebep secin"
                 options={adjustmentReasons}
+                className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
               />
             </Form.Item>
           </div>
 
-          <Form.Item name="notes" label="Notlar">
-            <TextArea rows={3} placeholder="Ek açıklama veya not ekleyin..." />
+          <Form.Item
+            name="notes"
+            label={<span className="text-slate-700 font-medium">Notlar</span>}
+          >
+            <TextArea
+              rows={3}
+              placeholder="Ek aciklamalar..."
+              className="!rounded-lg !border-slate-300"
+            />
           </Form.Item>
-
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
-            <ExclamationTriangleIcon className="w-4 h-4 text-amber-600 mt-0.5" />
-            <div className="text-sm text-amber-800">
-              <strong>Onaya Gönder:</strong> Düzeltme talebi oluşturulur ve onay bekler.<br />
-              <strong>Direkt Uygula:</strong> Düzeltme anında sisteme uygulanır.
-            </div>
-          </div>
         </Form>
       </Modal>
 
@@ -879,20 +874,11 @@ export default function StockAdjustmentsPage() {
       <Modal
         title={
           <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
-            <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: selectedAdjustment?.status === 'Pending' ? '#f59e0b15' : '#8b5cf615' }}
-            >
-              {selectedAdjustment?.status === 'Pending' ? (
-                <CheckIcon className="w-4 h-4" style={{ color: '#f59e0b' }} />
-              ) : (
-                <DocumentTextIcon className="w-4 h-4 text-violet-500" />
-              )}
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <DocumentTextIcon className="w-4 h-4 text-slate-600" />
             </div>
             <div>
-              <div className="text-lg font-semibold text-slate-900">
-                {selectedAdjustment?.status === 'Pending' ? 'Düzeltme Talebini İncele' : 'Düzeltme Detayı'}
-              </div>
+              <div className="text-lg font-semibold text-slate-900">Duzeltme Detayi</div>
               <div className="text-sm text-slate-500">{selectedAdjustment?.productName}</div>
             </div>
           </div>
@@ -906,27 +892,27 @@ export default function StockAdjustmentsPage() {
                 onClick={() => setReviewModalOpen(false)}
                 className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
               >
-                İptal
+                Kapat
               </button>
               <button
                 onClick={handleReject}
-                className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-200 hover:bg-slate-300 rounded-lg transition-colors"
               >
                 Reddet
               </button>
               <button
                 onClick={handleApprove}
                 disabled={adjustStock.isPending}
-                className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-50"
               >
-                {adjustStock.isPending ? 'Onaylanıyor...' : 'Onayla ve Uygula'}
+                {adjustStock.isPending ? 'Onaylaniyor...' : 'Onayla'}
               </button>
             </div>
           ) : (
-            <div className="flex justify-end pt-4 border-t border-slate-200">
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
               <button
                 onClick={() => setReviewModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
               >
                 Kapat
               </button>
@@ -936,100 +922,71 @@ export default function StockAdjustmentsPage() {
         width={600}
       >
         {selectedAdjustment && (
-          <div className="space-y-6 pt-4">
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <span className="text-xs text-slate-500 uppercase tracking-wide">Ürün</span>
-                <div className="text-sm font-medium text-slate-900 mt-1">{selectedAdjustment.productName}</div>
-                <div className="text-xs text-slate-500">{selectedAdjustment.productCode}</div>
+          <div className="pt-4 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                <span className="text-xs text-slate-500 uppercase tracking-wide">Mevcut Miktar</span>
+                <div className="text-xl font-semibold text-slate-900">{selectedAdjustment.currentQuantity}</div>
               </div>
-              <div>
-                <span className="text-xs text-slate-500 uppercase tracking-wide">Depo</span>
-                <div className="text-sm font-medium text-slate-900 mt-1">{selectedAdjustment.warehouseName}</div>
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                <span className="text-xs text-slate-500 uppercase tracking-wide">Yeni Miktar</span>
+                <div className="text-xl font-semibold text-slate-900">{selectedAdjustment.newQuantity}</div>
               </div>
             </div>
 
             <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <span className="text-xs text-slate-500 uppercase tracking-wide">Mevcut Miktar</span>
-                  <div className="text-xl font-semibold text-slate-900">{selectedAdjustment.currentQuantity}</div>
-                </div>
-                <div>
-                  <span className="text-xs text-slate-500 uppercase tracking-wide">Yeni Miktar</span>
-                  <div className="text-xl font-semibold text-slate-900">{selectedAdjustment.newQuantity}</div>
-                </div>
-                <div>
-                  <span className="text-xs text-slate-500 uppercase tracking-wide">Fark</span>
-                  <div
-                    className={`text-xl font-semibold ${
-                      selectedAdjustment.difference > 0
-                        ? 'text-green-600'
-                        : selectedAdjustment.difference < 0
-                        ? 'text-red-600'
-                        : 'text-slate-500'
-                    }`}
-                  >
-                    {selectedAdjustment.difference > 0 ? '+' : ''}
-                    {selectedAdjustment.difference}
-                  </div>
-                </div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Fark</span>
+              <div className={`text-xl font-semibold ${selectedAdjustment.difference > 0 ? 'text-slate-900' : 'text-slate-700'}`}>
+                {selectedAdjustment.difference > 0 ? '+' : ''}{selectedAdjustment.difference}
               </div>
             </div>
 
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Sebep</span>
-              <div className="text-sm font-medium text-slate-900 mt-1">
-                {adjustmentReasons.find((r) => r.value === selectedAdjustment.reason)?.label ||
-                  selectedAdjustment.reason}
-              </div>
-            </div>
-
-            {selectedAdjustment.notes && (
+            <div className="space-y-2">
               <div>
-                <span className="text-xs text-slate-500 uppercase tracking-wide">Notlar</span>
-                <div className="text-sm text-slate-700 mt-1">{selectedAdjustment.notes}</div>
+                <span className="text-xs text-slate-500 uppercase tracking-wide">Depo</span>
+                <div className="text-sm text-slate-900">{selectedAdjustment.warehouseName}</div>
               </div>
-            )}
-
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Oluşturulma</span>
-              <div className="text-sm text-slate-700 mt-1">
-                {dayjs(selectedAdjustment.createdAt).format('DD.MM.YYYY HH:mm')} - {selectedAdjustment.createdBy}
-              </div>
-            </div>
-
-            {selectedAdjustment.reviewedAt && (
               <div>
-                <span className="text-xs text-slate-500 uppercase tracking-wide">
-                  {selectedAdjustment.status === 'Approved' ? 'Onaylanma' : 'Reddedilme'}
-                </span>
-                <div className="text-sm text-slate-700 mt-1">
-                  {dayjs(selectedAdjustment.reviewedAt).format('DD.MM.YYYY HH:mm')} - {selectedAdjustment.reviewedBy}
+                <span className="text-xs text-slate-500 uppercase tracking-wide">Sebep</span>
+                <div className="text-sm text-slate-900">
+                  {adjustmentReasons.find((r) => r.value === selectedAdjustment.reason)?.label || selectedAdjustment.reason}
                 </div>
-                {selectedAdjustment.reviewNotes && (
-                  <div className="text-sm text-slate-600 mt-1 bg-slate-50 p-3 rounded-lg">
-                    {selectedAdjustment.reviewNotes}
-                  </div>
-                )}
               </div>
-            )}
+              {selectedAdjustment.notes && (
+                <div>
+                  <span className="text-xs text-slate-500 uppercase tracking-wide">Notlar</span>
+                  <div className="text-sm text-slate-900">{selectedAdjustment.notes}</div>
+                </div>
+              )}
+            </div>
 
             {selectedAdjustment.status === 'Pending' && (
               <div>
-                <span className="text-xs text-slate-500 uppercase tracking-wide">İnceleme Notu</span>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Inceleme Notu
+                </label>
                 <TextArea
-                  rows={3}
                   value={reviewNotes}
                   onChange={(e) => setReviewNotes(e.target.value)}
-                  placeholder="Onay veya red sebebini yazın..."
-                  className="mt-2"
+                  rows={3}
+                  placeholder="Onay veya ret aciklamasi..."
+                  className="!rounded-lg !border-slate-300"
                 />
+              </div>
+            )}
+
+            {selectedAdjustment.reviewNotes && (
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                <span className="text-xs text-slate-500 uppercase tracking-wide">Inceleme Notu</span>
+                <div className="text-sm text-slate-900 mt-1">{selectedAdjustment.reviewNotes}</div>
+                <div className="text-xs text-slate-500 mt-2">
+                  {selectedAdjustment.reviewedBy} - {dayjs(selectedAdjustment.reviewedAt).format('DD.MM.YYYY HH:mm')}
+                </div>
               </div>
             )}
           </div>
         )}
       </Modal>
-    </PageContainer>
+    </div>
   );
 }

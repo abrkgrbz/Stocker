@@ -2,18 +2,19 @@
 
 /**
  * Warehouse Zones List Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Monochrome design system following DESIGN_SYSTEM.md
  */
 
 import React, { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Table,
-  Tag,
   Input,
   Select,
   Dropdown,
   Spin,
+  Button,
+  Space,
 } from 'antd';
 import {
   ArrowPathIcon,
@@ -27,7 +28,6 @@ import {
   PlusIcon,
   TrashIcon,
   BeakerIcon,
-  CubeIcon,
 } from '@heroicons/react/24/outline';
 import {
   useWarehouseZones,
@@ -37,12 +37,6 @@ import {
 import type { WarehouseZoneDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  DataTableWrapper,
-} from '@/components/ui/enterprise-page';
-import {
   showDeleteSuccess,
   showError,
   confirmDelete,
@@ -50,36 +44,19 @@ import {
 
 const zoneTypeLabels: Record<string, string> = {
   'General': 'Genel',
-  'ColdStorage': 'Soğuk Depo',
+  'ColdStorage': 'Soguk Depo',
   'Freezer': 'Dondurucu',
   'DryStorage': 'Kuru Depo',
   'Hazardous': 'Tehlikeli Madde',
   'Quarantine': 'Karantina',
-  'Returns': 'İade',
+  'Returns': 'Iade',
   'Picking': 'Toplama',
   'Shipping': 'Sevkiyat',
   'Receiving': 'Kabul',
   'CrossDocking': 'Cross-Docking',
-  'HighValue': 'Yüksek Değerli',
+  'HighValue': 'Yuksek Degerli',
   'Bulk': 'Toplu Depolama',
-  'Other': 'Diğer',
-};
-
-const zoneTypeColors: Record<string, string> = {
-  'General': 'default',
-  'ColdStorage': 'blue',
-  'Freezer': 'cyan',
-  'DryStorage': 'orange',
-  'Hazardous': 'red',
-  'Quarantine': 'purple',
-  'Returns': 'magenta',
-  'Picking': 'green',
-  'Shipping': 'geekblue',
-  'Receiving': 'lime',
-  'CrossDocking': 'gold',
-  'HighValue': 'volcano',
-  'Bulk': 'default',
-  'Other': 'default',
+  'Other': 'Diger',
 };
 
 export default function WarehouseZonesPage() {
@@ -97,13 +74,13 @@ export default function WarehouseZonesPage() {
   const deleteZone = useDeleteWarehouseZone();
 
   const handleDelete = async (zone: WarehouseZoneDto) => {
-    const confirmed = await confirmDelete('Depo Bölgesi', zone.name);
+    const confirmed = await confirmDelete('Depo Bolgesi', zone.name);
     if (confirmed) {
       try {
         await deleteZone.mutateAsync(zone.id);
-        showDeleteSuccess('depo bölgesi');
+        showDeleteSuccess('depo bolgesi');
       } catch (error) {
-        showError('Silme işlemi başarısız');
+        showError('Silme islemi basarisiz');
       }
     }
   };
@@ -117,7 +94,6 @@ export default function WarehouseZonesPage() {
     );
   }, [zones, searchText]);
 
-  // Calculate stats
   const totalZones = zones.length;
   const activeZones = zones.filter((z) => z.isActive).length;
   const temperatureControlledZones = zones.filter((z) => z.isTemperatureControlled).length;
@@ -125,17 +101,14 @@ export default function WarehouseZonesPage() {
 
   const columns: ColumnsType<WarehouseZoneDto> = [
     {
-      title: 'Bölge',
+      title: 'Bolge',
       dataIndex: 'name',
       key: 'name',
       sorter: (a, b) => a.name.localeCompare(b.name),
       render: (name: string, record) => (
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: '#10b98115' }}
-          >
-            <MapPinIcon className="w-4 h-4" style={{ color: '#10b981' }} />
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <MapPinIcon className="w-5 h-5 text-slate-600" />
           </div>
           <div>
             <div className="text-sm font-medium text-slate-900">{name}</div>
@@ -159,18 +132,18 @@ export default function WarehouseZonesPage() {
       ),
     },
     {
-      title: 'Bölge Tipi',
+      title: 'Bolge Tipi',
       dataIndex: 'zoneType',
       key: 'zoneType',
       width: 140,
       render: (zoneType: string) => (
-        <Tag color={zoneTypeColors[zoneType] || 'default'}>
+        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-200 text-slate-700">
           {zoneTypeLabels[zoneType] || 'Bilinmeyen'}
-        </Tag>
+        </span>
       ),
     },
     {
-      title: 'Alan (m²)',
+      title: 'Alan (m2)',
       key: 'area',
       width: 120,
       align: 'right',
@@ -181,7 +154,7 @@ export default function WarehouseZonesPage() {
       ),
     },
     {
-      title: 'Sıcaklık',
+      title: 'Sicaklik',
       key: 'temperature',
       width: 130,
       render: (_, record) => {
@@ -192,8 +165,8 @@ export default function WarehouseZonesPage() {
         const max = record.maxTemperature;
         if (min !== undefined && max !== undefined) {
           return (
-            <span className="text-sm text-blue-600 font-medium">
-              {min}°C - {max}°C
+            <span className="text-sm text-slate-700 font-medium">
+              {min}C - {max}C
             </span>
           );
         }
@@ -212,7 +185,7 @@ export default function WarehouseZonesPage() {
         const max = record.maxHumidity;
         if (min !== undefined && max !== undefined) {
           return (
-            <span className="text-sm text-cyan-600 font-medium">
+            <span className="text-sm text-slate-700 font-medium">
               %{min} - %{max}
             </span>
           );
@@ -231,9 +204,13 @@ export default function WarehouseZonesPage() {
       ],
       onFilter: (value, record) => record.isActive === value,
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'default'}>
+        <span
+          className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${
+            isActive ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-600'
+          }`}
+        >
           {isActive ? 'Aktif' : 'Pasif'}
-        </Tag>
+        </span>
       ),
     },
     {
@@ -246,7 +223,7 @@ export default function WarehouseZonesPage() {
           {
             key: 'edit',
             icon: <PencilIcon className="w-4 h-4" />,
-            label: 'Düzenle',
+            label: 'Duzenle',
             onClick: () => router.push(`/inventory/warehouse-zones/${record.id}/edit`),
           },
           { type: 'divider' as const },
@@ -271,83 +248,83 @@ export default function WarehouseZonesPage() {
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Bölge</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalZones}</div>
+    <div className="min-h-screen bg-slate-50 p-8">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Depo Bolgeleri</h1>
+          <p className="text-slate-500 mt-1">Depolarinizdaki bolgeleri tanimlayin ve yonetin</p>
+        </div>
+        <Space>
+          <Button
+            icon={<ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="!border-slate-300 !text-slate-700 hover:!border-slate-400"
+          >
+            Yenile
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusIcon className="w-4 h-4" />}
+            onClick={() => router.push(`/inventory/warehouse-zones/new${selectedWarehouse ? `?warehouseId=${selectedWarehouse}` : ''}`)}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+          >
+            Yeni Bolge
+          </Button>
+        </Space>
+      </div>
+
+      <div className="grid grid-cols-12 gap-6 mb-8">
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <MapPinIcon className="w-5 h-5 text-slate-600" />
+              </div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <MapPinIcon className="w-4 h-4" style={{ color: '#10b981' }} />
-            </div>
+            <div className="text-2xl font-bold text-slate-900">{totalZones}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Bolge</div>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif Bölge</span>
-              <div className="text-2xl font-semibold text-slate-900">{activeZones}</div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CheckCircleIcon className="w-5 h-5 text-slate-600" />
+              </div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#22c55e15' }}>
-              <CheckCircleIcon className="w-4 h-4" style={{ color: '#22c55e' }} />
-            </div>
+            <div className="text-2xl font-bold text-slate-900">{activeZones}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Aktif Bolge</div>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Sıcaklık Kontrollü</span>
-              <div className="text-2xl font-semibold text-slate-900">{temperatureControlledZones}</div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <BeakerIcon className="w-5 h-5 text-slate-600" />
+              </div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <BeakerIcon className="w-4 h-4" style={{ color: '#3b82f6' }} />
-            </div>
+            <div className="text-2xl font-bold text-slate-900">{temperatureControlledZones}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Sicaklik Kontrollu</div>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Tehlikeli Madde</span>
-              <div className="text-2xl font-semibold text-slate-900">{hazardousZones}</div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ExclamationTriangleIcon className="w-5 h-5 text-slate-600" />
+              </div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: hazardousZones > 0 ? '#ef444415' : '#f59e0b15' }}>
-              <ExclamationTriangleIcon className="w-4 h-4" style={{ color: hazardousZones > 0 ? '#ef4444' : '#f59e0b' }} />
-            </div>
+            <div className="text-2xl font-bold text-slate-900">{hazardousZones}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Tehlikeli Madde</div>
           </div>
         </div>
       </div>
 
-      {/* Header */}
-      <ListPageHeader
-        icon={<MapPinIcon className="w-4 h-4" />}
-        iconColor="#10b981"
-        title="Depo Bölgeleri"
-        description="Depolarınızdaki bölgeleri tanımlayın ve yönetin"
-        itemCount={filteredZones.length}
-        primaryAction={{
-          label: 'Yeni Bölge',
-          onClick: () => router.push(`/inventory/warehouse-zones/new${selectedWarehouse ? `?warehouseId=${selectedWarehouse}` : ''}`),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-          >
-            <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
-
-      {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
           <Select
-            placeholder="Depo seçin"
+            placeholder="Depo secin"
             allowClear
             style={{ width: 200 }}
             value={selectedWarehouse}
@@ -356,28 +333,24 @@ export default function WarehouseZonesPage() {
               value: w.id,
               label: w.name,
             }))}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           />
           <Input
-            placeholder="Bölge ara... (ad, kod, depo)"
+            placeholder="Bolge ara... (ad, kod, depo)"
             prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ maxWidth: 400 }}
             allowClear
-            className="h-10"
+            className="!rounded-lg !border-slate-300"
           />
         </div>
-      </div>
 
-      {/* Table */}
-      {isLoading ? (
-        <Card>
+        {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Spin size="large" />
           </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
+        ) : (
           <Table
             columns={columns}
             dataSource={filteredZones}
@@ -386,15 +359,16 @@ export default function WarehouseZonesPage() {
             scroll={{ x: 1100 }}
             pagination={{
               showSizeChanger: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} bölge`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} bolge`,
             }}
             onRow={(record) => ({
               onClick: () => router.push(`/inventory/warehouse-zones/${record.id}`),
               className: 'cursor-pointer hover:bg-slate-50',
             })}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
           />
-        </DataTableWrapper>
-      )}
-    </PageContainer>
+        )}
+      </div>
+    </div>
   );
 }

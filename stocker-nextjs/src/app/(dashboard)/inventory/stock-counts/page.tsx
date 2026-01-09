@@ -1,15 +1,14 @@
 'use client';
 
 /**
- * Stock Counts List Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Stock Counts Page
+ * Monochrome design system following DESIGN_SYSTEM.md
  */
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Table,
-  Tag,
   Modal,
   Dropdown,
   Select,
@@ -17,6 +16,8 @@ import {
   Progress,
   message,
   Spin,
+  Button,
+  Space,
 } from 'antd';
 import {
   ArrowDownTrayIcon,
@@ -31,6 +32,7 @@ import {
   PlayCircleIcon,
   PlusIcon,
   XCircleIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 import {
   useStockCounts,
@@ -40,7 +42,8 @@ import {
   useApproveStockCount,
   useCancelStockCount,
 } from '@/lib/api/hooks/useInventory';
-import type { StockCountListDto, StockCountStatus, StockCountType } from '@/lib/api/services/inventory.types';
+import { StockCountStatus, StockCountType } from '@/lib/api/services/inventory.types';
+import type { StockCountListDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import {
@@ -54,36 +57,30 @@ import SavedFiltersDropdown from '@/components/inventory/SavedFiltersDropdown';
 import { resolveDatePreset } from '@/hooks/useSavedFilters';
 import BulkActionsBar, { createCountBulkActions } from '@/components/inventory/BulkActionsBar';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
-import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  DataTableWrapper,
-} from '@/components/ui/enterprise-page';
 
 const { RangePicker } = DatePicker;
 
-// Stock count status configuration
-const statusConfig: Record<StockCountStatus, { color: string; label: string; icon: React.ReactNode }> = {
-  Draft: { color: 'default', label: 'Taslak', icon: <PencilIcon className="w-4 h-4" /> },
-  InProgress: { color: 'processing', label: 'Devam Ediyor', icon: <PlayCircleIcon className="w-4 h-4" /> },
-  Completed: { color: 'blue', label: 'Tamamlandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  Approved: { color: 'green', label: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  Rejected: { color: 'red', label: 'Reddedildi', icon: <XCircleIcon className="w-4 h-4" /> },
-  Adjusted: { color: 'purple', label: 'Düzeltildi', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
-  Cancelled: { color: 'red', label: 'İptal', icon: <XCircleIcon className="w-4 h-4" /> },
+// Monochrome status configuration
+const statusConfig: Record<StockCountStatus, { bgColor: string; textColor: string; label: string; icon: React.ReactNode }> = {
+  [StockCountStatus.Draft]: { bgColor: 'bg-slate-200', textColor: 'text-slate-700', label: 'Taslak', icon: <ClockIcon className="w-3.5 h-3.5" /> },
+  [StockCountStatus.InProgress]: { bgColor: 'bg-slate-400', textColor: 'text-white', label: 'Devam Ediyor', icon: <PlayCircleIcon className="w-3.5 h-3.5" /> },
+  [StockCountStatus.Completed]: { bgColor: 'bg-slate-700', textColor: 'text-white', label: 'Tamamlandı', icon: <CheckCircleIcon className="w-3.5 h-3.5" /> },
+  [StockCountStatus.Approved]: { bgColor: 'bg-slate-900', textColor: 'text-white', label: 'Onaylandı', icon: <CheckCircleIcon className="w-3.5 h-3.5" /> },
+  [StockCountStatus.Rejected]: { bgColor: 'bg-slate-500', textColor: 'text-white', label: 'Reddedildi', icon: <XCircleIcon className="w-3.5 h-3.5" /> },
+  [StockCountStatus.Adjusted]: { bgColor: 'bg-slate-600', textColor: 'text-white', label: 'Düzeltildi', icon: <DocumentMagnifyingGlassIcon className="w-3.5 h-3.5" /> },
+  [StockCountStatus.Cancelled]: { bgColor: 'bg-slate-300', textColor: 'text-slate-600', label: 'İptal', icon: <XCircleIcon className="w-3.5 h-3.5" /> },
 };
 
-// Stock count type configuration
-const typeConfig: Record<StockCountType, { color: string; label: string }> = {
-  Full: { color: 'blue', label: 'Tam Sayım' },
-  Cycle: { color: 'cyan', label: 'Döngüsel' },
-  Spot: { color: 'orange', label: 'Ani Sayım' },
-  Annual: { color: 'purple', label: 'Yıllık' },
-  Category: { color: 'green', label: 'Kategori' },
-  Location: { color: 'gold', label: 'Lokasyon' },
-  ABC: { color: 'magenta', label: 'ABC Analizi' },
-  Perpetual: { color: 'geekblue', label: 'Sürekli' },
+// Count type configuration
+const typeConfig: Record<StockCountType, { label: string }> = {
+  [StockCountType.Full]: { label: 'Tam Sayım' },
+  [StockCountType.Cycle]: { label: 'Döngüsel Sayım' },
+  [StockCountType.Spot]: { label: 'Spot Sayım' },
+  [StockCountType.Annual]: { label: 'Yıllık Sayım' },
+  [StockCountType.Category]: { label: 'Kategori Sayımı' },
+  [StockCountType.Location]: { label: 'Lokasyon Sayımı' },
+  [StockCountType.ABC]: { label: 'ABC Sayımı' },
+  [StockCountType.Perpetual]: { label: 'Sürekli Sayım' },
 };
 
 export default function StockCountsPage() {
@@ -92,6 +89,7 @@ export default function StockCountsPage() {
   // Filters
   const [selectedWarehouse, setSelectedWarehouse] = useState<number | undefined>();
   const [selectedStatus, setSelectedStatus] = useState<StockCountStatus | undefined>();
+  const [selectedType, setSelectedType] = useState<StockCountType | undefined>();
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
 
   // API Hooks
@@ -103,10 +101,10 @@ export default function StockCountsPage() {
     dateRange?.[1]?.toISOString()
   );
 
-  const startStockCount = useStartStockCount();
-  const completeStockCount = useCompleteStockCount();
-  const approveStockCount = useApproveStockCount();
-  const cancelStockCount = useCancelStockCount();
+  const startCount = useStartStockCount();
+  const completeCount = useCompleteStockCount();
+  const approveCount = useApproveStockCount();
+  const cancelCount = useCancelStockCount();
 
   // Bulk selection
   const bulkSelection = useBulkSelection({
@@ -114,16 +112,25 @@ export default function StockCountsPage() {
     getItemId: (count) => count.id,
   });
 
+  // Filter by type (client-side since API might not support it)
+  const filteredCounts = selectedType
+    ? stockCounts.filter((c) => c.countType === selectedType)
+    : stockCounts;
+
   // Calculate stats
-  const totalCounts = stockCounts.length;
-  const inProgressCounts = stockCounts.filter((c) => c.status === 'InProgress').length;
-  const completedCounts = stockCounts.filter((c) => c.status === 'Completed' || c.status === 'Approved').length;
-  const totalDifferences = stockCounts.reduce((sum, c) => sum + (c.itemsWithDifference || 0), 0);
+  const stats = {
+    total: stockCounts.length,
+    draft: stockCounts.filter((c) => c.status === StockCountStatus.Draft).length,
+    inProgress: stockCounts.filter((c) => c.status === StockCountStatus.InProgress).length,
+    completed: stockCounts.filter((c) => c.status === StockCountStatus.Completed).length,
+    approved: stockCounts.filter((c) => c.status === StockCountStatus.Approved).length,
+  };
 
   // Get current filters for SavedFiltersDropdown
   const currentFilters = {
     warehouseId: selectedWarehouse,
     status: selectedStatus,
+    countType: selectedType,
     dateRange: dateRange ? {
       start: dateRange[0]?.toISOString(),
       end: dateRange[1]?.toISOString(),
@@ -149,6 +156,10 @@ export default function StockCountsPage() {
       setSelectedStatus(filters.status as StockCountStatus);
     }
 
+    if (filters.countType) {
+      setSelectedType(filters.countType as StockCountType);
+    }
+
     if (filters.warehouseId) {
       setSelectedWarehouse(filters.warehouseId as number);
     }
@@ -158,15 +169,16 @@ export default function StockCountsPage() {
   const handleClearFilter = () => {
     setSelectedWarehouse(undefined);
     setSelectedStatus(undefined);
+    setSelectedType(undefined);
     setDateRange(null);
   };
 
   // Bulk action handlers
   const handleBulkStart = async () => {
-    const draftItems = bulkSelection.selectedItems.filter((c) => c.status === 'Draft');
+    const draftItems = bulkSelection.selectedItems.filter((c) => c.status === StockCountStatus.Draft);
     for (const count of draftItems) {
       try {
-        await startStockCount.mutateAsync({ id: count.id, countedByUserId: 1 });
+        await startCount.mutateAsync({ id: count.id, countedByUserId: 1 });
       } catch (error) {
         // Continue with next item
       }
@@ -176,10 +188,12 @@ export default function StockCountsPage() {
   };
 
   const handleBulkComplete = async () => {
-    const inProgressItems = bulkSelection.selectedItems.filter((c) => c.status === 'InProgress');
+    const inProgressItems = bulkSelection.selectedItems.filter(
+      (c) => c.status === StockCountStatus.InProgress
+    );
     for (const count of inProgressItems) {
       try {
-        await completeStockCount.mutateAsync(count.id);
+        await completeCount.mutateAsync(count.id);
       } catch (error) {
         // Continue with next item
       }
@@ -189,10 +203,12 @@ export default function StockCountsPage() {
   };
 
   const handleBulkApprove = async () => {
-    const completedItems = bulkSelection.selectedItems.filter((c) => c.status === 'Completed');
+    const completedItems = bulkSelection.selectedItems.filter(
+      (c) => c.status === StockCountStatus.Completed
+    );
     for (const count of completedItems) {
       try {
-        await approveStockCount.mutateAsync({ id: count.id, approvedByUserId: 1 });
+        await approveCount.mutateAsync({ id: count.id, approvedByUserId: 1 });
       } catch (error) {
         // Continue with next item
       }
@@ -203,11 +219,11 @@ export default function StockCountsPage() {
 
   const handleBulkCancel = async () => {
     const cancellableItems = bulkSelection.selectedItems.filter(
-      (c) => c.status === 'Draft' || c.status === 'InProgress'
+      (c) => c.status === StockCountStatus.Draft || c.status === StockCountStatus.InProgress
     );
     for (const count of cancellableItems) {
       try {
-        await cancelStockCount.mutateAsync({ id: count.id, reason: 'Toplu iptal işlemi' });
+        await cancelCount.mutateAsync({ id: count.id, reason: 'Toplu iptal işlemi' });
       } catch (error) {
         // Continue with next item
       }
@@ -278,10 +294,9 @@ export default function StockCountsPage() {
           ? `${dayjs(dateRange[0]).format('DD/MM/YYYY')} - ${dayjs(dateRange[1]).format('DD/MM/YYYY')}`
           : undefined,
         summaryData: [
-          { label: 'Toplam Sayım', value: totalCounts },
-          { label: 'Devam Eden', value: inProgressCounts },
-          { label: 'Tamamlanan', value: completedCounts },
-          { label: 'Farklı Kalem', value: totalDifferences },
+          { label: 'Toplam Sayım', value: stats.total },
+          { label: 'Devam Eden', value: stats.inProgress },
+          { label: 'Tamamlanan', value: stats.completed },
         ],
       },
     });
@@ -306,10 +321,9 @@ export default function StockCountsPage() {
         title: 'Stok Sayımları',
         filename: `stok-sayimlari-${dayjs().format('YYYY-MM-DD')}`,
         summaryData: [
-          { label: 'Toplam Sayım', value: totalCounts },
-          { label: 'Devam Eden', value: inProgressCounts },
-          { label: 'Tamamlanan', value: completedCounts },
-          { label: 'Farklı Kalem', value: totalDifferences },
+          { label: 'Toplam Sayım', value: stats.total },
+          { label: 'Devam Eden', value: stats.inProgress },
+          { label: 'Tamamlanan', value: stats.completed },
         ],
       },
     });
@@ -320,15 +334,17 @@ export default function StockCountsPage() {
     router.push(`/inventory/stock-counts/${id}`);
   };
 
-  const handleStart = async (stockCount: StockCountListDto) => {
+  const handleStart = async (count: StockCountListDto) => {
     Modal.confirm({
       title: 'Sayımı Başlat',
-      content: `"${stockCount.countNumber}" sayımını başlatmak istediğinizden emin misiniz?`,
+      content: `"${count.countNumber}" sayımını başlatmak istediğinizden emin misiniz?`,
       okText: 'Başlat',
       cancelText: 'İptal',
+      okButtonProps: { className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: async () => {
         try {
-          await startStockCount.mutateAsync({ id: stockCount.id, countedByUserId: 1 });
+          await startCount.mutateAsync({ id: count.id, countedByUserId: 1 });
         } catch (error) {
           // Error handled by hook
         }
@@ -336,15 +352,17 @@ export default function StockCountsPage() {
     });
   };
 
-  const handleComplete = async (stockCount: StockCountListDto) => {
+  const handleComplete = async (count: StockCountListDto) => {
     Modal.confirm({
       title: 'Sayımı Tamamla',
-      content: `"${stockCount.countNumber}" sayımını tamamlamak istediğinizden emin misiniz?`,
+      content: `"${count.countNumber}" sayımını tamamlamak istediğinizden emin misiniz?`,
       okText: 'Tamamla',
       cancelText: 'İptal',
+      okButtonProps: { className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: async () => {
         try {
-          await completeStockCount.mutateAsync(stockCount.id);
+          await completeCount.mutateAsync(count.id);
         } catch (error) {
           // Error handled by hook
         }
@@ -352,15 +370,17 @@ export default function StockCountsPage() {
     });
   };
 
-  const handleApprove = async (stockCount: StockCountListDto) => {
+  const handleApprove = async (count: StockCountListDto) => {
     Modal.confirm({
       title: 'Sayımı Onayla',
-      content: `"${stockCount.countNumber}" sayımını onaylamak istediğinizden emin misiniz? Bu işlem stok miktarlarını güncelleyecektir.`,
+      content: `"${count.countNumber}" sayımını onaylamak istediğinizden emin misiniz? Bu işlem stok miktarlarını güncelleyecektir.`,
       okText: 'Onayla',
       cancelText: 'İptal',
+      okButtonProps: { className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: async () => {
         try {
-          await approveStockCount.mutateAsync({ id: stockCount.id, approvedByUserId: 1 });
+          await approveCount.mutateAsync({ id: count.id, approvedByUserId: 1 });
         } catch (error) {
           // Error handled by hook
         }
@@ -368,16 +388,16 @@ export default function StockCountsPage() {
     });
   };
 
-  const handleCancel = async (stockCount: StockCountListDto) => {
+  const handleCancel = async (count: StockCountListDto) => {
     Modal.confirm({
       title: 'Sayımı İptal Et',
-      content: `"${stockCount.countNumber}" sayımını iptal etmek istediğinizden emin misiniz?`,
+      content: `"${count.countNumber}" sayımını iptal etmek istediğinizden emin misiniz?`,
       okText: 'İptal Et',
       okType: 'danger',
       cancelText: 'Vazgeç',
       onOk: async () => {
         try {
-          await cancelStockCount.mutateAsync({ id: stockCount.id, reason: 'Kullanıcı tarafından iptal edildi' });
+          await cancelCount.mutateAsync({ id: count.id, reason: 'Kullanıcı tarafından iptal edildi' });
         } catch (error) {
           // Error handled by hook
         }
@@ -386,55 +406,65 @@ export default function StockCountsPage() {
   };
 
   // Get action items based on status
-  const getActionItems = (stockCount: StockCountListDto) => {
+  const getActionItems = (count: StockCountListDto) => {
     const items: any[] = [
       {
         key: 'view',
         icon: <EyeIcon className="w-4 h-4" />,
         label: 'Görüntüle',
-        onClick: () => handleView(stockCount.id),
+        onClick: () => handleView(count.id),
       },
     ];
 
-    switch (stockCount.status) {
-      case 'Draft':
+    switch (count.status) {
+      case StockCountStatus.Draft:
         items.push(
           {
             key: 'start',
             icon: <PlayCircleIcon className="w-4 h-4" />,
             label: 'Başlat',
-            onClick: () => handleStart(stockCount),
+            onClick: () => handleStart(count),
           },
+          {
+            key: 'edit',
+            icon: <PencilIcon className="w-4 h-4" />,
+            label: 'Düzenle',
+            onClick: () => router.push(`/inventory/stock-counts/${count.id}/edit`),
+          },
+          { type: 'divider' },
           {
             key: 'cancel',
             icon: <XCircleIcon className="w-4 h-4" />,
             label: 'İptal Et',
-            onClick: () => handleCancel(stockCount),
+            danger: true,
+            onClick: () => handleCancel(count),
           }
         );
         break;
-      case 'InProgress':
+      case StockCountStatus.InProgress:
         items.push(
           {
             key: 'complete',
             icon: <CheckCircleIcon className="w-4 h-4" />,
             label: 'Tamamla',
-            onClick: () => handleComplete(stockCount),
+            onClick: () => handleComplete(count),
           },
+          { type: 'divider' },
           {
             key: 'cancel',
             icon: <XCircleIcon className="w-4 h-4" />,
             label: 'İptal Et',
-            onClick: () => handleCancel(stockCount),
+            danger: true,
+            onClick: () => handleCancel(count),
           }
         );
         break;
-      case 'Completed':
+      case StockCountStatus.Completed:
         items.push({
           key: 'approve',
           icon: <CheckCircleIcon className="w-4 h-4" />,
           label: 'Onayla',
-          onClick: () => handleApprove(stockCount),
+          onClick: () => handleApprove(count),
         });
         break;
     }
@@ -448,25 +478,14 @@ export default function StockCountsPage() {
       title: 'Sayım No',
       dataIndex: 'countNumber',
       key: 'countNumber',
-      width: 150,
+      width: 140,
       render: (text, record) => (
-        <span
-          className="text-sm font-medium text-blue-600 cursor-pointer hover:text-blue-800"
+        <button
+          className="text-sm font-medium text-slate-900 hover:text-slate-600 transition-colors"
           onClick={() => handleView(record.id)}
         >
           {text}
-        </span>
-      ),
-    },
-    {
-      title: 'Tarih',
-      dataIndex: 'countDate',
-      key: 'countDate',
-      width: 120,
-      render: (date) => (
-        <span className="text-sm text-slate-600">
-          {dayjs(date).format('DD/MM/YYYY')}
-        </span>
+        </button>
       ),
     },
     {
@@ -474,70 +493,78 @@ export default function StockCountsPage() {
       dataIndex: 'warehouseName',
       key: 'warehouseName',
       width: 150,
-      render: (name) => <span className="text-sm text-slate-900">{name}</span>,
-    },
-    {
-      title: 'Konum',
-      dataIndex: 'locationName',
-      key: 'locationName',
-      width: 120,
-      render: (location) => (
-        <span className="text-sm text-slate-600">{location || '-'}</span>
-      ),
+      render: (name) => <span className="text-sm text-slate-700">{name}</span>,
     },
     {
       title: 'Tür',
       dataIndex: 'countType',
       key: 'countType',
       width: 120,
-      render: (type: StockCountType) => {
-        const config = typeConfig[type];
-        return <Tag color={config.color}>{config.label}</Tag>;
-      },
+      render: (type: StockCountType) => (
+        <span className="text-sm text-slate-600">{typeConfig[type]?.label || type}</span>
+      ),
+    },
+    {
+      title: 'Tarih',
+      key: 'dates',
+      width: 140,
+      render: (_, record) => (
+        <div className="text-sm">
+          <div className="text-slate-900">{dayjs(record.countDate).format('DD/MM/YYYY')}</div>
+        </div>
+      ),
     },
     {
       title: 'İlerleme',
       key: 'progress',
       width: 150,
       render: (_, record) => {
-        const percent = record.totalItems > 0
-          ? Math.round((record.countedItems / record.totalItems) * 100)
-          : 0;
+        const total = record.totalItems || 0;
+        const counted = record.countedItems || 0;
+        const percent = total > 0 ? Math.round((counted / total) * 100) : 0;
         return (
           <div style={{ width: 120 }}>
-            <Progress percent={percent} size="small" />
-            <span className="text-xs text-slate-500">
-              {record.countedItems} / {record.totalItems}
-            </span>
+            <Progress
+              percent={percent}
+              size="small"
+              format={() => `${counted}/${total}`}
+              strokeColor="#475569"
+              trailColor="#e2e8f0"
+            />
           </div>
         );
       },
     },
     {
-      title: 'Fark',
-      dataIndex: 'itemsWithDifference',
-      key: 'itemsWithDifference',
-      width: 80,
+      title: 'Farklar',
+      key: 'discrepancies',
+      width: 120,
       align: 'center',
-      render: (diff) => (
-        <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${
-          diff > 0 ? 'bg-orange-50 text-orange-700' : 'bg-green-50 text-green-700'
-        }`}>
-          {diff || 0}
-        </span>
-      ),
+      render: (_, record) => {
+        const discrepancies = record.itemsWithDifference || 0;
+        if (discrepancies === 0) {
+          return <span className="text-sm text-slate-400">-</span>;
+        }
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-200 text-slate-700">
+            <ExclamationCircleIcon className="w-3.5 h-3.5" />
+            {discrepancies}
+          </span>
+        );
+      },
     },
     {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
-      width: 130,
+      width: 140,
       render: (status: StockCountStatus) => {
         const config = statusConfig[status];
         return (
-          <Tag color={config.color} icon={config.icon}>
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${config.bgColor} ${config.textColor}`}>
+            {config.icon}
             {config.label}
-          </Tag>
+          </span>
         );
       },
     },
@@ -557,116 +584,115 @@ export default function StockCountsPage() {
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Stok Sayımları</h1>
+          <p className="text-slate-500 mt-1">Stok sayımlarını yönetin ve izleyin</p>
+        </div>
+        <Space>
+          <Button
+            icon={<ArrowPathIcon className="w-4 h-4" />}
+            onClick={() => refetch()}
+            className="!border-slate-300 !text-slate-700 hover:!border-slate-400"
+          >
+            Yenile
+          </Button>
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: 'pdf',
+                  icon: <DocumentIcon className="w-4 h-4" />,
+                  label: 'PDF İndir',
+                  onClick: handleExportPDF,
+                },
+                {
+                  key: 'excel',
+                  icon: <DocumentIcon className="w-4 h-4" />,
+                  label: 'Excel İndir',
+                  onClick: handleExportExcel,
+                },
+              ],
+            }}
+          >
+            <Button
+              icon={<ArrowDownTrayIcon className="w-4 h-4" />}
+              className="!border-slate-300 !text-slate-700 hover:!border-slate-400"
+            >
+              Dışa Aktar
+            </Button>
+          </Dropdown>
+          <Button
+            type="primary"
+            icon={<PlusIcon className="w-4 h-4" />}
+            onClick={() => router.push('/inventory/stock-counts/new')}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+          >
+            Yeni Sayım
+          </Button>
+        </Space>
+      </div>
+
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Sayım</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalCounts}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <DocumentMagnifyingGlassIcon className="w-4 h-4 text-blue-500" />
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <DocumentMagnifyingGlassIcon className="w-5 h-5 text-slate-600" />
             </div>
           </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam</div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Devam Eden</span>
-              <div className={`text-2xl font-semibold ${inProgressCounts > 0 ? 'text-blue-600' : 'text-slate-900'}`}>
-                {inProgressCounts}
-              </div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: inProgressCounts > 0 ? '#3b82f615' : '#64748b15' }}>
-              <PlayCircleIcon className="w-4 h-4" style={{ color: inProgressCounts > 0 ? '#3b82f6' : '#64748b' }} />
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+              <ClockIcon className="w-5 h-5 text-slate-700" />
             </div>
           </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.draft}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Taslak</div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Tamamlanan</span>
-              <div className="text-2xl font-semibold text-slate-900">{completedCounts}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-400 flex items-center justify-center">
+              <PlayCircleIcon className="w-5 h-5 text-white" />
             </div>
           </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.inProgress}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Devam Eden</div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Fark</span>
-              <div className={`text-2xl font-semibold ${totalDifferences > 0 ? 'text-orange-600' : 'text-slate-900'}`}>
-                {totalDifferences}
-              </div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: totalDifferences > 0 ? '#f9731615' : '#64748b15' }}>
-              <ExclamationCircleIcon className="w-4 h-4" style={{ color: totalDifferences > 0 ? '#f97316' : '#64748b' }} />
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center">
+              <CheckCircleIcon className="w-5 h-5 text-white" />
             </div>
           </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.completed}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Tamamlandı</div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
+              <CheckCircleIcon className="w-5 h-5 text-white" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.approved}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Onaylandı</div>
         </div>
       </div>
 
-      {/* Header */}
-      <ListPageHeader
-        icon={<DocumentMagnifyingGlassIcon className="w-4 h-4" />}
-        iconColor="#3b82f6"
-        title="Stok Sayımları"
-        description="Envanter sayım işlemlerini yönetin"
-        itemCount={stockCounts.length}
-        primaryAction={{
-          label: 'Yeni Sayım',
-          onClick: () => router.push('/inventory/stock-counts/new'),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <div className="flex items-center gap-2">
-            <SavedFiltersDropdown
-              entityType="stock-counts"
-              currentFilters={currentFilters}
-              onApplyFilter={handleApplyFilter}
-              onClearFilter={handleClearFilter}
-            />
-            <Dropdown
-              menu={{
-                items: [
-                  {
-                    key: 'pdf',
-                    icon: <DocumentIcon className="w-4 h-4" />,
-                    label: 'PDF İndir',
-                    onClick: handleExportPDF,
-                  },
-                  {
-                    key: 'excel',
-                    icon: <DocumentIcon className="w-4 h-4" />,
-                    label: 'Excel İndir',
-                    onClick: handleExportExcel,
-                  },
-                ],
-              }}
-            >
-              <button className="inline-flex items-center gap-2 px-3 py-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-                <ArrowDownTrayIcon className="w-4 h-4" />
-                Dışa Aktar
-              </button>
-            </Dropdown>
-            <button
-              onClick={() => refetch()}
-              disabled={isLoading}
-              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-            >
-              <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-        }
-      />
-
       {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
+          <SavedFiltersDropdown
+            entityType="stock-counts"
+            currentFilters={currentFilters}
+            onApplyFilter={handleApplyFilter}
+            onClearFilter={handleClearFilter}
+          />
           <Select
             placeholder="Depo"
             value={selectedWarehouse}
@@ -674,30 +700,45 @@ export default function StockCountsPage() {
             allowClear
             style={{ width: 180 }}
             options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
+          />
+          <Select
+            placeholder="Sayım Türü"
+            value={selectedType}
+            onChange={setSelectedType}
+            allowClear
+            style={{ width: 150 }}
+            options={Object.entries(typeConfig).map(([key, value]) => ({
+              value: key,
+              label: value.label,
+            }))}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           />
           <Select
             placeholder="Durum"
             value={selectedStatus}
             onChange={setSelectedStatus}
             allowClear
-            style={{ width: 150 }}
+            style={{ width: 160 }}
             options={Object.entries(statusConfig).map(([key, value]) => ({
               value: key,
               label: value.label,
             }))}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           />
           <RangePicker
             value={dateRange}
             onChange={setDateRange}
             style={{ width: 280 }}
             placeholder={['Başlangıç', 'Bitiş']}
+            className="!rounded-lg [&_.ant-picker]:!border-slate-300"
           />
-          <button
+          <Button
             onClick={handleClearFilter}
-            className="px-4 py-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+            className="!border-slate-300 !text-slate-600 hover:!border-slate-400"
           >
             Temizle
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -711,17 +752,15 @@ export default function StockCountsPage() {
       />
 
       {/* Table */}
-      {isLoading ? (
-        <Card>
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Spin size="large" />
           </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
+        ) : (
           <Table
             columns={columns}
-            dataSource={stockCounts}
+            dataSource={filteredCounts}
             rowKey="id"
             loading={isLoading}
             rowSelection={{
@@ -731,17 +770,18 @@ export default function StockCountsPage() {
                 selectedRowKeys.forEach((key) => bulkSelection.select(key as string | number));
               },
               getCheckboxProps: (record) => ({
-                disabled: record.status === 'Approved' || record.status === 'Cancelled' || record.status === 'Adjusted',
+                disabled: record.status === StockCountStatus.Approved || record.status === StockCountStatus.Cancelled,
               }),
             }}
             pagination={{
               showSizeChanger: true,
               showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} sayım`,
             }}
-            scroll={{ x: 1200 }}
+            scroll={{ x: 1100 }}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
           />
-        </DataTableWrapper>
-      )}
-    </PageContainer>
+        )}
+      </div>
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Table, Tag, Select, Progress, Alert, Input, DatePicker } from 'antd';
+import { Table, Select, Progress, Alert, Input } from 'antd';
 import {
   ArrowPathIcon,
   ClockIcon,
@@ -12,7 +12,6 @@ import { useLotBatches, useProducts } from '@/lib/api/hooks/useInventory';
 import type { LotBatchListDto, LotBatchFilterDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import { PageContainer, ListPageHeader, Card } from '@/components/patterns';
 
 export default function ShelfLifePage() {
   const [selectedProduct, setSelectedProduct] = useState<number | undefined>();
@@ -53,7 +52,7 @@ export default function ShelfLifePage() {
   // Table columns
   const columns: ColumnsType<LotBatchListDto> = [
     {
-      title: 'Lot Numarası',
+      title: 'Lot Numarasi',
       dataIndex: 'lotNumber',
       key: 'lotNumber',
       width: 150,
@@ -61,13 +60,16 @@ export default function ShelfLifePage() {
         <div>
           <span className="font-semibold text-slate-900">{text}</span>
           {record.isExpired && (
-            <Tag color="red" className="ml-2">Süresi Doldu</Tag>
+            <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-slate-400 text-white">
+              <ExclamationTriangleIcon className="w-3 h-3" />
+              Suresi Doldu
+            </span>
           )}
         </div>
       ),
     },
     {
-      title: 'Ürün',
+      title: 'Urun',
       key: 'product',
       width: 200,
       render: (_, record) => (
@@ -84,7 +86,7 @@ export default function ShelfLifePage() {
       render: (_, record) => (
         <div>
           <div className="font-semibold text-slate-900">{record.currentQuantity.toLocaleString('tr-TR')}</div>
-          <div className="text-xs text-slate-500">Kullanılabilir: {record.availableQuantity.toLocaleString('tr-TR')}</div>
+          <div className="text-xs text-slate-500">Kullanilabilir: {record.availableQuantity.toLocaleString('tr-TR')}</div>
         </div>
       ),
     },
@@ -104,27 +106,49 @@ export default function ShelfLifePage() {
       },
     },
     {
-      title: 'Kalan Gün',
+      title: 'Kalan Gun',
       key: 'daysLeft',
       width: 120,
       sorter: (a, b) => (a.daysUntilExpiry || 999) - (b.daysUntilExpiry || 999),
       render: (_, record) => {
         if (record.isExpired) {
-          return <Tag color="red">Süresi Doldu</Tag>;
+          return (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-400 text-white">
+              Suresi Doldu
+            </span>
+          );
         }
         if (record.daysUntilExpiry === undefined) {
           return <span className="text-slate-400">-</span>;
         }
-        let color = 'green';
-        if (record.daysUntilExpiry <= 7) color = 'red';
-        else if (record.daysUntilExpiry <= 30) color = 'orange';
-        else if (record.daysUntilExpiry <= 60) color = 'gold';
 
-        return <Tag color={color}>{record.daysUntilExpiry} gün</Tag>;
+        // Monochrome intensity based on urgency
+        let bgColor = '#f1f5f9'; // slate-100
+        let textColor = '#64748b'; // slate-500
+
+        if (record.daysUntilExpiry <= 7) {
+          bgColor = '#475569'; // slate-600
+          textColor = '#ffffff';
+        } else if (record.daysUntilExpiry <= 30) {
+          bgColor = '#cbd5e1'; // slate-300
+          textColor = '#1e293b';
+        } else if (record.daysUntilExpiry <= 60) {
+          bgColor = '#e2e8f0'; // slate-200
+          textColor = '#334155';
+        }
+
+        return (
+          <span
+            className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium"
+            style={{ backgroundColor: bgColor, color: textColor }}
+          >
+            {record.daysUntilExpiry} gun
+          </span>
+        );
       },
     },
     {
-      title: 'Kalan Raf Ömrü',
+      title: 'Kalan Raf Omru',
       key: 'shelfLife',
       width: 180,
       render: (_, record) => {
@@ -132,16 +156,18 @@ export default function ShelfLifePage() {
           return <span className="text-slate-400">-</span>;
         }
         const percent = Math.round(record.remainingShelfLifePercentage);
-        let status: 'success' | 'normal' | 'exception' = 'success';
-        if (percent < 20) status = 'exception';
-        else if (percent < 50) status = 'normal';
+
+        // Monochrome progress colors
+        let strokeColor = '#475569'; // slate-600
+        if (percent < 20) strokeColor = '#334155'; // slate-700
+        else if (percent < 50) strokeColor = '#64748b'; // slate-500
 
         return (
           <Progress
             percent={percent}
             size="small"
-            status={status}
-            strokeColor={percent < 20 ? '#ef4444' : percent < 50 ? '#f59e0b' : '#10b981'}
+            strokeColor={strokeColor}
+            trailColor="#e2e8f0"
           />
         );
       },
@@ -149,70 +175,85 @@ export default function ShelfLifePage() {
   ];
 
   return (
-    <PageContainer>
-      <ListPageHeader
-        icon={<ClockIcon className="w-5 h-5" />}
-        iconColor="#10b981"
-        title="Raf Ömrü Takibi"
-        description="Ürün lotlarının son kullanma tarihlerini ve kalan raf ömürlerini takip edin"
-        itemCount={stats.total}
-        secondaryActions={
-          <button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-          >
-            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <div className="flex items-center gap-3 mb-1">
             <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
               <ClockIcon className="w-5 h-5 text-slate-600" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
-              <div className="text-xs text-slate-500">Toplam Lot</div>
+              <h1 className="text-2xl font-bold text-slate-900">Raf Omru Takibi</h1>
+              <p className="text-slate-500 mt-1">Urun lotlarinin son kullanma tarihlerini ve kalan raf omurlerini takip edin</p>
             </div>
           </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
-              <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-12 gap-6 mb-8">
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ClockIcon className="w-5 h-5 text-slate-600" />
+              </div>
             </div>
-            <div>
-              <div className="text-2xl font-bold text-red-600">{stats.expired}</div>
-              <div className="text-xs text-slate-500">Süresi Dolan</div>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-              <ClockIcon className="w-5 h-5 text-orange-600" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-orange-600">{stats.expiringSoon}</div>
-              <div className="text-xs text-slate-500">7 Gün İçinde</div>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-              <ClockIcon className="w-5 h-5 text-amber-600" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-amber-600">{stats.expiringMonth}</div>
-              <div className="text-xs text-slate-500">30 Gün İçinde</div>
+            <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Toplam Lot
             </div>
           </div>
-        </Card>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-400 flex items-center justify-center">
+                <ExclamationTriangleIcon className="w-5 h-5 text-white" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.expired}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Suresi Dolan
+            </div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-300 flex items-center justify-center">
+                <ClockIcon className="w-5 h-5 text-slate-800" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-800">{stats.expiringSoon}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              7 Gun Icinde
+            </div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+                <ClockIcon className="w-5 h-5 text-slate-700" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-700">{stats.expiringMonth}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              30 Gun Icinde
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Alerts */}
@@ -220,39 +261,43 @@ export default function ShelfLifePage() {
         <Alert
           type="error"
           showIcon
-          message={`${stats.expired} adet lot/partinin son kullanma tarihi geçmiş!`}
-          description="Bu lotları kontrol edin ve gerekli aksiyonları alın."
-          className="mb-6"
+          icon={<ExclamationTriangleIcon className="w-4 h-4" />}
+          message={`${stats.expired} adet lot/partinin son kullanma tarihi gecmis!`}
+          description="Bu lotlari kontrol edin ve gerekli aksiyonlari alin."
+          className="mb-6 !border-slate-300 !bg-slate-100 [&_.ant-alert-message]:!text-slate-900 [&_.ant-alert-description]:!text-slate-600"
         />
       )}
       {stats.expiringSoon > 0 && (
         <Alert
           type="warning"
           showIcon
-          message={`${stats.expiringSoon} adet lot/parti 7 gün içinde sona erecek!`}
-          className="mb-6"
+          icon={<ClockIcon className="w-4 h-4" />}
+          message={`${stats.expiringSoon} adet lot/parti 7 gun icinde sona erecek!`}
+          className="mb-6 !border-slate-300 !bg-slate-50 [&_.ant-alert-message]:!text-slate-900"
         />
       )}
 
-      {/* Filters */}
-      <Card className="mb-6">
-        <div className="flex flex-wrap gap-4 p-4">
+      {/* Main Content Card */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        {/* Filters */}
+        <div className="flex flex-wrap gap-4 mb-6">
           <Input
-            placeholder="Lot veya ürün ara..."
+            placeholder="Lot veya urun ara..."
             prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
-            className="w-64"
+            className="w-64 [&_.ant-input]:!border-slate-300 [&_.ant-input]:!rounded-lg"
           />
           <Select
-            placeholder="Ürün seçin"
+            placeholder="Urun secin"
             allowClear
             style={{ width: 200 }}
             value={selectedProduct}
             onChange={setSelectedProduct}
             showSearch
             optionFilterProp="children"
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           >
             {products.map((p) => (
               <Select.Option key={p.id} value={p.id}>
@@ -261,24 +306,23 @@ export default function ShelfLifePage() {
             ))}
           </Select>
           <Select
-            placeholder="Süre filtresi"
+            placeholder="Sure filtresi"
             style={{ width: 150 }}
             value={expiringWithinDays}
             onChange={setExpiringWithinDays}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           >
-            <Select.Option value={7}>7 gün içinde</Select.Option>
-            <Select.Option value={14}>14 gün içinde</Select.Option>
-            <Select.Option value={30}>30 gün içinde</Select.Option>
-            <Select.Option value={60}>60 gün içinde</Select.Option>
-            <Select.Option value={90}>90 gün içinde</Select.Option>
-            <Select.Option value={180}>180 gün içinde</Select.Option>
-            <Select.Option value={365}>1 yıl içinde</Select.Option>
+            <Select.Option value={7}>7 gun icinde</Select.Option>
+            <Select.Option value={14}>14 gun icinde</Select.Option>
+            <Select.Option value={30}>30 gun icinde</Select.Option>
+            <Select.Option value={60}>60 gun icinde</Select.Option>
+            <Select.Option value={90}>90 gun icinde</Select.Option>
+            <Select.Option value={180}>180 gun icinde</Select.Option>
+            <Select.Option value={365}>1 yil icinde</Select.Option>
           </Select>
         </div>
-      </Card>
 
-      {/* Table */}
-      <Card>
+        {/* Table */}
         <Table
           columns={columns}
           dataSource={filteredData}
@@ -288,11 +332,12 @@ export default function ShelfLifePage() {
             total: filteredData.length,
             pageSize: 20,
             showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
+            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayit`,
           }}
           scroll={{ x: 1000 }}
+          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
         />
-      </Card>
-    </PageContainer>
+      </div>
+    </div>
   );
 }

@@ -1,21 +1,22 @@
 'use client';
 
 /**
- * Stock Transfers List Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Stock Transfers Page
+ * Monochrome design system following DESIGN_SYSTEM.md
  */
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Table,
-  Tag,
   Modal,
   Dropdown,
   Select,
   DatePicker,
   message,
   Spin,
+  Button,
+  Space,
 } from 'antd';
 import {
   ArrowDownTrayIcon,
@@ -55,26 +56,31 @@ import SavedFiltersDropdown from '@/components/inventory/SavedFiltersDropdown';
 import { resolveDatePreset } from '@/hooks/useSavedFilters';
 import BulkActionsBar, { createTransferBulkActions } from '@/components/inventory/BulkActionsBar';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
-import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  DataTableWrapper,
-} from '@/components/ui/enterprise-page';
 
 const { RangePicker } = DatePicker;
 
-// Transfer status configuration
-const statusConfig: Record<TransferStatus, { color: string; label: string; icon: React.ReactNode }> = {
-  Draft: { color: 'default', label: 'Taslak', icon: null },
-  Pending: { color: 'processing', label: 'Beklemede', icon: <ClockIcon className="w-4 h-4" /> },
-  Approved: { color: 'blue', label: 'Onaylı', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  Rejected: { color: 'red', label: 'Reddedildi', icon: <XCircleIcon className="w-4 h-4" /> },
-  InTransit: { color: 'orange', label: 'Yolda', icon: <RocketLaunchIcon className="w-4 h-4" /> },
-  Received: { color: 'cyan', label: 'Teslim Alındı', icon: <InboxIcon className="w-4 h-4" /> },
-  PartiallyReceived: { color: 'gold', label: 'Kısmi Teslim', icon: <InboxIcon className="w-4 h-4" /> },
-  Completed: { color: 'green', label: 'Tamamlandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  Cancelled: { color: 'red', label: 'İptal', icon: <XCircleIcon className="w-4 h-4" /> },
+// Monochrome transfer status configuration
+const statusConfig: Record<TransferStatus, { bgColor: string; textColor: string; label: string; icon: React.ReactNode }> = {
+  Draft: { bgColor: 'bg-slate-100', textColor: 'text-slate-600', label: 'Taslak', icon: null },
+  Pending: { bgColor: 'bg-slate-200', textColor: 'text-slate-700', label: 'Beklemede', icon: <ClockIcon className="w-3.5 h-3.5" /> },
+  Approved: { bgColor: 'bg-slate-400', textColor: 'text-white', label: 'Onaylı', icon: <CheckCircleIcon className="w-3.5 h-3.5" /> },
+  Rejected: { bgColor: 'bg-slate-300', textColor: 'text-slate-700', label: 'Reddedildi', icon: <XCircleIcon className="w-3.5 h-3.5" /> },
+  InTransit: { bgColor: 'bg-slate-500', textColor: 'text-white', label: 'Yolda', icon: <RocketLaunchIcon className="w-3.5 h-3.5" /> },
+  Received: { bgColor: 'bg-slate-600', textColor: 'text-white', label: 'Teslim Alındı', icon: <InboxIcon className="w-3.5 h-3.5" /> },
+  PartiallyReceived: { bgColor: 'bg-slate-500', textColor: 'text-white', label: 'Kısmi Teslim', icon: <InboxIcon className="w-3.5 h-3.5" /> },
+  Completed: { bgColor: 'bg-slate-900', textColor: 'text-white', label: 'Tamamlandı', icon: <CheckCircleIcon className="w-3.5 h-3.5" /> },
+  Cancelled: { bgColor: 'bg-slate-300', textColor: 'text-slate-600', label: 'İptal', icon: <XCircleIcon className="w-3.5 h-3.5" /> },
+};
+
+// Transfer type labels
+const typeLabels: Record<string, string> = {
+  Standard: 'Standart',
+  Urgent: 'Acil',
+  Replenishment: 'İkmal',
+  Return: 'İade',
+  Internal: 'Dahili',
+  CrossDock: 'Cross-Dock',
+  Consolidation: 'Konsolidasyon',
 };
 
 export default function StockTransfersPage() {
@@ -109,10 +115,12 @@ export default function StockTransfersPage() {
   });
 
   // Calculate stats
-  const totalTransfers = transfers.length;
-  const pendingTransfers = transfers.filter((t) => t.status === 'Pending').length;
-  const inTransitTransfers = transfers.filter((t) => t.status === 'InTransit').length;
-  const completedTransfers = transfers.filter((t) => t.status === 'Completed').length;
+  const stats = {
+    total: transfers.length,
+    pending: transfers.filter((t) => t.status === 'Pending').length,
+    inTransit: transfers.filter((t) => t.status === 'InTransit').length,
+    completed: transfers.filter((t) => t.status === 'Completed').length,
+  };
 
   // Get current filters for SavedFiltersDropdown
   const currentFilters = {
@@ -278,10 +286,10 @@ export default function StockTransfersPage() {
           ? `${dayjs(dateRange[0]).format('DD/MM/YYYY')} - ${dayjs(dateRange[1]).format('DD/MM/YYYY')}`
           : undefined,
         summaryData: [
-          { label: 'Toplam Transfer', value: totalTransfers },
-          { label: 'Bekleyen', value: pendingTransfers },
-          { label: 'Yolda', value: inTransitTransfers },
-          { label: 'Tamamlanan', value: completedTransfers },
+          { label: 'Toplam Transfer', value: stats.total },
+          { label: 'Bekleyen', value: stats.pending },
+          { label: 'Yolda', value: stats.inTransit },
+          { label: 'Tamamlanan', value: stats.completed },
         ],
       },
     });
@@ -306,10 +314,10 @@ export default function StockTransfersPage() {
         title: 'Stok Transferleri',
         filename: `stok-transferleri-${dayjs().format('YYYY-MM-DD')}`,
         summaryData: [
-          { label: 'Toplam Transfer', value: totalTransfers },
-          { label: 'Bekleyen', value: pendingTransfers },
-          { label: 'Yolda', value: inTransitTransfers },
-          { label: 'Tamamlanan', value: completedTransfers },
+          { label: 'Toplam Transfer', value: stats.total },
+          { label: 'Bekleyen', value: stats.pending },
+          { label: 'Yolda', value: stats.inTransit },
+          { label: 'Tamamlanan', value: stats.completed },
         ],
       },
     });
@@ -326,6 +334,8 @@ export default function StockTransfersPage() {
       content: `"${transfer.transferNumber}" transferini onaya göndermek istediğinizden emin misiniz?`,
       okText: 'Gönder',
       cancelText: 'İptal',
+      okButtonProps: { className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: async () => {
         try {
           await submitTransfer.mutateAsync(transfer.id);
@@ -342,6 +352,8 @@ export default function StockTransfersPage() {
       content: `"${transfer.transferNumber}" transferini onaylamak istediğinizden emin misiniz?`,
       okText: 'Onayla',
       cancelText: 'İptal',
+      okButtonProps: { className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: async () => {
         try {
           await approveTransfer.mutateAsync({ id: transfer.id, approvedByUserId: 1 });
@@ -358,6 +370,8 @@ export default function StockTransfersPage() {
       content: `"${transfer.transferNumber}" transferini sevk etmek istediğinizden emin misiniz?`,
       okText: 'Sevk Et',
       cancelText: 'İptal',
+      okButtonProps: { className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: async () => {
         try {
           await shipTransfer.mutateAsync({ id: transfer.id, shippedByUserId: 1 });
@@ -374,6 +388,8 @@ export default function StockTransfersPage() {
       content: `"${transfer.transferNumber}" transferini teslim almak istediğinizden emin misiniz?`,
       okText: 'Teslim Al',
       cancelText: 'İptal',
+      okButtonProps: { className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: async () => {
         try {
           await receiveTransfer.mutateAsync({ id: transfer.id, receivedByUserId: 1 });
@@ -421,10 +437,12 @@ export default function StockTransfersPage() {
             label: 'Onaya Gönder',
             onClick: () => handleSubmit(transfer),
           },
+          { type: 'divider' },
           {
             key: 'cancel',
             icon: <XCircleIcon className="w-4 h-4" />,
             label: 'İptal Et',
+            danger: true,
             onClick: () => handleCancel(transfer),
           }
         );
@@ -437,10 +455,12 @@ export default function StockTransfersPage() {
             label: 'Onayla',
             onClick: () => handleApprove(transfer),
           },
+          { type: 'divider' },
           {
             key: 'cancel',
             icon: <XCircleIcon className="w-4 h-4" />,
             label: 'Reddet',
+            danger: true,
             onClick: () => handleCancel(transfer),
           }
         );
@@ -474,12 +494,12 @@ export default function StockTransfersPage() {
       key: 'transferNumber',
       width: 150,
       render: (text, record) => (
-        <span
-          className="text-sm font-medium text-blue-600 cursor-pointer hover:text-blue-800"
+        <button
+          className="text-sm font-medium text-slate-900 hover:text-slate-600 transition-colors"
           onClick={() => handleView(record.id)}
         >
           {text}
-        </span>
+        </button>
       ),
     },
     {
@@ -512,18 +532,7 @@ export default function StockTransfersPage() {
       dataIndex: 'transferType',
       key: 'transferType',
       width: 120,
-      render: (type) => {
-        const typeLabels: Record<string, string> = {
-          Standard: 'Standart',
-          Urgent: 'Acil',
-          Replenishment: 'İkmal',
-          Return: 'İade',
-          Internal: 'Dahili',
-          CrossDock: 'Cross-Dock',
-          Consolidation: 'Konsolidasyon',
-        };
-        return <span className="text-sm text-slate-600">{typeLabels[type] || type}</span>;
-      },
+      render: (type) => <span className="text-sm text-slate-600">{typeLabels[type] || type}</span>,
     },
     {
       title: 'Kalem',
@@ -532,7 +541,7 @@ export default function StockTransfersPage() {
       width: 80,
       align: 'center',
       render: (count) => (
-        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded">
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded">
           {count}
         </span>
       ),
@@ -549,13 +558,14 @@ export default function StockTransfersPage() {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
-      width: 130,
+      width: 140,
       render: (status: TransferStatus) => {
         const config = statusConfig[status];
         return (
-          <Tag color={config.color} icon={config.icon}>
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${config.bgColor} ${config.textColor}`}>
+            {config.icon}
             {config.label}
-          </Tag>
+          </span>
         );
       },
     },
@@ -575,116 +585,107 @@ export default function StockTransfersPage() {
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Stok Transferleri</h1>
+          <p className="text-slate-500 mt-1">Depolar arası stok transferlerini yönetin</p>
+        </div>
+        <Space>
+          <Button
+            icon={<ArrowPathIcon className="w-4 h-4" />}
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="!border-slate-300 !text-slate-700 hover:!border-slate-400"
+          >
+            Yenile
+          </Button>
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: 'pdf',
+                  icon: <DocumentIcon className="w-4 h-4" />,
+                  label: 'PDF İndir',
+                  onClick: handleExportPDF,
+                },
+                {
+                  key: 'excel',
+                  icon: <DocumentIcon className="w-4 h-4" />,
+                  label: 'Excel İndir',
+                  onClick: handleExportExcel,
+                },
+              ],
+            }}
+          >
+            <Button
+              icon={<ArrowDownTrayIcon className="w-4 h-4" />}
+              className="!border-slate-300 !text-slate-700 hover:!border-slate-400"
+            >
+              Dışa Aktar
+            </Button>
+          </Dropdown>
+          <Button
+            type="primary"
+            icon={<PlusIcon className="w-4 h-4" />}
+            onClick={() => router.push('/inventory/stock-transfers/new')}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+          >
+            Yeni Transfer
+          </Button>
+        </Space>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Transfer</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalTransfers}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <ArrowsRightLeftIcon className="w-5 h-5" style={{ color: '#3b82f6' }} />
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <ArrowsRightLeftIcon className="w-5 h-5 text-slate-600" />
             </div>
           </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Transfer</div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Bekleyen</span>
-              <div className={`text-2xl font-semibold ${pendingTransfers > 0 ? 'text-yellow-600' : 'text-slate-900'}`}>
-                {pendingTransfers}
-              </div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: pendingTransfers > 0 ? '#f59e0b15' : '#64748b15' }}>
-              <ClockIcon className="w-4 h-4" style={{ color: pendingTransfers > 0 ? '#f59e0b' : '#64748b' }} />
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+              <ClockIcon className="w-5 h-5 text-slate-700" />
             </div>
           </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.pending}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Bekleyen</div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Yolda</span>
-              <div className={`text-2xl font-semibold ${inTransitTransfers > 0 ? 'text-orange-600' : 'text-slate-900'}`}>
-                {inTransitTransfers}
-              </div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: inTransitTransfers > 0 ? '#f9731615' : '#64748b15' }}>
-              <RocketLaunchIcon className="w-4 h-4" style={{ color: inTransitTransfers > 0 ? '#f97316' : '#64748b' }} />
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-500 flex items-center justify-center">
+              <RocketLaunchIcon className="w-5 h-5 text-white" />
             </div>
           </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.inTransit}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Yolda</div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Tamamlanan</span>
-              <div className="text-2xl font-semibold text-slate-900">{completedTransfers}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
+              <CheckCircleIcon className="w-5 h-5 text-white" />
             </div>
           </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.completed}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Tamamlanan</div>
         </div>
       </div>
 
-      {/* Header */}
-      <ListPageHeader
-        icon={<ArrowsRightLeftIcon className="w-5 h-5" />}
-        iconColor="#3b82f6"
-        title="Stok Transferleri"
-        description="Depolar arası stok transferlerini yönetin"
-        itemCount={transfers.length}
-        primaryAction={{
-          label: 'Yeni Transfer',
-          onClick: () => router.push('/inventory/stock-transfers/new'),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <div className="flex items-center gap-2">
-            <SavedFiltersDropdown
-              entityType="stock-transfers"
-              currentFilters={currentFilters}
-              onApplyFilter={handleApplyFilter}
-              onClearFilter={handleClearFilter}
-            />
-            <Dropdown
-              menu={{
-                items: [
-                  {
-                    key: 'pdf',
-                    icon: <DocumentIcon className="w-4 h-4" />,
-                    label: 'PDF İndir',
-                    onClick: handleExportPDF,
-                  },
-                  {
-                    key: 'excel',
-                    icon: <DocumentIcon className="w-4 h-4" />,
-                    label: 'Excel İndir',
-                    onClick: handleExportExcel,
-                  },
-                ],
-              }}
-            >
-              <button className="inline-flex items-center gap-2 px-3 py-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-                <ArrowDownTrayIcon className="w-4 h-4" />
-                Dışa Aktar
-              </button>
-            </Dropdown>
-            <button
-              onClick={() => refetch()}
-              disabled={isLoading}
-              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-            >
-              <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-        }
-      />
-
       {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
+          <SavedFiltersDropdown
+            entityType="stock-transfers"
+            currentFilters={currentFilters}
+            onApplyFilter={handleApplyFilter}
+            onClearFilter={handleClearFilter}
+          />
           <Select
             placeholder="Kaynak Depo"
             value={selectedSourceWarehouse}
@@ -692,6 +693,7 @@ export default function StockTransfersPage() {
             allowClear
             style={{ width: 180 }}
             options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           />
           <Select
             placeholder="Hedef Depo"
@@ -700,6 +702,7 @@ export default function StockTransfersPage() {
             allowClear
             style={{ width: 180 }}
             options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           />
           <Select
             placeholder="Durum"
@@ -711,19 +714,21 @@ export default function StockTransfersPage() {
               value: key,
               label: value.label,
             }))}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           />
           <RangePicker
             value={dateRange}
             onChange={setDateRange}
             style={{ width: 280 }}
             placeholder={['Başlangıç', 'Bitiş']}
+            className="!rounded-lg [&_.ant-picker]:!border-slate-300"
           />
-          <button
+          <Button
             onClick={handleClearFilter}
-            className="px-4 py-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+            className="!border-slate-300 !text-slate-600 hover:!border-slate-400"
           >
             Temizle
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -737,14 +742,12 @@ export default function StockTransfersPage() {
       />
 
       {/* Table */}
-      {isLoading ? (
-        <Card>
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Spin size="large" />
           </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
+        ) : (
           <Table
             columns={columns}
             dataSource={transfers}
@@ -765,9 +768,10 @@ export default function StockTransfersPage() {
               showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} transfer`,
             }}
             scroll={{ x: 1200 }}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
           />
-        </DataTableWrapper>
-      )}
-    </PageContainer>
+        )}
+      </div>
+    </div>
   );
 }

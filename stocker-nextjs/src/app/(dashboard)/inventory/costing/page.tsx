@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from 'react';
 import {
   Table,
-  Tag,
   Button,
   Space,
   Select,
@@ -96,31 +95,6 @@ const getCostingMethodLabel = (method: CostingMethod) => {
   }
 };
 
-const getCostingMethodColor = (method: CostingMethod) => {
-  switch (method) {
-    case CostingMethodEnum.FIFO:
-      return 'blue';
-    case CostingMethodEnum.LIFO:
-      return 'purple';
-    case CostingMethodEnum.WeightedAverageCost:
-      return 'green';
-    case CostingMethodEnum.StandardCost:
-      return 'orange';
-    default:
-      return 'default';
-  }
-};
-
-const getVarianceTypeColor = (type: string) => {
-  switch (type.toLowerCase()) {
-    case 'favorable':
-      return 'success';
-    case 'unfavorable':
-      return 'error';
-    default:
-      return 'default';
-  }
-};
 
 export default function CostingPage() {
   const [activeTab, setActiveTab] = useState('valuation');
@@ -243,7 +217,7 @@ export default function CostingPage() {
       width: 80,
       align: 'center',
       render: (value) => (
-        <Tag color={value > 3 ? 'orange' : 'default'}>{value}</Tag>
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded">{value}</span>
       ),
     },
     {
@@ -301,7 +275,7 @@ export default function CostingPage() {
       align: 'right',
       sorter: (a, b) => Math.abs(a.varianceAmount) - Math.abs(b.varianceAmount),
       render: (value, record) => (
-        <span className={value < 0 ? 'text-emerald-600' : value > 0 ? 'text-red-600' : 'text-slate-700'}>
+        <span className={value < 0 ? 'text-slate-900 font-medium' : value > 0 ? 'text-slate-500' : 'text-slate-700'}>
           {formatCurrency(value, record.currency)}
         </span>
       ),
@@ -313,7 +287,7 @@ export default function CostingPage() {
       width: 100,
       align: 'right',
       render: (value) => (
-        <span className={value < 0 ? 'text-emerald-600' : value > 0 ? 'text-red-600' : 'text-slate-700'}>
+        <span className={value < 0 ? 'text-slate-900 font-medium' : value > 0 ? 'text-slate-500' : 'text-slate-700'}>
           {formatNumber(value, 1)}%
         </span>
       ),
@@ -325,9 +299,9 @@ export default function CostingPage() {
       width: 120,
       align: 'center',
       render: (type) => (
-        <Tag color={getVarianceTypeColor(type)}>
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${type === 'Favorable' ? 'bg-slate-900 text-white' : type === 'Unfavorable' ? 'bg-slate-200 text-slate-600' : 'bg-slate-100 text-slate-500'}`}>
           {type === 'Favorable' ? 'Olumlu' : type === 'Unfavorable' ? 'Olumsuz' : 'Nötr'}
-        </Tag>
+        </span>
       ),
     },
     {
@@ -338,7 +312,7 @@ export default function CostingPage() {
       align: 'right',
       sorter: (a, b) => Math.abs(a.totalVarianceImpact) - Math.abs(b.totalVarianceImpact),
       render: (value, record) => (
-        <span className={`font-medium ${value < 0 ? 'text-emerald-600' : value > 0 ? 'text-red-600' : 'text-slate-700'}`}>
+        <span className={`font-medium ${value < 0 ? 'text-slate-900 font-medium' : value > 0 ? 'text-slate-500' : 'text-slate-700'}`}>
           {formatCurrency(value, record.currency)}
         </span>
       ),
@@ -420,7 +394,7 @@ export default function CostingPage() {
       key: 'layerOrder',
       width: 70,
       align: 'center',
-      render: (value) => <Tag>{value}</Tag>,
+      render: (value) => <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">{value}</span>,
     },
   ];
 
@@ -725,8 +699,8 @@ export default function CostingPage() {
         <div className="col-span-12 sm:col-span-6 lg:col-span-3">
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
-                <ChartPieIcon className="w-5 h-5 text-emerald-600" />
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ChartPieIcon className="w-5 h-5 text-slate-600" />
               </div>
             </div>
             <p className="text-xs text-slate-500 mb-1">Toplam Ürün Sayısı</p>
@@ -743,8 +717,8 @@ export default function CostingPage() {
         <div className="col-span-12 sm:col-span-6 lg:col-span-3">
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
-                <ChartBarIcon className="w-5 h-5 text-amber-600" />
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ChartBarIcon className="w-5 h-5 text-slate-600" />
               </div>
             </div>
             <p className="text-xs text-slate-500 mb-1">Dönem SMM</p>
@@ -765,13 +739,13 @@ export default function CostingPage() {
             <div className="flex items-center gap-3 mb-2">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                 varianceAnalysis && varianceAnalysis.reduce((sum, v) => sum + v.totalVarianceImpact, 0) < 0
-                  ? 'bg-emerald-50'
-                  : 'bg-red-50'
+                  ? 'bg-slate-900'
+                  : 'bg-slate-200'
               }`}>
                 {varianceAnalysis && varianceAnalysis.reduce((sum, v) => sum + v.totalVarianceImpact, 0) < 0 ? (
-                  <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
+                  <CheckCircleIcon className="w-5 h-5 text-slate-600" />
                 ) : (
-                  <ExclamationCircleIcon className="w-5 h-5 text-red-600" />
+                  <ExclamationCircleIcon className="w-5 h-5 text-slate-600" />
                 )}
               </div>
             </div>
@@ -782,8 +756,8 @@ export default function CostingPage() {
               <>
                 <p className={`text-2xl font-bold ${
                   varianceAnalysis && varianceAnalysis.reduce((sum, v) => sum + v.totalVarianceImpact, 0) < 0
-                    ? 'text-emerald-600'
-                    : 'text-red-600'
+                    ? 'text-slate-900'
+                    : 'text-slate-500'
                 }`}>
                   {formatCurrency(varianceAnalysis?.reduce((sum, v) => sum + v.totalVarianceImpact, 0) || 0)}
                 </p>
@@ -873,15 +847,13 @@ export default function CostingPage() {
               <Descriptions.Item label="Ürün Adı">{productDetailModal.productName}</Descriptions.Item>
               <Descriptions.Item label="Kategori">{productDetailModal.categoryName || '-'}</Descriptions.Item>
               <Descriptions.Item label="Maliyetlendirme Yöntemi">
-                <Tag color={getCostingMethodColor(productDetailModal.costingMethod)}>
-                  {getCostingMethodLabel(productDetailModal.costingMethod)}
-                </Tag>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-900 text-white">{getCostingMethodLabel(productDetailModal.costingMethod)}</span>
               </Descriptions.Item>
               <Descriptions.Item label="Toplam Miktar">
                 <span className="font-medium">{formatNumber(productDetailModal.totalQuantity)}</span>
               </Descriptions.Item>
               <Descriptions.Item label="Toplam Değer">
-                <span className="font-medium text-emerald-600">{formatCurrency(productDetailModal.totalValue, productDetailModal.currency)}</span>
+                <span className="font-medium text-slate-900">{formatCurrency(productDetailModal.totalValue, productDetailModal.currency)}</span>
               </Descriptions.Item>
             </Descriptions>
 
@@ -906,26 +878,26 @@ export default function CostingPage() {
               <>
                 <Divider className="!my-4">Standart Maliyet Karşılaştırması</Divider>
                 <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                    <p className="text-xs text-amber-700 mb-1">Standart Maliyet</p>
-                    <p className="text-xl font-bold text-amber-900">{formatCurrency(productDetailModal.standardCost, productDetailModal.currency)}</p>
+                  <div className="bg-slate-100 border border-slate-200 rounded-xl p-4">
+                    <p className="text-xs text-slate-600 mb-1">Standart Maliyet</p>
+                    <p className="text-xl font-bold text-slate-900">{formatCurrency(productDetailModal.standardCost, productDetailModal.currency)}</p>
                   </div>
                   <div className={`rounded-xl p-4 ${
                     productDetailModal.weightedAverageCost < productDetailModal.standardCost
-                      ? 'bg-emerald-50 border border-emerald-200'
-                      : 'bg-red-50 border border-red-200'
+                      ? 'bg-slate-900'
+                      : 'bg-slate-200'
                   }`}>
                     <p className={`text-xs mb-1 ${
                       productDetailModal.weightedAverageCost < productDetailModal.standardCost
-                        ? 'text-emerald-700'
-                        : 'text-red-700'
+                        ? 'text-slate-300'
+                        : 'text-slate-600'
                     }`}>
                       Fark (Gerçek - Standart)
                     </p>
                     <p className={`text-xl font-bold flex items-center gap-2 ${
                       productDetailModal.weightedAverageCost < productDetailModal.standardCost
-                        ? 'text-emerald-600'
-                        : 'text-red-600'
+                        ? 'text-white'
+                        : 'text-slate-700'
                     }`}>
                       {productDetailModal.weightedAverageCost < productDetailModal.standardCost
                         ? <CheckCircleIcon className="w-4 h-4" />
@@ -940,7 +912,7 @@ export default function CostingPage() {
             <Divider className="!my-4">Katman Bilgileri</Divider>
             <Descriptions bordered size="small" column={2}>
               <Descriptions.Item label="Aktif Katman Sayısı">
-                <Tag>{productDetailModal.activeLayerCount}</Tag>
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">{productDetailModal.activeLayerCount}</span>
               </Descriptions.Item>
               <Descriptions.Item label="Son Hesaplama">
                 {productDetailModal.lastCalculatedAt

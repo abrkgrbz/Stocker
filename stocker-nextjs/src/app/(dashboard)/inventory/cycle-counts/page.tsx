@@ -1,60 +1,95 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Table, Tag, Select, Modal, Form, Input, Button, Dropdown, DatePicker, Progress } from 'antd';
+import { useRouter } from 'next/navigation';
+import { Table, Select, Button, Dropdown, Progress } from 'antd';
 import {
   ArrowPathIcon,
   CalculatorIcon,
   PlusIcon,
   EyeIcon,
+  PencilIcon,
   PlayIcon,
   CheckCircleIcon,
   EllipsisHorizontalIcon,
+  ClockIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
   useCycleCounts,
   useWarehouses,
-  useCreateCycleCount,
   useStartCycleCount,
   useCompleteCycleCount,
 } from '@/lib/api/hooks/useInventory';
-import type { CycleCountDto, CreateCycleCountDto } from '@/lib/api/services/inventory.types';
+import type { CycleCountDto } from '@/lib/api/services/inventory.types';
 import { CycleCountStatus, CycleCountType } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import { PageContainer, ListPageHeader, Card } from '@/components/patterns';
 import { confirmAction } from '@/lib/utils/sweetalert';
 
-const statusConfig: Record<CycleCountStatus, { color: string; label: string }> = {
-  [CycleCountStatus.Planned]: { color: 'default', label: 'Planlandı' },
-  [CycleCountStatus.InProgress]: { color: 'blue', label: 'Devam Ediyor' },
-  [CycleCountStatus.Completed]: { color: 'green', label: 'Tamamlandı' },
-  [CycleCountStatus.Approved]: { color: 'cyan', label: 'Onaylandı' },
-  [CycleCountStatus.Processed]: { color: 'purple', label: 'İşlendi' },
-  [CycleCountStatus.Cancelled]: { color: 'red', label: 'İptal Edildi' },
+interface StatusConfig {
+  color: string;
+  bgColor: string;
+  label: string;
+  icon: React.ReactNode;
+}
+
+const statusConfig: Record<CycleCountStatus, StatusConfig> = {
+  [CycleCountStatus.Planned]: {
+    color: '#64748b',
+    bgColor: '#f1f5f9',
+    label: 'Planlandi',
+    icon: <ClockIcon className="w-3.5 h-3.5" />,
+  },
+  [CycleCountStatus.InProgress]: {
+    color: '#1e293b',
+    bgColor: '#e2e8f0',
+    label: 'Devam Ediyor',
+    icon: <ArrowPathIcon className="w-3.5 h-3.5" />,
+  },
+  [CycleCountStatus.Completed]: {
+    color: '#1e293b',
+    bgColor: '#cbd5e1',
+    label: 'Tamamlandi',
+    icon: <CheckCircleIcon className="w-3.5 h-3.5" />,
+  },
+  [CycleCountStatus.Approved]: {
+    color: '#ffffff',
+    bgColor: '#475569',
+    label: 'Onaylandi',
+    icon: <CheckCircleIcon className="w-3.5 h-3.5" />,
+  },
+  [CycleCountStatus.Processed]: {
+    color: '#ffffff',
+    bgColor: '#334155',
+    label: 'Islendi',
+    icon: <CheckCircleIcon className="w-3.5 h-3.5" />,
+  },
+  [CycleCountStatus.Cancelled]: {
+    color: '#475569',
+    bgColor: '#f1f5f9',
+    label: 'Iptal Edildi',
+    icon: <XCircleIcon className="w-3.5 h-3.5" />,
+  },
 };
 
 const countTypeLabels: Record<CycleCountType, string> = {
   [CycleCountType.Standard]: 'Standart',
-  [CycleCountType.AbcBased]: 'ABC Bazlı',
-  [CycleCountType.ZoneBased]: 'Bölge Bazlı',
-  [CycleCountType.CategoryBased]: 'Kategori Bazlı',
+  [CycleCountType.AbcBased]: 'ABC Bazli',
+  [CycleCountType.ZoneBased]: 'Bolge Bazli',
+  [CycleCountType.CategoryBased]: 'Kategori Bazli',
   [CycleCountType.Random]: 'Rastgele',
-  [CycleCountType.MovementBased]: 'Hareket Bazlı',
+  [CycleCountType.MovementBased]: 'Hareket Bazli',
 };
 
 export default function CycleCountsPage() {
+  const router = useRouter();
   const [selectedStatus, setSelectedStatus] = useState<CycleCountStatus | undefined>();
   const [selectedWarehouse, setSelectedWarehouse] = useState<number | undefined>();
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [selectedCount, setSelectedCount] = useState<CycleCountDto | null>(null);
-  const [form] = Form.useForm();
 
   // API Hooks
   const { data: warehouses = [] } = useWarehouses();
   const { data: cycleCounts = [], isLoading, refetch } = useCycleCounts({ status: selectedStatus, warehouseId: selectedWarehouse });
-  const createCount = useCreateCycleCount();
   const startCount = useStartCycleCount();
   const completeCount = useCompleteCycleCount();
 
@@ -68,21 +103,11 @@ export default function CycleCountsPage() {
   }, [cycleCounts]);
 
   // Handlers
-  const handleCreate = () => {
-    form.resetFields();
-    setCreateModalOpen(true);
-  };
-
-  const handleViewDetail = (count: CycleCountDto) => {
-    setSelectedCount(count);
-    setDetailModalOpen(true);
-  };
-
   const handleStart = async (count: CycleCountDto) => {
     const confirmed = await confirmAction(
-      'Sayımı Başlat',
-      `"${count.planNumber}" sayımını başlatmak istediğinizden emin misiniz?`,
-      'Başlat'
+      'Sayimi Baslat',
+      `"${count.planNumber}" sayimini baslatmak istediginizden emin misiniz?`,
+      'Baslat'
     );
     if (confirmed) {
       try {
@@ -95,8 +120,8 @@ export default function CycleCountsPage() {
 
   const handleComplete = async (count: CycleCountDto) => {
     const confirmed = await confirmAction(
-      'Sayımı Tamamla',
-      `"${count.planNumber}" sayımını tamamlamak istediğinizden emin misiniz?`,
+      'Sayimi Tamamla',
+      `"${count.planNumber}" sayimini tamamlamak istediginizden emin misiniz?`,
       'Tamamla'
     );
     if (confirmed) {
@@ -108,117 +133,149 @@ export default function CycleCountsPage() {
     }
   };
 
-  const handleCreateSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      const data: CreateCycleCountDto = {
-        warehouseId: values.warehouseId,
-        planNumber: values.planNumber || `CC-${Date.now()}`,
-        planName: values.planName || 'Dönemsel Sayım',
-        scheduledStartDate: values.scheduledDate?.toISOString(),
-        scheduledEndDate: values.scheduledDate?.toISOString(),
-        description: values.description,
-        countType: values.countType,
-      };
-      await createCount.mutateAsync(data);
-      setCreateModalOpen(false);
-      form.resetFields();
-    } catch (error) {
-      // Validation error
-    }
-  };
-
   // Table columns
   const columns: ColumnsType<CycleCountDto> = [
     {
-      title: 'Sayım No',
+      title: 'Sayim No',
       dataIndex: 'planNumber',
       key: 'planNumber',
       width: 130,
-      render: (text: string) => <span className="font-mono font-semibold text-slate-900">{text}</span>,
+      render: (text: string, record) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/inventory/cycle-counts/${record.id}`);
+          }}
+          className="font-mono font-semibold text-slate-900 hover:text-slate-600 transition-colors text-left"
+        >
+          {text}
+        </button>
+      ),
     },
     {
       title: 'Depo',
       dataIndex: 'warehouseName',
       key: 'warehouseName',
       width: 150,
-      render: (text: string) => <Tag color="blue">{text}</Tag>,
+      render: (text: string) => (
+        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
+          {text}
+        </span>
+      ),
     },
     {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
-      width: 120,
+      width: 140,
       render: (status: CycleCountStatus) => {
         const config = statusConfig[status];
-        return <Tag color={config.color}>{config.label}</Tag>;
+        return (
+          <span
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium"
+            style={{ backgroundColor: config.bgColor, color: config.color }}
+          >
+            {config.icon}
+            {config.label}
+          </span>
+        );
       },
     },
     {
-      title: 'Sayım Türü',
+      title: 'Sayim Turu',
       dataIndex: 'countType',
       key: 'countType',
       width: 130,
-      render: (text: string) => text || '-',
+      render: (text: CycleCountType) => (
+        <span className="text-slate-600">
+          {text ? (countTypeLabels[text] || text) : '-'}
+        </span>
+      ),
     },
     {
       title: 'Planlanan Tarih',
       dataIndex: 'scheduledStartDate',
       key: 'scheduledStartDate',
       width: 130,
-      render: (date: string) => date ? dayjs(date).format('DD.MM.YYYY') : '-',
+      render: (date: string) => (
+        <span className="text-slate-600">
+          {date ? dayjs(date).format('DD.MM.YYYY') : '-'}
+        </span>
+      ),
     },
     {
-      title: 'İlerleme',
+      title: 'Ilerleme',
       key: 'progress',
       width: 150,
       render: (_, record) => {
-        if (!record.totalItems) return '-';
+        if (!record.totalItems) return <span className="text-slate-400">-</span>;
         const percent = Math.round((record.countedItems || 0) / record.totalItems * 100);
         return (
           <div>
-            <Progress percent={percent} size="small" />
+            <Progress
+              percent={percent}
+              size="small"
+              strokeColor="#475569"
+              trailColor="#e2e8f0"
+            />
             <div className="text-xs text-slate-500">{record.countedItems || 0} / {record.totalItems}</div>
           </div>
         );
       },
     },
     {
-      title: 'İşlemler',
+      title: 'Islemler',
       key: 'actions',
       width: 80,
       fixed: 'right',
       render: (_, record) => {
-        const items = [
+        const items: any[] = [
           {
             key: 'view',
             icon: <EyeIcon className="w-4 h-4" />,
-            label: 'Detay',
-            onClick: () => handleViewDetail(record),
+            label: 'Goruntule',
+            onClick: () => router.push(`/inventory/cycle-counts/${record.id}`),
+          },
+          {
+            key: 'edit',
+            icon: <PencilIcon className="w-4 h-4" />,
+            label: 'Duzenle',
+            onClick: () => router.push(`/inventory/cycle-counts/${record.id}/edit`),
           },
         ];
 
         if (record.status === CycleCountStatus.Planned) {
-          items.push({
-            key: 'start',
-            icon: <PlayIcon className="w-4 h-4" />,
-            label: 'Başlat',
-            onClick: () => handleStart(record),
-          });
+          items.push(
+            { type: 'divider' },
+            {
+              key: 'start',
+              icon: <PlayIcon className="w-4 h-4" />,
+              label: 'Baslat',
+              onClick: () => handleStart(record),
+            }
+          );
         }
 
         if (record.status === CycleCountStatus.InProgress) {
-          items.push({
-            key: 'complete',
-            icon: <CheckCircleIcon className="w-4 h-4" />,
-            label: 'Tamamla',
-            onClick: () => handleComplete(record),
-          });
+          items.push(
+            { type: 'divider' },
+            {
+              key: 'complete',
+              icon: <CheckCircleIcon className="w-4 h-4" />,
+              label: 'Tamamla',
+              onClick: () => handleComplete(record),
+            }
+          );
         }
 
         return (
           <Dropdown menu={{ items }} trigger={['click']}>
-            <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
+            <Button
+              type="text"
+              icon={<EllipsisHorizontalIcon className="w-4 h-4" />}
+              onClick={(e) => e.stopPropagation()}
+              className="text-slate-600 hover:text-slate-900"
+            />
           </Dropdown>
         );
       },
@@ -226,58 +283,106 @@ export default function CycleCountsPage() {
   ];
 
   return (
-    <PageContainer>
-      <ListPageHeader
-        icon={<CalculatorIcon className="w-5 h-5" />}
-        iconColor="#10b981"
-        title="Dönemsel Sayımlar"
-        description="Planlı envanter sayımlarını yönetin ve takip edin"
-        itemCount={stats.total}
-        primaryAction={{
-          label: 'Yeni Sayım',
-          onClick: handleCreate,
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <CalculatorIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Donemsel Sayimlar</h1>
+              <p className="text-slate-500 mt-1">Planli envanter sayimlarini yonetin ve takip edin</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
           <button
             onClick={() => refetch()}
             disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
           >
             <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
-        }
-      />
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
-          <div className="text-xs text-slate-500">Toplam Sayım</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-slate-600">{stats.scheduled}</div>
-          <div className="text-xs text-slate-500">Planlandı</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
-          <div className="text-xs text-slate-500">Devam Ediyor</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
-          <div className="text-xs text-slate-500">Tamamlandı</div>
-        </Card>
+          <Button
+            type="primary"
+            icon={<PlusIcon className="w-4 h-4" />}
+            onClick={() => router.push('/inventory/cycle-counts/new')}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+          >
+            Yeni Sayim
+          </Button>
+        </div>
       </div>
 
-      {/* Filters */}
-      <Card className="mb-6">
-        <div className="flex flex-wrap gap-4 p-4">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-12 gap-6 mb-8">
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CalculatorIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Toplam Sayim
+            </div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ClockIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-700">{stats.scheduled}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Planlandi
+            </div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+                <ArrowPathIcon className="w-5 h-5 text-slate-700" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-800">{stats.inProgress}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Devam Ediyor
+            </div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-300 flex items-center justify-center">
+                <CheckCircleIcon className="w-5 h-5 text-slate-800" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.completed}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Tamamlandi
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Card */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        {/* Filters */}
+        <div className="flex flex-wrap gap-4 mb-6">
           <Select
-            placeholder="Depo seçin"
+            placeholder="Depo secin"
             allowClear
             style={{ width: 200 }}
             value={selectedWarehouse}
             onChange={setSelectedWarehouse}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           >
             {warehouses.map((w) => (
               <Select.Option key={w.id} value={w.id}>
@@ -286,23 +391,27 @@ export default function CycleCountsPage() {
             ))}
           </Select>
           <Select
-            placeholder="Duruma göre filtrele"
+            placeholder="Duruma gore filtrele"
             allowClear
             style={{ width: 180 }}
             value={selectedStatus}
             onChange={setSelectedStatus}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           >
             {Object.entries(statusConfig).map(([key, config]) => (
               <Select.Option key={key} value={key}>
-                <Tag color={config.color}>{config.label}</Tag>
+                <span
+                  className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium"
+                  style={{ backgroundColor: config.bgColor, color: config.color }}
+                >
+                  {config.label}
+                </span>
               </Select.Option>
             ))}
           </Select>
         </div>
-      </Card>
 
-      {/* Table */}
-      <Card>
+        {/* Table */}
         <Table
           columns={columns}
           dataSource={cycleCounts}
@@ -312,121 +421,16 @@ export default function CycleCountsPage() {
             total: cycleCounts.length,
             pageSize: 20,
             showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
+            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayit`,
           }}
           scroll={{ x: 1000 }}
+          onRow={(record) => ({
+            onClick: () => router.push(`/inventory/cycle-counts/${record.id}`),
+            className: 'cursor-pointer hover:bg-slate-50',
+          })}
+          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
         />
-      </Card>
-
-      {/* Create Modal */}
-      <Modal
-        title="Yeni Dönemsel Sayım"
-        open={createModalOpen}
-        onCancel={() => {
-          setCreateModalOpen(false);
-          form.resetFields();
-        }}
-        onOk={handleCreateSubmit}
-        okText="Oluştur"
-        cancelText="İptal"
-        confirmLoading={createCount.isPending}
-        width={500}
-      >
-        <Form form={form} layout="vertical" className="mt-4">
-          <Form.Item
-            name="warehouseId"
-            label="Depo"
-            rules={[{ required: true, message: 'Depo seçimi gerekli' }]}
-          >
-            <Select placeholder="Depo seçin" showSearch optionFilterProp="children">
-              {warehouses.map((w) => (
-                <Select.Option key={w.id} value={w.id}>
-                  {w.code} - {w.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item
-              name="scheduledDate"
-              label="Planlanan Tarih"
-              rules={[{ required: true, message: 'Tarih gerekli' }]}
-            >
-              <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
-            </Form.Item>
-            <Form.Item name="countType" label="Sayım Türü">
-              <Select placeholder="Seçin">
-                <Select.Option value="Full">Tam Sayım</Select.Option>
-                <Select.Option value="Partial">Kısmi Sayım</Select.Option>
-                <Select.Option value="ABC">ABC Analizi</Select.Option>
-                <Select.Option value="Random">Rastgele</Select.Option>
-              </Select>
-            </Form.Item>
-          </div>
-          <Form.Item name="description" label="Açıklama">
-            <Input.TextArea rows={3} placeholder="Sayım hakkında notlar..." />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* Detail Modal */}
-      <Modal
-        title={`Sayım Detayı: ${selectedCount?.planNumber || ''}`}
-        open={detailModalOpen}
-        onCancel={() => {
-          setDetailModalOpen(false);
-          setSelectedCount(null);
-        }}
-        footer={[
-          <Button key="close" onClick={() => setDetailModalOpen(false)}>
-            Kapat
-          </Button>,
-        ]}
-        width={500}
-      >
-        {selectedCount && (
-          <div className="space-y-4 mt-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-slate-500 uppercase">Sayım No</p>
-                <p className="font-semibold">{selectedCount.planNumber}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 uppercase">Durum</p>
-                <Tag color={statusConfig[selectedCount.status].color}>
-                  {statusConfig[selectedCount.status].label}
-                </Tag>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-slate-500 uppercase">Depo</p>
-                <p>{selectedCount.warehouseName}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 uppercase">Sayım Türü</p>
-                <p>{selectedCount.countType || '-'}</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-slate-500 uppercase">Planlanan Tarih</p>
-                <p>{selectedCount.scheduledStartDate ? dayjs(selectedCount.scheduledStartDate).format('DD.MM.YYYY') : '-'}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 uppercase">İlerleme</p>
-                <p>{selectedCount.countedItems || 0} / {selectedCount.totalItems || 0}</p>
-              </div>
-            </div>
-            {selectedCount.description && (
-              <div>
-                <p className="text-xs text-slate-500 uppercase">Açıklama</p>
-                <p className="text-slate-700">{selectedCount.description}</p>
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
-    </PageContainer>
+      </div>
+    </div>
   );
 }

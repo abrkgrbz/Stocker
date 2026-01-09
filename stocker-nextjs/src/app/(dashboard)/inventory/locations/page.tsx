@@ -2,19 +2,20 @@
 
 /**
  * Locations List Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Monochrome design system following DESIGN_SYSTEM.md
  */
 
 import React, { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Table,
-  Tag,
   Input,
   Select,
   Dropdown,
   Progress,
   Spin,
+  Button,
+  Space,
 } from 'antd';
 import {
   ArrowPathIcon,
@@ -32,12 +33,6 @@ import {
 import { useLocations, useDeleteLocation, useWarehouses } from '@/lib/api/hooks/useInventory';
 import type { LocationDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
-import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  DataTableWrapper,
-} from '@/components/ui/enterprise-page';
 import {
   showDeleteSuccess,
   showError,
@@ -65,7 +60,7 @@ export default function LocationsPage() {
         await deleteLocation.mutateAsync(location.id);
         showDeleteSuccess('lokasyon');
       } catch (error) {
-        showError('Silme işlemi başarısız');
+        showError('Silme islemi basarisiz');
       }
     }
   };
@@ -79,7 +74,6 @@ export default function LocationsPage() {
     );
   }, [locations, searchText]);
 
-  // Calculate stats
   const totalLocations = locations.length;
   const activeLocations = locations.filter((l) => l.isActive).length;
   const totalCapacity = locations.reduce((sum, l) => sum + (l.capacity || 0), 0);
@@ -87,9 +81,9 @@ export default function LocationsPage() {
   const overCapacityLocations = locations.filter((l) => l.capacity > 0 && (l.usedCapacity / l.capacity) >= 0.9).length;
 
   const getCapacityColor = (percent: number) => {
-    if (percent >= 90) return '#ef4444';
-    if (percent >= 70) return '#f59e0b';
-    return '#10b981';
+    if (percent >= 90) return '#475569';
+    if (percent >= 70) return '#64748b';
+    return '#94a3b8';
   };
 
   const columns: ColumnsType<LocationDto> = [
@@ -100,11 +94,8 @@ export default function LocationsPage() {
       sorter: (a, b) => a.name.localeCompare(b.name),
       render: (name: string, record) => (
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: '#6366f115' }}
-          >
-            <MapPinIcon className="w-4 h-4" style={{ color: '#6366f1' }} />
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <MapPinIcon className="w-5 h-5 text-slate-600" />
           </div>
           <div>
             <div className="text-sm font-medium text-slate-900">{name}</div>
@@ -135,17 +126,17 @@ export default function LocationsPage() {
         const parts = [];
         if (record.aisle) parts.push(`Koridor: ${record.aisle}`);
         if (record.shelf) parts.push(`Raf: ${record.shelf}`);
-        if (record.bin) parts.push(`Bölme: ${record.bin}`);
+        if (record.bin) parts.push(`Bolme: ${record.bin}`);
 
         return parts.length > 0 ? (
-          <div className="text-sm text-slate-600">{parts.join(' • ')}</div>
+          <div className="text-sm text-slate-600">{parts.join(' - ')}</div>
         ) : (
           <span className="text-slate-400">-</span>
         );
       },
     },
     {
-      title: 'Kapasite Kullanımı',
+      title: 'Kapasite Kullanimi',
       key: 'capacity',
       width: 160,
       align: 'center',
@@ -171,14 +162,14 @@ export default function LocationsPage() {
       },
     },
     {
-      title: 'Ürün Sayısı',
+      title: 'Urun Sayisi',
       dataIndex: 'productCount',
       key: 'productCount',
       width: 120,
       align: 'center',
       sorter: (a, b) => (a.productCount || 0) - (b.productCount || 0),
       render: (count: number) => (
-        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-purple-50 text-purple-700 rounded">
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded">
           {count || 0}
         </span>
       ),
@@ -194,9 +185,13 @@ export default function LocationsPage() {
       ],
       onFilter: (value, record) => record.isActive === value,
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'default'}>
+        <span
+          className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${
+            isActive ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-600'
+          }`}
+        >
           {isActive ? 'Aktif' : 'Pasif'}
-        </Tag>
+        </span>
       ),
     },
     {
@@ -209,7 +204,7 @@ export default function LocationsPage() {
           {
             key: 'edit',
             icon: <PencilIcon className="w-4 h-4" />,
-            label: 'Düzenle',
+            label: 'Duzenle',
             onClick: () => router.push(`/inventory/locations/${record.id}/edit`),
           },
           { type: 'divider' as const },
@@ -234,85 +229,83 @@ export default function LocationsPage() {
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Lokasyon</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalLocations}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#6366f115' }}>
-              <MapPinIcon className="w-4 h-4" style={{ color: '#6366f1' }} />
-            </div>
-          </div>
+    <div className="min-h-screen bg-slate-50 p-8">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Lokasyonlar</h1>
+          <p className="text-slate-500 mt-1">Depo ici lokasyonlari yonetin</p>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif Lokasyon</span>
-              <div className="text-2xl font-semibold text-slate-900">{activeLocations}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Kapasite</span>
-              <div className="text-2xl font-semibold text-slate-900">
-                {usedCapacity}/{totalCapacity}
+        <Space>
+          <Button
+            icon={<ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="!border-slate-300 !text-slate-700 hover:!border-slate-400"
+          >
+            Yenile
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusIcon className="w-4 h-4" />}
+            onClick={() => router.push(`/inventory/locations/new${selectedWarehouse ? `?warehouseId=${selectedWarehouse}` : ''}`)}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+          >
+            Yeni Lokasyon
+          </Button>
+        </Space>
+      </div>
+
+      <div className="grid grid-cols-12 gap-6 mb-8">
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <MapPinIcon className="w-5 h-5 text-slate-600" />
               </div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <InboxIcon className="w-4 h-4 text-blue-500" />
-            </div>
+            <div className="text-2xl font-bold text-slate-900">{totalLocations}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Lokasyon</div>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Yüksek Doluluk</span>
-              <div className="text-2xl font-semibold text-slate-900">{overCapacityLocations}</div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CheckCircleIcon className="w-5 h-5 text-slate-600" />
+              </div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: overCapacityLocations > 0 ? '#ef444415' : '#f59e0b15' }}>
-              <ExclamationTriangleIcon className="w-4 h-4" style={{ color: overCapacityLocations > 0 ? '#ef4444' : '#f59e0b' }} />
+            <div className="text-2xl font-bold text-slate-900">{activeLocations}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Aktif Lokasyon</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <InboxIcon className="w-5 h-5 text-slate-600" />
+              </div>
             </div>
+            <div className="text-2xl font-bold text-slate-900">{usedCapacity}/{totalCapacity}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Kapasite</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ExclamationTriangleIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{overCapacityLocations}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Yuksek Doluluk</div>
           </div>
         </div>
       </div>
 
-      {/* Header */}
-      <ListPageHeader
-        icon={<MapPinIcon className="w-4 h-4" />}
-        iconColor="#6366f1"
-        title="Lokasyonlar"
-        description="Depo içi lokasyonları yönetin"
-        itemCount={filteredLocations.length}
-        primaryAction={{
-          label: 'Yeni Lokasyon',
-          onClick: () => router.push(`/inventory/locations/new${selectedWarehouse ? `?warehouseId=${selectedWarehouse}` : ''}`),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-          >
-            <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
-
-      {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
           <Select
-            placeholder="Depo seçin"
+            placeholder="Depo secin"
             allowClear
             style={{ width: 200 }}
             value={selectedWarehouse}
@@ -321,6 +314,7 @@ export default function LocationsPage() {
               value: w.id,
               label: w.name,
             }))}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           />
           <Input
             placeholder="Lokasyon ara... (ad, kod, koridor)"
@@ -329,20 +323,15 @@ export default function LocationsPage() {
             onChange={(e) => setSearchText(e.target.value)}
             style={{ maxWidth: 400 }}
             allowClear
-            className="h-10"
+            className="!rounded-lg !border-slate-300"
           />
         </div>
-      </div>
 
-      {/* Table */}
-      {isLoading ? (
-        <Card>
+        {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Spin size="large" />
           </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
+        ) : (
           <Table
             columns={columns}
             dataSource={filteredLocations}
@@ -353,9 +342,10 @@ export default function LocationsPage() {
               showSizeChanger: true,
               showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} lokasyon`,
             }}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
           />
-        </DataTableWrapper>
-      )}
-    </PageContainer>
+        )}
+      </div>
+    </div>
   );
 }

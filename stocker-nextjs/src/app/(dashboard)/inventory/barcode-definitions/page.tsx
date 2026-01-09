@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Table, Tag, Select, Input, Button, Dropdown } from 'antd';
+import { Table, Select, Input, Button, Dropdown } from 'antd';
 import {
   ArrowPathIcon,
   QrCodeIcon,
@@ -12,6 +12,7 @@ import {
   EllipsisHorizontalIcon,
   MagnifyingGlassIcon,
   EyeIcon,
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
   useBarcodeDefinitions,
@@ -20,21 +21,20 @@ import {
 } from '@/lib/api/hooks/useInventory';
 import type { BarcodeDefinitionDto, BarcodeType } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
-import { PageContainer, ListPageHeader, Card } from '@/components/patterns';
 import { confirmAction } from '@/lib/utils/sweetalert';
 
-const barcodeTypeConfig: Record<number, { label: string; color: string }> = {
-  1: { label: 'EAN-13', color: 'blue' },
-  2: { label: 'EAN-8', color: 'cyan' },
-  3: { label: 'UPC-A', color: 'purple' },
-  4: { label: 'UPC-E', color: 'magenta' },
-  5: { label: 'Code 128', color: 'green' },
-  6: { label: 'Code 39', color: 'lime' },
-  7: { label: 'QR Code', color: 'orange' },
-  8: { label: 'Data Matrix', color: 'gold' },
-  9: { label: 'PDF417', color: 'volcano' },
-  10: { label: 'ITF-14', color: 'geekblue' },
-  11: { label: 'Custom', color: 'default' },
+const barcodeTypeConfig: Record<number, { label: string }> = {
+  1: { label: 'EAN-13' },
+  2: { label: 'EAN-8' },
+  3: { label: 'UPC-A' },
+  4: { label: 'UPC-E' },
+  5: { label: 'Code 128' },
+  6: { label: 'Code 39' },
+  7: { label: 'QR Code' },
+  8: { label: 'Data Matrix' },
+  9: { label: 'PDF417' },
+  10: { label: 'ITF-14' },
+  11: { label: 'Custom' },
 };
 
 export default function BarcodeDefinitionsPage() {
@@ -72,7 +72,7 @@ export default function BarcodeDefinitionsPage() {
   const handleDelete = async (barcode: BarcodeDefinitionDto) => {
     const confirmed = await confirmAction(
       'Barkodu Sil',
-      `"${barcode.barcode}" barkodunu silmek istediğinizden emin misiniz?`,
+      `"${barcode.barcode}" barkodunu silmek istediginizden emin misiniz?`,
       'Sil'
     );
 
@@ -100,13 +100,18 @@ export default function BarcodeDefinitionsPage() {
           }}
           className="text-left"
         >
-          <span className="font-mono font-semibold text-slate-900 hover:text-blue-600 transition-colors">{text}</span>
-          {record.isPrimary && <Tag color="green" className="ml-2">Birincil</Tag>}
+          <span className="font-mono font-semibold text-slate-900 hover:text-slate-600 transition-colors">{text}</span>
+          {record.isPrimary && (
+            <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-slate-900 text-white">
+              <CheckCircleIcon className="w-3 h-3" />
+              Birincil
+            </span>
+          )}
         </button>
       ),
     },
     {
-      title: 'Ürün',
+      title: 'Urun',
       key: 'product',
       width: 200,
       render: (_, record) => (
@@ -117,7 +122,7 @@ export default function BarcodeDefinitionsPage() {
           }}
           className="text-left"
         >
-          <div className="font-medium text-slate-900 hover:text-blue-600 transition-colors">{record.productName}</div>
+          <div className="font-medium text-slate-900 hover:text-slate-600 transition-colors">{record.productName}</div>
           <div className="text-xs text-slate-500">{record.productCode}</div>
         </button>
       ),
@@ -128,8 +133,12 @@ export default function BarcodeDefinitionsPage() {
       key: 'barcodeType',
       width: 120,
       render: (type: BarcodeType) => {
-        const config = barcodeTypeConfig[type] || { label: 'Bilinmiyor', color: 'default' };
-        return <Tag color={config.color}>{config.label}</Tag>;
+        const config = barcodeTypeConfig[type] || { label: 'Bilinmiyor' };
+        return (
+          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
+            {config.label}
+          </span>
+        );
       },
     },
     {
@@ -137,16 +146,20 @@ export default function BarcodeDefinitionsPage() {
       dataIndex: 'quantityPerUnit',
       key: 'quantityPerUnit',
       width: 100,
-      render: (value: number) => value || 1,
+      render: (value: number) => (
+        <span className="text-slate-600">{value || 1}</span>
+      ),
     },
     {
-      title: 'Üretici',
+      title: 'Uretici',
       key: 'manufacturer',
       width: 120,
       render: (_, record) => (
         record.isManufacturerBarcode ? (
           <div>
-            <Tag color="purple">Üretici</Tag>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-200 text-slate-700">
+              Uretici
+            </span>
             {record.manufacturerCode && (
               <div className="text-xs text-slate-500 mt-1">{record.manufacturerCode}</div>
             )}
@@ -159,7 +172,11 @@ export default function BarcodeDefinitionsPage() {
       dataIndex: 'gtin',
       key: 'gtin',
       width: 150,
-      render: (text: string) => text ? <span className="font-mono text-xs">{text}</span> : '-',
+      render: (text: string) => text ? (
+        <span className="font-mono text-xs text-slate-600">{text}</span>
+      ) : (
+        <span className="text-slate-400">-</span>
+      ),
     },
     {
       title: 'Durum',
@@ -167,13 +184,19 @@ export default function BarcodeDefinitionsPage() {
       key: 'isActive',
       width: 80,
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'default'}>
+        <span
+          className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${
+            isActive
+              ? 'bg-slate-900 text-white'
+              : 'bg-slate-200 text-slate-600'
+          }`}
+        >
           {isActive ? 'Aktif' : 'Pasif'}
-        </Tag>
+        </span>
       ),
     },
     {
-      title: 'İşlemler',
+      title: 'Islemler',
       key: 'actions',
       width: 80,
       fixed: 'right',
@@ -184,13 +207,13 @@ export default function BarcodeDefinitionsPage() {
               {
                 key: 'view',
                 icon: <EyeIcon className="w-4 h-4" />,
-                label: 'Görüntüle',
+                label: 'Goruntule',
                 onClick: () => router.push(`/inventory/barcode-definitions/${record.id}`),
               },
               {
                 key: 'edit',
                 icon: <PencilIcon className="w-4 h-4" />,
-                label: 'Düzenle',
+                label: 'Duzenle',
                 onClick: () => router.push(`/inventory/barcode-definitions/${record.id}/edit`),
               },
               {
@@ -211,6 +234,7 @@ export default function BarcodeDefinitionsPage() {
             type="text"
             icon={<EllipsisHorizontalIcon className="w-4 h-4" />}
             onClick={(e) => e.stopPropagation()}
+            className="text-slate-600 hover:text-slate-900"
           />
         </Dropdown>
       ),
@@ -218,68 +242,116 @@ export default function BarcodeDefinitionsPage() {
   ];
 
   return (
-    <PageContainer>
-      <ListPageHeader
-        icon={<QrCodeIcon className="w-5 h-5" />}
-        iconColor="#10b981"
-        title="Barkod Tanımları"
-        description="Ürünlere ait barkod tanımlarını yönetin"
-        itemCount={stats.total}
-        primaryAction={{
-          label: 'Yeni Barkod',
-          onClick: () => router.push('/inventory/barcode-definitions/new'),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <QrCodeIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Barkod Tanimlari</h1>
+              <p className="text-slate-500 mt-1">Urunlere ait barkod tanimlarini yonetin</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
           <button
             onClick={() => refetch()}
             disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
           >
             <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
-        }
-      />
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
-          <div className="text-xs text-slate-500">Toplam Barkod</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-green-600">{stats.primary}</div>
-          <div className="text-xs text-slate-500">Birincil Barkod</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-blue-600">{stats.active}</div>
-          <div className="text-xs text-slate-500">Aktif Barkod</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-purple-600">{stats.manufacturer}</div>
-          <div className="text-xs text-slate-500">Üretici Barkodu</div>
-        </Card>
+          <Button
+            type="primary"
+            icon={<PlusIcon className="w-4 h-4" />}
+            onClick={() => router.push('/inventory/barcode-definitions/new')}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+          >
+            Yeni Barkod
+          </Button>
+        </div>
       </div>
 
-      {/* Filters */}
-      <Card className="mb-6">
-        <div className="flex flex-wrap gap-4 p-4">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-12 gap-6 mb-8">
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <QrCodeIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Toplam Barkod
+            </div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-300 flex items-center justify-center">
+                <CheckCircleIcon className="w-5 h-5 text-slate-800" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.primary}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Birincil Barkod
+            </div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+                <QrCodeIcon className="w-5 h-5 text-slate-700" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-800">{stats.active}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Aktif Barkod
+            </div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <QrCodeIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-700">{stats.manufacturer}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Uretici Barkodu
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Card */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        {/* Filters */}
+        <div className="flex flex-wrap gap-4 mb-6">
           <Input
-            placeholder="Barkod veya ürün ara..."
+            placeholder="Barkod veya urun ara..."
             prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
-            className="w-64"
+            className="w-64 [&_.ant-input]:!border-slate-300 [&_.ant-input]:!rounded-lg"
           />
           <Select
-            placeholder="Ürüne göre filtrele"
+            placeholder="Urune gore filtrele"
             allowClear
             style={{ width: 250 }}
             value={selectedProduct}
             onChange={setSelectedProduct}
             showSearch
             optionFilterProp="children"
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           >
             {products.map((p) => (
               <Select.Option key={p.id} value={p.id}>
@@ -288,10 +360,8 @@ export default function BarcodeDefinitionsPage() {
             ))}
           </Select>
         </div>
-      </Card>
 
-      {/* Table */}
-      <Card>
+        {/* Table */}
         <Table
           columns={columns}
           dataSource={filteredData}
@@ -301,15 +371,16 @@ export default function BarcodeDefinitionsPage() {
             total: filteredData.length,
             pageSize: 20,
             showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
+            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayit`,
           }}
           scroll={{ x: 1200 }}
           onRow={(record) => ({
             onClick: () => router.push(`/inventory/barcode-definitions/${record.id}`),
             className: 'cursor-pointer hover:bg-slate-50',
           })}
+          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
         />
-      </Card>
-    </PageContainer>
+      </div>
+    </div>
   );
 }

@@ -2,18 +2,19 @@
 
 /**
  * Brands List Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Monochrome design system following DESIGN_SYSTEM.md
  */
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Table,
-  Tag,
   Input,
   Avatar,
   Popconfirm,
   Spin,
+  Button,
+  Space,
 } from 'antd';
 import {
   ArrowPathIcon,
@@ -29,12 +30,6 @@ import {
 import { useBrands, useDeleteBrand } from '@/lib/api/hooks/useInventory';
 import type { BrandDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
-import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  DataTableWrapper,
-} from '@/components/ui/enterprise-page';
 import {
   showDeleteSuccess,
   showError,
@@ -55,7 +50,7 @@ export default function BrandsPage() {
         await deleteBrand.mutateAsync(brand.id);
         showDeleteSuccess('marka');
       } catch (error) {
-        showError('Silme işlemi başarısız');
+        showError('Silme islemi basarisiz');
       }
     }
   };
@@ -68,7 +63,6 @@ export default function BrandsPage() {
     );
   }, [brands, searchText]);
 
-  // Calculate stats
   const totalBrands = brands.length;
   const activeBrands = brands.filter((b) => b.isActive).length;
   const brandsWithWebsite = brands.filter((b) => b.website).length;
@@ -84,26 +78,21 @@ export default function BrandsPage() {
           {record.logoUrl ? (
             <Avatar src={record.logoUrl} size={40} shape="square" />
           ) : (
-            <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: '#f59e0b15' }}
-            >
-              <TagIcon className="w-5 h-5 text-amber-500" />
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <TagIcon className="w-5 h-5 text-slate-600" />
             </div>
           )}
           <div>
             <div className="text-sm font-medium text-slate-900">{name}</div>
             {record.code && (
-              <div className="text-xs text-slate-500">
-                {record.code}
-              </div>
+              <div className="text-xs text-slate-500">{record.code}</div>
             )}
           </div>
         </div>
       ),
     },
     {
-      title: 'Açıklama',
+      title: 'Aciklama',
       dataIndex: 'description',
       key: 'description',
       ellipsis: true,
@@ -122,7 +111,7 @@ export default function BrandsPage() {
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+            className="text-sm text-slate-700 hover:text-slate-900 flex items-center gap-1"
             onClick={(e) => e.stopPropagation()}
           >
             <GlobeAltIcon className="w-4 h-4" />
@@ -133,13 +122,13 @@ export default function BrandsPage() {
         ),
     },
     {
-      title: 'Ürün Sayısı',
+      title: 'Urun Sayisi',
       dataIndex: 'productCount',
       key: 'productCount',
       width: 120,
       align: 'center',
       render: (count: number) => (
-        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-amber-50 text-amber-700 rounded">
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded">
           {count || 0}
         </span>
       ),
@@ -150,7 +139,13 @@ export default function BrandsPage() {
       key: 'isActive',
       width: 100,
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'default'}>{isActive ? 'Aktif' : 'Pasif'}</Tag>
+        <span
+          className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${
+            isActive ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-600'
+          }`}
+        >
+          {isActive ? 'Aktif' : 'Pasif'}
+        </span>
       ),
     },
     {
@@ -170,14 +165,16 @@ export default function BrandsPage() {
             <PencilIcon className="w-4 h-4" />
           </button>
           <Popconfirm
-            title="Markayı silmek istediğinize emin misiniz?"
+            title="Markayi silmek istediginize emin misiniz?"
             onConfirm={(e) => {
               e?.stopPropagation();
               handleDelete(record);
             }}
             onCancel={(e) => e?.stopPropagation()}
             okText="Evet"
-            cancelText="Hayır"
+            cancelText="Hayir"
+            okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
+            cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
           >
             <button
               onClick={(e) => e.stopPropagation()}
@@ -192,100 +189,97 @@ export default function BrandsPage() {
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Marka</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalBrands}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-              <TagIcon className="w-5 h-5 text-amber-500" />
-            </div>
-          </div>
+    <div className="min-h-screen bg-slate-50 p-8">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Markalar</h1>
+          <p className="text-slate-500 mt-1">Urun markalarini yonetin</p>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif Marka</span>
-              <div className="text-2xl font-semibold text-slate-900">{activeBrands}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleIcon className="w-5 h-5 text-emerald-500" />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Web Siteli</span>
-              <div className="text-2xl font-semibold text-slate-900">{brandsWithWebsite}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <GlobeAltIcon className="w-4 h-4 text-blue-500" />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Ürün</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalProducts}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <InboxIcon className="w-4 h-4 text-violet-500" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Header */}
-      <ListPageHeader
-        icon={<TagIcon className="w-5 h-5" />}
-        iconColor="#f59e0b"
-        title="Markalar"
-        description="Ürün markalarını yönetin"
-        itemCount={filteredBrands.length}
-        primaryAction={{
-          label: 'Yeni Marka',
-          onClick: () => router.push('/inventory/brands/new'),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <button
+        <Space>
+          <Button
+            icon={<ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
             onClick={() => refetch()}
             disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+            className="!border-slate-300 !text-slate-700 hover:!border-slate-400"
           >
-            <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
-
-      {/* Search */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
-        <Input
-          placeholder="Marka ara... (ad, açıklama)"
-          prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          style={{ maxWidth: 400 }}
-          allowClear
-          className="h-10"
-        />
+            Yenile
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusIcon className="w-4 h-4" />}
+            onClick={() => router.push('/inventory/brands/new')}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+          >
+            Yeni Marka
+          </Button>
+        </Space>
       </div>
 
-      {/* Table */}
-      {isLoading ? (
-        <Card>
+      <div className="grid grid-cols-12 gap-6 mb-8">
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <TagIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{totalBrands}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Marka</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CheckCircleIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{activeBrands}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Aktif Marka</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <GlobeAltIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{brandsWithWebsite}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Web Siteli</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <InboxIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{totalProducts}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Urun</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <div className="mb-6">
+          <Input
+            placeholder="Marka ara... (ad, aciklama)"
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ maxWidth: 400 }}
+            allowClear
+            className="!rounded-lg !border-slate-300"
+          />
+        </div>
+
+        {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Spin size="large" />
           </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
+        ) : (
           <Table
             columns={columns}
             dataSource={filteredBrands}
@@ -295,9 +289,10 @@ export default function BrandsPage() {
               showSizeChanger: true,
               showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} marka`,
             }}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
           />
-        </DataTableWrapper>
-      )}
-    </PageContainer>
+        )}
+      </div>
+    </div>
   );
 }

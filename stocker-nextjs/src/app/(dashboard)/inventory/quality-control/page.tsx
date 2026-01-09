@@ -1,51 +1,70 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Table, Tag, Select, Modal, Form, Input, InputNumber, Button, Space, Dropdown, DatePicker, Radio } from 'antd';
+import { useRouter } from 'next/navigation';
+import { Table, Select, Button, Dropdown } from 'antd';
 import {
   ArrowPathIcon,
   ClipboardDocumentCheckIcon,
   PlusIcon,
   EyeIcon,
+  PencilIcon,
   CheckCircleIcon,
   XCircleIcon,
   EllipsisHorizontalIcon,
-  BeakerIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 import {
   useQualityControls,
-  useProducts,
-  useLotBatches,
-  useCreateQualityControl,
   useApproveQualityControl,
   useRejectQualityControl,
 } from '@/lib/api/hooks/useInventory';
-import type { QualityControlDto, CreateQualityControlDto } from '@/lib/api/services/inventory.types';
-import { QualityControlStatus, QualityControlType } from '@/lib/api/services/inventory.types';
+import type { QualityControlDto } from '@/lib/api/services/inventory.types';
+import { QualityControlStatus } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import { PageContainer, ListPageHeader, Card } from '@/components/patterns';
 import { confirmAction } from '@/lib/utils/sweetalert';
 
-const statusConfig: Record<QualityControlStatus, { color: string; label: string }> = {
-  [QualityControlStatus.Pending]: { color: 'gold', label: 'Beklemede' },
-  [QualityControlStatus.InProgress]: { color: 'blue', label: 'Devam Ediyor' },
-  [QualityControlStatus.Completed]: { color: 'green', label: 'Tamamlandı' },
-  [QualityControlStatus.Cancelled]: { color: 'red', label: 'İptal' },
+interface StatusConfig {
+  color: string;
+  bgColor: string;
+  label: string;
+  icon: React.ReactNode;
+}
+
+const statusConfig: Record<QualityControlStatus, StatusConfig> = {
+  [QualityControlStatus.Pending]: {
+    color: '#64748b',
+    bgColor: '#f1f5f9',
+    label: 'Beklemede',
+    icon: <ClockIcon className="w-3.5 h-3.5" />,
+  },
+  [QualityControlStatus.InProgress]: {
+    color: '#1e293b',
+    bgColor: '#e2e8f0',
+    label: 'Devam Ediyor',
+    icon: <ArrowPathIcon className="w-3.5 h-3.5" />,
+  },
+  [QualityControlStatus.Completed]: {
+    color: '#ffffff',
+    bgColor: '#475569',
+    label: 'Tamamlandi',
+    icon: <CheckCircleIcon className="w-3.5 h-3.5" />,
+  },
+  [QualityControlStatus.Cancelled]: {
+    color: '#475569',
+    bgColor: '#f1f5f9',
+    label: 'Iptal',
+    icon: <XCircleIcon className="w-3.5 h-3.5" />,
+  },
 };
 
 export default function QualityControlPage() {
+  const router = useRouter();
   const [selectedStatus, setSelectedStatus] = useState<QualityControlStatus | undefined>();
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [selectedQC, setSelectedQC] = useState<QualityControlDto | null>(null);
-  const [form] = Form.useForm();
 
   // API Hooks
-  const { data: products = [] } = useProducts();
-  const { data: lotBatches = [] } = useLotBatches({});
   const { data: qualityControls = [], isLoading, refetch } = useQualityControls({ status: selectedStatus });
-  const createQC = useCreateQualityControl();
   const approveQC = useApproveQualityControl();
   const rejectQC = useRejectQualityControl();
 
@@ -60,25 +79,15 @@ export default function QualityControlPage() {
   }, [qualityControls]);
 
   // Handlers
-  const handleCreate = () => {
-    form.resetFields();
-    setCreateModalOpen(true);
-  };
-
-  const handleViewDetail = (qc: QualityControlDto) => {
-    setSelectedQC(qc);
-    setDetailModalOpen(true);
-  };
-
   const handleApprove = async (qc: QualityControlDto) => {
     const confirmed = await confirmAction(
       'Kalite Kontrol Onayla',
-      `Bu kalite kontrol kaydını onaylamak istediğinizden emin misiniz?`,
+      `Bu kalite kontrol kaydini onaylamak istediginizden emin misiniz?`,
       'Onayla'
     );
     if (confirmed) {
       try {
-        await approveQC.mutateAsync({ id: qc.id, notes: 'Onaylandı' });
+        await approveQC.mutateAsync({ id: qc.id, notes: 'Onaylandi' });
       } catch (error) {
         // Error handled by hook
       }
@@ -88,35 +97,15 @@ export default function QualityControlPage() {
   const handleReject = async (qc: QualityControlDto) => {
     const confirmed = await confirmAction(
       'Kalite Kontrol Reddet',
-      `Bu kalite kontrol kaydını reddetmek istediğinizden emin misiniz?`,
+      `Bu kalite kontrol kaydini reddetmek istediginizden emin misiniz?`,
       'Reddet'
     );
     if (confirmed) {
       try {
-        await rejectQC.mutateAsync({ id: qc.id, reason: 'Kalite standartlarını karşılamıyor' });
+        await rejectQC.mutateAsync({ id: qc.id, reason: 'Kalite standartlarini karsilamiyor' });
       } catch (error) {
         // Error handled by hook
       }
-    }
-  };
-
-  const handleCreateSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      const data: CreateQualityControlDto = {
-        productId: values.productId,
-        qcType: values.qcType || QualityControlType.IncomingInspection,
-        inspectedQuantity: values.inspectedQuantity || 1,
-        unit: values.unit || 'Adet',
-        lotNumber: values.lotNumber,
-        sampleQuantity: values.sampleSize,
-        inspectionNotes: values.notes,
-      };
-      await createQC.mutateAsync(data);
-      setCreateModalOpen(false);
-      form.resetFields();
-    } catch (error) {
-      // Validation error
     }
   };
 
@@ -127,10 +116,20 @@ export default function QualityControlPage() {
       dataIndex: 'qcNumber',
       key: 'qcNumber',
       width: 130,
-      render: (text: string) => <span className="font-mono font-semibold text-slate-900">{text}</span>,
+      render: (text: string, record) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/inventory/quality-control/${record.id}`);
+          }}
+          className="font-mono font-semibold text-slate-900 hover:text-slate-600 transition-colors text-left"
+        >
+          {text}
+        </button>
+      ),
     },
     {
-      title: 'Ürün',
+      title: 'Urun',
       key: 'product',
       width: 200,
       render: (_, record) => (
@@ -145,16 +144,28 @@ export default function QualityControlPage() {
       dataIndex: 'lotNumber',
       key: 'lotNumber',
       width: 130,
-      render: (text: string) => text ? <Tag>{text}</Tag> : '-',
+      render: (text: string) => text ? (
+        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
+          {text}
+        </span>
+      ) : '-',
     },
     {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
-      width: 120,
+      width: 140,
       render: (status: QualityControlStatus) => {
         const config = statusConfig[status];
-        return <Tag color={config.color}>{config.label}</Tag>;
+        return (
+          <span
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium"
+            style={{ backgroundColor: config.bgColor, color: config.color }}
+          >
+            {config.icon}
+            {config.label}
+          </span>
+        );
       },
     },
     {
@@ -162,32 +173,45 @@ export default function QualityControlPage() {
       dataIndex: 'inspectionDate',
       key: 'inspectionDate',
       width: 130,
-      render: (date: string) => date ? dayjs(date).format('DD.MM.YYYY') : '-',
+      render: (date: string) => (
+        <span className="text-slate-600">
+          {date ? dayjs(date).format('DD.MM.YYYY') : '-'}
+        </span>
+      ),
     },
     {
-      title: 'Denetçi',
+      title: 'Denetci',
       dataIndex: 'inspectorName',
       key: 'inspectorName',
       width: 150,
-      render: (text: string) => text || '-',
+      render: (text: string) => (
+        <span className="text-slate-600">{text || '-'}</span>
+      ),
     },
     {
-      title: 'İşlemler',
+      title: 'Islemler',
       key: 'actions',
       width: 80,
       fixed: 'right',
       render: (_, record) => {
-        const items = [
+        const items: any[] = [
           {
             key: 'view',
             icon: <EyeIcon className="w-4 h-4" />,
-            label: 'Detay',
-            onClick: () => handleViewDetail(record),
+            label: 'Goruntule',
+            onClick: () => router.push(`/inventory/quality-control/${record.id}`),
+          },
+          {
+            key: 'edit',
+            icon: <PencilIcon className="w-4 h-4" />,
+            label: 'Duzenle',
+            onClick: () => router.push(`/inventory/quality-control/${record.id}/edit`),
           },
         ];
 
         if (record.status === QualityControlStatus.Pending || record.status === QualityControlStatus.InProgress) {
           items.push(
+            { type: 'divider' },
             {
               key: 'approve',
               icon: <CheckCircleIcon className="w-4 h-4" />,
@@ -198,6 +222,7 @@ export default function QualityControlPage() {
               key: 'reject',
               icon: <XCircleIcon className="w-4 h-4" />,
               label: 'Reddet',
+              danger: true,
               onClick: () => handleReject(record),
             }
           );
@@ -205,7 +230,12 @@ export default function QualityControlPage() {
 
         return (
           <Dropdown menu={{ items }} trigger={['click']}>
-            <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
+            <Button
+              type="text"
+              icon={<EllipsisHorizontalIcon className="w-4 h-4" />}
+              onClick={(e) => e.stopPropagation()}
+              className="text-slate-600 hover:text-slate-900"
+            />
           </Dropdown>
         );
       },
@@ -213,74 +243,134 @@ export default function QualityControlPage() {
   ];
 
   return (
-    <PageContainer>
-      <ListPageHeader
-        icon={<ClipboardDocumentCheckIcon className="w-5 h-5" />}
-        iconColor="#10b981"
-        title="Kalite Kontrol"
-        description="Ürün kalite kontrollerini yönetin ve takip edin"
-        itemCount={stats.total}
-        primaryAction={{
-          label: 'Yeni Kontrol',
-          onClick: handleCreate,
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <ClipboardDocumentCheckIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Kalite Kontrol</h1>
+              <p className="text-slate-500 mt-1">Urun kalite kontrollerini yonetin ve takip edin</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
           <button
             onClick={() => refetch()}
             disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
           >
             <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
-        }
-      />
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
-          <div className="text-xs text-slate-500">Toplam Kontrol</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-amber-600">{stats.pending}</div>
-          <div className="text-xs text-slate-500">Beklemede</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
-          <div className="text-xs text-slate-500">Devam Ediyor</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
-          <div className="text-xs text-slate-500">Başarılı</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-2xl font-bold text-red-600">{stats.cancelled}</div>
-          <div className="text-xs text-slate-500">Başarısız</div>
-        </Card>
+          <Button
+            type="primary"
+            icon={<PlusIcon className="w-4 h-4" />}
+            onClick={() => router.push('/inventory/quality-control/new')}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+          >
+            Yeni Kontrol
+          </Button>
+        </div>
       </div>
 
-      {/* Filters */}
-      <Card className="mb-6">
-        <div className="flex flex-wrap gap-4 p-4">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-12 gap-6 mb-8">
+        <div className="col-span-12 md:col-span-6 lg:col-span-3 xl:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ClipboardDocumentCheckIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Toplam Kontrol
+            </div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3 xl:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ClockIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-700">{stats.pending}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Beklemede
+            </div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3 xl:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+                <ArrowPathIcon className="w-5 h-5 text-slate-700" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-800">{stats.inProgress}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Devam Ediyor
+            </div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3 xl:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-300 flex items-center justify-center">
+                <CheckCircleIcon className="w-5 h-5 text-slate-800" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.completed}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Basarili
+            </div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-3 xl:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-400 flex items-center justify-center">
+                <XCircleIcon className="w-5 h-5 text-white" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-600">{stats.cancelled}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Basarisiz
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Card */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        {/* Filters */}
+        <div className="flex flex-wrap gap-4 mb-6">
           <Select
-            placeholder="Duruma göre filtrele"
+            placeholder="Duruma gore filtrele"
             allowClear
             style={{ width: 180 }}
             value={selectedStatus}
             onChange={setSelectedStatus}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           >
             {Object.entries(statusConfig).map(([key, config]) => (
               <Select.Option key={key} value={key}>
-                <Tag color={config.color}>{config.label}</Tag>
+                <span
+                  className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium"
+                  style={{ backgroundColor: config.bgColor, color: config.color }}
+                >
+                  {config.label}
+                </span>
               </Select.Option>
             ))}
           </Select>
         </div>
-      </Card>
 
-      {/* Table */}
-      <Card>
+        {/* Table */}
         <Table
           columns={columns}
           dataSource={qualityControls}
@@ -290,131 +380,16 @@ export default function QualityControlPage() {
             total: qualityControls.length,
             pageSize: 20,
             showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
+            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayit`,
           }}
           scroll={{ x: 1000 }}
+          onRow={(record) => ({
+            onClick: () => router.push(`/inventory/quality-control/${record.id}`),
+            className: 'cursor-pointer hover:bg-slate-50',
+          })}
+          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
         />
-      </Card>
-
-      {/* Create Modal */}
-      <Modal
-        title="Yeni Kalite Kontrol"
-        open={createModalOpen}
-        onCancel={() => {
-          setCreateModalOpen(false);
-          form.resetFields();
-        }}
-        onOk={handleCreateSubmit}
-        okText="Oluştur"
-        cancelText="İptal"
-        confirmLoading={createQC.isPending}
-        width={600}
-      >
-        <Form form={form} layout="vertical" className="mt-4">
-          <Form.Item
-            name="productId"
-            label="Ürün"
-            rules={[{ required: true, message: 'Ürün seçimi gerekli' }]}
-          >
-            <Select placeholder="Ürün seçin" showSearch optionFilterProp="children">
-              {products.map((p) => (
-                <Select.Option key={p.id} value={p.id}>
-                  {p.code} - {p.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item name="lotBatchId" label="Lot/Parti (Opsiyonel)">
-            <Select placeholder="Lot seçin" allowClear showSearch optionFilterProp="children">
-              {lotBatches.map((l) => (
-                <Select.Option key={l.id} value={l.id}>
-                  {l.lotNumber} - {l.productName}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item
-              name="inspectionType"
-              label="Denetim Türü"
-              rules={[{ required: true, message: 'Denetim türü gerekli' }]}
-            >
-              <Select placeholder="Seçin">
-                <Select.Option value="Incoming">Giriş Denetimi</Select.Option>
-                <Select.Option value="InProcess">Süreç Denetimi</Select.Option>
-                <Select.Option value="Final">Final Denetimi</Select.Option>
-                <Select.Option value="Random">Rastgele Denetim</Select.Option>
-              </Select>
-            </Form.Item>
-            <Form.Item name="sampleSize" label="Numune Boyutu">
-              <InputNumber min={1} style={{ width: '100%' }} placeholder="10" />
-            </Form.Item>
-          </div>
-          <Form.Item name="notes" label="Notlar">
-            <Input.TextArea rows={3} placeholder="Kalite kontrol hakkında notlar..." />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* Detail Modal */}
-      <Modal
-        title={`Kalite Kontrol Detayı: ${selectedQC?.qcNumber || ''}`}
-        open={detailModalOpen}
-        onCancel={() => {
-          setDetailModalOpen(false);
-          setSelectedQC(null);
-        }}
-        footer={[
-          <Button key="close" onClick={() => setDetailModalOpen(false)}>
-            Kapat
-          </Button>,
-        ]}
-        width={600}
-      >
-        {selectedQC && (
-          <div className="space-y-4 mt-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-slate-500 uppercase">Kontrol No</p>
-                <p className="font-semibold">{selectedQC.qcNumber}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 uppercase">Durum</p>
-                <Tag color={statusConfig[selectedQC.status].color}>
-                  {statusConfig[selectedQC.status].label}
-                </Tag>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-slate-500 uppercase">Ürün</p>
-                <p className="font-medium">{selectedQC.productName}</p>
-                <p className="text-sm text-slate-500">{selectedQC.productCode}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 uppercase">Lot/Parti</p>
-                <p>{selectedQC.lotNumber || '-'}</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-slate-500 uppercase">Denetim Tarihi</p>
-                <p>{selectedQC.inspectionDate ? dayjs(selectedQC.inspectionDate).format('DD.MM.YYYY HH:mm') : '-'}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 uppercase">Denetçi</p>
-                <p>{selectedQC.inspectorName || '-'}</p>
-              </div>
-            </div>
-            {selectedQC.inspectionNotes && (
-              <div>
-                <p className="text-xs text-slate-500 uppercase">Notlar</p>
-                <p className="text-slate-700">{selectedQC.inspectionNotes}</p>
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
-    </PageContainer>
+      </div>
+    </div>
   );
 }

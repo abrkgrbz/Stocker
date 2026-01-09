@@ -6,7 +6,6 @@ import {
   Button,
   Space,
   Table,
-  Tag,
   Modal,
   Dropdown,
   Select,
@@ -14,11 +13,8 @@ import {
   Form,
   Input,
   InputNumber,
-  Tooltip,
   Alert,
   Tabs,
-  Badge,
-  message,
 } from 'antd';
 import {
   ArrowPathIcon,
@@ -56,7 +52,6 @@ import {
 } from '@/lib/api/hooks/useInventory';
 import type {
   SerialNumberListDto,
-  SerialNumberDto,
   SerialNumberStatus,
   SerialNumberFilterDto,
   CreateSerialNumberDto,
@@ -66,22 +61,19 @@ import dayjs from 'dayjs';
 
 const { TextArea } = Input;
 
-// Monochrome color palette
-const MONOCHROME_COLORS = ['#1e293b', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1', '#e2e8f0', '#f1f5f9'];
-
 // Serial number status configuration - monochrome
-const statusConfig: Record<SerialNumberStatus, { color: string; label: string; icon: React.ReactNode }> = {
-  Available: { color: '#1e293b', label: 'Mevcut', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  InStock: { color: '#334155', label: 'Stokta', icon: <QrCodeIcon className="w-4 h-4" /> },
-  Reserved: { color: '#475569', label: 'Rezerve', icon: <LockClosedIcon className="w-4 h-4" /> },
-  Sold: { color: '#64748b', label: 'Satıldı', icon: <ShoppingBagIcon className="w-4 h-4" /> },
-  Returned: { color: '#94a3b8', label: 'İade', icon: <ArrowUturnLeftIcon className="w-4 h-4" /> },
-  Defective: { color: '#cbd5e1', label: 'Arızalı', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
-  InRepair: { color: '#475569', label: 'Tamirde', icon: <WrenchIcon className="w-4 h-4" /> },
-  Scrapped: { color: '#1e293b', label: 'Hurda', icon: <TrashIcon className="w-4 h-4" /> },
-  Lost: { color: '#94a3b8', label: 'Kayıp', icon: <ExclamationTriangleIcon className="w-4 h-4" /> },
-  OnLoan: { color: '#64748b', label: 'Ödünç', icon: <ShoppingCartIcon className="w-4 h-4" /> },
-  InTransit: { color: '#334155', label: 'Taşımada', icon: <ClockIcon className="w-4 h-4" /> },
+const statusConfig: Record<SerialNumberStatus, { bgColor: string; textColor: string; label: string; icon: React.ReactNode }> = {
+  Available: { bgColor: 'bg-slate-900', textColor: 'text-white', label: 'Mevcut', icon: <CheckCircleIcon className="w-3 h-3" /> },
+  InStock: { bgColor: 'bg-slate-800', textColor: 'text-white', label: 'Stokta', icon: <QrCodeIcon className="w-3 h-3" /> },
+  Reserved: { bgColor: 'bg-slate-700', textColor: 'text-white', label: 'Rezerve', icon: <LockClosedIcon className="w-3 h-3" /> },
+  Sold: { bgColor: 'bg-slate-600', textColor: 'text-white', label: 'Satildi', icon: <ShoppingBagIcon className="w-3 h-3" /> },
+  Returned: { bgColor: 'bg-slate-400', textColor: 'text-white', label: 'Iade', icon: <ArrowUturnLeftIcon className="w-3 h-3" /> },
+  Defective: { bgColor: 'bg-slate-300', textColor: 'text-slate-800', label: 'Arizali', icon: <ExclamationCircleIcon className="w-3 h-3" /> },
+  InRepair: { bgColor: 'bg-slate-500', textColor: 'text-white', label: 'Tamirde', icon: <WrenchIcon className="w-3 h-3" /> },
+  Scrapped: { bgColor: 'bg-slate-200', textColor: 'text-slate-700', label: 'Hurda', icon: <TrashIcon className="w-3 h-3" /> },
+  Lost: { bgColor: 'bg-slate-300', textColor: 'text-slate-800', label: 'Kayip', icon: <ExclamationTriangleIcon className="w-3 h-3" /> },
+  OnLoan: { bgColor: 'bg-slate-500', textColor: 'text-white', label: 'Odunc', icon: <ShoppingCartIcon className="w-3 h-3" /> },
+  InTransit: { bgColor: 'bg-slate-600', textColor: 'text-white', label: 'Tasimada', icon: <ClockIcon className="w-3 h-3" /> },
 };
 
 export default function SerialNumbersPage() {
@@ -178,15 +170,16 @@ export default function SerialNumbersPage() {
 
   const handleReceive = async (serial: SerialNumberListDto) => {
     Modal.confirm({
-      title: 'Seri Numarasını Teslim Al',
-      content: `"${serial.serial}" seri numarasını teslim almak istediğinizden emin misiniz?`,
+      title: 'Seri Numarasini Teslim Al',
+      content: `"${serial.serial}" seri numarasini teslim almak istediginizden emin misiniz?`,
       okText: 'Teslim Al',
-      cancelText: 'İptal',
+      cancelText: 'Iptal',
       okButtonProps: { className: '!bg-slate-900 !border-slate-900' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: async () => {
         try {
           await receiveSerialNumber.mutateAsync({ id: serial.id });
-        } catch (error) {
+        } catch {
           // Error handled by hook
         }
       },
@@ -210,22 +203,23 @@ export default function SerialNumbersPage() {
         setReserveModalOpen(false);
         reserveForm.resetFields();
       }
-    } catch (error) {
+    } catch {
       // Validation error handled by form
     }
   };
 
   const handleRelease = async (serial: SerialNumberListDto) => {
     Modal.confirm({
-      title: 'Rezervasyonu Kaldır',
-      content: `"${serial.serial}" seri numarasının rezervasyonunu kaldırmak istediğinizden emin misiniz?`,
-      okText: 'Kaldır',
-      cancelText: 'İptal',
+      title: 'Rezervasyonu Kaldir',
+      content: `"${serial.serial}" seri numarasinin rezervasyonunu kaldirmak istediginizden emin misiniz?`,
+      okText: 'Kaldir',
+      cancelText: 'Iptal',
       okButtonProps: { className: '!bg-slate-900 !border-slate-900' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: async () => {
         try {
           await releaseSerialNumber.mutateAsync(serial.id);
-        } catch (error) {
+        } catch {
           // Error handled by hook
         }
       },
@@ -253,7 +247,7 @@ export default function SerialNumbersPage() {
         setSellModalOpen(false);
         sellForm.resetFields();
       }
-    } catch (error) {
+    } catch {
       // Validation error handled by form
     }
   };
@@ -275,22 +269,23 @@ export default function SerialNumbersPage() {
         setDefectiveModalOpen(false);
         defectiveForm.resetFields();
       }
-    } catch (error) {
+    } catch {
       // Validation error handled by form
     }
   };
 
   const handleScrap = async (serial: SerialNumberListDto) => {
     Modal.confirm({
-      title: 'Hurda Olarak İşaretle',
-      content: `"${serial.serial}" seri numarasını hurda olarak işaretlemek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
-      okText: 'Hurda İşaretle',
-      cancelText: 'İptal',
+      title: 'Hurda Olarak Isaretle',
+      content: `"${serial.serial}" seri numarasini hurda olarak isaretlemek istediginizden emin misiniz? Bu islem geri alinamaz.`,
+      okText: 'Hurda Isaretle',
+      cancelText: 'Iptal',
       okButtonProps: { danger: true },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: async () => {
         try {
           await scrapSerialNumber.mutateAsync({ id: serial.id });
-        } catch (error) {
+        } catch {
           // Error handled by hook
         }
       },
@@ -313,7 +308,7 @@ export default function SerialNumbersPage() {
       await createSerialNumber.mutateAsync(data);
       setCreateModalOpen(false);
       createForm.resetFields();
-    } catch (error) {
+    } catch {
       // Error handled by hook or form validation
     }
   };
@@ -321,7 +316,7 @@ export default function SerialNumbersPage() {
   // Table columns
   const columns: ColumnsType<SerialNumberListDto> = [
     {
-      title: 'Seri Numarası',
+      title: 'Seri Numarasi',
       dataIndex: 'serial',
       key: 'serial',
       width: 180,
@@ -335,17 +330,17 @@ export default function SerialNumbersPage() {
           </span>
           {record.isUnderWarranty && (
             <div className="mt-1">
-              <Tag className="text-xs bg-slate-900 text-white border-none">
-                <ShieldCheckIcon className="w-4 h-4 mr-1" />
-                Garanti: {record.remainingWarrantyDays} gün
-              </Tag>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-slate-900 text-white">
+                <ShieldCheckIcon className="w-3 h-3" />
+                Garanti: {record.remainingWarrantyDays} gun
+              </span>
             </div>
           )}
         </div>
       ),
     },
     {
-      title: 'Ürün',
+      title: 'Urun',
       key: 'product',
       width: 200,
       render: (_, record) => (
@@ -364,9 +359,9 @@ export default function SerialNumbersPage() {
       render: (status: SerialNumberStatus) => {
         const config = statusConfig[status];
         return (
-          <Tag style={{ backgroundColor: config.color, color: '#fff', border: 'none', fontWeight: 500 }}>
+          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium ${config.bgColor} ${config.textColor}`}>
             {config.icon} {config.label}
-          </Tag>
+          </span>
         );
       },
     },
@@ -378,7 +373,7 @@ export default function SerialNumbersPage() {
       render: (text: string | undefined) => text || <span className="text-slate-400">-</span>,
     },
     {
-      title: 'İşlemler',
+      title: 'Islemler',
       key: 'actions',
       width: 100,
       fixed: 'right',
@@ -421,7 +416,7 @@ export default function SerialNumbersPage() {
           menuItems.push({
             key: 'release',
             icon: <LockOpenIcon className="w-4 h-4" />,
-            label: 'Rezervasyonu Kaldır',
+            label: 'Rezervasyonu Kaldir',
             onClick: () => handleRelease(record),
           });
           menuItems.push({
@@ -436,7 +431,7 @@ export default function SerialNumbersPage() {
           menuItems.push({
             key: 'defective',
             icon: <ExclamationCircleIcon className="w-4 h-4" />,
-            label: 'Arızalı İşaretle',
+            label: 'Arizali Isaretle',
             onClick: () => handleDefectiveClick(record),
           });
         }
@@ -445,7 +440,7 @@ export default function SerialNumbersPage() {
           menuItems.push({
             key: 'scrap',
             icon: <TrashIcon className="w-4 h-4" />,
-            label: 'Hurda İşaretle',
+            label: 'Hurda Isaretle',
             danger: true,
             onClick: () => handleScrap(record),
           });
@@ -456,7 +451,11 @@ export default function SerialNumbersPage() {
             menu={{ items: menuItems }}
             trigger={['click']}
           >
-            <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
+            <Button
+              type="text"
+              icon={<EllipsisHorizontalIcon className="w-4 h-4" />}
+              className="text-slate-600 hover:text-slate-900"
+            />
           </Dropdown>
         );
       },
@@ -470,8 +469,10 @@ export default function SerialNumbersPage() {
       label: (
         <span className="flex items-center gap-2">
           <QrCodeIcon className="w-4 h-4" />
-          Tümü
-          <Badge count={stats.total} showZero style={{ backgroundColor: '#1e293b' }} />
+          Tumu
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
+            {stats.total}
+          </span>
         </span>
       ),
     },
@@ -481,7 +482,9 @@ export default function SerialNumbersPage() {
         <span className="flex items-center gap-2">
           <CheckCircleIcon className="w-4 h-4" />
           Mevcut
-          <Badge count={stats.available} showZero style={{ backgroundColor: '#334155' }} />
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
+            {stats.available}
+          </span>
         </span>
       ),
     },
@@ -491,7 +494,9 @@ export default function SerialNumbersPage() {
         <span className="flex items-center gap-2">
           <LockClosedIcon className="w-4 h-4" />
           Rezerve
-          <Badge count={stats.reserved} showZero style={{ backgroundColor: '#475569' }} />
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
+            {stats.reserved}
+          </span>
         </span>
       ),
     },
@@ -500,8 +505,10 @@ export default function SerialNumbersPage() {
       label: (
         <span className="flex items-center gap-2">
           <ShoppingBagIcon className="w-4 h-4" />
-          Satılan
-          <Badge count={stats.sold} showZero style={{ backgroundColor: '#64748b' }} />
+          Satilan
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
+            {stats.sold}
+          </span>
         </span>
       ),
     },
@@ -511,7 +518,9 @@ export default function SerialNumbersPage() {
         <span className="flex items-center gap-2">
           <ShieldCheckIcon className="w-4 h-4" />
           Garantili
-          <Badge count={stats.underWarranty} showZero style={{ backgroundColor: '#1e293b' }} />
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
+            {stats.underWarranty}
+          </span>
         </span>
       ),
     },
@@ -520,8 +529,10 @@ export default function SerialNumbersPage() {
       label: (
         <span className="flex items-center gap-2">
           <ExclamationCircleIcon className="w-4 h-4" />
-          Arızalı
-          <Badge count={stats.defective} showZero style={{ backgroundColor: '#94a3b8' }} />
+          Arizali
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
+            {stats.defective}
+          </span>
         </span>
       ),
     },
@@ -536,15 +547,15 @@ export default function SerialNumbersPage() {
             <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
               <QrCodeIcon className="w-5 h-5 text-white" />
             </div>
-            Seri Numarası Yönetimi
+            Seri Numarasi Yonetimi
           </h1>
-          <p className="text-slate-500 mt-1">Ürün seri numaralarını takip edin ve yönetin</p>
+          <p className="text-slate-500 mt-1">Urun seri numaralarini takip edin ve yonetin</p>
         </div>
         <Space>
           <Button
             icon={<ArrowPathIcon className="w-4 h-4" />}
             onClick={() => refetch()}
-            className="!border-slate-200 !text-slate-600 hover:!text-slate-900 hover:!border-slate-300"
+            className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
           >
             Yenile
           </Button>
@@ -554,105 +565,120 @@ export default function SerialNumbersPage() {
             onClick={() => setCreateModalOpen(true)}
             className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
           >
-            Yeni Seri Numarası
+            Yeni Seri Numarasi
           </Button>
         </Space>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-12 gap-6 mb-6">
-        <div className="col-span-12 sm:col-span-6 lg:col-span-2">
-          <div className="bg-white border border-slate-200 rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-2">
+      <div className="grid grid-cols-12 gap-6 mb-8">
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
                 <QrCodeIcon className="w-5 h-5 text-slate-600" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
-            <div className="text-xs text-slate-500 mt-1">Toplam</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Toplam
+            </div>
           </div>
         </div>
-        <div className="col-span-12 sm:col-span-6 lg:col-span-2">
-          <div className="bg-white border border-slate-200 rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-2">
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
                 <CheckCircleIcon className="w-5 h-5 text-white" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.available}</div>
-            <div className="text-xs text-slate-500 mt-1">Mevcut</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Mevcut
+            </div>
           </div>
         </div>
-        <div className="col-span-12 sm:col-span-6 lg:col-span-2">
-          <div className="bg-white border border-slate-200 rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-2">
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
                 <LockClosedIcon className="w-5 h-5 text-slate-600" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.reserved}</div>
-            <div className="text-xs text-slate-500 mt-1">Rezerve</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Rezerve
+            </div>
           </div>
         </div>
-        <div className="col-span-12 sm:col-span-6 lg:col-span-2">
-          <div className="bg-white border border-slate-200 rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-2">
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
                 <ShoppingBagIcon className="w-5 h-5 text-slate-600" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.sold}</div>
-            <div className="text-xs text-slate-500 mt-1">Satılan</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Satilan
+            </div>
           </div>
         </div>
-        <div className="col-span-12 sm:col-span-6 lg:col-span-2">
-          <div className="bg-white border border-slate-200 rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-2">
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
                 <ShieldCheckIcon className="w-5 h-5 text-slate-600" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.underWarranty}</div>
-            <div className="text-xs text-slate-500 mt-1">Garantili</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Garantili
+            </div>
           </div>
         </div>
-        <div className="col-span-12 sm:col-span-6 lg:col-span-2">
-          <div className="bg-white border border-slate-200 rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-2">
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
                 <ExclamationCircleIcon className="w-5 h-5 text-slate-600" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.defective}</div>
-            <div className="text-xs text-slate-500 mt-1">Arızalı</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
+              Arizali
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Tabs and Filters */}
+      {/* Main Content Card */}
       <div className="bg-white border border-slate-200 rounded-xl p-6">
+        {/* Tabs */}
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
           items={tabItems}
-          className="mb-4 [&_.ant-tabs-tab]:!text-slate-600 [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:!text-slate-900 [&_.ant-tabs-ink-bar]:!bg-slate-900"
+          className="mb-6 [&_.ant-tabs-tab]:!text-slate-600 [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:!text-slate-900 [&_.ant-tabs-ink-bar]:!bg-slate-900"
         />
 
         {/* Filters */}
-        <Space wrap className="mb-4">
+        <div className="flex flex-wrap gap-4 mb-6">
           <Input
-            placeholder="Seri numarası ara..."
+            placeholder="Seri numarasi ara..."
             prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchSerial}
             onChange={(e) => setSearchSerial(e.target.value)}
-            className="w-52 [&_.ant-input]:!border-slate-200"
+            style={{ width: 220 }}
             allowClear
+            className="[&_.ant-input]:!border-slate-300 [&_.ant-input]:!rounded-lg"
           />
 
           <Select
-            placeholder="Ürün"
+            placeholder="Urun"
             allowClear
-            className="w-52 [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg"
+            style={{ width: 220 }}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
             value={selectedProduct}
             onChange={setSelectedProduct}
             showSearch
@@ -668,7 +694,8 @@ export default function SerialNumbersPage() {
           <Select
             placeholder="Depo"
             allowClear
-            className="w-40 [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg"
+            style={{ width: 160 }}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
             value={selectedWarehouse}
             onChange={setSelectedWarehouse}
           >
@@ -683,18 +710,21 @@ export default function SerialNumbersPage() {
             <Select
               placeholder="Durum"
               allowClear
-              className="w-36 [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg"
+              style={{ width: 150 }}
+              className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
               value={selectedStatus}
               onChange={setSelectedStatus}
             >
               {Object.entries(statusConfig).map(([key, config]) => (
                 <Select.Option key={key} value={key}>
-                  <Tag style={{ backgroundColor: config.color, color: '#fff', border: 'none' }}>{config.label}</Tag>
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${config.bgColor} ${config.textColor}`}>
+                    {config.label}
+                  </span>
                 </Select.Option>
               ))}
             </Select>
           )}
-        </Space>
+        </div>
 
         {/* Table */}
         <Table
@@ -706,16 +736,16 @@ export default function SerialNumbersPage() {
             total: filteredSerialNumbers.length,
             pageSize: 10,
             showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
+            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayit`,
           }}
           scroll={{ x: 900 }}
-          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100"
+          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
         />
       </div>
 
       {/* Create Modal */}
       <Modal
-        title={<span className="text-slate-900 font-semibold">Yeni Seri Numarası Ekle</span>}
+        title={<span className="text-slate-900 font-semibold">Yeni Seri Numarasi Ekle</span>}
         open={createModalOpen}
         onCancel={() => {
           setCreateModalOpen(false);
@@ -723,10 +753,11 @@ export default function SerialNumbersPage() {
         }}
         onOk={handleCreateSubmit}
         okText="Ekle"
-        cancelText="İptal"
+        cancelText="Iptal"
         confirmLoading={createSerialNumber.isPending}
         width={600}
         okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
+        cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
       >
         <Form
           form={createForm}
@@ -736,21 +767,21 @@ export default function SerialNumbersPage() {
           <div className="grid grid-cols-2 gap-4">
             <Form.Item
               name="serial"
-              label={<span className="text-slate-700">Seri Numarası</span>}
-              rules={[{ required: true, message: 'Seri numarası gerekli' }]}
+              label={<span className="text-slate-700 font-medium">Seri Numarasi</span>}
+              rules={[{ required: true, message: 'Seri numarasi gerekli' }]}
             >
-              <Input placeholder="SN-2024-00001" className="!border-slate-200 !rounded-lg" />
+              <Input placeholder="SN-2024-00001" className="!border-slate-300 !rounded-lg" />
             </Form.Item>
             <Form.Item
               name="productId"
-              label={<span className="text-slate-700">Ürün</span>}
-              rules={[{ required: true, message: 'Ürün seçimi gerekli' }]}
+              label={<span className="text-slate-700 font-medium">Urun</span>}
+              rules={[{ required: true, message: 'Urun secimi gerekli' }]}
             >
               <Select
-                placeholder="Ürün seçin"
+                placeholder="Urun secin"
                 showSearch
                 optionFilterProp="children"
-                className="[&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg"
+                className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
               >
                 {products.filter(p => p.trackSerialNumbers).map((p) => (
                   <Select.Option key={p.id} value={p.id}>
@@ -764,9 +795,9 @@ export default function SerialNumbersPage() {
           <div className="grid grid-cols-2 gap-4">
             <Form.Item
               name="warehouseId"
-              label={<span className="text-slate-700">Depo</span>}
+              label={<span className="text-slate-700 font-medium">Depo</span>}
             >
-              <Select placeholder="Depo seçin" allowClear className="[&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg">
+              <Select placeholder="Depo secin" allowClear className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg">
                 {warehouses.map((w) => (
                   <Select.Option key={w.id} value={w.id}>
                     {w.name}
@@ -776,46 +807,46 @@ export default function SerialNumbersPage() {
             </Form.Item>
             <Form.Item
               name="manufacturedDate"
-              label={<span className="text-slate-700">Üretim Tarihi</span>}
+              label={<span className="text-slate-700 font-medium">Uretim Tarihi</span>}
             >
-              <DatePicker className="w-full !border-slate-200 !rounded-lg" format="DD.MM.YYYY" />
+              <DatePicker className="w-full !border-slate-300 !rounded-lg" format="DD.MM.YYYY" />
             </Form.Item>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <Form.Item
               name="batchNumber"
-              label={<span className="text-slate-700">Parti/Lot Numarası</span>}
+              label={<span className="text-slate-700 font-medium">Parti/Lot Numarasi</span>}
             >
-              <Input placeholder="LOT-2024-001" className="!border-slate-200 !rounded-lg" />
+              <Input placeholder="LOT-2024-001" className="!border-slate-300 !rounded-lg" />
             </Form.Item>
             <Form.Item
               name="supplierSerial"
-              label={<span className="text-slate-700">Tedarikçi Seri No</span>}
+              label={<span className="text-slate-700 font-medium">Tedarikci Seri No</span>}
             >
-              <Input placeholder="Tedarikçinin seri numarası" className="!border-slate-200 !rounded-lg" />
+              <Input placeholder="Tedarikcinin seri numarasi" className="!border-slate-300 !rounded-lg" />
             </Form.Item>
           </div>
 
           <Form.Item
             name="notes"
-            label={<span className="text-slate-700">Notlar</span>}
+            label={<span className="text-slate-700 font-medium">Notlar</span>}
           >
-            <TextArea rows={3} placeholder="Seri numarası hakkında ek bilgiler..." className="!border-slate-200 !rounded-lg" />
+            <TextArea rows={3} placeholder="Seri numarasi hakkinda ek bilgiler..." className="!border-slate-300 !rounded-lg" />
           </Form.Item>
         </Form>
       </Modal>
 
       {/* Detail Modal */}
       <Modal
-        title={<span className="text-slate-900 font-semibold">Seri Numarası Detayı: {selectedSerial?.serial || ''}</span>}
+        title={<span className="text-slate-900 font-semibold">Seri Numarasi Detayi: {selectedSerial?.serial || ''}</span>}
         open={detailModalOpen}
         onCancel={() => {
           setDetailModalOpen(false);
           setSelectedSerialId(null);
         }}
         footer={[
-          <Button key="close" onClick={() => setDetailModalOpen(false)} className="!border-slate-200">
+          <Button key="close" onClick={() => setDetailModalOpen(false)} className="!border-slate-300 !text-slate-600">
             Kapat
           </Button>,
         ]}
@@ -825,140 +856,130 @@ export default function SerialNumbersPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="text-xs text-slate-500">Seri Numarası</span>
-                <div className="text-lg font-semibold text-slate-900">{selectedSerial.serial}</div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Seri Numarasi</p>
+                <p className="text-lg font-semibold text-slate-900">{selectedSerial.serial}</p>
               </div>
               <div>
-                <span className="text-xs text-slate-500">Durum</span>
-                <div>
-                  <Tag style={{ backgroundColor: statusConfig[selectedSerial.status].color, color: '#fff', border: 'none', fontWeight: 500 }}>
-                    {statusConfig[selectedSerial.status].icon} {statusConfig[selectedSerial.status].label}
-                  </Tag>
-                </div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Durum</p>
+                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium ${statusConfig[selectedSerial.status].bgColor} ${statusConfig[selectedSerial.status].textColor}`}>
+                  {statusConfig[selectedSerial.status].icon} {statusConfig[selectedSerial.status].label}
+                </span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="text-xs text-slate-500">Ürün</span>
-                <div>
-                  <span className="font-semibold text-slate-900">{selectedSerial.productName}</span>
-                  <br />
-                  <span className="text-slate-500 text-sm">{selectedSerial.productCode}</span>
-                </div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Urun</p>
+                <p className="font-semibold text-slate-900">{selectedSerial.productName}</p>
+                <p className="text-sm text-slate-500">{selectedSerial.productCode}</p>
               </div>
               <div>
-                <span className="text-xs text-slate-500">Depo / Konum</span>
-                <div>
-                  <span className="text-slate-900">{selectedSerial.warehouseName || '-'}</span>
-                  {selectedSerial.locationName && (
-                    <>
-                      <br />
-                      <span className="text-slate-500 text-sm">{selectedSerial.locationName}</span>
-                    </>
-                  )}
-                </div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Depo / Konum</p>
+                <p className="text-slate-900">{selectedSerial.warehouseName || '-'}</p>
+                {selectedSerial.locationName && (
+                  <p className="text-sm text-slate-500">{selectedSerial.locationName}</p>
+                )}
               </div>
             </div>
 
             {selectedSerial.isUnderWarranty && (
               <Alert
-                type="success"
-                message="Garanti Kapsamında"
-                description={`${selectedSerial.remainingWarrantyDays} gün garanti süresi kaldı`}
+                type="info"
+                message="Garanti Kapsaminda"
+                description={`${selectedSerial.remainingWarrantyDays} gun garanti suresi kaldi`}
                 icon={<ShieldCheckIcon className="w-4 h-4" />}
                 showIcon
-                className="!bg-slate-50 !border-slate-200"
+                className="!bg-slate-50 !border-slate-200 [&_.ant-alert-message]:!text-slate-900 [&_.ant-alert-description]:!text-slate-600"
               />
             )}
 
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <span className="text-xs text-slate-500">Üretim Tarihi</span>
-                <div className="text-slate-900">
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Uretim Tarihi</p>
+                <p className="text-slate-900">
                   {selectedSerial.manufacturedDate
                     ? dayjs(selectedSerial.manufacturedDate).format('DD.MM.YYYY')
                     : '-'}
-                </div>
+                </p>
               </div>
               <div>
-                <span className="text-xs text-slate-500">Teslim Tarihi</span>
-                <div className="text-slate-900">
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Teslim Tarihi</p>
+                <p className="text-slate-900">
                   {selectedSerial.receivedDate
                     ? dayjs(selectedSerial.receivedDate).format('DD.MM.YYYY')
                     : '-'}
-                </div>
+                </p>
               </div>
               <div>
-                <span className="text-xs text-slate-500">Satış Tarihi</span>
-                <div className="text-slate-900">
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Satis Tarihi</p>
+                <p className="text-slate-900">
                   {selectedSerial.soldDate
                     ? dayjs(selectedSerial.soldDate).format('DD.MM.YYYY')
                     : '-'}
-                </div>
+                </p>
               </div>
             </div>
 
             {(selectedSerial.warrantyStartDate || selectedSerial.warrantyEndDate) && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="text-xs text-slate-500">Garanti Başlangıç</span>
-                  <div className="text-slate-900">
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Garanti Baslangic</p>
+                  <p className="text-slate-900">
                     {selectedSerial.warrantyStartDate
                       ? dayjs(selectedSerial.warrantyStartDate).format('DD.MM.YYYY')
                       : '-'}
-                  </div>
+                  </p>
                 </div>
                 <div>
-                  <span className="text-xs text-slate-500">Garanti Bitiş</span>
-                  <div className="text-slate-900">
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Garanti Bitis</p>
+                  <p className="text-slate-900">
                     {selectedSerial.warrantyEndDate
                       ? dayjs(selectedSerial.warrantyEndDate).format('DD.MM.YYYY')
                       : '-'}
-                  </div>
+                  </p>
                 </div>
               </div>
             )}
 
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <span className="text-xs text-slate-500">Parti/Lot No</span>
-                <div className="text-slate-900">{selectedSerial.batchNumber || '-'}</div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Parti/Lot No</p>
+                <p className="text-slate-900">{selectedSerial.batchNumber || '-'}</p>
               </div>
               <div>
-                <span className="text-xs text-slate-500">Tedarikçi Seri No</span>
-                <div className="text-slate-900">{selectedSerial.supplierSerial || '-'}</div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Tedarikci Seri No</p>
+                <p className="text-slate-900">{selectedSerial.supplierSerial || '-'}</p>
               </div>
               <div>
-                <span className="text-xs text-slate-500">Müşteri ID</span>
-                <div className="text-slate-900">{selectedSerial.customerId || '-'}</div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Musteri ID</p>
+                <p className="text-slate-900">{selectedSerial.customerId || '-'}</p>
               </div>
             </div>
 
             {(selectedSerial.salesOrderId || selectedSerial.purchaseOrderId) && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="text-xs text-slate-500">Satış Siparişi</span>
-                  <div className="text-slate-900">{selectedSerial.salesOrderId || '-'}</div>
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Satis Siparisi</p>
+                  <p className="text-slate-900">{selectedSerial.salesOrderId || '-'}</p>
                 </div>
                 <div>
-                  <span className="text-xs text-slate-500">Satınalma Siparişi</span>
-                  <div className="text-slate-900">{selectedSerial.purchaseOrderId || '-'}</div>
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Satinalma Siparisi</p>
+                  <p className="text-slate-900">{selectedSerial.purchaseOrderId || '-'}</p>
                 </div>
               </div>
             )}
 
             {selectedSerial.notes && (
               <div>
-                <span className="text-xs text-slate-500">Notlar</span>
-                <div className="text-slate-900">{selectedSerial.notes}</div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Notlar</p>
+                <p className="text-slate-900">{selectedSerial.notes}</p>
               </div>
             )}
 
             <div className="border-t border-slate-200 pt-4 mt-4">
-              <span className="text-xs text-slate-400">
-                Oluşturulma: {dayjs(selectedSerial.createdAt).format('DD.MM.YYYY HH:mm')}
-              </span>
+              <p className="text-xs text-slate-400">
+                Olusturulma: {dayjs(selectedSerial.createdAt).format('DD.MM.YYYY HH:mm')}
+              </p>
             </div>
           </div>
         )}
@@ -966,7 +987,7 @@ export default function SerialNumbersPage() {
 
       {/* Sell Modal */}
       <Modal
-        title={<span className="text-slate-900 font-semibold">Seri Numarasını Sat</span>}
+        title={<span className="text-slate-900 font-semibold">Seri Numarasini Sat</span>}
         open={sellModalOpen}
         onCancel={() => {
           setSellModalOpen(false);
@@ -974,37 +995,38 @@ export default function SerialNumbersPage() {
         }}
         onOk={handleSellConfirm}
         okText="Sat"
-        cancelText="İptal"
+        cancelText="Iptal"
         confirmLoading={sellSerialNumber.isPending}
         okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
+        cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
       >
         <Form form={sellForm} layout="vertical" className="mt-4">
           <Form.Item
             name="customerId"
-            label={<span className="text-slate-700">Müşteri ID</span>}
-            rules={[{ required: true, message: 'Müşteri ID gerekli' }]}
+            label={<span className="text-slate-700 font-medium">Musteri ID</span>}
+            rules={[{ required: true, message: 'Musteri ID gerekli' }]}
           >
-            <Input placeholder="Müşteri ID girin" className="!border-slate-200 !rounded-lg" />
+            <Input placeholder="Musteri ID girin" className="!border-slate-300 !rounded-lg" />
           </Form.Item>
           <Form.Item
             name="salesOrderId"
-            label={<span className="text-slate-700">Satış Siparişi No</span>}
-            rules={[{ required: true, message: 'Satış siparişi numarası gerekli' }]}
+            label={<span className="text-slate-700 font-medium">Satis Siparisi No</span>}
+            rules={[{ required: true, message: 'Satis siparisi numarasi gerekli' }]}
           >
-            <Input placeholder="Satış siparişi numarası" className="!border-slate-200 !rounded-lg" />
+            <Input placeholder="Satis siparisi numarasi" className="!border-slate-300 !rounded-lg" />
           </Form.Item>
           <Form.Item
             name="warrantyMonths"
-            label={<span className="text-slate-700">Garanti Süresi (Ay)</span>}
+            label={<span className="text-slate-700 font-medium">Garanti Suresi (Ay)</span>}
           >
-            <InputNumber min={0} max={120} className="w-full !border-slate-200 !rounded-lg" placeholder="12" />
+            <InputNumber min={0} max={120} className="w-full !border-slate-300 !rounded-lg" placeholder="12" />
           </Form.Item>
         </Form>
       </Modal>
 
       {/* Reserve Modal */}
       <Modal
-        title={<span className="text-slate-900 font-semibold">Seri Numarasını Rezerve Et</span>}
+        title={<span className="text-slate-900 font-semibold">Seri Numarasini Rezerve Et</span>}
         open={reserveModalOpen}
         onCancel={() => {
           setReserveModalOpen(false);
@@ -1012,51 +1034,53 @@ export default function SerialNumbersPage() {
         }}
         onOk={handleReserveConfirm}
         okText="Rezerve Et"
-        cancelText="İptal"
+        cancelText="Iptal"
         confirmLoading={reserveSerialNumber.isPending}
         okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
+        cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
       >
         <Form form={reserveForm} layout="vertical" className="mt-4">
           <Form.Item
             name="salesOrderId"
-            label={<span className="text-slate-700">Satış Siparişi No</span>}
-            rules={[{ required: true, message: 'Satış siparişi numarası gerekli' }]}
+            label={<span className="text-slate-700 font-medium">Satis Siparisi No</span>}
+            rules={[{ required: true, message: 'Satis siparisi numarasi gerekli' }]}
           >
-            <Input placeholder="Satış siparişi numarası" className="!border-slate-200 !rounded-lg" />
+            <Input placeholder="Satis siparisi numarasi" className="!border-slate-300 !rounded-lg" />
           </Form.Item>
         </Form>
       </Modal>
 
       {/* Defective Modal */}
       <Modal
-        title={<span className="text-slate-900 font-semibold">Arızalı Olarak İşaretle</span>}
+        title={<span className="text-slate-900 font-semibold">Arizali Olarak Isaretle</span>}
         open={defectiveModalOpen}
         onCancel={() => {
           setDefectiveModalOpen(false);
           defectiveForm.resetFields();
         }}
         onOk={handleDefectiveConfirm}
-        okText="Arızalı İşaretle"
-        cancelText="İptal"
+        okText="Arizali Isaretle"
+        cancelText="Iptal"
         confirmLoading={markDefective.isPending}
         okButtonProps={{ danger: true }}
+        cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
       >
         <Alert
           type="warning"
-          message="Bu işlem seri numarasını arızalı olarak işaretleyecektir"
-          description="Arızalı seri numaraları satışa kapalı olacaktır."
-          className="mb-4 !bg-slate-50 !border-slate-300"
+          message="Bu islem seri numarasini arizali olarak isaretleyecektir"
+          description="Arizali seri numaralari satisa kapali olacaktir."
+          className="mb-4 !bg-slate-50 !border-slate-300 [&_.ant-alert-message]:!text-slate-900 [&_.ant-alert-description]:!text-slate-600"
           showIcon
         />
         <Form form={defectiveForm} layout="vertical">
           <Form.Item
             name="reason"
-            label={<span className="text-slate-700">Arıza Sebebi</span>}
+            label={<span className="text-slate-700 font-medium">Ariza Sebebi</span>}
           >
             <TextArea
               rows={4}
-              placeholder="Arıza sebebini açıklayın..."
-              className="!border-slate-200 !rounded-lg"
+              placeholder="Ariza sebebini aciklayin..."
+              className="!border-slate-300 !rounded-lg"
             />
           </Form.Item>
         </Form>
