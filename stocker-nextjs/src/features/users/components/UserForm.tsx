@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Form, Input, Select, Switch, Spin } from 'antd';
-import { EnvelopeIcon, PhoneIcon, UserGroupIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
+import { EnvelopeIcon, PhoneIcon, UserGroupIcon, PaperAirplaneIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
 import { useQuery } from '@tanstack/react-query';
 import { getRoles, type Role } from '@/lib/api/roles';
 import { getDepartments, type Department } from '@/lib/api/departments';
@@ -215,6 +215,22 @@ export function UserForm({ form, initialValues, onFinish, loading, isEditMode = 
                       </Select.Option>
                     ))}
                   </Select>
+                </Form.Item>
+              </div>
+            </div>
+
+            {/* Şube */}
+            <div className="grid grid-cols-12 gap-4 mt-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">
+                  Şube
+                </label>
+                <Form.Item name="branch" className="mb-0">
+                  <Input
+                    prefix={<BuildingOfficeIcon className="w-4 h-4 text-slate-400" />}
+                    placeholder="Merkez Ofis, İstanbul Şubesi, vb."
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
                 </Form.Item>
               </div>
             </div>
