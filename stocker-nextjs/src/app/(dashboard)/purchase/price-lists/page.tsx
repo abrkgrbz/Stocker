@@ -5,16 +5,15 @@ import { Table, Input, Select, Dropdown, Modal, Spin, Switch } from 'antd';
 import {
   BuildingStorefrontIcon,
   CheckCircleIcon,
-  ChevronRightIcon,
   CurrencyDollarIcon,
   EllipsisHorizontalIcon,
-  ExclamationCircleIcon,
   EyeIcon,
   MagnifyingGlassIcon,
   PencilIcon,
   PlusIcon,
   TrashIcon,
   XCircleIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -29,13 +28,13 @@ import type { PriceListListDto, PriceListStatus } from '@/lib/api/services/purch
 
 const statusConfig: Record<PriceListStatus, { bg: string; text: string; label: string }> = {
   Draft: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Taslak' },
-  PendingApproval: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Onay Bekliyor' },
-  Approved: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Onaylandı' },
-  Active: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Aktif' },
+  PendingApproval: { bg: 'bg-slate-200', text: 'text-slate-700', label: 'Onay Bekliyor' },
+  Approved: { bg: 'bg-slate-300', text: 'text-slate-800', label: 'Onaylandı' },
+  Active: { bg: 'bg-slate-800', text: 'text-white', label: 'Aktif' },
   Inactive: { bg: 'bg-slate-100', text: 'text-slate-500', label: 'Pasif' },
-  Expired: { bg: 'bg-red-100', text: 'text-red-700', label: 'Süresi Doldu' },
-  Superseded: { bg: 'bg-purple-100', text: 'text-purple-700', label: 'Yenilendi' },
-  Rejected: { bg: 'bg-rose-100', text: 'text-rose-700', label: 'Reddedildi' },
+  Expired: { bg: 'bg-slate-400', text: 'text-white', label: 'Süresi Doldu' },
+  Superseded: { bg: 'bg-slate-200', text: 'text-slate-600', label: 'Yenilendi' },
+  Rejected: { bg: 'bg-slate-300', text: 'text-slate-700', label: 'Reddedildi' },
 };
 
 export default function PriceListsPage() {
@@ -99,7 +98,7 @@ export default function PriceListsPage() {
         <div>
           <div className="text-sm font-medium text-slate-900">{text}</div>
           {record.isDefault && (
-            <span className="text-xs text-blue-600">Varsayılan</span>
+            <span className="text-xs text-slate-500">Varsayılan</span>
           )}
         </div>
       ),
@@ -147,7 +146,7 @@ export default function PriceListsPage() {
       width: 120,
       align: 'center',
       render: (count) => (
-        <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700">
+        <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-100 text-slate-700">
           {count} ürün
         </span>
       ),
@@ -216,8 +215,8 @@ export default function PriceListsPage() {
           }}
           trigger={['click']}
         >
-          <button className="p-1 hover:bg-slate-100 rounded transition-colors">
-            <EllipsisHorizontalIcon className="w-5 h-5 text-slate-400" />
+          <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+            <EllipsisHorizontalIcon className="w-5 h-5" />
           </button>
         </Dropdown>
       ),
@@ -240,114 +239,115 @@ export default function PriceListsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-900">Fiyat Listeleri</h1>
-              <p className="text-sm text-slate-500 mt-1">Tedarikçi fiyat listelerini yönetin</p>
-            </div>
-            <Link href="/purchase/price-lists/new">
-              <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
-                <PlusIcon className="w-4 h-4" />
-                Yeni Fiyat Listesi
-              </button>
-            </Link>
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+            <CurrencyDollarIcon className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Fiyat Listeleri</h1>
+            <p className="text-sm text-slate-500">Tedarikçi fiyat listelerini yönetin</p>
           </div>
         </div>
+        <Link href="/purchase/price-lists/new">
+          <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
+            <PlusIcon className="w-4 h-4" />
+            Yeni Fiyat Listesi
+          </button>
+        </Link>
+      </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Link href="/purchase/price-lists">
-            <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer group">
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <CurrencyDollarIcon className="w-4 h-4 text-blue-600" />
-                </div>
-                <ChevronRightIcon className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
-              </div>
-              <div className="text-2xl font-semibold text-slate-900 mb-1">{stats.total}</div>
-              <div className="text-sm text-slate-500">Toplam Liste</div>
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <CurrencyDollarIcon className="w-5 h-5 text-slate-600" />
             </div>
-          </Link>
-
-          <div className="bg-white border border-slate-200 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Aktif</span>
-            </div>
-            <div className="text-2xl font-semibold text-emerald-600">{stats.active}</div>
-            <div className="text-sm text-slate-500">Aktif Liste</div>
           </div>
-
-          <div className="bg-white border border-slate-200 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 rounded-full bg-slate-400" />
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Pasif</span>
-            </div>
-            <div className="text-2xl font-semibold text-slate-600">{stats.inactive}</div>
-            <div className="text-sm text-slate-500">Pasif Liste</div>
-          </div>
-
-          <div className="bg-white border border-slate-200 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 rounded-full bg-red-500" />
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Süresi Dolmuş</span>
-            </div>
-            <div className="text-2xl font-semibold text-red-600">{stats.expired}</div>
-            <div className="text-sm text-slate-500">Süresi Dolmuş</div>
-          </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Liste</div>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6">
-          <div className="flex flex-wrap items-center gap-4">
-            <Input
-              placeholder="Kod veya ad ara..."
-              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="w-72"
-              allowClear
-            />
-            <Select
-              placeholder="Durum"
-              className="w-40"
-              allowClear
-              value={statusFilter}
-              onChange={setStatusFilter}
-              options={Object.entries(statusConfig).map(([key, value]) => ({
-                value: key,
-                label: value.label,
-              }))}
-            />
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
+              <CheckCircleIcon className="w-5 h-5 text-white" />
+            </div>
           </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.active}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Aktif Liste</div>
         </div>
 
-        {/* Table */}
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-          <Table
-            columns={columns}
-            dataSource={data?.items || []}
-            rowKey="id"
-            loading={isLoading}
-            pagination={{
-              current: currentPage,
-              pageSize,
-              total: data?.totalCount || 0,
-              showSizeChanger: true,
-              showTotal: (total) => `Toplam ${total} kayıt`,
-              onChange: (page, size) => {
-                setCurrentPage(page);
-                setPageSize(size);
-              },
-            }}
-            scroll={{ x: 1200 }}
-            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-600 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wide"
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+              <XCircleIcon className="w-5 h-5 text-slate-600" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.inactive}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Pasif Liste</div>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-400 flex items-center justify-center">
+              <ClockIcon className="w-5 h-5 text-white" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.expired}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Süresi Dolmuş</div>
+        </div>
+      </div>
+
+      {/* Filter Section */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+        <div className="flex flex-wrap items-center gap-4">
+          <Input
+            placeholder="Kod veya ad ara..."
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="w-72"
+            allowClear
+          />
+          <Select
+            placeholder="Durum"
+            className="w-40"
+            allowClear
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={Object.entries(statusConfig).map(([key, value]) => ({
+              value: key,
+              label: value.label,
+            }))}
           />
         </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <Table
+          columns={columns}
+          dataSource={data?.items || []}
+          rowKey="id"
+          loading={isLoading}
+          pagination={{
+            current: currentPage,
+            pageSize,
+            total: data?.totalCount || 0,
+            showSizeChanger: true,
+            showTotal: (total) => `Toplam ${total} kayıt`,
+            onChange: (page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            },
+          }}
+          scroll={{ x: 1200 }}
+          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
+        />
       </div>
     </div>
   );

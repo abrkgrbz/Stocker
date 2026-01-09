@@ -1,16 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Table, Input, Select, Dropdown, Modal, Spin } from 'antd';
+import { Table, Input, Select, Dropdown, Modal, Spin, Button, Tooltip } from 'antd';
 import {
-  CheckCircleIcon,
-  ChevronRightIcon,
-  ClockIcon,
+  ArrowDownTrayIcon,
+  ArrowPathIcon,
   DocumentTextIcon,
   EllipsisHorizontalIcon,
   EyeIcon,
   MagnifyingGlassIcon,
-  PaperAirplaneIcon,
   PencilIcon,
   PlusIcon,
   TrashIcon,
@@ -24,17 +22,17 @@ import type { QuotationListDto, QuotationStatus } from '@/lib/api/services/purch
 
 const statusConfig: Record<QuotationStatus, { bg: string; text: string; label: string }> = {
   Draft: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Taslak' },
-  Sent: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Gönderildi' },
-  PartiallyResponded: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Kısmi Yanıt' },
-  FullyResponded: { bg: 'bg-cyan-100', text: 'text-cyan-700', label: 'Tam Yanıt' },
-  UnderReview: { bg: 'bg-purple-100', text: 'text-purple-700', label: 'İnceleniyor' },
-  Evaluated: { bg: 'bg-purple-100', text: 'text-purple-700', label: 'Değerlendirildi' },
-  SupplierSelected: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Tedarikçi Seçildi' },
-  Awarded: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Kazanan Belirlendi' },
-  Converted: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Siparişe Dönüştü' },
-  Cancelled: { bg: 'bg-red-100', text: 'text-red-700', label: 'İptal' },
+  Sent: { bg: 'bg-slate-200', text: 'text-slate-700', label: 'Gönderildi' },
+  PartiallyResponded: { bg: 'bg-slate-300', text: 'text-slate-800', label: 'Kısmi Yanıt' },
+  FullyResponded: { bg: 'bg-slate-400', text: 'text-white', label: 'Tam Yanıt' },
+  UnderReview: { bg: 'bg-slate-500', text: 'text-white', label: 'İnceleniyor' },
+  Evaluated: { bg: 'bg-slate-600', text: 'text-white', label: 'Değerlendirildi' },
+  SupplierSelected: { bg: 'bg-slate-700', text: 'text-white', label: 'Tedarikçi Seçildi' },
+  Awarded: { bg: 'bg-slate-900', text: 'text-white', label: 'Kazanan Belirlendi' },
+  Converted: { bg: 'bg-slate-400', text: 'text-white', label: 'Siparişe Dönüştü' },
+  Cancelled: { bg: 'bg-slate-100', text: 'text-slate-500', label: 'İptal' },
   Closed: { bg: 'bg-slate-100', text: 'text-slate-500', label: 'Kapatıldı' },
-  Expired: { bg: 'bg-red-100', text: 'text-red-700', label: 'Süresi Doldu' },
+  Expired: { bg: 'bg-slate-700', text: 'text-white', label: 'Süresi Doldu' },
 };
 
 export default function QuotationsPage() {
@@ -44,7 +42,7 @@ export default function QuotationsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const { data, isLoading } = useQuotations({
+  const { data, isLoading, refetch } = useQuotations({
     page: currentPage,
     pageSize,
     searchTerm: searchText || undefined,
@@ -61,6 +59,8 @@ export default function QuotationsPage() {
       okText: 'Sil',
       okType: 'danger',
       cancelText: 'İptal',
+      okButtonProps: { className: '!bg-red-600 hover:!bg-red-700 !border-red-600' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: () => deleteMutation.mutateAsync(id),
     });
   };
@@ -72,6 +72,8 @@ export default function QuotationsPage() {
       okText: 'İptal Et',
       okType: 'danger',
       cancelText: 'Vazgeç',
+      okButtonProps: { className: '!bg-red-600 hover:!bg-red-700 !border-red-600' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: () => cancelMutation.mutateAsync({ id, reason: 'Kullanıcı tarafından iptal edildi' }),
     });
   };
@@ -191,8 +193,8 @@ export default function QuotationsPage() {
           }}
           trigger={['click']}
         >
-          <button className="p-1 hover:bg-slate-100 rounded transition-colors">
-            <EllipsisHorizontalIcon className="w-5 h-5 text-slate-400" />
+          <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+            <EllipsisHorizontalIcon className="w-4 h-4" />
           </button>
         </Dropdown>
       ),
@@ -206,78 +208,97 @@ export default function QuotationsPage() {
     awarded: data?.items?.filter(i => i.status === 'Awarded').length || 0,
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Spin size="large" />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-900">Teklif Talepleri (RFQ)</h1>
-              <p className="text-sm text-slate-500 mt-1">Tedarikçilerden teklif isteklerini yönetin</p>
+    <div className="min-h-screen bg-slate-50 p-8">
+      <Spin spinning={isLoading}>
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+              <DocumentTextIcon className="w-6 h-6 text-white" />
             </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Teklif Talepleri (RFQ)</h1>
+              <p className="text-sm text-slate-500">Tedarikçilerden teklif isteklerini yönetin</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Tooltip title="Dışa Aktar">
+              <Button
+                icon={<ArrowDownTrayIcon className="w-4 h-4" />}
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+              />
+            </Tooltip>
+            <Tooltip title="Yenile">
+              <Button
+                icon={<ArrowPathIcon className="w-4 h-4" />}
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+                onClick={() => refetch()}
+                loading={isLoading}
+              />
+            </Tooltip>
             <Link href="/purchase/quotations/new">
-              <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
-                <PlusIcon className="w-4 h-4" />
+              <Button
+                type="primary"
+                icon={<PlusIcon className="w-4 h-4" />}
+                className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+              >
                 Yeni Teklif Talebi
-              </button>
+              </Button>
             </Link>
           </div>
         </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Link href="/purchase/quotations">
-            <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer group">
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center">
-                  <DocumentTextIcon className="w-4 h-4 text-slate-500" />
-                </div>
-                <ChevronRightIcon className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Toplam Talep</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{stats.total}</p>
               </div>
-              <div className="text-2xl font-semibold text-slate-900 mb-1">{stats.total}</div>
-              <div className="text-sm text-slate-500">Toplam Talep</div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <DocumentTextIcon className="w-5 h-5 text-slate-600" />
+              </div>
             </div>
-          </Link>
-
-          <div className="bg-white border border-slate-200 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 rounded-full bg-slate-400" />
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Taslak</span>
-            </div>
-            <div className="text-2xl font-semibold text-slate-900">{stats.draft}</div>
-            <div className="text-sm text-slate-500">Bekleyen</div>
           </div>
-
           <div className="bg-white border border-slate-200 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 rounded-full bg-blue-500" />
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Gönderildi</span>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Taslak</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{stats.draft}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <PencilIcon className="w-5 h-5 text-slate-600" />
+              </div>
             </div>
-            <div className="text-2xl font-semibold text-slate-900">{stats.sent}</div>
-            <div className="text-sm text-slate-500">Yanıt Beklenen</div>
           </div>
-
           <div className="bg-white border border-slate-200 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Kazanan</span>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Gönderildi</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{stats.sent}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ArrowPathIcon className="w-5 h-5 text-slate-600" />
+              </div>
             </div>
-            <div className="text-2xl font-semibold text-emerald-600">{stats.awarded}</div>
-            <div className="text-sm text-slate-500">Belirlendi</div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Kazanan</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{stats.awarded}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <DocumentTextIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
           <div className="flex flex-wrap items-center gap-4">
             <Input
               placeholder="Teklif no veya başlık ara..."
@@ -302,12 +323,13 @@ export default function QuotationsPage() {
         </div>
 
         {/* Table */}
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
           <Table
             columns={columns}
             dataSource={data?.items || []}
             rowKey="id"
             loading={isLoading}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-200"
             pagination={{
               current: currentPage,
               pageSize,
@@ -320,10 +342,9 @@ export default function QuotationsPage() {
               },
             }}
             scroll={{ x: 1000 }}
-            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-600 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wide"
           />
         </div>
-      </div>
+      </Spin>
     </div>
   );
 }

@@ -46,12 +46,7 @@ import {
 import type { PurchaseOrderListDto, PurchaseOrderStatus } from '@/lib/api/services/purchase.types';
 import { exportToCSV, exportToExcel, type ExportColumn, formatDateForExport, formatCurrencyForExport } from '@/lib/utils/export';
 import dayjs from 'dayjs';
-import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  DataTableWrapper,
-} from '@/components/ui/enterprise-page';
+
 import {
   showSuccess,
   showError,
@@ -443,94 +438,98 @@ export default function PurchaseOrdersPage() {
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+            <ShoppingCartIcon className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Satın Alma Siparişleri</h1>
+            <p className="text-sm text-slate-500">Tedarikçilere verilen siparişleri yönetin</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleExportExcel}
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+          >
+            <TableCellsIcon className="w-4 h-4" />
+            Excel {selectedRowKeys.length > 0 && `(${selectedRowKeys.length})`}
+          </button>
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={() => router.push('/purchase/orders/new')}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Yeni Sipariş
+          </button>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Sipariş</span>
-              <div className="text-2xl font-semibold text-slate-900">{stats.total}</div>
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Toplam Sipariş</span>
+              <div className="text-2xl font-semibold text-slate-900 mt-1">{stats.total}</div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#6366f115' }}>
-              <ShoppingCartIcon className="w-5 h-5" style={{ color: '#6366f1' }} />
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <ShoppingCartIcon className="w-5 h-5 text-slate-600" />
             </div>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Onay Bekleyen</span>
-              <div className="text-2xl font-semibold text-slate-900">{stats.pending}</div>
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Onay Bekleyen</span>
+              <div className="text-2xl font-semibold text-slate-900 mt-1">{stats.pending}</div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: stats.pending > 0 ? '#f59e0b15' : '#64748b15' }}>
-              <ClockIcon className="w-5 h-5" style={{ color: stats.pending > 0 ? '#f59e0b' : '#64748b' }} />
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <ClockIcon className="w-5 h-5 text-slate-600" />
             </div>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Gönderilen</span>
-              <div className="text-2xl font-semibold text-slate-900">{stats.sent}</div>
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Gönderilen</span>
+              <div className="text-2xl font-semibold text-slate-900 mt-1">{stats.sent}</div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#06b6d415' }}>
-              <PaperAirplaneIcon className="w-5 h-5" style={{ color: '#06b6d4' }} />
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <PaperAirplaneIcon className="w-5 h-5 text-slate-600" />
             </div>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Tutar</span>
-              <div className="text-2xl font-semibold text-slate-900">
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Toplam Tutar</span>
+              <div className="text-2xl font-semibold text-slate-900 mt-1">
                 {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(stats.totalAmount)}
               </div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CurrencyDollarIcon className="w-5 h-5" style={{ color: '#10b981' }} />
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <CurrencyDollarIcon className="w-5 h-5 text-slate-600" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Header */}
-      <ListPageHeader
-        icon={<ShoppingCartIcon className="w-5 h-5" />}
-        iconColor="#10b981"
-        title="Satın Alma Siparişleri"
-        description="Tedarikçilere verilen siparişleri yönetin"
-        itemCount={totalCount}
-        primaryAction={{
-          label: 'Yeni Sipariş',
-          onClick: () => router.push('/purchase/orders/new'),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleExportExcel}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-md hover:bg-slate-50"
-            >
-              <TableCellsIcon className="w-4 h-4" />
-              Excel {selectedRowKeys.length > 0 && `(${selectedRowKeys.length})`}
-            </button>
-            <button
-              onClick={() => refetch()}
-              disabled={isLoading}
-              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-            >
-              <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-        }
-      />
-
       {/* Bulk Actions Bar */}
       {selectedRowKeys.length > 0 && (
-        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6">
+        <div className="bg-slate-100 border border-slate-200 rounded-xl p-4 mb-6">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-indigo-700 font-medium">
+            <span className="text-sm text-slate-700 font-medium">
               {selectedRowKeys.length} sipariş seçildi
             </span>
             <div className="flex items-center gap-2">
@@ -570,7 +569,7 @@ export default function PurchaseOrdersPage() {
       )}
 
       {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
           <Input
             placeholder="Sipariş ara..."
@@ -600,14 +599,12 @@ export default function PurchaseOrdersPage() {
       </div>
 
       {/* Table */}
-      {isLoading ? (
-        <Card>
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Spinner size="lg" />
           </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
+        ) : (
           <Table
             columns={columns}
             dataSource={orders}
@@ -615,6 +612,7 @@ export default function PurchaseOrdersPage() {
             loading={isLoading || bulkLoading}
             rowSelection={rowSelection}
             scroll={{ x: 1100 }}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
             pagination={{
               current: pagination.current,
               pageSize: pagination.pageSize,
@@ -624,8 +622,8 @@ export default function PurchaseOrdersPage() {
               onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
             }}
           />
-        </DataTableWrapper>
-      )}
-    </PageContainer>
+        )}
+      </div>
+    </div>
   );
 }

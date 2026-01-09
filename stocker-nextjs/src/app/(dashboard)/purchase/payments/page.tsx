@@ -4,17 +4,14 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Table,
-  Button,
   Input,
   Tag,
   Dropdown,
-  Card,
-  Typography,
-  Tooltip,
   Modal,
   Select,
   DatePicker,
 } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
   ArrowPathIcon,
   ArrowUpTrayIcon,
@@ -45,7 +42,6 @@ import {
 import type { SupplierPaymentListDto, SupplierPaymentStatus, PaymentMethod } from '@/lib/api/services/purchase.types';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { confirm } = Modal;
 
@@ -157,8 +153,8 @@ export default function SupplierPaymentsPage() {
       width: 150,
       render: (num, record) => (
         <div>
-          <div className="font-medium text-blue-600">{num}</div>
-          <div className="text-xs text-gray-500">
+          <div className="font-medium text-slate-900 hover:text-slate-700">{num}</div>
+          <div className="text-xs text-slate-500">
             {dayjs(record.paymentDate).format('DD.MM.YYYY')}
           </div>
         </div>
@@ -198,7 +194,7 @@ export default function SupplierPaymentsPage() {
       width: 140,
       align: 'right',
       render: (amount, record) => (
-        <span className="font-semibold text-green-600">
+        <span className="font-semibold text-slate-900">
           {formatCurrency(amount, record.currency)}
         </span>
       ),
@@ -281,39 +277,56 @@ export default function SupplierPaymentsPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<EllipsisVerticalIcon className="w-4 h-4" />} />
+          <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+              <EllipsisVerticalIcon className="w-4 h-4" />
+            </button>
         </Dropdown>
       ),
     },
   ];
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <Title level={3} className="!mb-1 flex items-center gap-2">
-            <WalletIcon className="w-5 h-5 text-green-500" />
-            Tedarikçi Ödemeleri
-          </Title>
-          <Text type="secondary">Tedarikçilere yapılan ödemeleri yönetin</Text>
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+            <WalletIcon className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Tedarikçi Ödemeleri</h1>
+            <p className="text-sm text-slate-500">Tedarikçilere yapılan ödemeleri yönetin</p>
+          </div>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusIcon className="w-4 h-4" />}
-          size="large"
-          onClick={() => router.push('/purchase/payments/new')}
-        >
-          Yeni Ödeme
-        </Button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-white border border-slate-200 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-white border border-slate-200 rounded-md transition-colors"
+          >
+            <ArrowUpTrayIcon className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => router.push('/purchase/payments/new')}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Yeni Ödeme
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
-      <Card className="mb-4" size="small">
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
         <div className="flex flex-wrap items-center gap-4">
           <Input
             placeholder="Belge ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 280 }}
@@ -352,38 +365,38 @@ export default function SupplierPaymentsPage() {
             value={dateRange}
             onChange={(dates) => setDateRange(dates)}
           />
-          <div className="flex-1" />
-          <Tooltip title="Yenile">
-            <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()} />
-          </Tooltip>
-          <Tooltip title="Dışa Aktar">
-            <Button icon={<ArrowUpTrayIcon className="w-4 h-4" />} />
-          </Tooltip>
         </div>
-      </Card>
+      </div>
 
       {/* Table */}
-      <Card bodyStyle={{ padding: 0 }}>
-        <Table
-          columns={columns}
-          dataSource={payments}
-          rowKey="id"
-          loading={isLoading}
-          scroll={{ x: 1200 }}
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: totalCount,
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} ödeme`,
-            onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
-          }}
-          onRow={(record) => ({
-            onClick: () => router.push(`/purchase/payments/${record.id}`),
-            className: 'cursor-pointer hover:bg-gray-50',
-          })}
-        />
-      </Card>
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Spinner size="lg" />
+          </div>
+        ) : (
+          <Table
+            columns={columns}
+            dataSource={payments}
+            rowKey="id"
+            loading={isLoading}
+            scroll={{ x: 1200 }}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: totalCount,
+              showSizeChanger: true,
+              showTotal: (total) => <span className="text-sm text-slate-500">Toplam {total} ödeme</span>,
+              onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
+            }}
+            onRow={(record) => ({
+              onClick: () => router.push(`/purchase/payments/${record.id}`),
+              className: 'cursor-pointer',
+            })}
+          />
+        )}
+      </div>
     </div>
   );
 }

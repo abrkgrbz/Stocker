@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Table, Input, Select, Dropdown, Modal, Spin, Progress } from 'antd';
 import {
   BuildingStorefrontIcon,
-  ChevronRightIcon,
+  ClipboardDocumentCheckIcon,
   ClockIcon,
   EllipsisHorizontalIcon,
   EyeIcon,
@@ -14,6 +14,7 @@ import {
   StarIcon,
   TrashIcon,
   TrophyIcon,
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -23,16 +24,16 @@ import type { SupplierEvaluationListDto, EvaluationStatus } from '@/lib/api/serv
 
 const statusConfig: Record<EvaluationStatus, { bg: string; text: string; label: string }> = {
   Draft: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Taslak' },
-  Submitted: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Gönderildi' },
-  Approved: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Onaylandı' },
-  Rejected: { bg: 'bg-red-100', text: 'text-red-700', label: 'Reddedildi' },
+  Submitted: { bg: 'bg-slate-200', text: 'text-slate-700', label: 'Gönderildi' },
+  Approved: { bg: 'bg-slate-800', text: 'text-white', label: 'Onaylandı' },
+  Rejected: { bg: 'bg-slate-300', text: 'text-slate-800', label: 'Reddedildi' },
 };
 
 const getScoreColor = (score: number) => {
-  if (score >= 80) return '#10b981';
-  if (score >= 60) return '#3b82f6';
-  if (score >= 40) return '#f59e0b';
-  return '#ef4444';
+  if (score >= 80) return '#1e293b';
+  if (score >= 60) return '#334155';
+  if (score >= 40) return '#64748b';
+  return '#94a3b8';
 };
 
 const getScoreLabel = (score: number) => {
@@ -151,7 +152,7 @@ export default function SupplierEvaluationsPage() {
       align: 'center',
       render: (rank: number | null) =>
         rank ? (
-          <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${rank <= 3 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${rank <= 3 ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600'}`}>
             {rank <= 3 && <TrophyIcon className="w-3 h-3" />}
             #{rank}
           </span>
@@ -213,8 +214,8 @@ export default function SupplierEvaluationsPage() {
           }}
           trigger={['click']}
         >
-          <button className="p-1 hover:bg-slate-100 rounded transition-colors">
-            <EllipsisHorizontalIcon className="w-5 h-5 text-slate-400" />
+          <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+            <EllipsisHorizontalIcon className="w-5 h-5" />
           </button>
         </Dropdown>
       ),
@@ -236,116 +237,117 @@ export default function SupplierEvaluationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-900">Tedarikçi Değerlendirmeleri</h1>
-              <p className="text-sm text-slate-500 mt-1">Tedarikçi performanslarını değerlendirin ve karşılaştırın</p>
-            </div>
-            <Link href="/purchase/evaluations/new">
-              <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
-                <PlusIcon className="w-4 h-4" />
-                Yeni Değerlendirme
-              </button>
-            </Link>
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+            <ClipboardDocumentCheckIcon className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Tedarikçi Değerlendirmeleri</h1>
+            <p className="text-sm text-slate-500">Tedarikçi performanslarını değerlendirin ve karşılaştırın</p>
           </div>
         </div>
+        <Link href="/purchase/evaluations/new">
+          <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
+            <PlusIcon className="w-4 h-4" />
+            Yeni Değerlendirme
+          </button>
+        </Link>
+      </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Link href="/purchase/evaluations">
-            <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer group">
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <StarIcon className="w-4 h-4 text-amber-600" />
-                </div>
-                <ChevronRightIcon className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
-              </div>
-              <div className="text-2xl font-semibold text-slate-900 mb-1">{data?.totalCount || 0}</div>
-              <div className="text-sm text-slate-500">Toplam Değerlendirme</div>
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <StarIcon className="w-5 h-5 text-slate-600" />
             </div>
-          </Link>
-
-          <div className="bg-white border border-slate-200 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 rounded-full bg-amber-500" />
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Ortalama</span>
-            </div>
-            <div className="text-2xl font-semibold text-slate-900">{avgScore.toFixed(1)}</div>
-            <div className="text-sm text-slate-500">Puan / 100</div>
           </div>
-
-          <div className="bg-white border border-slate-200 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Üst Performans</span>
-            </div>
-            <div className="text-2xl font-semibold text-emerald-600">{topPerformers}</div>
-            <div className="text-sm text-slate-500">80+ Puan</div>
-          </div>
-
-          <div className="bg-white border border-slate-200 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 rounded-full bg-blue-500" />
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Bekleyen</span>
-            </div>
-            <div className="text-2xl font-semibold text-slate-900">
-              {data?.items?.filter(i => i.status === 'Submitted').length || 0}
-            </div>
-            <div className="text-sm text-slate-500">Onay Bekliyor</div>
-          </div>
+          <div className="text-2xl font-bold text-slate-900">{data?.totalCount || 0}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Değerlendirme</div>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6">
-          <div className="flex flex-wrap items-center gap-4">
-            <Input
-              placeholder="Tedarikçi veya değerlendirme no ara..."
-              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="w-72"
-              allowClear
-            />
-            <Select
-              placeholder="Durum"
-              className="w-40"
-              allowClear
-              value={statusFilter}
-              onChange={setStatusFilter}
-              options={Object.entries(statusConfig).map(([key, value]) => ({
-                value: key,
-                label: value.label,
-              }))}
-            />
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+              <TrophyIcon className="w-5 h-5 text-slate-700" />
+            </div>
           </div>
+          <div className="text-2xl font-bold text-slate-900">{avgScore.toFixed(1)}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Ortalama Puan</div>
         </div>
 
-        {/* Table */}
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-          <Table
-            columns={columns}
-            dataSource={data?.items || []}
-            rowKey="id"
-            loading={isLoading}
-            pagination={{
-              current: currentPage,
-              pageSize,
-              total: data?.totalCount || 0,
-              showSizeChanger: true,
-              showTotal: (total) => `Toplam ${total} kayıt`,
-              onChange: (page, size) => {
-                setCurrentPage(page);
-                setPageSize(size);
-              },
-            }}
-            scroll={{ x: 1200 }}
-            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-600 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wide"
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
+              <CheckCircleIcon className="w-5 h-5 text-white" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">{topPerformers}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Üst Performans (80+)</div>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <ClockIcon className="w-5 h-5 text-slate-600" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">
+            {data?.items?.filter(i => i.status === 'Submitted').length || 0}
+          </div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Onay Bekliyor</div>
+        </div>
+      </div>
+
+      {/* Filter Section */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+        <div className="flex flex-wrap items-center gap-4">
+          <Input
+            placeholder="Tedarikçi veya değerlendirme no ara..."
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="w-72"
+            allowClear
+          />
+          <Select
+            placeholder="Durum"
+            className="w-40"
+            allowClear
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={Object.entries(statusConfig).map(([key, value]) => ({
+              value: key,
+              label: value.label,
+            }))}
           />
         </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <Table
+          columns={columns}
+          dataSource={data?.items || []}
+          rowKey="id"
+          loading={isLoading}
+          pagination={{
+            current: currentPage,
+            pageSize,
+            total: data?.totalCount || 0,
+            showSizeChanger: true,
+            showTotal: (total) => `Toplam ${total} kayıt`,
+            onChange: (page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            },
+          }}
+          scroll={{ x: 1200 }}
+          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
+        />
       </div>
     </div>
   );

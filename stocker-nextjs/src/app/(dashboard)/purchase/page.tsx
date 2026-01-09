@@ -52,7 +52,7 @@ import {
   Legend,
 } from 'recharts';
 import dayjs from 'dayjs';
-import { PageContainer } from '@/components/ui/enterprise-page';
+
 import type { ColumnsType } from 'antd/es/table';
 
 // Monochrome color palette
@@ -171,13 +171,18 @@ export default function PurchaseDashboardPage() {
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
+    <div className="min-h-screen bg-slate-50 p-8">
       {/* Page Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Satın Alma</h1>
-            <p className="text-sm text-slate-500">Tedarik zinciri ve satın alma operasyonları</p>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+              <ShoppingCartIcon className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Satın Alma</h1>
+              <p className="text-sm text-slate-500">Tedarik zinciri ve satın alma operasyonları</p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <Link href="/purchase/orders/new">
@@ -652,6 +657,6 @@ export default function PurchaseDashboardPage() {
           </div>
         </Link>
       </div>
-    </PageContainer>
+    </div>
   );
 }

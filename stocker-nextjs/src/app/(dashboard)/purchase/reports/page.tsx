@@ -13,7 +13,6 @@ import {
 } from 'antd';
 import {
   ChartBarIcon,
-  ChevronRightIcon,
   CurrencyDollarIcon,
   DocumentArrowDownIcon,
   DocumentTextIcon,
@@ -22,6 +21,7 @@ import {
   ShoppingCartIcon,
   TrophyIcon,
   UserGroupIcon,
+  ClipboardDocumentListIcon,
 } from '@heroicons/react/24/outline';
 import {
   BarChart,
@@ -49,14 +49,14 @@ import {
 const { RangePicker } = DatePicker;
 
 const CHART_COLORS = [
-  '#3b82f6', // blue
-  '#10b981', // green
-  '#f59e0b', // amber
-  '#ef4444', // red
-  '#8b5cf6', // purple
-  '#ec4899', // pink
-  '#06b6d4', // cyan
-  '#84cc16', // lime
+  '#1e293b', // slate-800
+  '#334155', // slate-700
+  '#475569', // slate-600
+  '#64748b', // slate-500
+  '#94a3b8', // slate-400
+  '#cbd5e1', // slate-300
+  '#e2e8f0', // slate-200
+  '#f1f5f9', // slate-100
 ];
 
 export default function PurchaseReportsPage() {
@@ -220,24 +220,24 @@ export default function PurchaseReportsPage() {
                   <AreaChart data={monthlyTrendData}>
                     <defs>
                       <linearGradient id="colorSiparis" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#1e293b" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#1e293b" stopOpacity={0}/>
                       </linearGradient>
                       <linearGradient id="colorFatura" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#64748b" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#64748b" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#64748b' }} />
+                    <YAxis tick={{ fontSize: 12, fill: '#64748b' }} />
                     <RechartsTooltip content={<CustomTooltip />} />
                     <Legend />
                     <Area
                       type="monotone"
                       dataKey="siparişler"
                       name="Siparişler"
-                      stroke="#3b82f6"
+                      stroke="#1e293b"
                       fillOpacity={1}
                       fill="url(#colorSiparis)"
                     />
@@ -245,7 +245,7 @@ export default function PurchaseReportsPage() {
                       type="monotone"
                       dataKey="faturalar"
                       name="Faturalar"
-                      stroke="#10b981"
+                      stroke="#64748b"
                       fillOpacity={1}
                       fill="url(#colorFatura)"
                     />
@@ -291,11 +291,11 @@ export default function PurchaseReportsPage() {
                 {topSuppliersByAmount.length > 0 ? (
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={topSuppliersByAmount} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis type="number" tick={{ fontSize: 12 }} />
-                      <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} width={120} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis type="number" tick={{ fontSize: 12, fill: '#64748b' }} />
+                      <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} width={120} />
                       <RechartsTooltip content={<CustomTooltip />} />
-                      <Bar dataKey="tutar" name="Tutar" fill="#3b82f6" radius={[0, 4, 4, 0]}>
+                      <Bar dataKey="tutar" name="Tutar" fill="#1e293b" radius={[0, 4, 4, 0]}>
                         {topSuppliersByAmount.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
@@ -360,7 +360,7 @@ export default function PurchaseReportsPage() {
               dataSource={supplierPerformanceData}
               rowKey="name"
               pagination={{ pageSize: 10 }}
-              className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-600 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wide"
+              className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
               columns={[
                 {
                   title: 'Tedarikçi',
@@ -376,11 +376,11 @@ export default function PurchaseReportsPage() {
                   key: 'durum',
                   render: (status: string) => {
                     const config: Record<string, { bg: string; text: string; label: string }> = {
-                      Active: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Aktif' },
+                      Active: { bg: 'bg-slate-800', text: 'text-white', label: 'Aktif' },
                       Inactive: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Pasif' },
-                      Pending: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Bekliyor' },
-                      Blacklisted: { bg: 'bg-red-100', text: 'text-red-700', label: 'Bloklu' },
-                      OnHold: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Beklemede' },
+                      Pending: { bg: 'bg-slate-200', text: 'text-slate-700', label: 'Bekliyor' },
+                      Blacklisted: { bg: 'bg-slate-400', text: 'text-white', label: 'Bloklu' },
+                      OnHold: { bg: 'bg-slate-300', text: 'text-slate-800', label: 'Beklemede' },
                     };
                     const c = config[status] || { bg: 'bg-slate-100', text: 'text-slate-600', label: status };
                     return (
@@ -396,13 +396,13 @@ export default function PurchaseReportsPage() {
                   key: 'puan',
                   render: (rating: number) => (
                     <div className="flex items-center gap-2">
-                      <TrophyIcon className={`w-4 h-4 ${rating >= 4 ? 'text-amber-500' : 'text-slate-400'}`} />
+                      <TrophyIcon className={`w-4 h-4 ${rating >= 4 ? 'text-slate-800' : 'text-slate-400'}`} />
                       <span className="text-sm font-medium text-slate-900">{rating.toFixed(1)}</span>
                       <Progress
                         percent={rating * 20}
                         size="small"
                         showInfo={false}
-                        strokeColor={rating >= 4 ? '#f59e0b' : rating >= 3 ? '#10b981' : '#ef4444'}
+                        strokeColor={rating >= 4 ? '#1e293b' : rating >= 3 ? '#64748b' : '#94a3b8'}
                         style={{ width: 60 }}
                       />
                     </div>
@@ -414,7 +414,7 @@ export default function PurchaseReportsPage() {
                   dataIndex: 'bakiye',
                   key: 'bakiye',
                   render: (balance: number) => (
-                    <span className={`text-sm font-medium ${balance > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                    <span className={`text-sm font-medium ${balance > 0 ? 'text-slate-700' : 'text-slate-500'}`}>
                       {balance.toLocaleString('tr-TR')} ₺
                     </span>
                   ),
@@ -472,11 +472,11 @@ export default function PurchaseReportsPage() {
                           count,
                         }))}
                     >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis dataKey="city" tick={{ fontSize: 12 }} />
-                      <YAxis tick={{ fontSize: 12 }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="city" tick={{ fontSize: 12, fill: '#64748b' }} />
+                      <YAxis tick={{ fontSize: 12, fill: '#64748b' }} />
                       <RechartsTooltip />
-                      <Bar dataKey="count" name="Tedarikçi Sayısı" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="count" name="Tedarikçi Sayısı" fill="#334155" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -499,39 +499,47 @@ export default function PurchaseReportsPage() {
       children: (
         <div className="space-y-6">
           {/* Order KPIs */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="bg-white border border-slate-200 rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 rounded-full bg-blue-500" />
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Toplam Sipariş</span>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <ShoppingCartIcon className="w-5 h-5 text-slate-600" />
+                </div>
               </div>
-              <div className="text-2xl font-semibold text-blue-600">{orderSummary?.totalOrders || 0}</div>
+              <div className="text-2xl font-bold text-slate-900">{orderSummary?.totalOrders || 0}</div>
+              <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Sipariş</div>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <ExclamationTriangleIcon className="w-4 h-4 text-amber-500" />
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Bekleyen</span>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+                  <ExclamationTriangleIcon className="w-5 h-5 text-slate-700" />
+                </div>
               </div>
-              <div className="text-2xl font-semibold text-amber-600">{orderSummary?.pendingOrders || 0}</div>
+              <div className="text-2xl font-bold text-slate-900">{orderSummary?.pendingOrders || 0}</div>
+              <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Bekleyen</div>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Tamamlanan</span>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
+                  <DocumentTextIcon className="w-5 h-5 text-white" />
+                </div>
               </div>
-              <div className="text-2xl font-semibold text-emerald-600">{orderSummary?.completedOrders || 0}</div>
+              <div className="text-2xl font-bold text-slate-900">{orderSummary?.completedOrders || 0}</div>
+              <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Tamamlanan</div>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 rounded-full bg-red-500" />
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Bekleyen Tutar</span>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-400 flex items-center justify-center">
+                  <CurrencyDollarIcon className="w-5 h-5 text-white" />
+                </div>
               </div>
-              <div className="text-2xl font-semibold text-red-600">
+              <div className="text-2xl font-bold text-slate-900">
                 {(orderSummary?.pendingAmount || 0).toLocaleString('tr-TR')} ₺
               </div>
+              <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Bekleyen Tutar</div>
             </div>
           </div>
 
@@ -550,11 +558,11 @@ export default function PurchaseReportsPage() {
                     }))}
                   layout="vertical"
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis type="number" tick={{ fontSize: 12 }} />
-                  <YAxis type="category" dataKey="supplier" tick={{ fontSize: 12 }} width={150} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis type="number" tick={{ fontSize: 12, fill: '#64748b' }} />
+                  <YAxis type="category" dataKey="supplier" tick={{ fontSize: 12, fill: '#64748b' }} width={150} />
                   <RechartsTooltip content={<CustomTooltip />} />
-                  <Bar dataKey="tutar" name="Tutar" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="tutar" name="Tutar" fill="#1e293b" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -575,39 +583,47 @@ export default function PurchaseReportsPage() {
       children: (
         <div className="space-y-6">
           {/* Invoice KPIs */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="bg-white border border-slate-200 rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 rounded-full bg-purple-500" />
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Toplam Fatura</span>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <DocumentTextIcon className="w-5 h-5 text-slate-600" />
+                </div>
               </div>
-              <div className="text-2xl font-semibold text-purple-600">{invoiceSummary?.totalInvoices || 0}</div>
+              <div className="text-2xl font-bold text-slate-900">{invoiceSummary?.totalInvoices || 0}</div>
+              <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Fatura</div>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Ödenen</span>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
+                  <CurrencyDollarIcon className="w-5 h-5 text-white" />
+                </div>
               </div>
-              <div className="text-2xl font-semibold text-emerald-600">{invoiceSummary?.paidInvoices || 0}</div>
+              <div className="text-2xl font-bold text-slate-900">{invoiceSummary?.paidInvoices || 0}</div>
+              <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Ödenen</div>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Geciken</span>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-400 flex items-center justify-center">
+                  <ExclamationTriangleIcon className="w-5 h-5 text-white" />
+                </div>
               </div>
-              <div className="text-2xl font-semibold text-red-600">{invoiceSummary?.overdueInvoices || 0}</div>
+              <div className="text-2xl font-bold text-slate-900">{invoiceSummary?.overdueInvoices || 0}</div>
+              <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Geciken</div>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 rounded-full bg-red-500" />
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Geciken Tutar</span>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+                  <CurrencyDollarIcon className="w-5 h-5 text-slate-700" />
+                </div>
               </div>
-              <div className="text-2xl font-semibold text-red-600">
+              <div className="text-2xl font-bold text-slate-900">
                 {(invoiceSummary?.overdueAmount || 0).toLocaleString('tr-TR')} ₺
               </div>
+              <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Geciken Tutar</div>
             </div>
           </div>
 
@@ -632,8 +648,8 @@ export default function PurchaseReportsPage() {
                   </div>
                   <div>
                     <div className="flex justify-between mb-2">
-                      <span className="text-sm text-emerald-600">Ödenen Tutar</span>
-                      <span className="text-sm font-medium text-emerald-600">
+                      <span className="text-sm text-slate-600">Ödenen Tutar</span>
+                      <span className="text-sm font-medium text-slate-800">
                         {(invoiceSummary?.totalPaidAmount || 0).toLocaleString('tr-TR')} ₺
                       </span>
                     </div>
@@ -642,13 +658,13 @@ export default function PurchaseReportsPage() {
                         ? Math.round((invoiceSummary.totalPaidAmount / invoiceSummary.totalAmount) * 100)
                         : 0}
                       showInfo={false}
-                      strokeColor="#10b981"
+                      strokeColor="#1e293b"
                     />
                   </div>
                   <div>
                     <div className="flex justify-between mb-2">
-                      <span className="text-sm text-amber-600">Kalan Tutar</span>
-                      <span className="text-sm font-medium text-amber-600">
+                      <span className="text-sm text-slate-500">Kalan Tutar</span>
+                      <span className="text-sm font-medium text-slate-600">
                         {(invoiceSummary?.totalRemainingAmount || 0).toLocaleString('tr-TR')} ₺
                       </span>
                     </div>
@@ -657,7 +673,7 @@ export default function PurchaseReportsPage() {
                         ? Math.round((invoiceSummary.totalRemainingAmount / invoiceSummary.totalAmount) * 100)
                         : 0}
                       showInfo={false}
-                      strokeColor="#f59e0b"
+                      strokeColor="#64748b"
                     />
                   </div>
                 </div>
@@ -680,11 +696,11 @@ export default function PurchaseReportsPage() {
                         }))}
                       layout="vertical"
                     >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis type="number" tick={{ fontSize: 12 }} />
-                      <YAxis type="category" dataKey="supplier" tick={{ fontSize: 12 }} width={120} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis type="number" tick={{ fontSize: 12, fill: '#64748b' }} />
+                      <YAxis type="category" dataKey="supplier" tick={{ fontSize: 12, fill: '#64748b' }} width={120} />
                       <RechartsTooltip content={<CustomTooltip />} />
-                      <Bar dataKey="tutar" name="Tutar" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+                      <Bar dataKey="tutar" name="Tutar" fill="#334155" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -699,137 +715,143 @@ export default function PurchaseReportsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-900">Satın Alma Raporları</h1>
-              <p className="text-sm text-slate-500 mt-1">Tedarikçi performansı, sipariş analitiği ve finansal raporlar</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleExportExcel}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
-              >
-                <DocumentArrowDownIcon className="w-4 h-4" />
-                Excel
-              </button>
-              <button
-                onClick={handlePrint}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
-              >
-                <PrinterIcon className="w-4 h-4" />
-                Yazdır
-              </button>
-            </div>
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+            <ClipboardDocumentListIcon className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Satın Alma Raporları</h1>
+            <p className="text-sm text-slate-500">Tedarikçi performansı, sipariş analitiği ve finansal raporlar</p>
           </div>
         </div>
-
-        {/* Filters */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6">
-          <div className="flex flex-wrap items-center gap-4">
-            <div>
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-1">Tarih Aralığı</span>
-              <RangePicker
-                value={dateRange}
-                onChange={(dates) => setDateRange(dates as [Dayjs, Dayjs] | null)}
-                format="DD.MM.YYYY"
-              />
-            </div>
-            <div>
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-1">Tedarikçi</span>
-              <Select
-                placeholder="Tüm Tedarikçiler"
-                style={{ width: 200 }}
-                allowClear
-                showSearch
-                optionFilterProp="label"
-                value={selectedSupplier}
-                onChange={setSelectedSupplier}
-                options={suppliersData?.items?.map((s) => ({
-                  value: s.id,
-                  label: s.name,
-                }))}
-              />
-            </div>
-          </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleExportExcel}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 transition-colors"
+          >
+            <DocumentArrowDownIcon className="w-4 h-4" />
+            Excel
+          </button>
+          <button
+            onClick={handlePrint}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 transition-colors"
+          >
+            <PrinterIcon className="w-4 h-4" />
+            Yazdır
+          </button>
         </div>
+      </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white border border-slate-200 rounded-xl p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center">
-                <UserGroupIcon className="w-4 h-4 text-emerald-600" />
-              </div>
-              <ChevronRightIcon className="w-4 h-4 text-slate-300" />
-            </div>
-            <div className="text-2xl font-semibold text-emerald-600 mb-1">
-              {supplierSummary?.activeSuppliers || 0}
-              <span className="text-sm text-slate-400 font-normal">/{supplierSummary?.totalSuppliers || 0}</span>
-            </div>
-            <div className="text-sm text-slate-500">Aktif Tedarikçiler</div>
-            <Progress
-              percent={supplierSummary?.totalSuppliers
-                ? Math.round((supplierSummary.activeSuppliers / supplierSummary.totalSuppliers) * 100)
-                : 0}
-              showInfo={false}
-              strokeColor="#10b981"
-              size="small"
-              className="mt-2"
+      {/* Filter Section */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+        <div className="flex flex-wrap items-center gap-4">
+          <div>
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider block mb-2">Tarih Aralığı</span>
+            <RangePicker
+              value={dateRange}
+              onChange={(dates) => setDateRange(dates as [Dayjs, Dayjs] | null)}
+              format="DD.MM.YYYY"
             />
           </div>
-
-          <div className="bg-white border border-slate-200 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 rounded-full bg-blue-500" />
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Siparişler</span>
-            </div>
-            <div className="text-2xl font-semibold text-blue-600">{orderSummary?.totalOrders || 0}</div>
-            <div className="text-sm text-slate-500 mt-1">
-              <span className="text-amber-500">{orderSummary?.pendingOrders || 0} bekleyen</span>
-              {' • '}
-              <span className="text-emerald-500">{orderSummary?.completedOrders || 0} tamamlanan</span>
-            </div>
-          </div>
-
-          <div className="bg-white border border-slate-200 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 rounded-full bg-purple-500" />
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Faturalar</span>
-            </div>
-            <div className="text-2xl font-semibold text-purple-600">{invoiceSummary?.totalInvoices || 0}</div>
-            <div className="text-sm text-slate-500 mt-1">
-              <span className="text-emerald-500">{invoiceSummary?.paidInvoices || 0} ödenen</span>
-              {' • '}
-              <span className="text-red-500">{invoiceSummary?.overdueInvoices || 0} geciken</span>
-            </div>
-          </div>
-
-          <div className="bg-white border border-slate-200 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 rounded-full bg-amber-500" />
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Toplam Tutar</span>
-            </div>
-            <div className="text-2xl font-semibold text-amber-600">
-              {(orderSummary?.totalAmount || 0).toLocaleString('tr-TR')} ₺
-            </div>
-            <div className="text-sm text-amber-500 mt-1">
-              {(invoiceSummary?.totalRemainingAmount || 0).toLocaleString('tr-TR')} ₺ ödenmemiş
-            </div>
+          <div>
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider block mb-2">Tedarikçi</span>
+            <Select
+              placeholder="Tüm Tedarikçiler"
+              style={{ width: 200 }}
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              value={selectedSupplier}
+              onChange={setSelectedSupplier}
+              options={suppliersData?.items?.map((s) => ({
+                value: s.id,
+                label: s.name,
+              }))}
+            />
           </div>
         </div>
+      </div>
 
-        {/* Tabs with Charts */}
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-          <Tabs
-            defaultActiveKey="overview"
-            items={tabItems}
-            className="[&_.ant-tabs-nav]:px-6 [&_.ant-tabs-nav]:pt-2 [&_.ant-tabs-content]:p-6"
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
+              <UserGroupIcon className="w-5 h-5 text-white" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">
+            {supplierSummary?.activeSuppliers || 0}
+            <span className="text-sm text-slate-400 font-normal">/{supplierSummary?.totalSuppliers || 0}</span>
+          </div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Aktif Tedarikçiler</div>
+          <Progress
+            percent={supplierSummary?.totalSuppliers
+              ? Math.round((supplierSummary.activeSuppliers / supplierSummary.totalSuppliers) * 100)
+              : 0}
+            showInfo={false}
+            strokeColor="#1e293b"
+            size="small"
+            className="mt-2"
           />
         </div>
+
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <ShoppingCartIcon className="w-5 h-5 text-slate-600" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">{orderSummary?.totalOrders || 0}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Siparişler</div>
+          <div className="text-xs text-slate-500 mt-1">
+            <span className="text-slate-600">{orderSummary?.pendingOrders || 0} bekleyen</span>
+            {' / '}
+            <span className="text-slate-800">{orderSummary?.completedOrders || 0} tamamlanan</span>
+          </div>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+              <DocumentTextIcon className="w-5 h-5 text-slate-700" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">{invoiceSummary?.totalInvoices || 0}</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Faturalar</div>
+          <div className="text-xs text-slate-500 mt-1">
+            <span className="text-slate-800">{invoiceSummary?.paidInvoices || 0} ödenen</span>
+            {' / '}
+            <span className="text-slate-600">{invoiceSummary?.overdueInvoices || 0} geciken</span>
+          </div>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <CurrencyDollarIcon className="w-5 h-5 text-slate-600" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">
+            {(orderSummary?.totalAmount || 0).toLocaleString('tr-TR')} ₺
+          </div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Tutar</div>
+          <div className="text-xs text-slate-500 mt-1">
+            {(invoiceSummary?.totalRemainingAmount || 0).toLocaleString('tr-TR')} ₺ ödenmemiş
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs with Charts */}
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <Tabs
+          defaultActiveKey="overview"
+          items={tabItems}
+          className="[&_.ant-tabs-nav]:px-6 [&_.ant-tabs-nav]:pt-2 [&_.ant-tabs-content]:p-6"
+        />
       </div>
     </div>
   );

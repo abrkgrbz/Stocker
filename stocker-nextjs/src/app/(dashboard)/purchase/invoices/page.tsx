@@ -32,12 +32,7 @@ import type { PurchaseInvoiceListDto, PurchaseInvoiceStatus } from '@/lib/api/se
 import { exportToExcel, type ExportColumn, formatDateForExport, formatCurrencyForExport } from '@/lib/utils/export';
 import { confirmDelete, showSuccess, showError, showWarning, confirmAction } from '@/lib/utils/sweetalert';
 import dayjs from 'dayjs';
-import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  DataTableWrapper,
-} from '@/components/ui/enterprise-page';
+
 
 const { RangePicker } = DatePicker;
 
@@ -334,167 +329,174 @@ export default function PurchaseInvoicesPage() {
 
   if (isLoading) {
     return (
-      <PageContainer>
+      <div className="min-h-screen bg-slate-50 p-8">
         <div className="flex items-center justify-center h-96">
           <Spinner size="lg" />
         </div>
-      </PageContainer>
+      </div>
     );
   }
 
   return (
-    <PageContainer>
-      <ListPageHeader
-        title="Satın Alma Faturaları"
-        description="Tedarikçi faturalarını yönetin"
-        icon={<DocumentTextIcon className="w-5 h-5 text-blue-600" />}
-        primaryAction={{
-          label: 'Yeni Fatura',
-          icon: <PlusIcon className="w-4 h-4" />,
-          onClick: () => router.push('/purchase/invoices/new'),
-        }}
-        secondaryActions={
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+            <DocumentTextIcon className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Satın Alma Faturaları</h1>
+            <p className="text-sm text-slate-500">Tedarikçi faturalarını yönetin</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
           <button
             onClick={handleExportExcel}
-            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
           >
             <TableCellsIcon className="w-4 h-4" />
             Excel İndir
           </button>
-        }
-      />
+          <button
+            onClick={() => router.push('/purchase/invoices/new')}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Yeni Fatura
+          </button>
+        </div>
+      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card className="bg-white border border-slate-200">
-          <div className="flex items-center gap-4 p-4">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#6366f115' }}>
-              <DocumentTextIcon className="w-6 h-6" style={{ color: '#6366f1' }} />
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <DocumentTextIcon className="w-5 h-5 text-slate-600" />
             </div>
             <div>
               <div className="text-2xl font-semibold text-slate-900">{stats.total}</div>
-              <div className="text-sm text-slate-500">Toplam Fatura</div>
+              <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Toplam Fatura</div>
             </div>
           </div>
-        </Card>
-        <Card className="bg-white border border-slate-200">
-          <div className="flex items-center gap-4 p-4">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-              <ClockIcon className="w-6 h-6" style={{ color: '#f59e0b' }} />
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <ClockIcon className="w-5 h-5 text-slate-600" />
             </div>
             <div>
               <div className="text-2xl font-semibold text-slate-900">{stats.pending}</div>
-              <div className="text-sm text-slate-500">Onay Bekliyor</div>
+              <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Onay Bekliyor</div>
             </div>
           </div>
-        </Card>
-        <Card className="bg-white border border-slate-200">
-          <div className="flex items-center gap-4 p-4">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#ef444415' }}>
-              <ExclamationTriangleIcon className="w-6 h-6" style={{ color: '#ef4444' }} />
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <ExclamationTriangleIcon className="w-5 h-5 text-slate-600" />
             </div>
             <div>
               <div className="text-2xl font-semibold text-slate-900">{stats.overdue}</div>
-              <div className="text-sm text-slate-500">Vadesi Geçmiş</div>
+              <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Vadesi Geçmiş</div>
             </div>
           </div>
-        </Card>
-        <Card className="bg-white border border-slate-200">
-          <div className="flex items-center gap-4 p-4">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CurrencyDollarIcon className="w-6 h-6" style={{ color: '#10b981' }} />
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <CurrencyDollarIcon className="w-5 h-5 text-slate-600" />
             </div>
             <div>
               <div className="text-2xl font-semibold text-slate-900">
                 {stats.totalBalance.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} ₺
               </div>
-              <div className="text-sm text-slate-500">Toplam Bakiye</div>
+              <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Toplam Bakiye</div>
             </div>
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Filters */}
-      <Card className="bg-white border border-slate-200 mb-6">
-        <div className="p-4">
-          <div className="flex flex-wrap items-center gap-4">
-            <Input
-              placeholder="Fatura ara..."
-              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="w-72"
-              allowClear
-            />
-            <Select
-              placeholder="Durum"
-              allowClear
-              className="w-40"
-              value={statusFilter}
-              onChange={setStatusFilter}
-              options={Object.entries(statusConfig).map(([value, config]) => ({ value, label: config.label }))}
-            />
-            <RangePicker
-              placeholder={['Başlangıç', 'Bitiş']}
-              format="DD.MM.YYYY"
-              value={dateRange}
-              onChange={(dates) => setDateRange(dates)}
-            />
-          </div>
-
-          {/* Bulk Actions Bar */}
-          {selectedRowKeys.length > 0 && (
-            <div className="mt-4 p-3 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-between">
-              <span className="text-sm font-medium text-indigo-700">
-                {selectedRowKeys.length} fatura seçildi
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  className="px-3 py-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors flex items-center gap-1.5"
-                  onClick={handleBulkApprove}
-                  disabled={bulkLoading}
-                >
-                  <CheckCircleIcon className="w-3 h-3" />
-                  Onayla
-                </button>
-                <button
-                  className="px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex items-center gap-1.5"
-                  onClick={handleBulkMarkPaid}
-                  disabled={bulkLoading}
-                >
-                  <CurrencyDollarIcon className="w-3 h-3" />
-                  Ödendi İşaretle
-                </button>
-                <button
-                  className="px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-1.5"
-                  onClick={handleBulkReject}
-                  disabled={bulkLoading}
-                >
-                  <XCircleIcon className="w-3 h-3" />
-                  Reddet
-                </button>
-                <button
-                  className="px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-1.5"
-                  onClick={handleBulkDelete}
-                  disabled={bulkLoading}
-                >
-                  <TrashIcon className="w-3 h-3" />
-                  Sil
-                </button>
-                <button
-                  className="px-3 py-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors"
-                  onClick={() => setSelectedRowKeys([])}
-                >
-                  Temizle
-                </button>
-              </div>
-            </div>
-          )}
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+        <div className="flex flex-wrap items-center gap-4">
+          <Input
+            placeholder="Fatura ara..."
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="w-72"
+            allowClear
+          />
+          <Select
+            placeholder="Durum"
+            allowClear
+            className="w-40"
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={Object.entries(statusConfig).map(([value, config]) => ({ value, label: config.label }))}
+          />
+          <RangePicker
+            placeholder={['Başlangıç', 'Bitiş']}
+            format="DD.MM.YYYY"
+            value={dateRange}
+            onChange={(dates) => setDateRange(dates)}
+          />
         </div>
-      </Card>
+
+        {/* Bulk Actions Bar */}
+        {selectedRowKeys.length > 0 && (
+          <div className="mt-4 p-3 bg-slate-100 border border-slate-200 rounded-lg flex items-center justify-between">
+            <span className="text-sm font-medium text-slate-700">
+              {selectedRowKeys.length} fatura seçildi
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors flex items-center gap-1.5"
+                onClick={handleBulkApprove}
+                disabled={bulkLoading}
+              >
+                <CheckCircleIcon className="w-3 h-3" />
+                Onayla
+              </button>
+              <button
+                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors flex items-center gap-1.5"
+                onClick={handleBulkMarkPaid}
+                disabled={bulkLoading}
+              >
+                <CurrencyDollarIcon className="w-3 h-3" />
+                Ödendi İşaretle
+              </button>
+              <button
+                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors flex items-center gap-1.5"
+                onClick={handleBulkReject}
+                disabled={bulkLoading}
+              >
+                <XCircleIcon className="w-3 h-3" />
+                Reddet
+              </button>
+              <button
+                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors flex items-center gap-1.5"
+                onClick={handleBulkDelete}
+                disabled={bulkLoading}
+              >
+                <TrashIcon className="w-3 h-3" />
+                Sil
+              </button>
+              <button
+                className="px-3 py-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+                onClick={() => setSelectedRowKeys([])}
+              >
+                Temizle
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Table */}
-      <DataTableWrapper>
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
         <Table
           columns={columns}
           dataSource={invoices}
@@ -502,6 +504,7 @@ export default function PurchaseInvoicesPage() {
           loading={isLoading || bulkLoading}
           rowSelection={rowSelection}
           scroll={{ x: 1200 }}
+          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
           pagination={{
             current: pagination.current,
             pageSize: pagination.pageSize,
@@ -515,7 +518,7 @@ export default function PurchaseInvoicesPage() {
             className: 'cursor-pointer',
           })}
         />
-      </DataTableWrapper>
-    </PageContainer>
+      </div>
+    </div>
   );
 }

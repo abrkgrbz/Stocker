@@ -4,20 +4,18 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Table,
-  Button,
   Input,
-  Tag,
   Dropdown,
-  Card,
-  Typography,
-  Tooltip,
   Modal,
   Select,
   DatePicker,
+  Spin,
+  Button,
+  Tooltip,
 } from 'antd';
 import {
+  ArrowDownTrayIcon,
   ArrowPathIcon,
-  ArrowUpTrayIcon,
   ArrowUturnLeftIcon,
   CheckCircleIcon,
   CurrencyDollarIcon,
@@ -42,19 +40,18 @@ import {
 import type { PurchaseReturnListDto, PurchaseReturnStatus, PurchaseReturnReason } from '@/lib/api/services/purchase.types';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { confirm } = Modal;
 
-const statusColors: Record<PurchaseReturnStatus, string> = {
-  Draft: 'default',
-  Pending: 'blue',
-  Approved: 'cyan',
-  Rejected: 'red',
-  Shipped: 'geekblue',
-  Received: 'purple',
-  Completed: 'green',
-  Cancelled: 'default',
+const statusConfig: Record<PurchaseReturnStatus, { bg: string; text: string; label: string }> = {
+  Draft: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Taslak' },
+  Pending: { bg: 'bg-slate-200', text: 'text-slate-700', label: 'Onay Bekliyor' },
+  Approved: { bg: 'bg-slate-300', text: 'text-slate-800', label: 'Onaylandı' },
+  Rejected: { bg: 'bg-slate-700', text: 'text-white', label: 'Reddedildi' },
+  Shipped: { bg: 'bg-slate-400', text: 'text-white', label: 'Gönderildi' },
+  Received: { bg: 'bg-slate-500', text: 'text-white', label: 'Teslim Alındı' },
+  Completed: { bg: 'bg-slate-900', text: 'text-white', label: 'Tamamlandı' },
+  Cancelled: { bg: 'bg-slate-100', text: 'text-slate-500', label: 'İptal' },
 };
 
 const statusLabels: Record<PurchaseReturnStatus, string> = {
@@ -68,6 +65,17 @@ const statusLabels: Record<PurchaseReturnStatus, string> = {
   Cancelled: 'İptal',
 };
 
+const reasonConfig: Record<PurchaseReturnReason, { bg: string; text: string; label: string }> = {
+  Defective: { bg: 'bg-slate-700', text: 'text-white', label: 'Kusurlu' },
+  WrongItem: { bg: 'bg-slate-600', text: 'text-white', label: 'Yanlış Ürün' },
+  WrongQuantity: { bg: 'bg-slate-500', text: 'text-white', label: 'Yanlış Miktar' },
+  Damaged: { bg: 'bg-slate-800', text: 'text-white', label: 'Hasarlı' },
+  QualityIssue: { bg: 'bg-slate-600', text: 'text-white', label: 'Kalite Sorunu' },
+  Expired: { bg: 'bg-slate-700', text: 'text-white', label: 'Vadesi Geçmiş' },
+  NotAsDescribed: { bg: 'bg-slate-400', text: 'text-white', label: 'Tanımlandığı Gibi Değil' },
+  Other: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Diğer' },
+};
+
 const reasonLabels: Record<PurchaseReturnReason, string> = {
   Defective: 'Kusurlu',
   WrongItem: 'Yanlış Ürün',
@@ -77,17 +85,6 @@ const reasonLabels: Record<PurchaseReturnReason, string> = {
   Expired: 'Vadesi Geçmiş',
   NotAsDescribed: 'Tanımlandığı Gibi Değil',
   Other: 'Diğer',
-};
-
-const reasonColors: Record<PurchaseReturnReason, string> = {
-  Defective: 'red',
-  WrongItem: 'orange',
-  WrongQuantity: 'gold',
-  Damaged: 'volcano',
-  QualityIssue: 'magenta',
-  Expired: 'purple',
-  NotAsDescribed: 'blue',
-  Other: 'default',
 };
 
 export default function PurchaseReturnsPage() {
@@ -123,6 +120,8 @@ export default function PurchaseReturnsPage() {
       okText: 'Sil',
       okType: 'danger',
       cancelText: 'İptal',
+      okButtonProps: { className: '!bg-red-600 hover:!bg-red-700 !border-red-600' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: () => deleteReturn.mutate(record.id),
     });
   };
@@ -134,6 +133,8 @@ export default function PurchaseReturnsPage() {
       okText: 'Reddet',
       okType: 'danger',
       cancelText: 'İptal',
+      okButtonProps: { className: '!bg-red-600 hover:!bg-red-700 !border-red-600' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: () => rejectReturn.mutate({ id: record.id, reason: 'Manuel reddetme' }),
     });
   };
@@ -146,6 +147,11 @@ export default function PurchaseReturnsPage() {
     }).format(amount);
   };
 
+  // Stats
+  const pendingCount = returns.filter(r => r.status === 'Pending').length;
+  const approvedCount = returns.filter(r => r.status === 'Approved').length;
+  const completedCount = returns.filter(r => r.status === 'Completed').length;
+
   const columns: ColumnsType<PurchaseReturnListDto> = [
     {
       title: 'İade No',
@@ -155,8 +161,8 @@ export default function PurchaseReturnsPage() {
       width: 150,
       render: (num, record) => (
         <div>
-          <div className="font-medium text-blue-600">{num}</div>
-          <div className="text-xs text-gray-500">
+          <div className="font-medium text-slate-900">{num}</div>
+          <div className="text-xs text-slate-500">
             {dayjs(record.returnDate).format('DD.MM.YYYY')}
           </div>
         </div>
@@ -167,31 +173,42 @@ export default function PurchaseReturnsPage() {
       dataIndex: 'rmaNumber',
       key: 'rmaNumber',
       width: 120,
-      render: (rma) => rma || '-',
+      render: (rma) => <span className="text-sm text-slate-600">{rma || '-'}</span>,
     },
     {
       title: 'Tedarikçi',
       dataIndex: 'supplierName',
       key: 'supplierName',
       width: 200,
+      render: (name) => <span className="text-sm font-medium text-slate-900">{name}</span>,
     },
     {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
       width: 130,
-      render: (status: PurchaseReturnStatus) => (
-        <Tag color={statusColors[status]}>{statusLabels[status]}</Tag>
-      ),
+      render: (status: PurchaseReturnStatus) => {
+        const config = statusConfig[status];
+        return (
+          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${config.bg} ${config.text}`}>
+            {config.label}
+          </span>
+        );
+      },
     },
     {
       title: 'Sebep',
       dataIndex: 'reason',
       key: 'reason',
       width: 140,
-      render: (reason: PurchaseReturnReason) => (
-        <Tag color={reasonColors[reason]}>{reasonLabels[reason]}</Tag>
-      ),
+      render: (reason: PurchaseReturnReason) => {
+        const config = reasonConfig[reason];
+        return (
+          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${config.bg} ${config.text}`}>
+            {config.label}
+          </span>
+        );
+      },
     },
     {
       title: 'Kalem',
@@ -199,6 +216,7 @@ export default function PurchaseReturnsPage() {
       key: 'itemCount',
       width: 70,
       align: 'center',
+      render: (count) => <span className="text-sm text-slate-600">{count}</span>,
     },
     {
       title: 'İade Tutarı',
@@ -207,7 +225,7 @@ export default function PurchaseReturnsPage() {
       width: 140,
       align: 'right',
       render: (amount, record) => (
-        <span className="font-medium text-red-600">
+        <span className="font-medium text-slate-900">
           {formatCurrency(amount, record.currency)}
         </span>
       ),
@@ -219,7 +237,7 @@ export default function PurchaseReturnsPage() {
       width: 140,
       align: 'right',
       render: (amount, record) => (
-        <span className={amount > 0 ? 'font-medium text-green-600' : 'text-gray-400'}>
+        <span className={amount > 0 ? 'font-medium text-slate-900' : 'text-slate-400'}>
           {amount > 0 ? formatCurrency(amount, record.currency) : '-'}
         </span>
       ),
@@ -286,98 +304,162 @@ export default function PurchaseReturnsPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
+          <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+            <EllipsisHorizontalIcon className="w-4 h-4" />
+          </button>
         </Dropdown>
       ),
     },
   ];
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <Title level={3} className="!mb-1 flex items-center gap-2">
-            <ArrowUturnLeftIcon className="w-5 h-5 text-orange-500" />
-            Satın Alma İadeleri
-          </Title>
-          <Text type="secondary">Tedarikçilere yapılan iadeleri yönetin</Text>
+    <div className="min-h-screen bg-slate-50 p-8">
+      <Spin spinning={isLoading}>
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+              <ArrowUturnLeftIcon className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Satın Alma İadeleri</h1>
+              <p className="text-sm text-slate-500">Tedarikçilere yapılan iadeleri yönetin</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Tooltip title="Dışa Aktar">
+              <Button
+                icon={<ArrowDownTrayIcon className="w-4 h-4" />}
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+              />
+            </Tooltip>
+            <Tooltip title="Yenile">
+              <Button
+                icon={<ArrowPathIcon className="w-4 h-4" />}
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+                onClick={() => refetch()}
+                loading={isLoading}
+              />
+            </Tooltip>
+            <Button
+              type="primary"
+              icon={<PlusIcon className="w-4 h-4" />}
+              className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+              onClick={() => router.push('/purchase/returns/new')}
+            >
+              Yeni İade
+            </Button>
+          </div>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusIcon className="w-4 h-4" />}
-          size="large"
-          onClick={() => router.push('/purchase/returns/new')}
-        >
-          Yeni İade
-        </Button>
-      </div>
 
-      {/* Filters */}
-      <Card className="mb-4" size="small">
-        <div className="flex flex-wrap items-center gap-4">
-          <Input
-            placeholder="Belge ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 280 }}
-            allowClear
-          />
-          <Select
-            placeholder="Durum"
-            allowClear
-            style={{ width: 160 }}
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={Object.entries(statusLabels).map(([value, label]) => ({ value, label }))}
-          />
-          <Select
-            placeholder="Sebep"
-            allowClear
-            style={{ width: 160 }}
-            value={reasonFilter}
-            onChange={setReasonFilter}
-            options={Object.entries(reasonLabels).map(([value, label]) => ({ value, label }))}
-          />
-          <RangePicker
-            placeholder={['Başlangıç', 'Bitiş']}
-            format="DD.MM.YYYY"
-            value={dateRange}
-            onChange={(dates) => setDateRange(dates)}
-          />
-          <div className="flex-1" />
-          <Tooltip title="Yenile">
-            <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()} />
-          </Tooltip>
-          <Tooltip title="Dışa Aktar">
-            <Button icon={<ArrowUpTrayIcon className="w-4 h-4" />} />
-          </Tooltip>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Toplam</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{totalCount}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ArrowUturnLeftIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Onay Bekleyen</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{pendingCount}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ArrowPathIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Onaylandı</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{approvedCount}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CheckCircleIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Tamamlandı</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{completedCount}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CurrencyDollarIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
         </div>
-      </Card>
 
-      {/* Table */}
-      <Card bodyStyle={{ padding: 0 }}>
-        <Table
-          columns={columns}
-          dataSource={returns}
-          rowKey="id"
-          loading={isLoading}
-          scroll={{ x: 1300 }}
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: totalCount,
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} iade`,
-            onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
-          }}
-          onRow={(record) => ({
-            onClick: () => router.push(`/purchase/returns/${record.id}`),
-            className: 'cursor-pointer hover:bg-gray-50',
-          })}
-        />
-      </Card>
+        {/* Filters */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+          <div className="flex flex-wrap items-center gap-4">
+            <Input
+              placeholder="Belge ara..."
+              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              style={{ width: 280 }}
+              allowClear
+            />
+            <Select
+              placeholder="Durum"
+              allowClear
+              style={{ width: 160 }}
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={Object.entries(statusLabels).map(([value, label]) => ({ value, label }))}
+            />
+            <Select
+              placeholder="Sebep"
+              allowClear
+              style={{ width: 160 }}
+              value={reasonFilter}
+              onChange={setReasonFilter}
+              options={Object.entries(reasonLabels).map(([value, label]) => ({ value, label }))}
+            />
+            <RangePicker
+              placeholder={['Başlangıç', 'Bitiş']}
+              format="DD.MM.YYYY"
+              value={dateRange}
+              onChange={(dates) => setDateRange(dates)}
+            />
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <Table
+            columns={columns}
+            dataSource={returns}
+            rowKey="id"
+            loading={isLoading}
+            scroll={{ x: 1300 }}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-200"
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: totalCount,
+              showSizeChanger: true,
+              showTotal: (total) => `Toplam ${total} iade`,
+              onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
+            }}
+            onRow={(record) => ({
+              onClick: () => router.push(`/purchase/returns/${record.id}`),
+              className: 'cursor-pointer hover:bg-slate-50',
+            })}
+          />
+        </div>
+      </Spin>
     </div>
   );
 }

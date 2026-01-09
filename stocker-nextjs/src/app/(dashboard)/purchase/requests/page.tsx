@@ -4,27 +4,21 @@ import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Table,
-  Button,
   Input,
-  Tag,
   Dropdown,
-  Card,
-  Typography,
-  Tooltip,
   Modal,
   Select,
-  Row,
-  Col,
-  Statistic,
   DatePicker,
+  Spin,
+  Button,
+  Tooltip,
 } from 'antd';
 import {
+  ArrowDownTrayIcon,
   ArrowPathIcon,
-  ArrowUpTrayIcon,
   CheckCircleIcon,
   DocumentTextIcon,
   EllipsisHorizontalIcon,
-  ExclamationCircleIcon,
   EyeIcon,
   MagnifyingGlassIcon,
   PaperAirplaneIcon,
@@ -48,17 +42,16 @@ import {
 import type { PurchaseRequestListDto, PurchaseRequestStatus, PurchaseRequestPriority } from '@/lib/api/services/purchase.types';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { confirm } = Modal;
 
-const statusColors: Record<PurchaseRequestStatus, string> = {
-  Draft: 'default',
-  Pending: 'orange',
-  Approved: 'green',
-  Rejected: 'red',
-  Converted: 'blue',
-  Cancelled: 'default',
+const statusConfig: Record<PurchaseRequestStatus, { bg: string; text: string; label: string }> = {
+  Draft: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Taslak' },
+  Pending: { bg: 'bg-slate-200', text: 'text-slate-700', label: 'Onay Bekliyor' },
+  Approved: { bg: 'bg-slate-900', text: 'text-white', label: 'Onaylandı' },
+  Rejected: { bg: 'bg-slate-700', text: 'text-white', label: 'Reddedildi' },
+  Converted: { bg: 'bg-slate-400', text: 'text-white', label: 'Siparişe Dönüştürüldü' },
+  Cancelled: { bg: 'bg-slate-100', text: 'text-slate-500', label: 'İptal' },
 };
 
 const statusLabels: Record<PurchaseRequestStatus, string> = {
@@ -70,11 +63,11 @@ const statusLabels: Record<PurchaseRequestStatus, string> = {
   Cancelled: 'İptal',
 };
 
-const priorityColors: Record<PurchaseRequestPriority, string> = {
-  Low: 'default',
-  Normal: 'blue',
-  High: 'orange',
-  Urgent: 'red',
+const priorityConfig: Record<PurchaseRequestPriority, { bg: string; text: string; label: string }> = {
+  Low: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Düşük' },
+  Normal: { bg: 'bg-slate-200', text: 'text-slate-700', label: 'Normal' },
+  High: { bg: 'bg-slate-600', text: 'text-white', label: 'Yüksek' },
+  Urgent: { bg: 'bg-slate-900', text: 'text-white', label: 'Acil' },
 };
 
 const priorityLabels: Record<PurchaseRequestPriority, string> = {
@@ -126,11 +119,12 @@ export default function PurchaseRequestsPage() {
   const handleDelete = (record: PurchaseRequestListDto) => {
     confirm({
       title: 'Talebi Sil',
-      icon: <ExclamationCircleIcon className="w-4 h-4" />,
       content: `"${record.requestNumber}" talebini silmek istediğinizden emin misiniz?`,
       okText: 'Sil',
       okType: 'danger',
       cancelText: 'İptal',
+      okButtonProps: { className: '!bg-red-600 hover:!bg-red-700 !border-red-600' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: () => deleteRequest.mutate(record.id),
     });
   };
@@ -144,36 +138,39 @@ export default function PurchaseRequestsPage() {
   };
 
   const handleReject = (record: PurchaseRequestListDto) => {
-    Modal.confirm({
+    confirm({
       title: 'Talebi Reddet',
-      icon: <XCircleIcon className="w-4 h-4" style={{ color: '#ff4d4f' }} />,
       content: 'Bu talebi reddetmek istediğinizden emin misiniz?',
       okText: 'Reddet',
       okType: 'danger',
       cancelText: 'Vazgeç',
+      okButtonProps: { className: '!bg-red-600 hover:!bg-red-700 !border-red-600' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: () => rejectRequest.mutate({ id: record.id, reason: 'Manuel red' }),
     });
   };
 
   const handleCancel = (record: PurchaseRequestListDto) => {
-    Modal.confirm({
+    confirm({
       title: 'Talebi İptal Et',
-      icon: <XCircleIcon className="w-4 h-4" style={{ color: '#ff4d4f' }} />,
       content: 'Bu talebi iptal etmek istediğinizden emin misiniz?',
       okText: 'İptal Et',
       okType: 'danger',
       cancelText: 'Vazgeç',
+      okButtonProps: { className: '!bg-red-600 hover:!bg-red-700 !border-red-600' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: () => cancelRequest.mutate({ id: record.id, reason: 'Manuel iptal' }),
     });
   };
 
   const handleConvertToOrder = (record: PurchaseRequestListDto) => {
-    Modal.confirm({
+    confirm({
       title: 'Siparişe Dönüştür',
-      icon: <ShoppingCartIcon className="w-4 h-4" style={{ color: '#1890ff' }} />,
       content: 'Bu talebi satın alma siparişine dönüştürmek istiyor musunuz?',
       okText: 'Dönüştür',
       cancelText: 'Vazgeç',
+      okButtonProps: { className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: () => convertToOrder.mutate({ id: record.id, supplierId: '' }),
     });
   };
@@ -247,8 +244,8 @@ export default function PurchaseRequestsPage() {
       width: 150,
       render: (requestNumber, record) => (
         <div>
-          <div className="font-medium text-blue-600">{requestNumber}</div>
-          <div className="text-xs text-gray-500">
+          <div className="font-medium text-slate-900">{requestNumber}</div>
+          <div className="text-xs text-slate-500">
             {dayjs(record.requestDate).format('DD.MM.YYYY')}
           </div>
         </div>
@@ -261,9 +258,9 @@ export default function PurchaseRequestsPage() {
       width: 150,
       render: (name, record) => (
         <div>
-          <div className="font-medium text-gray-900">{name || '-'}</div>
+          <div className="font-medium text-slate-900">{name || '-'}</div>
           {record.departmentName && (
-            <div className="text-xs text-gray-500">{record.departmentName}</div>
+            <div className="text-xs text-slate-500">{record.departmentName}</div>
           )}
         </div>
       ),
@@ -273,22 +270,28 @@ export default function PurchaseRequestsPage() {
       dataIndex: 'status',
       key: 'status',
       width: 140,
-      render: (status: PurchaseRequestStatus) => (
-        <Tag color={statusColors[status]}>
-          {statusLabels[status] || status}
-        </Tag>
-      ),
+      render: (status: PurchaseRequestStatus) => {
+        const config = statusConfig[status];
+        return (
+          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${config.bg} ${config.text}`}>
+            {config.label}
+          </span>
+        );
+      },
     },
     {
       title: 'Öncelik',
       dataIndex: 'priority',
       key: 'priority',
       width: 100,
-      render: (priority: PurchaseRequestPriority) => (
-        <Tag color={priorityColors[priority]}>
-          {priorityLabels[priority] || priority}
-        </Tag>
-      ),
+      render: (priority: PurchaseRequestPriority) => {
+        const config = priorityConfig[priority];
+        return (
+          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${config.bg} ${config.text}`}>
+            {config.label}
+          </span>
+        );
+      },
     },
     {
       title: 'Kalem',
@@ -296,7 +299,7 @@ export default function PurchaseRequestsPage() {
       key: 'itemCount',
       width: 80,
       align: 'center',
-      render: (count) => count || 0,
+      render: (count) => <span className="text-sm text-slate-600">{count || 0}</span>,
     },
     {
       title: 'Tahmini Tutar',
@@ -306,7 +309,7 @@ export default function PurchaseRequestsPage() {
       align: 'right',
       render: (amount, record) => (
         <div>
-          <div className="font-medium">
+          <div className="font-medium text-slate-900">
             {(amount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {record.currency || '₺'}
           </div>
         </div>
@@ -317,7 +320,7 @@ export default function PurchaseRequestsPage() {
       dataIndex: 'requiredDate',
       key: 'requiredDate',
       width: 120,
-      render: (date) => date ? dayjs(date).format('DD.MM.YYYY') : '-',
+      render: (date) => <span className="text-sm text-slate-600">{date ? dayjs(date).format('DD.MM.YYYY') : '-'}</span>,
     },
     {
       title: '',
@@ -326,151 +329,176 @@ export default function PurchaseRequestsPage() {
       width: 60,
       render: (_, record) => (
         <Dropdown menu={getActionMenu(record)} trigger={['click']}>
-          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} onClick={(e) => e.stopPropagation()} />
+          <button
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <EllipsisHorizontalIcon className="w-4 h-4" />
+          </button>
         </Dropdown>
       ),
     },
   ];
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <Title level={3} className="!mb-1 flex items-center gap-2">
-            <DocumentTextIcon className="w-4 h-4 text-purple-500" />
-            Satın Alma Talepleri
-          </Title>
-          <Text type="secondary">Departmanlardan gelen satın alma taleplerini yönetin</Text>
+    <div className="min-h-screen bg-slate-50 p-8">
+      <Spin spinning={isLoading}>
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+              <DocumentTextIcon className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Satın Alma Talepleri</h1>
+              <p className="text-sm text-slate-500">Departmanlardan gelen satın alma taleplerini yönetin</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Tooltip title="Dışa Aktar">
+              <Button
+                icon={<ArrowDownTrayIcon className="w-4 h-4" />}
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+              />
+            </Tooltip>
+            <Tooltip title="Yenile">
+              <Button
+                icon={<ArrowPathIcon className="w-4 h-4" />}
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+                onClick={() => refetch()}
+                loading={isLoading}
+              />
+            </Tooltip>
+            <Button
+              type="primary"
+              icon={<PlusIcon className="w-4 h-4" />}
+              className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+              onClick={() => router.push('/purchase/requests/new')}
+            >
+              Yeni Talep
+            </Button>
+          </div>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusIcon className="w-4 h-4" />}
-          size="large"
-          onClick={() => router.push('/purchase/requests/new')}
-        >
-          Yeni Talep
-        </Button>
-      </div>
 
-      {/* Statistics */}
-      <Row gutter={16} className="mb-6">
-        <Col xs={12} sm={6}>
-          <Card size="small" className="text-center">
-            <Statistic
-              title="Toplam Talep"
-              value={stats.total}
-              valueStyle={{ color: '#8b5cf6' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small" className="text-center">
-            <Statistic
-              title="Onay Bekleyen"
-              value={stats.pending}
-              valueStyle={{ color: '#faad14' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small" className="text-center">
-            <Statistic
-              title="Onaylanan"
-              value={stats.approved}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small" className="text-center">
-            <Statistic
-              title="Tahmini Tutar"
-              value={stats.totalAmount}
-              precision={2}
-              suffix="₺"
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Filters */}
-      <Card className="mb-4" size="small">
-        <div className="flex flex-wrap items-center gap-4">
-          <Input
-            placeholder="Talep ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 280 }}
-            allowClear
-          />
-
-          <Select
-            placeholder="Durum"
-            allowClear
-            style={{ width: 160 }}
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={Object.entries(statusLabels).map(([value, label]) => ({
-              value,
-              label,
-            }))}
-          />
-
-          <Select
-            placeholder="Öncelik"
-            allowClear
-            style={{ width: 130 }}
-            value={priorityFilter}
-            onChange={setPriorityFilter}
-            options={Object.entries(priorityLabels).map(([value, label]) => ({
-              value,
-              label,
-            }))}
-          />
-
-          <RangePicker
-            placeholder={['Başlangıç', 'Bitiş']}
-            format="DD.MM.YYYY"
-            value={dateRange}
-            onChange={(dates) => setDateRange(dates)}
-          />
-
-          <div className="flex-1" />
-
-          <Tooltip title="Yenile">
-            <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()} />
-          </Tooltip>
-          <Tooltip title="Dışa Aktar">
-            <Button icon={<ArrowUpTrayIcon className="w-4 h-4" />} />
-          </Tooltip>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Toplam Talep</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{stats.total}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <DocumentTextIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Onay Bekleyen</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{stats.pending}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ArrowPathIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Onaylanan</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{stats.approved}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CheckCircleIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Tahmini Tutar</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">
+                  {stats.totalAmount.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ₺
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ShoppingCartIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
         </div>
-      </Card>
 
-      {/* Table */}
-      <Card bodyStyle={{ padding: 0 }}>
-        <Table
-          columns={columns}
-          dataSource={requests}
-          rowKey="id"
-          loading={isLoading}
-          scroll={{ x: 1200 }}
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: totalCount,
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} talep`,
-            onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
-          }}
-          onRow={(record) => ({
-            onClick: () => router.push(`/purchase/requests/${record.id}`),
-            className: 'cursor-pointer hover:bg-gray-50',
-          })}
-        />
-      </Card>
+        {/* Filters */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+          <div className="flex flex-wrap items-center gap-4">
+            <Input
+              placeholder="Talep ara..."
+              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              style={{ width: 280 }}
+              allowClear
+            />
+
+            <Select
+              placeholder="Durum"
+              allowClear
+              style={{ width: 160 }}
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={Object.entries(statusLabels).map(([value, label]) => ({
+                value,
+                label,
+              }))}
+            />
+
+            <Select
+              placeholder="Öncelik"
+              allowClear
+              style={{ width: 130 }}
+              value={priorityFilter}
+              onChange={setPriorityFilter}
+              options={Object.entries(priorityLabels).map(([value, label]) => ({
+                value,
+                label,
+              }))}
+            />
+
+            <RangePicker
+              placeholder={['Başlangıç', 'Bitiş']}
+              format="DD.MM.YYYY"
+              value={dateRange}
+              onChange={(dates) => setDateRange(dates)}
+            />
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <Table
+            columns={columns}
+            dataSource={requests}
+            rowKey="id"
+            loading={isLoading}
+            scroll={{ x: 1200 }}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-200"
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: totalCount,
+              showSizeChanger: true,
+              showTotal: (total) => `Toplam ${total} talep`,
+              onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
+            }}
+            onRow={(record) => ({
+              onClick: () => router.push(`/purchase/requests/${record.id}`),
+              className: 'cursor-pointer hover:bg-slate-50',
+            })}
+          />
+        </div>
+      </Spin>
     </div>
   );
 }
