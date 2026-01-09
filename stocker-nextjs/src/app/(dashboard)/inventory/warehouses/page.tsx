@@ -2,7 +2,7 @@
 
 /**
  * Warehouses List Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Monochrome design system following lot-batches design principles
  */
 
 import React, { useState } from 'react';
@@ -13,6 +13,9 @@ import {
   Modal,
   Dropdown,
   Spin,
+  Button,
+  Input,
+  Tooltip,
 } from 'antd';
 import {
   ArrowPathIcon,
@@ -21,6 +24,7 @@ import {
   EllipsisHorizontalIcon,
   EyeIcon,
   InboxIcon,
+  MagnifyingGlassIcon,
   MapPinIcon,
   PencilIcon,
   PlusIcon,
@@ -34,16 +38,13 @@ import {
 } from '@/lib/api/hooks/useInventory';
 import type { WarehouseDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
-import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  DataTableWrapper,
-} from '@/components/ui/enterprise-page';
+
+const { Search } = Input;
 
 export default function WarehousesPage() {
   const router = useRouter();
   const [includeInactive, setIncludeInactive] = useState(false);
+  const [searchText, setSearchText] = useState('');
 
   // API Hooks
   const { data: warehouses = [], isLoading, refetch } = useWarehouses(includeInactive);
@@ -55,6 +56,17 @@ export default function WarehousesPage() {
   const activeWarehouses = warehouses.filter((w) => w.isActive).length;
   const totalLocations = warehouses.reduce((sum, w) => sum + (w.locationCount || 0), 0);
   const totalProducts = warehouses.reduce((sum, w) => sum + (w.productCount || 0), 0);
+
+  // Filtered data
+  const filteredWarehouses = warehouses.filter((w) => {
+    if (!searchText) return true;
+    const lowerSearch = searchText.toLowerCase();
+    return (
+      w.name.toLowerCase().includes(lowerSearch) ||
+      w.code?.toLowerCase().includes(lowerSearch) ||
+      w.city?.toLowerCase().includes(lowerSearch)
+    );
+  });
 
   // Handlers
   const handleView = (id: number) => {
@@ -80,6 +92,8 @@ export default function WarehousesPage() {
       okText: 'Sil',
       okType: 'danger',
       cancelText: 'İptal',
+      okButtonProps: { className: '!bg-red-600 hover:!bg-red-700 !border-red-600' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: async () => {
         try {
           await deleteWarehouse.mutateAsync(warehouse.id);
@@ -98,6 +112,8 @@ export default function WarehousesPage() {
       content: `"${warehouse.name}" deposunu varsayılan olarak ayarlamak istediğinizden emin misiniz?`,
       okText: 'Ayarla',
       cancelText: 'İptal',
+      okButtonProps: { className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: async () => {
         try {
           await setDefaultWarehouse.mutateAsync(warehouse.id);
@@ -116,14 +132,17 @@ export default function WarehousesPage() {
       width: 280,
       render: (_, record) => (
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: record.isDefault ? '#f59e0b15' : '#3b82f615' }}>
-            <BuildingStorefrontIcon className="w-4 h-4" style={{ color: record.isDefault ? '#f59e0b' : '#3b82f6' }} />
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <BuildingStorefrontIcon className="w-5 h-5 text-slate-600" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-slate-900">{record.name}</span>
               {record.isDefault && (
-                <Tag color="gold" icon={<StarIcon className="w-4 h-4" />} style={{ margin: 0 }}>Varsayılan</Tag>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-slate-900 text-white rounded">
+                  <StarIcon className="w-3 h-3" />
+                  Varsayılan
+                </span>
               )}
             </div>
             <div className="text-xs text-slate-500">{record.code}</div>
@@ -160,7 +179,7 @@ export default function WarehousesPage() {
       width: 100,
       align: 'center',
       render: (count) => (
-        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-purple-50 text-purple-700 rounded">
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded">
           {count || 0}
         </span>
       ),
@@ -172,7 +191,7 @@ export default function WarehousesPage() {
       width: 100,
       align: 'center',
       render: (count) => (
-        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-50 text-green-700 rounded">
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded">
           {count || 0}
         </span>
       ),
@@ -191,7 +210,13 @@ export default function WarehousesPage() {
       key: 'isActive',
       width: 100,
       render: (isActive) => (
-        <Tag color={isActive ? 'green' : 'default'}>{isActive ? 'Aktif' : 'Pasif'}</Tag>
+        <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${
+          isActive
+            ? 'bg-slate-900 text-white'
+            : 'bg-slate-200 text-slate-600'
+        }`}>
+          {isActive ? 'Aktif' : 'Pasif'}
+        </span>
       ),
     },
     {
@@ -243,100 +268,129 @@ export default function WarehousesPage() {
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Depo</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalWarehouses}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <BuildingStorefrontIcon className="w-4 h-4 text-blue-500" />
-            </div>
+    <div className="min-h-screen bg-slate-50 p-8">
+      <Spin spinning={isLoading}>
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+              <BuildingStorefrontIcon className="w-7 h-7" />
+              Depolar
+            </h1>
+            <p className="text-sm text-slate-500 mt-1">
+              Depo ve lokasyonlarınızı yönetin
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Tooltip title="Yenile">
+              <Button
+                icon={<ArrowPathIcon className="w-4 h-4" />}
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+                onClick={() => refetch()}
+                loading={isLoading}
+              />
+            </Tooltip>
+            <Button
+              type="primary"
+              icon={<PlusIcon className="w-4 h-4" />}
+              className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+              onClick={() => router.push('/inventory/warehouses/new')}
+            >
+              Yeni Depo
+            </Button>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif Depo</span>
-              <div className="text-2xl font-semibold text-slate-900">{activeWarehouses}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Konum</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalLocations}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <MapPinIcon className="w-4 h-4 text-violet-500" />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Depolardaki Ürün</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalProducts}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-              <InboxIcon className="w-4 h-4" style={{ color: '#f59e0b' }} />
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Header */}
-      <ListPageHeader
-        icon={<BuildingStorefrontIcon className="w-4 h-4" />}
-        iconColor="#3b82f6"
-        title="Depolar"
-        description="Depo ve lokasyonlarınızı yönetin"
-        itemCount={totalWarehouses}
-        primaryAction={{
-          label: 'Yeni Depo',
-          onClick: () => router.push('/inventory/warehouses/new'),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-          >
-            <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
-
-      {/* Table */}
-      {isLoading ? (
-        <Card>
-          <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Toplam Depo</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{totalWarehouses}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <BuildingStorefrontIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
           </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Aktif Depo</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{activeWarehouses}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CheckCircleIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Toplam Konum</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{totalLocations}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <MapPinIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Depolardaki Ürün</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{totalProducts}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <InboxIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+          <div className="flex flex-wrap items-center gap-4">
+            <Search
+              placeholder="Depo adı, kodu veya şehir ara..."
+              allowClear
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+              style={{ width: 300 }}
+            />
+            <div className="flex-1" />
+            <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={includeInactive}
+                onChange={(e) => setIncludeInactive(e.target.checked)}
+                className="rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+              />
+              Pasif depoları göster
+            </label>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
           <Table
             columns={columns}
-            dataSource={warehouses}
+            dataSource={filteredWarehouses}
             rowKey="id"
             loading={isLoading}
             scroll={{ x: 1200 }}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-200"
             pagination={{
               showSizeChanger: true,
               showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} depo`,
+              pageSizeOptions: ['10', '20', '50'],
+              defaultPageSize: 20,
             }}
           />
-        </DataTableWrapper>
-      )}
-    </PageContainer>
+        </div>
+      </Spin>
+    </div>
   );
 }

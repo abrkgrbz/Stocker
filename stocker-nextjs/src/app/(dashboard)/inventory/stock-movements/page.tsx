@@ -2,19 +2,20 @@
 
 /**
  * Stock Movements List Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Monochrome design system following lot-batches design principles
  */
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Table,
-  Tag,
   Select,
   DatePicker,
   Modal,
   Dropdown,
   Spin,
+  Button,
+  Tooltip,
 } from 'antd';
 import {
   ArrowDownIcon,
@@ -26,6 +27,7 @@ import {
   DocumentIcon,
   EllipsisHorizontalIcon,
   EyeIcon,
+  FunnelIcon,
   PlusIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -47,31 +49,25 @@ import {
 } from '@/lib/utils/export-utils';
 import SavedFiltersDropdown from '@/components/inventory/SavedFiltersDropdown';
 import { resolveDatePreset } from '@/hooks/useSavedFilters';
-import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  DataTableWrapper,
-} from '@/components/ui/enterprise-page';
 
 const { RangePicker } = DatePicker;
 
-// Movement type configuration
-const movementTypeConfig: Record<StockMovementType, { color: string; label: string; direction: 'in' | 'out' | 'transfer' }> = {
-  Purchase: { color: 'green', label: 'Satın Alma', direction: 'in' },
-  Sales: { color: 'red', label: 'Satış', direction: 'out' },
-  PurchaseReturn: { color: 'orange', label: 'Satın Alma İadesi', direction: 'out' },
-  SalesReturn: { color: 'cyan', label: 'Satış İadesi', direction: 'in' },
-  Transfer: { color: 'blue', label: 'Transfer', direction: 'transfer' },
-  Production: { color: 'purple', label: 'Üretim', direction: 'in' },
-  Consumption: { color: 'magenta', label: 'Tüketim', direction: 'out' },
-  AdjustmentIncrease: { color: 'lime', label: 'Artış Düzeltme', direction: 'in' },
-  AdjustmentDecrease: { color: 'volcano', label: 'Azalış Düzeltme', direction: 'out' },
-  Opening: { color: 'geekblue', label: 'Açılış', direction: 'in' },
-  Counting: { color: 'gold', label: 'Sayım', direction: 'transfer' },
-  Damage: { color: 'red', label: 'Hasar', direction: 'out' },
-  Loss: { color: 'red', label: 'Kayıp', direction: 'out' },
-  Found: { color: 'green', label: 'Bulunan', direction: 'in' },
+// Movement type configuration - Monochrome style
+const movementTypeConfig: Record<StockMovementType, { bgColor: string; textColor: string; label: string; direction: 'in' | 'out' | 'transfer' }> = {
+  Purchase: { bgColor: 'bg-slate-900', textColor: 'text-white', label: 'Satın Alma', direction: 'in' },
+  Sales: { bgColor: 'bg-slate-700', textColor: 'text-white', label: 'Satış', direction: 'out' },
+  PurchaseReturn: { bgColor: 'bg-slate-600', textColor: 'text-white', label: 'Satın Alma İadesi', direction: 'out' },
+  SalesReturn: { bgColor: 'bg-slate-500', textColor: 'text-white', label: 'Satış İadesi', direction: 'in' },
+  Transfer: { bgColor: 'bg-slate-400', textColor: 'text-white', label: 'Transfer', direction: 'transfer' },
+  Production: { bgColor: 'bg-slate-800', textColor: 'text-white', label: 'Üretim', direction: 'in' },
+  Consumption: { bgColor: 'bg-slate-600', textColor: 'text-white', label: 'Tüketim', direction: 'out' },
+  AdjustmentIncrease: { bgColor: 'bg-slate-500', textColor: 'text-white', label: 'Artış Düzeltme', direction: 'in' },
+  AdjustmentDecrease: { bgColor: 'bg-slate-500', textColor: 'text-white', label: 'Azalış Düzeltme', direction: 'out' },
+  Opening: { bgColor: 'bg-slate-900', textColor: 'text-white', label: 'Açılış', direction: 'in' },
+  Counting: { bgColor: 'bg-slate-400', textColor: 'text-white', label: 'Sayım', direction: 'transfer' },
+  Damage: { bgColor: 'bg-slate-700', textColor: 'text-white', label: 'Hasar', direction: 'out' },
+  Loss: { bgColor: 'bg-slate-700', textColor: 'text-white', label: 'Kayıp', direction: 'out' },
+  Found: { bgColor: 'bg-slate-600', textColor: 'text-white', label: 'Bulunan', direction: 'in' },
 };
 
 export default function StockMovementsPage() {
@@ -234,6 +230,8 @@ export default function StockMovementsPage() {
       okText: 'Tersine Çevir',
       okType: 'danger',
       cancelText: 'İptal',
+      okButtonProps: { className: '!bg-red-600 hover:!bg-red-700 !border-red-600' },
+      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: async () => {
         try {
           await reverseMovement.mutateAsync({
@@ -258,13 +256,15 @@ export default function StockMovementsPage() {
       render: (text, record) => (
         <div className="flex items-center gap-2">
           <span
-            className="text-sm font-medium text-blue-600 cursor-pointer hover:text-blue-800"
+            className="text-sm font-medium text-slate-900 cursor-pointer hover:text-slate-600"
             onClick={() => handleView(record.id)}
           >
             {text}
           </span>
           {record.isReversed && (
-            <Tag color="red" className="text-xs">Tersine Çevrildi</Tag>
+            <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-slate-700 text-white rounded">
+              Tersine Çevrildi
+            </span>
           )}
         </div>
       ),
@@ -284,16 +284,17 @@ export default function StockMovementsPage() {
       title: 'Tür',
       dataIndex: 'movementType',
       key: 'movementType',
-      width: 140,
+      width: 160,
       render: (type: StockMovementType) => {
         const config = movementTypeConfig[type];
-        const icon = config.direction === 'in' ? <ArrowUpIcon className="w-4 h-4" /> :
-                    config.direction === 'out' ? <ArrowDownIcon className="w-4 h-4" /> :
-                    <ArrowPathIcon className="w-4 h-4" />;
+        const icon = config.direction === 'in' ? <ArrowUpIcon className="w-3 h-3" /> :
+                    config.direction === 'out' ? <ArrowDownIcon className="w-3 h-3" /> :
+                    <ArrowPathIcon className="w-3 h-3" />;
         return (
-          <Tag color={config.color} icon={icon}>
+          <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded ${config.bgColor} ${config.textColor}`}>
+            {icon}
             {config.label}
-          </Tag>
+          </span>
         );
       },
     },
@@ -342,13 +343,10 @@ export default function StockMovementsPage() {
       align: 'right',
       render: (qty, record) => {
         const config = movementTypeConfig[record.movementType];
-        const colorClass = config.direction === 'in' ? 'text-green-600' :
-                     config.direction === 'out' ? 'text-red-600' :
-                     'text-blue-600';
         const prefix = config.direction === 'in' ? '+' :
                       config.direction === 'out' ? '-' : '';
         return (
-          <span className={`text-sm font-semibold ${colorClass}`}>
+          <span className="text-sm font-semibold text-slate-900">
             {prefix}{qty}
           </span>
         );
@@ -432,71 +430,20 @@ export default function StockMovementsPage() {
   const netChange = summary?.netChange || 0;
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Hareket</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalMovements}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <ArrowsRightLeftIcon className="w-5 h-5" style={{ color: '#3b82f6' }} />
-            </div>
+    <div className="min-h-screen bg-slate-50 p-8">
+      <Spin spinning={isLoading}>
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+              <ArrowsRightLeftIcon className="w-7 h-7" />
+              Stok Hareketleri
+            </h1>
+            <p className="text-sm text-slate-500 mt-1">
+              Tüm stok giriş, çıkış ve transferlerini görüntüleyin
+            </p>
           </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Giriş</span>
-              <div className="text-2xl font-semibold text-green-600">{totalInbound}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <ArrowUpIcon className="w-5 h-5" style={{ color: '#10b981' }} />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Çıkış</span>
-              <div className="text-2xl font-semibold text-red-600">{totalOutbound}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#ef444415' }}>
-              <ArrowDownIcon className="w-5 h-5" style={{ color: '#ef4444' }} />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Net Değişim</span>
-              <div className={`text-2xl font-semibold ${netChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {netChange >= 0 ? '+' : ''}{netChange}
-              </div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <ArrowPathIcon className="w-4 h-4 text-violet-500" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Header */}
-      <ListPageHeader
-        icon={<ArrowsRightLeftIcon className="w-5 h-5" />}
-        iconColor="#3b82f6"
-        title="Stok Hareketleri"
-        description="Tüm stok giriş, çıkış ve transferlerini görüntüleyin"
-        itemCount={movements.length}
-        primaryAction={{
-          label: 'Yeni Hareket',
-          onClick: () => router.push('/inventory/stock-movements/new'),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <SavedFiltersDropdown
               entityType="stock-movements"
               currentFilters={currentFilters}
@@ -521,94 +468,153 @@ export default function StockMovementsPage() {
                 ],
               }}
             >
-              <button className="inline-flex items-center gap-2 px-3 py-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-                <ArrowDownTrayIcon className="w-4 h-4" />
+              <Button
+                icon={<ArrowDownTrayIcon className="w-4 h-4" />}
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+              >
                 Dışa Aktar
-              </button>
+              </Button>
             </Dropdown>
-            <button
-              onClick={() => refetch()}
-              disabled={isLoading}
-              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+            <Tooltip title="Yenile">
+              <Button
+                icon={<ArrowPathIcon className="w-4 h-4" />}
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+                onClick={() => refetch()}
+                loading={isLoading}
+              />
+            </Tooltip>
+            <Button
+              type="primary"
+              icon={<PlusIcon className="w-4 h-4" />}
+              className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+              onClick={() => router.push('/inventory/stock-movements/new')}
             >
-              <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </button>
+              Yeni Hareket
+            </Button>
           </div>
-        }
-      />
-
-      {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <Select
-            placeholder="Ürün"
-            value={selectedProduct}
-            onChange={setSelectedProduct}
-            allowClear
-            showSearch
-            optionFilterProp="label"
-            style={{ width: 200 }}
-            options={products.map((p) => ({
-              value: p.id,
-              label: `${p.code} - ${p.name}`,
-            }))}
-          />
-          <Select
-            placeholder="Depo"
-            value={selectedWarehouse}
-            onChange={setSelectedWarehouse}
-            allowClear
-            style={{ width: 180 }}
-            options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
-          />
-          <Select
-            placeholder="Hareket Türü"
-            value={selectedType}
-            onChange={setSelectedType}
-            allowClear
-            style={{ width: 180 }}
-            options={Object.entries(movementTypeConfig).map(([key, value]) => ({
-              value: key,
-              label: value.label,
-            }))}
-          />
-          <RangePicker
-            value={dateRange}
-            onChange={setDateRange}
-            style={{ width: 280 }}
-            placeholder={['Başlangıç', 'Bitiş']}
-          />
-          <button
-            onClick={handleClearFilter}
-            className="px-4 py-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-          >
-            Temizle
-          </button>
         </div>
-      </div>
 
-      {/* Table */}
-      {isLoading ? (
-        <Card>
-          <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Toplam Hareket</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{totalMovements}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ArrowsRightLeftIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
           </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Giriş</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{totalInbound}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ArrowUpIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Çıkış</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{totalOutbound}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ArrowDownIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Net Değişim</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">
+                  {netChange >= 0 ? '+' : ''}{netChange}
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ArrowPathIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <Select
+              placeholder="Ürün"
+              value={selectedProduct}
+              onChange={setSelectedProduct}
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              style={{ width: 200 }}
+              options={products.map((p) => ({
+                value: p.id,
+                label: `${p.code} - ${p.name}`,
+              }))}
+            />
+            <Select
+              placeholder="Depo"
+              value={selectedWarehouse}
+              onChange={setSelectedWarehouse}
+              allowClear
+              style={{ width: 180 }}
+              options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+            />
+            <Select
+              placeholder="Hareket Türü"
+              value={selectedType}
+              onChange={setSelectedType}
+              allowClear
+              style={{ width: 180 }}
+              options={Object.entries(movementTypeConfig).map(([key, value]) => ({
+                value: key,
+                label: value.label,
+              }))}
+            />
+            <RangePicker
+              value={dateRange}
+              onChange={setDateRange}
+              style={{ width: 280 }}
+              placeholder={['Başlangıç', 'Bitiş']}
+            />
+            <Tooltip title="Filtreleri Temizle">
+              <Button
+                icon={<FunnelIcon className="w-4 h-4" />}
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+                onClick={handleClearFilter}
+              >
+                Temizle
+              </Button>
+            </Tooltip>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
           <Table
             columns={columns}
             dataSource={movements}
             rowKey="id"
             loading={isLoading}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-200"
             pagination={{
               showSizeChanger: true,
               showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} hareket`,
+              pageSizeOptions: ['20', '50', '100'],
+              defaultPageSize: 50,
             }}
             scroll={{ x: 1500 }}
           />
-        </DataTableWrapper>
-      )}
-    </PageContainer>
+        </div>
+      </Spin>
+    </div>
   );
 }

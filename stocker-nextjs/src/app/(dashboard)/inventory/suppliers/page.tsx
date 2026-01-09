@@ -2,17 +2,18 @@
 
 /**
  * Suppliers List Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Monochrome design system following lot-batches design principles
  */
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Table,
-  Tag,
   Input,
   Dropdown,
   Spin,
+  Button,
+  Tooltip,
 } from 'antd';
 import {
   ArrowPathIcon,
@@ -33,16 +34,12 @@ import { useSuppliers, useDeleteSupplier } from '@/lib/api/hooks/useInventory';
 import type { SupplierDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  DataTableWrapper,
-} from '@/components/ui/enterprise-page';
-import {
   showDeleteSuccess,
   showError,
   confirmDelete,
 } from '@/lib/utils/sweetalert';
+
+const { Search } = Input;
 
 export default function SuppliersPage() {
   const router = useRouter();
@@ -75,7 +72,7 @@ export default function SuppliersPage() {
   // Calculate stats
   const totalSuppliers = suppliers.length;
   const activeSuppliers = suppliers.filter((s) => s.isActive).length;
-  const preferredSuppliers = suppliers.filter((s) => s.isActive).length;
+  const preferredSuppliers = suppliers.filter((s) => s.isPreferred).length;
   const totalProducts = suppliers.reduce((sum, s) => sum + (s.productCount || 0), 0);
 
   const columns: ColumnsType<SupplierDto> = [
@@ -86,17 +83,17 @@ export default function SuppliersPage() {
       sorter: (a, b) => a.name.localeCompare(b.name),
       render: (name: string, record) => (
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: record.isActive ? '#f59e0b15' : '#10b98115' }}
-          >
-            <BuildingStorefrontIcon className="w-4 h-4" style={{ color: record.isActive ? '#f59e0b' : '#10b981' }} />
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <BuildingStorefrontIcon className="w-5 h-5 text-slate-600" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-slate-900">{name}</span>
-              {record.isActive && (
-                <StarIcon className="w-3 h-3 text-amber-500" />
+              {record.isPreferred && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-slate-900 text-white rounded">
+                  <StarIcon className="w-3 h-3" />
+                  Tercih
+                </span>
               )}
             </div>
             {record.code && (
@@ -138,7 +135,7 @@ export default function SuppliersPage() {
       align: 'center',
       sorter: (a, b) => (a.productCount || 0) - (b.productCount || 0),
       render: (count: number) => (
-        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-50 text-green-700 rounded">
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded">
           {count || 0}
         </span>
       ),
@@ -153,13 +150,16 @@ export default function SuppliersPage() {
         { text: 'Tercih Edilen', value: true },
         { text: 'Standart', value: false },
       ],
-      onFilter: (value, record) => record.isActive === value,
+      onFilter: (value, record) => record.isPreferred === value,
       render: (isPreferred: boolean) => (
-        isPreferred ? (
-          <Tag color="gold" icon={<StarIcon className="w-4 h-4" />}>Tercih Edilen</Tag>
-        ) : (
-          <Tag color="default">Standart</Tag>
-        )
+        <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded ${
+          isPreferred
+            ? 'bg-slate-900 text-white'
+            : 'bg-slate-200 text-slate-600'
+        }`}>
+          {isPreferred && <StarIcon className="w-3 h-3" />}
+          {isPreferred ? 'Tercih Edilen' : 'Standart'}
+        </span>
       ),
     },
     {
@@ -173,9 +173,13 @@ export default function SuppliersPage() {
       ],
       onFilter: (value, record) => record.isActive === value,
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'default'}>
+        <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${
+          isActive
+            ? 'bg-slate-900 text-white'
+            : 'bg-slate-200 text-slate-600'
+        }`}>
           {isActive ? 'Aktif' : 'Pasif'}
-        </Tag>
+        </span>
       ),
     },
     {
@@ -219,117 +223,123 @@ export default function SuppliersPage() {
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Tedarikçi</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalSuppliers}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <BuildingStorefrontIcon className="w-4 h-4" style={{ color: '#10b981' }} />
-            </div>
+    <div className="min-h-screen bg-slate-50 p-8">
+      <Spin spinning={isLoading}>
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+              <BuildingStorefrontIcon className="w-7 h-7" />
+              Tedarikçiler
+            </h1>
+            <p className="text-sm text-slate-500 mt-1">
+              Tedarikçi ve satıcı bilgilerini yönetin
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Tooltip title="Yenile">
+              <Button
+                icon={<ArrowPathIcon className="w-4 h-4" />}
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+                onClick={() => refetch()}
+                loading={isLoading}
+              />
+            </Tooltip>
+            <Button
+              type="primary"
+              icon={<PlusIcon className="w-4 h-4" />}
+              className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+              onClick={() => router.push('/inventory/suppliers/new')}
+            >
+              Yeni Tedarikçi
+            </Button>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif Tedarikçi</span>
-              <div className="text-2xl font-semibold text-slate-900">{activeSuppliers}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <CheckCircleIcon className="w-4 h-4 text-blue-500" />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Tercih Edilen</span>
-              <div className="text-2xl font-semibold text-slate-900">{preferredSuppliers}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-              <StarIcon className="w-4 h-4" style={{ color: '#f59e0b' }} />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Ürün</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalProducts}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <InboxIcon className="w-4 h-4 text-violet-500" />
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Header */}
-      <ListPageHeader
-        icon={<BuildingStorefrontIcon className="w-4 h-4" />}
-        iconColor="#10b981"
-        title="Tedarikçiler"
-        description="Tedarikçi ve satıcı bilgilerini yönetin"
-        itemCount={filteredSuppliers.length}
-        primaryAction={{
-          label: 'Yeni Tedarikçi',
-          onClick: () => router.push('/inventory/suppliers/new'),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-          >
-            <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
-
-      {/* Search */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
-        <Input
-          placeholder="Tedarikçi ara... (ad, kod, şehir)"
-          prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          style={{ maxWidth: 400 }}
-          allowClear
-          className="h-10"
-        />
-      </div>
-
-      {/* Table */}
-      {isLoading ? (
-        <Card>
-          <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Toplam Tedarikçi</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{totalSuppliers}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <BuildingStorefrontIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
           </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Aktif Tedarikçi</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{activeSuppliers}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CheckCircleIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Tercih Edilen</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{preferredSuppliers}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <StarIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Toplam Ürün</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{totalProducts}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <InboxIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+          <div className="flex flex-wrap items-center gap-4">
+            <Search
+              placeholder="Tedarikçi ara... (ad, kod, şehir)"
+              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              style={{ maxWidth: 400 }}
+              allowClear
+            />
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
           <Table
             columns={columns}
             dataSource={filteredSuppliers}
             rowKey="id"
             loading={isLoading}
             scroll={{ x: 900 }}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-200"
             pagination={{
               showSizeChanger: true,
               showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} tedarikçi`,
+              pageSizeOptions: ['10', '20', '50'],
+              defaultPageSize: 20,
             }}
             onRow={(record) => ({
               onClick: () => router.push(`/inventory/suppliers/${record.id}`),
               style: { cursor: 'pointer' },
             })}
           />
-        </DataTableWrapper>
-      )}
-    </PageContainer>
+        </div>
+      </Spin>
+    </div>
   );
 }

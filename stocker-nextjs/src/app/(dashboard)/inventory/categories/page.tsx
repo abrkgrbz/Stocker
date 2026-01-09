@@ -2,22 +2,22 @@
 
 /**
  * Categories List Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Monochrome design system following lot-batches design principles
  */
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Table,
-  Tag,
   Input,
   Popconfirm,
   message,
   Segmented,
   Badge,
   Tooltip,
+  Button,
+  Spin,
 } from 'antd';
-import { Spinner } from '@/components/primitives';
 import {
   ArrowPathIcon,
   CheckCircleIcon,
@@ -33,12 +33,8 @@ import {
 import { useCategories, useCategoryTree, useDeleteCategory } from '@/lib/api/hooks/useInventory';
 import type { CategoryDto, CategoryTreeDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
-import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  DataTableWrapper,
-} from '@/components/ui/enterprise-page';
+
+const { Search } = Input;
 
 // Tree table item interface
 interface TreeTableItem {
@@ -146,14 +142,11 @@ export default function CategoriesPage() {
       key: 'name',
       render: (name: string, record) => (
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: '#10b98115' }}
-          >
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
             {record.parentCategoryId ? (
-              <FolderIcon className="w-5 h-5" style={{ color: '#10b981' }} />
+              <FolderIcon className="w-5 h-5 text-slate-600" />
             ) : (
-              <TagIcon className="w-5 h-5" style={{ color: '#10b981' }} />
+              <TagIcon className="w-5 h-5 text-slate-600" />
             )}
           </div>
           <div>
@@ -183,7 +176,7 @@ export default function CategoriesPage() {
       width: 120,
       align: 'center',
       render: (count: number) => (
-        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded">
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded">
           {count || 0}
         </span>
       ),
@@ -194,7 +187,13 @@ export default function CategoriesPage() {
       key: 'isActive',
       width: 100,
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'default'}>{isActive ? 'Aktif' : 'Pasif'}</Tag>
+        <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${
+          isActive
+            ? 'bg-slate-900 text-white'
+            : 'bg-slate-200 text-slate-600'
+        }`}>
+          {isActive ? 'Aktif' : 'Pasif'}
+        </span>
       ),
     },
     {
@@ -215,6 +214,8 @@ export default function CategoriesPage() {
             onConfirm={() => handleDelete(record.id)}
             okText="Evet"
             cancelText="Hayır"
+            okButtonProps={{ className: '!bg-red-600 hover:!bg-red-700 !border-red-600' }}
+            cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
           >
             <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors">
               <TrashIcon className="w-4 h-4" />
@@ -235,30 +236,22 @@ export default function CategoriesPage() {
         const subCount = countSubCategories(record);
         return (
           <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: record.level === 0 ? '#10b98115' : '#f1f5f9' }}
-            >
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+              record.level === 0 ? 'bg-slate-900' : 'bg-slate-100'
+            }`}>
               {record.level === 0 ? (
-                <TagIcon className="w-5 h-5" style={{ color: '#10b981' }} />
+                <TagIcon className="w-5 h-5 text-white" />
               ) : (
-                <FolderIcon className="w-5 h-5" style={{ color: '#64748b' }} />
+                <FolderIcon className="w-5 h-5 text-slate-600" />
               )}
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-slate-900">{name}</span>
               {subCount > 0 && (
                 <Tooltip title={`${subCount} alt kategori`}>
-                  <Badge
-                    count={subCount}
-                    style={{
-                      backgroundColor: '#10b981',
-                      fontSize: 10,
-                      height: 16,
-                      minWidth: 16,
-                      lineHeight: '16px'
-                    }}
-                  />
+                  <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-medium bg-slate-600 text-white rounded-full">
+                    {subCount}
+                  </span>
                 </Tooltip>
               )}
             </div>
@@ -284,11 +277,11 @@ export default function CategoriesPage() {
       width: 100,
       align: 'center',
       render: (level: number) => {
-        const colors = ['green', 'blue', 'purple'];
+        const bgColors = ['bg-slate-900 text-white', 'bg-slate-600 text-white', 'bg-slate-400 text-white'];
         return (
-          <Tag color={colors[level] || 'default'}>
+          <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${bgColors[level] || 'bg-slate-200 text-slate-600'}`}>
             Seviye {level + 1}
-          </Tag>
+          </span>
         );
       },
     },
@@ -298,9 +291,13 @@ export default function CategoriesPage() {
       align: 'center',
       width: 120,
       render: (_, record) => (
-        <Tag color={record.hasChildren ? 'blue' : 'default'}>
+        <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${
+          record.hasChildren
+            ? 'bg-slate-700 text-white'
+            : 'bg-slate-200 text-slate-600'
+        }`}>
           {record.hasChildren ? 'Var' : 'Yok'}
-        </Tag>
+        </span>
       ),
     },
     {
@@ -324,6 +321,8 @@ export default function CategoriesPage() {
             onConfirm={() => handleDelete(record.id)}
             okText="Evet"
             cancelText="Hayır"
+            okButtonProps={{ className: '!bg-red-600 hover:!bg-red-700 !border-red-600' }}
+            cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
           >
             <Tooltip title="Sil">
               <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors">
@@ -337,118 +336,119 @@ export default function CategoriesPage() {
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Kategori</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalCategories}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <TagIcon className="w-6 h-6" style={{ color: '#10b981' }} />
-            </div>
+    <div className="min-h-screen bg-slate-50 p-8">
+      <Spin spinning={isLoading}>
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+              <TagIcon className="w-7 h-7" />
+              Kategoriler
+            </h1>
+            <p className="text-sm text-slate-500 mt-1">
+              Ürün kategorilerini yönetin
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Tooltip title="Yenile">
+              <Button
+                icon={<ArrowPathIcon className="w-4 h-4" />}
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+                onClick={handleRefresh}
+                loading={isLoading}
+              />
+            </Tooltip>
+            <Button
+              type="primary"
+              icon={<PlusIcon className="w-4 h-4" />}
+              className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+              onClick={() => router.push('/inventory/categories/new')}
+            >
+              Yeni Kategori
+            </Button>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif Kategori</span>
-              <div className="text-2xl font-semibold text-slate-900">{activeCategories}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <CheckCircleIcon className="w-6 h-6" style={{ color: '#3b82f6' }} />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Ana Kategori</span>
-              <div className="text-2xl font-semibold text-slate-900">{rootCategories}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <Squares2X2Icon className="w-6 h-6" style={{ color: '#8b5cf6' }} />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Ürün</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalProducts}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-              <FolderIcon className="w-6 h-6" style={{ color: '#f59e0b' }} />
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Header */}
-      <ListPageHeader
-        icon={<TagIcon className="w-5 h-5" />}
-        iconColor="#10b981"
-        title="Kategoriler"
-        description="Ürün kategorilerini yönetin"
-        itemCount={viewMode === 'tree' ? filteredTreeData.length : filteredCategories.length}
-        primaryAction={{
-          label: 'Yeni Kategori',
-          onClick: () => router.push('/inventory/categories/new'),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <button
-            onClick={handleRefresh}
-            disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-          >
-            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-        }
-      />
-
-      {/* Search and View Toggle */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <Input
-            placeholder="Kategori ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ maxWidth: 300 }}
-            allowClear
-            className="h-10"
-          />
-          <Segmented
-            value={viewMode}
-            onChange={(value) => setViewMode(value as 'tree' | 'flat')}
-            options={[
-              {
-                value: 'tree',
-                icon: <Squares2X2Icon className="w-4 h-4" />,
-                label: 'Ağaç Görünümü',
-              },
-              {
-                value: 'flat',
-                icon: <ListBulletIcon className="w-4 h-4" />,
-                label: 'Liste Görünümü',
-              },
-            ]}
-          />
-        </div>
-      </div>
-
-      {/* Table */}
-      {isLoading ? (
-        <Card>
-          <div className="flex items-center justify-center py-12">
-            <Spinner size="lg" />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Toplam Kategori</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{totalCategories}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <TagIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
           </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Aktif Kategori</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{activeCategories}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CheckCircleIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Ana Kategori</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{rootCategories}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <Squares2X2Icon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Toplam Ürün</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{totalProducts}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <FolderIcon className="w-5 h-5 text-slate-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <Search
+              placeholder="Kategori ara..."
+              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              style={{ maxWidth: 300 }}
+              allowClear
+            />
+            <Segmented
+              value={viewMode}
+              onChange={(value) => setViewMode(value as 'tree' | 'flat')}
+              options={[
+                {
+                  value: 'tree',
+                  icon: <Squares2X2Icon className="w-4 h-4" />,
+                  label: 'Ağaç Görünümü',
+                },
+                {
+                  value: 'flat',
+                  icon: <ListBulletIcon className="w-4 h-4" />,
+                  label: 'Liste Görünümü',
+                },
+              ]}
+            />
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
           {viewMode === 'tree' ? (
             <Table
               columns={treeColumns}
@@ -460,6 +460,7 @@ export default function CategoriesPage() {
                 indentSize: 24,
               }}
               pagination={false}
+              className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-200"
             />
           ) : (
             <Table
@@ -467,14 +468,17 @@ export default function CategoriesPage() {
               dataSource={filteredCategories}
               rowKey="id"
               loading={isLoading}
+              className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-200"
               pagination={{
                 showSizeChanger: true,
                 showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kategori`,
+                pageSizeOptions: ['10', '20', '50'],
+                defaultPageSize: 20,
               }}
             />
           )}
-        </DataTableWrapper>
-      )}
-    </PageContainer>
+        </div>
+      </Spin>
+    </div>
   );
 }

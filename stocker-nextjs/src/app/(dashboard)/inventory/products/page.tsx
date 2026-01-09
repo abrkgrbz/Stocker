@@ -1,15 +1,9 @@
 'use client';
 
-/**
- * Products List Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
- */
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Table,
-  Tag,
   Input,
   Select,
   Modal,
@@ -22,14 +16,16 @@ import {
   Dropdown,
   Tooltip,
   Checkbox,
+  Space,
+  Button,
 } from 'antd';
-import { Spinner } from '@/components/primitives';
 import {
   ArrowDownTrayIcon,
   ArrowPathIcon,
   CheckCircleIcon,
   CheckIcon,
   Cog6ToothIcon,
+  CubeIcon,
   DocumentIcon,
   EllipsisHorizontalIcon,
   ExclamationTriangleIcon,
@@ -39,12 +35,12 @@ import {
   MagnifyingGlassIcon,
   PencilSquareIcon,
   PlusIcon,
-  Squares2X2Icon,
   StarIcon,
   StopIcon,
   TableCellsIcon,
   TrashIcon,
   XMarkIcon,
+  CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import {
@@ -60,26 +56,20 @@ import type { ProductDto, ProductType, UpdateProductDto } from '@/lib/api/servic
 import type { ColumnsType } from 'antd/es/table';
 import { generateInventoryPDF, exportInventoryToExcel } from '@/lib/utils/inventory-export';
 import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  DataTableWrapper,
-} from '@/components/ui/enterprise-page';
-import {
   showSuccess,
   showError,
   showWarning,
   confirmDelete,
 } from '@/lib/utils/sweetalert';
 
-// Product type configuration
-const productTypeConfig: Record<ProductType, { color: string; label: string }> = {
-  Raw: { color: 'blue', label: 'Hammadde' },
-  SemiFinished: { color: 'cyan', label: 'Yarı Mamul' },
-  Finished: { color: 'green', label: 'Mamul' },
-  Service: { color: 'purple', label: 'Hizmet' },
-  Consumable: { color: 'orange', label: 'Sarf Malzeme' },
-  FixedAsset: { color: 'gold', label: 'Duran Varlık' },
+// Monochrome product type configuration
+const productTypeConfig: Record<ProductType, { color: string; bgColor: string; label: string }> = {
+  Raw: { color: '#1e293b', bgColor: '#e2e8f0', label: 'Hammadde' },
+  SemiFinished: { color: '#334155', bgColor: '#f1f5f9', label: 'Yarı Mamul' },
+  Finished: { color: '#1e293b', bgColor: '#e2e8f0', label: 'Mamul' },
+  Service: { color: '#475569', bgColor: '#f1f5f9', label: 'Hizmet' },
+  Consumable: { color: '#64748b', bgColor: '#f1f5f9', label: 'Sarf Malzeme' },
+  FixedAsset: { color: '#334155', bgColor: '#e2e8f0', label: 'Duran Varlık' },
 };
 
 // Filter state interface
@@ -116,40 +106,6 @@ const defaultFilters: FilterState = {
   stockStatus: [],
   trackingType: [],
 };
-
-// Predefined filter presets
-const filterPresets: { key: string; label: string; icon: React.ReactNode; filters: Partial<FilterState> }[] = [
-  {
-    key: 'lowStock',
-    label: 'Düşük Stok',
-    icon: <ExclamationTriangleIcon className="w-4 h-4" style={{ color: '#fa8c16' }} />,
-    filters: { stockStatus: ['lowStock'] },
-  },
-  {
-    key: 'outOfStock',
-    label: 'Stokta Yok',
-    icon: <ExclamationTriangleIcon className="w-4 h-4" style={{ color: '#f5222d' }} />,
-    filters: { stockStatus: ['outOfStock'] },
-  },
-  {
-    key: 'serialTracked',
-    label: 'Seri Takipli',
-    icon: <Cog6ToothIcon className="w-4 h-4" style={{ color: '#1890ff' }} />,
-    filters: { trackingType: ['serial'] },
-  },
-  {
-    key: 'lotTracked',
-    label: 'Lot Takipli',
-    icon: <Cog6ToothIcon className="w-4 h-4" style={{ color: '#52c41a' }} />,
-    filters: { trackingType: ['lot'] },
-  },
-  {
-    key: 'inactive',
-    label: 'Pasif Ürünler',
-    icon: <StopIcon className="w-4 h-4" style={{ color: '#8c8c8c' }} />,
-    filters: { includeInactive: true },
-  },
-];
 
 // Local storage key for saved views
 const SAVED_VIEWS_KEY = 'inventory_product_saved_views';
@@ -248,15 +204,6 @@ export default function ProductsPage() {
     };
   }, [products]);
 
-  const stockStats = useMemo(() => {
-    if (products.length === 0) return { min: 0, max: 1000 };
-    const stocks = products.map(p => p.totalStockQuantity);
-    return {
-      min: 0,
-      max: Math.ceil(Math.max(...stocks, 1000) / 10) * 10,
-    };
-  }, [products]);
-
   // Filter products with advanced filters
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
@@ -274,11 +221,6 @@ export default function ProductsPage() {
       const matchesPrice = !filters.priceRange ||
         ((product.unitPrice || 0) >= filters.priceRange[0] &&
          (product.unitPrice || 0) <= filters.priceRange[1]);
-
-      // Stock range filter
-      const matchesStockRange = !filters.stockRange ||
-        (product.totalStockQuantity >= filters.stockRange[0] &&
-         product.totalStockQuantity <= filters.stockRange[1]);
 
       // Stock status filter
       let matchesStockStatus = true;
@@ -304,7 +246,7 @@ export default function ProductsPage() {
         );
       }
 
-      return matchesSearch && matchesType && matchesPrice && matchesStockRange && matchesStockStatus && matchesTrackingType;
+      return matchesSearch && matchesType && matchesPrice && matchesStockStatus && matchesTrackingType;
     });
   }, [products, debouncedSearch, filters]);
 
@@ -317,7 +259,6 @@ export default function ProductsPage() {
       filters.productTypes.length > 0 ||
       filters.includeInactive !== false ||
       filters.priceRange !== null ||
-      filters.stockRange !== null ||
       filters.stockStatus.length > 0 ||
       filters.trackingType.length > 0
     );
@@ -331,17 +272,20 @@ export default function ProductsPage() {
     if (filters.productTypes.length > 0) count++;
     if (filters.includeInactive) count++;
     if (filters.priceRange) count++;
-    if (filters.stockRange) count++;
     if (filters.stockStatus.length > 0) count++;
     if (filters.trackingType.length > 0) count++;
     return count;
   }, [filters]);
 
   // Calculate stats
-  const totalProducts = products.length;
-  const activeProducts = products.filter((p) => p.isActive).length;
-  const lowStockProducts = products.filter((p) => p.totalStockQuantity < p.minStockLevel).length;
-  const totalValue = products.reduce((sum, p) => sum + (p.unitPrice || 0) * p.totalStockQuantity, 0);
+  const stats = useMemo(() => {
+    const total = products.length;
+    const active = products.filter((p) => p.isActive).length;
+    const lowStock = products.filter((p) => p.totalStockQuantity > 0 && p.totalStockQuantity < p.minStockLevel).length;
+    const outOfStock = products.filter((p) => p.totalStockQuantity === 0).length;
+    const totalValue = products.reduce((sum, p) => sum + (p.unitPrice || 0) * p.totalStockQuantity, 0);
+    return { total, active, lowStock, outOfStock, totalValue };
+  }, [products]);
 
   // Filter handlers
   const updateFilter = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
@@ -355,11 +299,6 @@ export default function ProductsPage() {
     if (lowStockFilter) {
       router.push('/inventory/products');
     }
-  };
-
-  const applyPreset = (preset: typeof filterPresets[0]) => {
-    setFilters({ ...defaultFilters, ...preset.filters });
-    setActiveViewId(null);
   };
 
   // Saved view handlers
@@ -660,62 +599,56 @@ export default function ProductsPage() {
           setSelectedRowKeys(lowStockIds);
         },
       },
-      {
-        key: 'active',
-        text: 'Aktifleri Seç',
-        onSelect: () => {
-          const activeIds = filteredProducts.filter(p => p.isActive).map(p => p.id);
-          setSelectedRowKeys(activeIds);
-        },
-      },
-      {
-        key: 'inactive',
-        text: 'Pasifleri Seç',
-        onSelect: () => {
-          const inactiveIds = filteredProducts.filter(p => !p.isActive).map(p => p.id);
-          setSelectedRowKeys(inactiveIds);
-        },
-      },
     ],
   };
 
-  // Table columns
+  // Table columns - Monochrome design
   const columns: ColumnsType<ProductDto> = [
     {
       title: 'Ürün',
       key: 'product',
+      width: 280,
       render: (_, record) => (
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: '#3b82f615' }}
+        <div className="space-y-1">
+          <span
+            className="font-semibold text-slate-900 cursor-pointer hover:text-slate-600"
+            onClick={() => handleView(record.id)}
           >
-            <Squares2X2Icon className="w-5 h-5" style={{ color: '#3b82f6' }} />
+            {record.name}
+          </span>
+          <div className="text-xs text-slate-500">
+            {record.code}
+            {record.barcode && ` • ${record.barcode}`}
           </div>
-          <div>
-            <div
-              className="text-sm font-medium text-blue-600 cursor-pointer hover:text-blue-800"
-              onClick={() => handleView(record.id)}
-            >
-              {record.name}
-            </div>
-            <div className="text-xs text-slate-500">
-              {record.code}
-              {record.barcode && ` • ${record.barcode}`}
-            </div>
+          <div className="flex gap-1">
+            {!record.isActive && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-600">
+                Pasif
+              </span>
+            )}
+            {record.trackSerialNumbers && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                Seri
+              </span>
+            )}
+            {record.trackLotNumbers && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                Lot
+              </span>
+            )}
           </div>
         </div>
       ),
     },
     {
-      title: 'Kategori',
-      dataIndex: 'categoryName',
-      key: 'categoryName',
-      width: 140,
-      render: (name) => name ? (
-        <Tag color="default">{name}</Tag>
-      ) : (
-        <span className="text-slate-400">-</span>
+      title: 'Kategori / Marka',
+      key: 'category',
+      width: 180,
+      render: (_, record) => (
+        <div>
+          <div className="font-medium text-slate-900">{record.categoryName || '-'}</div>
+          <div className="text-xs text-slate-500">{record.brandName || '-'}</div>
+        </div>
       ),
     },
     {
@@ -724,16 +657,16 @@ export default function ProductsPage() {
       key: 'productType',
       width: 120,
       render: (type: ProductType) => {
-        const config = productTypeConfig[type] || { color: 'default', label: type };
-        return <Tag color={config.color}>{config.label}</Tag>;
+        const config = productTypeConfig[type] || { color: '#64748b', bgColor: '#f1f5f9', label: type };
+        return (
+          <span
+            className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium"
+            style={{ backgroundColor: config.bgColor, color: config.color }}
+          >
+            {config.label}
+          </span>
+        );
       },
-    },
-    {
-      title: 'Marka',
-      dataIndex: 'brandName',
-      key: 'brandName',
-      width: 120,
-      render: (brand) => <span className="text-sm text-slate-600">{brand || '-'}</span>,
     },
     {
       title: 'Birim Fiyat',
@@ -741,74 +674,42 @@ export default function ProductsPage() {
       key: 'unitPrice',
       width: 120,
       align: 'right',
-      render: (price, record) => (
+      render: (price) => (
         price ? (
-          <div>
-            <div className="text-sm font-medium text-slate-900">₺{price.toLocaleString('tr-TR')}</div>
-            {record.unitPriceCurrency && record.unitPriceCurrency !== 'TRY' && (
-              <div className="text-xs text-slate-500">{record.unitPriceCurrency}</div>
-            )}
-          </div>
+          <span className="font-semibold text-slate-900">₺{price.toLocaleString('tr-TR')}</span>
         ) : <span className="text-slate-400">-</span>
       ),
     },
     {
       title: 'Stok',
-      dataIndex: 'totalStockQuantity',
-      key: 'totalStockQuantity',
-      width: 100,
-      align: 'right',
-      sorter: (a, b) => a.totalStockQuantity - b.totalStockQuantity,
-      render: (qty, record) => {
-        const isLow = qty < record.minStockLevel;
-        const isZero = qty === 0;
+      key: 'stock',
+      width: 140,
+      render: (_, record) => {
+        const isLow = record.totalStockQuantity > 0 && record.totalStockQuantity < record.minStockLevel;
+        const isZero = record.totalStockQuantity === 0;
         return (
-          <div className="flex items-center justify-end gap-2">
-            <span className={`text-sm font-medium ${isZero ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-slate-900'}`}>
-              {qty}
-            </span>
-            {isLow && !isZero && (
-              <Tooltip title="Düşük stok">
-                <ExclamationTriangleIcon className="w-4 h-4 text-amber-500" />
-              </Tooltip>
-            )}
-            {isZero && (
-              <Tooltip title="Stok yok">
-                <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
-              </Tooltip>
-            )}
+          <div>
+            <div className="flex items-center gap-2">
+              <span className={`font-semibold ${isZero ? 'text-slate-400' : isLow ? 'text-slate-700' : 'text-slate-900'}`}>
+                {record.totalStockQuantity.toLocaleString('tr-TR')}
+              </span>
+              {isLow && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-700">
+                  <ExclamationTriangleIcon className="w-3 h-3" /> Düşük
+                </span>
+              )}
+              {isZero && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-300 text-slate-800">
+                  <ExclamationTriangleIcon className="w-3 h-3" /> Yok
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-slate-500">
+              Kullanılabilir: {record.availableStockQuantity.toLocaleString('tr-TR')}
+            </div>
           </div>
         );
       },
-    },
-    {
-      title: 'Kullanılabilir',
-      dataIndex: 'availableStockQuantity',
-      key: 'availableStockQuantity',
-      width: 100,
-      align: 'right',
-      render: (qty) => <span className="text-sm text-slate-600">{qty}</span>,
-    },
-    {
-      title: 'Takip',
-      key: 'tracking',
-      width: 80,
-      align: 'center',
-      render: (_, record) => (
-        <div className="flex items-center justify-center gap-1">
-          {record.trackSerialNumbers && (
-            <Tooltip title="Seri No Takibi">
-              <Tag color="blue" style={{ margin: 0 }}>S</Tag>
-            </Tooltip>
-          )}
-          {record.trackLotNumbers && (
-            <Tooltip title="Lot Takibi">
-              <Tag color="green" style={{ margin: 0 }}>L</Tag>
-            </Tooltip>
-          )}
-          {!record.trackSerialNumbers && !record.trackLotNumbers && <span className="text-slate-400">-</span>}
-        </div>
-      ),
     },
     {
       title: 'Durum',
@@ -816,15 +717,22 @@ export default function ProductsPage() {
       key: 'isActive',
       width: 100,
       render: (isActive) => (
-        <Tag color={isActive ? 'green' : 'default'}>
+        <span
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium"
+          style={{
+            backgroundColor: isActive ? '#e2e8f0' : '#f1f5f9',
+            color: isActive ? '#1e293b' : '#64748b'
+          }}
+        >
+          {isActive ? <CheckCircleIcon className="w-4 h-4" /> : <StopIcon className="w-4 h-4" />}
           {isActive ? 'Aktif' : 'Pasif'}
-        </Tag>
+        </span>
       ),
     },
     {
-      title: '',
+      title: 'İşlemler',
       key: 'actions',
-      width: 60,
+      width: 100,
       fixed: 'right',
       render: (_, record) => {
         const menuItems = [
@@ -858,9 +766,7 @@ export default function ProductsPage() {
 
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <EllipsisHorizontalIcon className="w-4 h-4" />
-            </button>
+            <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} className="text-slate-600 hover:text-slate-900" />
           </Dropdown>
         );
       },
@@ -868,152 +774,134 @@ export default function ProductsPage() {
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Ürünler</h1>
+          <p className="text-slate-500 mt-1">Ürün kataloğunuzu yönetin ve takip edin</p>
+        </div>
+        <Space>
+          <Dropdown
+            menu={{
+              items: [
+                { key: 'pdf', icon: <DocumentIcon className="w-4 h-4" />, label: 'PDF İndir', onClick: handleExportPDF },
+                { key: 'excel', icon: <TableCellsIcon className="w-4 h-4" />, label: 'Excel İndir', onClick: handleExportExcel },
+              ],
+            }}
+          >
+            <Button icon={<ArrowDownTrayIcon className="w-4 h-4" />} className="!border-slate-300 !text-slate-700 hover:!border-slate-400">
+              Dışa Aktar
+            </Button>
+          </Dropdown>
+          <Button
+            icon={<ArrowPathIcon className="w-4 h-4" />}
+            onClick={() => refetch()}
+            loading={isLoading}
+            className="!border-slate-300 !text-slate-700 hover:!border-slate-400"
+          >
+            Yenile
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusIcon className="w-4 h-4" />}
+            onClick={() => router.push('/inventory/products/new')}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+          >
+            Yeni Ürün
+          </Button>
+        </Space>
+      </div>
+
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Ürün</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalProducts}</div>
+      <div className="grid grid-cols-12 gap-6 mb-8">
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CubeIcon className="w-5 h-5 text-slate-600" />
+              </div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <Squares2X2Icon className="w-6 h-6" style={{ color: '#3b82f6' }} />
-            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Ürün</div>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif Ürün</span>
-              <div className="text-2xl font-semibold text-slate-900">{activeProducts}</div>
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+                <CheckCircleIcon className="w-5 h-5 text-slate-700" />
+              </div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleIcon className="w-6 h-6" style={{ color: '#10b981' }} />
-            </div>
+            <div className="text-2xl font-bold text-slate-700">{stats.active}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Aktif Ürün</div>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Düşük Stok</span>
-              <div className="text-2xl font-semibold text-slate-900">{lowStockProducts}</div>
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-300 flex items-center justify-center">
+                <ExclamationTriangleIcon className="w-5 h-5 text-slate-800" />
+              </div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: lowStockProducts > 0 ? '#f59e0b15' : '#64748b15' }}>
-              <ExclamationTriangleIcon className="w-6 h-6" style={{ color: lowStockProducts > 0 ? '#f59e0b' : '#64748b' }} />
-            </div>
+            <div className="text-2xl font-bold text-slate-800">{stats.lowStock}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Düşük Stok</div>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Değer</span>
-              <div className="text-2xl font-semibold text-slate-900">₺{totalValue.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</div>
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-400 flex items-center justify-center">
+                <StopIcon className="w-5 h-5 text-white" />
+              </div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <Squares2X2Icon className="w-6 h-6" style={{ color: '#8b5cf6' }} />
+            <div className="text-2xl font-bold text-slate-500">{stats.outOfStock}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Stokta Yok</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-4 lg:col-span-4">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CurrencyDollarIcon className="w-5 h-5 text-slate-600" />
+              </div>
             </div>
+            <div className="text-2xl font-bold text-slate-900">₺{stats.totalValue.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Stok Değeri</div>
           </div>
         </div>
       </div>
 
       {/* Bulk Actions Bar */}
       {selectedRowKeys.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div className="bg-slate-100 border border-slate-300 rounded-xl p-4 mb-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
-            <span className="text-sm font-medium text-blue-800">{selectedRowKeys.length} ürün seçildi</span>
+            <span className="text-sm font-medium text-slate-800">{selectedRowKeys.length} ürün seçildi</span>
             <div className="flex items-center gap-2 flex-wrap">
-              <button
-                onClick={handleBulkEdit}
-                disabled={bulkLoading}
-                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors disabled:opacity-50 inline-flex items-center gap-1"
-              >
-                <PencilSquareIcon className="w-4 h-4" /> Toplu Düzenle
-              </button>
-              <button
-                onClick={() => handleBulkActivate(true)}
-                disabled={bulkLoading}
-                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors disabled:opacity-50 inline-flex items-center gap-1"
-              >
-                <CheckCircleIcon className="w-4 h-4" /> Aktifleştir
-              </button>
-              <button
-                onClick={() => handleBulkActivate(false)}
-                disabled={bulkLoading}
-                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors disabled:opacity-50 inline-flex items-center gap-1"
-              >
-                <StopIcon className="w-4 h-4" /> Pasifleştir
-              </button>
-              <Dropdown
-                menu={{
-                  items: [
-                    { key: 'pdf', icon: <DocumentIcon className="w-4 h-4" />, label: 'Seçilenleri PDF İndir', onClick: handleExportPDF },
-                    { key: 'excel', icon: <TableCellsIcon className="w-4 h-4" />, label: 'Seçilenleri Excel İndir', onClick: handleExportExcel },
-                  ],
-                }}
-              >
-                <button className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors inline-flex items-center gap-1">
-                  <ArrowDownTrayIcon className="w-4 h-4" /> Dışa Aktar
-                </button>
-              </Dropdown>
-              <button
-                onClick={handleBulkDelete}
-                disabled={bulkLoading}
-                className="px-3 py-1.5 text-sm font-medium text-red-600 bg-white border border-red-200 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 inline-flex items-center gap-1"
-              >
-                <TrashIcon className="w-4 h-4" /> Sil
-              </button>
-              <button
-                onClick={() => setSelectedRowKeys([])}
-                className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
-              >
+              <Button size="small" icon={<PencilSquareIcon className="w-4 h-4" />} onClick={handleBulkEdit} disabled={bulkLoading}>
+                Toplu Düzenle
+              </Button>
+              <Button size="small" icon={<CheckCircleIcon className="w-4 h-4" />} onClick={() => handleBulkActivate(true)} disabled={bulkLoading}>
+                Aktifleştir
+              </Button>
+              <Button size="small" icon={<StopIcon className="w-4 h-4" />} onClick={() => handleBulkActivate(false)} disabled={bulkLoading}>
+                Pasifleştir
+              </Button>
+              <Button size="small" danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleBulkDelete} disabled={bulkLoading}>
+                Sil
+              </Button>
+              <Button size="small" type="link" onClick={() => setSelectedRowKeys([])}>
                 Seçimi Temizle
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Header */}
-      <ListPageHeader
-        icon={<Squares2X2Icon className="w-5 h-5" />}
-        iconColor="#3b82f6"
-        title="Ürünler"
-        description="Ürün kataloğunuzu yönetin"
-        itemCount={filteredProducts.length}
-        primaryAction={{
-          label: 'Yeni Ürün',
-          onClick: () => router.push('/inventory/products/new'),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
-          <div className="flex items-center gap-2">
-            <Dropdown
-              menu={{
-                items: [
-                  { key: 'pdf', icon: <DocumentIcon className="w-4 h-4" />, label: 'PDF İndir', onClick: handleExportPDF },
-                  { key: 'excel', icon: <TableCellsIcon className="w-4 h-4" />, label: 'Excel İndir', onClick: handleExportExcel },
-                ],
-              }}
-            >
-              <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-                <ArrowDownTrayIcon className="w-5 h-5" />
-              </button>
-            </Dropdown>
-            <button
-              onClick={() => refetch()}
-              disabled={isLoading}
-              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-            >
-              <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-        }
-      />
-
-      {/* Saved Views & Quick Filters */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-4">
-        <div className="flex items-center justify-between flex-wrap gap-4">
+      {/* Main Content Card */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        {/* Saved Views */}
+        <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
           <div className="flex items-center gap-3 flex-wrap">
             <span className="text-sm font-medium text-slate-700 flex items-center gap-1">
               <FolderIcon className="w-4 h-4 text-slate-400" /> Görünümler:
@@ -1022,24 +910,17 @@ export default function ProductsPage() {
               <span className="text-sm text-slate-400">Henüz kayıtlı görünüm yok</span>
             ) : (
               savedViews.slice(0, 5).map(view => (
-                <Tag
+                <span
                   key={view.id}
-                  color={activeViewId === view.id ? 'blue' : 'default'}
-                  style={{ cursor: 'pointer' }}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium cursor-pointer ${
+                    activeViewId === view.id ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
                   onClick={() => handleApplyView(view)}
-                  icon={view.isDefault ? <StarIconSolid className="w-3 h-3" style={{ color: '#faad14' }} /> : null}
                 >
+                  {view.isDefault && <StarIconSolid className="w-3 h-3 text-amber-400" />}
                   {view.name}
-                </Tag>
+                </span>
               ))
-            )}
-            {savedViews.length > 5 && (
-              <button
-                onClick={() => setManageViewsModalOpen(true)}
-                className="text-sm text-blue-600 hover:text-blue-800"
-              >
-                +{savedViews.length - 5} daha
-              </button>
             )}
             <button
               onClick={() => setManageViewsModalOpen(true)}
@@ -1048,33 +929,18 @@ export default function ProductsPage() {
               <Cog6ToothIcon className="w-4 h-4" /> Yönet
             </button>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm text-slate-500">Hızlı Filtre:</span>
-            {filterPresets.map(preset => (
-              <Tag
-                key={preset.key}
-                style={{ cursor: 'pointer' }}
-                onClick={() => applyPreset(preset)}
-                icon={preset.icon}
-              >
-                {preset.label}
-              </Tag>
-            ))}
-          </div>
         </div>
-      </div>
 
-      {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+        {/* Filters */}
+        <div className="flex flex-wrap gap-3 mb-6">
           <Input
             placeholder="Ürün adı, kodu veya barkod ara..."
             prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={filters.searchText}
             onChange={(e) => updateFilter('searchText', e.target.value)}
             allowClear
-            style={{ maxWidth: 300 }}
-            className="h-10"
+            style={{ width: 280 }}
+            className="[&_.ant-input]:!border-slate-300 [&_.ant-input]:!rounded-lg"
           />
           <Select
             placeholder="Kategori"
@@ -1083,6 +949,7 @@ export default function ProductsPage() {
             allowClear
             style={{ width: 160 }}
             options={categories.map((c) => ({ value: c.id, label: c.name }))}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           />
           <Select
             placeholder="Marka"
@@ -1091,6 +958,7 @@ export default function ProductsPage() {
             allowClear
             style={{ width: 160 }}
             options={brands.map((b) => ({ value: b.id, label: b.name }))}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           />
           <Select
             value={filters.includeInactive}
@@ -1100,32 +968,26 @@ export default function ProductsPage() {
               { value: false, label: 'Sadece Aktif' },
               { value: true, label: 'Tümü' },
             ]}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           />
           <div className="flex items-center gap-2 ml-auto">
             <Badge count={activeFilterCount} size="small" offset={[-5, 5]}>
-              <button
+              <Button
                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1 ${
-                  showAdvancedFilters ? 'bg-blue-100 text-blue-700' : 'text-slate-600 hover:bg-slate-100'
-                }`}
+                icon={<FunnelIcon className="w-4 h-4" />}
+                className={showAdvancedFilters ? '!bg-slate-200 !border-slate-300' : '!border-slate-300'}
               >
-                <FunnelIcon className="w-4 h-4" /> Gelişmiş
-              </button>
+                Gelişmiş
+              </Button>
             </Badge>
             {hasActiveFilters && (
               <>
-                <button
-                  onClick={handleSaveView}
-                  className="px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1"
-                >
-                  <CheckIcon className="w-4 h-4" /> Kaydet
-                </button>
-                <button
-                  onClick={clearFilters}
-                  className="px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1"
-                >
-                  <XMarkIcon className="w-4 h-4" /> Temizle
-                </button>
+                <Button onClick={handleSaveView} icon={<CheckIcon className="w-4 h-4" />} className="!border-slate-300">
+                  Kaydet
+                </Button>
+                <Button onClick={clearFilters} icon={<XMarkIcon className="w-4 h-4" />} className="!border-slate-300">
+                  Temizle
+                </Button>
               </>
             )}
           </div>
@@ -1134,10 +996,10 @@ export default function ProductsPage() {
         {/* Advanced Filters */}
         {showAdvancedFilters && (
           <>
-            <Divider style={{ margin: '16px 0' }} />
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Divider className="!my-4" />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <div>
-                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Ürün Türü</label>
+                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Ürün Türü</label>
                 <Select
                   mode="multiple"
                   placeholder="Tür seçin"
@@ -1148,10 +1010,11 @@ export default function ProductsPage() {
                     value: key,
                     label: config.label,
                   }))}
+                  className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Stok Durumu</label>
+                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Stok Durumu</label>
                 <Select
                   mode="multiple"
                   placeholder="Stok durumu"
@@ -1163,10 +1026,11 @@ export default function ProductsPage() {
                     { value: 'lowStock', label: 'Düşük Stok' },
                     { value: 'outOfStock', label: 'Stokta Yok' },
                   ]}
+                  className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Takip Türü</label>
+                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Takip Türü</label>
                 <Select
                   mode="multiple"
                   placeholder="Takip türü"
@@ -1178,10 +1042,11 @@ export default function ProductsPage() {
                     { value: 'lot', label: 'Lot Takibi' },
                     { value: 'none', label: 'Takip Yok' },
                   ]}
+                  className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">
+                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">
                   Fiyat Aralığı
                   {filters.priceRange && (
                     <span className="font-normal ml-2">
@@ -1205,47 +1070,28 @@ export default function ProductsPage() {
         {/* Active Filters Summary */}
         {hasActiveFilters && (
           <>
-            <Divider style={{ margin: '16px 0' }} />
-            <div className="flex items-center gap-2 flex-wrap">
+            <Divider className="!my-4" />
+            <div className="flex items-center gap-2 flex-wrap mb-6">
               <span className="text-sm text-slate-500">Aktif Filtreler:</span>
               {filters.categoryId && (
-                <Tag closable onClose={() => updateFilter('categoryId', undefined)}>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
                   Kategori: {categories.find(c => c.id === filters.categoryId)?.name}
-                </Tag>
+                  <button onClick={() => updateFilter('categoryId', undefined)}><XMarkIcon className="w-3 h-3" /></button>
+                </span>
               )}
               {filters.brandId && (
-                <Tag closable onClose={() => updateFilter('brandId', undefined)}>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
                   Marka: {brands.find(b => b.id === filters.brandId)?.name}
-                </Tag>
-              )}
-              {filters.productTypes.length > 0 && (
-                <Tag closable onClose={() => updateFilter('productTypes', [])}>
-                  Tür: {filters.productTypes.map(t => productTypeConfig[t]?.label).join(', ')}
-                </Tag>
+                  <button onClick={() => updateFilter('brandId', undefined)}><XMarkIcon className="w-3 h-3" /></button>
+                </span>
               )}
               {filters.stockStatus.length > 0 && (
-                <Tag closable onClose={() => updateFilter('stockStatus', [])}>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
                   Stok: {filters.stockStatus.map(s =>
                     s === 'inStock' ? 'Var' : s === 'lowStock' ? 'Düşük' : 'Yok'
                   ).join(', ')}
-                </Tag>
-              )}
-              {filters.trackingType.length > 0 && (
-                <Tag closable onClose={() => updateFilter('trackingType', [])}>
-                  Takip: {filters.trackingType.map(t =>
-                    t === 'serial' ? 'Seri' : t === 'lot' ? 'Lot' : 'Yok'
-                  ).join(', ')}
-                </Tag>
-              )}
-              {filters.priceRange && (
-                <Tag closable onClose={() => updateFilter('priceRange', null)}>
-                  Fiyat: ₺{filters.priceRange[0].toLocaleString()} - ₺{filters.priceRange[1].toLocaleString()}
-                </Tag>
-              )}
-              {filters.includeInactive && (
-                <Tag closable onClose={() => updateFilter('includeInactive', false)}>
-                  Pasifler Dahil
-                </Tag>
+                  <button onClick={() => updateFilter('stockStatus', [])}><XMarkIcon className="w-3 h-3" /></button>
+                </span>
               )}
               <span className="text-sm text-slate-500">
                 ({filteredProducts.length} / {products.length} ürün)
@@ -1253,52 +1099,33 @@ export default function ProductsPage() {
             </div>
           </>
         )}
-      </div>
 
-      {/* Table */}
-      {isLoading ? (
-        <Card>
-          <div className="flex items-center justify-center py-12">
-            <Spinner size="lg" />
-          </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
-          <Table
-            rowSelection={rowSelection}
-            columns={columns}
-            dataSource={filteredProducts}
-            rowKey="id"
-            loading={isLoading}
-            scroll={{ x: 1400 }}
-            pagination={{
-              current: currentPage,
-              pageSize: pageSize,
-              total: filteredProducts.length,
-              showSizeChanger: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} ürün`,
-              onChange: (page, size) => {
-                setCurrentPage(page);
-                setPageSize(size);
-              },
-            }}
-          />
-        </DataTableWrapper>
-      )}
+        {/* Table */}
+        <Table
+          rowSelection={rowSelection}
+          columns={columns}
+          dataSource={filteredProducts}
+          rowKey="id"
+          loading={isLoading}
+          scroll={{ x: 1200 }}
+          pagination={{
+            current: currentPage,
+            pageSize: pageSize,
+            total: filteredProducts.length,
+            showSizeChanger: true,
+            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} ürün`,
+            onChange: (page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            },
+          }}
+          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
+        />
+      </div>
 
       {/* Bulk Edit Modal */}
       <Modal
-        title={
-          <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <PencilSquareIcon className="w-5 h-5" style={{ color: '#3b82f6' }} />
-            </div>
-            <div>
-              <div className="text-lg font-semibold text-slate-900">Toplu Düzenleme</div>
-              <div className="text-sm text-slate-500">{selectedRowKeys.length} ürün seçildi</div>
-            </div>
-          </div>
-        }
+        title={<span className="text-slate-900 font-semibold">Toplu Düzenleme ({selectedRowKeys.length} ürün)</span>}
         open={bulkEditModalOpen}
         onOk={handleBulkEditConfirm}
         onCancel={() => setBulkEditModalOpen(false)}
@@ -1306,141 +1133,102 @@ export default function ProductsPage() {
         cancelText="İptal"
         confirmLoading={bulkLoading}
         width={600}
+        okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
+        cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
       >
-        <Form form={form} layout="vertical" className="pt-4">
+        <Form form={form} layout="vertical" className="mt-4">
           <div className="text-sm text-slate-500 mb-4 p-3 bg-slate-50 rounded-lg">
             Sadece değiştirmek istediğiniz alanları doldurun. Boş bırakılan alanlar değiştirilmeyecektir.
           </div>
 
-          <Form.Item name="categoryId" label="Kategori">
+          <Form.Item name="categoryId" label={<span className="text-slate-700 font-medium">Kategori</span>}>
             <Select
               placeholder="Kategori seçin (değiştirmek için)"
               allowClear
               options={categories.map((c) => ({ value: c.id, label: c.name }))}
+              className="[&_.ant-select-selector]:!rounded-lg [&_.ant-select-selector]:!border-slate-300"
             />
           </Form.Item>
 
-          <Form.Item name="brandId" label="Marka">
+          <Form.Item name="brandId" label={<span className="text-slate-700 font-medium">Marka</span>}>
             <Select
               placeholder="Marka seçin (değiştirmek için)"
               allowClear
               options={brands.map((b) => ({ value: b.id, label: b.name }))}
+              className="[&_.ant-select-selector]:!rounded-lg [&_.ant-select-selector]:!border-slate-300"
             />
           </Form.Item>
 
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="priceChangeType" label="Fiyat Değişiklik Türü" initialValue="fixed">
+            <Form.Item name="priceChangeType" label={<span className="text-slate-700 font-medium">Fiyat Değişiklik Türü</span>} initialValue="fixed">
               <Select
                 options={[
                   { value: 'fixed', label: 'Sabit Fiyat' },
                   { value: 'percentage', label: 'Yüzde Değişim (%)' },
                   { value: 'increase', label: 'Tutar Artırma/Azaltma' },
                 ]}
+                className="[&_.ant-select-selector]:!rounded-lg [&_.ant-select-selector]:!border-slate-300"
               />
             </Form.Item>
-            <Form.Item
-              name="priceChange"
-              label="Fiyat Değeri"
-              tooltip="Sabit fiyat: yeni fiyat, Yüzde: +10 veya -10, Tutar: +100 veya -100"
-            >
+            <Form.Item name="priceChange" label={<span className="text-slate-700 font-medium">Fiyat Değeri</span>}>
               <InputNumber
                 placeholder="Değer girin"
                 style={{ width: '100%' }}
-                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                parser={(value) => value!.replace(/\$\s?|(,*)/g, '') as unknown as number}
+                className="!rounded-lg"
               />
             </Form.Item>
-          </div>
-
-          <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
-            <strong>Fiyat Değişiklik Örnekleri:</strong><br />
-            • Sabit Fiyat: 100 → Tüm seçili ürünlerin fiyatı 100₺ olur<br />
-            • Yüzde Değişim: 10 → %10 artış, -10 → %10 indirim<br />
-            • Tutar Artırma: 50 → 50₺ artış, -50 → 50₺ düşüş
           </div>
         </Form>
       </Modal>
 
       {/* Save View Modal */}
       <Modal
-        title={
-          <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <CheckIcon className="w-5 h-5" style={{ color: '#8b5cf6' }} />
-            </div>
-            <div>
-              <div className="text-lg font-semibold text-slate-900">Görünümü Kaydet</div>
-              <div className="text-sm text-slate-500">Mevcut filtreleri kaydedin</div>
-            </div>
-          </div>
-        }
+        title={<span className="text-slate-900 font-semibold">Görünümü Kaydet</span>}
         open={saveViewModalOpen}
         onOk={handleSaveViewConfirm}
         onCancel={() => setSaveViewModalOpen(false)}
         okText="Kaydet"
         cancelText="İptal"
+        okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
+        cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
       >
-        <Form form={saveViewForm} layout="vertical" className="pt-4">
+        <Form form={saveViewForm} layout="vertical" className="mt-4">
           <Form.Item
             name="name"
-            label="Görünüm Adı"
+            label={<span className="text-slate-700 font-medium">Görünüm Adı</span>}
             rules={[{ required: true, message: 'Lütfen görünüm adı girin' }]}
           >
-            <Input placeholder="Örn: Düşük Stoklu Ürünler" />
+            <Input placeholder="Örn: Düşük Stoklu Ürünler" className="!rounded-lg !border-slate-300" />
           </Form.Item>
           <Form.Item name="isDefault" valuePropName="checked">
             <Checkbox>
               <span className="flex items-center gap-1">
-                <StarIcon className="w-4 h-4" style={{ color: '#faad14' }} />
+                <StarIcon className="w-4 h-4 text-amber-400" />
                 Varsayılan görünüm olarak ayarla
               </span>
             </Checkbox>
           </Form.Item>
-          <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
-            <strong>Kaydedilecek Filtreler:</strong><br />
-            {filters.categoryId && `• Kategori: ${categories.find(c => c.id === filters.categoryId)?.name}\n`}
-            {filters.brandId && `• Marka: ${brands.find(b => b.id === filters.brandId)?.name}\n`}
-            {filters.productTypes.length > 0 && `• Tür: ${filters.productTypes.map(t => productTypeConfig[t]?.label).join(', ')}\n`}
-            {filters.stockStatus.length > 0 && `• Stok Durumu: ${filters.stockStatus.length} kriter\n`}
-            {filters.trackingType.length > 0 && `• Takip Türü: ${filters.trackingType.length} kriter\n`}
-            {filters.priceRange && `• Fiyat: ₺${filters.priceRange[0]} - ₺${filters.priceRange[1]}\n`}
-            {filters.includeInactive && `• Pasifler Dahil\n`}
-            {!hasActiveFilters && 'Henüz filtre uygulanmadı'}
-          </div>
         </Form>
       </Modal>
 
       {/* Manage Views Modal */}
       <Modal
-        title={
-          <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#64748b15' }}>
-              <FolderIcon className="w-5 h-5" style={{ color: '#64748b' }} />
-            </div>
-            <div>
-              <div className="text-lg font-semibold text-slate-900">Kayıtlı Görünümler</div>
-              <div className="text-sm text-slate-500">Görünümlerinizi yönetin</div>
-            </div>
-          </div>
-        }
+        title={<span className="text-slate-900 font-semibold">Kayıtlı Görünümler</span>}
         open={manageViewsModalOpen}
         onCancel={() => setManageViewsModalOpen(false)}
         footer={null}
         width={600}
       >
         {savedViews.length === 0 ? (
-          <Empty
-            description="Henüz kayıtlı görünüm yok"
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          />
+          <Empty description="Henüz kayıtlı görünüm yok" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         ) : (
-          <div className="space-y-3 pt-4">
+          <div className="space-y-3 mt-4">
             {savedViews.map(view => (
               <div key={view.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      {view.isDefault && <StarIconSolid className="w-4 h-4" style={{ color: '#faad14' }} />}
+                      {view.isDefault && <StarIconSolid className="w-4 h-4 text-amber-400" />}
                       <span className="font-medium text-slate-900">{view.name}</span>
                     </div>
                     <div className="text-xs text-slate-500 mt-1">
@@ -1448,32 +1236,34 @@ export default function ProductsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button
+                    <Button
+                      size="small"
+                      type="primary"
                       onClick={() => {
                         handleApplyView(view);
                         setManageViewsModalOpen(false);
                       }}
-                      className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                      className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
                     >
                       Uygula
-                    </button>
+                    </Button>
                     {!view.isDefault && (
                       <Tooltip title="Varsayılan Yap">
-                        <button
+                        <Button
+                          size="small"
+                          icon={<StarIcon className="w-4 h-4" />}
                           onClick={() => handleSetDefaultView(view.id)}
-                          className="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
-                        >
-                          <StarIcon className="w-4 h-4" />
-                        </button>
+                          className="!border-slate-300"
+                        />
                       </Tooltip>
                     )}
                     <Tooltip title="Sil">
-                      <button
+                      <Button
+                        size="small"
+                        danger
+                        icon={<TrashIcon className="w-4 h-4" />}
                         onClick={() => handleDeleteView(view.id)}
-                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                      </button>
+                      />
                     </Tooltip>
                   </div>
                 </div>
@@ -1482,6 +1272,6 @@ export default function ProductsPage() {
           </div>
         )}
       </Modal>
-    </PageContainer>
+    </div>
   );
 }
