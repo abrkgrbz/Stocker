@@ -36,7 +36,6 @@ export default function NewUserPage() {
       phoneNumber: values.phoneNumber,
       roleIds: values.roleIds,
       department: values.department,
-      branch: values.branch,
     };
     await createMutation.mutateAsync(createData);
   };
