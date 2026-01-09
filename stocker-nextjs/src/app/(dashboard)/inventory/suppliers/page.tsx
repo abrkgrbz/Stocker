@@ -27,7 +27,6 @@ import {
   PencilIcon,
   PhoneIcon,
   PlusIcon,
-  StarIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import { useSuppliers, useDeleteSupplier } from '@/lib/api/hooks/useInventory';
@@ -72,7 +71,7 @@ export default function SuppliersPage() {
   // Calculate stats
   const totalSuppliers = suppliers.length;
   const activeSuppliers = suppliers.filter((s) => s.isActive).length;
-  const preferredSuppliers = suppliers.filter((s) => s.isPreferred).length;
+  const inactiveSuppliers = suppliers.filter((s) => !s.isActive).length;
   const totalProducts = suppliers.reduce((sum, s) => sum + (s.productCount || 0), 0);
 
   const columns: ColumnsType<SupplierDto> = [
@@ -89,12 +88,6 @@ export default function SuppliersPage() {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-slate-900">{name}</span>
-              {record.isPreferred && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-slate-900 text-white rounded">
-                  <StarIcon className="w-3 h-3" />
-                  Tercih
-                </span>
-              )}
             </div>
             {record.code && (
               <div className="text-xs text-slate-500">
@@ -137,28 +130,6 @@ export default function SuppliersPage() {
       render: (count: number) => (
         <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded">
           {count || 0}
-        </span>
-      ),
-    },
-    {
-      title: 'Tercih',
-      dataIndex: 'isPreferred',
-      key: 'isPreferred',
-      width: 130,
-      align: 'center',
-      filters: [
-        { text: 'Tercih Edilen', value: true },
-        { text: 'Standart', value: false },
-      ],
-      onFilter: (value, record) => record.isPreferred === value,
-      render: (isPreferred: boolean) => (
-        <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded ${
-          isPreferred
-            ? 'bg-slate-900 text-white'
-            : 'bg-slate-200 text-slate-600'
-        }`}>
-          {isPreferred && <StarIcon className="w-3 h-3" />}
-          {isPreferred ? 'Tercih Edilen' : 'Standart'}
         </span>
       ),
     },
@@ -283,11 +254,11 @@ export default function SuppliersPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wide">Tercih Edilen</p>
-                <p className="text-2xl font-bold text-slate-900 mt-1">{preferredSuppliers}</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Pasif Tedarikçi</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{inactiveSuppliers}</p>
               </div>
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <StarIcon className="w-5 h-5 text-slate-600" />
+                <BuildingStorefrontIcon className="w-5 h-5 text-slate-600" />
               </div>
             </div>
           </div>

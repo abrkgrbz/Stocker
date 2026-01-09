@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Table, Tag, Select, Modal, Form, Input, InputNumber, Button, Switch, Dropdown } from 'antd';
+import { useRouter } from 'next/navigation';
+import { Table, Tag, Select, Input, Button, Dropdown } from 'antd';
 import {
   ArrowPathIcon,
   CubeIcon,
@@ -10,14 +11,13 @@ import {
   TrashIcon,
   EllipsisHorizontalIcon,
   MagnifyingGlassIcon,
+  EyeIcon,
 } from '@heroicons/react/24/outline';
 import {
   usePackagingTypes,
-  useCreatePackagingType,
-  useUpdatePackagingType,
   useDeletePackagingType,
 } from '@/lib/api/hooks/useInventory';
-import type { PackagingTypeDto, CreatePackagingTypeDto, UpdatePackagingTypeDto, PackagingCategory } from '@/lib/api/services/inventory.types';
+import type { PackagingTypeDto, PackagingCategory } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import { PageContainer, ListPageHeader, Card } from '@/components/patterns';
 import { confirmAction } from '@/lib/utils/sweetalert';
@@ -33,21 +33,18 @@ const categoryConfig: Record<number, { label: string; color: string }> = {
   8: { label: 'Şişe', color: 'lime' },
   9: { label: 'Kavanoz', color: 'gold' },
   10: { label: 'Tüp', color: 'magenta' },
-  11: { label: 'Diğer', color: 'default' },
+  11: { label: 'Poşet', color: 'cyan' },
+  12: { label: 'Rulo', color: 'purple' },
+  99: { label: 'Diğer', color: 'default' },
 };
 
 export default function PackagingTypesPage() {
+  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<number | undefined>();
   const [searchText, setSearchText] = useState('');
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedType, setSelectedType] = useState<PackagingTypeDto | null>(null);
-  const [form] = Form.useForm();
 
   // API Hooks
   const { data: packagingTypes = [], isLoading, refetch } = usePackagingTypes();
-  const createType = useCreatePackagingType();
-  const updateType = useUpdatePackagingType();
   const deleteType = useDeletePackagingType();
 
   // Filter data
@@ -80,36 +77,6 @@ export default function PackagingTypesPage() {
   }, [packagingTypes]);
 
   // Handlers
-  const handleCreate = () => {
-    form.resetFields();
-    setCreateModalOpen(true);
-  };
-
-  const handleEdit = (type: PackagingTypeDto) => {
-    setSelectedType(type);
-    form.setFieldsValue({
-      code: type.code,
-      name: type.name,
-      description: type.description,
-      category: type.category,
-      length: type.length,
-      width: type.width,
-      height: type.height,
-      emptyWeight: type.emptyWeight,
-      maxWeightCapacity: type.maxWeightCapacity,
-      defaultQuantity: type.defaultQuantity,
-      maxQuantity: type.maxQuantity,
-      stackableCount: type.stackableCount,
-      isStackable: type.isStackable,
-      unitsPerPallet: type.unitsPerPallet,
-      materialType: type.materialType,
-      isRecyclable: type.isRecyclable,
-      isReturnable: type.isReturnable,
-      depositAmount: type.depositAmount,
-    });
-    setEditModalOpen(true);
-  };
-
   const handleDelete = async (type: PackagingTypeDto) => {
     const confirmed = await confirmAction(
       'Ambalaj Tipini Sil',
@@ -126,69 +93,6 @@ export default function PackagingTypesPage() {
     }
   };
 
-  const handleCreateSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      const data: CreatePackagingTypeDto = {
-        code: values.code,
-        name: values.name,
-        description: values.description,
-        category: values.category,
-        length: values.length,
-        width: values.width,
-        height: values.height,
-        emptyWeight: values.emptyWeight,
-        maxWeightCapacity: values.maxWeightCapacity,
-        defaultQuantity: values.defaultQuantity,
-        maxQuantity: values.maxQuantity,
-        stackableCount: values.stackableCount,
-        isStackable: values.isStackable,
-        unitsPerPallet: values.unitsPerPallet,
-        materialType: values.materialType,
-        isRecyclable: values.isRecyclable,
-        isReturnable: values.isReturnable,
-        depositAmount: values.depositAmount,
-      };
-      await createType.mutateAsync(data);
-      setCreateModalOpen(false);
-      form.resetFields();
-    } catch (error) {
-      // Validation error
-    }
-  };
-
-  const handleEditSubmit = async () => {
-    if (!selectedType) return;
-    try {
-      const values = await form.validateFields();
-      const data: UpdatePackagingTypeDto = {
-        name: values.name,
-        description: values.description,
-        category: values.category,
-        length: values.length,
-        width: values.width,
-        height: values.height,
-        emptyWeight: values.emptyWeight,
-        maxWeightCapacity: values.maxWeightCapacity,
-        defaultQuantity: values.defaultQuantity,
-        maxQuantity: values.maxQuantity,
-        stackableCount: values.stackableCount,
-        isStackable: values.isStackable,
-        unitsPerPallet: values.unitsPerPallet,
-        materialType: values.materialType,
-        isRecyclable: values.isRecyclable,
-        isReturnable: values.isReturnable,
-        depositAmount: values.depositAmount,
-      };
-      await updateType.mutateAsync({ id: selectedType.id, dto: data });
-      setEditModalOpen(false);
-      setSelectedType(null);
-      form.resetFields();
-    } catch (error) {
-      // Validation error
-    }
-  };
-
   // Table columns
   const columns: ColumnsType<PackagingTypeDto> = [
     {
@@ -196,14 +100,34 @@ export default function PackagingTypesPage() {
       dataIndex: 'code',
       key: 'code',
       width: 120,
-      render: (text: string) => <span className="font-mono font-semibold text-slate-900">{text}</span>,
+      render: (text: string, record) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/inventory/packaging-types/${record.id}`);
+          }}
+          className="font-mono font-semibold text-slate-900 hover:text-blue-600 transition-colors"
+        >
+          {text}
+        </button>
+      ),
     },
     {
       title: 'Ad',
       dataIndex: 'name',
       key: 'name',
       width: 180,
-      render: (text: string) => <span className="font-medium text-slate-900">{text}</span>,
+      render: (text: string, record) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/inventory/packaging-types/${record.id}`);
+          }}
+          className="font-medium text-slate-900 hover:text-blue-600 transition-colors text-left"
+        >
+          {text}
+        </button>
+      ),
     },
     {
       title: 'Kategori',
@@ -293,10 +217,19 @@ export default function PackagingTypesPage() {
           menu={{
             items: [
               {
+                key: 'view',
+                icon: <EyeIcon className="w-4 h-4" />,
+                label: 'Görüntüle',
+                onClick: () => router.push(`/inventory/packaging-types/${record.id}`),
+              },
+              {
                 key: 'edit',
                 icon: <PencilIcon className="w-4 h-4" />,
                 label: 'Düzenle',
-                onClick: () => handleEdit(record),
+                onClick: () => router.push(`/inventory/packaging-types/${record.id}/edit`),
+              },
+              {
+                type: 'divider',
               },
               {
                 key: 'delete',
@@ -309,113 +242,15 @@ export default function PackagingTypesPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
+          <Button
+            type="text"
+            icon={<EllipsisHorizontalIcon className="w-4 h-4" />}
+            onClick={(e) => e.stopPropagation()}
+          />
         </Dropdown>
       ),
     },
   ];
-
-  // Form content
-  const formContent = (
-    <Form form={form} layout="vertical" className="mt-4">
-      <div className="grid grid-cols-2 gap-4">
-        <Form.Item
-          name="code"
-          label="Kod"
-          rules={[{ required: true, message: 'Kod gerekli' }]}
-        >
-          <Input placeholder="PKG-001" />
-        </Form.Item>
-        <Form.Item
-          name="name"
-          label="Ad"
-          rules={[{ required: true, message: 'Ad gerekli' }]}
-        >
-          <Input placeholder="Standart Kutu" />
-        </Form.Item>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <Form.Item
-          name="category"
-          label="Kategori"
-          rules={[{ required: true, message: 'Kategori gerekli' }]}
-        >
-          <Select placeholder="Seçin">
-            {Object.entries(categoryConfig).map(([key, config]) => (
-              <Select.Option key={key} value={parseInt(key)}>
-                {config.label}
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
-        <Form.Item name="materialType" label="Materyal">
-          <Input placeholder="Karton, Plastik, Ahşap..." />
-        </Form.Item>
-      </div>
-      <Form.Item name="description" label="Açıklama">
-        <Input.TextArea rows={2} placeholder="Ambalaj tipi hakkında notlar..." />
-      </Form.Item>
-
-      <div className="text-sm font-medium text-slate-700 mb-2">Boyutlar (cm)</div>
-      <div className="grid grid-cols-3 gap-4">
-        <Form.Item name="length" label="Uzunluk">
-          <InputNumber min={0} style={{ width: '100%' }} placeholder="30" />
-        </Form.Item>
-        <Form.Item name="width" label="Genişlik">
-          <InputNumber min={0} style={{ width: '100%' }} placeholder="20" />
-        </Form.Item>
-        <Form.Item name="height" label="Yükseklik">
-          <InputNumber min={0} style={{ width: '100%' }} placeholder="15" />
-        </Form.Item>
-      </div>
-
-      <div className="text-sm font-medium text-slate-700 mb-2">Ağırlık (kg)</div>
-      <div className="grid grid-cols-2 gap-4">
-        <Form.Item name="emptyWeight" label="Boş Ağırlık">
-          <InputNumber min={0} step={0.1} style={{ width: '100%' }} placeholder="0.5" />
-        </Form.Item>
-        <Form.Item name="maxWeightCapacity" label="Max Taşıma Kapasitesi">
-          <InputNumber min={0} step={0.1} style={{ width: '100%' }} placeholder="25" />
-        </Form.Item>
-      </div>
-
-      <div className="text-sm font-medium text-slate-700 mb-2">Kapasite</div>
-      <div className="grid grid-cols-3 gap-4">
-        <Form.Item name="defaultQuantity" label="Varsayılan Miktar">
-          <InputNumber min={1} style={{ width: '100%' }} placeholder="12" />
-        </Form.Item>
-        <Form.Item name="maxQuantity" label="Max Miktar">
-          <InputNumber min={1} style={{ width: '100%' }} placeholder="24" />
-        </Form.Item>
-        <Form.Item name="unitsPerPallet" label="Palet Başına">
-          <InputNumber min={1} style={{ width: '100%' }} placeholder="48" />
-        </Form.Item>
-      </div>
-
-      <div className="text-sm font-medium text-slate-700 mb-2">İstifleme</div>
-      <div className="grid grid-cols-2 gap-4">
-        <Form.Item name="isStackable" label="İstiflenebilir" valuePropName="checked">
-          <Switch />
-        </Form.Item>
-        <Form.Item name="stackableCount" label="İstif Sayısı">
-          <InputNumber min={1} style={{ width: '100%' }} placeholder="4" />
-        </Form.Item>
-      </div>
-
-      <div className="text-sm font-medium text-slate-700 mb-2">Geri Dönüşüm</div>
-      <div className="grid grid-cols-3 gap-4">
-        <Form.Item name="isRecyclable" label="Geri Dönüştürülebilir" valuePropName="checked">
-          <Switch />
-        </Form.Item>
-        <Form.Item name="isReturnable" label="İade Edilebilir" valuePropName="checked">
-          <Switch />
-        </Form.Item>
-        <Form.Item name="depositAmount" label="Depozito">
-          <InputNumber min={0} step={0.01} style={{ width: '100%' }} placeholder="5.00" />
-        </Form.Item>
-      </div>
-    </Form>
-  );
 
   return (
     <PageContainer>
@@ -427,7 +262,7 @@ export default function PackagingTypesPage() {
         itemCount={stats.total}
         primaryAction={{
           label: 'Yeni Ambalaj Tipi',
-          onClick: handleCreate,
+          onClick: () => router.push('/inventory/packaging-types/new'),
           icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
@@ -502,43 +337,12 @@ export default function PackagingTypesPage() {
             showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
           }}
           scroll={{ x: 1200 }}
+          onRow={(record) => ({
+            onClick: () => router.push(`/inventory/packaging-types/${record.id}`),
+            className: 'cursor-pointer hover:bg-slate-50',
+          })}
         />
       </Card>
-
-      {/* Create Modal */}
-      <Modal
-        title="Yeni Ambalaj Tipi"
-        open={createModalOpen}
-        onCancel={() => {
-          setCreateModalOpen(false);
-          form.resetFields();
-        }}
-        onOk={handleCreateSubmit}
-        okText="Oluştur"
-        cancelText="İptal"
-        confirmLoading={createType.isPending}
-        width={700}
-      >
-        {formContent}
-      </Modal>
-
-      {/* Edit Modal */}
-      <Modal
-        title="Ambalaj Tipi Düzenle"
-        open={editModalOpen}
-        onCancel={() => {
-          setEditModalOpen(false);
-          setSelectedType(null);
-          form.resetFields();
-        }}
-        onOk={handleEditSubmit}
-        okText="Kaydet"
-        cancelText="İptal"
-        confirmLoading={updateType.isPending}
-        width={700}
-      >
-        {formContent}
-      </Modal>
     </PageContainer>
   );
 }

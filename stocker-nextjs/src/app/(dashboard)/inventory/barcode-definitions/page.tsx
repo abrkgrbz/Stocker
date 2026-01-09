@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Table, Tag, Select, Modal, Form, Input, InputNumber, Button, Switch, Dropdown } from 'antd';
+import { useRouter } from 'next/navigation';
+import { Table, Tag, Select, Input, Button, Dropdown } from 'antd';
 import {
   ArrowPathIcon,
   QrCodeIcon,
@@ -10,15 +11,14 @@ import {
   TrashIcon,
   EllipsisHorizontalIcon,
   MagnifyingGlassIcon,
+  EyeIcon,
 } from '@heroicons/react/24/outline';
 import {
   useBarcodeDefinitions,
   useProducts,
-  useCreateBarcodeDefinition,
-  useUpdateBarcodeDefinition,
   useDeleteBarcodeDefinition,
 } from '@/lib/api/hooks/useInventory';
-import type { BarcodeDefinitionDto, CreateBarcodeDefinitionDto, UpdateBarcodeDefinitionDto, BarcodeType } from '@/lib/api/services/inventory.types';
+import type { BarcodeDefinitionDto, BarcodeType } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import { PageContainer, ListPageHeader, Card } from '@/components/patterns';
 import { confirmAction } from '@/lib/utils/sweetalert';
@@ -38,18 +38,13 @@ const barcodeTypeConfig: Record<number, { label: string; color: string }> = {
 };
 
 export default function BarcodeDefinitionsPage() {
+  const router = useRouter();
   const [selectedProduct, setSelectedProduct] = useState<number | undefined>();
   const [searchText, setSearchText] = useState('');
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedBarcode, setSelectedBarcode] = useState<BarcodeDefinitionDto | null>(null);
-  const [form] = Form.useForm();
 
   // API Hooks
   const { data: products = [] } = useProducts();
   const { data: barcodes = [], isLoading, refetch } = useBarcodeDefinitions(selectedProduct);
-  const createBarcode = useCreateBarcodeDefinition();
-  const updateBarcode = useUpdateBarcodeDefinition();
   const deleteBarcode = useDeleteBarcodeDefinition();
 
   // Filter by search
@@ -74,27 +69,6 @@ export default function BarcodeDefinitionsPage() {
   }, [barcodes]);
 
   // Handlers
-  const handleCreate = () => {
-    form.resetFields();
-    setCreateModalOpen(true);
-  };
-
-  const handleEdit = (barcode: BarcodeDefinitionDto) => {
-    setSelectedBarcode(barcode);
-    form.setFieldsValue({
-      productId: barcode.productId,
-      barcode: barcode.barcode,
-      barcodeType: barcode.barcodeType,
-      isPrimary: barcode.isPrimary,
-      quantityPerUnit: barcode.quantityPerUnit,
-      isManufacturerBarcode: barcode.isManufacturerBarcode,
-      manufacturerCode: barcode.manufacturerCode,
-      gtin: barcode.gtin,
-      description: barcode.description,
-    });
-    setEditModalOpen(true);
-  };
-
   const handleDelete = async (barcode: BarcodeDefinitionDto) => {
     const confirmed = await confirmAction(
       'Barkodu Sil',
@@ -111,50 +85,6 @@ export default function BarcodeDefinitionsPage() {
     }
   };
 
-  const handleCreateSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      const data: CreateBarcodeDefinitionDto = {
-        productId: values.productId,
-        barcode: values.barcode,
-        barcodeType: values.barcodeType,
-        isPrimary: values.isPrimary,
-        quantityPerUnit: values.quantityPerUnit,
-        isManufacturerBarcode: values.isManufacturerBarcode,
-        manufacturerCode: values.manufacturerCode,
-        gtin: values.gtin,
-        description: values.description,
-      };
-      await createBarcode.mutateAsync(data);
-      setCreateModalOpen(false);
-      form.resetFields();
-    } catch (error) {
-      // Validation error
-    }
-  };
-
-  const handleEditSubmit = async () => {
-    if (!selectedBarcode) return;
-    try {
-      const values = await form.validateFields();
-      const data: UpdateBarcodeDefinitionDto = {
-        barcodeType: values.barcodeType,
-        isPrimary: values.isPrimary,
-        quantityPerUnit: values.quantityPerUnit,
-        isManufacturerBarcode: values.isManufacturerBarcode,
-        manufacturerCode: values.manufacturerCode,
-        gtin: values.gtin,
-        description: values.description,
-      };
-      await updateBarcode.mutateAsync({ id: selectedBarcode.id, dto: data });
-      setEditModalOpen(false);
-      setSelectedBarcode(null);
-      form.resetFields();
-    } catch (error) {
-      // Validation error
-    }
-  };
-
   // Table columns
   const columns: ColumnsType<BarcodeDefinitionDto> = [
     {
@@ -163,10 +93,16 @@ export default function BarcodeDefinitionsPage() {
       key: 'barcode',
       width: 180,
       render: (text: string, record) => (
-        <div>
-          <span className="font-mono font-semibold text-slate-900">{text}</span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/inventory/barcode-definitions/${record.id}`);
+          }}
+          className="text-left"
+        >
+          <span className="font-mono font-semibold text-slate-900 hover:text-blue-600 transition-colors">{text}</span>
           {record.isPrimary && <Tag color="green" className="ml-2">Birincil</Tag>}
-        </div>
+        </button>
       ),
     },
     {
@@ -174,10 +110,16 @@ export default function BarcodeDefinitionsPage() {
       key: 'product',
       width: 200,
       render: (_, record) => (
-        <div>
-          <div className="font-medium text-slate-900">{record.productName}</div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/inventory/barcode-definitions/${record.id}`);
+          }}
+          className="text-left"
+        >
+          <div className="font-medium text-slate-900 hover:text-blue-600 transition-colors">{record.productName}</div>
           <div className="text-xs text-slate-500">{record.productCode}</div>
-        </div>
+        </button>
       ),
     },
     {
@@ -240,10 +182,19 @@ export default function BarcodeDefinitionsPage() {
           menu={{
             items: [
               {
+                key: 'view',
+                icon: <EyeIcon className="w-4 h-4" />,
+                label: 'Görüntüle',
+                onClick: () => router.push(`/inventory/barcode-definitions/${record.id}`),
+              },
+              {
                 key: 'edit',
                 icon: <PencilIcon className="w-4 h-4" />,
                 label: 'Düzenle',
-                onClick: () => handleEdit(record),
+                onClick: () => router.push(`/inventory/barcode-definitions/${record.id}/edit`),
+              },
+              {
+                type: 'divider',
               },
               {
                 key: 'delete',
@@ -256,78 +207,15 @@ export default function BarcodeDefinitionsPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
+          <Button
+            type="text"
+            icon={<EllipsisHorizontalIcon className="w-4 h-4" />}
+            onClick={(e) => e.stopPropagation()}
+          />
         </Dropdown>
       ),
     },
   ];
-
-  // Form content
-  const formContent = (isEdit: boolean = false) => (
-    <Form form={form} layout="vertical" className="mt-4">
-      {!isEdit && (
-        <Form.Item
-          name="productId"
-          label="Ürün"
-          rules={[{ required: true, message: 'Ürün seçimi gerekli' }]}
-        >
-          <Select placeholder="Ürün seçin" showSearch optionFilterProp="children">
-            {products.map((p) => (
-              <Select.Option key={p.id} value={p.id}>
-                {p.code} - {p.name}
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
-      )}
-      <div className="grid grid-cols-2 gap-4">
-        {!isEdit && (
-          <Form.Item
-            name="barcode"
-            label="Barkod"
-            rules={[{ required: true, message: 'Barkod gerekli' }]}
-          >
-            <Input placeholder="8690123456789" />
-          </Form.Item>
-        )}
-        <Form.Item
-          name="barcodeType"
-          label="Barkod Tipi"
-          rules={[{ required: true, message: 'Barkod tipi gerekli' }]}
-        >
-          <Select placeholder="Seçin">
-            {Object.entries(barcodeTypeConfig).map(([key, config]) => (
-              <Select.Option key={key} value={parseInt(key)}>
-                {config.label}
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
-        <Form.Item name="quantityPerUnit" label="Birim Miktar">
-          <InputNumber min={1} style={{ width: '100%' }} placeholder="1" />
-        </Form.Item>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <Form.Item name="isPrimary" label="Birincil Barkod" valuePropName="checked">
-          <Switch />
-        </Form.Item>
-        <Form.Item name="isManufacturerBarcode" label="Üretici Barkodu" valuePropName="checked">
-          <Switch />
-        </Form.Item>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <Form.Item name="manufacturerCode" label="Üretici Kodu">
-          <Input placeholder="MFR-001" />
-        </Form.Item>
-        <Form.Item name="gtin" label="GTIN">
-          <Input placeholder="00012345678905" />
-        </Form.Item>
-      </div>
-      <Form.Item name="description" label="Açıklama">
-        <Input.TextArea rows={2} placeholder="Barkod hakkında notlar..." />
-      </Form.Item>
-    </Form>
-  );
 
   return (
     <PageContainer>
@@ -339,7 +227,7 @@ export default function BarcodeDefinitionsPage() {
         itemCount={stats.total}
         primaryAction={{
           label: 'Yeni Barkod',
-          onClick: handleCreate,
+          onClick: () => router.push('/inventory/barcode-definitions/new'),
           icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
@@ -416,43 +304,12 @@ export default function BarcodeDefinitionsPage() {
             showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
           }}
           scroll={{ x: 1200 }}
+          onRow={(record) => ({
+            onClick: () => router.push(`/inventory/barcode-definitions/${record.id}`),
+            className: 'cursor-pointer hover:bg-slate-50',
+          })}
         />
       </Card>
-
-      {/* Create Modal */}
-      <Modal
-        title="Yeni Barkod Tanımı"
-        open={createModalOpen}
-        onCancel={() => {
-          setCreateModalOpen(false);
-          form.resetFields();
-        }}
-        onOk={handleCreateSubmit}
-        okText="Oluştur"
-        cancelText="İptal"
-        confirmLoading={createBarcode.isPending}
-        width={600}
-      >
-        {formContent(false)}
-      </Modal>
-
-      {/* Edit Modal */}
-      <Modal
-        title="Barkod Tanımı Düzenle"
-        open={editModalOpen}
-        onCancel={() => {
-          setEditModalOpen(false);
-          setSelectedBarcode(null);
-          form.resetFields();
-        }}
-        onOk={handleEditSubmit}
-        okText="Kaydet"
-        cancelText="İptal"
-        confirmLoading={updateBarcode.isPending}
-        width={600}
-      >
-        {formContent(true)}
-      </Modal>
     </PageContainer>
   );
 }
