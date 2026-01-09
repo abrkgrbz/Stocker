@@ -2,75 +2,57 @@
 
 import React, { useState } from 'react';
 import {
-  Card,
   Table,
-  Button,
-  Space,
-  Tag,
-  Typography,
-  Input,
   Select,
   DatePicker,
-  Row,
-  Col,
-  Statistic,
   Modal,
   Form,
   message,
-  Tooltip,
-  Badge,
-  Alert,
   Tabs,
+  Input,
+  Alert,
+  Tag,
+  Badge,
+  Tooltip,
+  Space,
 } from 'antd';
 import {
-  MagnifyingGlassIcon,
-  PaperAirplaneIcon,
-  ArrowPathIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  ExclamationCircleIcon,
-  DocumentTextIcon,
-  CloudArrowUpIcon,
-  ClockIcon,
-  Cog6ToothIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
+  Search,
+  Send,
+  RefreshCw,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  FileText,
+  Clock,
+  Settings,
+  Eye,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useInvoices, useSetEInvoice } from '@/lib/api/hooks/useInvoices';
 import type { InvoiceListItem, InvoiceStatus } from '@/lib/api/services/invoice.service';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
-const eInvoiceStatusConfig: Record<string, { color: string; label: string; icon: React.ReactNode }> = {
-  Pending: { color: 'default', label: 'Bekliyor', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
-  Queued: { color: 'processing', label: 'Kuyrukta', icon: <ArrowPathIcon className="w-4 h-4 animate-spin" /> },
-  Sent: { color: 'blue', label: 'Gönderildi', icon: <PaperAirplaneIcon className="w-4 h-4" /> },
-  Delivered: { color: 'cyan', label: 'Ulaştı', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  Accepted: { color: 'green', label: 'Kabul Edildi', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  Rejected: { color: 'red', label: 'Reddedildi', icon: <XCircleIcon className="w-4 h-4" /> },
-  Error: { color: 'error', label: 'Hata', icon: <XCircleIcon className="w-4 h-4" /> },
+const eInvoiceStatusConfig: Record<string, { color: string; bgColor: string; label: string; icon: React.ReactNode }> = {
+  Pending: { color: 'text-slate-700', bgColor: 'bg-slate-100', label: 'Bekliyor', icon: <AlertCircle className="w-4 h-4" /> },
+  Queued: { color: 'text-slate-700', bgColor: 'bg-slate-200', label: 'Kuyrukta', icon: <RefreshCw className="w-4 h-4 animate-spin" /> },
+  Sent: { color: 'text-slate-700', bgColor: 'bg-slate-300', label: 'Gönderildi', icon: <Send className="w-4 h-4" /> },
+  Delivered: { color: 'text-slate-800', bgColor: 'bg-slate-400', label: 'Ulaştı', icon: <CheckCircle className="w-4 h-4" /> },
+  Accepted: { color: 'text-white', bgColor: 'bg-slate-700', label: 'Kabul Edildi', icon: <CheckCircle className="w-4 h-4" /> },
+  Rejected: { color: 'text-white', bgColor: 'bg-slate-900', label: 'Reddedildi', icon: <XCircle className="w-4 h-4" /> },
+  Error: { color: 'text-white', bgColor: 'bg-slate-800', label: 'Hata', icon: <XCircle className="w-4 h-4" /> },
 };
 
-const invoiceStatusColors: Record<InvoiceStatus, string> = {
-  Draft: 'default',
-  Issued: 'blue',
-  Sent: 'cyan',
-  PartiallyPaid: 'orange',
-  Paid: 'green',
-  Overdue: 'red',
-  Cancelled: 'red',
-};
-
-const invoiceStatusLabels: Record<InvoiceStatus, string> = {
-  Draft: 'Taslak',
-  Issued: 'Kesildi',
-  Sent: 'Gönderildi',
-  PartiallyPaid: 'Kısmi Ödendi',
-  Paid: 'Ödendi',
-  Overdue: 'Vadesi Geçmiş',
-  Cancelled: 'İptal',
+const invoiceStatusConfig: Record<InvoiceStatus, { color: string; bgColor: string; label: string }> = {
+  Draft: { color: 'text-slate-600', bgColor: 'bg-slate-100', label: 'Taslak' },
+  Issued: { color: 'text-slate-700', bgColor: 'bg-slate-200', label: 'Kesildi' },
+  Sent: { color: 'text-slate-700', bgColor: 'bg-slate-300', label: 'Gönderildi' },
+  PartiallyPaid: { color: 'text-slate-800', bgColor: 'bg-slate-400', label: 'Kısmi Ödendi' },
+  Paid: { color: 'text-white', bgColor: 'bg-slate-700', label: 'Ödendi' },
+  Overdue: { color: 'text-white', bgColor: 'bg-slate-800', label: 'Vadesi Geçmiş' },
+  Cancelled: { color: 'text-white', bgColor: 'bg-slate-900', label: 'İptal' },
 };
 
 export default function EInvoicePage() {
@@ -149,7 +131,12 @@ export default function EInvoicePage() {
       dataIndex: 'invoiceNumber',
       key: 'invoiceNumber',
       render: (text: string, record: InvoiceListItem) => (
-        <a onClick={() => router.push(`/sales/invoices/${record.id}`)}>{text}</a>
+        <button
+          onClick={() => router.push(`/sales/invoices/${record.id}`)}
+          className="text-slate-900 hover:text-slate-700 font-medium hover:underline"
+        >
+          {text}
+        </button>
       ),
     },
     {
@@ -175,18 +162,27 @@ export default function EInvoicePage() {
       title: 'Fatura Durumu',
       dataIndex: 'status',
       key: 'status',
-      render: (status: InvoiceStatus) => (
-        <Tag color={invoiceStatusColors[status]}>{invoiceStatusLabels[status]}</Tag>
-      ),
+      render: (status: InvoiceStatus) => {
+        const config = invoiceStatusConfig[status];
+        return (
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bgColor} ${config.color}`}>
+            {config.label}
+          </span>
+        );
+      },
     },
     {
       title: 'E-Fatura',
       key: 'eInvoice',
       render: (_: any, record: InvoiceListItem) => (
         record.isEInvoice ? (
-          <Badge status="success" text="E-Fatura" />
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-700 text-white">
+            E-Fatura
+          </span>
         ) : (
-          <Badge status="default" text="Klasik" />
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+            Klasik
+          </span>
         )
       ),
     },
@@ -194,14 +190,15 @@ export default function EInvoicePage() {
       title: 'E-Fatura Durumu',
       key: 'eInvoiceStatus',
       render: (_: any, record: InvoiceListItem) => {
-        if (!record.isEInvoice) return '-';
+        if (!record.isEInvoice) return <span className="text-slate-400">-</span>;
         // In a real app, this would come from the API
         const status = 'Pending';
         const config = eInvoiceStatusConfig[status];
         return (
-          <Tag color={config.color} icon={config.icon}>
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bgColor} ${config.color}`}>
+            {config.icon}
             {config.label}
-          </Tag>
+          </span>
         );
       },
     },
@@ -210,27 +207,27 @@ export default function EInvoicePage() {
       key: 'actions',
       width: 150,
       render: (_: any, record: InvoiceListItem) => (
-        <Space>
+        <div className="flex items-center gap-2">
           {record.status === 'Issued' && (
             <Tooltip title="E-Fatura Gönder">
-              <Button
-                type="primary"
-                size="small"
-                icon={<PaperAirplaneIcon className="w-4 h-4" />}
+              <button
                 onClick={() => handleSendEInvoice(record)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors"
               >
+                <Send className="w-3.5 h-3.5" />
                 Gönder
-              </Button>
+              </button>
             </Tooltip>
           )}
           <Tooltip title="Detay">
-            <Button
-              size="small"
-              icon={<DocumentTextIcon className="w-4 h-4" />}
+            <button
               onClick={() => router.push(`/sales/invoices/${record.id}`)}
-            />
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
           </Tooltip>
-        </Space>
+        </div>
       ),
     },
   ];
@@ -243,120 +240,165 @@ export default function EInvoicePage() {
     }),
   };
 
+  const tableClassName = `
+    [&_.ant-table]:!border-slate-200
+    [&_.ant-table-thead>tr>th]:!bg-slate-50
+    [&_.ant-table-thead>tr>th]:!text-slate-600
+    [&_.ant-table-thead>tr>th]:!font-semibold
+    [&_.ant-table-thead>tr>th]:!border-b
+    [&_.ant-table-thead>tr>th]:!border-slate-200
+    [&_.ant-table-tbody>tr>td]:!border-b
+    [&_.ant-table-tbody>tr>td]:!border-slate-100
+    [&_.ant-table-tbody>tr:hover>td]:!bg-slate-50
+    [&_.ant-table-tbody>tr>td]:!py-4
+    [&_.ant-pagination]:!mt-4
+    [&_.ant-pagination-item-active]:!bg-slate-900
+    [&_.ant-pagination-item-active]:!border-slate-900
+    [&_.ant-pagination-item-active>a]:!text-white
+  `;
+
   return (
-    <div style={{ padding: 24 }}>
+    <div className="min-h-screen bg-slate-50 p-8">
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <Title level={2} style={{ margin: 0 }}>E-Fatura Yönetimi</Title>
-        <Text type="secondary">E-Fatura ve E-Arşiv fatura işlemlerinizi yönetin</Text>
+      <div className="flex items-start gap-4 mb-8">
+        <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center flex-shrink-0">
+          <FileText className="w-6 h-6 text-white" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">E-Fatura Yönetimi</h1>
+          <p className="text-sm text-slate-500">E-Fatura ve E-Arşiv fatura işlemlerinizi yönetin</p>
+        </div>
       </div>
 
       {/* Statistics */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Toplam E-Fatura"
-              value={eInvoices.length}
-              prefix={<DocumentTextIcon className="w-4 h-4" style={{ color: '#1890ff' }} />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Gönderilmeyi Bekleyen"
-              value={pendingEInvoices.length}
-              prefix={<ExclamationCircleIcon className="w-4 h-4" style={{ color: '#faad14' }} />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Bu Ay Gönderilen"
-              value={eInvoices.filter(inv => dayjs(inv.invoiceDate).isSame(dayjs(), 'month')).length}
-              prefix={<PaperAirplaneIcon className="w-4 h-4" style={{ color: '#52c41a' }} />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Reddedilen"
-              value={0}
-              prefix={<XCircleIcon className="w-4 h-4" style={{ color: '#ff4d4f' }} />}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <FileText className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Toplam E-Fatura</p>
+              <p className="text-xl font-bold text-slate-900">{eInvoices.length}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <AlertCircle className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Gönderilmeyi Bekleyen</p>
+              <p className="text-xl font-bold text-slate-900">{pendingEInvoices.length}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <Send className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Bu Ay Gönderilen</p>
+              <p className="text-xl font-bold text-slate-900">{eInvoices.filter(inv => dayjs(inv.invoiceDate).isSame(dayjs(), 'month')).length}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <XCircle className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Reddedilen</p>
+              <p className="text-xl font-bold text-slate-900">0</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Integration Info Alert */}
-      <Alert
-        message="E-Fatura Entegrasyonu"
-        description="E-Fatura gönderimi için GİB (Gelir İdaresi Başkanlığı) entegrasyonu gereklidir. Entegrasyon ayarlarını yapılandırmak için Ayarlar butonuna tıklayın."
-        type="info"
-        showIcon
-        action={
-          <Button size="small" icon={<Cog6ToothIcon className="w-4 h-4" />} onClick={() => setSettingsModalOpen(true)}>
+      <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6">
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+            <AlertCircle className="w-4 h-4 text-slate-600" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-medium text-slate-900">E-Fatura Entegrasyonu</h3>
+            <p className="text-sm text-slate-500 mt-1">
+              E-Fatura gönderimi için GİB (Gelir İdaresi Başkanlığı) entegrasyonu gereklidir.
+              Entegrasyon ayarlarını yapılandırmak için Ayarlar butonuna tıklayın.
+            </p>
+          </div>
+          <button
+            onClick={() => setSettingsModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+          >
+            <Settings className="w-4 h-4" />
             Ayarlar
-          </Button>
-        }
-        style={{ marginBottom: 24 }}
-      />
+          </button>
+        </div>
+      </div>
 
       {/* Filters */}
-      <Card style={{ marginBottom: 16 }}>
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} md={6}>
-            <Input
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="relative flex-1 min-w-[200px] max-w-[300px]">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
               placeholder="Fatura no, müşteri ara..."
-              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              allowClear
+              className="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
             />
-          </Col>
-          <Col xs={24} sm={12} md={4}>
-            <Select
-              placeholder="Durum"
-              style={{ width: '100%' }}
-              value={statusFilter}
-              onChange={setStatusFilter}
-              allowClear
-              options={[
-                { value: 'Issued', label: 'Kesilmiş' },
-                { value: 'Sent', label: 'Gönderilmiş' },
-              ]}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <RangePicker
-              style={{ width: '100%' }}
-              format="DD/MM/YYYY"
-              value={dateRange}
-              onChange={(dates) => setDateRange(dates)}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={8}>
-            <Space>
-              <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()}>
-                Yenile
-              </Button>
-              {selectedInvoices.length > 0 && (
-                <Button type="primary" icon={<PaperAirplaneIcon className="w-4 h-4" />} onClick={handleBulkSend}>
-                  Seçilenleri Gönder ({selectedInvoices.length})
-                </Button>
-              )}
-            </Space>
-          </Col>
-        </Row>
-      </Card>
+          </div>
+          <Select
+            placeholder="Durum"
+            style={{ width: 150 }}
+            value={statusFilter}
+            onChange={setStatusFilter}
+            allowClear
+            options={[
+              { value: 'Issued', label: 'Kesilmiş' },
+              { value: 'Sent', label: 'Gönderilmiş' },
+            ]}
+            className="[&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg"
+          />
+          <RangePicker
+            style={{ width: 240 }}
+            format="DD/MM/YYYY"
+            value={dateRange}
+            onChange={(dates) => setDateRange(dates)}
+            className="[&_.ant-picker]:!border-slate-200 [&_.ant-picker]:!rounded-lg"
+          />
+          <div className="flex items-center gap-2 ml-auto">
+            <button
+              onClick={() => refetch()}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 hover:border-slate-400 rounded-lg transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Yenile
+            </button>
+            {selectedInvoices.length > 0 && (
+              <button
+                onClick={handleBulkSend}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors"
+              >
+                <Send className="w-4 h-4" />
+                Seçilenleri Gönder ({selectedInvoices.length})
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Tabs for different views */}
-      <Card>
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
         <Tabs
           defaultActiveKey="all"
+          className="[&_.ant-tabs-tab]:!text-slate-500 [&_.ant-tabs-tab-active]:!text-slate-900 [&_.ant-tabs-ink-bar]:!bg-slate-900"
           items={[
             {
               key: 'all',
@@ -368,6 +410,7 @@ export default function EInvoicePage() {
                   dataSource={invoices}
                   rowKey="id"
                   loading={isLoading}
+                  className={tableClassName}
                   pagination={{
                     total: invoicesData?.totalCount,
                     pageSize: 20,
@@ -380,9 +423,14 @@ export default function EInvoicePage() {
             {
               key: 'pending',
               label: (
-                <Badge count={pendingEInvoices.length} offset={[10, 0]}>
+                <span className="flex items-center gap-2">
                   Gönderilecekler
-                </Badge>
+                  {pendingEInvoices.length > 0 && (
+                    <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium text-white bg-slate-900 rounded-full">
+                      {pendingEInvoices.length}
+                    </span>
+                  )}
+                </span>
               ),
               children: (
                 <Table
@@ -391,6 +439,7 @@ export default function EInvoicePage() {
                   dataSource={pendingEInvoices}
                   rowKey="id"
                   loading={isLoading}
+                  className={tableClassName}
                   pagination={{
                     pageSize: 20,
                     showTotal: (total) => `Toplam ${total} fatura`,
@@ -407,6 +456,7 @@ export default function EInvoicePage() {
                   dataSource={eInvoices.filter(inv => inv.status === 'Sent')}
                   rowKey="id"
                   loading={isLoading}
+                  className={tableClassName}
                   pagination={{
                     pageSize: 20,
                     showTotal: (total) => `Toplam ${total} fatura`,
@@ -417,116 +467,141 @@ export default function EInvoicePage() {
             {
               key: 'history',
               label: (
-                <span>
-                  <ClockIcon className="w-4 h-4" /> Gönderim Geçmişi
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-4 h-4" />
+                  Gönderim Geçmişi
                 </span>
               ),
               children: (
-                <div style={{ padding: 40, textAlign: 'center' }}>
-                  <ClockIcon className="w-12 h-12" style={{ color: '#d9d9d9' }} />
-                  <div style={{ marginTop: 16 }}>
-                    <Text type="secondary">E-Fatura gönderim geçmişi entegrasyon sonrası görüntülenecektir.</Text>
+                <div className="flex flex-col items-center justify-center py-16">
+                  <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                    <Clock className="w-8 h-8 text-slate-400" />
                   </div>
+                  <p className="text-slate-500 text-sm">E-Fatura gönderim geçmişi entegrasyon sonrası görüntülenecektir.</p>
                 </div>
               ),
             },
           ]}
         />
-      </Card>
+      </div>
 
       {/* Send E-Invoice Modal */}
       <Modal
-        title="E-Fatura Gönder"
+        title={<span className="text-lg font-semibold text-slate-900">E-Fatura Gönder</span>}
         open={sendModalOpen}
         onCancel={() => setSendModalOpen(false)}
-        onOk={() => sendForm.submit()}
-        okText="Gönder"
-        cancelText="Vazgeç"
-        confirmLoading={setEInvoice.isPending}
+        footer={[
+          <button
+            key="cancel"
+            onClick={() => setSendModalOpen(false)}
+            className="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 hover:border-slate-400 rounded-lg transition-colors mr-2"
+          >
+            Vazgeç
+          </button>,
+          <button
+            key="submit"
+            onClick={() => sendForm.submit()}
+            disabled={setEInvoice.isPending}
+            className="px-4 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 rounded-lg transition-colors"
+          >
+            {setEInvoice.isPending ? 'Gönderiliyor...' : 'Gönder'}
+          </button>,
+        ]}
       >
         <Form form={sendForm} layout="vertical" onFinish={handleSendSubmit}>
           {currentInvoice && (
-            <div style={{ marginBottom: 16, padding: 16, background: '#f5f5f5', borderRadius: 8 }}>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Text type="secondary">Fatura No:</Text>
-                  <br />
-                  <Text strong>{currentInvoice.invoiceNumber}</Text>
-                </Col>
-                <Col span={12}>
-                  <Text type="secondary">Müşteri:</Text>
-                  <br />
-                  <Text strong>{currentInvoice.customerName}</Text>
-                </Col>
-              </Row>
-              <Row gutter={16} style={{ marginTop: 8 }}>
-                <Col span={12}>
-                  <Text type="secondary">Tutar:</Text>
-                  <br />
-                  <Text strong>
+            <div className="mb-4 p-4 bg-slate-50 rounded-lg">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-slate-500">Fatura No:</p>
+                  <p className="text-sm font-medium text-slate-900">{currentInvoice.invoiceNumber}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500">Müşteri:</p>
+                  <p className="text-sm font-medium text-slate-900">{currentInvoice.customerName}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500">Tutar:</p>
+                  <p className="text-sm font-medium text-slate-900">
                     {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: currentInvoice.currency }).format(currentInvoice.grandTotal)}
-                  </Text>
-                </Col>
-                <Col span={12}>
-                  <Text type="secondary">Tarih:</Text>
-                  <br />
-                  <Text strong>{dayjs(currentInvoice.invoiceDate).format('DD/MM/YYYY')}</Text>
-                </Col>
-              </Row>
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500">Tarih:</p>
+                  <p className="text-sm font-medium text-slate-900">{dayjs(currentInvoice.invoiceDate).format('DD/MM/YYYY')}</p>
+                </div>
+              </div>
             </div>
           )}
 
           <Form.Item
             name="eInvoiceId"
-            label="E-Fatura UUID"
+            label={<span className="text-sm font-medium text-slate-700">E-Fatura UUID</span>}
             rules={[{ required: true, message: 'E-Fatura UUID gereklidir' }]}
-            extra="GİB tarafından otomatik üretilecektir. Manuel giriş için boş bırakabilirsiniz."
+            extra={<span className="text-xs text-slate-500">GİB tarafından otomatik üretilecektir. Manuel giriş için boş bırakabilirsiniz.</span>}
           >
-            <Input placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+            <Input
+              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+              className="!border-slate-200 !rounded-lg focus:!ring-slate-900"
+            />
           </Form.Item>
 
-          <Alert
-            message="Bilgi"
-            description="E-Fatura gönderildikten sonra iptal edilemez. Lütfen fatura bilgilerini kontrol ediniz."
-            type="warning"
-            showIcon
-          />
+          <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-slate-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-slate-700">Bilgi</p>
+                <p className="text-xs text-slate-500">E-Fatura gönderildikten sonra iptal edilemez. Lütfen fatura bilgilerini kontrol ediniz.</p>
+              </div>
+            </div>
+          </div>
         </Form>
       </Modal>
 
       {/* Settings Modal */}
       <Modal
-        title="E-Fatura Ayarları"
+        title={<span className="text-lg font-semibold text-slate-900">E-Fatura Ayarları</span>}
         open={settingsModalOpen}
         onCancel={() => setSettingsModalOpen(false)}
         footer={[
-          <Button key="cancel" onClick={() => setSettingsModalOpen(false)}>
+          <button
+            key="cancel"
+            onClick={() => setSettingsModalOpen(false)}
+            className="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 hover:border-slate-400 rounded-lg transition-colors mr-2"
+          >
             Kapat
-          </Button>,
-          <Button key="save" type="primary" onClick={() => {
-            message.info('Ayarlar kaydedildi');
-            setSettingsModalOpen(false);
-          }}>
+          </button>,
+          <button
+            key="save"
+            onClick={() => {
+              message.info('Ayarlar kaydedildi');
+              setSettingsModalOpen(false);
+            }}
+            className="px-4 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors"
+          >
             Kaydet
-          </Button>,
+          </button>,
         ]}
         width={600}
       >
         <Form layout="vertical">
-          <Alert
-            message="GİB Entegrasyonu"
-            description="E-Fatura göndermek için GİB (Gelir İdaresi Başkanlığı) ile entegrasyon yapmanız gerekmektedir. Entegrasyon için bir e-fatura servis sağlayıcısı ile çalışmanız önerilir."
-            type="info"
-            showIcon
-            style={{ marginBottom: 16 }}
-          />
+          <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 mb-4">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-slate-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-slate-700">GİB Entegrasyonu</p>
+                <p className="text-xs text-slate-500">E-Fatura göndermek için GİB (Gelir İdaresi Başkanlığı) ile entegrasyon yapmanız gerekmektedir. Entegrasyon için bir e-fatura servis sağlayıcısı ile çalışmanız önerilir.</p>
+              </div>
+            </div>
+          </div>
 
           <Form.Item
-            label="E-Fatura Servis Sağlayıcısı"
-            extra="Kullanılan e-fatura entegratörü"
+            label={<span className="text-sm font-medium text-slate-700">E-Fatura Servis Sağlayıcısı</span>}
+            extra={<span className="text-xs text-slate-500">Kullanılan e-fatura entegratörü</span>}
           >
             <Select
               placeholder="Servis sağlayıcı seçin"
+              className="[&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg"
               options={[
                 { value: 'foriba', label: 'Foriba' },
                 { value: 'logo', label: 'Logo e-Fatura' },
@@ -537,32 +612,42 @@ export default function EInvoicePage() {
           </Form.Item>
 
           <Form.Item
-            label="API Anahtarı"
-            extra="Servis sağlayıcınızdan aldığınız API anahtarı"
+            label={<span className="text-sm font-medium text-slate-700">API Anahtarı</span>}
+            extra={<span className="text-xs text-slate-500">Servis sağlayıcınızdan aldığınız API anahtarı</span>}
           >
-            <Input.Password placeholder="API anahtarınızı giriniz" />
+            <Input.Password
+              placeholder="API anahtarınızı giriniz"
+              className="!border-slate-200 !rounded-lg"
+            />
           </Form.Item>
 
           <Form.Item
-            label="API Gizli Anahtarı"
-            extra="Servis sağlayıcınızdan aldığınız gizli anahtar"
+            label={<span className="text-sm font-medium text-slate-700">API Gizli Anahtarı</span>}
+            extra={<span className="text-xs text-slate-500">Servis sağlayıcınızdan aldığınız gizli anahtar</span>}
           >
-            <Input.Password placeholder="Gizli anahtarınızı giriniz" />
+            <Input.Password
+              placeholder="Gizli anahtarınızı giriniz"
+              className="!border-slate-200 !rounded-lg"
+            />
           </Form.Item>
 
           <Form.Item
-            label="Şirket VKN/TCKN"
-            extra="Fatura kesecek şirketin vergi/TC kimlik numarası"
+            label={<span className="text-sm font-medium text-slate-700">Şirket VKN/TCKN</span>}
+            extra={<span className="text-xs text-slate-500">Fatura kesecek şirketin vergi/TC kimlik numarası</span>}
           >
-            <Input placeholder="Vergi kimlik numaranızı giriniz" />
+            <Input
+              placeholder="Vergi kimlik numaranızı giriniz"
+              className="!border-slate-200 !rounded-lg"
+            />
           </Form.Item>
 
           <Form.Item
-            label="Test Modu"
-            extra="Test modunda faturalar gerçekte gönderilmez"
+            label={<span className="text-sm font-medium text-slate-700">Test Modu</span>}
+            extra={<span className="text-xs text-slate-500">Test modunda faturalar gerçekte gönderilmez</span>}
           >
             <Select
               defaultValue="test"
+              className="[&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg"
               options={[
                 { value: 'test', label: 'Test Modu (Aktif)' },
                 { value: 'production', label: 'Üretim Modu' },

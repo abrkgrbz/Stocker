@@ -19,17 +19,7 @@ import {
   ArrowRight,
   User,
   ShoppingCart,
-  Filter,
 } from 'lucide-react';
-import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  Badge,
-  EmptyState,
-} from '@/components/patterns';
-import { Select } from '@/components/primitives';
-import { ClockIcon } from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
 
@@ -193,25 +183,25 @@ export default function BackOrdersPage() {
     const configs = {
       Waiting: {
         label: 'Stok Bekleniyor',
-        bgColor: 'bg-orange-50',
-        textColor: 'text-orange-700',
-        borderColor: 'border-orange-200',
+        bgColor: 'bg-slate-200',
+        textColor: 'text-slate-700',
+        borderColor: 'border-slate-300',
       },
       PartiallyAvailable: {
         label: 'Kısmen Mevcut',
-        bgColor: 'bg-amber-50',
-        textColor: 'text-amber-700',
-        borderColor: 'border-amber-200',
+        bgColor: 'bg-slate-300',
+        textColor: 'text-slate-800',
+        borderColor: 'border-slate-400',
       },
       ReadyToShip: {
         label: 'Gönderime Hazır',
-        bgColor: 'bg-green-50',
-        textColor: 'text-green-700',
-        borderColor: 'border-green-200',
+        bgColor: 'bg-slate-700',
+        textColor: 'text-white',
+        borderColor: 'border-slate-600',
       },
       Cancelled: {
         label: 'İptal Edildi',
-        bgColor: 'bg-slate-50',
+        bgColor: 'bg-slate-100',
         textColor: 'text-slate-500',
         borderColor: 'border-slate-200',
       },
@@ -222,8 +212,8 @@ export default function BackOrdersPage() {
   const getPriorityConfig = (priority: BackOrderPriority) => {
     const configs = {
       Normal: { label: 'Normal', color: 'text-slate-600', bgColor: 'bg-slate-100' },
-      High: { label: 'Yüksek', color: 'text-orange-600', bgColor: 'bg-orange-100' },
-      Critical: { label: 'Kritik', color: 'text-red-600', bgColor: 'bg-red-100' },
+      High: { label: 'Yüksek', color: 'text-slate-700', bgColor: 'bg-slate-200' },
+      Critical: { label: 'Kritik', color: 'text-white', bgColor: 'bg-slate-900' },
     };
     return configs[priority];
   };
@@ -301,66 +291,90 @@ export default function BackOrdersPage() {
   const readyCount = backOrders.filter((bo) => bo.status === 'ReadyToShip').length;
 
   return (
-    <PageContainer maxWidth="7xl">
-      <ListPageHeader
-        icon={<ClockIcon className="w-5 h-5" />}
-        iconColor="#f97316"
-        title="Bekleyen Siparişler"
-        description="Stokta olmayan ve tedarik beklenen sipariş kalemleri"
-        itemCount={backOrders.filter((bo) => bo.status !== 'Cancelled').length}
-        secondaryActions={
-          <button
-            onClick={() => setShowCriticalOnly(!showCriticalOnly)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-              showCriticalOnly
-                ? 'bg-red-100 text-red-700'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            <AlertTriangle className="w-3.5 h-3.5" />
-            {showCriticalOnly ? 'Kritik Gösteriliyor' : 'Sadece Kritik'}
-          </button>
-        }
-      />
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4 mb-8">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center flex-shrink-0">
+            <Clock className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-slate-900">Bekleyen Siparişler</h1>
+              <span className="px-2.5 py-0.5 text-sm font-medium bg-slate-200 text-slate-700 rounded-full">
+                {backOrders.filter((bo) => bo.status !== 'Cancelled').length}
+              </span>
+            </div>
+            <p className="text-sm text-slate-500">Stokta olmayan ve tedarik beklenen sipariş kalemleri</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setShowCriticalOnly(!showCriticalOnly)}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            showCriticalOnly
+              ? 'bg-slate-900 text-white'
+              : 'bg-white border border-slate-300 text-slate-600 hover:border-slate-400'
+          }`}
+        >
+          <AlertTriangle className="w-4 h-4" />
+          {showCriticalOnly ? 'Kritik Gösteriliyor' : 'Sadece Kritik'}
+        </button>
+      </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-500">Stok Bekleniyor</span>
-            <Clock className="w-5 h-5 text-orange-500" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Stok Bekleniyor</p>
+              <p className="text-xl font-bold text-slate-900">{waitingCount}</p>
+            </div>
           </div>
-          <div className="mt-2 text-2xl font-semibold text-orange-600">{waitingCount}</div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-500">Kritik ({'>'}7 gün)</span>
-            <AlertTriangle className="w-5 h-5 text-red-500" />
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Kritik ({'>'}7 gün)</p>
+              <p className="text-xl font-bold text-slate-900">{criticalCount}</p>
+            </div>
           </div>
-          <div className="mt-2 text-2xl font-semibold text-red-600">{criticalCount}</div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-500">Gönderime Hazır</span>
-            <Truck className="w-5 h-5 text-green-500" />
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <Truck className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Gönderime Hazır</p>
+              <p className="text-xl font-bold text-slate-900">{readyCount}</p>
+            </div>
           </div>
-          <div className="mt-2 text-2xl font-semibold text-green-600">{readyCount}</div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-500">Toplam Bekleyen Adet</span>
-            <Package className="w-5 h-5 text-slate-400" />
-          </div>
-          <div className="mt-2 text-2xl font-semibold text-slate-900">
-            {backOrders
-              .filter((bo) => bo.status !== 'Cancelled')
-              .reduce((sum, bo) => sum + bo.waitingQuantity, 0)}
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <Package className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Toplam Bekleyen Adet</p>
+              <p className="text-xl font-bold text-slate-900">
+                {backOrders
+                  .filter((bo) => bo.status !== 'Cancelled')
+                  .reduce((sum, bo) => sum + bo.waitingQuantity, 0)}
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <Card className="mb-6">
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
         <div className="flex flex-wrap items-center gap-4">
           <div className="relative flex-1 min-w-[200px] max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -369,46 +383,44 @@ export default function BackOrdersPage() {
               placeholder="Sipariş no, müşteri veya ürün ara..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
             />
           </div>
-          <Select
-            value={statusFilter === 'All' ? null : statusFilter}
-            onChange={(val) => setStatusFilter((val as BackOrderStatus) || 'All')}
-            className="w-44"
-            placeholder="Tüm Durumlar"
-            clearable
-            options={[
-              { value: 'Waiting', label: 'Stok Bekleniyor' },
-              { value: 'PartiallyAvailable', label: 'Kısmen Mevcut' },
-              { value: 'ReadyToShip', label: 'Gönderime Hazır' },
-              { value: 'Cancelled', label: 'İptal Edildi' },
-            ]}
-          />
-          <Select
-            value={priorityFilter === 'All' ? null : priorityFilter}
-            onChange={(val) => setPriorityFilter((val as BackOrderPriority) || 'All')}
-            className="w-36"
-            placeholder="Tüm Öncelikler"
-            clearable
-            options={[
-              { value: 'Critical', label: 'Kritik' },
-              { value: 'High', label: 'Yüksek' },
-              { value: 'Normal', label: 'Normal' },
-            ]}
-          />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as BackOrderStatus | 'All')}
+            className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent bg-white"
+          >
+            <option value="All">Tüm Durumlar</option>
+            <option value="Waiting">Stok Bekleniyor</option>
+            <option value="PartiallyAvailable">Kısmen Mevcut</option>
+            <option value="ReadyToShip">Gönderime Hazır</option>
+            <option value="Cancelled">İptal Edildi</option>
+          </select>
+          <select
+            value={priorityFilter}
+            onChange={(e) => setPriorityFilter(e.target.value as BackOrderPriority | 'All')}
+            className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent bg-white"
+          >
+            <option value="All">Tüm Öncelikler</option>
+            <option value="Critical">Kritik</option>
+            <option value="High">Yüksek</option>
+            <option value="Normal">Normal</option>
+          </select>
         </div>
-      </Card>
+      </div>
 
       {/* Back Orders List */}
       {sortedBackOrders.length === 0 ? (
-        <Card>
-          <EmptyState
-            icon={<Package className="w-6 h-6" />}
-            title="Bekleyen sipariş bulunamadı"
-            description="Arama kriterlerinize uygun bekleyen sipariş yok"
-          />
-        </Card>
+        <div className="bg-white border border-slate-200 rounded-xl p-12">
+          <div className="flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+              <Package className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Bekleyen sipariş bulunamadı</h3>
+            <p className="text-sm text-slate-500">Arama kriterlerinize uygun bekleyen sipariş yok</p>
+          </div>
+        </div>
       ) : (
         <div className="space-y-3">
           {sortedBackOrders.map((backOrder) => {
@@ -420,14 +432,14 @@ export default function BackOrdersPage() {
               <div
                 key={backOrder.id}
                 className={`
-                  bg-white border rounded-lg overflow-hidden transition-all
-                  ${isCritical ? 'border-red-300 shadow-sm' : 'border-slate-200'}
+                  bg-white border rounded-xl overflow-hidden transition-all
+                  ${isCritical ? 'border-slate-400 shadow-sm' : 'border-slate-200'}
                   ${backOrder.status === 'Cancelled' ? 'opacity-60' : ''}
                 `}
               >
                 {/* Critical Banner */}
                 {isCritical && (
-                  <div className="bg-red-500 text-white px-4 py-1.5 text-xs font-medium flex items-center gap-2">
+                  <div className="bg-slate-900 text-white px-4 py-1.5 text-xs font-medium flex items-center gap-2">
                     <AlertTriangle className="w-3.5 h-3.5" />
                     Kritik: {backOrder.waitingDays} gündür bekleniyor
                   </div>
@@ -476,7 +488,7 @@ export default function BackOrdersPage() {
                           <div className="text-xs text-slate-500">{backOrder.productSku}</div>
                         </div>
                         <div className="text-right">
-                          <div className="text-lg font-bold text-orange-600">
+                          <div className="text-lg font-bold text-slate-900">
                             {backOrder.waitingQuantity} adet
                           </div>
                           <div className="text-xs text-slate-500">bekleniyor</div>
@@ -501,9 +513,9 @@ export default function BackOrdersPage() {
 
                       {/* Available Stock */}
                       {backOrder.status !== 'Cancelled' && backOrder.availableQuantity > 0 && (
-                        <div className="px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg text-center">
-                          <div className="text-xs text-green-600">Mevcut Stok</div>
-                          <div className="text-lg font-bold text-green-700">
+                        <div className="px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-center">
+                          <div className="text-xs text-slate-600">Mevcut Stok</div>
+                          <div className="text-lg font-bold text-slate-900">
                             {backOrder.availableQuantity}
                           </div>
                         </div>
@@ -518,7 +530,7 @@ export default function BackOrdersPage() {
                             flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all
                             ${
                               backOrder.availableQuantity > 0
-                                ? 'bg-green-600 text-white hover:bg-green-700 shadow-sm'
+                                ? 'bg-slate-900 text-white hover:bg-slate-800 shadow-sm'
                                 : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                             }
                           `}
@@ -530,7 +542,7 @@ export default function BackOrdersPage() {
                       )}
 
                       {backOrder.status === 'ReadyToShip' && (
-                        <div className="flex items-center gap-2 px-4 py-2.5 bg-green-100 text-green-700 rounded-lg text-sm font-medium">
+                        <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-700 text-white rounded-lg text-sm font-medium">
                           <Truck className="w-4 h-4" />
                           Gönderime Hazır
                         </div>
@@ -550,6 +562,6 @@ export default function BackOrdersPage() {
           })}
         </div>
       )}
-    </PageContainer>
+    </div>
   );
 }

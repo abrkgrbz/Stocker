@@ -2,14 +2,13 @@
 
 /**
  * Invoices List Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Monochrome Design System
  */
 
 import React, { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Table,
-  Tag,
   DatePicker,
   Dropdown,
 } from 'antd';
@@ -45,13 +44,6 @@ import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { generateInvoicePDF } from '@/lib/utils/pdf-export';
 import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  DataTableWrapper,
-} from '@/components/patterns';
-import { Input, Select, Spinner } from '@/components/primitives';
-import {
   showSuccess,
   showError,
   showWarning,
@@ -61,14 +53,14 @@ import {
 
 const { RangePicker } = DatePicker;
 
-const statusConfig: Record<InvoiceStatus, { color: string; label: string; bgColor: string; tagColor: string }> = {
-  Draft: { color: '#64748b', label: 'Taslak', bgColor: '#64748b15', tagColor: 'default' },
-  Issued: { color: '#3b82f6', label: 'Kesildi', bgColor: '#3b82f615', tagColor: 'blue' },
-  Sent: { color: '#06b6d4', label: 'Gönderildi', bgColor: '#06b6d415', tagColor: 'cyan' },
-  PartiallyPaid: { color: '#f59e0b', label: 'Kısmi Ödendi', bgColor: '#f59e0b15', tagColor: 'orange' },
-  Paid: { color: '#10b981', label: 'Ödendi', bgColor: '#10b98115', tagColor: 'green' },
-  Overdue: { color: '#ef4444', label: 'Vadesi Geçmiş', bgColor: '#ef444415', tagColor: 'red' },
-  Cancelled: { color: '#ef4444', label: 'İptal Edildi', bgColor: '#ef444415', tagColor: 'red' },
+const statusConfig: Record<InvoiceStatus, { bgColor: string; textColor: string; label: string }> = {
+  Draft: { bgColor: 'bg-slate-100', textColor: 'text-slate-600', label: 'Taslak' },
+  Issued: { bgColor: 'bg-slate-200', textColor: 'text-slate-700', label: 'Kesildi' },
+  Sent: { bgColor: 'bg-slate-300', textColor: 'text-slate-800', label: 'Gönderildi' },
+  PartiallyPaid: { bgColor: 'bg-slate-400', textColor: 'text-white', label: 'Kısmi Ödendi' },
+  Paid: { bgColor: 'bg-slate-700', textColor: 'text-white', label: 'Ödendi' },
+  Overdue: { bgColor: 'bg-slate-800', textColor: 'text-white', label: 'Vadesi Geçmiş' },
+  Cancelled: { bgColor: 'bg-slate-900', textColor: 'text-white', label: 'İptal Edildi' },
 };
 
 const statusOptions = [
@@ -302,6 +294,7 @@ export default function InvoicesPage() {
     onChange: (keys: React.Key[]) => setSelectedRowKeys(keys as string[]),
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleTableChange = (pagination: any, _filters: any, sorter: any) => {
     setFilters((prev) => ({
       ...prev,
@@ -318,16 +311,13 @@ export default function InvoicesPage() {
       key: 'invoice',
       render: (_, record) => (
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: statusConfig[record.status]?.bgColor || '#64748b15' }}
-          >
-            <DocumentTextIcon className="w-5 h-5" style={{ color: statusConfig[record.status]?.color || '#64748b' }} />
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <DocumentTextIcon className="w-5 h-5 text-slate-600" />
           </div>
           <div>
             <Link
               href={`/sales/invoices/${record.id}`}
-              className="text-sm font-medium text-slate-900 hover:text-indigo-600"
+              className="text-sm font-medium text-slate-900 hover:text-slate-600"
             >
               {record.invoiceNumber}
             </Link>
@@ -359,7 +349,7 @@ export default function InvoicesPage() {
       render: (date, record) => {
         const isOverdue = record.status === 'Overdue';
         return (
-          <div className={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-slate-600'}`}>
+          <div className={`text-sm ${isOverdue ? 'text-slate-900 font-medium' : 'text-slate-600'}`}>
             {dayjs(date).format('DD.MM.YYYY')}
           </div>
         );
@@ -369,12 +359,15 @@ export default function InvoicesPage() {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
-      width: 120,
-      render: (status: InvoiceStatus) => (
-        <Tag color={statusConfig[status]?.tagColor}>
-          {statusConfig[status]?.label}
-        </Tag>
-      ),
+      width: 130,
+      render: (status: InvoiceStatus) => {
+        const config = statusConfig[status];
+        return (
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bgColor} ${config.textColor}`}>
+            {config.label}
+          </span>
+        );
+      },
     },
     {
       title: 'Toplam',
@@ -396,7 +389,7 @@ export default function InvoicesPage() {
       width: 130,
       align: 'right',
       render: (amount, record) => (
-        <div className="text-sm text-emerald-600">
+        <div className="text-sm text-slate-600">
           {amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {record.currency}
         </div>
       ),
@@ -408,7 +401,7 @@ export default function InvoicesPage() {
       width: 130,
       align: 'right',
       render: (balance, record) => (
-        <div className={`text-sm font-medium ${balance > 0 ? 'text-red-600' : 'text-slate-500'}`}>
+        <div className={`text-sm font-medium ${balance > 0 ? 'text-slate-900' : 'text-slate-500'}`}>
           {balance.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {record.currency}
         </div>
       ),
@@ -420,7 +413,7 @@ export default function InvoicesPage() {
       width: 90,
       align: 'center',
       render: (isEInvoice) => (
-        <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${isEInvoice ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
+        <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${isEInvoice ? 'bg-slate-200 text-slate-700' : 'bg-slate-100 text-slate-600'}`}>
           {isEInvoice ? 'E-Fatura' : 'Normal'}
         </span>
       ),
@@ -431,7 +424,7 @@ export default function InvoicesPage() {
       width: 60,
       fixed: 'right',
       render: (_, record) => {
-        const menuItems: any[] = [
+        const menuItems: ({ key: string; icon: React.ReactNode; label: string; onClick: () => void; danger?: boolean } | { type: 'divider' })[] = [
           {
             key: 'view',
             icon: <EyeIcon className="w-4 h-4" />,
@@ -506,70 +499,22 @@ export default function InvoicesPage() {
   ];
 
   return (
-    <PageContainer maxWidth="7xl">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Fatura</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalCount}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#6366f115' }}>
-              <DocumentTextIcon className="w-5 h-5" style={{ color: '#6366f1' }} />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Taslak</span>
-              <div className="text-2xl font-semibold text-slate-900">{stats.draft}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: stats.draft > 0 ? '#f59e0b15' : '#64748b15' }}>
-              <ClockIcon className="w-5 h-5" style={{ color: stats.draft > 0 ? '#f59e0b' : '#64748b' }} />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Vadesi Geçmiş</span>
-              <div className="text-2xl font-semibold text-slate-900">{stats.overdue}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: stats.overdue > 0 ? '#ef444415' : '#64748b15' }}>
-              <ExclamationTriangleIcon className="w-5 h-5" style={{ color: stats.overdue > 0 ? '#ef4444' : '#64748b' }} />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Bakiye</span>
-              <div className="text-2xl font-semibold text-slate-900">
-                {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(stats.totalDue)}
-              </div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: stats.totalDue > 0 ? '#ef444415' : '#10b98115' }}>
-              <CurrencyDollarIcon className="w-5 h-5" style={{ color: stats.totalDue > 0 ? '#ef4444' : '#10b981' }} />
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-slate-50 p-8">
       {/* Header */}
-      <ListPageHeader
-        icon={<DocumentTextIcon className="w-5 h-5" />}
-        iconColor="#10b981"
-        title="Faturalar"
-        description="Satış faturalarını yönetin"
-        itemCount={totalCount}
-        primaryAction={{
-          label: 'Yeni Fatura',
-          onClick: () => router.push('/sales/invoices/new'),
-          icon: <PlusIcon className="w-4 h-4" />,
-        }}
-        secondaryActions={
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+            <DocumentTextIcon className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Faturalar</h1>
+            <p className="text-sm text-slate-500">
+              Satış faturalarını yönetin
+              {totalCount > 0 && <span className="ml-2 text-slate-400">({totalCount} fatura)</span>}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
           <button
             onClick={() => refetch()}
             disabled={isLoading}
@@ -577,14 +522,63 @@ export default function InvoicesPage() {
           >
             <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
-        }
-      />
+          <button
+            onClick={() => router.push('/sales/invoices/new')}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Yeni Fatura
+          </button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <DocumentTextIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <span className="text-sm text-slate-500">Toplam Fatura</span>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">{totalCount}</div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <ClockIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <span className="text-sm text-slate-500">Taslak</span>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.draft}</div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <ExclamationTriangleIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <span className="text-sm text-slate-500">Vadesi Geçmiş</span>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.overdue}</div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <CurrencyDollarIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <span className="text-sm text-slate-500">Toplam Bakiye</span>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">
+            {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(stats.totalDue)}
+          </div>
+        </div>
+      </div>
 
       {/* Bulk Actions Bar */}
       {selectedRowKeys.length > 0 && (
-        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6">
+        <div className="bg-slate-100 border border-slate-300 rounded-xl p-4 mb-6">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-indigo-700 font-medium">
+            <span className="text-sm text-slate-700 font-medium">
               {selectedRowKeys.length} fatura seçildi
             </span>
             <div className="flex items-center gap-2">
@@ -615,7 +609,7 @@ export default function InvoicesPage() {
               <button
                 onClick={handleBulkDelete}
                 disabled={bulkLoading}
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 bg-white border border-red-200 rounded-md hover:bg-red-50 disabled:opacity-50"
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50"
               >
                 <TrashIcon className="w-4 h-4" />
                 Sil
@@ -632,31 +626,35 @@ export default function InvoicesPage() {
       )}
 
       {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
-          <Input
-            placeholder="Fatura ara..."
-            prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
-            style={{ maxWidth: 300 }}
-            onChange={(e) => setFilters((prev) => ({ ...prev, searchTerm: e.target.value, page: 1 }))}
-            className="h-10"
-          />
-          <Select
-            placeholder="Durum seçin"
-            options={statusOptions}
-            value={filters.status ?? null}
-            onChange={(value) => setFilters((prev) => ({ ...prev, status: value ?? undefined, page: 1 }))}
-            clearable
-            className="w-40"
-          />
-          <Select
-            placeholder="Tip seçin"
-            options={typeOptions}
-            value={filters.type ?? null}
-            onChange={(value) => setFilters((prev) => ({ ...prev, type: value ?? undefined, page: 1 }))}
-            clearable
-            className="w-36"
-          />
+          <div className="relative flex-1 max-w-xs">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Fatura ara..."
+              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+              onChange={(e) => setFilters((prev) => ({ ...prev, searchTerm: e.target.value, page: 1 }))}
+            />
+          </div>
+          <select
+            className="px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+            value={filters.status}
+            onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value, page: 1 }))}
+          >
+            {statusOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <select
+            className="px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+            value={filters.type}
+            onChange={(e) => setFilters((prev) => ({ ...prev, type: e.target.value, page: 1 }))}
+          >
+            {typeOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
           <RangePicker
             placeholder={['Başlangıç', 'Bitiş']}
             style={{ width: 280 }}
@@ -682,14 +680,12 @@ export default function InvoicesPage() {
       </div>
 
       {/* Table */}
-      {isLoading ? (
-        <Card>
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Spinner size="lg" />
+            <div className="w-8 h-8 border-2 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div>
           </div>
-        </Card>
-      ) : (
-        <DataTableWrapper>
+        ) : (
           <Table
             rowSelection={rowSelection}
             columns={columns}
@@ -705,9 +701,10 @@ export default function InvoicesPage() {
             }}
             onChange={handleTableChange}
             scroll={{ x: 1200 }}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
           />
-        </DataTableWrapper>
-      )}
-    </PageContainer>
+        )}
+      </div>
+    </div>
   );
 }

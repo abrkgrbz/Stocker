@@ -1,9 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Card, Row, Col, Statistic, Typography, Table, Tag, Button, Progress, Alert, List, Badge, Tooltip } from 'antd';
+import { Table, Progress } from 'antd';
 import {
-  CalendarIcon,
   ChevronRightIcon,
   ClockIcon,
   CurrencyDollarIcon,
@@ -11,6 +10,7 @@ import {
   ExclamationTriangleIcon,
   ShoppingCartIcon,
   WalletIcon,
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useSalesStatistics, useSalesOrders } from '@/lib/api/hooks/useSales';
@@ -20,26 +20,14 @@ import type { SalesOrderListItem, SalesOrderStatus } from '@/lib/api/services/sa
 import type { InvoiceListItem } from '@/lib/api/services/invoice.service';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
-
-const statusColors: Record<SalesOrderStatus, string> = {
-  Draft: 'default',
-  Approved: 'processing',
-  Confirmed: 'cyan',
-  Shipped: 'blue',
-  Delivered: 'geekblue',
-  Completed: 'success',
-  Cancelled: 'error',
-};
-
-const statusLabels: Record<SalesOrderStatus, string> = {
-  Draft: 'Taslak',
-  Approved: 'Onaylı',
-  Confirmed: 'Onaylandı',
-  Shipped: 'Gönderildi',
-  Delivered: 'Teslim Edildi',
-  Completed: 'Tamamlandı',
-  Cancelled: 'İptal',
+const statusConfig: Record<SalesOrderStatus, { bgColor: string; textColor: string; label: string }> = {
+  Draft: { bgColor: 'bg-slate-100', textColor: 'text-slate-600', label: 'Taslak' },
+  Approved: { bgColor: 'bg-slate-200', textColor: 'text-slate-700', label: 'Onaylı' },
+  Confirmed: { bgColor: 'bg-slate-300', textColor: 'text-slate-800', label: 'Onaylandı' },
+  Shipped: { bgColor: 'bg-slate-400', textColor: 'text-white', label: 'Gönderildi' },
+  Delivered: { bgColor: 'bg-slate-500', textColor: 'text-white', label: 'Teslim Edildi' },
+  Completed: { bgColor: 'bg-slate-700', textColor: 'text-white', label: 'Tamamlandı' },
+  Cancelled: { bgColor: 'bg-slate-900', textColor: 'text-white', label: 'İptal' },
 };
 
 export default function SalesDashboardPage() {
@@ -60,7 +48,12 @@ export default function SalesDashboardPage() {
       dataIndex: 'orderNumber',
       key: 'orderNumber',
       render: (text: string, record: SalesOrderListItem) => (
-        <a onClick={() => router.push(`/sales/orders/${record.id}`)}>{text}</a>
+        <button
+          onClick={() => router.push(`/sales/orders/${record.id}`)}
+          className="text-slate-900 font-medium hover:text-slate-600 transition-colors"
+        >
+          {text}
+        </button>
       ),
     },
     {
@@ -78,338 +71,378 @@ export default function SalesDashboardPage() {
       title: 'Tutar',
       dataIndex: 'grandTotal',
       key: 'grandTotal',
-      render: (amount: number, record: SalesOrderListItem) =>
-        new Intl.NumberFormat('tr-TR', { style: 'currency', currency: record.currency }).format(amount),
+      render: (amount: number, record: SalesOrderListItem) => (
+        <span className="font-medium text-slate-900">
+          {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: record.currency }).format(amount)}
+        </span>
+      ),
     },
     {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
-      render: (status: SalesOrderStatus) => (
-        <Tag color={statusColors[status]}>{statusLabels[status]}</Tag>
-      ),
+      render: (status: SalesOrderStatus) => {
+        const config = statusConfig[status];
+        return (
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bgColor} ${config.textColor}`}>
+            {config.label}
+          </span>
+        );
+      },
     },
   ];
 
   return (
-    <div style={{ padding: 24 }}>
-      <div style={{ marginBottom: 24 }}>
-        <Title level={2} style={{ margin: 0 }}>Satış Dashboard</Title>
-        <Text type="secondary">Satış operasyonlarınızın genel görünümü</Text>
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+          <CurrencyDollarIcon className="w-6 h-6 text-white" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Satış Dashboard</h1>
+          <p className="text-sm text-slate-500">Satış operasyonlarınızın genel görünümü</p>
+        </div>
       </div>
 
       {/* Statistics Cards */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable onClick={() => router.push('/sales/orders')}>
-            <Statistic
-              title="Toplam Sipariş"
-              value={salesStats?.totalOrders ?? 0}
-              prefix={<ShoppingCartIcon className="w-4 h-4" style={{ color: '#1890ff' }} />}
-              loading={salesStatsLoading}
-            />
-            <div style={{ marginTop: 8 }}>
-              <Text type="secondary">
-                {salesStats?.draftOrders ?? 0} taslak, {salesStats?.approvedOrders ?? 0} onaylı
-              </Text>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {/* Total Orders Card */}
+        <button
+          onClick={() => router.push('/sales/orders')}
+          className="bg-white border border-slate-200 rounded-xl p-5 text-left hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <ShoppingCartIcon className="w-5 h-5 text-slate-600" />
             </div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable onClick={() => router.push('/sales/invoices')}>
-            <Statistic
-              title="Toplam Fatura"
-              value={invoiceStats?.totalInvoices ?? 0}
-              prefix={<DocumentTextIcon className="w-4 h-4" style={{ color: '#52c41a' }} />}
-              loading={invoiceStatsLoading}
-            />
-            <div style={{ marginTop: 8 }}>
-              <Text type="secondary">
-                {invoiceStats?.overdueInvoices ?? 0} gecikmiş
-              </Text>
+            <span className="text-sm text-slate-500">Toplam Sipariş</span>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">
+            {salesStatsLoading ? '...' : (salesStats?.totalOrders ?? 0)}
+          </div>
+          <p className="text-xs text-slate-400 mt-1">
+            {salesStats?.draftOrders ?? 0} taslak, {salesStats?.approvedOrders ?? 0} onaylı
+          </p>
+        </button>
+
+        {/* Total Invoices Card */}
+        <button
+          onClick={() => router.push('/sales/invoices')}
+          className="bg-white border border-slate-200 rounded-xl p-5 text-left hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <DocumentTextIcon className="w-5 h-5 text-slate-600" />
             </div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable onClick={() => router.push('/sales/payments')}>
-            <Statistic
-              title="Toplam Ödeme"
-              value={paymentStats?.totalPayments ?? 0}
-              prefix={<WalletIcon className="w-4 h-4" style={{ color: '#722ed1' }} />}
-              loading={paymentStatsLoading}
-            />
-            <div style={{ marginTop: 8 }}>
-              <Text type="secondary">
-                {paymentStats?.pendingPayments ?? 0} beklemede
-              </Text>
+            <span className="text-sm text-slate-500">Toplam Fatura</span>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">
+            {invoiceStatsLoading ? '...' : (invoiceStats?.totalInvoices ?? 0)}
+          </div>
+          <p className="text-xs text-slate-400 mt-1">
+            {invoiceStats?.overdueInvoices ?? 0} gecikmiş
+          </p>
+        </button>
+
+        {/* Total Payments Card */}
+        <button
+          onClick={() => router.push('/sales/payments')}
+          className="bg-white border border-slate-200 rounded-xl p-5 text-left hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <WalletIcon className="w-5 h-5 text-slate-600" />
             </div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Toplam Gelir"
-              value={salesStats?.totalRevenue ?? 0}
-              precision={2}
-              prefix={<CurrencyDollarIcon className="w-4 h-4" style={{ color: '#faad14' }} />}
-              suffix="₺"
-              loading={salesStatsLoading}
-            />
-            <div style={{ marginTop: 8 }}>
-              <Text type="secondary">
-                Ort: {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(salesStats?.averageOrderValue ?? 0)}
-              </Text>
+            <span className="text-sm text-slate-500">Toplam Ödeme</span>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">
+            {paymentStatsLoading ? '...' : (paymentStats?.totalPayments ?? 0)}
+          </div>
+          <p className="text-xs text-slate-400 mt-1">
+            {paymentStats?.pendingPayments ?? 0} beklemede
+          </p>
+        </button>
+
+        {/* Total Revenue Card */}
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <CurrencyDollarIcon className="w-5 h-5 text-slate-600" />
             </div>
-          </Card>
-        </Col>
-      </Row>
+            <span className="text-sm text-slate-500">Toplam Gelir</span>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">
+            {salesStatsLoading ? '...' : new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(salesStats?.totalRevenue ?? 0)}
+          </div>
+          <p className="text-xs text-slate-400 mt-1">
+            Ort: {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(salesStats?.averageOrderValue ?? 0)}
+          </p>
+        </div>
+      </div>
 
       {/* Overdue Invoices Alert */}
       {hasOverdueInvoices && (
-        <Alert
-          message={
-            <span>
-              <ExclamationTriangleIcon className="w-4 h-4" style={{ marginRight: 8 }} />
+        <div className="bg-slate-100 border border-slate-300 rounded-xl p-4 mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <ExclamationTriangleIcon className="w-5 h-5 text-slate-700" />
+            <span className="text-slate-700">
               <strong>{invoiceStats?.overdueInvoices ?? 0} adet vadesi geçmiş fatura</strong> bulunmaktadır.
               Toplam tutar: {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(overdueAmount)}
             </span>
-          }
-          type="warning"
-          showIcon={false}
-          action={
-            <Button size="small" type="primary" danger onClick={() => router.push('/sales/invoices?status=Overdue')}>
-              Faturaları Görüntüle
-            </Button>
-          }
-          style={{ marginBottom: 24 }}
-        />
+          </div>
+          <button
+            onClick={() => router.push('/sales/invoices?status=Overdue')}
+            className="px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
+          >
+            Faturaları Görüntüle
+          </button>
+        </div>
       )}
 
       {/* Quick Stats Row */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} lg={8}>
-          <Card title="Sipariş Durumları" size="small">
-            <div style={{ padding: '8px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <Text>Taslak</Text>
-                <Text strong>{salesStats?.draftOrders ?? 0}</Text>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+        {/* Order Status Card */}
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-slate-900 mb-4">Sipariş Durumları</h3>
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm text-slate-600">Taslak</span>
+                <span className="text-sm font-medium text-slate-900">{salesStats?.draftOrders ?? 0}</span>
               </div>
               <Progress
                 percent={salesStats?.totalOrders ? ((salesStats?.draftOrders ?? 0) / salesStats.totalOrders) * 100 : 0}
                 showInfo={false}
-                strokeColor="#d9d9d9"
+                strokeColor="#94a3b8"
+                trailColor="#f1f5f9"
               />
             </div>
-            <div style={{ padding: '8px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <Text>Onaylı</Text>
-                <Text strong>{salesStats?.approvedOrders ?? 0}</Text>
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm text-slate-600">Onaylı</span>
+                <span className="text-sm font-medium text-slate-900">{salesStats?.approvedOrders ?? 0}</span>
               </div>
               <Progress
                 percent={salesStats?.totalOrders ? ((salesStats?.approvedOrders ?? 0) / salesStats.totalOrders) * 100 : 0}
                 showInfo={false}
-                strokeColor="#1890ff"
+                strokeColor="#64748b"
+                trailColor="#f1f5f9"
               />
             </div>
-            <div style={{ padding: '8px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <Text>Tamamlanan</Text>
-                <Text strong>{salesStats?.completedOrders ?? 0}</Text>
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm text-slate-600">Tamamlanan</span>
+                <span className="text-sm font-medium text-slate-900">{salesStats?.completedOrders ?? 0}</span>
               </div>
               <Progress
                 percent={salesStats?.totalOrders ? ((salesStats?.completedOrders ?? 0) / salesStats.totalOrders) * 100 : 0}
                 showInfo={false}
-                strokeColor="#52c41a"
+                strokeColor="#334155"
+                trailColor="#f1f5f9"
               />
             </div>
-            <div style={{ padding: '8px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <Text>İptal</Text>
-                <Text strong>{salesStats?.cancelledOrders ?? 0}</Text>
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm text-slate-600">İptal</span>
+                <span className="text-sm font-medium text-slate-900">{salesStats?.cancelledOrders ?? 0}</span>
               </div>
               <Progress
                 percent={salesStats?.totalOrders ? ((salesStats?.cancelledOrders ?? 0) / salesStats.totalOrders) * 100 : 0}
                 showInfo={false}
-                strokeColor="#ff4d4f"
+                strokeColor="#0f172a"
+                trailColor="#f1f5f9"
               />
             </div>
-          </Card>
-        </Col>
-        <Col xs={24} lg={8}>
-          <Card title="Fatura Durumları" size="small">
-            <div style={{ padding: '8px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <Text>Taslak</Text>
-                <Text strong>{invoiceStats?.draftInvoices ?? 0}</Text>
+          </div>
+        </div>
+
+        {/* Invoice Status Card */}
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-slate-900 mb-4">Fatura Durumları</h3>
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm text-slate-600">Taslak</span>
+                <span className="text-sm font-medium text-slate-900">{invoiceStats?.draftInvoices ?? 0}</span>
               </div>
               <Progress
                 percent={invoiceStats?.totalInvoices ? ((invoiceStats?.draftInvoices ?? 0) / invoiceStats.totalInvoices) * 100 : 0}
                 showInfo={false}
-                strokeColor="#d9d9d9"
+                strokeColor="#94a3b8"
+                trailColor="#f1f5f9"
               />
             </div>
-            <div style={{ padding: '8px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <Text>Kesilmiş</Text>
-                <Text strong>{invoiceStats?.issuedInvoices ?? 0}</Text>
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm text-slate-600">Kesilmiş</span>
+                <span className="text-sm font-medium text-slate-900">{invoiceStats?.issuedInvoices ?? 0}</span>
               </div>
               <Progress
                 percent={invoiceStats?.totalInvoices ? ((invoiceStats?.issuedInvoices ?? 0) / invoiceStats.totalInvoices) * 100 : 0}
                 showInfo={false}
-                strokeColor="#1890ff"
+                strokeColor="#64748b"
+                trailColor="#f1f5f9"
               />
             </div>
-            <div style={{ padding: '8px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <Text>Ödenmiş</Text>
-                <Text strong>{invoiceStats?.paidInvoices ?? 0}</Text>
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm text-slate-600">Ödenmiş</span>
+                <span className="text-sm font-medium text-slate-900">{invoiceStats?.paidInvoices ?? 0}</span>
               </div>
               <Progress
                 percent={invoiceStats?.totalInvoices ? ((invoiceStats?.paidInvoices ?? 0) / invoiceStats.totalInvoices) * 100 : 0}
                 showInfo={false}
-                strokeColor="#52c41a"
+                strokeColor="#334155"
+                trailColor="#f1f5f9"
               />
             </div>
-            <div style={{ padding: '8px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <Text>Gecikmiş</Text>
-                <Text strong>{invoiceStats?.overdueInvoices ?? 0}</Text>
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm text-slate-600">Gecikmiş</span>
+                <span className="text-sm font-medium text-slate-900">{invoiceStats?.overdueInvoices ?? 0}</span>
               </div>
               <Progress
                 percent={invoiceStats?.totalInvoices ? ((invoiceStats?.overdueInvoices ?? 0) / invoiceStats.totalInvoices) * 100 : 0}
                 showInfo={false}
-                strokeColor="#ff4d4f"
+                strokeColor="#0f172a"
+                trailColor="#f1f5f9"
               />
             </div>
-          </Card>
-        </Col>
-        <Col xs={24} lg={8}>
-          <Card title="Ödeme Durumları" size="small">
-            <div style={{ padding: '8px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <Text>Beklemede</Text>
-                <Text strong>{paymentStats?.pendingPayments ?? 0}</Text>
+          </div>
+        </div>
+
+        {/* Payment Status Card */}
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-slate-900 mb-4">Ödeme Durumları</h3>
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm text-slate-600">Beklemede</span>
+                <span className="text-sm font-medium text-slate-900">{paymentStats?.pendingPayments ?? 0}</span>
               </div>
               <Progress
                 percent={paymentStats?.totalPayments ? ((paymentStats?.pendingPayments ?? 0) / paymentStats.totalPayments) * 100 : 0}
                 showInfo={false}
-                strokeColor="#faad14"
+                strokeColor="#94a3b8"
+                trailColor="#f1f5f9"
               />
             </div>
-            <div style={{ padding: '8px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <Text>Reddedilen</Text>
-                <Text strong>{paymentStats?.rejectedPayments ?? 0}</Text>
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm text-slate-600">Reddedilen</span>
+                <span className="text-sm font-medium text-slate-900">{paymentStats?.rejectedPayments ?? 0}</span>
               </div>
               <Progress
                 percent={paymentStats?.totalPayments ? ((paymentStats?.rejectedPayments ?? 0) / paymentStats.totalPayments) * 100 : 0}
                 showInfo={false}
-                strokeColor="#ff7a45"
+                strokeColor="#64748b"
+                trailColor="#f1f5f9"
               />
             </div>
-            <div style={{ padding: '8px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <Text>Tamamlanan</Text>
-                <Text strong>{paymentStats?.completedPayments ?? 0}</Text>
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm text-slate-600">Tamamlanan</span>
+                <span className="text-sm font-medium text-slate-900">{paymentStats?.completedPayments ?? 0}</span>
               </div>
               <Progress
                 percent={paymentStats?.totalPayments ? ((paymentStats?.completedPayments ?? 0) / paymentStats.totalPayments) * 100 : 0}
                 showInfo={false}
-                strokeColor="#52c41a"
+                strokeColor="#334155"
+                trailColor="#f1f5f9"
               />
             </div>
-            <div style={{ padding: '8px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <Text>İade</Text>
-                <Text strong>{paymentStats?.refundedPayments ?? 0}</Text>
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm text-slate-600">İade</span>
+                <span className="text-sm font-medium text-slate-900">{paymentStats?.refundedPayments ?? 0}</span>
               </div>
               <Progress
                 percent={paymentStats?.totalPayments ? ((paymentStats?.refundedPayments ?? 0) / paymentStats.totalPayments) * 100 : 0}
                 showInfo={false}
-                strokeColor="#ff4d4f"
+                strokeColor="#0f172a"
+                trailColor="#f1f5f9"
               />
             </div>
-          </Card>
-        </Col>
-      </Row>
+          </div>
+        </div>
+      </div>
 
       {/* Recent Orders and Overdue Invoices */}
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={16}>
-          <Card
-            title="Son Siparişler"
-            extra={
-              <Button type="link" onClick={() => router.push('/sales/orders')}>
-                Tümünü Gör <ChevronRightIcon className="w-4 h-4" />
-              </Button>
-            }
-          >
-            <Table
-              columns={columns}
-              dataSource={recentOrders?.items ?? []}
-              rowKey="id"
-              loading={ordersLoading}
-              pagination={false}
-              size="small"
-            />
-          </Card>
-        </Col>
-        <Col xs={24} lg={8}>
-          <Card
-            title={
-              <span>
-                <ClockIcon className="w-4 h-4" style={{ marginRight: 8, color: '#ff4d4f' }} />
-                Vadesi Geçmiş Faturalar
-              </span>
-            }
-            extra={
-              <Button type="link" onClick={() => router.push('/sales/invoices?status=Overdue')}>
-                Tümü <ChevronRightIcon className="w-4 h-4" />
-              </Button>
-            }
-          >
-            {overdueLoading ? (
-              <div style={{ textAlign: 'center', padding: 24 }}>Yükleniyor...</div>
-            ) : overdueInvoices?.items?.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 24, color: '#52c41a' }}>
-                <Badge status="success" text="Vadesi geçmiş fatura yok" />
-              </div>
-            ) : (
-              <List
-                size="small"
-                dataSource={overdueInvoices?.items ?? []}
-                renderItem={(invoice: InvoiceListItem) => {
-                  const daysOverdue = dayjs().diff(dayjs(invoice.dueDate), 'day');
-                  return (
-                    <List.Item
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => router.push(`/sales/invoices/${invoice.id}`)}
-                    >
-                      <List.Item.Meta
-                        title={
-                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Text strong>{invoice.invoiceNumber}</Text>
-                            <Tag color="error">{daysOverdue} gün gecikmiş</Tag>
-                          </div>
-                        }
-                        description={
-                          <div>
-                            <Text type="secondary">{invoice.customerName}</Text>
-                            <br />
-                            <Text strong style={{ color: '#ff4d4f' }}>
-                              {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: invoice.currency }).format(invoice.grandTotal)}
-                            </Text>
-                          </div>
-                        }
-                      />
-                    </List.Item>
-                  );
-                }}
-              />
-            )}
-          </Card>
-        </Col>
-      </Row>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Recent Orders */}
+        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-slate-900">Son Siparişler</h3>
+            <button
+              onClick={() => router.push('/sales/orders')}
+              className="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1 transition-colors"
+            >
+              Tümünü Gör
+              <ChevronRightIcon className="w-4 h-4" />
+            </button>
+          </div>
+          <Table
+            columns={columns}
+            dataSource={recentOrders?.items ?? []}
+            rowKey="id"
+            loading={ordersLoading}
+            pagination={false}
+            size="small"
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
+          />
+        </div>
+
+        {/* Overdue Invoices */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <ClockIcon className="w-4 h-4 text-slate-700" />
+              <h3 className="text-sm font-semibold text-slate-900">Vadesi Geçmiş Faturalar</h3>
+            </div>
+            <button
+              onClick={() => router.push('/sales/invoices?status=Overdue')}
+              className="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1 transition-colors"
+            >
+              Tümü
+              <ChevronRightIcon className="w-4 h-4" />
+            </button>
+          </div>
+
+          {overdueLoading ? (
+            <div className="text-center py-8 text-slate-500">Yükleniyor...</div>
+          ) : overdueInvoices?.items?.length === 0 ? (
+            <div className="text-center py-8">
+              <CheckCircleIcon className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+              <p className="text-sm text-slate-500">Vadesi geçmiş fatura yok</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {overdueInvoices?.items?.map((invoice: InvoiceListItem) => {
+                const daysOverdue = dayjs().diff(dayjs(invoice.dueDate), 'day');
+                return (
+                  <button
+                    key={invoice.id}
+                    onClick={() => router.push(`/sales/invoices/${invoice.id}`)}
+                    className="w-full text-left p-3 rounded-lg border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-medium text-slate-900">{invoice.invoiceNumber}</span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-900 text-white">
+                        {daysOverdue} gün gecikmiş
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-500">{invoice.customerName}</p>
+                    <p className="text-sm font-medium text-slate-900 mt-1">
+                      {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: invoice.currency }).format(invoice.grandTotal)}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

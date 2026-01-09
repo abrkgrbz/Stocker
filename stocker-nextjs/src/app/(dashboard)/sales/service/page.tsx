@@ -26,12 +26,7 @@ import {
   FileText,
   DollarSign,
 } from 'lucide-react';
-import {
-  PageContainer,
-  ListPageHeader,
-  Badge,
-} from '@/components/ui/enterprise-page';
-import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
+
 import { SalesService, ServiceOrderListDto, ServiceOrderDto, ServiceOrderStatisticsDto } from '@/lib/api/services/sales.service';
 
 dayjs.extend(relativeTime);
@@ -53,30 +48,30 @@ const kanbanColumns: KanbanColumn[] = [
   {
     id: 'Received',
     title: 'Yeni Talep',
-    color: 'text-blue-700',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
+    color: 'text-slate-700',
+    bgColor: 'bg-slate-100',
+    borderColor: 'border-slate-300',
   },
   {
     id: 'Diagnosing',
     title: 'Teşhis',
-    color: 'text-amber-700',
-    bgColor: 'bg-amber-50',
-    borderColor: 'border-amber-200',
+    color: 'text-slate-700',
+    bgColor: 'bg-slate-50',
+    borderColor: 'border-slate-200',
   },
   {
     id: 'InProgress',
     title: 'Onarımda',
-    color: 'text-purple-700',
-    bgColor: 'bg-purple-50',
-    borderColor: 'border-purple-200',
+    color: 'text-slate-800',
+    bgColor: 'bg-slate-200',
+    borderColor: 'border-slate-300',
   },
   {
     id: 'Completed',
     title: 'Tamamlandı',
-    color: 'text-emerald-700',
-    bgColor: 'bg-emerald-50',
-    borderColor: 'border-emerald-200',
+    color: 'text-slate-900',
+    bgColor: 'bg-slate-300',
+    borderColor: 'border-slate-400',
   },
 ];
 
@@ -131,19 +126,19 @@ export default function ServiceOrdersPage() {
     switch (priority) {
       case 'Urgent':
         return {
-          color: 'bg-red-100 text-red-700 border-red-200',
+          color: 'bg-slate-900 text-white border-slate-900',
           icon: <AlertTriangle className="w-3 h-3" />,
           label: 'Acil',
         };
       case 'High':
         return {
-          color: 'bg-orange-100 text-orange-700 border-orange-200',
+          color: 'bg-slate-700 text-white border-slate-700',
           icon: <AlertTriangle className="w-3 h-3" />,
           label: 'Yüksek',
         };
       case 'Normal':
         return {
-          color: 'bg-amber-100 text-amber-700 border-amber-200',
+          color: 'bg-slate-200 text-slate-700 border-slate-300',
           icon: null,
           label: 'Normal',
         };
@@ -244,97 +239,98 @@ export default function ServiceOrdersPage() {
   const completedOrders = statistics?.completedCount ?? orders.filter((o) => o.status === 'Completed').length;
 
   const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { label: string; variant: 'success' | 'warning' | 'error' | 'default' | 'info' }> = {
-      Received: { label: 'Alındı', variant: 'info' },
-      Diagnosing: { label: 'Teşhis', variant: 'warning' },
-      WaitingParts: { label: 'Parça Bekleniyor', variant: 'warning' },
-      InProgress: { label: 'Devam Ediyor', variant: 'info' },
-      Testing: { label: 'Test', variant: 'info' },
-      Completed: { label: 'Tamamlandı', variant: 'success' },
-      Delivered: { label: 'Teslim Edildi', variant: 'success' },
-      Cancelled: { label: 'İptal', variant: 'error' },
+    const statusConfig: Record<string, { label: string; bgColor: string; textColor: string }> = {
+      Received: { label: 'Alındı', bgColor: 'bg-slate-100', textColor: 'text-slate-600' },
+      Diagnosing: { label: 'Teşhis', bgColor: 'bg-slate-200', textColor: 'text-slate-700' },
+      WaitingParts: { label: 'Parça Bekleniyor', bgColor: 'bg-slate-200', textColor: 'text-slate-700' },
+      InProgress: { label: 'Devam Ediyor', bgColor: 'bg-slate-300', textColor: 'text-slate-800' },
+      Testing: { label: 'Test', bgColor: 'bg-slate-300', textColor: 'text-slate-800' },
+      Completed: { label: 'Tamamlandı', bgColor: 'bg-slate-800', textColor: 'text-white' },
+      Delivered: { label: 'Teslim Edildi', bgColor: 'bg-slate-900', textColor: 'text-white' },
+      Cancelled: { label: 'İptal', bgColor: 'bg-slate-100', textColor: 'text-slate-500' },
     };
-    return statusConfig[status] || { label: status, variant: 'default' as const };
+    return statusConfig[status] || { label: status, bgColor: 'bg-slate-100', textColor: 'text-slate-600' };
   };
 
   if (loading) {
     return (
-      <PageContainer maxWidth="full">
+      <div className="min-h-screen bg-slate-50 p-8">
         <div className="flex items-center justify-center h-96">
           <Spinner size="lg" />
         </div>
-      </PageContainer>
+      </div>
     );
   }
 
   return (
-    <PageContainer maxWidth="full">
-      <ListPageHeader
-        icon={<WrenchScrewdriverIcon className="w-5 h-5" />}
-        iconColor="#7c3aed"
-        title="Servis Talepleri"
-        description="Tamir ve bakım taleplerini yönetin"
-        itemCount={totalOrders}
-        primaryAction={{
-          label: 'Yeni Talep',
-          onClick: () => {},
-          icon: <Plus className="w-4 h-4" />,
-        }}
-        secondaryActions={
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Page Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-4 mb-2">
+          <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+            <Wrench className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-slate-900">Servis Talepleri</h1>
+              <span className="px-2.5 py-1 bg-slate-100 text-slate-600 text-sm font-medium rounded-full">
+                {totalOrders}
+              </span>
+            </div>
+            <p className="text-sm text-slate-500">Tamir ve bakım taleplerini yönetin</p>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2">
           <button
             onClick={fetchData}
-            className="inline-flex items-center gap-2 px-3 py-2 text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
+            className="inline-flex items-center gap-2 px-3 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors text-sm font-medium"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
-        }
-      />
+          <button className="inline-flex items-center gap-2 px-4 py-2 !bg-slate-900 hover:!bg-slate-800 text-white rounded-lg transition-colors text-sm font-medium">
+            <Plus className="w-4 h-4" />
+            Yeni Talep
+          </button>
+        </div>
+      </div>
 
       {/* Summary Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Package className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <div className="text-sm text-slate-500">Toplam Talep</div>
-              <div className="text-xl font-bold text-slate-900">{totalOrders}</div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-slate-500">Toplam Talep</span>
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <Package className="w-5 h-5 text-slate-600" />
             </div>
           </div>
+          <div className="mt-2 text-2xl font-semibold text-slate-900">{totalOrders}</div>
         </div>
-        <div className="bg-white border border-red-200 rounded-lg p-4 bg-red-50/30">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-            </div>
-            <div>
-              <div className="text-sm text-slate-500">Acil / Yüksek</div>
-              <div className="text-xl font-bold text-red-600">{urgentOrders}</div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-slate-500">Acil / Yüksek</span>
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5 text-slate-600" />
             </div>
           </div>
+          <div className="mt-2 text-2xl font-semibold text-slate-900">{urgentOrders}</div>
         </div>
-        <div className="bg-white border border-purple-200 rounded-lg p-4 bg-purple-50/30">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Wrench className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <div className="text-sm text-slate-500">Devam Eden</div>
-              <div className="text-xl font-bold text-purple-600">{inProgressOrders}</div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-slate-500">Devam Eden</span>
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <Wrench className="w-5 h-5 text-slate-600" />
             </div>
           </div>
+          <div className="mt-2 text-2xl font-semibold text-slate-900">{inProgressOrders}</div>
         </div>
-        <div className="bg-white border border-emerald-200 rounded-lg p-4 bg-emerald-50/30">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-100 rounded-lg">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-            </div>
-            <div>
-              <div className="text-sm text-slate-500">Tamamlanan</div>
-              <div className="text-xl font-bold text-emerald-600">{completedOrders}</div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-slate-500">Tamamlanan</span>
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <CheckCircle2 className="w-5 h-5 text-slate-600" />
             </div>
           </div>
+          <div className="mt-2 text-2xl font-semibold text-slate-900">{completedOrders}</div>
         </div>
       </div>
 
@@ -345,7 +341,7 @@ export default function ServiceOrdersPage() {
           return (
             <div
               key={column.id}
-              className={`${column.bgColor} ${column.borderColor} border rounded-lg p-4 min-h-[500px]`}
+              className={`${column.bgColor} ${column.borderColor} border rounded-xl p-4 min-h-[500px]`}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, column.id)}
             >
@@ -373,7 +369,7 @@ export default function ServiceOrdersPage() {
                         bg-white rounded-lg border border-slate-200 p-3 cursor-pointer
                         hover:shadow-md hover:border-slate-300 transition-all duration-200
                         ${draggedOrder?.id === order.id ? 'opacity-50 scale-95' : ''}
-                        ${order.priority === 'Urgent' ? 'ring-2 ring-red-200' : ''}
+                        ${order.priority === 'Urgent' ? 'ring-2 ring-slate-400' : ''}
                       `}
                     >
                       {/* Drag Handle & Ticket Number */}
@@ -407,7 +403,7 @@ export default function ServiceOrdersPage() {
                         {/* Technician */}
                         {order.technicianName ? (
                           <div className="flex items-center gap-1.5">
-                            <div className="w-6 h-6 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-xs font-medium">
+                            <div className="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-medium">
                               {order.technicianName.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                             </div>
                             <span className="text-xs text-slate-500 hidden sm:inline">
@@ -449,7 +445,7 @@ export default function ServiceOrdersPage() {
       <Modal
         title={
           <div className="flex items-center gap-2">
-            <Wrench className="w-5 h-5 text-violet-600" />
+            <Wrench className="w-5 h-5 text-slate-600" />
             <span>Servis Detayı</span>
           </div>
         }
@@ -481,18 +477,12 @@ export default function ServiceOrdersPage() {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant={getStatusBadge(selectedOrder.status).variant}>
+                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadge(selectedOrder.status).bgColor} ${getStatusBadge(selectedOrder.status).textColor}`}>
                   {getStatusBadge(selectedOrder.status).label}
-                </Badge>
-                <Badge
-                  variant={
-                    selectedOrder.priority === 'Urgent' || selectedOrder.priority === 'High'
-                      ? 'error'
-                      : 'default'
-                  }
-                >
+                </span>
+                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getPriorityConfig(selectedOrder.priority).color}`}>
                   {getPriorityConfig(selectedOrder.priority).label}
-                </Badge>
+                </span>
               </div>
             </div>
 
@@ -531,7 +521,7 @@ export default function ServiceOrdersPage() {
                 </div>
                 {selectedOrder.technicianName ? (
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-xs font-medium">
+                    <div className="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-medium">
                       {selectedOrder.technicianName.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                     </div>
                     <span className="font-medium text-slate-900">
@@ -578,12 +568,12 @@ export default function ServiceOrdersPage() {
                     {selectedOrder.partsCost.toLocaleString('tr-TR')} ₺
                   </div>
                 </div>
-                <div className="bg-white border border-emerald-200 rounded-lg p-3 bg-emerald-50/50">
-                  <div className="flex items-center gap-2 text-emerald-600 mb-1">
+                <div className="bg-slate-800 rounded-lg p-3">
+                  <div className="flex items-center gap-2 text-slate-300 mb-1">
                     <DollarSign className="w-4 h-4" />
                     <span className="text-xs">Toplam</span>
                   </div>
-                  <div className="font-medium text-emerald-700">
+                  <div className="font-medium text-white">
                     {selectedOrder.totalAmount.toLocaleString('tr-TR')} ₺
                   </div>
                 </div>
@@ -592,17 +582,17 @@ export default function ServiceOrdersPage() {
 
             {/* Diagnosis Notes */}
             {selectedOrder.diagnosisNotes && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="text-sm font-medium text-blue-700 mb-1">Teşhis Notları</div>
-                <p className="text-blue-800 text-sm">{selectedOrder.diagnosisNotes}</p>
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                <div className="text-sm font-medium text-slate-700 mb-1">Teşhis Notları</div>
+                <p className="text-slate-600 text-sm">{selectedOrder.diagnosisNotes}</p>
               </div>
             )}
 
             {/* Repair Notes */}
             {selectedOrder.repairNotes && (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
-                <div className="text-sm font-medium text-emerald-700 mb-1">Onarım Notları</div>
-                <p className="text-emerald-800 text-sm">{selectedOrder.repairNotes}</p>
+              <div className="bg-slate-100 border border-slate-200 rounded-lg p-3">
+                <div className="text-sm font-medium text-slate-700 mb-1">Onarım Notları</div>
+                <p className="text-slate-600 text-sm">{selectedOrder.repairNotes}</p>
               </div>
             )}
 
@@ -676,7 +666,7 @@ export default function ServiceOrdersPage() {
                 )}
                 {selectedOrder.completedDate && (
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    <CheckCircle2 className="w-4 h-4 text-slate-600" />
                     <span>Tamamlanma: {dayjs(selectedOrder.completedDate).format('DD MMM YYYY, HH:mm')}</span>
                   </div>
                 )}
@@ -694,13 +684,13 @@ export default function ServiceOrdersPage() {
               >
                 Kapat
               </button>
-              <button className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors text-sm font-medium">
+              <button className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm font-medium">
                 Düzenle
               </button>
             </div>
           </div>
         ) : null}
       </Modal>
-    </PageContainer>
+    </div>
   );
 }

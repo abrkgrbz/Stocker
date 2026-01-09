@@ -16,24 +16,12 @@ import {
   Download,
   Eye,
   Calendar,
-  MapPin,
   Package,
   CheckCircle,
   Clock,
   X,
-  Building2,
-  Phone,
   Hash,
 } from 'lucide-react';
-import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  Badge,
-  EmptyState,
-} from '@/components/patterns';
-import { Select } from '@/components/primitives';
-import { DocumentTextIcon } from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
 
@@ -219,30 +207,30 @@ export default function DeliveryNotesPage() {
     const configs = {
       Preparing: {
         label: 'Hazırlanıyor',
-        bgColor: 'bg-amber-50',
-        textColor: 'text-amber-700',
-        borderColor: 'border-amber-200',
+        bgColor: 'bg-slate-100',
+        textColor: 'text-slate-600',
+        borderColor: 'border-slate-200',
         icon: Clock,
       },
       InTransit: {
         label: 'Yolda',
-        bgColor: 'bg-blue-50',
-        textColor: 'text-blue-700',
-        borderColor: 'border-blue-200',
+        bgColor: 'bg-slate-200',
+        textColor: 'text-slate-700',
+        borderColor: 'border-slate-300',
         icon: Truck,
       },
       Delivered: {
         label: 'Teslim Edildi',
-        bgColor: 'bg-green-50',
-        textColor: 'text-green-700',
-        borderColor: 'border-green-200',
+        bgColor: 'bg-slate-700',
+        textColor: 'text-white',
+        borderColor: 'border-slate-600',
         icon: CheckCircle,
       },
       Returned: {
         label: 'İade Edildi',
-        bgColor: 'bg-red-50',
-        textColor: 'text-red-700',
-        borderColor: 'border-red-200',
+        bgColor: 'bg-slate-900',
+        textColor: 'text-white',
+        borderColor: 'border-slate-800',
         icon: X,
       },
     };
@@ -276,53 +264,75 @@ export default function DeliveryNotesPage() {
   const deliveredCount = deliveryNotes.filter((n) => n.status === 'Delivered').length;
 
   return (
-    <PageContainer maxWidth="7xl">
-      <ListPageHeader
-        icon={<DocumentTextIcon className="w-5 h-5" />}
-        iconColor="#10b981"
-        title="İrsaliyeler"
-        description="Sevkiyat ile gönderilen resmi belgeler"
-        itemCount={deliveryNotes.length}
-      />
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex items-start gap-4 mb-8">
+        <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center flex-shrink-0">
+          <FileText className="w-6 h-6 text-white" />
+        </div>
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-slate-900">İrsaliyeler</h1>
+            <span className="px-2.5 py-0.5 text-sm font-medium bg-slate-200 text-slate-700 rounded-full">
+              {deliveryNotes.length}
+            </span>
+          </div>
+          <p className="text-sm text-slate-500">Sevkiyat ile gönderilen resmi belgeler</p>
+        </div>
+      </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-500">Toplam İrsaliye</span>
-            <FileText className="w-5 h-5 text-slate-400" />
-          </div>
-          <div className="mt-2 text-2xl font-semibold text-slate-900">
-            {deliveryNotes.length}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <FileText className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Toplam İrsaliye</p>
+              <p className="text-xl font-bold text-slate-900">{deliveryNotes.length}</p>
+            </div>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-500">Yolda</span>
-            <Truck className="w-5 h-5 text-blue-500" />
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <Truck className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Yolda</p>
+              <p className="text-xl font-bold text-slate-900">{inTransitCount}</p>
+            </div>
           </div>
-          <div className="mt-2 text-2xl font-semibold text-blue-600">{inTransitCount}</div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-500">Teslim Edildi</span>
-            <CheckCircle className="w-5 h-5 text-green-500" />
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Teslim Edildi</p>
+              <p className="text-xl font-bold text-slate-900">{deliveredCount}</p>
+            </div>
           </div>
-          <div className="mt-2 text-2xl font-semibold text-green-600">{deliveredCount}</div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-500">Toplam Koli</span>
-            <Package className="w-5 h-5 text-slate-400" />
-          </div>
-          <div className="mt-2 text-2xl font-semibold text-slate-900">
-            {deliveryNotes.reduce((sum, n) => sum + n.totalPackages, 0)}
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <Package className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Toplam Koli</p>
+              <p className="text-xl font-bold text-slate-900">
+                {deliveryNotes.reduce((sum, n) => sum + n.totalPackages, 0)}
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <Card className="mb-6">
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
         <div className="flex flex-wrap items-center gap-4">
           <div className="relative flex-1 min-w-[200px] max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -331,34 +341,34 @@ export default function DeliveryNotesPage() {
               placeholder="Belge no, sipariş no, müşteri veya kargo ara..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
             />
           </div>
-          <Select
-            placeholder="Tüm Durumlar"
-            value={statusFilter === 'All' ? null : statusFilter}
-            onChange={(val) => setStatusFilter((val as DeliveryStatus) || 'All')}
-            className="w-40"
-            clearable
-            options={[
-              { value: 'Preparing', label: 'Hazırlanıyor' },
-              { value: 'InTransit', label: 'Yolda' },
-              { value: 'Delivered', label: 'Teslim Edildi' },
-              { value: 'Returned', label: 'İade Edildi' },
-            ]}
-          />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as DeliveryStatus | 'All')}
+            className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent bg-white"
+          >
+            <option value="All">Tüm Durumlar</option>
+            <option value="Preparing">Hazırlanıyor</option>
+            <option value="InTransit">Yolda</option>
+            <option value="Delivered">Teslim Edildi</option>
+            <option value="Returned">İade Edildi</option>
+          </select>
         </div>
-      </Card>
+      </div>
 
       {/* Document Grid */}
       {filteredNotes.length === 0 ? (
-        <Card>
-          <EmptyState
-            icon={<FileText className="w-6 h-6" />}
-            title="İrsaliye bulunamadı"
-            description="Arama kriterlerinize uygun irsaliye yok"
-          />
-        </Card>
+        <div className="bg-white border border-slate-200 rounded-xl p-12">
+          <div className="flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+              <FileText className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">İrsaliye bulunamadı</h3>
+            <p className="text-sm text-slate-500">Arama kriterlerinize uygun irsaliye yok</p>
+          </div>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredNotes.map((note) => {
@@ -370,13 +380,13 @@ export default function DeliveryNotesPage() {
                 key={note.id}
                 onClick={() => handlePrintPreview(note)}
                 className={`
-                  bg-white border-2 rounded-lg overflow-hidden cursor-pointer transition-all
-                  hover:shadow-lg hover:border-slate-300
+                  bg-white border-2 rounded-xl overflow-hidden cursor-pointer transition-all
+                  hover:shadow-lg hover:border-slate-400
                   ${statusConfig.borderColor}
                 `}
                 style={{
                   backgroundImage:
-                    'repeating-linear-gradient(0deg, transparent, transparent 24px, #f1f5f9 24px, #f1f5f9 25px)',
+                    'repeating-linear-gradient(0deg, transparent, transparent 24px, #f8fafc 24px, #f8fafc 25px)',
                 }}
               >
                 {/* Document Header - looks like paper */}
@@ -457,7 +467,7 @@ export default function DeliveryNotesPage() {
                   <div className="text-xs text-slate-400">
                     Hazırlayan: {note.preparedBy}
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-indigo-600 font-medium">
+                  <div className="flex items-center gap-1 text-xs text-slate-700 font-medium">
                     <Eye className="w-3.5 h-3.5" />
                     Önizle
                   </div>
@@ -495,7 +505,7 @@ export default function DeliveryNotesPage() {
                 </button>
                 <button
                   onClick={() => message.info('PDF indirme özelliği yakında!')}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:border-slate-400 transition-colors"
                 >
                   <Download className="w-4 h-4" />
                   PDF
@@ -570,7 +580,7 @@ export default function DeliveryNotesPage() {
                 </div>
                 <div>
                   <div className="text-xs text-slate-400 mb-1">Durum</div>
-                  <div className={`font-medium ${getStatusConfig(previewNote.status).textColor}`}>
+                  <div className="font-medium text-slate-700">
                     {getStatusConfig(previewNote.status).label}
                   </div>
                 </div>
@@ -661,6 +671,6 @@ export default function DeliveryNotesPage() {
           </div>
         )}
       </Modal>
-    </PageContainer>
+    </div>
   );
 }

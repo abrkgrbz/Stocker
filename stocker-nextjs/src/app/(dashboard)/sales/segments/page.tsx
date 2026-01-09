@@ -3,13 +3,11 @@
 /**
  * Customer Segments Page
  * Manage customer groups (VIP, Wholesale, etc.)
- * Refactored to Feature-Based Architecture
+ * Monochrome design system
  */
 
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
-import { PageContainer, ListPageHeader } from '@/components/patterns';
-import { UsersIcon } from '@heroicons/react/24/outline';
+import { Plus, Users } from 'lucide-react';
 import {
   SegmentsTable,
   CreateSegmentModal,
@@ -42,19 +40,33 @@ export default function CustomerSegmentsPage() {
   };
 
   return (
-    <PageContainer maxWidth="6xl">
-      <ListPageHeader
-        icon={<UsersIcon className="w-5 h-5" />}
-        iconColor="#6366f1"
-        title="Müşteri Segmentleri"
-        description="Müşteri gruplarını ve indirim oranlarını yönetin"
-        itemCount={segmentCount}
-        primaryAction={{
-          label: 'Yeni Segment',
-          onClick: handleCreateClick,
-          icon: <Plus className="w-4 h-4" />,
-        }}
-      />
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+            <Users className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-slate-900">Musteri Segmentleri</h1>
+              <span className="px-2.5 py-1 text-xs font-medium bg-slate-100 text-slate-600 rounded-full">
+                {segmentCount} segment
+              </span>
+            </div>
+            <p className="text-sm text-slate-500 mt-1">
+              Musteri gruplarini ve indirim oranlarini yonetin
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={handleCreateClick}
+          className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Yeni Segment
+        </button>
+      </div>
 
       <SegmentsTable
         params={params}
@@ -67,6 +79,6 @@ export default function CustomerSegmentsPage() {
         onClose={handleModalClose}
         editingSegment={editingSegment}
       />
-    </PageContainer>
+    </div>
   );
 }

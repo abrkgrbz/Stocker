@@ -2,22 +2,14 @@
 
 import React, { useState } from 'react';
 import {
-  Card,
   Table,
-  Button,
   Input,
   Select,
-  Space,
-  Tag,
-  Typography,
   DatePicker,
   Dropdown,
   Modal,
   message,
-  Row,
-  Col,
   Tabs,
-  Statistic,
 } from 'antd';
 import {
   ArrowPathIcon,
@@ -29,6 +21,8 @@ import {
   MagnifyingGlassIcon,
   PlusIcon,
   XMarkIcon,
+  BanknotesIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import {
@@ -49,28 +43,19 @@ import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
-const statusColors: Record<SalesCommissionStatus, string> = {
-  Pending: 'processing',
-  Approved: 'cyan',
-  Rejected: 'error',
-  Paid: 'success',
-  Cancelled: 'default',
+const statusConfig: Record<SalesCommissionStatus, { label: string; bgColor: string; textColor: string }> = {
+  Pending: { label: 'Beklemede', bgColor: 'bg-slate-200', textColor: 'text-slate-800' },
+  Approved: { label: 'Onaylandı', bgColor: 'bg-slate-700', textColor: 'text-white' },
+  Rejected: { label: 'Reddedildi', bgColor: 'bg-slate-900', textColor: 'text-white' },
+  Paid: { label: 'Ödendi', bgColor: 'bg-slate-800', textColor: 'text-white' },
+  Cancelled: { label: 'İptal', bgColor: 'bg-slate-300', textColor: 'text-slate-700' },
 };
 
-const statusLabels: Record<SalesCommissionStatus, string> = {
-  Pending: 'Beklemede',
-  Approved: 'Onaylandı',
-  Rejected: 'Reddedildi',
-  Paid: 'Ödendi',
-  Cancelled: 'İptal',
-};
-
-const statusOptions = Object.entries(statusLabels).map(([value, label]) => ({
+const statusOptions = Object.entries(statusConfig).map(([value, config]) => ({
   value,
-  label,
+  label: config.label,
 }));
 
 export default function CommissionsPage() {
@@ -188,7 +173,12 @@ export default function CommissionsPage() {
       dataIndex: 'referenceNumber',
       key: 'referenceNumber',
       render: (text: string, record) => (
-        <a onClick={() => router.push(`/sales/commissions/${record.id}`)}>{text}</a>
+        <button
+          onClick={() => router.push(`/sales/commissions/${record.id}`)}
+          className="text-slate-900 hover:text-slate-600 font-medium"
+        >
+          {text}
+        </button>
       ),
     },
     {
@@ -201,7 +191,12 @@ export default function CommissionsPage() {
       dataIndex: 'orderNumber',
       key: 'orderNumber',
       render: (text: string, record) => (
-        <a onClick={() => router.push(`/sales/orders/${record.orderId}`)}>{text}</a>
+        <button
+          onClick={() => router.push(`/sales/orders/${record.orderId}`)}
+          className="text-slate-600 hover:text-slate-900"
+        >
+          {text}
+        </button>
       ),
     },
     {
@@ -231,9 +226,14 @@ export default function CommissionsPage() {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
-      render: (status: SalesCommissionStatus) => (
-        <Tag color={statusColors[status]}>{statusLabels[status]}</Tag>
-      ),
+      render: (status: SalesCommissionStatus) => {
+        const config = statusConfig[status];
+        return (
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bgColor} ${config.textColor}`}>
+            {config.label}
+          </span>
+        );
+      },
       filters: statusOptions.map((s) => ({ text: s.label, value: s.value })),
     },
     {
@@ -242,7 +242,9 @@ export default function CommissionsPage() {
       width: 50,
       render: (_, record) => (
         <Dropdown menu={{ items: getActionMenu(record) }} trigger={['click']}>
-          <Button type="text" icon={<EllipsisVerticalIcon className="w-4 h-4" />} />
+          <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+            <EllipsisVerticalIcon className="w-4 h-4" />
+          </button>
         </Dropdown>
       ),
     },
@@ -254,7 +256,12 @@ export default function CommissionsPage() {
       dataIndex: 'name',
       key: 'name',
       render: (text: string, record) => (
-        <a onClick={() => router.push(`/sales/commissions/plans/${record.id}`)}>{text}</a>
+        <button
+          onClick={() => router.push(`/sales/commissions/plans/${record.id}`)}
+          className="text-slate-900 hover:text-slate-600 font-medium"
+        >
+          {text}
+        </button>
       ),
     },
     {
@@ -282,7 +289,9 @@ export default function CommissionsPage() {
       dataIndex: 'isActive',
       key: 'isActive',
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'success' : 'default'}>{isActive ? 'Aktif' : 'Pasif'}</Tag>
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isActive ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-700'}`}>
+          {isActive ? 'Aktif' : 'Pasif'}
+        </span>
       ),
     },
   ];
@@ -299,71 +308,93 @@ export default function CommissionsPage() {
   };
 
   return (
-    <div style={{ padding: 24 }}>
-      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <Title level={2} style={{ margin: 0 }}>Komisyonlar</Title>
-          <Text type="secondary">Satış komisyonlarını yönetin</Text>
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+            <CurrencyDollarIcon className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Komisyonlar</h1>
+            <p className="text-sm text-slate-500">Satış komisyonlarını yönetin</p>
+          </div>
         </div>
-        <Space>
-          <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()}>
-            Yenile
-          </Button>
-          <Button
-            icon={<Cog6ToothIcon className="w-4 h-4" />}
-            onClick={() => router.push('/sales/commissions/plans/new')}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => refetch()}
+            disabled={commissionsLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
+            <ArrowPathIcon className={`w-5 h-5 ${commissionsLoading ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={() => router.push('/sales/commissions/plans/new')}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-600 bg-white border border-slate-300 hover:border-slate-400 transition-colors"
+          >
+            <Cog6ToothIcon className="w-4 h-4" />
             Yeni Plan
-          </Button>
-        </Space>
+          </button>
+        </div>
       </div>
 
-      {/* Summary Cards */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Toplam Komisyon"
-              value={summaryData?.totalCommission || 0}
-              prefix="₺"
-              precision={2}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Bekleyen"
-              value={summaryData?.pendingCount || 0}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Onaylanan"
-              value={summaryData?.approvedCount || 0}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Ödenen"
-              value={summaryData?.paidAmount || 0}
-              prefix="₺"
-              precision={2}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <CurrencyDollarIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Toplam Komisyon</p>
+              <p className="text-xl font-semibold text-slate-900">
+                {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(summaryData?.totalCommission || 0)}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <ClockIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Bekleyen</p>
+              <p className="text-xl font-semibold text-slate-900">{summaryData?.pendingCount || 0}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <CheckIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Onaylanan</p>
+              <p className="text-xl font-semibold text-slate-900">{summaryData?.approvedCount || 0}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <BanknotesIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Ödenen</p>
+              <p className="text-xl font-semibold text-slate-900">
+                {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(summaryData?.paidAmount || 0)}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
+      {/* Tabs */}
       <Tabs
         activeKey={activeTab}
         onChange={setActiveTab}
+        className="[&_.ant-tabs-nav]:!mb-0"
         items={[
           {
             key: 'commissions',
@@ -371,46 +402,43 @@ export default function CommissionsPage() {
             children: (
               <>
                 {/* Filters */}
-                <Card style={{ marginBottom: 16 }}>
-                  <Row gutter={[16, 16]}>
-                    <Col xs={24} sm={12} md={8} lg={6}>
-                      <Input
-                        placeholder="Ara..."
-                        prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
-                        allowClear
-                        onChange={(e) =>
-                          setFilters((prev) => ({ ...prev, searchTerm: e.target.value, page: 1 }))
-                        }
-                      />
-                    </Col>
-                    <Col xs={24} sm={12} md={8} lg={6}>
-                      <Select
-                        placeholder="Durum"
-                        allowClear
-                        style={{ width: '100%' }}
-                        options={statusOptions}
-                        onChange={(value) => setFilters((prev) => ({ ...prev, status: value, page: 1 }))}
-                      />
-                    </Col>
-                    <Col xs={24} sm={12} md={8} lg={6}>
-                      <RangePicker
-                        style={{ width: '100%' }}
-                        placeholder={['Başlangıç', 'Bitiş']}
-                        onChange={(dates) =>
-                          setFilters((prev) => ({
-                            ...prev,
-                            fromDate: dates?.[0]?.toISOString(),
-                            toDate: dates?.[1]?.toISOString(),
-                            page: 1,
-                          }))
-                        }
-                      />
-                    </Col>
-                  </Row>
-                </Card>
+                <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6 mt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Input
+                      placeholder="Ara..."
+                      prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+                      allowClear
+                      onChange={(e) =>
+                        setFilters((prev) => ({ ...prev, searchTerm: e.target.value, page: 1 }))
+                      }
+                      className="h-10"
+                    />
+                    <Select
+                      placeholder="Durum"
+                      allowClear
+                      style={{ width: '100%' }}
+                      options={statusOptions}
+                      onChange={(value) => setFilters((prev) => ({ ...prev, status: value, page: 1 }))}
+                      className="h-10"
+                    />
+                    <RangePicker
+                      style={{ width: '100%' }}
+                      placeholder={['Başlangıç', 'Bitiş']}
+                      onChange={(dates) =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          fromDate: dates?.[0]?.toISOString(),
+                          toDate: dates?.[1]?.toISOString(),
+                          page: 1,
+                        }))
+                      }
+                      className="h-10"
+                    />
+                  </div>
+                </div>
 
                 {/* Commissions Table */}
-                <Card>
+                <div className="bg-white border border-slate-200 rounded-xl p-6">
                   <Table
                     columns={commissionColumns}
                     dataSource={commissions}
@@ -424,8 +452,9 @@ export default function CommissionsPage() {
                       showSizeChanger: true,
                       showTotal: (total) => `Toplam ${total} komisyon`,
                     }}
+                    className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
                   />
-                </Card>
+                </div>
               </>
             ),
           },
@@ -433,15 +462,16 @@ export default function CommissionsPage() {
             key: 'plans',
             label: 'Komisyon Planları',
             children: (
-              <Card>
-                <div style={{ marginBottom: 16 }}>
-                  <Button
-                    type="primary"
-                    icon={<PlusIcon className="w-4 h-4" />}
+              <div className="bg-white border border-slate-200 rounded-xl p-6 mt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-slate-900">Komisyon Planları</h3>
+                  <button
                     onClick={() => router.push('/sales/commissions/plans/new')}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 transition-colors"
                   >
+                    <PlusIcon className="w-4 h-4" />
                     Yeni Plan
-                  </Button>
+                  </button>
                 </div>
                 <Table
                   columns={planColumns}
@@ -449,8 +479,9 @@ export default function CommissionsPage() {
                   rowKey="id"
                   loading={plansLoading}
                   pagination={false}
+                  className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
                 />
-              </Card>
+              </div>
             ),
           },
         ]}
@@ -467,8 +498,8 @@ export default function CommissionsPage() {
         cancelText="Vazgeç"
         confirmLoading={rejectMutation.isPending || markPaidMutation.isPending}
       >
-        <div style={{ marginBottom: 16 }}>
-          <Text>
+        <div className="mb-4">
+          <p className="text-slate-600">
             <strong>{selectedCommission?.salesPersonName}</strong> için{' '}
             <strong>
               {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(
@@ -476,7 +507,7 @@ export default function CommissionsPage() {
               )}
             </strong>{' '}
             komisyon
-          </Text>
+          </p>
         </div>
         <Input.TextArea
           placeholder={actionType === 'reject' ? 'Red sebebini giriniz...' : 'Ödeme referansı (opsiyonel)...'}

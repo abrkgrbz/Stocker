@@ -2,20 +2,13 @@
 
 import React, { useState } from 'react';
 import {
-  Card,
   Table,
-  Button,
   Input,
   Select,
-  Space,
-  Tag,
-  Typography,
   DatePicker,
   Dropdown,
   Modal,
   message,
-  Row,
-  Col,
 } from 'antd';
 import {
   ArrowPathIcon,
@@ -49,29 +42,17 @@ import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
-const statusColors: Record<SalesReturnStatus, string> = {
-  Draft: 'default',
-  Submitted: 'processing',
-  Approved: 'cyan',
-  Rejected: 'error',
-  Received: 'blue',
-  Processing: 'geekblue',
-  Completed: 'success',
-  Cancelled: 'default',
-};
-
-const statusLabels: Record<SalesReturnStatus, string> = {
-  Draft: 'Taslak',
-  Submitted: 'Gönderildi',
-  Approved: 'Onaylandı',
-  Rejected: 'Reddedildi',
-  Received: 'Teslim Alındı',
-  Processing: 'İşleniyor',
-  Completed: 'Tamamlandı',
-  Cancelled: 'İptal',
+const statusConfig: Record<SalesReturnStatus, { label: string; bgColor: string; textColor: string }> = {
+  Draft: { label: 'Taslak', bgColor: 'bg-slate-100', textColor: 'text-slate-700' },
+  Submitted: { label: 'Gönderildi', bgColor: 'bg-slate-200', textColor: 'text-slate-800' },
+  Approved: { label: 'Onaylandı', bgColor: 'bg-slate-700', textColor: 'text-white' },
+  Rejected: { label: 'Reddedildi', bgColor: 'bg-slate-900', textColor: 'text-white' },
+  Received: { label: 'Teslim Alındı', bgColor: 'bg-slate-600', textColor: 'text-white' },
+  Processing: { label: 'İşleniyor', bgColor: 'bg-slate-500', textColor: 'text-white' },
+  Completed: { label: 'Tamamlandı', bgColor: 'bg-slate-800', textColor: 'text-white' },
+  Cancelled: { label: 'İptal', bgColor: 'bg-slate-300', textColor: 'text-slate-700' },
 };
 
 const reasonLabels: Record<SalesReturnReason, string> = {
@@ -83,9 +64,9 @@ const reasonLabels: Record<SalesReturnReason, string> = {
   Other: 'Diğer',
 };
 
-const statusOptions = Object.entries(statusLabels).map(([value, label]) => ({
+const statusOptions = Object.entries(statusConfig).map(([value, config]) => ({
   value,
-  label,
+  label: config.label,
 }));
 
 const reasonOptions = Object.entries(reasonLabels).map(([value, label]) => ({
@@ -257,7 +238,12 @@ export default function SalesReturnsPage() {
       dataIndex: 'returnNumber',
       key: 'returnNumber',
       render: (text: string, record) => (
-        <a onClick={() => router.push(`/sales/returns/${record.id}`)}>{text}</a>
+        <button
+          onClick={() => router.push(`/sales/returns/${record.id}`)}
+          className="text-slate-900 hover:text-slate-600 font-medium"
+        >
+          {text}
+        </button>
       ),
       sorter: true,
     },
@@ -266,7 +252,12 @@ export default function SalesReturnsPage() {
       dataIndex: 'orderNumber',
       key: 'orderNumber',
       render: (text: string, record) => (
-        <a onClick={() => router.push(`/sales/orders/${record.orderId}`)}>{text}</a>
+        <button
+          onClick={() => router.push(`/sales/orders/${record.orderId}`)}
+          className="text-slate-600 hover:text-slate-900"
+        >
+          {text}
+        </button>
       ),
     },
     {
@@ -306,9 +297,14 @@ export default function SalesReturnsPage() {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
-      render: (status: SalesReturnStatus) => (
-        <Tag color={statusColors[status]}>{statusLabels[status]}</Tag>
-      ),
+      render: (status: SalesReturnStatus) => {
+        const config = statusConfig[status];
+        return (
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bgColor} ${config.textColor}`}>
+            {config.label}
+          </span>
+        );
+      },
       filters: statusOptions.map((s) => ({ text: s.label, value: s.value })),
     },
     {
@@ -317,7 +313,9 @@ export default function SalesReturnsPage() {
       width: 50,
       render: (_, record) => (
         <Dropdown menu={{ items: getActionMenu(record) }} trigger={['click']}>
-          <Button type="text" icon={<EllipsisVerticalIcon className="w-4 h-4" />} />
+          <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+            <EllipsisVerticalIcon className="w-4 h-4" />
+          </button>
         </Dropdown>
       ),
     },
@@ -334,77 +332,137 @@ export default function SalesReturnsPage() {
     }));
   };
 
+  // Calculate stats
+  const totalReturns = data?.totalCount ?? 0;
+  const pendingReturns = returns.filter(r => ['Draft', 'Submitted'].includes(r.status)).length;
+  const approvedReturns = returns.filter(r => r.status === 'Approved').length;
+  const completedReturns = returns.filter(r => r.status === 'Completed').length;
+
   return (
-    <div style={{ padding: 24 }}>
-      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <Title level={2} style={{ margin: 0 }}>Satış İadeleri</Title>
-          <Text type="secondary">Müşteri iadelerini yönetin</Text>
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+            <CurrencyDollarIcon className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Satış İadeleri</h1>
+            <p className="text-sm text-slate-500">Müşteri iadelerini yönetin</p>
+          </div>
         </div>
-        <Space>
-          <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()}>
-            Yenile
-          </Button>
-          <Button
-            type="primary"
-            icon={<PlusIcon className="w-4 h-4" />}
-            onClick={() => router.push('/sales/returns/new')}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={() => router.push('/sales/returns/new')}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 transition-colors"
+          >
+            <PlusIcon className="w-4 h-4" />
             Yeni İade
-          </Button>
-        </Space>
+          </button>
+        </div>
+      </div>
+
+      {/* Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <CurrencyDollarIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Toplam İade</p>
+              <p className="text-xl font-semibold text-slate-900">{totalReturns}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <InboxIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Bekleyen</p>
+              <p className="text-xl font-semibold text-slate-900">{pendingReturns}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <CheckIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Onaylandı</p>
+              <p className="text-xl font-semibold text-slate-900">{approvedReturns}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <CheckIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Tamamlandı</p>
+              <p className="text-xl font-semibold text-slate-900">{completedReturns}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}
-      <Card style={{ marginBottom: 16 }}>
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <Input
-              placeholder="Ara..."
-              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
-              allowClear
-              onChange={(e) =>
-                setFilters((prev) => ({ ...prev, searchTerm: e.target.value, page: 1 }))
-              }
-            />
-          </Col>
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <Select
-              placeholder="Durum"
-              allowClear
-              style={{ width: '100%' }}
-              options={statusOptions}
-              onChange={(value) => setFilters((prev) => ({ ...prev, status: value, page: 1 }))}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <Select
-              placeholder="Sebep"
-              allowClear
-              style={{ width: '100%' }}
-              options={reasonOptions}
-              onChange={(value) => setFilters((prev) => ({ ...prev, reason: value, page: 1 }))}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <RangePicker
-              style={{ width: '100%' }}
-              placeholder={['Başlangıç', 'Bitiş']}
-              onChange={(dates) =>
-                setFilters((prev) => ({
-                  ...prev,
-                  fromDate: dates?.[0]?.toISOString(),
-                  toDate: dates?.[1]?.toISOString(),
-                  page: 1,
-                }))
-              }
-            />
-          </Col>
-        </Row>
-      </Card>
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Input
+            placeholder="Ara..."
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+            allowClear
+            onChange={(e) =>
+              setFilters((prev) => ({ ...prev, searchTerm: e.target.value, page: 1 }))
+            }
+            className="h-10"
+          />
+          <Select
+            placeholder="Durum"
+            allowClear
+            style={{ width: '100%' }}
+            options={statusOptions}
+            onChange={(value) => setFilters((prev) => ({ ...prev, status: value, page: 1 }))}
+            className="h-10"
+          />
+          <Select
+            placeholder="Sebep"
+            allowClear
+            style={{ width: '100%' }}
+            options={reasonOptions}
+            onChange={(value) => setFilters((prev) => ({ ...prev, reason: value, page: 1 }))}
+            className="h-10"
+          />
+          <RangePicker
+            style={{ width: '100%' }}
+            placeholder={['Başlangıç', 'Bitiş']}
+            onChange={(dates) =>
+              setFilters((prev) => ({
+                ...prev,
+                fromDate: dates?.[0]?.toISOString(),
+                toDate: dates?.[1]?.toISOString(),
+                page: 1,
+              }))
+            }
+            className="h-10"
+          />
+        </div>
+      </div>
 
       {/* Table */}
-      <Card>
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
         <Table
           columns={columns}
           dataSource={returns}
@@ -418,8 +476,9 @@ export default function SalesReturnsPage() {
             showSizeChanger: true,
             showTotal: (total) => `Toplam ${total} iade`,
           }}
+          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
         />
-      </Card>
+      </div>
 
       {/* Action Modal */}
       <Modal
@@ -432,10 +491,10 @@ export default function SalesReturnsPage() {
         cancelText="Vazgeç"
         confirmLoading={rejectMutation.isPending || cancelMutation.isPending}
       >
-        <div style={{ marginBottom: 16 }}>
-          <Text>
+        <div className="mb-4">
+          <p className="text-slate-600">
             <strong>{selectedReturn?.returnNumber}</strong> numaralı iadeyi {actionType === 'reject' ? 'reddetmek' : 'iptal etmek'} üzeresiniz.
-          </Text>
+          </p>
         </div>
         <Input.TextArea
           placeholder="Sebebi giriniz..."

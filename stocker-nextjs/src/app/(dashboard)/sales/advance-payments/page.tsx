@@ -24,14 +24,8 @@ import {
   FileText,
   Banknote,
   RefreshCw,
+  Wallet,
 } from 'lucide-react';
-import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  EmptyState,
-} from '@/components/ui/enterprise-page';
-import { WalletIcon } from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
 import SalesService, {
@@ -90,32 +84,32 @@ export default function AdvancePaymentsPage() {
       },
       Captured: {
         label: 'Tahsil Edildi',
-        bgColor: 'bg-green-50',
-        textColor: 'text-green-700',
+        bgColor: 'bg-slate-200',
+        textColor: 'text-slate-700',
         icon: CheckCircle,
       },
       PartiallyApplied: {
         label: 'Kısmen Uygulandı',
-        bgColor: 'bg-blue-50',
-        textColor: 'text-blue-700',
+        bgColor: 'bg-slate-300',
+        textColor: 'text-slate-800',
         icon: CheckCircle,
       },
       FullyApplied: {
         label: 'Tamamen Uygulandı',
-        bgColor: 'bg-green-50',
-        textColor: 'text-green-700',
+        bgColor: 'bg-slate-800',
+        textColor: 'text-white',
         icon: CheckCircle,
       },
       Refunded: {
         label: 'İade Edildi',
-        bgColor: 'bg-amber-50',
-        textColor: 'text-amber-700',
+        bgColor: 'bg-slate-200',
+        textColor: 'text-slate-600',
         icon: RotateCcw,
       },
       Cancelled: {
         label: 'İptal',
-        bgColor: 'bg-red-50',
-        textColor: 'text-red-600',
+        bgColor: 'bg-slate-100',
+        textColor: 'text-slate-500',
         icon: Clock,
       },
     };
@@ -188,14 +182,24 @@ export default function AdvancePaymentsPage() {
   };
 
   return (
-    <PageContainer maxWidth="7xl">
-      <ListPageHeader
-        icon={<WalletIcon className="w-5 h-5" />}
-        iconColor="#6366f1"
-        title="Avans Ödemeler"
-        description="Depozito ve ön ödemeleri takip edin"
-        itemCount={payments.length}
-        secondaryActions={
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Page Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-4 mb-2">
+          <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+            <Wallet className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-slate-900">Avans Ödemeler</h1>
+              <span className="px-2.5 py-1 bg-slate-100 text-slate-600 text-sm font-medium rounded-full">
+                {payments.length}
+              </span>
+            </div>
+            <p className="text-sm text-slate-500">Depozito ve ön ödemeleri takip edin</p>
+          </div>
+        </div>
+        <div className="flex justify-end">
           <button
             onClick={fetchData}
             disabled={loading}
@@ -204,51 +208,59 @@ export default function AdvancePaymentsPage() {
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Yenile
           </button>
-        }
-      />
+        </div>
+      </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-500">Toplam İşlem</span>
-            <DollarSign className="w-5 h-5 text-slate-400" />
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <DollarSign className="w-5 h-5 text-slate-600" />
+            </div>
           </div>
           <div className="mt-2 text-2xl font-semibold text-slate-900 font-mono">
             {statistics?.totalCount ?? payments.length}
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-500">Bekleyen</span>
-            <Clock className="w-5 h-5 text-amber-500" />
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-slate-600" />
+            </div>
           </div>
-          <div className="mt-2 text-2xl font-semibold text-amber-600 font-mono">
+          <div className="mt-2 text-2xl font-semibold text-slate-700 font-mono">
             {statistics ? formatCurrency(statistics.totalAmount - statistics.appliedAmount, statistics.currency) : '₺0,00'}
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-500">Toplam Tutar</span>
-            <ArrowDownLeft className="w-5 h-5 text-green-500" />
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <ArrowDownLeft className="w-5 h-5 text-slate-600" />
+            </div>
           </div>
-          <div className="mt-2 text-2xl font-semibold text-green-600 font-mono">
+          <div className="mt-2 text-2xl font-semibold text-slate-900 font-mono">
             {statistics ? formatCurrency(statistics.totalAmount, statistics.currency) : '₺0,00'}
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-500">Uygulanan</span>
-            <ArrowUpRight className="w-5 h-5 text-blue-500" />
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <ArrowUpRight className="w-5 h-5 text-slate-600" />
+            </div>
           </div>
-          <div className="mt-2 text-2xl font-semibold text-blue-600 font-mono">
+          <div className="mt-2 text-2xl font-semibold text-slate-900 font-mono">
             {statistics ? formatCurrency(statistics.appliedAmount, statistics.currency) : '₺0,00'}
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <Card className="mb-6">
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
         <div className="flex flex-wrap items-center gap-4">
           <div className="relative flex-1 min-w-[200px] max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -257,7 +269,7 @@ export default function AdvancePaymentsPage() {
               placeholder="İşlem no, müşteri veya sipariş ara..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
             />
           </div>
           <Select
@@ -276,54 +288,56 @@ export default function AdvancePaymentsPage() {
             ]}
           />
         </div>
-      </Card>
+      </div>
 
       {/* Ledger Table */}
       {loading ? (
-        <Card>
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
           <div className="flex items-center justify-center py-12">
             <Spinner size="lg" />
           </div>
-        </Card>
+        </div>
       ) : payments.length === 0 ? (
-        <Card>
-          <EmptyState
-            icon={<CreditCard className="w-6 h-6" />}
-            title="Ödeme bulunamadı"
-            description="Arama kriterlerinize uygun ödeme kaydı yok"
-          />
-        </Card>
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+              <CreditCard className="w-6 h-6 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-medium text-slate-900 mb-1">Ödeme bulunamadı</h3>
+            <p className="text-sm text-slate-500">Arama kriterlerinize uygun ödeme kaydı yok</p>
+          </div>
+        </div>
       ) : (
-        <Card padding="none">
+        <div className="bg-white border border-slate-200 rounded-xl">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">
+                  <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider px-6 py-4">
                     Tarih
                   </th>
-                  <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">
+                  <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider px-6 py-4">
                     İşlem No
                   </th>
-                  <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">
+                  <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider px-6 py-4">
                     Müşteri
                   </th>
-                  <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">
+                  <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider px-6 py-4">
                     Sipariş Ref
                   </th>
-                  <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">
+                  <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider px-6 py-4">
                     Ödeme Yöntemi
                   </th>
-                  <th className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">
+                  <th className="text-right text-xs font-medium text-slate-500 uppercase tracking-wider px-6 py-4">
                     Tutar
                   </th>
-                  <th className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">
+                  <th className="text-right text-xs font-medium text-slate-500 uppercase tracking-wider px-6 py-4">
                     Kalan
                   </th>
-                  <th className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">
+                  <th className="text-center text-xs font-medium text-slate-500 uppercase tracking-wider px-6 py-4">
                     Durum
                   </th>
-                  <th className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">
+                  <th className="text-right text-xs font-medium text-slate-500 uppercase tracking-wider px-6 py-4">
                     İşlem
                   </th>
                 </tr>
@@ -358,7 +372,7 @@ export default function AdvancePaymentsPage() {
                       </td>
                       <td className="px-6 py-4">
                         {payment.salesOrderNumber ? (
-                          <span className="font-mono text-sm text-indigo-600 hover:underline cursor-pointer">
+                          <span className="font-mono text-sm text-slate-600 hover:underline cursor-pointer">
                             {payment.salesOrderNumber}
                           </span>
                         ) : (
@@ -380,8 +394,8 @@ export default function AdvancePaymentsPage() {
                         <span
                           className={`font-mono text-sm ${
                             payment.remainingAmount > 0
-                              ? 'text-amber-600'
-                              : 'text-green-600'
+                              ? 'text-slate-700'
+                              : 'text-slate-500'
                           }`}
                         >
                           {formatCurrency(payment.remainingAmount, payment.currency)}
@@ -402,7 +416,7 @@ export default function AdvancePaymentsPage() {
                               onClick={() =>
                                 setOpenDropdown(openDropdown === payment.id ? null : payment.id)
                               }
-                              className="p-1.5 rounded-md hover:bg-slate-100 transition-colors"
+                              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
                             >
                               <MoreVertical className="w-4 h-4 text-slate-400" />
                             </button>
@@ -417,7 +431,7 @@ export default function AdvancePaymentsPage() {
                                     {payment.status === 'Pending' && !payment.isCaptured && (
                                       <button
                                         onClick={() => handleCaptureClick(payment)}
-                                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-green-700 hover:bg-green-50"
+                                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                                       >
                                         <CheckCircle className="w-4 h-4" />
                                         Tahsil Et
@@ -426,7 +440,7 @@ export default function AdvancePaymentsPage() {
                                     {(payment.status === 'Captured' || payment.isCaptured) && (
                                       <button
                                         onClick={() => handleRefund(payment.id)}
-                                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                                       >
                                         <RotateCcw className="w-4 h-4" />
                                         İade Et
@@ -445,14 +459,14 @@ export default function AdvancePaymentsPage() {
               </tbody>
             </table>
           </div>
-        </Card>
+        </div>
       )}
 
       {/* Capture Payment Modal */}
       <Modal
         title={
           <div className="flex items-center gap-2">
-            <CreditCard className="w-5 h-5 text-green-600" />
+            <CreditCard className="w-5 h-5 text-slate-600" />
             <span>Ödeme Tahsil Et</span>
           </div>
         }
@@ -464,14 +478,15 @@ export default function AdvancePaymentsPage() {
         }}
         okText="Tahsil Et"
         cancelText="Vazgeç"
-        okButtonProps={{ className: 'bg-green-600 hover:bg-green-700', loading: actionLoading }}
+        okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900', loading: actionLoading }}
+        cancelButtonProps={{ className: '!border-slate-300 hover:!border-slate-400 !text-slate-600' }}
         width={450}
       >
         {selectedPayment && (
           <div className="space-y-4 py-4">
             <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
               <div className="text-sm text-slate-500 mb-1">Tahsil Edilecek Tutar</div>
-              <div className="text-3xl font-bold text-green-600 font-mono">
+              <div className="text-3xl font-bold text-slate-900 font-mono">
                 {formatCurrency(selectedPayment.amount, selectedPayment.currency)}
               </div>
             </div>
@@ -508,6 +523,6 @@ export default function AdvancePaymentsPage() {
           </div>
         )}
       </Modal>
-    </PageContainer>
+    </div>
   );
 }

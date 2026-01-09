@@ -3,6 +3,7 @@
 /**
  * Warranty Lookup Page
  * Search-first interface for checking product warranty status
+ * Monochrome design system
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -31,19 +32,9 @@ import {
   Wrench,
   RefreshCw,
 } from 'lucide-react';
-import {
-  PageContainer,
-  ListPageHeader,
-  Card,
-  Badge,
-} from '@/components/ui/enterprise-page';
-import { ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { SalesService, WarrantyListDto, WarrantyDto, WarrantyStatisticsDto } from '@/lib/api/services/sales.service';
 
 dayjs.locale('tr');
-
-// Types
-type WarrantyStatus = 'Active' | 'Expired' | 'Void' | 'Pending' | 'Claimed';
 
 export default function WarrantyLookupPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -73,7 +64,7 @@ export default function WarrantyLookupPage() {
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
-      message.warning('Lütfen bir arama terimi girin');
+      message.warning('Lutfen bir arama terimi girin');
       return;
     }
 
@@ -82,11 +73,9 @@ export default function WarrantyLookupPage() {
       setSearchPerformed(true);
       setSelectedRecord(null);
 
-      // Try lookup by serial number first
       const lookupResult = await SalesService.lookupWarranty(searchQuery.trim()).catch(() => null);
 
       if (lookupResult) {
-        // If found by serial number, show it in results
         setSearchResults([{
           id: lookupResult.id,
           warrantyNumber: lookupResult.warrantyNumber,
@@ -106,7 +95,6 @@ export default function WarrantyLookupPage() {
           createdAt: lookupResult.createdAt,
         }]);
       } else {
-        // Search by other parameters
         const results = await SalesService.getWarranties({
           searchTerm: searchQuery.trim(),
           pageSize: 50,
@@ -115,7 +103,7 @@ export default function WarrantyLookupPage() {
       }
     } catch (error) {
       console.error('Error searching warranties:', error);
-      message.error('Garanti araması yapılırken hata oluştu');
+      message.error('Garanti aramasi yapilirken hata olustu');
       setSearchResults([]);
     } finally {
       setLoading(false);
@@ -129,21 +117,20 @@ export default function WarrantyLookupPage() {
       setSelectedRecord(detail);
     } catch (error) {
       console.error('Error fetching warranty detail:', error);
-      message.error('Garanti detayı yüklenirken hata oluştu');
+      message.error('Garanti detayi yuklenirken hata olustu');
     } finally {
       setDetailLoading(false);
     }
   };
 
   const getStatusConfig = (status: string, isExpired?: boolean, isActive?: boolean) => {
-    // Handle based on actual status and flags
     if (status === 'Void') {
       return {
         icon: <ShieldAlert className="w-5 h-5" />,
-        color: 'text-red-600',
-        bgColor: 'bg-red-50',
-        borderColor: 'border-red-200',
-        label: 'Geçersiz',
+        color: 'text-slate-700',
+        bgColor: 'bg-slate-300',
+        borderColor: 'border-slate-400',
+        label: 'Gecersiz',
         description: 'Garanti iptal edildi',
       };
     }
@@ -151,78 +138,87 @@ export default function WarrantyLookupPage() {
       return {
         icon: <ShieldX className="w-5 h-5" />,
         color: 'text-slate-500',
-        bgColor: 'bg-slate-50',
+        bgColor: 'bg-slate-100',
         borderColor: 'border-slate-200',
         label: 'Sona Erdi',
-        description: 'Garanti süresi doldu',
+        description: 'Garanti suresi doldu',
       };
     }
     if (isActive) {
       return {
         icon: <ShieldCheck className="w-5 h-5" />,
-        color: 'text-emerald-600',
-        bgColor: 'bg-emerald-50',
-        borderColor: 'border-emerald-200',
+        color: 'text-slate-900',
+        bgColor: 'bg-slate-200',
+        borderColor: 'border-slate-300',
         label: 'Aktif',
-        description: 'Garanti kapsamında',
+        description: 'Garanti kapsaminda',
       };
     }
-    // Default/Pending
     return {
       icon: <Shield className="w-5 h-5" />,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200',
+      color: 'text-slate-600',
+      bgColor: 'bg-slate-100',
+      borderColor: 'border-slate-200',
       label: 'Beklemede',
       description: 'Garanti aktivasyonu bekleniyor',
     };
   };
 
   const formatRemainingTime = (remainingDays: number) => {
-    if (remainingDays < 0) return 'Süresi doldu';
-    if (remainingDays === 0) return 'Bugün doluyor';
-    if (remainingDays < 30) return `${remainingDays} gün kaldı`;
-    if (remainingDays < 365) return `${Math.floor(remainingDays / 30)} ay kaldı`;
-    return `${Math.floor(remainingDays / 365)} yıl ${Math.floor((remainingDays % 365) / 30)} ay kaldı`;
+    if (remainingDays < 0) return 'Suresi doldu';
+    if (remainingDays === 0) return 'Bugun doluyor';
+    if (remainingDays < 30) return remainingDays + ' gun kaldi';
+    if (remainingDays < 365) return Math.floor(remainingDays / 30) + ' ay kaldi';
+    return Math.floor(remainingDays / 365) + ' yil ' + Math.floor((remainingDays % 365) / 30) + ' ay kaldi';
   };
 
   return (
-    <PageContainer maxWidth="5xl">
-      <ListPageHeader
-        icon={<ShieldCheckIcon className="w-5 h-5" />}
-        iconColor="#059669"
-        title="Garanti Sorgulama"
-        description="Ürün garanti durumunu kontrol edin"
-        itemCount={statistics?.totalCount ?? 0}
-        secondaryActions={
-          <button
-            onClick={fetchStatistics}
-            className="inline-flex items-center gap-2 px-3 py-2 text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
-        }
-      />
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+            <ShieldCheck className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-slate-900">Garanti Sorgulama</h1>
+              <span className="px-2.5 py-1 text-xs font-medium bg-slate-100 text-slate-600 rounded-full">
+                {statistics?.totalCount ?? 0} kayit
+              </span>
+            </div>
+            <p className="text-sm text-slate-500 mt-1">
+              Urun garanti durumunu kontrol edin
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={fetchStatistics}
+          className="inline-flex items-center gap-2 px-3 py-2 text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
+        >
+          <RefreshCw className="w-4 h-4" />
+        </button>
+      </div>
 
       {/* Search Section */}
-      <Card className="mb-8">
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-8">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Shield className="w-8 h-8 text-emerald-600" />
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Shield className="w-8 h-8 text-slate-600" />
             </div>
             <h2 className="text-xl font-semibold text-slate-900 mb-2">
               Garanti Durumu Sorgula
             </h2>
             <p className="text-slate-500">
-              Seri numarası, garanti numarası veya müşteri bilgisi ile arayın
+              Seri numarasi, garanti numarasi veya musteri bilgisi ile arayin
             </p>
           </div>
 
           <div className="flex gap-3">
             <Input
               size="large"
-              placeholder="Seri no, garanti no veya müşteri adı..."
+              placeholder="Seri no, garanti no veya musteri adi..."
               prefix={<Search className="w-5 h-5 text-slate-400" />}
               value={searchQuery}
               onChange={(e) => {
@@ -238,13 +234,13 @@ export default function WarrantyLookupPage() {
             <button
               onClick={handleSearch}
               disabled={loading}
-              className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium disabled:opacity-50"
+              className="px-6 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium disabled:opacity-50"
             >
               {loading ? <Spinner size="sm" /> : 'Ara'}
             </button>
           </div>
         </div>
-      </Card>
+      </div>
 
       {/* Search Results */}
       {searchPerformed && (
@@ -253,9 +249,9 @@ export default function WarrantyLookupPage() {
           <div className={selectedRecord ? 'lg:col-span-1' : 'lg:col-span-3'}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-slate-900">
-                Arama Sonuçları
+                Arama Sonuclari
                 <span className="ml-2 text-sm font-normal text-slate-500">
-                  ({searchResults.length} kayıt)
+                  ({searchResults.length} kayit)
                 </span>
               </h3>
             </div>
@@ -274,31 +270,26 @@ export default function WarrantyLookupPage() {
                     <div
                       key={record.id}
                       onClick={() => handleSelectRecord(record)}
-                      className={`
-                        bg-white border rounded-lg p-4 cursor-pointer transition-all duration-200
-                        ${
-                          isSelected
-                            ? 'border-emerald-400 ring-2 ring-emerald-100 shadow-md'
-                            : 'border-slate-200 hover:border-slate-300 hover:shadow-sm'
-                        }
-                      `}
+                      className={
+                        'bg-white border rounded-lg p-4 cursor-pointer transition-all duration-200 ' +
+                        (isSelected
+                          ? 'border-slate-400 ring-2 ring-slate-200 shadow-md'
+                          : 'border-slate-200 hover:border-slate-300 hover:shadow-sm')
+                      }
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
-                          {/* Status Badge */}
                           <div
-                            className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium mb-2 ${statusConfig.bgColor} ${statusConfig.color} border ${statusConfig.borderColor}`}
+                            className={'inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium mb-2 ' + statusConfig.bgColor + ' ' + statusConfig.color + ' border ' + statusConfig.borderColor}
                           >
                             {statusConfig.icon}
                             {statusConfig.label}
                           </div>
 
-                          {/* Product Name */}
                           <h4 className="font-semibold text-slate-900 mb-1 truncate">
                             {record.productName}
                           </h4>
 
-                          {/* Serial Number */}
                           {record.serialNumber && (
                             <div className="flex items-center gap-2 text-sm text-slate-500 mb-2">
                               <Barcode className="w-4 h-4" />
@@ -306,24 +297,23 @@ export default function WarrantyLookupPage() {
                             </div>
                           )}
 
-                          {/* Customer */}
                           <div className="flex items-center gap-2 text-sm text-slate-500">
                             <User className="w-4 h-4" />
                             <span>{record.customerName}</span>
                           </div>
                         </div>
 
-                        {/* Remaining Time */}
                         <div className="text-right shrink-0">
                           {record.isActive ? (
                             <div
-                              className={`text-sm font-medium ${
-                                record.remainingDays < 30
-                                  ? 'text-amber-600'
+                              className={
+                                'text-sm font-medium ' +
+                                (record.remainingDays < 30
+                                  ? 'text-slate-600'
                                   : record.remainingDays < 90
-                                  ? 'text-blue-600'
-                                  : 'text-emerald-600'
-                              }`}
+                                  ? 'text-slate-700'
+                                  : 'text-slate-900')
+                              }
                             >
                               {formatRemainingTime(record.remainingDays)}
                             </div>
@@ -342,11 +332,11 @@ export default function WarrantyLookupPage() {
                 <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Search className="w-8 h-8 text-slate-400" />
                 </div>
-                <h3 className="text-lg font-medium text-slate-900 mb-2">Sonuç Bulunamadı</h3>
+                <h3 className="text-lg font-medium text-slate-900 mb-2">Sonuc Bulunamadi</h3>
                 <p className="text-slate-500 text-sm">
-                  &quot;{searchQuery}&quot; için eşleşen kayıt bulunamadı.
+                  &quot;{searchQuery}&quot; icin eslesen kayit bulunamadi.
                   <br />
-                  Seri numarası veya garanti numarasını kontrol edin.
+                  Seri numarasi veya garanti numarasini kontrol edin.
                 </p>
               </div>
             )}
@@ -355,7 +345,7 @@ export default function WarrantyLookupPage() {
           {/* Detail Panel */}
           {selectedRecord && (
             <div className="lg:col-span-2">
-              <Card>
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
                 {detailLoading ? (
                   <div className="flex items-center justify-center py-12">
                     <Spinner size="lg" />
@@ -390,7 +380,7 @@ export default function WarrantyLookupPage() {
                             </div>
                           </div>
                           <div
-                            className={`flex items-center gap-2 px-3 py-2 rounded-lg ${statusConfig.bgColor} ${statusConfig.color} border ${statusConfig.borderColor}`}
+                            className={'flex items-center gap-2 px-3 py-2 rounded-lg ' + statusConfig.bgColor + ' ' + statusConfig.color + ' border ' + statusConfig.borderColor}
                           >
                             {statusConfig.icon}
                             <div>
@@ -403,36 +393,40 @@ export default function WarrantyLookupPage() {
                         {/* Warranty Timeline */}
                         {selectedRecord.isActive && (
                           <div
-                            className={`p-4 rounded-lg ${
-                              selectedRecord.remainingDays < 30
-                                ? 'bg-amber-50 border border-amber-200'
+                            className={
+                              'p-4 rounded-lg ' +
+                              (selectedRecord.remainingDays < 30
+                                ? 'bg-slate-200 border border-slate-300'
                                 : selectedRecord.remainingDays < 90
-                                ? 'bg-blue-50 border border-blue-200'
-                                : 'bg-emerald-50 border border-emerald-200'
-                            }`}
+                                ? 'bg-slate-100 border border-slate-200'
+                                : 'bg-slate-50 border border-slate-100')
+                            }
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
                                 <Clock
-                                  className={`w-5 h-5 ${
-                                    selectedRecord.remainingDays < 30
-                                      ? 'text-amber-600'
+                                  className={
+                                    'w-5 h-5 ' +
+                                    (selectedRecord.remainingDays < 30
+                                      ? 'text-slate-700'
                                       : selectedRecord.remainingDays < 90
-                                      ? 'text-blue-600'
-                                      : 'text-emerald-600'
-                                  }`}
+                                      ? 'text-slate-600'
+                                      : 'text-slate-500')
+                                  }
                                 />
                                 <div>
                                   <div className="font-medium text-slate-900">
-                                    Kalan Süre: {formatRemainingTime(selectedRecord.remainingDays)}
+                                    Kalan Sure: {formatRemainingTime(selectedRecord.remainingDays)}
                                   </div>
                                   <div className="text-sm text-slate-500">
-                                    Bitiş: {dayjs(selectedRecord.endDate).format('DD MMMM YYYY')}
+                                    Bitis: {dayjs(selectedRecord.endDate).format('DD MMMM YYYY')}
                                   </div>
                                 </div>
                               </div>
                               {selectedRecord.remainingDays < 30 && (
-                                <Badge variant="warning">Yakında Doluyor</Badge>
+                                <span className="px-2.5 py-1 text-xs font-medium bg-slate-300 text-slate-700 rounded">
+                                  Yakinda Doluyor
+                                </span>
                               )}
                             </div>
 
@@ -440,21 +434,16 @@ export default function WarrantyLookupPage() {
                             <div className="mt-3">
                               <div className="h-2 bg-white rounded-full overflow-hidden">
                                 <div
-                                  className={`h-full rounded-full ${
-                                    selectedRecord.remainingDays < 30
-                                      ? 'bg-amber-500'
+                                  className={
+                                    'h-full rounded-full ' +
+                                    (selectedRecord.remainingDays < 30
+                                      ? 'bg-slate-700'
                                       : selectedRecord.remainingDays < 90
-                                      ? 'bg-blue-500'
-                                      : 'bg-emerald-500'
-                                  }`}
+                                      ? 'bg-slate-600'
+                                      : 'bg-slate-500')
+                                  }
                                   style={{
-                                    width: `${Math.max(
-                                      0,
-                                      Math.min(
-                                        100,
-                                        (selectedRecord.remainingDays / (selectedRecord.durationMonths * 30)) * 100
-                                      )
-                                    )}%`,
+                                    width: Math.max(0, Math.min(100, (selectedRecord.remainingDays / (selectedRecord.durationMonths * 30)) * 100)) + '%',
                                   }}
                                 />
                               </div>
@@ -467,7 +456,7 @@ export default function WarrantyLookupPage() {
                           <div className="bg-slate-50 rounded-lg p-3">
                             <div className="flex items-center gap-2 text-slate-500 mb-1">
                               <Package className="w-4 h-4" />
-                              <span className="text-xs">Ürün Kodu</span>
+                              <span className="text-xs">Urun Kodu</span>
                             </div>
                             <div className="font-medium text-slate-900 font-mono text-sm">
                               {selectedRecord.productCode}
@@ -485,7 +474,7 @@ export default function WarrantyLookupPage() {
                           <div className="bg-slate-50 rounded-lg p-3">
                             <div className="flex items-center gap-2 text-slate-500 mb-1">
                               <Calendar className="w-4 h-4" />
-                              <span className="text-xs">Başlangıç Tarihi</span>
+                              <span className="text-xs">Baslangic Tarihi</span>
                             </div>
                             <div className="font-medium text-slate-900">
                               {dayjs(selectedRecord.startDate).format('DD MMMM YYYY')}
@@ -494,7 +483,7 @@ export default function WarrantyLookupPage() {
                           <div className="bg-slate-50 rounded-lg p-3">
                             <div className="flex items-center gap-2 text-slate-500 mb-1">
                               <Calendar className="w-4 h-4" />
-                              <span className="text-xs">Bitiş Tarihi</span>
+                              <span className="text-xs">Bitis Tarihi</span>
                             </div>
                             <div className="font-medium text-slate-900">
                               {dayjs(selectedRecord.endDate).format('DD MMMM YYYY')}
@@ -504,9 +493,9 @@ export default function WarrantyLookupPage() {
 
                         {/* Coverage Info */}
                         {selectedRecord.coverageDescription && (
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                            <div className="text-sm font-medium text-blue-700 mb-1">Kapsam Açıklaması</div>
-                            <p className="text-blue-800 text-sm">{selectedRecord.coverageDescription}</p>
+                          <div className="bg-slate-100 border border-slate-200 rounded-lg p-3">
+                            <div className="text-sm font-medium text-slate-700 mb-1">Kapsam Aciklamasi</div>
+                            <p className="text-slate-800 text-sm">{selectedRecord.coverageDescription}</p>
                           </div>
                         )}
 
@@ -514,7 +503,7 @@ export default function WarrantyLookupPage() {
                         <div className="border-t border-slate-100 pt-4">
                           <h4 className="font-medium text-slate-900 mb-3 flex items-center gap-2">
                             <User className="w-4 h-4 text-slate-500" />
-                            Müşteri Bilgileri
+                            Musteri Bilgileri
                           </h4>
                           <div className="grid grid-cols-2 gap-4">
                             <div className="flex items-center gap-2 text-sm">
@@ -546,9 +535,11 @@ export default function WarrantyLookupPage() {
                         <div className="border-t border-slate-100 pt-4">
                           <h4 className="font-medium text-slate-900 mb-3 flex items-center gap-2">
                             <History className="w-4 h-4 text-slate-500" />
-                            Talep Geçmişi
+                            Talep Gecmisi
                             {selectedRecord.claimCount > 0 && (
-                              <Badge variant="info">{selectedRecord.claimCount} talep</Badge>
+                              <span className="px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-600 rounded">
+                                {selectedRecord.claimCount} talep
+                              </span>
                             )}
                           </h4>
                           {selectedRecord.claims && selectedRecord.claims.length > 0 ? (
@@ -558,8 +549,8 @@ export default function WarrantyLookupPage() {
                                   key={claim.id || index}
                                   className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg"
                                 >
-                                  <div className="w-8 h-8 bg-violet-100 rounded-full flex items-center justify-center shrink-0">
-                                    <Wrench className="w-4 h-4 text-violet-600" />
+                                  <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center shrink-0">
+                                    <Wrench className="w-4 h-4 text-slate-600" />
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between gap-2">
@@ -574,18 +565,19 @@ export default function WarrantyLookupPage() {
                                       {claim.issueDescription}
                                     </p>
                                     <div className="flex items-center gap-2 mt-1">
-                                      <Badge
-                                        variant={
-                                          claim.status === 'Approved' ? 'success' :
-                                          claim.status === 'Rejected' ? 'error' :
-                                          'default'
+                                      <span
+                                        className={
+                                          'px-2 py-0.5 text-xs font-medium rounded ' +
+                                          (claim.status === 'Approved' ? 'bg-slate-900 text-white' :
+                                          claim.status === 'Rejected' ? 'bg-slate-300 text-slate-700' :
+                                          'bg-slate-100 text-slate-600')
                                         }
                                       >
                                         {claim.status}
-                                      </Badge>
+                                      </span>
                                       {claim.resolution && (
                                         <span className="text-xs text-slate-500">
-                                          Çözüm: {claim.resolution}
+                                          Cozum: {claim.resolution}
                                         </span>
                                       )}
                                     </div>
@@ -596,24 +588,24 @@ export default function WarrantyLookupPage() {
                           ) : (
                             <div className="text-center py-6 text-slate-400">
                               <CheckCircle2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                              <p className="text-sm">Talep kaydı bulunmuyor</p>
+                              <p className="text-sm">Talep kaydi bulunmuyor</p>
                             </div>
                           )}
                         </div>
 
                         {/* Notes */}
                         {selectedRecord.notes && (
-                          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                            <div className="text-sm font-medium text-amber-700 mb-1">Notlar</div>
-                            <p className="text-amber-800 text-sm">{selectedRecord.notes}</p>
+                          <div className="bg-slate-100 border border-slate-200 rounded-lg p-3">
+                            <div className="text-sm font-medium text-slate-700 mb-1">Notlar</div>
+                            <p className="text-slate-800 text-sm">{selectedRecord.notes}</p>
                           </div>
                         )}
 
                         {/* Void Reason */}
                         {selectedRecord.isVoid && selectedRecord.voidReason && (
-                          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                            <div className="text-sm font-medium text-red-700 mb-1">İptal Sebebi</div>
-                            <p className="text-red-800 text-sm">{selectedRecord.voidReason}</p>
+                          <div className="bg-slate-200 border border-slate-300 rounded-lg p-3">
+                            <div className="text-sm font-medium text-slate-700 mb-1">Iptal Sebebi</div>
+                            <p className="text-slate-800 text-sm">{selectedRecord.voidReason}</p>
                           </div>
                         )}
 
@@ -626,11 +618,11 @@ export default function WarrantyLookupPage() {
                             Kapat
                           </button>
                           <div className="flex items-center gap-3">
-                            <button className="px-4 py-2 text-violet-600 hover:text-violet-700 hover:bg-violet-50 rounded-lg transition-colors text-sm font-medium">
-                              Servis Talebi Oluştur
+                            <button className="px-4 py-2 text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors text-sm font-medium">
+                              Servis Talebi Olustur
                             </button>
                             {selectedRecord.isActive && (
-                              <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium">
+                              <button className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm font-medium">
                                 Garantiyi Uzat
                               </button>
                             )}
@@ -640,7 +632,7 @@ export default function WarrantyLookupPage() {
                     );
                   })()
                 )}
-              </Card>
+              </div>
             </div>
           )}
         </div>
@@ -652,7 +644,7 @@ export default function WarrantyLookupPage() {
           {statsLoading ? (
             <>
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-white border border-slate-200 rounded-lg p-4 text-center animate-pulse">
+                <div key={i} className="bg-white border border-slate-200 rounded-xl p-5 text-center animate-pulse">
                   <div className="w-12 h-12 bg-slate-100 rounded-full mx-auto mb-3" />
                   <div className="h-8 bg-slate-100 rounded w-16 mx-auto mb-2" />
                   <div className="h-4 bg-slate-100 rounded w-24 mx-auto" />
@@ -661,38 +653,38 @@ export default function WarrantyLookupPage() {
             </>
           ) : (
             <>
-              <div className="bg-white border border-emerald-200 rounded-lg p-4 text-center">
-                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <ShieldCheck className="w-6 h-6 text-emerald-600" />
+              <div className="bg-white border border-slate-200 rounded-xl p-5 text-center">
+                <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <ShieldCheck className="w-6 h-6 text-slate-700" />
                 </div>
-                <div className="text-2xl font-bold text-emerald-600">
+                <div className="text-2xl font-bold text-slate-900">
                   {statistics?.activeCount ?? 0}
                 </div>
                 <div className="text-sm text-slate-500">Aktif Garanti</div>
               </div>
-              <div className="bg-white border border-blue-200 rounded-lg p-4 text-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Shield className="w-6 h-6 text-blue-600" />
+              <div className="bg-white border border-slate-200 rounded-xl p-5 text-center">
+                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Shield className="w-6 h-6 text-slate-600" />
                 </div>
-                <div className="text-2xl font-bold text-blue-600">
+                <div className="text-2xl font-bold text-slate-900">
                   {statistics?.expiringThisMonthCount ?? 0}
                 </div>
                 <div className="text-sm text-slate-500">Bu Ay Dolacak</div>
               </div>
-              <div className="bg-white border border-slate-200 rounded-lg p-4 text-center">
+              <div className="bg-white border border-slate-200 rounded-xl p-5 text-center">
                 <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <ShieldX className="w-6 h-6 text-slate-500" />
                 </div>
-                <div className="text-2xl font-bold text-slate-600">
+                <div className="text-2xl font-bold text-slate-900">
                   {statistics?.expiredCount ?? 0}
                 </div>
-                <div className="text-sm text-slate-500">Süresi Dolan</div>
+                <div className="text-sm text-slate-500">Suresi Dolan</div>
               </div>
-              <div className="bg-white border border-amber-200 rounded-lg p-4 text-center">
-                <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <History className="w-6 h-6 text-amber-600" />
+              <div className="bg-white border border-slate-200 rounded-xl p-5 text-center">
+                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <History className="w-6 h-6 text-slate-600" />
                 </div>
-                <div className="text-2xl font-bold text-amber-600">
+                <div className="text-2xl font-bold text-slate-900">
                   {statistics?.totalClaimCount ?? 0}
                 </div>
                 <div className="text-sm text-slate-500">Toplam Talep</div>
@@ -701,6 +693,6 @@ export default function WarrantyLookupPage() {
           )}
         </div>
       )}
-    </PageContainer>
+    </div>
   );
 }

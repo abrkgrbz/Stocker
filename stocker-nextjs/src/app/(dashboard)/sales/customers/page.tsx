@@ -2,20 +2,9 @@
 
 import React, { useState, useMemo } from 'react';
 import {
-  Card,
   Table,
-  Button,
-  Input,
-  Space,
-  Tag,
-  Typography,
-  Row,
-  Col,
-  Statistic,
   Progress,
-  Tooltip,
   Modal,
-  Descriptions,
 } from 'antd';
 import {
   ArrowPathIcon,
@@ -26,13 +15,12 @@ import {
   EyeIcon,
   MagnifyingGlassIcon,
   UserIcon,
+  UsersIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useInvoices } from '@/lib/api/hooks/useInvoices';
-import type { InvoiceListItem, InvoiceStatus } from '@/lib/api/services/invoice.service';
+import type { InvoiceListItem } from '@/lib/api/services/invoice.service';
 import dayjs from 'dayjs';
-
-const { Title, Text } = Typography;
 
 interface CustomerBalance {
   customerName: string;
@@ -120,7 +108,6 @@ export default function CustomerBalancePage() {
   };
 
   const handleViewInvoices = (customerName: string) => {
-    // Navigate to invoices with customer filter
     router.push(`/sales/invoices?customer=${encodeURIComponent(customerName)}`);
   };
 
@@ -130,10 +117,10 @@ export default function CustomerBalancePage() {
       dataIndex: 'customerName',
       key: 'customerName',
       render: (name: string) => (
-        <Space>
-          <UserIcon className="w-4 h-4" />
-          <Text strong>{name}</Text>
-        </Space>
+        <div className="flex items-center gap-2">
+          <UserIcon className="w-4 h-4 text-slate-400" />
+          <span className="font-medium text-slate-900">{name}</span>
+        </div>
       ),
       sorter: (a: CustomerBalance, b: CustomerBalance) => a.customerName.localeCompare(b.customerName),
     },
@@ -142,8 +129,11 @@ export default function CustomerBalancePage() {
       dataIndex: 'totalInvoiced',
       key: 'totalInvoiced',
       align: 'right' as const,
-      render: (amount: number, record: CustomerBalance) =>
-        new Intl.NumberFormat('tr-TR', { style: 'currency', currency: record.currency }).format(amount),
+      render: (amount: number, record: CustomerBalance) => (
+        <span className="text-slate-900">
+          {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: record.currency }).format(amount)}
+        </span>
+      ),
       sorter: (a: CustomerBalance, b: CustomerBalance) => a.totalInvoiced - b.totalInvoiced,
     },
     {
@@ -152,9 +142,9 @@ export default function CustomerBalancePage() {
       key: 'totalPaid',
       align: 'right' as const,
       render: (amount: number, record: CustomerBalance) => (
-        <Text type="success">
+        <span className="text-slate-600">
           {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: record.currency }).format(amount)}
-        </Text>
+        </span>
       ),
       sorter: (a: CustomerBalance, b: CustomerBalance) => a.totalPaid - b.totalPaid,
     },
@@ -164,9 +154,9 @@ export default function CustomerBalancePage() {
       key: 'balance',
       align: 'right' as const,
       render: (amount: number, record: CustomerBalance) => (
-        <Text type={amount > 0 ? 'danger' : 'success'} strong>
+        <span className={`font-medium ${amount > 0 ? 'text-slate-900' : 'text-slate-500'}`}>
           {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: record.currency }).format(amount)}
-        </Text>
+        </span>
       ),
       sorter: (a: CustomerBalance, b: CustomerBalance) => a.balance - b.balance,
     },
@@ -177,13 +167,17 @@ export default function CustomerBalancePage() {
       align: 'right' as const,
       render: (amount: number, record: CustomerBalance) =>
         amount > 0 ? (
-          <Tooltip title={`${record.overdueCount} adet vadesi geçmiş fatura`}>
-            <Tag color="error" icon={<ExclamationTriangleIcon className="w-4 h-4" />}>
+          <div className="flex items-center justify-end gap-1">
+            <ExclamationTriangleIcon className="w-4 h-4 text-slate-700" />
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-900 text-white">
               {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: record.currency }).format(amount)}
-            </Tag>
-          </Tooltip>
+            </span>
+          </div>
         ) : (
-          <Tag color="success" icon={<CheckCircleIcon className="w-4 h-4" />}>Yok</Tag>
+          <div className="flex items-center justify-end gap-1">
+            <CheckCircleIcon className="w-4 h-4 text-slate-400" />
+            <span className="text-slate-400 text-sm">Yok</span>
+          </div>
         ),
       sorter: (a: CustomerBalance, b: CustomerBalance) => a.overdueAmount - b.overdueAmount,
     },
@@ -192,25 +186,29 @@ export default function CustomerBalancePage() {
       dataIndex: 'invoiceCount',
       key: 'invoiceCount',
       align: 'center' as const,
+      render: (count: number) => (
+        <span className="text-slate-600">{count}</span>
+      ),
       sorter: (a: CustomerBalance, b: CustomerBalance) => a.invoiceCount - b.invoiceCount,
     },
     {
       title: 'Ödeme Oranı',
       key: 'paymentRate',
       align: 'center' as const,
-      render: (_: any, record: CustomerBalance) => {
+      render: (_: unknown, record: CustomerBalance) => {
         const rate = record.totalInvoiced > 0
           ? Math.round((record.totalPaid / record.totalInvoiced) * 100)
           : 0;
         return (
-          <Tooltip title={`%${rate} ödendi`}>
+          <div className="w-20">
             <Progress
               percent={rate}
               size="small"
-              status={rate === 100 ? 'success' : rate < 50 ? 'exception' : 'normal'}
-              style={{ width: 80 }}
+              strokeColor={rate === 100 ? '#334155' : rate < 50 ? '#0f172a' : '#64748b'}
+              trailColor="#f1f5f9"
+              format={(percent) => <span className="text-xs text-slate-600">{percent}%</span>}
             />
-          </Tooltip>
+          </div>
         );
       },
     },
@@ -218,7 +216,11 @@ export default function CustomerBalancePage() {
       title: 'Son Fatura',
       dataIndex: 'lastInvoiceDate',
       key: 'lastInvoiceDate',
-      render: (date: string | null) => date ? dayjs(date).format('DD/MM/YYYY') : '-',
+      render: (date: string | null) => (
+        <span className="text-slate-600">
+          {date ? dayjs(date).format('DD/MM/YYYY') : '-'}
+        </span>
+      ),
       sorter: (a: CustomerBalance, b: CustomerBalance) => {
         if (!a.lastInvoiceDate) return 1;
         if (!b.lastInvoiceDate) return -1;
@@ -228,103 +230,115 @@ export default function CustomerBalancePage() {
     {
       title: 'İşlemler',
       key: 'actions',
-      width: 120,
-      render: (_: any, record: CustomerBalance) => (
-        <Space>
-          <Tooltip title="Detay">
-            <Button size="small" icon={<EyeIcon className="w-4 h-4" />} onClick={() => handleViewDetail(record)} />
-          </Tooltip>
-          <Tooltip title="Faturaları Gör">
-            <Button size="small" icon={<DocumentTextIcon className="w-4 h-4" />} onClick={() => handleViewInvoices(record.customerName)} />
-          </Tooltip>
-        </Space>
+      width: 100,
+      render: (_: unknown, record: CustomerBalance) => (
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => handleViewDetail(record)}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+            title="Detay"
+          >
+            <EyeIcon className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleViewInvoices(record.customerName)}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+            title="Faturaları Gör"
+          >
+            <DocumentTextIcon className="w-4 h-4" />
+          </button>
+        </div>
       ),
     },
   ];
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="min-h-screen bg-slate-50 p-8">
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <Title level={2} style={{ margin: 0 }}>Müşteri Bakiye Takibi</Title>
-        <Text type="secondary">Müşterilerin borç/alacak durumunu takip edin</Text>
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+            <UsersIcon className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Müşteri Bakiye Takibi</h1>
+            <p className="text-sm text-slate-500">Müşterilerin borç/alacak durumunu takip edin</p>
+          </div>
+        </div>
+        <button
+          onClick={() => refetch()}
+          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+        >
+          <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+        </button>
       </div>
 
       {/* Statistics */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Toplam Müşteri"
-              value={stats.totalCustomers}
-              prefix={<UserIcon className="w-4 h-4" style={{ color: '#1890ff' }} />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Toplam Alacak"
-              value={stats.totalOutstanding}
-              precision={2}
-              prefix={<CurrencyDollarIcon className="w-4 h-4" style={{ color: '#faad14' }} />}
-              suffix="₺"
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Vadesi Geçmiş Alacak"
-              value={stats.totalOverdue}
-              precision={2}
-              prefix={<ExclamationTriangleIcon className="w-4 h-4" style={{ color: '#ff4d4f' }} />}
-              suffix="₺"
-              valueStyle={{ color: stats.totalOverdue > 0 ? '#ff4d4f' : undefined }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Borçlu Müşteri"
-              value={stats.customersWithBalance}
-              suffix={`/ ${stats.totalCustomers}`}
-              prefix={<UserIcon className="w-4 h-4" style={{ color: '#722ed1' }} />}
-            />
-            <div style={{ marginTop: 8 }}>
-              <Text type="secondary">
-                {stats.customersWithOverdue} müşterinin vadesi geçmiş borcu var
-              </Text>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <UsersIcon className="w-5 h-5 text-slate-600" />
             </div>
-          </Card>
-        </Col>
-      </Row>
+            <span className="text-sm text-slate-500">Toplam Müşteri</span>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.totalCustomers}</div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <CurrencyDollarIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <span className="text-sm text-slate-500">Toplam Alacak</span>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">
+            {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(stats.totalOutstanding)}
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <ExclamationTriangleIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <span className="text-sm text-slate-500">Vadesi Geçmiş Alacak</span>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">
+            {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(stats.totalOverdue)}
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <UserIcon className="w-5 h-5 text-slate-600" />
+            </div>
+            <span className="text-sm text-slate-500">Borçlu Müşteri</span>
+          </div>
+          <div className="text-2xl font-bold text-slate-900">
+            {stats.customersWithBalance}
+            <span className="text-sm font-normal text-slate-400 ml-1">/ {stats.totalCustomers}</span>
+          </div>
+          <p className="text-xs text-slate-400 mt-1">
+            {stats.customersWithOverdue} müşterinin vadesi geçmiş borcu var
+          </p>
+        </div>
+      </div>
 
       {/* Filters */}
-      <Card style={{ marginBottom: 16 }}>
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} md={8}>
-            <Input
-              placeholder="Müşteri ara..."
-              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              allowClear
-            />
-          </Col>
-          <Col xs={24} sm={12} md={8}>
-            <Space>
-              <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()}>
-                Yenile
-              </Button>
-            </Space>
-          </Col>
-        </Row>
-      </Card>
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+        <div className="relative max-w-xs">
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Müşteri ara..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+          />
+        </div>
+      </div>
 
       {/* Table */}
-      <Card>
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
         <Table
           columns={columns}
           dataSource={filteredCustomers}
@@ -335,80 +349,104 @@ export default function CustomerBalancePage() {
             showSizeChanger: true,
             showTotal: (total) => `Toplam ${total} müşteri`,
           }}
+          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
         />
-      </Card>
+      </div>
 
       {/* Customer Detail Modal */}
       <Modal
         title={
-          <Space>
-            <UserIcon className="w-4 h-4" />
-            {selectedCustomer?.customerName}
-          </Space>
+          <div className="flex items-center gap-2">
+            <UserIcon className="w-5 h-5 text-slate-600" />
+            <span>{selectedCustomer?.customerName}</span>
+          </div>
         }
         open={detailModalOpen}
         onCancel={() => setDetailModalOpen(false)}
-        footer={[
-          <Button key="invoices" icon={<DocumentTextIcon className="w-4 h-4" />} onClick={() => {
-            if (selectedCustomer) {
-              handleViewInvoices(selectedCustomer.customerName);
-              setDetailModalOpen(false);
-            }
-          }}>
-            Faturaları Görüntüle
-          </Button>,
-          <Button key="close" type="primary" onClick={() => setDetailModalOpen(false)}>
-            Kapat
-          </Button>,
-        ]}
+        footer={
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => {
+                if (selectedCustomer) {
+                  handleViewInvoices(selectedCustomer.customerName);
+                  setDetailModalOpen(false);
+                }
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              <DocumentTextIcon className="w-4 h-4" />
+              Faturaları Görüntüle
+            </button>
+            <button
+              onClick={() => setDetailModalOpen(false)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
+            >
+              Kapat
+            </button>
+          </div>
+        }
         width={600}
       >
         {selectedCustomer && (
-          <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="Müşteri Adı">{selectedCustomer.customerName}</Descriptions.Item>
-            <Descriptions.Item label="Toplam Fatura Tutarı">
-              {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: selectedCustomer.currency }).format(selectedCustomer.totalInvoiced)}
-            </Descriptions.Item>
-            <Descriptions.Item label="Ödenen Tutar">
-              <Text type="success">
-                {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: selectedCustomer.currency }).format(selectedCustomer.totalPaid)}
-              </Text>
-            </Descriptions.Item>
-            <Descriptions.Item label="Kalan Borç">
-              <Text type={selectedCustomer.balance > 0 ? 'danger' : 'success'} strong>
-                {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: selectedCustomer.currency }).format(selectedCustomer.balance)}
-              </Text>
-            </Descriptions.Item>
-            <Descriptions.Item label="Vadesi Geçmiş Tutar">
-              <Text type="danger">
-                {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: selectedCustomer.currency }).format(selectedCustomer.overdueAmount)}
-              </Text>
-              {selectedCustomer.overdueCount > 0 && (
-                <Tag color="error" style={{ marginLeft: 8 }}>
-                  {selectedCustomer.overdueCount} fatura
-                </Tag>
-              )}
-            </Descriptions.Item>
-            <Descriptions.Item label="Toplam Fatura Sayısı">{selectedCustomer.invoiceCount}</Descriptions.Item>
-            <Descriptions.Item label="Ödeme Oranı">
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-slate-50 rounded-lg p-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Toplam Fatura Tutarı</p>
+                <p className="text-lg font-semibold text-slate-900">
+                  {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: selectedCustomer.currency }).format(selectedCustomer.totalInvoiced)}
+                </p>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Ödenen Tutar</p>
+                <p className="text-lg font-semibold text-slate-600">
+                  {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: selectedCustomer.currency }).format(selectedCustomer.totalPaid)}
+                </p>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Kalan Borç</p>
+                <p className={`text-lg font-semibold ${selectedCustomer.balance > 0 ? 'text-slate-900' : 'text-slate-500'}`}>
+                  {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: selectedCustomer.currency }).format(selectedCustomer.balance)}
+                </p>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Vadesi Geçmiş</p>
+                <p className="text-lg font-semibold text-slate-900">
+                  {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: selectedCustomer.currency }).format(selectedCustomer.overdueAmount)}
+                  {selectedCustomer.overdueCount > 0 && (
+                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-900 text-white">
+                      {selectedCustomer.overdueCount} fatura
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-slate-50 rounded-lg p-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Toplam Fatura Sayısı</p>
+                <p className="text-lg font-semibold text-slate-900">{selectedCustomer.invoiceCount}</p>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Son Fatura Tarihi</p>
+                <p className="text-lg font-semibold text-slate-900">
+                  {selectedCustomer.lastInvoiceDate
+                    ? dayjs(selectedCustomer.lastInvoiceDate).format('DD/MM/YYYY')
+                    : '-'
+                  }
+                </p>
+              </div>
+            </div>
+            <div className="bg-slate-50 rounded-lg p-4">
+              <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">Ödeme Oranı</p>
               <Progress
                 percent={selectedCustomer.totalInvoiced > 0
                   ? Math.round((selectedCustomer.totalPaid / selectedCustomer.totalInvoiced) * 100)
                   : 0
                 }
-                status={
-                  selectedCustomer.totalPaid >= selectedCustomer.totalInvoiced ? 'success' :
-                  (selectedCustomer.totalPaid / selectedCustomer.totalInvoiced) < 0.5 ? 'exception' : 'normal'
-                }
+                strokeColor="#334155"
+                trailColor="#e2e8f0"
               />
-            </Descriptions.Item>
-            <Descriptions.Item label="Son Fatura Tarihi">
-              {selectedCustomer.lastInvoiceDate
-                ? dayjs(selectedCustomer.lastInvoiceDate).format('DD/MM/YYYY')
-                : '-'
-              }
-            </Descriptions.Item>
-          </Descriptions>
+            </div>
+          </div>
         )}
       </Modal>
     </div>
