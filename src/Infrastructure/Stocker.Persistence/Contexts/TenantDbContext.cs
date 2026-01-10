@@ -6,21 +6,35 @@ using Stocker.Application.Common.Interfaces;
 
 namespace Stocker.Persistence.Contexts;
 
-public class TenantDbContext : BaseDbContext, ITenantDbContext 
+public class TenantDbContext : BaseDbContext, ITenantDbContext
 {
     private readonly ITenantService? _tenantService;
     private readonly Guid? _tenantId;
-    
+
     // Constructor for DI with ITenantService
-    public TenantDbContext(DbContextOptions<TenantDbContext> options, ITenantService tenantService) 
+    public TenantDbContext(DbContextOptions<TenantDbContext> options, ITenantService tenantService)
         : base(options)
     {
         _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     }
-    
+
+    // Constructor for DI with ITenantService and domain event dispatcher
+    public TenantDbContext(DbContextOptions<TenantDbContext> options, ITenantService tenantService, IDomainEventDispatcher domainEventDispatcher)
+        : base(options, domainEventDispatcher)
+    {
+        _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
+    }
+
     // Constructor for factory pattern with explicit tenantId
-    public TenantDbContext(DbContextOptions<TenantDbContext> options, Guid tenantId) 
+    public TenantDbContext(DbContextOptions<TenantDbContext> options, Guid tenantId)
         : base(options)
+    {
+        _tenantId = tenantId;
+    }
+
+    // Constructor for factory pattern with explicit tenantId and domain event dispatcher
+    public TenantDbContext(DbContextOptions<TenantDbContext> options, Guid tenantId, IDomainEventDispatcher domainEventDispatcher)
+        : base(options, domainEventDispatcher)
     {
         _tenantId = tenantId;
     }

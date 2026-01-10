@@ -1,19 +1,27 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Primitives;
 
 namespace Stocker.Persistence.Contexts;
- 
+
 
 public abstract class BaseDbContext : DbContext
 {
+    private readonly IDomainEventDispatcher? _domainEventDispatcher;
+
     protected BaseDbContext(DbContextOptions options) : base(options)
     {
     }
 
+    protected BaseDbContext(DbContextOptions options, IDomainEventDispatcher domainEventDispatcher) : base(options)
+    {
+        _domainEventDispatcher = domainEventDispatcher;
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(modelBuilder);    
+        base.OnModelCreating(modelBuilder);
         // Configuration'lar her context tarafından kendi ihtiyacına göre uygulanacak
         // modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
     }
@@ -33,25 +41,23 @@ public abstract class BaseDbContext : DbContext
 
         var result = await base.SaveChangesAsync(cancellationToken);
 
-        await DispatchDomainEventsAsync(domainEvents, cancellationToken);
+        // Dispatch domain events after successful save
+        if (domainEvents.Count > 0 && _domainEventDispatcher != null)
+        {
+            await _domainEventDispatcher.DispatchEventsAsync(domainEvents, cancellationToken);
+        }
 
         return result;
-    }
-
-    protected virtual Task DispatchDomainEventsAsync(List<IDomainEvent> domainEvents, CancellationToken cancellationToken)
-    {
-       
-        return Task.CompletedTask;
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         base.ConfigureConventions(configurationBuilder);
-         
+
         configurationBuilder.Properties<string>()
             .HaveMaxLength(256);
 
         configurationBuilder.Properties<decimal>()
-            .HavePrecision(18, 2); 
+            .HavePrecision(18, 2);
     }
 }

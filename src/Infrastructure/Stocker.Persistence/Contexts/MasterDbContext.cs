@@ -14,6 +14,11 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
     {
     }
 
+    public MasterDbContext(DbContextOptions<MasterDbContext> options, IDomainEventDispatcher domainEventDispatcher)
+        : base(options, domainEventDispatcher)
+    {
+    }
+
     // Tenant Management (Core - Stays in Master)
     public DbSet<Tenant> Tenants => Set<Tenant>();
 

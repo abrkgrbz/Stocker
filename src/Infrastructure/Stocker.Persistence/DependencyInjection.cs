@@ -18,8 +18,11 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddPersistenceServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Add MasterDbContext
-        services.AddDbContext<MasterDbContext>(options =>
+        // Register Domain Event Dispatcher for publishing domain events via MediatR
+        services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+
+        // Add MasterDbContext with domain event dispatcher
+        services.AddDbContext<MasterDbContext>((serviceProvider, options) =>
             options.UseNpgsql(
                 configuration.GetConnectionString("MasterConnection"),
                 b => b.MigrationsAssembly(typeof(MasterDbContext).Assembly.FullName)));
