@@ -331,6 +331,28 @@ body {
   animation: gradient-shift 4s ease infinite;
 }
 
+/* Slow gradient animation for WebGL fallback backgrounds */
+@keyframes gradient-shift-slow {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 50% 100%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  75% {
+    background-position: 50% 0%;
+  }
+}
+
+.animate-gradient-slow {
+  background-size: 400% 400%;
+  animation: gradient-shift-slow 15s ease infinite;
+}
+
 /* Subtle float animation for mockups */
 @keyframes float {
   0%,

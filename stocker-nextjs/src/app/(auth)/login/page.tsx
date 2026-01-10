@@ -3,7 +3,14 @@
 import { useState, useEffect, Suspense, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import dynamicImport from 'next/dynamic'
 import { Tenant, TenantInfo } from '@/lib/types/auth'
+
+// Dynamic import for GradientMesh to avoid SSR issues with Three.js
+const GradientMesh = dynamicImport(() => import('@/components/landing/GradientMesh'), {
+  ssr: false,
+  loading: () => null,
+})
 
 // Testimonials data
 const TESTIMONIALS = [
@@ -403,18 +410,16 @@ function LoginForm() {
   return (
     <div className="auth-page min-h-screen flex">
       {/* Left Panel - Corporate Branding with Testimonial */}
-      <div className="hidden lg:flex lg:w-1/2 bg-slate-900 relative overflow-hidden">
-        {/* Subtle gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
+      <div className="hidden lg:flex lg:w-1/2 bg-[#0c0f1a] relative overflow-hidden">
+        {/* Gradient Mesh Animation Background */}
+        <div className="absolute inset-0">
+          <Suspense fallback={<div className="absolute inset-0 bg-[#0c0f1a]" />}>
+            <GradientMesh />
+          </Suspense>
+        </div>
 
-        {/* Subtle dot pattern - enhanced visibility */}
-        <div
-          className="absolute inset-0 opacity-[0.05]"
-          style={{
-            backgroundImage: `radial-gradient(circle, #fff 1px, transparent 1px)`,
-            backgroundSize: '24px 24px',
-          }}
-        />
+        {/* Subtle overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/30 via-transparent to-slate-900/30" />
 
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-between p-12 w-full h-full">
