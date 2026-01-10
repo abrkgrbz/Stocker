@@ -90,6 +90,9 @@ public static class ServiceCollectionExtensions
         // Register rate limiting service
         services.AddSingleton<ISignalRRateLimiter, SignalRRateLimiter>();
 
+        // Register domain event monitor service for real-time event broadcasting
+        services.AddScoped<IDomainEventMonitorService, DomainEventMonitorService>();
+
         // Add SignalR user ID provider for authentication
         services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 

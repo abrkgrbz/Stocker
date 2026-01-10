@@ -18,6 +18,11 @@ public static class SignalREvents
     /// </summary>
     public const string Error = "Error";
 
+    /// <summary>
+    /// Domain event occurred (for real-time monitoring)
+    /// </summary>
+    public const string DomainEventOccurred = "DomainEventOccurred";
+
     #endregion
 
     #region Notification Events
