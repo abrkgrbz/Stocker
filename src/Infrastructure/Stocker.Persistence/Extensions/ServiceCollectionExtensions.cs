@@ -26,8 +26,9 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddPersistenceServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Add Audit Interceptor
+        // Add Interceptors
         services.AddScoped<AuditInterceptor>();
+        services.AddScoped<DomainEventDispatcherInterceptor>();
 
         // Add DbContextFactory for MasterDbContext
         // Using factory pattern for better control over DbContext lifetime and concurrency
@@ -63,15 +64,16 @@ public static class ServiceCollectionExtensions
             var factory = serviceProvider.GetRequiredService<IDbContextFactory<MasterDbContext>>();
             var context = factory.CreateDbContext();
 
-            // Add audit interceptor to the context
+            // Add interceptors to the context
             var auditInterceptor = serviceProvider.GetRequiredService<AuditInterceptor>();
+            var domainEventInterceptor = serviceProvider.GetRequiredService<DomainEventDispatcherInterceptor>();
             var optionsBuilder = new DbContextOptionsBuilder<MasterDbContext>();
 
-            // Get existing options and add interceptor
+            // Get existing options and add interceptors
             optionsBuilder.UseNpgsql(configuration.GetConnectionString("MasterConnection"));
             optionsBuilder.ConfigureWarnings(warnings =>
                 warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
-            optionsBuilder.AddInterceptors(auditInterceptor);
+            optionsBuilder.AddInterceptors(auditInterceptor, domainEventInterceptor);
 
             if (configuration.GetValue<bool>("IsDevelopment", false))
             {

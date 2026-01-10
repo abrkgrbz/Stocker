@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Persistence.Contexts;
+using Stocker.Persistence.Interceptors;
 using Stocker.Domain.Master.Entities;
 using System;
 using System.Diagnostics;
@@ -17,17 +18,26 @@ public class TenantDbContextFactory : ITenantDbContextFactory
     private readonly IConfiguration _configuration;
     private readonly ILogger<TenantDbContextFactory> _logger;
     private readonly ITenantDatabaseSecurityService? _securityService;
+    private readonly IDomainEventDispatcher? _domainEventDispatcher;
+    private readonly AuditInterceptor? _auditInterceptor;
+    private readonly DomainEventDispatcherInterceptor? _domainEventInterceptor;
 
     public TenantDbContextFactory(
         IMasterDbContext masterContext,
         IConfiguration configuration,
         ILogger<TenantDbContextFactory> logger,
-        ITenantDatabaseSecurityService? securityService = null)
+        ITenantDatabaseSecurityService? securityService = null,
+        IDomainEventDispatcher? domainEventDispatcher = null,
+        AuditInterceptor? auditInterceptor = null,
+        DomainEventDispatcherInterceptor? domainEventInterceptor = null)
     {
         _masterContext = masterContext;
         _configuration = configuration;
         _logger = logger;
         _securityService = securityService;
+        _domainEventDispatcher = domainEventDispatcher;
+        _auditInterceptor = auditInterceptor;
+        _domainEventInterceptor = domainEventInterceptor;
     }
 
     public async Task<ITenantDbContext> CreateDbContextAsync(Guid tenantId)
@@ -58,6 +68,12 @@ public class TenantDbContextFactory : ITenantDbContextFactory
         optionsBuilder.ConfigureWarnings(warnings =>
             warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 
+        // Add interceptors for audit and domain events
+        var interceptors = new List<Microsoft.EntityFrameworkCore.Diagnostics.IInterceptor>();
+        if (_auditInterceptor != null) interceptors.Add(_auditInterceptor);
+        if (_domainEventInterceptor != null) interceptors.Add(_domainEventInterceptor);
+        if (interceptors.Count > 0) optionsBuilder.AddInterceptors(interceptors.ToArray());
+
         if (_configuration.GetValue<bool>("Database:EnableSensitiveDataLogging"))
         {
             optionsBuilder.EnableSensitiveDataLogging();
@@ -68,7 +84,10 @@ public class TenantDbContextFactory : ITenantDbContextFactory
             optionsBuilder.EnableDetailedErrors();
         }
 
-        var context = new TenantDbContext(optionsBuilder.Options, tenantId);
+        // Use constructor with domain event dispatcher if available, otherwise just tenantId
+        var context = _domainEventDispatcher != null
+            ? new TenantDbContext(optionsBuilder.Options, tenantId, _domainEventDispatcher)
+            : new TenantDbContext(optionsBuilder.Options, tenantId);
 
         try
         {
