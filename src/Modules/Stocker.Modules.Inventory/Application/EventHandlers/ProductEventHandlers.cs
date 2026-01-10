@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Stocker.Infrastructure.Metrics;
 using Stocker.Modules.Inventory.Domain.Events;
 using Stocker.SignalR.Services;
 
@@ -23,32 +24,52 @@ public class ProductCreatedEventHandler : INotificationHandler<ProductCreatedDom
 
     public async Task Handle(ProductCreatedDomainEvent notification, CancellationToken cancellationToken)
     {
-        _logger.LogInformation(
-            "Product created: {ProductCode} ({ProductName}), Type: {ProductType}, " +
-            "Category: {CategoryId}, UnitPrice: {UnitPrice}",
-            notification.Code,
-            notification.Name,
-            notification.ProductType,
-            notification.CategoryId,
-            notification.UnitPrice);
+        using var timer = DomainEventMetrics.StartHandlingTimer("Inventory", "ProductCreated", nameof(ProductCreatedEventHandler));
+        DomainEventMetrics.IncrementInProgress("Inventory");
 
-        // Broadcast to monitoring clients
-        if (_monitorService != null)
+        try
         {
-            await _monitorService.BroadcastDomainEventAsync(new DomainEventInfo(
-                EventType: "ProductCreated",
-                Module: "Inventory",
-                EntityType: "Product",
-                EntityId: notification.ProductId.ToString(),
-                TenantId: notification.TenantId,
-                Summary: $"Ürün oluşturuldu: {notification.Code} - {notification.Name}",
-                Metadata: new Dictionary<string, object>
-                {
-                    ["productCode"] = notification.Code,
-                    ["productName"] = notification.Name,
-                    ["productType"] = notification.ProductType,
-                    ["unitPrice"] = notification.UnitPrice
-                }), cancellationToken);
+            _logger.LogInformation(
+                "Product created: {ProductCode} ({ProductName}), Type: {ProductType}, " +
+                "Category: {CategoryId}, UnitPrice: {UnitPrice}",
+                notification.Code,
+                notification.Name,
+                notification.ProductType,
+                notification.CategoryId,
+                notification.UnitPrice);
+
+            // Record Prometheus metric
+            DomainEventMetrics.RecordEventRaised("Inventory", "ProductCreated", "Product", notification.TenantId.ToString());
+
+            // Broadcast to monitoring clients
+            if (_monitorService != null)
+            {
+                await _monitorService.BroadcastDomainEventAsync(new DomainEventInfo(
+                    EventType: "ProductCreated",
+                    Module: "Inventory",
+                    EntityType: "Product",
+                    EntityId: notification.ProductId.ToString(),
+                    TenantId: notification.TenantId,
+                    Summary: $"Ürün oluşturuldu: {notification.Code} - {notification.Name}",
+                    Metadata: new Dictionary<string, object>
+                    {
+                        ["productCode"] = notification.Code,
+                        ["productName"] = notification.Name,
+                        ["productType"] = notification.ProductType,
+                        ["unitPrice"] = notification.UnitPrice
+                    }), cancellationToken);
+            }
+
+            DomainEventMetrics.RecordEventHandled("Inventory", "ProductCreated", nameof(ProductCreatedEventHandler));
+        }
+        catch (Exception ex)
+        {
+            DomainEventMetrics.RecordEventFailed("Inventory", "ProductCreated", nameof(ProductCreatedEventHandler), ex.GetType().Name);
+            throw;
+        }
+        finally
+        {
+            DomainEventMetrics.DecrementInProgress("Inventory");
         }
     }
 }
@@ -71,29 +92,48 @@ public class ProductUpdatedEventHandler : INotificationHandler<ProductUpdatedDom
 
     public async Task Handle(ProductUpdatedDomainEvent notification, CancellationToken cancellationToken)
     {
-        _logger.LogInformation(
-            "Product updated: {ProductCode} ({ProductName}), CostPrice: {CostPrice}, UnitPrice: {UnitPrice}",
-            notification.Code,
-            notification.Name,
-            notification.CostPrice,
-            notification.UnitPrice);
+        using var timer = DomainEventMetrics.StartHandlingTimer("Inventory", "ProductUpdated", nameof(ProductUpdatedEventHandler));
+        DomainEventMetrics.IncrementInProgress("Inventory");
 
-        if (_monitorService != null)
+        try
         {
-            await _monitorService.BroadcastDomainEventAsync(new DomainEventInfo(
-                EventType: "ProductUpdated",
-                Module: "Inventory",
-                EntityType: "Product",
-                EntityId: notification.ProductId.ToString(),
-                TenantId: notification.TenantId,
-                Summary: $"Ürün güncellendi: {notification.Code} - {notification.Name}",
-                Metadata: new Dictionary<string, object>
-                {
-                    ["productCode"] = notification.Code,
-                    ["productName"] = notification.Name,
-                    ["costPrice"] = notification.CostPrice,
-                    ["unitPrice"] = notification.UnitPrice
-                }), cancellationToken);
+            _logger.LogInformation(
+                "Product updated: {ProductCode} ({ProductName}), CostPrice: {CostPrice}, UnitPrice: {UnitPrice}",
+                notification.Code,
+                notification.Name,
+                notification.CostPrice,
+                notification.UnitPrice);
+
+            DomainEventMetrics.RecordEventRaised("Inventory", "ProductUpdated", "Product", notification.TenantId.ToString());
+
+            if (_monitorService != null)
+            {
+                await _monitorService.BroadcastDomainEventAsync(new DomainEventInfo(
+                    EventType: "ProductUpdated",
+                    Module: "Inventory",
+                    EntityType: "Product",
+                    EntityId: notification.ProductId.ToString(),
+                    TenantId: notification.TenantId,
+                    Summary: $"Ürün güncellendi: {notification.Code} - {notification.Name}",
+                    Metadata: new Dictionary<string, object>
+                    {
+                        ["productCode"] = notification.Code,
+                        ["productName"] = notification.Name,
+                        ["costPrice"] = notification.CostPrice,
+                        ["unitPrice"] = notification.UnitPrice
+                    }), cancellationToken);
+            }
+
+            DomainEventMetrics.RecordEventHandled("Inventory", "ProductUpdated", nameof(ProductUpdatedEventHandler));
+        }
+        catch (Exception ex)
+        {
+            DomainEventMetrics.RecordEventFailed("Inventory", "ProductUpdated", nameof(ProductUpdatedEventHandler), ex.GetType().Name);
+            throw;
+        }
+        finally
+        {
+            DomainEventMetrics.DecrementInProgress("Inventory");
         }
     }
 }
@@ -116,20 +156,34 @@ public class ProductActivatedEventHandler : INotificationHandler<ProductActivate
 
     public async Task Handle(ProductActivatedDomainEvent notification, CancellationToken cancellationToken)
     {
-        _logger.LogInformation(
-            "Product activated: {ProductCode} ({ProductName})",
-            notification.Code,
-            notification.Name);
+        using var timer = DomainEventMetrics.StartHandlingTimer("Inventory", "ProductActivated", nameof(ProductActivatedEventHandler));
 
-        if (_monitorService != null)
+        try
         {
-            await _monitorService.BroadcastDomainEventAsync(new DomainEventInfo(
-                EventType: "ProductActivated",
-                Module: "Inventory",
-                EntityType: "Product",
-                EntityId: notification.ProductId.ToString(),
-                TenantId: notification.TenantId,
-                Summary: $"Ürün aktifleştirildi: {notification.Code} - {notification.Name}"), cancellationToken);
+            _logger.LogInformation(
+                "Product activated: {ProductCode} ({ProductName})",
+                notification.Code,
+                notification.Name);
+
+            DomainEventMetrics.RecordEventRaised("Inventory", "ProductActivated", "Product", notification.TenantId.ToString());
+
+            if (_monitorService != null)
+            {
+                await _monitorService.BroadcastDomainEventAsync(new DomainEventInfo(
+                    EventType: "ProductActivated",
+                    Module: "Inventory",
+                    EntityType: "Product",
+                    EntityId: notification.ProductId.ToString(),
+                    TenantId: notification.TenantId,
+                    Summary: $"Ürün aktifleştirildi: {notification.Code} - {notification.Name}"), cancellationToken);
+            }
+
+            DomainEventMetrics.RecordEventHandled("Inventory", "ProductActivated", nameof(ProductActivatedEventHandler));
+        }
+        catch (Exception ex)
+        {
+            DomainEventMetrics.RecordEventFailed("Inventory", "ProductActivated", nameof(ProductActivatedEventHandler), ex.GetType().Name);
+            throw;
         }
     }
 }
@@ -152,27 +206,41 @@ public class ProductDeactivatedEventHandler : INotificationHandler<ProductDeacti
 
     public async Task Handle(ProductDeactivatedDomainEvent notification, CancellationToken cancellationToken)
     {
-        _logger.LogWarning(
-            "Product deactivated: {ProductCode} ({ProductName}), By: {DeactivatedBy}, Reason: {Reason}",
-            notification.Code,
-            notification.Name,
-            notification.DeactivatedBy,
-            notification.Reason ?? "Not specified");
+        using var timer = DomainEventMetrics.StartHandlingTimer("Inventory", "ProductDeactivated", nameof(ProductDeactivatedEventHandler));
 
-        if (_monitorService != null)
+        try
         {
-            await _monitorService.BroadcastDomainEventAsync(new DomainEventInfo(
-                EventType: "ProductDeactivated",
-                Module: "Inventory",
-                EntityType: "Product",
-                EntityId: notification.ProductId.ToString(),
-                TenantId: notification.TenantId,
-                Summary: $"Ürün pasifleştirildi: {notification.Code} - {notification.Name}",
-                Metadata: new Dictionary<string, object>
-                {
-                    ["deactivatedBy"] = notification.DeactivatedBy,
-                    ["reason"] = notification.Reason ?? "Belirtilmedi"
-                }), cancellationToken);
+            _logger.LogWarning(
+                "Product deactivated: {ProductCode} ({ProductName}), By: {DeactivatedBy}, Reason: {Reason}",
+                notification.Code,
+                notification.Name,
+                notification.DeactivatedBy,
+                notification.Reason ?? "Not specified");
+
+            DomainEventMetrics.RecordEventRaised("Inventory", "ProductDeactivated", "Product", notification.TenantId.ToString());
+
+            if (_monitorService != null)
+            {
+                await _monitorService.BroadcastDomainEventAsync(new DomainEventInfo(
+                    EventType: "ProductDeactivated",
+                    Module: "Inventory",
+                    EntityType: "Product",
+                    EntityId: notification.ProductId.ToString(),
+                    TenantId: notification.TenantId,
+                    Summary: $"Ürün pasifleştirildi: {notification.Code} - {notification.Name}",
+                    Metadata: new Dictionary<string, object>
+                    {
+                        ["deactivatedBy"] = notification.DeactivatedBy,
+                        ["reason"] = notification.Reason ?? "Belirtilmedi"
+                    }), cancellationToken);
+            }
+
+            DomainEventMetrics.RecordEventHandled("Inventory", "ProductDeactivated", nameof(ProductDeactivatedEventHandler));
+        }
+        catch (Exception ex)
+        {
+            DomainEventMetrics.RecordEventFailed("Inventory", "ProductDeactivated", nameof(ProductDeactivatedEventHandler), ex.GetType().Name);
+            throw;
         }
     }
 }
@@ -195,31 +263,45 @@ public class ProductStockLevelsChangedEventHandler : INotificationHandler<Produc
 
     public async Task Handle(ProductStockLevelsChangedDomainEvent notification, CancellationToken cancellationToken)
     {
-        _logger.LogInformation(
-            "Product stock levels changed: {ProductCode}, Min: {MinimumStock}, Max: {MaximumStock}, " +
-            "ReorderPoint: {ReorderPoint}, ReorderQty: {ReorderQuantity}",
-            notification.Code,
-            notification.MinimumStock,
-            notification.MaximumStock,
-            notification.ReorderPoint,
-            notification.ReorderQuantity);
+        using var timer = DomainEventMetrics.StartHandlingTimer("Inventory", "ProductStockLevelsChanged", nameof(ProductStockLevelsChangedEventHandler));
 
-        if (_monitorService != null)
+        try
         {
-            await _monitorService.BroadcastDomainEventAsync(new DomainEventInfo(
-                EventType: "ProductStockLevelsChanged",
-                Module: "Inventory",
-                EntityType: "Product",
-                EntityId: notification.ProductId.ToString(),
-                TenantId: notification.TenantId,
-                Summary: $"Stok seviyeleri değişti: {notification.Code}",
-                Metadata: new Dictionary<string, object>
-                {
-                    ["minimumStock"] = notification.MinimumStock,
-                    ["maximumStock"] = notification.MaximumStock,
-                    ["reorderPoint"] = notification.ReorderPoint,
-                    ["reorderQuantity"] = notification.ReorderQuantity
-                }), cancellationToken);
+            _logger.LogInformation(
+                "Product stock levels changed: {ProductCode}, Min: {MinimumStock}, Max: {MaximumStock}, " +
+                "ReorderPoint: {ReorderPoint}, ReorderQty: {ReorderQuantity}",
+                notification.Code,
+                notification.MinimumStock,
+                notification.MaximumStock,
+                notification.ReorderPoint,
+                notification.ReorderQuantity);
+
+            DomainEventMetrics.RecordEventRaised("Inventory", "ProductStockLevelsChanged", "Product", notification.TenantId.ToString());
+
+            if (_monitorService != null)
+            {
+                await _monitorService.BroadcastDomainEventAsync(new DomainEventInfo(
+                    EventType: "ProductStockLevelsChanged",
+                    Module: "Inventory",
+                    EntityType: "Product",
+                    EntityId: notification.ProductId.ToString(),
+                    TenantId: notification.TenantId,
+                    Summary: $"Stok seviyeleri değişti: {notification.Code}",
+                    Metadata: new Dictionary<string, object>
+                    {
+                        ["minimumStock"] = notification.MinimumStock,
+                        ["maximumStock"] = notification.MaximumStock,
+                        ["reorderPoint"] = notification.ReorderPoint,
+                        ["reorderQuantity"] = notification.ReorderQuantity
+                    }), cancellationToken);
+            }
+
+            DomainEventMetrics.RecordEventHandled("Inventory", "ProductStockLevelsChanged", nameof(ProductStockLevelsChangedEventHandler));
+        }
+        catch (Exception ex)
+        {
+            DomainEventMetrics.RecordEventFailed("Inventory", "ProductStockLevelsChanged", nameof(ProductStockLevelsChangedEventHandler), ex.GetType().Name);
+            throw;
         }
     }
 }
