@@ -6,9 +6,9 @@ namespace Stocker.Modules.Finance.Application.EventHandlers;
 
 /// <summary>
 /// Fatura ödendiğinde çalışan event handler.
-/// - Cari hesap bakiyesini günceller
-/// - Ödeme makbuzu oluşturur
-/// - E-posta/bildirim gönderir
+/// - Bildirim gönderir
+/// - Loglama yapar
+/// Not: Cari hesap hareketi PaymentCreatedEventHandler tarafından oluşturulur.
 /// </summary>
 public class InvoicePaidEventHandler : INotificationHandler<InvoicePaidDomainEvent>
 {
@@ -19,28 +19,21 @@ public class InvoicePaidEventHandler : INotificationHandler<InvoicePaidDomainEve
         _logger = logger;
     }
 
-    public async Task Handle(InvoicePaidDomainEvent notification, CancellationToken cancellationToken)
+    public Task Handle(InvoicePaidDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
-            "Invoice paid: {InvoiceNumber} for Tenant {TenantId}, Paid: {PaidAmount}, Remaining: {RemainingAmount}",
+            "Invoice fully paid: {InvoiceNumber} for Tenant {TenantId}, " +
+            "Paid: {PaidAmount} {Currency}, Remaining: {RemainingAmount}",
             notification.InvoiceNumber,
             notification.TenantId,
             notification.PaidAmount,
+            notification.Currency,
             notification.RemainingAmount);
 
-        // TODO: Cari hesap bakiyesini düşür
-        // await _currentAccountService.DeductBalanceAsync(notification.CurrentAccountId, notification.PaidAmount, cancellationToken);
-
-        // TODO: Muhasebe kaydı oluştur
-        // await _journalEntryService.CreateForPaymentAsync(notification.PaymentId, notification.InvoiceId, cancellationToken);
-
-        // TODO: Ödeme makbuzu oluştur
-        // await _receiptService.CreatePaymentReceiptAsync(notification, cancellationToken);
-
-        // TODO: Müşteriye ödeme onayı e-postası gönder
+        // Burada e-posta bildirimi gönderilebilir
         // await _emailService.SendPaymentConfirmationAsync(notification, cancellationToken);
 
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 }
 
@@ -56,18 +49,18 @@ public class InvoicePartiallyPaidEventHandler : INotificationHandler<InvoicePart
         _logger = logger;
     }
 
-    public async Task Handle(InvoicePartiallyPaidDomainEvent notification, CancellationToken cancellationToken)
+    public Task Handle(InvoicePartiallyPaidDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Invoice partially paid: {InvoiceNumber} for Tenant {TenantId}, " +
-            "This payment: {PaidAmount}, Total paid: {TotalPaidAmount}, Remaining: {RemainingAmount}",
+            "This payment: {PaidAmount}, Total paid: {TotalPaidAmount}, Remaining: {RemainingAmount} {Currency}",
             notification.InvoiceNumber,
             notification.TenantId,
             notification.PaidAmount,
             notification.TotalPaidAmount,
-            notification.RemainingAmount);
+            notification.RemainingAmount,
+            notification.Currency);
 
-        // Kısmi ödeme işlemleri...
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 }

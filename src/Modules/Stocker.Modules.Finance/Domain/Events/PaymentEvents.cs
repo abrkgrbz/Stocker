@@ -6,46 +6,59 @@ namespace Stocker.Modules.Finance.Domain.Events;
 /// Ödeme oluşturulduğunda tetiklenen event.
 /// </summary>
 public sealed record PaymentCreatedDomainEvent(
-    Guid PaymentId,
+    int PaymentId,
     Guid TenantId,
+    string PaymentNumber,
+    DateTime PaymentDate,
+    string PaymentType,
+    string Direction,
     int CurrentAccountId,
     decimal Amount,
-    string Currency,
-    string PaymentType) : DomainEvent;
+    string Currency) : DomainEvent;
 
 /// <summary>
 /// Ödeme onaylandığında tetiklenen event.
 /// </summary>
 public sealed record PaymentApprovedDomainEvent(
-    Guid PaymentId,
+    int PaymentId,
     Guid TenantId,
-    string ApprovedBy,
+    string PaymentNumber,
+    int ApprovedByUserId,
     DateTime ApprovedAt) : DomainEvent;
 
 /// <summary>
 /// Ödeme iptal edildiğinde tetiklenen event.
 /// </summary>
 public sealed record PaymentCancelledDomainEvent(
-    Guid PaymentId,
+    int PaymentId,
     Guid TenantId,
+    string PaymentNumber,
+    string CancelledBy,
     string CancellationReason,
-    string CancelledBy) : DomainEvent;
+    DateTime CancelledAt) : DomainEvent;
 
 /// <summary>
 /// Ödeme faturaya eşleştirildiğinde tetiklenen event.
 /// </summary>
 public sealed record PaymentAllocatedToInvoiceDomainEvent(
-    Guid PaymentId,
-    Guid InvoiceId,
+    int PaymentId,
     Guid TenantId,
-    decimal AllocatedAmount) : DomainEvent;
+    string PaymentNumber,
+    int InvoiceId,
+    string InvoiceNumber,
+    decimal AllocatedAmount,
+    string Currency,
+    DateTime AllocatedAt) : DomainEvent;
 
 /// <summary>
 /// Ödeme iade edildiğinde tetiklenen event.
 /// </summary>
 public sealed record PaymentRefundedDomainEvent(
-    Guid PaymentId,
-    Guid RefundPaymentId,
+    int PaymentId,
     Guid TenantId,
+    string PaymentNumber,
+    string RefundedBy,
     decimal RefundAmount,
-    string RefundReason) : DomainEvent;
+    string Currency,
+    string RefundReason,
+    DateTime RefundedAt) : DomainEvent;
