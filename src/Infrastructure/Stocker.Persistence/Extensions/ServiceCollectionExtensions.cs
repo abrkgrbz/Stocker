@@ -26,6 +26,9 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddPersistenceServices(this IServiceCollection services, IConfiguration configuration)
     {
+        // Register Domain Event Dispatcher for publishing domain events via MediatR
+        services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+
         // Add Interceptors
         services.AddScoped<AuditInterceptor>();
         services.AddScoped<DomainEventDispatcherInterceptor>();
