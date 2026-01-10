@@ -23,6 +23,7 @@ using Stocker.Modules.CRM.Infrastructure.Services.Reminders;
 using Stocker.Modules.CRM.Infrastructure.BackgroundJobs;
 using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.CRM.Domain.Services;
 
 namespace Stocker.Modules.CRM.Infrastructure;
 
@@ -167,6 +168,9 @@ public static class DependencyInjection
 
         // Register Hangfire Background Jobs
         services.AddScoped<WorkflowExecutionJob>();
+
+        // Register CRM Notification Service (SignalR-based)
+        services.AddScoped<ICrmNotificationService, CrmNotificationService>();
 
         // Register Cross-Module Services (Contract Implementations)
         services.AddScoped<Shared.Contracts.CRM.ICrmCustomerService, Application.Services.CrmCustomerService>();

@@ -95,7 +95,7 @@ public class ReverseStockMovementCommandHandler : IRequestHandler<ReverseStockMo
         }
 
         // Mark original movement as reversed
-        movement.Reverse(reversalMovement.Id);
+        movement.Reverse(reversalMovement.Id, request.UserId.ToString(), request.Description);
         await _unitOfWork.StockMovements.UpdateAsync(movement, cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);

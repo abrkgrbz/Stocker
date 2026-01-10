@@ -1,5 +1,6 @@
 using Stocker.SharedKernel.Common;
 using Stocker.Modules.Inventory.Domain.Enums;
+using Stocker.Modules.Inventory.Domain.Events;
 
 namespace Stocker.Modules.Inventory.Domain.Entities;
 
@@ -48,6 +49,20 @@ public class StockCount : BaseEntity
         CreatedByUserId = createdByUserId;
         AutoAdjust = false;
         Items = new List<StockCountItem>();
+    }
+
+    /// <summary>
+    /// Stok sayımı oluşturulduktan sonra domain event fırlatır.
+    /// </summary>
+    public void RaiseCreatedEvent()
+    {
+        RaiseDomainEvent(new StockCountCreatedDomainEvent(
+            Id,
+            TenantId,
+            CountNumber,
+            WarehouseId,
+            CountType.ToString(),
+            Items.Count));
     }
 
     public void SetLocation(int? locationId)
@@ -110,6 +125,14 @@ public class StockCount : BaseEntity
         Status = StockCountStatus.InProgress;
         StartedAt = DateTime.UtcNow;
         CountedByUserId = countedByUserId;
+
+        RaiseDomainEvent(new StockCountStartedDomainEvent(
+            Id,
+            TenantId,
+            CountNumber,
+            WarehouseId,
+            countedByUserId,
+            StartedAt.Value));
     }
 
     public void Complete()
@@ -117,12 +140,21 @@ public class StockCount : BaseEntity
         if (Status != StockCountStatus.InProgress)
             throw new InvalidOperationException("Can only complete in-progress counts");
 
-        // Check if all items have been counted
         if (Items.Any(i => !i.IsCounted))
             throw new InvalidOperationException("All items must be counted before completing");
 
         Status = StockCountStatus.Completed;
         CompletedAt = DateTime.UtcNow;
+
+        RaiseDomainEvent(new StockCountCompletedDomainEvent(
+            Id,
+            TenantId,
+            CountNumber,
+            WarehouseId,
+            GetTotalSystemQuantity(),
+            GetTotalCountedQuantity(),
+            GetTotalDifference(),
+            GetItemsWithDifferenceCount()));
     }
 
     public void Approve(int approvedByUserId)
@@ -133,6 +165,13 @@ public class StockCount : BaseEntity
         Status = StockCountStatus.Approved;
         ApprovedAt = DateTime.UtcNow;
         ApprovedByUserId = approvedByUserId;
+
+        RaiseDomainEvent(new StockCountApprovedDomainEvent(
+            Id,
+            TenantId,
+            CountNumber,
+            approvedByUserId,
+            ApprovedAt.Value));
     }
 
     public void Reject(string? reason = null)
@@ -142,6 +181,12 @@ public class StockCount : BaseEntity
 
         Status = StockCountStatus.Rejected;
         CancellationReason = reason;
+
+        RaiseDomainEvent(new StockCountRejectedDomainEvent(
+            Id,
+            TenantId,
+            CountNumber,
+            reason));
     }
 
     public void Cancel(string? reason = null)
@@ -152,6 +197,13 @@ public class StockCount : BaseEntity
         Status = StockCountStatus.Cancelled;
         CancelledAt = DateTime.UtcNow;
         CancellationReason = reason;
+
+        RaiseDomainEvent(new StockCountCancelledDomainEvent(
+            Id,
+            TenantId,
+            CountNumber,
+            reason,
+            CancelledAt.Value));
     }
 
     public void MarkAsAdjusted()
@@ -160,6 +212,13 @@ public class StockCount : BaseEntity
             throw new InvalidOperationException("Can only mark approved counts as adjusted");
 
         Status = StockCountStatus.Adjusted;
+
+        RaiseDomainEvent(new StockCountAdjustedDomainEvent(
+            Id,
+            TenantId,
+            CountNumber,
+            WarehouseId,
+            GetTotalDifference()));
     }
 
     public decimal GetTotalSystemQuantity() => Items.Sum(i => i.SystemQuantity);

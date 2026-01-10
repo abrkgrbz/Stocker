@@ -1,5 +1,6 @@
 using Stocker.SharedKernel.Common;
 using Stocker.Domain.Common.ValueObjects;
+using Stocker.Modules.Inventory.Domain.Events;
 
 namespace Stocker.Modules.Inventory.Domain.Entities;
 
@@ -20,11 +21,11 @@ public class Supplier : BaseEntity
     public decimal CreditLimit { get; private set; }
     public int PaymentTerm { get; private set; }
     public bool IsActive { get; private set; }
-    
+
     public virtual ICollection<Product> Products { get; private set; }
-    
+
     protected Supplier() { }
-    
+
     public Supplier(string code, string name)
     {
         Code = code;
@@ -34,7 +35,19 @@ public class Supplier : BaseEntity
         PaymentTerm = 30;
         Products = new List<Product>();
     }
-    
+
+    /// <summary>
+    /// Tedarikçi oluşturulduktan sonra domain event fırlatır.
+    /// </summary>
+    public void RaiseCreatedEvent()
+    {
+        RaiseDomainEvent(new SupplierCreatedDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            Name));
+    }
+
     public void UpdateSupplierInfo(
         string name,
         string? taxNumber,
@@ -49,8 +62,15 @@ public class Supplier : BaseEntity
         Email = email;
         Phone = phone;
         Address = address;
+
+        RaiseDomainEvent(new SupplierUpdatedDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            Name,
+            TaxNumber));
     }
-    
+
     public void SetContactInfo(
         string? contactPerson,
         string? contactPhone,
@@ -60,13 +80,39 @@ public class Supplier : BaseEntity
         ContactPhone = contactPhone;
         ContactEmail = contactEmail;
     }
-    
+
     public void SetCreditInfo(decimal creditLimit, int paymentTerm)
     {
         CreditLimit = creditLimit;
         PaymentTerm = paymentTerm;
+
+        RaiseDomainEvent(new SupplierCreditInfoChangedDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            CreditLimit,
+            PaymentTerm));
     }
-    
-    public void Activate() => IsActive = true;
-    public void Deactivate() => IsActive = false;
+
+    public void Activate()
+    {
+        IsActive = true;
+
+        RaiseDomainEvent(new SupplierActivatedDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            Name));
+    }
+
+    public void Deactivate()
+    {
+        IsActive = false;
+
+        RaiseDomainEvent(new SupplierDeactivatedDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            Name));
+    }
 }

@@ -1,6 +1,7 @@
 using Stocker.SharedKernel.Common;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.Finance.Domain.Enums;
+using Stocker.Modules.Finance.Domain.Events;
 
 namespace Stocker.Modules.Finance.Domain.Entities;
 
@@ -487,6 +488,17 @@ public class Invoice : BaseEntity
 
         // Initialize money fields
         InitializeMoneyFields(currency);
+
+        // Raise domain event
+        RaiseDomainEvent(new InvoiceCreatedDomainEvent(
+            Id,
+            TenantId,
+            invoiceNumber,
+            invoiceDate,
+            invoiceType.ToString(),
+            currentAccountId,
+            0, // TotalAmount will be calculated later
+            currency));
     }
 
     private void InitializeMoneyFields(string currency)
@@ -599,6 +611,13 @@ public class Invoice : BaseEntity
         Status = InvoiceStatus.Approved;
         ApprovedByUserId = approvedByUserId;
         ApprovalDate = DateTime.UtcNow;
+
+        RaiseDomainEvent(new InvoiceApprovedDomainEvent(
+            Id,
+            TenantId,
+            InvoiceNumber,
+            approvedByUserId,
+            ApprovalDate.Value));
     }
 
     public void SendToTaxAuthority(Guid uuid, string envelopeId, string receiverAlias)
@@ -611,6 +630,15 @@ public class Invoice : BaseEntity
         ReceiverAlias = receiverAlias;
         GibSendDate = DateTime.UtcNow;
         Status = InvoiceStatus.SentToTaxAuthority;
+
+        RaiseDomainEvent(new InvoiceSentToGibDomainEvent(
+            Id,
+            TenantId,
+            InvoiceNumber,
+            uuid,
+            envelopeId,
+            receiverAlias,
+            GibSendDate.Value));
     }
 
     public void MarkAcceptedByTaxAuthority(string statusCode, string statusDescription)
@@ -619,6 +647,15 @@ public class Invoice : BaseEntity
         GibStatusDescription = statusDescription;
         GibResponseDate = DateTime.UtcNow;
         Status = InvoiceStatus.AcceptedByTaxAuthority;
+
+        RaiseDomainEvent(new InvoiceAcceptedByGibDomainEvent(
+            Id,
+            TenantId,
+            InvoiceNumber,
+            GibUuid!.Value,
+            statusCode,
+            statusDescription,
+            GibResponseDate.Value));
     }
 
     public void MarkRejectedByTaxAuthority(string statusCode, string statusDescription)
@@ -627,6 +664,15 @@ public class Invoice : BaseEntity
         GibStatusDescription = statusDescription;
         GibResponseDate = DateTime.UtcNow;
         Status = InvoiceStatus.RejectedByTaxAuthority;
+
+        RaiseDomainEvent(new InvoiceRejectedByGibDomainEvent(
+            Id,
+            TenantId,
+            InvoiceNumber,
+            GibUuid!.Value,
+            statusCode,
+            statusDescription,
+            GibResponseDate.Value));
     }
 
     public void MarkAcceptedByRecipient()
@@ -640,33 +686,61 @@ public class Invoice : BaseEntity
         Notes = string.IsNullOrEmpty(Notes) ? $"Rejected: {reason}" : $"{Notes}\nRejected: {reason}";
     }
 
-    public void Cancel()
+    public void Cancel(string cancelledBy, string? reason = null)
     {
         if (Status == InvoiceStatus.Cancelled)
             throw new InvalidOperationException("Invoice is already cancelled");
 
         Status = InvoiceStatus.Cancelled;
+
+        RaiseDomainEvent(new InvoiceCancelledDomainEvent(
+            Id,
+            TenantId,
+            InvoiceNumber,
+            cancelledBy,
+            reason ?? "No reason provided",
+            DateTime.UtcNow));
     }
 
     #endregion
 
     #region Payment Management
 
-    public void RecordPayment(Money amount)
+    public void RecordPayment(Money amount, int? paymentId = null)
     {
         if (amount.Currency != Currency)
             throw new InvalidOperationException("Currency mismatch");
 
+        var previousPaidAmount = PaidAmount.Amount;
         PaidAmount = Money.Create(PaidAmount.Amount + amount.Amount, Currency);
         RemainingAmount = Money.Create(GrandTotal.Amount - PaidAmount.Amount, Currency);
 
         if (RemainingAmount.Amount <= 0)
         {
             Status = InvoiceStatus.Paid;
+            RaiseDomainEvent(new InvoicePaidDomainEvent(
+                Id,
+                TenantId,
+                InvoiceNumber,
+                paymentId ?? 0,
+                CurrentAccountId,
+                amount.Amount,
+                0, // Fully paid
+                Currency));
         }
         else if (PaidAmount.Amount > 0)
         {
             Status = InvoiceStatus.PartiallyPaid;
+            RaiseDomainEvent(new InvoicePartiallyPaidDomainEvent(
+                Id,
+                TenantId,
+                InvoiceNumber,
+                paymentId ?? 0,
+                CurrentAccountId,
+                amount.Amount,
+                PaidAmount.Amount,
+                RemainingAmount.Amount,
+                Currency));
         }
     }
 

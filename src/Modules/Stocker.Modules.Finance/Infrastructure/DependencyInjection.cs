@@ -3,9 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Stocker.Modules.Finance.Domain.Repositories;
+using Stocker.Modules.Finance.Domain.Services;
 using Stocker.Modules.Finance.Infrastructure.EventConsumers;
 using Stocker.Modules.Finance.Infrastructure.Persistence;
 using Stocker.Modules.Finance.Infrastructure.Persistence.Repositories;
+using Stocker.Modules.Finance.Infrastructure.Services;
 using Stocker.Modules.Finance.Interfaces;
 using Stocker.SharedKernel.Interfaces;
 
@@ -78,6 +80,11 @@ public static class DependencyInjection
 
         // Register Cross-Module Services (Contract Implementations)
         services.AddScoped<Shared.Contracts.Finance.IFinanceInvoiceService, Application.Services.FinanceInvoiceService>();
+
+        // Register Domain Services
+        services.AddScoped<ITaxCalculationService, TaxCalculationService>();
+        services.AddScoped<IInvoiceNumberGenerator, InvoiceNumberGenerator>();
+        services.AddScoped<ICurrentAccountTransactionService, CurrentAccountTransactionService>();
 
         return services;
     }

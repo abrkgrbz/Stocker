@@ -48,5 +48,20 @@ public enum NotificationType
     /// <summary>
     /// User-related notification
     /// </summary>
-    User
+    User,
+
+    /// <summary>
+    /// CRM-related notification (leads, deals, customers, activities)
+    /// </summary>
+    CRM,
+
+    /// <summary>
+    /// Inventory-related notification (stock levels, transfers, adjustments)
+    /// </summary>
+    Inventory,
+
+    /// <summary>
+    /// HR-related notification (employees, leaves, attendance, payroll)
+    /// </summary>
+    HR
 }

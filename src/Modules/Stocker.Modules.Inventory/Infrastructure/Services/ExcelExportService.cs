@@ -493,7 +493,7 @@ public class ExcelExportService : IExcelExportService
 
                         if (!ParseBoolSafe(row.Cell(20).GetString(), true))
                         {
-                            product.Deactivate();
+                            product.Deactivate("Excel Import", "Imported as inactive");
                         }
 
                         await _productRepository.AddAsync(product, cancellationToken);

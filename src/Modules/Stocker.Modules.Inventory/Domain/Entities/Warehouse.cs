@@ -1,5 +1,6 @@
 using Stocker.SharedKernel.Common;
 using Stocker.Domain.Common.ValueObjects;
+using Stocker.Modules.Inventory.Domain.Events;
 
 namespace Stocker.Modules.Inventory.Domain.Entities;
 
@@ -15,14 +16,14 @@ public class Warehouse : BaseEntity
     public decimal TotalArea { get; private set; }
     public bool IsActive { get; private set; }
     public bool IsDefault { get; private set; }
-    
+
     public virtual ICollection<Location> Locations { get; private set; }
     public virtual ICollection<WarehouseZone> Zones { get; private set; }
     public virtual ICollection<Stock> Stocks { get; private set; }
     public virtual ICollection<StockMovement> StockMovements { get; private set; }
 
     protected Warehouse() { }
-    
+
     public Warehouse(string code, string name, int? branchId = null)
     {
         Code = code;
@@ -35,7 +36,20 @@ public class Warehouse : BaseEntity
         Stocks = new List<Stock>();
         StockMovements = new List<StockMovement>();
     }
-    
+
+    /// <summary>
+    /// Depo oluşturulduktan sonra domain event fırlatır.
+    /// </summary>
+    public void RaiseCreatedEvent()
+    {
+        RaiseDomainEvent(new WarehouseCreatedDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            Name,
+            BranchId));
+    }
+
     public void UpdateWarehouse(
         string name,
         string? description,
@@ -48,23 +62,55 @@ public class Warehouse : BaseEntity
         Address = address;
         Phone = phone;
         Manager = manager;
+
+        RaiseDomainEvent(new WarehouseUpdatedDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            Name,
+            Manager));
     }
-    
+
     public void SetAsDefault()
     {
         IsDefault = true;
+
+        RaiseDomainEvent(new WarehouseSetAsDefaultDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            Name));
     }
-    
+
     public void UnsetDefault()
     {
         IsDefault = false;
     }
-    
+
     public void SetTotalArea(decimal area)
     {
         TotalArea = area;
     }
-    
-    public void Activate() => IsActive = true;
-    public void Deactivate() => IsActive = false;
+
+    public void Activate()
+    {
+        IsActive = true;
+
+        RaiseDomainEvent(new WarehouseActivatedDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            Name));
+    }
+
+    public void Deactivate()
+    {
+        IsActive = false;
+
+        RaiseDomainEvent(new WarehouseDeactivatedDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            Name));
+    }
 }

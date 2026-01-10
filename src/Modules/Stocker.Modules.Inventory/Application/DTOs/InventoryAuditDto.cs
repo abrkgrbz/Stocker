@@ -154,6 +154,8 @@ public static class InventoryEntityTypes
     public const string ProductAttribute = "ProductAttribute";
     public const string ProductVariant = "ProductVariant";
     public const string ProductBundle = "ProductBundle";
+    public const string CycleCount = "CycleCount";
+    public const string StockAdjustment = "StockAdjustment";
 
     public static readonly Dictionary<string, string> Labels = new()
     {
@@ -175,6 +177,8 @@ public static class InventoryEntityTypes
         { ProductAttribute, "Ürün Özelliği" },
         { ProductVariant, "Ürün Varyantı" },
         { ProductBundle, "Ürün Paketi" },
+        { CycleCount, "Dönemsel Sayım" },
+        { StockAdjustment, "Stok Düzeltme" },
     };
 }
 

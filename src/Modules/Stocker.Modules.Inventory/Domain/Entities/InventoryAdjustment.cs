@@ -1,4 +1,5 @@
 using Stocker.SharedKernel.Common;
+using Stocker.Modules.Inventory.Domain.Events;
 
 namespace Stocker.Modules.Inventory.Domain.Entities;
 
@@ -148,6 +149,25 @@ public class InventoryAdjustment : BaseEntity
         Status = AdjustmentStatus.Draft;
     }
 
+    /// <summary>
+    /// Düzeltme oluşturulduktan sonra domain event fırlatır.
+    /// Bu metod repository veya application layer tarafından çağrılmalıdır.
+    /// </summary>
+    public void RaiseCreatedEvent()
+    {
+        RaiseDomainEvent(new InventoryAdjustmentCreatedDomainEvent(
+            Id,
+            TenantId,
+            AdjustmentNumber,
+            AdjustmentDate,
+            WarehouseId,
+            LocationId,
+            AdjustmentType.ToString(),
+            Reason.ToString(),
+            _items.Count,
+            TotalCostImpact));
+    }
+
     public static InventoryAdjustment CreateFromStockCount(
         string adjustmentNumber,
         int warehouseId,
@@ -225,6 +245,14 @@ public class InventoryAdjustment : BaseEntity
         ApprovedBy = approvedBy;
         ApprovedDate = DateTime.UtcNow;
         Status = AdjustmentStatus.Approved;
+
+        RaiseDomainEvent(new InventoryAdjustmentApprovedDomainEvent(
+            Id,
+            TenantId,
+            AdjustmentNumber,
+            approvedBy,
+            ApprovedDate.Value,
+            TotalCostImpact));
     }
 
     public void Reject(string rejectedBy, string reason)
@@ -236,6 +264,14 @@ public class InventoryAdjustment : BaseEntity
         ApprovedDate = DateTime.UtcNow;
         RejectionReason = reason;
         Status = AdjustmentStatus.Rejected;
+
+        RaiseDomainEvent(new InventoryAdjustmentRejectedDomainEvent(
+            Id,
+            TenantId,
+            AdjustmentNumber,
+            rejectedBy,
+            reason,
+            ApprovedDate.Value));
     }
 
     public void Process()

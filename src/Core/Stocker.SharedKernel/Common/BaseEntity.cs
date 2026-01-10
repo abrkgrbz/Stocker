@@ -1,9 +1,12 @@
 using Stocker.SharedKernel.MultiTenancy;
+using Stocker.SharedKernel.Primitives;
 
 namespace Stocker.SharedKernel.Common;
 
 public abstract class BaseEntity : ITenantEntity
 {
+    private readonly List<IDomainEvent> _domainEvents = new();
+
     public int Id { get; protected set; }
     public Guid TenantId { get; protected set; }
     public DateTime CreatedDate { get; protected set; }
@@ -13,10 +16,22 @@ public abstract class BaseEntity : ITenantEntity
     public bool IsDeleted { get; protected set; }
     public DateTime? DeletedDate { get; protected set; }
 
+    public IReadOnlyList<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+
     protected BaseEntity()
     {
         CreatedDate = DateTime.UtcNow;
         IsDeleted = false;
+    }
+
+    protected void RaiseDomainEvent(IDomainEvent domainEvent)
+    {
+        _domainEvents.Add(domainEvent);
+    }
+
+    public void ClearDomainEvents()
+    {
+        _domainEvents.Clear();
     }
 
     public void SetTenantId(Guid tenantId)

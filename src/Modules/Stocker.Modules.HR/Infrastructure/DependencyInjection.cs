@@ -2,8 +2,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Domain.Services;
 using Stocker.Modules.HR.Infrastructure.Persistence;
 using Stocker.Modules.HR.Infrastructure.Repositories;
+using Stocker.Modules.HR.Infrastructure.Services;
 using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Interfaces;
 
@@ -124,6 +126,9 @@ public static class DependencyInjection
 
         // Payroll Repositories
         services.AddScoped<IPayslipRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().Payslips);
+
+        // Notification Service
+        services.AddScoped<IHrNotificationService, HrNotificationService>();
 
         return services;
     }

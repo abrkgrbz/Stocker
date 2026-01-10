@@ -11,6 +11,8 @@ public class DeactivateProductCommand : IRequest<Result>
 {
     public Guid TenantId { get; set; }
     public int ProductId { get; set; }
+    public string DeactivatedBy { get; set; } = "System";
+    public string? Reason { get; set; }
 }
 
 /// <summary>
@@ -33,7 +35,7 @@ public class DeactivateProductCommandHandler : IRequestHandler<DeactivateProduct
             return Result.Failure(Error.NotFound("Product", $"Product with ID {request.ProductId} not found"));
         }
 
-        product.Deactivate();
+        product.Deactivate(request.DeactivatedBy, request.Reason);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

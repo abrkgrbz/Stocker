@@ -1,5 +1,6 @@
 using Stocker.SharedKernel.Common;
 using Stocker.Modules.Inventory.Domain.Enums;
+using Stocker.Modules.Inventory.Domain.Events;
 
 namespace Stocker.Modules.Inventory.Domain.Entities;
 
@@ -55,6 +56,27 @@ public class StockReservation : BaseEntity
         CreatedByUserId = createdByUserId;
     }
 
+    /// <summary>
+    /// Rezervasyon oluşturulduktan sonra domain event fırlatır.
+    /// Bu metod repository veya application layer tarafından çağrılmalıdır.
+    /// </summary>
+    public void RaiseCreatedEvent()
+    {
+        RaiseDomainEvent(new StockReservationCreatedDomainEvent(
+            Id,
+            TenantId,
+            ReservationNumber,
+            ProductId,
+            WarehouseId,
+            LocationId,
+            Quantity,
+            ReservationType,
+            ReservationDate,
+            ExpirationDate,
+            ReferenceDocumentType,
+            ReferenceDocumentNumber));
+    }
+
     public void SetLocation(int? locationId)
     {
         LocationId = locationId;
@@ -104,17 +126,37 @@ public class StockReservation : BaseEntity
         FulfilledQuantity = Quantity;
         Status = ReservationStatus.Fulfilled;
         FulfilledDate = DateTime.UtcNow;
+
+        RaiseDomainEvent(new StockReservationFulfilledDomainEvent(
+            Id,
+            TenantId,
+            ReservationNumber,
+            ProductId,
+            WarehouseId,
+            Quantity,
+            FulfilledDate.Value));
     }
 
-    public void Cancel(string? reason = null)
+    public void Cancel(string cancelledBy, string? reason = null)
     {
         if (Status == ReservationStatus.Fulfilled || Status == ReservationStatus.Cancelled)
             throw new InvalidOperationException("Cannot cancel fulfilled or already cancelled reservations");
 
+        var releasedQuantity = RemainingQuantity;
         Status = ReservationStatus.Cancelled;
         CancelledDate = DateTime.UtcNow;
         if (!string.IsNullOrEmpty(reason))
             Notes = string.IsNullOrEmpty(Notes) ? reason : $"{Notes}; Cancelled: {reason}";
+
+        RaiseDomainEvent(new StockReservationCancelledDomainEvent(
+            Id,
+            TenantId,
+            ReservationNumber,
+            ProductId,
+            WarehouseId,
+            releasedQuantity,
+            cancelledBy,
+            CancelledDate.Value));
     }
 
     public void Expire()
@@ -122,7 +164,17 @@ public class StockReservation : BaseEntity
         if (Status != ReservationStatus.Active && Status != ReservationStatus.PartiallyFulfilled)
             throw new InvalidOperationException("Can only expire active or partially fulfilled reservations");
 
+        var releasedQuantity = RemainingQuantity;
         Status = ReservationStatus.Expired;
+
+        RaiseDomainEvent(new StockReservationExpiredDomainEvent(
+            Id,
+            TenantId,
+            ReservationNumber,
+            ProductId,
+            WarehouseId,
+            releasedQuantity,
+            ExpirationDate ?? DateTime.UtcNow));
     }
 
     public bool IsExpired()

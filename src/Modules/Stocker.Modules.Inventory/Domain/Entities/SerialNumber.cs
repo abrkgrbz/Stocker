@@ -1,5 +1,6 @@
 using Stocker.SharedKernel.Common;
 using Stocker.Modules.Inventory.Domain.Enums;
+using Stocker.Modules.Inventory.Domain.Events;
 
 namespace Stocker.Modules.Inventory.Domain.Entities;
 
@@ -39,6 +40,15 @@ public class SerialNumber : BaseEntity
         Status = SerialNumberStatus.Available;
     }
 
+    public void RaiseCreatedEvent()
+    {
+        RaiseDomainEvent(new SerialNumberCreatedDomainEvent(
+            Id,
+            TenantId,
+            Serial,
+            ProductId));
+    }
+
     public void SetWarehouse(int? warehouseId, int? locationId = null)
     {
         WarehouseId = warehouseId;
@@ -69,6 +79,14 @@ public class SerialNumber : BaseEntity
         Status = SerialNumberStatus.InStock;
         ReceivedDate = DateTime.UtcNow;
         PurchaseOrderId = purchaseOrderId;
+
+        RaiseDomainEvent(new SerialNumberReceivedDomainEvent(
+            Id,
+            TenantId,
+            Serial,
+            ProductId,
+            WarehouseId,
+            ReceivedDate.Value));
     }
 
     public void Reserve(Guid salesOrderId)
@@ -78,6 +96,13 @@ public class SerialNumber : BaseEntity
 
         Status = SerialNumberStatus.Reserved;
         SalesOrderId = salesOrderId;
+
+        RaiseDomainEvent(new SerialNumberReservedDomainEvent(
+            Id,
+            TenantId,
+            Serial,
+            ProductId,
+            salesOrderId));
     }
 
     public void ReleaseReservation()
@@ -87,6 +112,12 @@ public class SerialNumber : BaseEntity
 
         Status = SerialNumberStatus.InStock;
         SalesOrderId = null;
+
+        RaiseDomainEvent(new SerialNumberReservationReleasedDomainEvent(
+            Id,
+            TenantId,
+            Serial,
+            ProductId));
     }
 
     public void Sell(Guid customerId, Guid salesOrderId, int? warrantyMonths = null)
@@ -106,6 +137,16 @@ public class SerialNumber : BaseEntity
             WarrantyStartDate = DateTime.UtcNow;
             WarrantyEndDate = DateTime.UtcNow.AddMonths(warrantyMonths.Value);
         }
+
+        RaiseDomainEvent(new SerialNumberSoldDomainEvent(
+            Id,
+            TenantId,
+            Serial,
+            ProductId,
+            customerId,
+            salesOrderId,
+            SoldDate.Value,
+            WarrantyEndDate));
     }
 
     public void Return(int warehouseId, int? locationId = null)
@@ -116,6 +157,14 @@ public class SerialNumber : BaseEntity
         Status = SerialNumberStatus.Returned;
         WarehouseId = warehouseId;
         LocationId = locationId;
+
+        RaiseDomainEvent(new SerialNumberReturnedDomainEvent(
+            Id,
+            TenantId,
+            Serial,
+            ProductId,
+            warehouseId,
+            DateTime.UtcNow));
     }
 
     public void MarkDefective(string? reason = null)
@@ -123,6 +172,13 @@ public class SerialNumber : BaseEntity
         Status = SerialNumberStatus.Defective;
         if (!string.IsNullOrEmpty(reason))
             Notes = string.IsNullOrEmpty(Notes) ? reason : $"{Notes}; Defective: {reason}";
+
+        RaiseDomainEvent(new SerialNumberMarkedDefectiveDomainEvent(
+            Id,
+            TenantId,
+            Serial,
+            ProductId,
+            reason));
     }
 
     public void MarkInRepair()
@@ -131,6 +187,12 @@ public class SerialNumber : BaseEntity
             throw new InvalidOperationException($"Cannot mark as in repair in status {Status}");
 
         Status = SerialNumberStatus.InRepair;
+
+        RaiseDomainEvent(new SerialNumberSentToRepairDomainEvent(
+            Id,
+            TenantId,
+            Serial,
+            ProductId));
     }
 
     public void CompleteRepair()
@@ -139,6 +201,12 @@ public class SerialNumber : BaseEntity
             throw new InvalidOperationException($"Cannot complete repair in status {Status}");
 
         Status = SerialNumberStatus.InStock;
+
+        RaiseDomainEvent(new SerialNumberRepairCompletedDomainEvent(
+            Id,
+            TenantId,
+            Serial,
+            ProductId));
     }
 
     public void Scrap(string? reason = null)
@@ -146,6 +214,13 @@ public class SerialNumber : BaseEntity
         Status = SerialNumberStatus.Scrapped;
         if (!string.IsNullOrEmpty(reason))
             Notes = string.IsNullOrEmpty(Notes) ? reason : $"{Notes}; Scrapped: {reason}";
+
+        RaiseDomainEvent(new SerialNumberScrappedDomainEvent(
+            Id,
+            TenantId,
+            Serial,
+            ProductId,
+            reason));
     }
 
     public void MarkLost(string? reason = null)
@@ -153,6 +228,13 @@ public class SerialNumber : BaseEntity
         Status = SerialNumberStatus.Lost;
         if (!string.IsNullOrEmpty(reason))
             Notes = string.IsNullOrEmpty(Notes) ? reason : $"{Notes}; Lost: {reason}";
+
+        RaiseDomainEvent(new SerialNumberLostDomainEvent(
+            Id,
+            TenantId,
+            Serial,
+            ProductId,
+            reason));
     }
 
     public bool IsUnderWarranty()

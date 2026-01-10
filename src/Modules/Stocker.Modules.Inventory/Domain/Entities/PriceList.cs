@@ -1,5 +1,6 @@
 using Stocker.SharedKernel.Common;
 using Stocker.Domain.Common.ValueObjects;
+using Stocker.Modules.Inventory.Domain.Events;
 
 namespace Stocker.Modules.Inventory.Domain.Entities;
 
@@ -37,16 +38,39 @@ public class PriceList : BaseEntity
         Items = new List<PriceListItem>();
     }
 
+    public void RaiseCreatedEvent()
+    {
+        RaiseDomainEvent(new PriceListCreatedDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            Name,
+            Currency));
+    }
+
     public void UpdatePriceList(string name, string? description, string currency)
     {
         Name = name;
         Description = description;
         Currency = currency;
+
+        RaiseDomainEvent(new PriceListUpdatedDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            Name,
+            Currency));
     }
 
     public void SetAsDefault()
     {
         IsDefault = true;
+
+        RaiseDomainEvent(new PriceListSetAsDefaultDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            Name));
     }
 
     public void UnsetDefault()
@@ -97,6 +121,15 @@ public class PriceList : BaseEntity
 
         var item = new PriceListItem(Id, productId, price);
         Items.Add(item);
+
+        RaiseDomainEvent(new PriceListItemAddedDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            productId,
+            price.Amount,
+            price.Currency));
+
         return item;
     }
 
@@ -106,7 +139,17 @@ public class PriceList : BaseEntity
         if (item == null)
             throw new InvalidOperationException("Product not found in price list");
 
+        var oldPrice = item.Price.Amount;
         item.UpdatePrice(price);
+
+        RaiseDomainEvent(new PriceListItemUpdatedDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            productId,
+            oldPrice,
+            price.Amount,
+            price.Currency));
     }
 
     public void RemoveItem(int productId)
@@ -115,6 +158,12 @@ public class PriceList : BaseEntity
         if (item != null)
         {
             Items.Remove(item);
+
+            RaiseDomainEvent(new PriceListItemRemovedDomainEvent(
+                Id,
+                TenantId,
+                Code,
+                productId));
         }
     }
 
@@ -131,8 +180,27 @@ public class PriceList : BaseEntity
         return IsActive;
     }
 
-    public void Activate() => IsActive = true;
-    public void Deactivate() => IsActive = false;
+    public void Activate()
+    {
+        IsActive = true;
+
+        RaiseDomainEvent(new PriceListActivatedDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            Name));
+    }
+
+    public void Deactivate()
+    {
+        IsActive = false;
+
+        RaiseDomainEvent(new PriceListDeactivatedDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            Name));
+    }
 }
 
 /// <summary>

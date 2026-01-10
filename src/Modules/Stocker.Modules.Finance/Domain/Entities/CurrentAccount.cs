@@ -344,6 +344,31 @@ public class CurrentAccount : BaseEntity
         RecalculateBalance();
     }
 
+
+    /// <summary>
+    /// Bakiyeyi doğrudan günceller (hareket toplamından hesaplanır)
+    /// </summary>
+    public void UpdateBalance(Money balance)
+    {
+        if (balance.Currency != Currency)
+            throw new InvalidOperationException("Currency mismatch");
+
+        Balance = balance;
+        
+        // Update used credit based on new balance
+        if (balance.Amount > 0)
+        {
+            UsedCredit = balance;
+        }
+        else
+        {
+            UsedCredit = Money.Zero(Currency);
+        }
+
+        RecalculateAvailableCredit();
+        UpdateRiskStatus();
+    }
+
     private void RecalculateBalance()
     {
         // Net balance = Debit - Credit

@@ -1,5 +1,6 @@
 using Stocker.SharedKernel.Common;
 using Stocker.Modules.Inventory.Domain.Enums;
+using Stocker.Modules.Inventory.Domain.Events;
 
 namespace Stocker.Modules.Inventory.Domain.Entities;
 
@@ -24,15 +25,15 @@ public class StockMovement : BaseEntity
     public int UserId { get; private set; }
     public bool IsReversed { get; private set; }
     public int? ReversedMovementId { get; private set; }
-    
+
     public virtual Product Product { get; private set; }
     public virtual Warehouse Warehouse { get; private set; }
     public virtual Location? FromLocation { get; private set; }
     public virtual Location? ToLocation { get; private set; }
     public virtual StockMovement? ReversedMovement { get; private set; }
-    
+
     protected StockMovement() { }
-    
+
     public StockMovement(
         string documentNumber,
         DateTime movementDate,
@@ -53,44 +54,79 @@ public class StockMovement : BaseEntity
         UserId = userId;
         IsReversed = false;
     }
-    
+
+    /// <summary>
+    /// Stok hareketi oluşturulduktan sonra domain event fırlatır.
+    /// Bu metod repository veya application layer tarafından çağrılmalıdır.
+    /// </summary>
+    public void RaiseCreatedEvent()
+    {
+        RaiseDomainEvent(new StockMovementCreatedDomainEvent(
+            Id,
+            TenantId,
+            DocumentNumber,
+            MovementDate,
+            ProductId,
+            WarehouseId,
+            MovementType,
+            Quantity,
+            UnitCost,
+            TotalCost,
+            LotNumber,
+            SerialNumber,
+            ReferenceDocumentType,
+            ReferenceDocumentNumber));
+    }
+
     public void SetLocations(int? fromLocationId, int? toLocationId)
     {
         FromLocationId = fromLocationId;
         ToLocationId = toLocationId;
     }
-    
+
     public void SetSerialNumber(string serialNumber)
     {
         SerialNumber = serialNumber;
     }
-    
+
     public void SetLotNumber(string lotNumber)
     {
         LotNumber = lotNumber;
     }
-    
+
     public void SetReference(string documentType, string documentNumber, int? documentId = null)
     {
         ReferenceDocumentType = documentType;
         ReferenceDocumentNumber = documentNumber;
         ReferenceDocumentId = documentId;
     }
-    
+
     public void SetDescription(string description)
     {
         Description = description;
     }
-    
-    public void Reverse(int reversedMovementId)
+
+    public void Reverse(int reversedMovementId, string reversedBy, string? reason = null)
     {
         if (IsReversed)
             throw new InvalidOperationException("Movement has already been reversed");
-            
+
         IsReversed = true;
         ReversedMovementId = reversedMovementId;
+
+        RaiseDomainEvent(new StockMovementReversedDomainEvent(
+            Id,
+            TenantId,
+            DocumentNumber,
+            reversedMovementId,
+            ProductId,
+            WarehouseId,
+            MovementType,
+            Quantity,
+            reversedBy,
+            reason));
     }
-    
+
     public bool IsIncoming()
     {
         return MovementType == StockMovementType.Purchase ||
@@ -99,7 +135,7 @@ public class StockMovement : BaseEntity
                MovementType == StockMovementType.Production ||
                MovementType == StockMovementType.AdjustmentIncrease;
     }
-    
+
     public bool IsOutgoing()
     {
         return MovementType == StockMovementType.Sales ||

@@ -108,7 +108,7 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand,
                         allocation.SetDescription(allocationDto.Notes);
                     }
 
-                    payment.AddAllocation(allocation);
+                    payment.AddAllocation(allocation, invoice.InvoiceNumber);
                 }
             }
             await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -371,7 +371,7 @@ public class CancelPaymentCommandHandler : IRequestHandler<CancelPaymentCommand,
 
         try
         {
-            payment.Cancel(request.Reason ?? "İptal edildi");
+            payment.Cancel("System", request.Reason ?? "İptal edildi");
         }
         catch (InvalidOperationException ex)
         {
@@ -535,7 +535,7 @@ public class AllocatePaymentCommandHandler : IRequestHandler<AllocatePaymentComm
                     allocation.SetDescription(allocationDto.Notes);
                 }
 
-                payment.AddAllocation(allocation);
+                payment.AddAllocation(allocation, invoice.InvoiceNumber);
             }
             catch (InvalidOperationException ex)
             {

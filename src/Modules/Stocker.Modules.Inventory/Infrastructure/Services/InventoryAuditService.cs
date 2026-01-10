@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.Domain.Tenant.Entities;
+using Stocker.Modules.Inventory.Application.Contracts;
 using Stocker.Modules.Inventory.Application.DTOs;
-using Stocker.Modules.Inventory.Application.Services;
 using Stocker.Modules.Inventory.Infrastructure.Persistence;
 using Stocker.SharedKernel.Interfaces;
 
@@ -509,6 +509,222 @@ public class InventoryAuditService : IInventoryAuditService
         }
 
         return dto;
+    }
+
+    #endregion
+
+    #region IInventoryAuditService (Contracts) Implementation
+
+    public async Task LogProductCreatedAsync(
+        Guid tenantId,
+        int productId,
+        string productCode,
+        string productName,
+        string? createdBy = null,
+        CancellationToken cancellationToken = default)
+    {
+        await LogAsync(
+            InventoryEntityTypes.Product,
+            productId.ToString(),
+            productName,
+            InventoryAuditActions.Created,
+            additionalData: JsonSerializer.Serialize(new { productCode, createdBy }, JsonOptions),
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task LogProductUpdatedAsync(
+        Guid tenantId,
+        int productId,
+        string productCode,
+        string productName,
+        string? changes = null,
+        string? updatedBy = null,
+        CancellationToken cancellationToken = default)
+    {
+        await LogAsync(
+            InventoryEntityTypes.Product,
+            productId.ToString(),
+            productName,
+            InventoryAuditActions.Updated,
+            additionalData: JsonSerializer.Serialize(new { productCode, changes, updatedBy }, JsonOptions),
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task LogStockMovementAsync(
+        Guid tenantId,
+        int productId,
+        int warehouseId,
+        string movementType,
+        decimal quantity,
+        decimal previousQuantity,
+        decimal newQuantity,
+        string? reference = null,
+        string? performedBy = null,
+        CancellationToken cancellationToken = default)
+    {
+        await LogAsync(
+            InventoryEntityTypes.StockMovement,
+            $"{productId}-{warehouseId}",
+            $"Product {productId} in Warehouse {warehouseId}",
+            movementType,
+            oldValue: new { quantity = previousQuantity },
+            newValue: new { quantity = newQuantity },
+            additionalData: JsonSerializer.Serialize(new { movementType, quantity, reference, performedBy }, JsonOptions),
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task LogStockCountAsync(
+        Guid tenantId,
+        int stockCountId,
+        string countNumber,
+        int warehouseId,
+        string action,
+        string? performedBy = null,
+        string? notes = null,
+        CancellationToken cancellationToken = default)
+    {
+        await LogAsync(
+            InventoryEntityTypes.StockCount,
+            stockCountId.ToString(),
+            countNumber,
+            action,
+            additionalData: JsonSerializer.Serialize(new { warehouseId, performedBy, notes }, JsonOptions),
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task LogStockAdjustmentAsync(
+        Guid tenantId,
+        int productId,
+        int warehouseId,
+        decimal previousQuantity,
+        decimal adjustedQuantity,
+        decimal newQuantity,
+        string adjustmentReason,
+        string? reference = null,
+        string? performedBy = null,
+        CancellationToken cancellationToken = default)
+    {
+        await LogAsync(
+            InventoryEntityTypes.StockAdjustment,
+            $"{productId}-{warehouseId}",
+            $"Product {productId} Adjustment",
+            "Adjusted",
+            oldValue: new { quantity = previousQuantity },
+            newValue: new { quantity = newQuantity },
+            additionalData: JsonSerializer.Serialize(new { adjustedQuantity, adjustmentReason, reference, performedBy }, JsonOptions),
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task LogLotBatchEventAsync(
+        Guid tenantId,
+        int lotBatchId,
+        string lotNumber,
+        int productId,
+        string eventType,
+        string? details = null,
+        string? performedBy = null,
+        CancellationToken cancellationToken = default)
+    {
+        await LogAsync(
+            InventoryEntityTypes.LotBatch,
+            lotBatchId.ToString(),
+            lotNumber,
+            eventType,
+            additionalData: JsonSerializer.Serialize(new { productId, details, performedBy }, JsonOptions),
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task LogSerialNumberEventAsync(
+        Guid tenantId,
+        int serialNumberId,
+        string serial,
+        int productId,
+        string eventType,
+        string? details = null,
+        string? performedBy = null,
+        CancellationToken cancellationToken = default)
+    {
+        await LogAsync(
+            InventoryEntityTypes.SerialNumber,
+            serialNumberId.ToString(),
+            serial,
+            eventType,
+            additionalData: JsonSerializer.Serialize(new { productId, details, performedBy }, JsonOptions),
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task LogPriceListEventAsync(
+        Guid tenantId,
+        int priceListId,
+        string priceListCode,
+        string eventType,
+        string? details = null,
+        string? performedBy = null,
+        CancellationToken cancellationToken = default)
+    {
+        await LogAsync(
+            InventoryEntityTypes.PriceList,
+            priceListId.ToString(),
+            priceListCode,
+            eventType,
+            additionalData: JsonSerializer.Serialize(new { details, performedBy }, JsonOptions),
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task LogWarehouseEventAsync(
+        Guid tenantId,
+        int warehouseId,
+        string warehouseCode,
+        string eventType,
+        string? details = null,
+        string? performedBy = null,
+        CancellationToken cancellationToken = default)
+    {
+        await LogAsync(
+            InventoryEntityTypes.Warehouse,
+            warehouseId.ToString(),
+            warehouseCode,
+            eventType,
+            additionalData: JsonSerializer.Serialize(new { details, performedBy }, JsonOptions),
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task LogCycleCountEventAsync(
+        Guid tenantId,
+        int cycleCountId,
+        string countNumber,
+        int warehouseId,
+        int categoryId,
+        string eventType,
+        string? details = null,
+        string? performedBy = null,
+        CancellationToken cancellationToken = default)
+    {
+        await LogAsync(
+            InventoryEntityTypes.CycleCount,
+            cycleCountId.ToString(),
+            countNumber,
+            eventType,
+            additionalData: JsonSerializer.Serialize(new { warehouseId, categoryId, details, performedBy }, JsonOptions),
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task LogStockCountEventAsync(
+        Guid tenantId,
+        int stockCountId,
+        string countNumber,
+        string eventType,
+        string? details = null,
+        string? userId = null,
+        CancellationToken cancellationToken = default)
+    {
+        await LogAsync(
+            InventoryEntityTypes.StockCount,
+            stockCountId.ToString(),
+            countNumber,
+            eventType,
+            additionalData: JsonSerializer.Serialize(new { details, userId }, JsonOptions),
+            cancellationToken: cancellationToken);
     }
 
     #endregion

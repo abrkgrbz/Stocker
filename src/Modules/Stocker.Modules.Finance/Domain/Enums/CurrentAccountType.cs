@@ -158,6 +158,16 @@ public enum CurrentAccountTransactionType
     Interest = 18,
 
     /// <summary>
+    /// Fatura İptali (Invoice Cancellation)
+    /// </summary>
+    InvoiceCancellation = 19,
+
+    /// <summary>
+    /// Ödeme İptali (Payment Cancellation)
+    /// </summary>
+    PaymentCancellation = 20,
+
+    /// <summary>
     /// Diğer (Other)
     /// </summary>
     Other = 99

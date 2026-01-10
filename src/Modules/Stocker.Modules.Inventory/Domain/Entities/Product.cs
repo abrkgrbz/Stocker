@@ -1,6 +1,7 @@
 using Stocker.SharedKernel.Common;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.Inventory.Domain.Enums;
+using Stocker.Modules.Inventory.Domain.Events;
 
 namespace Stocker.Modules.Inventory.Domain.Entities;
 
@@ -93,7 +94,27 @@ public class Product : BaseEntity
         SerialNumbers = new List<SerialNumber>();
         LotBatches = new List<LotBatch>();
     }
-    
+
+    /// <summary>
+    /// Ürün oluşturulduktan sonra domain event fırlatır.
+    /// Bu metod repository veya application layer tarafından çağrılmalıdır.
+    /// </summary>
+    public void RaiseCreatedEvent()
+    {
+        RaiseDomainEvent(new ProductCreatedDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            Name,
+            SKU,
+            Barcode,
+            CategoryId,
+            BrandId,
+            ProductType.ToString(),
+            CostPrice?.Amount ?? 0,
+            UnitPrice.Amount));
+    }
+
     public void UpdateProductInfo(
         string name,
         string? description,
@@ -106,6 +127,14 @@ public class Product : BaseEntity
         UnitPrice = unitPrice;
         CostPrice = costPrice;
         VatRate = vatRate;
+
+        RaiseDomainEvent(new ProductUpdatedDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            Name,
+            CostPrice?.Amount ?? 0,
+            UnitPrice.Amount));
     }
     
     public void SetStockLevels(
@@ -116,6 +145,15 @@ public class Product : BaseEntity
         MinimumStock = minimumStock;
         MaximumStock = maximumStock;
         ReorderPoint = reorderPoint;
+
+        RaiseDomainEvent(new ProductStockLevelsChangedDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            MinimumStock,
+            MaximumStock,
+            ReorderPoint,
+            ReorderQuantity));
     }
     
     public void SetCategory(int categoryId)
@@ -189,6 +227,27 @@ public class Product : BaseEntity
         LeadTimeDays = leadTimeDays;
     }
 
-    public void Activate() => IsActive = true;
-    public void Deactivate() => IsActive = false;
+    public void Activate()
+    {
+        IsActive = true;
+
+        RaiseDomainEvent(new ProductActivatedDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            Name));
+    }
+
+    public void Deactivate(string deactivatedBy, string? reason = null)
+    {
+        IsActive = false;
+
+        RaiseDomainEvent(new ProductDeactivatedDomainEvent(
+            Id,
+            TenantId,
+            Code,
+            Name,
+            deactivatedBy,
+            reason));
+    }
 }

@@ -14,6 +14,7 @@
     <ProjectReference Include="..\..\Core\Stocker.Application\Stocker.Application.csproj" />
     <ProjectReference Include="..\..\Shared\Stocker.Shared.Events\Stocker.Shared.Events.csproj" />
     <ProjectReference Include="..\..\Shared\Stocker.Shared.Contracts\Stocker.Shared.Contracts.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Stocker.SignalR\Stocker.SignalR.csproj" />
   </ItemGroup>
 
   <ItemGroup>

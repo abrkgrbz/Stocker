@@ -1,6 +1,7 @@
 using Stocker.SharedKernel.Common;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.Finance.Domain.Enums;
+using Stocker.Modules.Finance.Domain.Events;
 
 namespace Stocker.Modules.Finance.Domain.Entities;
 
@@ -280,6 +281,17 @@ public class Payment : BaseEntity
         UnallocatedAmount = amount;
         Status = PaymentStatus.Pending;
         IsPosTransaction = false;
+
+        RaiseDomainEvent(new PaymentCreatedDomainEvent(
+            Id,
+            TenantId,
+            paymentNumber,
+            paymentDate,
+            paymentType.ToString(),
+            direction.ToString(),
+            currentAccountId,
+            amount.Amount,
+            currency));
     }
 
     public void SetValueDate(DateTime valueDate)
@@ -390,6 +402,13 @@ public class Payment : BaseEntity
         ApprovedByUserId = approvedByUserId;
         ApprovalDate = DateTime.UtcNow;
         ApprovalNote = note;
+
+        RaiseDomainEvent(new PaymentApprovedDomainEvent(
+            Id,
+            TenantId,
+            PaymentNumber,
+            approvedByUserId,
+            ApprovalDate.Value));
     }
 
     public void Process()
@@ -414,7 +433,7 @@ public class Payment : BaseEntity
         Notes = string.IsNullOrEmpty(Notes) ? $"Failed: {reason}" : $"{Notes}\nFailed: {reason}";
     }
 
-    public void Cancel(string reason)
+    public void Cancel(string cancelledBy, string reason)
     {
         if (Status == PaymentStatus.Cancelled)
             throw new InvalidOperationException("Payment is already cancelled");
@@ -424,14 +443,32 @@ public class Payment : BaseEntity
 
         Status = PaymentStatus.Cancelled;
         Notes = string.IsNullOrEmpty(Notes) ? $"Cancelled: {reason}" : $"{Notes}\nCancelled: {reason}";
+
+        RaiseDomainEvent(new PaymentCancelledDomainEvent(
+            Id,
+            TenantId,
+            PaymentNumber,
+            cancelledBy,
+            reason,
+            DateTime.UtcNow));
     }
 
-    public void Refund()
+    public void Refund(string refundedBy, string? reason = null)
     {
         if (Status != PaymentStatus.Completed)
             throw new InvalidOperationException("Only completed payments can be refunded");
 
         Status = PaymentStatus.Refunded;
+
+        RaiseDomainEvent(new PaymentRefundedDomainEvent(
+            Id,
+            TenantId,
+            PaymentNumber,
+            refundedBy,
+            Amount.Amount,
+            Currency,
+            reason ?? "Refund requested",
+            DateTime.UtcNow));
     }
 
     public void MarkAsBounced(string reason)
@@ -447,13 +484,23 @@ public class Payment : BaseEntity
 
     #region Allocation Management
 
-    public void AddAllocation(PaymentAllocation allocation)
+    public void AddAllocation(PaymentAllocation allocation, string invoiceNumber)
     {
         if (allocation.Amount.Amount > UnallocatedAmount.Amount)
             throw new InvalidOperationException("Allocation amount exceeds unallocated amount");
 
         Allocations.Add(allocation);
         RecalculateAllocations();
+
+        RaiseDomainEvent(new PaymentAllocatedToInvoiceDomainEvent(
+            Id,
+            TenantId,
+            PaymentNumber,
+            allocation.InvoiceId,
+            invoiceNumber,
+            allocation.Amount.Amount,
+            Currency,
+            DateTime.UtcNow));
     }
 
     public void RemoveAllocation(PaymentAllocation allocation)

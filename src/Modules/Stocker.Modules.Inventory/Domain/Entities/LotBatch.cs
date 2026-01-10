@@ -1,5 +1,6 @@
 using Stocker.SharedKernel.Common;
 using Stocker.Modules.Inventory.Domain.Enums;
+using Stocker.Modules.Inventory.Domain.Events;
 
 namespace Stocker.Modules.Inventory.Domain.Entities;
 
@@ -54,6 +55,17 @@ public class LotBatch : BaseEntity
         Stocks = new List<Stock>();
     }
 
+    public void RaiseCreatedEvent()
+    {
+        RaiseDomainEvent(new LotBatchCreatedDomainEvent(
+            Id,
+            TenantId,
+            LotNumber,
+            ProductId,
+            InitialQuantity,
+            ExpiryDate));
+    }
+
     public void SetSupplierInfo(int? supplierId, string? supplierLotNumber, Guid? purchaseOrderId = null)
     {
         SupplierId = supplierId;
@@ -84,6 +96,14 @@ public class LotBatch : BaseEntity
 
         Status = LotBatchStatus.Received;
         ReceivedDate = DateTime.UtcNow;
+
+        RaiseDomainEvent(new LotBatchReceivedDomainEvent(
+            Id,
+            TenantId,
+            LotNumber,
+            ProductId,
+            CurrentQuantity,
+            ReceivedDate.Value));
     }
 
     public void Inspect(int inspectedByUserId, bool passed, string? notes = null)
@@ -113,6 +133,13 @@ public class LotBatch : BaseEntity
 
         Status = LotBatchStatus.Approved;
         IsQuarantined = false;
+
+        RaiseDomainEvent(new LotBatchApprovedDomainEvent(
+            Id,
+            TenantId,
+            LotNumber,
+            ProductId,
+            CurrentQuantity));
     }
 
     public void Quarantine(string reason)
@@ -124,6 +151,14 @@ public class LotBatch : BaseEntity
         QuarantinedDate = DateTime.UtcNow;
         QuarantineReason = reason;
         Status = LotBatchStatus.Quarantined;
+
+        RaiseDomainEvent(new LotBatchQuarantinedDomainEvent(
+            Id,
+            TenantId,
+            LotNumber,
+            ProductId,
+            reason,
+            QuarantinedDate.Value));
     }
 
     public void ReleaseFromQuarantine()
@@ -133,6 +168,12 @@ public class LotBatch : BaseEntity
 
         IsQuarantined = false;
         Status = CurrentQuantity > 0 ? LotBatchStatus.Approved : LotBatchStatus.Exhausted;
+
+        RaiseDomainEvent(new LotBatchReleasedFromQuarantineDomainEvent(
+            Id,
+            TenantId,
+            LotNumber,
+            ProductId));
     }
 
     public void Reject(string? reason = null)
@@ -140,6 +181,13 @@ public class LotBatch : BaseEntity
         Status = LotBatchStatus.Rejected;
         if (!string.IsNullOrEmpty(reason))
             Notes = string.IsNullOrEmpty(Notes) ? reason : $"{Notes}; Rejected: {reason}";
+
+        RaiseDomainEvent(new LotBatchRejectedDomainEvent(
+            Id,
+            TenantId,
+            LotNumber,
+            ProductId,
+            reason));
     }
 
     public void Reserve(decimal quantity)
@@ -171,9 +219,23 @@ public class LotBatch : BaseEntity
 
         CurrentQuantity -= quantity;
 
+        RaiseDomainEvent(new LotBatchConsumedDomainEvent(
+            Id,
+            TenantId,
+            LotNumber,
+            ProductId,
+            quantity,
+            CurrentQuantity));
+
         if (CurrentQuantity <= 0)
         {
             Status = LotBatchStatus.Exhausted;
+
+            RaiseDomainEvent(new LotBatchExhaustedDomainEvent(
+                Id,
+                TenantId,
+                LotNumber,
+                ProductId));
         }
     }
 

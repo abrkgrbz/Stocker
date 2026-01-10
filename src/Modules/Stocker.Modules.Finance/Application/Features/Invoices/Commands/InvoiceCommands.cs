@@ -623,11 +623,7 @@ public class CancelInvoiceCommandHandler : IRequestHandler<CancelInvoiceCommand,
 
         try
         {
-            if (!string.IsNullOrEmpty(request.Reason))
-            {
-                invoice.SetNotes(invoice.Notes, $"{invoice.InternalNotes}\nİptal Nedeni: {request.Reason}");
-            }
-            invoice.Cancel();
+            invoice.Cancel("System", request.Reason);
         }
         catch (InvalidOperationException ex)
         {

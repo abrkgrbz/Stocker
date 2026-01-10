@@ -147,6 +147,17 @@ public static class DependencyInjection
         // Register Inventory Analysis Service (ABC/XYZ, turnover, dead stock)
         services.AddScoped<IInventoryAnalysisService, InventoryAnalysisService>();
 
+        // Register Event Handler Infrastructure Services
+        services.AddScoped<IInventoryNotificationService, InventoryNotificationService>();
+        services.AddScoped<IInventoryCacheService, InventoryCacheService>();
+        services.AddScoped<IInventoryStockService, InventoryStockService>();
+        services.AddScoped<IIntegrationEventPublisher, IntegrationEventPublisher>();
+
+        // Register Domain Services
+        services.AddScoped<Domain.Services.IStockLevelService, StockLevelService>();
+        services.AddScoped<Domain.Services.IStockMovementService, StockMovementService>();
+        services.AddScoped<Domain.Services.IStockReservationService, StockReservationService>();
+
         return services;
     }
 

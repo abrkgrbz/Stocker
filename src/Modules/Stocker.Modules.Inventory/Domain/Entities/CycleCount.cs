@@ -1,4 +1,5 @@
 using Stocker.SharedKernel.Common;
+using Stocker.Modules.Inventory.Domain.Events;
 
 namespace Stocker.Modules.Inventory.Domain.Entities;
 
@@ -224,6 +225,18 @@ public class CycleCount : BaseEntity
         Status = CycleCountStatus.Planned;
     }
 
+    public void RaiseCreatedEvent()
+    {
+        RaiseDomainEvent(new CycleCountCreatedDomainEvent(
+            Id,
+            TenantId,
+            PlanNumber,
+            PlanName,
+            WarehouseId,
+            CountType.ToString(),
+            ScheduledStartDate));
+    }
+
     public static CycleCount CreateAbcBased(
         string planNumber,
         string planName,
@@ -286,6 +299,14 @@ public class CycleCount : BaseEntity
 
         ActualStartDate = DateTime.UtcNow;
         Status = CycleCountStatus.InProgress;
+
+        RaiseDomainEvent(new CycleCountStartedDomainEvent(
+            Id,
+            TenantId,
+            PlanNumber,
+            WarehouseId,
+            TotalItems,
+            ActualStartDate.Value));
     }
 
     public void RecordCount(int itemId, decimal countedQuantity, string? notes = null)
@@ -340,6 +361,17 @@ public class CycleCount : BaseEntity
                 _ => null
             };
         }
+
+        RaiseDomainEvent(new CycleCountCompletedDomainEvent(
+            Id,
+            TenantId,
+            PlanNumber,
+            WarehouseId,
+            TotalItems,
+            CountedItems,
+            ItemsWithVariance,
+            AccuracyPercent,
+            ActualEndDate.Value));
     }
 
     public void Approve(string approvedBy)
@@ -350,6 +382,13 @@ public class CycleCount : BaseEntity
         ApprovedBy = approvedBy;
         ApprovedDate = DateTime.UtcNow;
         Status = CycleCountStatus.Approved;
+
+        RaiseDomainEvent(new CycleCountApprovedDomainEvent(
+            Id,
+            TenantId,
+            PlanNumber,
+            ApprovedBy,
+            ApprovedDate.Value));
     }
 
     public void Cancel(string reason)
@@ -359,6 +398,12 @@ public class CycleCount : BaseEntity
 
         CountNotes = $"İptal nedeni: {reason}. {CountNotes}";
         Status = CycleCountStatus.Cancelled;
+
+        RaiseDomainEvent(new CycleCountCancelledDomainEvent(
+            Id,
+            TenantId,
+            PlanNumber,
+            reason));
     }
 
     public void MarkAsProcessed()
@@ -367,6 +412,13 @@ public class CycleCount : BaseEntity
             throw new InvalidOperationException("Sadece onaylı sayımlar işlenebilir.");
 
         Status = CycleCountStatus.Processed;
+
+        RaiseDomainEvent(new CycleCountProcessedDomainEvent(
+            Id,
+            TenantId,
+            PlanNumber,
+            WarehouseId,
+            ItemsWithVariance));
     }
 
     public void SetZone(int? zoneId) => ZoneId = zoneId;

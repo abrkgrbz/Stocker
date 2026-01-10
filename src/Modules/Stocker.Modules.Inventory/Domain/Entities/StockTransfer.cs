@@ -1,5 +1,6 @@
 using Stocker.SharedKernel.Common;
 using Stocker.Modules.Inventory.Domain.Enums;
+using Stocker.Modules.Inventory.Domain.Events;
 
 namespace Stocker.Modules.Inventory.Domain.Entities;
 
@@ -50,6 +51,24 @@ public class StockTransfer : BaseEntity
         Status = TransferStatus.Draft;
         CreatedByUserId = createdByUserId;
         Items = new List<StockTransferItem>();
+    }
+
+    /// <summary>
+    /// Transfer oluşturulduktan sonra domain event fırlatır.
+    /// Bu metod repository veya application layer tarafından çağrılmalıdır.
+    /// </summary>
+    public void RaiseCreatedEvent()
+    {
+        RaiseDomainEvent(new StockTransferCreatedDomainEvent(
+            Id,
+            TenantId,
+            TransferNumber,
+            TransferDate,
+            SourceWarehouseId,
+            DestinationWarehouseId,
+            TransferType,
+            Items.Count,
+            CreatedByUserId));
     }
 
     public void SetDescription(string? description)
@@ -166,9 +185,17 @@ public class StockTransfer : BaseEntity
             Status = TransferStatus.Completed;
 
         CompletedDate = DateTime.UtcNow;
+
+        RaiseDomainEvent(new StockTransferCompletedDomainEvent(
+            Id,
+            TenantId,
+            TransferNumber,
+            SourceWarehouseId,
+            DestinationWarehouseId,
+            CompletedDate.Value));
     }
 
-    public void Cancel(string? reason = null)
+    public void Cancel(string cancelledBy, string? reason = null)
     {
         if (Status == TransferStatus.Completed || Status == TransferStatus.Cancelled)
             throw new InvalidOperationException("Cannot cancel completed or already cancelled transfers");
@@ -176,6 +203,14 @@ public class StockTransfer : BaseEntity
         Status = TransferStatus.Cancelled;
         CancelledDate = DateTime.UtcNow;
         CancellationReason = reason;
+
+        RaiseDomainEvent(new StockTransferCancelledDomainEvent(
+            Id,
+            TenantId,
+            TransferNumber,
+            cancelledBy,
+            reason ?? string.Empty,
+            CancelledDate.Value));
     }
 
     public decimal GetTotalRequestedQuantity() => Items.Sum(i => i.RequestedQuantity);
