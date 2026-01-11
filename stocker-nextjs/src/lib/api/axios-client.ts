@@ -110,6 +110,10 @@ apiClient.interceptors.request.use(
       if (!(config.data instanceof FormData)) {
         config.headers['Content-Type'] = 'application/json';
       }
+
+      // Disable browser caching to ensure fresh data after mutations
+      config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+      config.headers['Pragma'] = 'no-cache';
     }
 
     // Debug logging for POST requests

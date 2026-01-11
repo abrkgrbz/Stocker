@@ -152,11 +152,11 @@ public class CacheControlOptions
             MaxAge = 31536000 // 1 year
         },
 
-        // API responses
+        // API responses - no browser cache to ensure fresh data after mutations
         ["/api"] = new CachePolicy
         {
-            CacheControl = "private, max-age=60, must-revalidate",
-            MaxAge = 60,
+            CacheControl = "private, no-cache, no-store, must-revalidate",
+            MaxAge = 0,
             Vary = "Accept, Accept-Encoding, Authorization"
         },
 
