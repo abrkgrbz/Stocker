@@ -9,8 +9,9 @@
  * - Restore confirmation modal
  */
 
-import { useState, useMemo, Fragment } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { Modal, Form, Input, Select, Checkbox } from 'antd';
 import { Spinner } from '@/components/primitives';
 import {
   ArrowLeft,
@@ -683,266 +684,197 @@ export default function BackupPage() {
         </div>
 
         {/* Create Backup Modal */}
-        {showCreateModal && (
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4">
-              <div className="fixed inset-0 bg-black/30" onClick={() => setShowCreateModal(false)} />
-              <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-slate-900">Yeni Yedek Oluştur</h3>
-                  <button
-                    onClick={() => setShowCreateModal(false)}
-                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
+        <Modal
+          title={<span className="text-slate-900 font-semibold">Yeni Yedek Oluştur</span>}
+          open={showCreateModal}
+          onCancel={() => setShowCreateModal(false)}
+          onOk={handleCreateBackup}
+          okText={createBackup.isPending ? 'Oluşturuluyor...' : 'Yedek Oluştur'}
+          cancelText="İptal"
+          confirmLoading={createBackup.isPending}
+          okButtonProps={{
+            disabled: !createForm.backupName.trim(),
+            className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900',
+            icon: <CloudUpload className="w-4 h-4" />,
+          }}
+          cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
+          width={500}
+        >
+          <Form layout="vertical" className="mt-4">
+            {/* Backup Name */}
+            <Form.Item
+              label={<span className="text-slate-700 font-medium">Yedek Adı</span>}
+              required
+              className="mb-4"
+            >
+              <Input
+                value={createForm.backupName}
+                onChange={(e) => setCreateForm({ ...createForm, backupName: e.target.value })}
+                placeholder="Örn: Günlük Yedek 27.12.2024"
+                className="!rounded-lg !border-slate-300"
+              />
+            </Form.Item>
 
-                <div className="space-y-4">
-                  {/* Backup Name */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Yedek Adı *
-                    </label>
-                    <input
-                      type="text"
-                      value={createForm.backupName}
-                      onChange={(e) => setCreateForm({ ...createForm, backupName: e.target.value })}
-                      placeholder="Örn: Günlük Yedek 27.12.2024"
-                      className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
-                    />
-                  </div>
+            {/* Backup Type */}
+            <Form.Item
+              label={<span className="text-slate-700 font-medium">Yedek Türü</span>}
+              className="mb-4"
+            >
+              <Select
+                value={createForm.backupType}
+                onChange={(value) => setCreateForm({ ...createForm, backupType: value as 'Full' | 'Incremental' | 'Differential' })}
+                className="[&_.ant-select-selector]:!rounded-lg [&_.ant-select-selector]:!border-slate-300"
+              >
+                <Select.Option value="Full">Tam Yedek</Select.Option>
+                <Select.Option value="Incremental">Artımlı</Select.Option>
+                <Select.Option value="Differential">Fark</Select.Option>
+              </Select>
+            </Form.Item>
 
-                  {/* Backup Type */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Yedek Türü
-                    </label>
-                    <select
-                      value={createForm.backupType}
-                      onChange={(e) => setCreateForm({ ...createForm, backupType: e.target.value as 'Full' | 'Incremental' | 'Differential' })}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
-                    >
-                      <option value="Full">Tam Yedek</option>
-                      <option value="Incremental">Artımlı</option>
-                      <option value="Differential">Fark</option>
-                    </select>
-                  </div>
-
-                  {/* Include Options */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Dahil Edilecekler
-                    </label>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={createForm.includeDatabase}
-                          onChange={(e) => setCreateForm({ ...createForm, includeDatabase: e.target.checked })}
-                          className="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
-                        />
-                        <Database className="w-4 h-4 text-slate-500" />
-                        <span className="text-sm text-slate-700">Veritabanı</span>
-                      </label>
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={createForm.includeFiles}
-                          onChange={(e) => setCreateForm({ ...createForm, includeFiles: e.target.checked })}
-                          className="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
-                        />
-                        <FileArchive className="w-4 h-4 text-slate-500" />
-                        <span className="text-sm text-slate-700">Dosyalar</span>
-                      </label>
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={createForm.includeConfiguration}
-                          onChange={(e) => setCreateForm({ ...createForm, includeConfiguration: e.target.checked })}
-                          className="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
-                        />
-                        <Settings className="w-4 h-4 text-slate-500" />
-                        <span className="text-sm text-slate-700">Ayarlar</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Security Options */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Güvenlik
-                    </label>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={createForm.compress}
-                          onChange={(e) => setCreateForm({ ...createForm, compress: e.target.checked })}
-                          className="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
-                        />
-                        <span className="text-sm text-slate-700">Sıkıştır</span>
-                      </label>
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={createForm.encrypt}
-                          onChange={(e) => setCreateForm({ ...createForm, encrypt: e.target.checked })}
-                          className="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
-                        />
-                        <Shield className="w-4 h-4 text-slate-500" />
-                        <span className="text-sm text-slate-700">Şifrele</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Description */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Açıklama
-                    </label>
-                    <textarea
-                      value={createForm.description}
-                      onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
-                      placeholder="İsteğe bağlı açıklama..."
-                      rows={2}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent resize-none"
-                    />
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
-                  <button
-                    onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-                  >
-                    İptal
-                  </button>
-                  <button
-                    onClick={handleCreateBackup}
-                    disabled={!createForm.backupName.trim() || createBackup.isPending}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {createBackup.isPending ? (
-                      <>
-                        <Spinner size="sm" />
-                        Oluşturuluyor...
-                      </>
-                    ) : (
-                      <>
-                        <CloudUpload className="w-4 h-4" />
-                        Yedek Oluştur
-                      </>
-                    )}
-                  </button>
-                </div>
+            {/* Include Options */}
+            <Form.Item
+              label={<span className="text-slate-700 font-medium">Dahil Edilecekler</span>}
+              className="mb-4"
+            >
+              <div className="space-y-2">
+                <Checkbox
+                  checked={createForm.includeDatabase}
+                  onChange={(e) => setCreateForm({ ...createForm, includeDatabase: e.target.checked })}
+                  className="[&_.ant-checkbox-checked_.ant-checkbox-inner]:!bg-slate-900 [&_.ant-checkbox-checked_.ant-checkbox-inner]:!border-slate-900"
+                >
+                  <span className="inline-flex items-center gap-2 text-slate-700">
+                    <Database className="w-4 h-4 text-slate-500" />
+                    Veritabanı
+                  </span>
+                </Checkbox>
+                <br />
+                <Checkbox
+                  checked={createForm.includeFiles}
+                  onChange={(e) => setCreateForm({ ...createForm, includeFiles: e.target.checked })}
+                  className="[&_.ant-checkbox-checked_.ant-checkbox-inner]:!bg-slate-900 [&_.ant-checkbox-checked_.ant-checkbox-inner]:!border-slate-900"
+                >
+                  <span className="inline-flex items-center gap-2 text-slate-700">
+                    <FileArchive className="w-4 h-4 text-slate-500" />
+                    Dosyalar
+                  </span>
+                </Checkbox>
+                <br />
+                <Checkbox
+                  checked={createForm.includeConfiguration}
+                  onChange={(e) => setCreateForm({ ...createForm, includeConfiguration: e.target.checked })}
+                  className="[&_.ant-checkbox-checked_.ant-checkbox-inner]:!bg-slate-900 [&_.ant-checkbox-checked_.ant-checkbox-inner]:!border-slate-900"
+                >
+                  <span className="inline-flex items-center gap-2 text-slate-700">
+                    <Settings className="w-4 h-4 text-slate-500" />
+                    Ayarlar
+                  </span>
+                </Checkbox>
               </div>
-            </div>
-          </div>
-        )}
+            </Form.Item>
+
+            {/* Security Options */}
+            <Form.Item
+              label={<span className="text-slate-700 font-medium">Güvenlik</span>}
+              className="mb-4"
+            >
+              <div className="grid grid-cols-2 gap-4">
+                <Checkbox
+                  checked={createForm.compress}
+                  onChange={(e) => setCreateForm({ ...createForm, compress: e.target.checked })}
+                  className="[&_.ant-checkbox-checked_.ant-checkbox-inner]:!bg-slate-900 [&_.ant-checkbox-checked_.ant-checkbox-inner]:!border-slate-900"
+                >
+                  <span className="text-slate-700">Sıkıştır</span>
+                </Checkbox>
+                <Checkbox
+                  checked={createForm.encrypt}
+                  onChange={(e) => setCreateForm({ ...createForm, encrypt: e.target.checked })}
+                  className="[&_.ant-checkbox-checked_.ant-checkbox-inner]:!bg-slate-900 [&_.ant-checkbox-checked_.ant-checkbox-inner]:!border-slate-900"
+                >
+                  <span className="inline-flex items-center gap-2 text-slate-700">
+                    <Shield className="w-4 h-4 text-slate-500" />
+                    Şifrele
+                  </span>
+                </Checkbox>
+              </div>
+            </Form.Item>
+
+            {/* Description */}
+            <Form.Item
+              label={<span className="text-slate-700 font-medium">Açıklama</span>}
+              className="mb-0"
+            >
+              <Input.TextArea
+                value={createForm.description}
+                onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
+                placeholder="İsteğe bağlı açıklama..."
+                rows={2}
+                className="!rounded-lg !border-slate-300"
+              />
+            </Form.Item>
+          </Form>
+        </Modal>
 
         {/* Restore Confirmation Modal */}
-        {showRestoreModal && (
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4">
-              <div className="fixed inset-0 bg-black/30" onClick={() => setShowRestoreModal(null)} />
-              <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 p-2 bg-slate-200 rounded-full">
-                    <AlertTriangle className="w-6 h-6 text-slate-700" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-900">Geri Yüklemeyi Onayla</h3>
-                    <p className="mt-2 text-sm text-slate-600">
-                      <strong>{showRestoreModal.backupName}</strong> yedeğinden geri yükleme yapmak istediğinizden emin misiniz?
-                    </p>
-                    <p className="mt-2 text-sm text-slate-900">
-                      Bu işlem mevcut verilerin üzerine yazacaktır!
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
-                  <button
-                    onClick={() => setShowRestoreModal(null)}
-                    className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-                  >
-                    İptal
-                  </button>
-                  <button
-                    onClick={handleRestoreBackup}
-                    disabled={restoreBackup.isPending}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-700 text-white text-sm font-medium rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {restoreBackup.isPending ? (
-                      <>
-                        <Spinner size="sm" />
-                        Geri Yükleniyor...
-                      </>
-                    ) : (
-                      <>
-                        <RotateCcw className="w-4 h-4" />
-                        Geri Yükle
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
+        <Modal
+          title={<span className="text-slate-900 font-semibold">Geri Yüklemeyi Onayla</span>}
+          open={!!showRestoreModal}
+          onCancel={() => setShowRestoreModal(null)}
+          onOk={handleRestoreBackup}
+          okText={restoreBackup.isPending ? 'Geri Yükleniyor...' : 'Geri Yükle'}
+          cancelText="İptal"
+          confirmLoading={restoreBackup.isPending}
+          okButtonProps={{
+            className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900',
+            icon: <RotateCcw className="w-4 h-4" />,
+          }}
+          cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
+          width={450}
+        >
+          <div className="flex items-start gap-4 mt-4">
+            <div className="flex-shrink-0 p-2 bg-slate-200 rounded-full">
+              <AlertTriangle className="w-6 h-6 text-slate-700" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-600">
+                <strong>{showRestoreModal?.backupName}</strong> yedeğinden geri yükleme yapmak istediğinizden emin misiniz?
+              </p>
+              <p className="mt-2 text-sm font-medium text-slate-900">
+                Bu işlem mevcut verilerin üzerine yazacaktır!
+              </p>
             </div>
           </div>
-        )}
+        </Modal>
 
         {/* Delete Confirmation Modal */}
-        {showDeleteModal && (
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4">
-              <div className="fixed inset-0 bg-black/30" onClick={() => setShowDeleteModal(null)} />
-              <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 p-2 bg-slate-100 rounded-full">
-                    <Trash2 className="w-6 h-6 text-slate-900" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-900">Yedeği Sil</h3>
-                    <p className="mt-2 text-sm text-slate-600">
-                      <strong>{showDeleteModal.backupName}</strong> yedeğini silmek istediğinizden emin misiniz?
-                    </p>
-                    <p className="mt-2 text-sm text-slate-900">
-                      Bu işlem geri alınamaz!
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
-                  <button
-                    onClick={() => setShowDeleteModal(null)}
-                    className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-                  >
-                    İptal
-                  </button>
-                  <button
-                    onClick={handleDeleteBackup}
-                    disabled={deleteBackup.isPending}
-                    className="flex items-center gap-2 px-4 py-2 !bg-slate-900 hover:!bg-slate-800 !border-slate-900 text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {deleteBackup.isPending ? (
-                      <>
-                        <Spinner size="sm" />
-                        Siliniyor...
-                      </>
-                    ) : (
-                      <>
-                        <Trash2 className="w-4 h-4" />
-                        Sil
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
+        <Modal
+          title={<span className="text-slate-900 font-semibold">Yedeği Sil</span>}
+          open={!!showDeleteModal}
+          onCancel={() => setShowDeleteModal(null)}
+          onOk={handleDeleteBackup}
+          okText={deleteBackup.isPending ? 'Siliniyor...' : 'Sil'}
+          cancelText="İptal"
+          confirmLoading={deleteBackup.isPending}
+          okButtonProps={{
+            danger: true,
+            icon: <Trash2 className="w-4 h-4" />,
+          }}
+          cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
+          width={450}
+        >
+          <div className="flex items-start gap-4 mt-4">
+            <div className="flex-shrink-0 p-2 bg-slate-100 rounded-full">
+              <Trash2 className="w-6 h-6 text-slate-900" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-600">
+                <strong>{showDeleteModal?.backupName}</strong> yedeğini silmek istediğinizden emin misiniz?
+              </p>
+              <p className="mt-2 text-sm font-medium text-slate-900">
+                Bu işlem geri alınamaz!
+              </p>
             </div>
           </div>
-        )}
+        </Modal>
 
         {/* Detail Slide-Over */}
         {selectedBackup && (
