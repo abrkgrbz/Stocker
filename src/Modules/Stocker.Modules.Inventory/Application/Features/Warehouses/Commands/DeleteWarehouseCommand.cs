@@ -30,20 +30,20 @@ public class DeleteWarehouseCommandHandler : IRequestHandler<DeleteWarehouseComm
         var warehouse = await _unitOfWork.Warehouses.GetByIdAsync(request.WarehouseId, cancellationToken);
         if (warehouse == null)
         {
-            return Result.Failure(Error.NotFound("Warehouse", $"Warehouse with ID {request.WarehouseId} not found"));
+            return Result.Failure(Error.NotFound("Warehouse", $"Depo bulunamadı (ID: {request.WarehouseId})"));
         }
 
         // Check if warehouse has stock
         var stocks = await _unitOfWork.Stocks.GetByWarehouseAsync(request.WarehouseId, cancellationToken);
         if (stocks.Any(s => s.Quantity > 0))
         {
-            return Result.Failure(Error.Validation("Warehouse.HasStock", "Cannot delete warehouse with existing stock"));
+            return Result.Failure(Error.Validation("Warehouse.HasStock", "Stoku olan depo silinemez. Önce stokları taşıyın veya silin."));
         }
 
         // Check if it's the default warehouse
         if (warehouse.IsDefault)
         {
-            return Result.Failure(Error.Validation("Warehouse.IsDefault", "Cannot delete the default warehouse"));
+            return Result.Failure(Error.Validation("Warehouse.IsDefault", "Varsayılan depo silinemez"));
         }
 
         await _unitOfWork.Warehouses.RemoveByIdAsync(warehouse.Id, cancellationToken);

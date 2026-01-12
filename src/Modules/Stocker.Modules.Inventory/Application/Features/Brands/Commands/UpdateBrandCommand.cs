@@ -23,13 +23,13 @@ public class UpdateBrandCommandValidator : AbstractValidator<UpdateBrandCommand>
 {
     public UpdateBrandCommandValidator()
     {
-        RuleFor(x => x.TenantId).NotEmpty();
-        RuleFor(x => x.BrandId).NotEmpty();
-        RuleFor(x => x.BrandData).NotNull();
-        RuleFor(x => x.BrandData.Name).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.BrandData.Description).MaximumLength(1000);
-        RuleFor(x => x.BrandData.LogoUrl).MaximumLength(500);
-        RuleFor(x => x.BrandData.Website).MaximumLength(500);
+        RuleFor(x => x.TenantId).NotEmpty().WithMessage("Kiracı kimliği gereklidir");
+        RuleFor(x => x.BrandId).NotEmpty().WithMessage("Marka kimliği gereklidir");
+        RuleFor(x => x.BrandData).NotNull().WithMessage("Marka bilgileri gereklidir");
+        RuleFor(x => x.BrandData.Name).NotEmpty().WithMessage("Marka adı gereklidir").MaximumLength(200).WithMessage("Marka adı en fazla 200 karakter olabilir");
+        RuleFor(x => x.BrandData.Description).MaximumLength(1000).WithMessage("Açıklama en fazla 1000 karakter olabilir");
+        RuleFor(x => x.BrandData.LogoUrl).MaximumLength(500).WithMessage("Logo URL en fazla 500 karakter olabilir");
+        RuleFor(x => x.BrandData.Website).MaximumLength(500).WithMessage("Website URL en fazla 500 karakter olabilir");
     }
 }
 
@@ -52,7 +52,7 @@ public class UpdateBrandCommandHandler : IRequestHandler<UpdateBrandCommand, Res
 
         if (brand == null)
         {
-            return Result<BrandDto>.Failure(new Error("Brand.NotFound", $"Brand with ID {request.BrandId} not found", ErrorType.NotFound));
+            return Result<BrandDto>.Failure(new Error("Brand.NotFound", $"Marka bulunamadı (ID: {request.BrandId})", ErrorType.NotFound));
         }
 
         var data = request.BrandData;

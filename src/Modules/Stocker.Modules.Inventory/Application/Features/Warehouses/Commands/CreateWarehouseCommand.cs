@@ -25,26 +25,26 @@ public class CreateWarehouseCommandValidator : AbstractValidator<CreateWarehouse
     public CreateWarehouseCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Kiracı kimliği gereklidir");
 
         RuleFor(x => x.WarehouseData)
-            .NotNull().WithMessage("Warehouse data is required");
+            .NotNull().WithMessage("Depo bilgileri gereklidir");
 
         When(x => x.WarehouseData != null, () =>
         {
             RuleFor(x => x.WarehouseData.Code)
-                .NotEmpty().WithMessage("Warehouse code is required")
-                .MaximumLength(50).WithMessage("Warehouse code must not exceed 50 characters");
+                .NotEmpty().WithMessage("Depo kodu gereklidir")
+                .MaximumLength(50).WithMessage("Depo kodu en fazla 50 karakter olabilir");
 
             RuleFor(x => x.WarehouseData.Name)
-                .NotEmpty().WithMessage("Warehouse name is required")
-                .MaximumLength(100).WithMessage("Warehouse name must not exceed 100 characters");
+                .NotEmpty().WithMessage("Depo adı gereklidir")
+                .MaximumLength(100).WithMessage("Depo adı en fazla 100 karakter olabilir");
 
             RuleFor(x => x.WarehouseData.Description)
-                .MaximumLength(500).WithMessage("Description must not exceed 500 characters");
+                .MaximumLength(500).WithMessage("Açıklama en fazla 500 karakter olabilir");
 
             RuleFor(x => x.WarehouseData.TotalArea)
-                .GreaterThanOrEqualTo(0).WithMessage("Total area cannot be negative");
+                .GreaterThanOrEqualTo(0).WithMessage("Toplam alan negatif olamaz");
         });
     }
 }
@@ -68,7 +68,7 @@ public class CreateWarehouseCommandHandler : IRequestHandler<CreateWarehouseComm
         if (existingWarehouse != null)
         {
             return Result<WarehouseDto>.Failure(
-                Error.Conflict("Warehouse.Code", "A warehouse with this code already exists"));
+                Error.Conflict("Warehouse.Code", "Bu depo kodu zaten kullanılmaktadır"));
         }
 
         // Create the warehouse

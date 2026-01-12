@@ -21,8 +21,8 @@ public class DeleteBrandCommandValidator : AbstractValidator<DeleteBrandCommand>
 {
     public DeleteBrandCommandValidator()
     {
-        RuleFor(x => x.TenantId).NotEmpty();
-        RuleFor(x => x.BrandId).NotEmpty();
+        RuleFor(x => x.TenantId).NotEmpty().WithMessage("Kiracı kimliği gereklidir");
+        RuleFor(x => x.BrandId).NotEmpty().WithMessage("Marka kimliği gereklidir");
     }
 }
 
@@ -45,13 +45,13 @@ public class DeleteBrandCommandHandler : IRequestHandler<DeleteBrandCommand, Res
 
         if (brand == null)
         {
-            return Result<bool>.Failure(new Error("Brand.NotFound", $"Brand with ID {request.BrandId} not found", ErrorType.NotFound));
+            return Result<bool>.Failure(new Error("Brand.NotFound", $"Marka bulunamadı (ID: {request.BrandId})", ErrorType.NotFound));
         }
 
         // Check if brand has products
         if (brand.Products != null && brand.Products.Count > 0)
         {
-            return Result<bool>.Failure(new Error("Brand.HasProducts", "Cannot delete brand with associated products", ErrorType.Validation));
+            return Result<bool>.Failure(new Error("Brand.HasProducts", "Bu markaya ait ürünler bulunmaktadır. Önce ürünleri taşıyın veya silin.", ErrorType.Validation));
         }
 
         // Soft delete

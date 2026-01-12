@@ -32,14 +32,14 @@ public class ActivateCategoryCommandHandler : IRequestHandler<ActivateCategoryCo
         if (category == null)
         {
             return Result<bool>.Failure(
-                Error.NotFound("Category", $"Category with ID {request.CategoryId} not found"));
+                Error.NotFound("Category", $"Kategori bulunamadı (ID: {request.CategoryId})"));
         }
 
         // Verify tenant ownership
         if (category.TenantId != request.TenantId)
         {
             return Result<bool>.Failure(
-                Error.NotFound("Category", $"Category with ID {request.CategoryId} not found"));
+                Error.NotFound("Category", $"Kategori bulunamadı (ID: {request.CategoryId})"));
         }
 
         category.Activate();

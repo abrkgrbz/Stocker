@@ -32,14 +32,14 @@ public class DeactivateCategoryCommandHandler : IRequestHandler<DeactivateCatego
         if (category == null)
         {
             return Result<bool>.Failure(
-                Error.NotFound("Category", $"Category with ID {request.CategoryId} not found"));
+                Error.NotFound("Category", $"Kategori bulunamadı (ID: {request.CategoryId})"));
         }
 
         // Verify tenant ownership
         if (category.TenantId != request.TenantId)
         {
             return Result<bool>.Failure(
-                Error.NotFound("Category", $"Category with ID {request.CategoryId} not found"));
+                Error.NotFound("Category", $"Kategori bulunamadı (ID: {request.CategoryId})"));
         }
 
         // Check if category has active products
@@ -47,7 +47,7 @@ public class DeactivateCategoryCommandHandler : IRequestHandler<DeactivateCatego
         if (hasActiveProducts)
         {
             return Result<bool>.Failure(
-                Error.Validation("Category.HasActiveProducts", "Cannot deactivate category with active products. Please deactivate or move products first."));
+                Error.Validation("Category.HasActiveProducts", "Aktif ürünleri olan kategori pasife alınamaz. Önce ürünleri pasife alın veya başka kategoriye taşıyın."));
         }
 
         category.Deactivate();

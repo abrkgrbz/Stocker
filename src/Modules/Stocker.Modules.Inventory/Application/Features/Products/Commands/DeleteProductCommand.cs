@@ -22,10 +22,10 @@ public class DeleteProductCommandValidator : AbstractValidator<DeleteProductComm
     public DeleteProductCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Kiracı kimliği gereklidir");
 
         RuleFor(x => x.ProductId)
-            .NotEmpty().WithMessage("Product ID is required");
+            .NotEmpty().WithMessage("Ürün kimliği gereklidir");
     }
 }
 
@@ -47,14 +47,14 @@ public class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommand,
         if (product == null)
         {
             return Result.Failure(
-                Error.NotFound("Product", $"Product with ID {request.ProductId} not found"));
+                Error.NotFound("Product", $"Ürün bulunamadı (ID: {request.ProductId})"));
         }
 
         var totalStock = await _unitOfWork.Stocks.GetTotalQuantityByProductAsync(request.ProductId, cancellationToken);
         if (totalStock > 0)
         {
             return Result.Failure(
-                Error.Conflict("Product.Stock", "Cannot delete product with existing stock. Please adjust stock to zero first."));
+                Error.Conflict("Product.Stock", "Stoku olan ürün silinemez. Önce stok miktarını sıfırlayın."));
         }
 
         // Soft delete using BaseEntity's Delete method

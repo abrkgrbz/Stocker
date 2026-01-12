@@ -23,13 +23,13 @@ public class CreateBrandCommandValidator : AbstractValidator<CreateBrandCommand>
 {
     public CreateBrandCommandValidator()
     {
-        RuleFor(x => x.TenantId).NotEmpty();
-        RuleFor(x => x.BrandData).NotNull();
-        RuleFor(x => x.BrandData.Code).NotEmpty().MaximumLength(50);
-        RuleFor(x => x.BrandData.Name).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.BrandData.Description).MaximumLength(1000);
-        RuleFor(x => x.BrandData.LogoUrl).MaximumLength(500);
-        RuleFor(x => x.BrandData.Website).MaximumLength(500);
+        RuleFor(x => x.TenantId).NotEmpty().WithMessage("Kiracı kimliği gereklidir");
+        RuleFor(x => x.BrandData).NotNull().WithMessage("Marka bilgileri gereklidir");
+        RuleFor(x => x.BrandData.Code).NotEmpty().WithMessage("Marka kodu gereklidir").MaximumLength(50).WithMessage("Marka kodu en fazla 50 karakter olabilir");
+        RuleFor(x => x.BrandData.Name).NotEmpty().WithMessage("Marka adı gereklidir").MaximumLength(200).WithMessage("Marka adı en fazla 200 karakter olabilir");
+        RuleFor(x => x.BrandData.Description).MaximumLength(1000).WithMessage("Açıklama en fazla 1000 karakter olabilir");
+        RuleFor(x => x.BrandData.LogoUrl).MaximumLength(500).WithMessage("Logo URL en fazla 500 karakter olabilir");
+        RuleFor(x => x.BrandData.Website).MaximumLength(500).WithMessage("Website URL en fazla 500 karakter olabilir");
     }
 }
 
@@ -54,7 +54,7 @@ public class CreateBrandCommandHandler : IRequestHandler<CreateBrandCommand, Res
         var existingBrand = await _unitOfWork.Brands.GetByCodeAsync(data.Code, cancellationToken);
         if (existingBrand != null)
         {
-            return Result<BrandDto>.Failure(new Error("Brand.DuplicateCode", $"Brand with code '{data.Code}' already exists", ErrorType.Conflict));
+            return Result<BrandDto>.Failure(new Error("Brand.DuplicateCode", "Bu marka kodu zaten kullanılmaktadır", ErrorType.Conflict));
         }
 
         var brand = new Brand(data.Code, data.Name);

@@ -25,22 +25,22 @@ public class UpdateWarehouseCommandValidator : AbstractValidator<UpdateWarehouse
     public UpdateWarehouseCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Kiracı kimliği gereklidir");
 
         RuleFor(x => x.WarehouseId)
-            .NotEmpty().WithMessage("Warehouse ID is required");
+            .NotEmpty().WithMessage("Depo kimliği gereklidir");
 
         RuleFor(x => x.WarehouseData)
-            .NotNull().WithMessage("Warehouse data is required");
+            .NotNull().WithMessage("Depo bilgileri gereklidir");
 
         When(x => x.WarehouseData != null, () =>
         {
             RuleFor(x => x.WarehouseData.Name)
-                .NotEmpty().WithMessage("Warehouse name is required")
-                .MaximumLength(100).WithMessage("Warehouse name must not exceed 100 characters");
+                .NotEmpty().WithMessage("Depo adı gereklidir")
+                .MaximumLength(100).WithMessage("Depo adı en fazla 100 karakter olabilir");
 
             RuleFor(x => x.WarehouseData.Description)
-                .MaximumLength(500).WithMessage("Description must not exceed 500 characters");
+                .MaximumLength(500).WithMessage("Açıklama en fazla 500 karakter olabilir");
         });
     }
 }
@@ -63,7 +63,7 @@ public class UpdateWarehouseCommandHandler : IRequestHandler<UpdateWarehouseComm
         if (warehouse == null)
         {
             return Result<WarehouseDto>.Failure(
-                Error.NotFound("Warehouse", $"Warehouse with ID {request.WarehouseId} not found"));
+                Error.NotFound("Warehouse", $"Depo bulunamadı (ID: {request.WarehouseId})"));
         }
 
         // Build address if provided

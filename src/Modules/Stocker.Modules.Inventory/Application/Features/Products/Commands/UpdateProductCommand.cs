@@ -25,29 +25,29 @@ public class UpdateProductCommandValidator : AbstractValidator<UpdateProductComm
     public UpdateProductCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Kiracı kimliği gereklidir");
 
         RuleFor(x => x.ProductId)
-            .NotEmpty().WithMessage("Product ID is required");
+            .NotEmpty().WithMessage("Ürün kimliği gereklidir");
 
         RuleFor(x => x.ProductData)
-            .NotNull().WithMessage("Product data is required");
+            .NotNull().WithMessage("Ürün bilgileri gereklidir");
 
         When(x => x.ProductData != null, () =>
         {
             RuleFor(x => x.ProductData.Name)
-                .NotEmpty().WithMessage("Product name is required")
-                .MaximumLength(200).WithMessage("Product name must not exceed 200 characters");
+                .NotEmpty().WithMessage("Ürün adı gereklidir")
+                .MaximumLength(200).WithMessage("Ürün adı en fazla 200 karakter olabilir");
 
             RuleFor(x => x.ProductData.CategoryId)
-                .NotEmpty().WithMessage("Category is required");
+                .NotEmpty().WithMessage("Kategori gereklidir");
 
             RuleFor(x => x.ProductData.UnitPrice)
                 .GreaterThanOrEqualTo(0).When(x => x.ProductData.UnitPrice.HasValue)
-                .WithMessage("Unit price cannot be negative");
+                .WithMessage("Birim fiyatı negatif olamaz");
 
             RuleFor(x => x.ProductData.MinStockLevel)
-                .GreaterThanOrEqualTo(0).WithMessage("Minimum stock level cannot be negative");
+                .GreaterThanOrEqualTo(0).WithMessage("Minimum stok seviyesi negatif olamaz");
         });
     }
 }
@@ -70,14 +70,14 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
         if (product == null)
         {
             return Result<ProductDto>.Failure(
-                Error.NotFound("Product", $"Product with ID {request.ProductId} not found"));
+                Error.NotFound("Product", $"Ürün bulunamadı (ID: {request.ProductId})"));
         }
 
         var category = await _unitOfWork.Categories.GetByIdAsync(request.ProductData.CategoryId, cancellationToken);
         if (category == null)
         {
             return Result<ProductDto>.Failure(
-                Error.NotFound("Category", $"Category with ID {request.ProductData.CategoryId} not found"));
+                Error.NotFound("Category", $"Kategori bulunamadı (ID: {request.ProductData.CategoryId})"));
         }
 
         var unitPrice = Money.Create(

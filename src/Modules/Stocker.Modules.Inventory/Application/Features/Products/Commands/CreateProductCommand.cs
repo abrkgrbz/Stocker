@@ -26,49 +26,49 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
     public CreateProductCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Kiracı kimliği gereklidir");
 
         RuleFor(x => x.ProductData)
-            .NotNull().WithMessage("Product data is required");
+            .NotNull().WithMessage("Ürün bilgileri gereklidir");
 
         When(x => x.ProductData != null, () =>
         {
             RuleFor(x => x.ProductData.Code)
-                .NotEmpty().WithMessage("Product code is required")
-                .MaximumLength(50).WithMessage("Product code must not exceed 50 characters");
+                .NotEmpty().WithMessage("Ürün kodu gereklidir")
+                .MaximumLength(50).WithMessage("Ürün kodu en fazla 50 karakter olabilir");
 
             RuleFor(x => x.ProductData.Name)
-                .NotEmpty().WithMessage("Product name is required")
-                .MaximumLength(200).WithMessage("Product name must not exceed 200 characters");
+                .NotEmpty().WithMessage("Ürün adı gereklidir")
+                .MaximumLength(200).WithMessage("Ürün adı en fazla 200 karakter olabilir");
 
             RuleFor(x => x.ProductData.CategoryId)
-                .NotEmpty().WithMessage("Category is required");
+                .NotEmpty().WithMessage("Kategori gereklidir");
 
             RuleFor(x => x.ProductData.UnitId)
-                .NotEmpty().WithMessage("Unit is required");
+                .NotEmpty().WithMessage("Birim gereklidir");
 
             RuleFor(x => x.ProductData.UnitPrice)
                 .GreaterThanOrEqualTo(0).When(x => x.ProductData.UnitPrice.HasValue)
-                .WithMessage("Unit price cannot be negative");
+                .WithMessage("Birim fiyatı negatif olamaz");
 
             RuleFor(x => x.ProductData.CostPrice)
                 .GreaterThanOrEqualTo(0).When(x => x.ProductData.CostPrice.HasValue)
-                .WithMessage("Cost price cannot be negative");
+                .WithMessage("Maliyet fiyatı negatif olamaz");
 
             RuleFor(x => x.ProductData.MinStockLevel)
-                .GreaterThanOrEqualTo(0).WithMessage("Minimum stock level cannot be negative");
+                .GreaterThanOrEqualTo(0).WithMessage("Minimum stok seviyesi negatif olamaz");
 
             RuleFor(x => x.ProductData.ReorderQuantity)
-                .GreaterThanOrEqualTo(0).WithMessage("Reorder quantity cannot be negative");
+                .GreaterThanOrEqualTo(0).WithMessage("Yeniden sipariş miktarı negatif olamaz");
 
             RuleFor(x => x.ProductData.LeadTimeDays)
-                .GreaterThanOrEqualTo(0).WithMessage("Lead time cannot be negative");
+                .GreaterThanOrEqualTo(0).WithMessage("Tedarik süresi negatif olamaz");
 
             RuleFor(x => x.ProductData.Barcode)
-                .MaximumLength(50).WithMessage("Barcode must not exceed 50 characters");
+                .MaximumLength(50).WithMessage("Barkod en fazla 50 karakter olabilir");
 
             RuleFor(x => x.ProductData.SKU)
-                .MaximumLength(100).WithMessage("SKU must not exceed 100 characters");
+                .MaximumLength(100).WithMessage("SKU en fazla 100 karakter olabilir");
         });
     }
 }
@@ -95,7 +95,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         if (existingProduct != null)
         {
             return Result<ProductDto>.Failure(
-                Error.Conflict("Product.Code", "A product with this code already exists"));
+                Error.Conflict("Product.Code", "Bu ürün kodu zaten kullanılmaktadır"));
         }
 
         // Check if SKU is unique (if provided)
@@ -105,7 +105,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             if (existingBySku != null)
             {
                 return Result<ProductDto>.Failure(
-                    Error.Conflict("Product.SKU", "A product with this SKU already exists"));
+                    Error.Conflict("Product.SKU", "Bu SKU zaten kullanılmaktadır"));
             }
         }
 
@@ -114,7 +114,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         if (category == null)
         {
             return Result<ProductDto>.Failure(
-                Error.NotFound("Category", $"Category with ID {data.CategoryId} not found"));
+                Error.NotFound("Category", $"Kategori bulunamadı (ID: {data.CategoryId})"));
         }
 
         // Check if unit exists
@@ -122,7 +122,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         if (unit == null)
         {
             return Result<ProductDto>.Failure(
-                Error.NotFound("Unit", $"Unit with ID {data.UnitId} not found"));
+                Error.NotFound("Unit", $"Birim bulunamadı (ID: {data.UnitId})"));
         }
 
         // Check if brand exists (if provided)
@@ -133,7 +133,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             if (brand == null)
             {
                 return Result<ProductDto>.Failure(
-                    Error.NotFound("Brand", $"Brand with ID {data.BrandId} not found"));
+                    Error.NotFound("Brand", $"Marka bulunamadı (ID: {data.BrandId})"));
             }
         }
 
