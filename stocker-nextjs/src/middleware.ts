@@ -73,16 +73,37 @@ export function middleware(request: NextRequest) {
     return response
   }
 
-  // Root domain: redirect auth routes to auth subdomain
-  // Skip redirect for RSC prefetch requests to avoid CORS errors
-  if (isRootDomain && !isDev && !isRSCPrefetch) {
-    // Redirect /login, /register to auth subdomain (only for full page navigations)
-    if (pathname === '/login' || pathname === '/register' || pathname.startsWith('/login/') || pathname.startsWith('/register/')) {
-      const url = request.nextUrl.clone()
-      url.protocol = 'https:'
-      url.host = authHostname
-      url.port = '' // Remove port for production (default HTTPS 443)
-      return NextResponse.redirect(url, 307) // Temporary redirect (preserves method)
+  // Root domain: handle auth routes
+  // For RSC prefetch/fetch requests, serve locally to avoid CORS
+  // For full page navigations, redirect to auth subdomain
+  if (isRootDomain && !isDev) {
+    const isAuthRoute = pathname === '/login' || pathname === '/register' ||
+                        pathname.startsWith('/login/') || pathname.startsWith('/register/') ||
+                        pathname === '/forgot-password' || pathname === '/reset-password' ||
+                        pathname.startsWith('/forgot-password/') || pathname.startsWith('/reset-password/')
+
+    if (isAuthRoute) {
+      // For RSC prefetch/fetch requests, serve the page locally (same origin)
+      // This avoids CORS errors with cross-origin fetches
+      if (isRSCPrefetch) {
+        return NextResponse.next()
+      }
+
+      // For full page navigations (browser address bar), redirect to auth subdomain
+      // Check if this is a real navigation (not fetch/XHR)
+      const acceptHeader = request.headers.get('accept') || ''
+      const isPageNavigation = acceptHeader.includes('text/html')
+
+      if (isPageNavigation) {
+        const url = request.nextUrl.clone()
+        url.protocol = 'https:'
+        url.host = authHostname
+        url.port = '' // Remove port for production (default HTTPS 443)
+        return NextResponse.redirect(url, 307) // Temporary redirect (preserves method)
+      }
+
+      // For other requests (API calls, etc.), serve locally
+      return NextResponse.next()
     }
   }
 
