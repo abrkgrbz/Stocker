@@ -222,7 +222,7 @@ export default function HeroSection() {
               <div className="w-20 h-8 bg-slate-700/50 rounded-md animate-pulse" />
             ) : isAuthenticated && user?.tenantCode ? (
               <a
-                href={`https://${user.tenantCode}.stoocker.app/dashboard`}
+                href={`https://${user.tenantCode}.stoocker.app/app`}
                 className="inline-flex items-center gap-2 text-[13px] font-medium text-slate-900 bg-white hover:bg-slate-100 px-3.5 py-1.5 rounded-md transition-all hover:shadow-lg hover:shadow-white/20"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -296,7 +296,7 @@ export default function HeroSection() {
         >
           {isAuthenticated && user?.tenantCode ? (
             <a
-              href={`https://${user.tenantCode}.stoocker.app/dashboard`}
+              href={`https://${user.tenantCode}.stoocker.app/app`}
               className="group inline-flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-900 text-[14px] font-medium px-6 py-3 rounded-lg transition-all hover:shadow-xl hover:shadow-white/20 hover:-translate-y-0.5"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
