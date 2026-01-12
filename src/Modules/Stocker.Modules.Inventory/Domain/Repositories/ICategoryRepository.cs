@@ -41,4 +41,14 @@ public interface ICategoryRepository : IInventoryRepository<Category>
     /// Checks if a category with the given code exists
     /// </summary>
     Task<bool> ExistsWithCodeAsync(string code, int? excludeCategoryId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks if a category has any products
+    /// </summary>
+    Task<bool> HasProductsAsync(int categoryId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks if a category has any subcategories
+    /// </summary>
+    Task<bool> HasSubcategoriesAsync(int categoryId, CancellationToken cancellationToken = default);
 }

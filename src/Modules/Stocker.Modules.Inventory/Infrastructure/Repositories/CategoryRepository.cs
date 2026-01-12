@@ -81,6 +81,12 @@ public class CategoryRepository : BaseRepository<Category>, ICategoryRepository
             .AnyAsync(p => !p.IsDeleted && p.CategoryId == categoryId, cancellationToken);
     }
 
+    public async Task<bool> HasSubcategoriesAsync(int categoryId, CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .AnyAsync(c => !c.IsDeleted && c.ParentCategoryId == categoryId, cancellationToken);
+    }
+
     public async Task<bool> ExistsWithNameAsync(string name, int? parentCategoryId = null, int? excludeCategoryId = null, CancellationToken cancellationToken = default)
     {
         var query = DbSet.Where(c => !c.IsDeleted && c.Name == name);
