@@ -105,6 +105,10 @@ backup*.sql
 .env.*
 !.env.example
 
+# Modules not yet ready for production
+src/Modules/Stocker.Modules.Manufacturing
+src/Shared/Stocker.Shared.Contracts/Manufacturing
+
 # Frontend specific
 stocker-web/node_modules
 stocker-web/dist
