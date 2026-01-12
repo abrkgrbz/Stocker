@@ -172,8 +172,70 @@ public class ShelfLivesController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Activate a shelf life configuration
+    /// </summary>
+    [HttpPost("{id}/activate")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> ActivateShelfLife(int id)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new ActivateShelfLifeCommand
+        {
+            TenantId = tenantId.Value,
+            Id = id
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(new { message = "Raf ömrü yapılandırması başarıyla aktifleştirildi" });
+    }
+
+    /// <summary>
+    /// Deactivate a shelf life configuration
+    /// </summary>
+    [HttpPost("{id}/deactivate")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> DeactivateShelfLife(int id)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new DeactivateShelfLifeCommand
+        {
+            TenantId = tenantId.Value,
+            Id = id
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(new { message = "Raf ömrü yapılandırması başarıyla pasifleştirildi" });
+    }
+
     private static Error CreateTenantError()
     {
-        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
+        return new Error("Tenant.Required", "Kiracı kimliği gereklidir", ErrorType.Validation);
     }
 }

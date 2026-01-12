@@ -265,8 +265,70 @@ public class WarehousesController : ControllerBase
         return Ok(result.Value);
     }
 
+    /// <summary>
+    /// Activate a warehouse
+    /// </summary>
+    [HttpPost("{id}/activate")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> ActivateWarehouse(int id)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new ActivateWarehouseCommand
+        {
+            TenantId = tenantId.Value,
+            WarehouseId = id
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(new { message = "Depo başarıyla aktifleştirildi" });
+    }
+
+    /// <summary>
+    /// Deactivate a warehouse
+    /// </summary>
+    [HttpPost("{id}/deactivate")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> DeactivateWarehouse(int id)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new DeactivateWarehouseCommand
+        {
+            TenantId = tenantId.Value,
+            WarehouseId = id
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(new { message = "Depo başarıyla pasifleştirildi" });
+    }
+
     private static Error CreateTenantError()
     {
-        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
+        return new Error("Tenant.Required", "Kiracı kimliği gereklidir", ErrorType.Validation);
     }
 }
