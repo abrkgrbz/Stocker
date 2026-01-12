@@ -1,28 +1,23 @@
 using MediatR;
 using Stocker.Modules.CRM.Domain.Entities;
-using Stocker.Modules.CRM.Domain.Repositories;
-using Stocker.Modules.CRM.Infrastructure.Repositories;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Meetings.Commands;
 
 public class CreateMeetingCommandHandler : IRequestHandler<CreateMeetingCommand, Result<Guid>>
 {
-    private readonly IMeetingRepository _repository;
-    private readonly SharedKernel.Interfaces.IUnitOfWork _unitOfWork;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public CreateMeetingCommandHandler(
-        IMeetingRepository repository,
-        SharedKernel.Interfaces.IUnitOfWork unitOfWork)
+    public CreateMeetingCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<Result<Guid>> Handle(CreateMeetingCommand request, CancellationToken cancellationToken)
     {
         var meeting = new Meeting(
-            request.TenantId,
+            _unitOfWork.TenantId,
             request.Title,
             request.StartTime,
             request.EndTime,
@@ -80,7 +75,7 @@ public class CreateMeetingCommandHandler : IRequestHandler<CreateMeetingCommand,
         if (!string.IsNullOrEmpty(request.Agenda))
             meeting.SetAgenda(request.Agenda);
 
-        await _repository.CreateAsync(meeting, cancellationToken);
+        await _unitOfWork.Meetings.CreateAsync(meeting, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<Guid>.Success(meeting.Id);

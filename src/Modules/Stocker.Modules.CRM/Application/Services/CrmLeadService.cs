@@ -1,9 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Domain.Repositories;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.Shared.Contracts.CRM;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Services;
 
@@ -12,19 +11,13 @@ namespace Stocker.Modules.CRM.Application.Services;
 /// </summary>
 public class CrmLeadService : ICrmLeadService
 {
-    private readonly ILeadRepository _leadRepository;
-    private readonly ICustomerRepository _customerRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ICRMUnitOfWork _unitOfWork;
     private readonly ILogger<CrmLeadService> _logger;
 
     public CrmLeadService(
-        ILeadRepository leadRepository,
-        ICustomerRepository customerRepository,
-        IUnitOfWork unitOfWork,
+        ICRMUnitOfWork unitOfWork,
         ILogger<CrmLeadService> logger)
     {
-        _leadRepository = leadRepository;
-        _customerRepository = customerRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
     }
@@ -33,7 +26,7 @@ public class CrmLeadService : ICrmLeadService
     {
         try
         {
-            var lead = await _leadRepository.GetByIdAsync(leadId, cancellationToken);
+            var lead = await _unitOfWork.Leads.GetByIdAsync(leadId, cancellationToken);
             if (lead == null || lead.TenantId != tenantId)
                 return null;
 
@@ -93,7 +86,7 @@ public class CrmLeadService : ICrmLeadService
                 lead.UpdateDescription(leadData.Notes);
             }
 
-            await _leadRepository.AddAsync(lead, cancellationToken);
+            await _unitOfWork.Leads.AddAsync(lead, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Lead {LeadId} created from campaign for tenant {TenantId}", lead.Id, tenantId);
@@ -110,7 +103,7 @@ public class CrmLeadService : ICrmLeadService
     {
         try
         {
-            var lead = await _leadRepository.GetByIdAsync(leadId, cancellationToken);
+            var lead = await _unitOfWork.Leads.GetByIdAsync(leadId, cancellationToken);
             if (lead == null || lead.TenantId != tenantId)
             {
                 _logger.LogWarning("Lead {LeadId} not found for tenant {TenantId}", leadId, tenantId);
@@ -139,7 +132,7 @@ public class CrmLeadService : ICrmLeadService
     {
         try
         {
-            var leads = await _leadRepository.GetQualifiedLeadsAsync(cancellationToken);
+            var leads = await _unitOfWork.Leads.GetQualifiedLeadsAsync(cancellationToken);
             return leads
                 .Where(l => l.TenantId == tenantId && l.Score >= minScore)
                 .Select(MapToDto)
@@ -156,7 +149,7 @@ public class CrmLeadService : ICrmLeadService
     {
         try
         {
-            var lead = await _leadRepository.GetByIdAsync(leadId, cancellationToken);
+            var lead = await _unitOfWork.Leads.GetByIdAsync(leadId, cancellationToken);
             if (lead == null || lead.TenantId != tenantId)
             {
                 _logger.LogWarning("Lead {LeadId} not found for tenant {TenantId}", leadId, tenantId);
@@ -173,7 +166,7 @@ public class CrmLeadService : ICrmLeadService
 
             var customer = convertResult.Value;
 
-            await _customerRepository.AddAsync(customer, cancellationToken);
+            await _unitOfWork.Customers.AddAsync(customer, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Lead {LeadId} converted to customer {CustomerId}", leadId, customer.Id);

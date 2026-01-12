@@ -1,28 +1,23 @@
 using MediatR;
 using Stocker.Modules.CRM.Domain.Entities;
-using Stocker.Modules.CRM.Domain.Repositories;
-using Stocker.Modules.CRM.Infrastructure.Repositories;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.ProductInterests.Commands;
 
 public class CreateProductInterestCommandHandler : IRequestHandler<CreateProductInterestCommand, Result<Guid>>
 {
-    private readonly IProductInterestRepository _repository;
-    private readonly SharedKernel.Interfaces.IUnitOfWork _unitOfWork;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public CreateProductInterestCommandHandler(
-        IProductInterestRepository repository,
-        SharedKernel.Interfaces.IUnitOfWork unitOfWork)
+    public CreateProductInterestCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<Result<Guid>> Handle(CreateProductInterestCommand request, CancellationToken cancellationToken)
     {
         var productInterest = new ProductInterest(
-            request.TenantId,
+            _unitOfWork.TenantId,
             request.ProductId,
             request.ProductName,
             request.InterestLevel);
@@ -74,7 +69,7 @@ public class CreateProductInterestCommandHandler : IRequestHandler<CreateProduct
         if (!string.IsNullOrEmpty(request.PromoCode))
             productInterest.SetPromoCode(request.PromoCode);
 
-        await _repository.CreateAsync(productInterest, cancellationToken);
+        await _unitOfWork.ProductInterests.CreateAsync(productInterest, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<Guid>.Success(productInterest.Id);

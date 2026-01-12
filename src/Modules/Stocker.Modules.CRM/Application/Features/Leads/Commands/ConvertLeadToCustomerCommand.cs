@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Domain.Repositories;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -20,24 +20,17 @@ public class ConvertLeadToCustomerCommand : IRequest<Result<CustomerDto>>, ITena
 /// </summary>
 public class ConvertLeadToCustomerCommandHandler : IRequestHandler<ConvertLeadToCustomerCommand, Result<CustomerDto>>
 {
-    private readonly ILeadRepository _leadRepository;
-    private readonly ICustomerRepository _customerRepository;
-    private readonly SharedKernel.Interfaces.IUnitOfWork _unitOfWork;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public ConvertLeadToCustomerCommandHandler(
-        ILeadRepository leadRepository,
-        ICustomerRepository customerRepository,
-        SharedKernel.Interfaces.IUnitOfWork unitOfWork)
+    public ConvertLeadToCustomerCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _leadRepository = leadRepository;
-        _customerRepository = customerRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<CustomerDto>> Handle(ConvertLeadToCustomerCommand request, CancellationToken cancellationToken)
     {
         // Get the lead
-        var lead = await _leadRepository.GetByIdAsync(request.LeadId, cancellationToken);
+        var lead = await _unitOfWork.Leads.GetByIdAsync(request.LeadId, cancellationToken);
 
         if (lead == null)
         {
@@ -45,13 +38,13 @@ public class ConvertLeadToCustomerCommandHandler : IRequestHandler<ConvertLeadTo
         }
 
         // Verify tenant access
-        if (lead.TenantId != request.TenantId)
+        if (lead.TenantId != _unitOfWork.TenantId)
         {
             return Result<CustomerDto>.Failure(Error.Forbidden("Lead", "Access denied"));
         }
 
         // Check if customer with same email already exists
-        var emailExists = await _customerRepository.ExistsWithEmailAsync(
+        var emailExists = await _unitOfWork.Customers.ExistsWithEmailAsync(
             lead.Email,
             null,
             cancellationToken);
@@ -73,10 +66,10 @@ public class ConvertLeadToCustomerCommandHandler : IRequestHandler<ConvertLeadTo
         var customer = customerResult.Value;
 
         // Save the customer
-        await _customerRepository.AddAsync(customer, cancellationToken);
+        await _unitOfWork.Customers.AddAsync(customer, cancellationToken);
 
         // Update the lead
-        await _leadRepository.UpdateAsync(lead, cancellationToken);
+        await _unitOfWork.Leads.UpdateAsync(lead, cancellationToken);
 
         // Save changes
         await _unitOfWork.SaveChangesAsync(cancellationToken);

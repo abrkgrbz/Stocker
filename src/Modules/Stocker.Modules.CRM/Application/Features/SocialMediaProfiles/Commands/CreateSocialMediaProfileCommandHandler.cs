@@ -1,27 +1,23 @@
 using MediatR;
-using Stocker.SharedKernel.Results;
 using Stocker.Modules.CRM.Domain.Entities;
-using Stocker.Modules.CRM.Infrastructure.Repositories;
+using Stocker.Modules.CRM.Interfaces;
+using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.SocialMediaProfiles.Commands;
 
 public class CreateSocialMediaProfileCommandHandler : IRequestHandler<CreateSocialMediaProfileCommand, Result<Guid>>
 {
-    private readonly ISocialMediaProfileRepository _repository;
-    private readonly SharedKernel.Interfaces.IUnitOfWork _unitOfWork;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public CreateSocialMediaProfileCommandHandler(
-        ISocialMediaProfileRepository repository,
-        SharedKernel.Interfaces.IUnitOfWork unitOfWork)
+    public CreateSocialMediaProfileCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<Result<Guid>> Handle(CreateSocialMediaProfileCommand request, CancellationToken cancellationToken)
     {
         var profile = new SocialMediaProfile(
-            request.TenantId,
+            _unitOfWork.TenantId,
             request.Platform,
             request.ProfileUrl);
 
@@ -58,7 +54,7 @@ public class CreateSocialMediaProfileCommandHandler : IRequestHandler<CreateSoci
         if (!request.IsActive)
             profile.Deactivate();
 
-        await _repository.CreateAsync(profile, cancellationToken);
+        await _unitOfWork.SocialMediaProfiles.CreateAsync(profile, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<Guid>.Success(profile.Id);

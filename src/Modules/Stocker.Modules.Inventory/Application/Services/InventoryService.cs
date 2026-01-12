@@ -1,9 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Enums;
-using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.Shared.Contracts.Inventory;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.Inventory.Application.Services;
 
@@ -13,25 +12,13 @@ namespace Stocker.Modules.Inventory.Application.Services;
 /// </summary>
 public class InventoryService : IInventoryService
 {
-    private readonly IProductRepository _productRepository;
-    private readonly IStockRepository _stockRepository;
-    private readonly IStockReservationRepository _reservationRepository;
-    private readonly IWarehouseRepository _warehouseRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
     private readonly ILogger<InventoryService> _logger;
 
     public InventoryService(
-        IProductRepository productRepository,
-        IStockRepository stockRepository,
-        IStockReservationRepository reservationRepository,
-        IWarehouseRepository warehouseRepository,
-        IUnitOfWork unitOfWork,
+        IInventoryUnitOfWork unitOfWork,
         ILogger<InventoryService> logger)
     {
-        _productRepository = productRepository;
-        _stockRepository = stockRepository;
-        _reservationRepository = reservationRepository;
-        _warehouseRepository = warehouseRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
     }
@@ -55,7 +42,7 @@ public class InventoryService : IInventoryService
         try
         {
             // Find product by code (using GUID as string code lookup)
-            var product = await _productRepository.GetByCodeAsync(productId.ToString(), cancellationToken);
+            var product = await _unitOfWork.Products.GetByCodeAsync(productId.ToString(), cancellationToken);
 
             if (product == null)
             {
@@ -64,15 +51,15 @@ public class InventoryService : IInventoryService
             }
 
             // Get total stock across all warehouses
-            var totalStock = await _stockRepository.GetTotalQuantityByProductAsync(product.Id, cancellationToken);
+            var totalStock = await _unitOfWork.Stocks.GetTotalQuantityByProductAsync(product.Id, cancellationToken);
 
             // Get total reserved quantity across all warehouses
-            var stocks = await _stockRepository.GetByProductAsync(product.Id, cancellationToken);
+            var stocks = await _unitOfWork.Stocks.GetByProductAsync(product.Id, cancellationToken);
             decimal totalReserved = 0;
 
             foreach (var stock in stocks)
             {
-                totalReserved += await _reservationRepository.GetTotalReservedQuantityAsync(
+                totalReserved += await _unitOfWork.StockReservations.GetTotalReservedQuantityAsync(
                     product.Id, stock.WarehouseId, cancellationToken);
             }
 
@@ -98,10 +85,10 @@ public class InventoryService : IInventoryService
             _logger.LogInformation("Reserving stock for order {OrderId} with {Count} items", orderId, reservations.Count());
 
             // Get default warehouse
-            var defaultWarehouse = await _warehouseRepository.GetDefaultWarehouseAsync(cancellationToken);
+            var defaultWarehouse = await _unitOfWork.Warehouses.GetDefaultWarehouseAsync(cancellationToken);
             if (defaultWarehouse == null)
             {
-                var warehouses = await _warehouseRepository.GetActiveWarehousesAsync(cancellationToken);
+                var warehouses = await _unitOfWork.Warehouses.GetActiveWarehousesAsync(cancellationToken);
                 defaultWarehouse = warehouses.FirstOrDefault();
             }
 
@@ -117,7 +104,7 @@ public class InventoryService : IInventoryService
             foreach (var item in reservationsList)
             {
                 // Find product by code
-                var product = await _productRepository.GetByCodeAsync(item.ProductId.ToString(), cancellationToken);
+                var product = await _unitOfWork.Products.GetByCodeAsync(item.ProductId.ToString(), cancellationToken);
 
                 if (product == null)
                 {
@@ -126,10 +113,10 @@ public class InventoryService : IInventoryService
                 }
 
                 // Check available stock
-                var availableStock = await _stockRepository.GetTotalAvailableQuantityAsync(
+                var availableStock = await _unitOfWork.Stocks.GetTotalAvailableQuantityAsync(
                     product.Id, defaultWarehouse.Id, cancellationToken);
 
-                var reservedStock = await _reservationRepository.GetTotalReservedQuantityAsync(
+                var reservedStock = await _unitOfWork.StockReservations.GetTotalReservedQuantityAsync(
                     product.Id, defaultWarehouse.Id, cancellationToken);
 
                 var netAvailable = availableStock - reservedStock;
@@ -150,7 +137,7 @@ public class InventoryService : IInventoryService
                 }
 
                 // Generate reservation number
-                var reservationNumber = await _reservationRepository.GenerateReservationNumberAsync(cancellationToken);
+                var reservationNumber = await _unitOfWork.StockReservations.GenerateReservationNumberAsync(cancellationToken);
 
                 // Create reservation
                 var reservation = new StockReservation(
@@ -166,7 +153,7 @@ public class InventoryService : IInventoryService
                 reservation.SetReference("SalesOrder", orderId.ToString(), orderId);
                 reservation.SetNotes($"Auto-reserved for order {orderId}");
 
-                await _reservationRepository.AddAsync(reservation, cancellationToken);
+                await _unitOfWork.StockReservations.AddAsync(reservation, cancellationToken);
                 createdReservations.Add(reservation);
 
                 _logger.LogInformation(
@@ -196,7 +183,7 @@ public class InventoryService : IInventoryService
             _logger.LogInformation("Releasing reserved stock for order {OrderId}", orderId);
 
             // Find all reservations for this order using reference lookup
-            var orderReservations = await _reservationRepository.GetByReferenceAsync(
+            var orderReservations = await _unitOfWork.StockReservations.GetByReferenceAsync(
                 ReservationType.SalesOrder, orderId, cancellationToken);
 
             var activeReservations = orderReservations
@@ -237,7 +224,7 @@ public class InventoryService : IInventoryService
     {
         try
         {
-            var product = await _productRepository.GetByCodeAsync(productId.ToString(), cancellationToken);
+            var product = await _unitOfWork.Products.GetByCodeAsync(productId.ToString(), cancellationToken);
 
             if (product == null)
             {
@@ -245,7 +232,7 @@ public class InventoryService : IInventoryService
             }
 
             // Get available stock
-            var totalStock = await _stockRepository.GetTotalQuantityByProductAsync(product.Id, cancellationToken);
+            var totalStock = await _unitOfWork.Stocks.GetTotalQuantityByProductAsync(product.Id, cancellationToken);
 
             return new ProductDto
             {
@@ -272,12 +259,12 @@ public class InventoryService : IInventoryService
     {
         try
         {
-            var products = await _productRepository.GetActiveProductsAsync(cancellationToken);
+            var products = await _unitOfWork.Products.GetActiveProductsAsync(cancellationToken);
             var result = new List<ProductDto>();
 
             foreach (var product in products)
             {
-                var totalStock = await _stockRepository.GetTotalQuantityByProductAsync(product.Id, cancellationToken);
+                var totalStock = await _unitOfWork.Stocks.GetTotalQuantityByProductAsync(product.Id, cancellationToken);
 
                 result.Add(new ProductDto
                 {

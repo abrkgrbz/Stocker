@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
-using Stocker.Modules.CRM.Domain.Repositories;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.Shared.Contracts.CRM;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Services;
 
@@ -10,16 +9,13 @@ namespace Stocker.Modules.CRM.Application.Services;
 /// </summary>
 public class CrmDealService : ICrmDealService
 {
-    private readonly IDealRepository _dealRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ICRMUnitOfWork _unitOfWork;
     private readonly ILogger<CrmDealService> _logger;
 
     public CrmDealService(
-        IDealRepository dealRepository,
-        IUnitOfWork unitOfWork,
+        ICRMUnitOfWork unitOfWork,
         ILogger<CrmDealService> logger)
     {
-        _dealRepository = dealRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
     }
@@ -28,7 +24,7 @@ public class CrmDealService : ICrmDealService
     {
         try
         {
-            var deal = await _dealRepository.GetByIdAsync(dealId, cancellationToken);
+            var deal = await _unitOfWork.Deals.GetByIdAsync(dealId, cancellationToken);
             if (deal == null || deal.TenantId != tenantId)
                 return null;
 
@@ -46,7 +42,7 @@ public class CrmDealService : ICrmDealService
         try
         {
             // Get all deals for customer and filter for won deals
-            var deals = await _dealRepository.GetByCustomerIdAsync(customerId, tenantId, cancellationToken);
+            var deals = await _unitOfWork.Deals.GetByCustomerIdAsync(customerId, tenantId, cancellationToken);
             return deals
                 .Where(d => d.Status == Domain.Enums.DealStatus.Won)
                 .Select(MapToDto)
@@ -63,7 +59,7 @@ public class CrmDealService : ICrmDealService
     {
         try
         {
-            var deal = await _dealRepository.GetByIdAsync(dealId, cancellationToken);
+            var deal = await _unitOfWork.Deals.GetByIdAsync(dealId, cancellationToken);
             if (deal == null || deal.TenantId != tenantId)
                 return 0;
 
@@ -80,7 +76,7 @@ public class CrmDealService : ICrmDealService
     {
         try
         {
-            var deal = await _dealRepository.GetByIdAsync(dealId, cancellationToken);
+            var deal = await _unitOfWork.Deals.GetByIdAsync(dealId, cancellationToken);
             if (deal == null || deal.TenantId != tenantId)
             {
                 _logger.LogWarning("Deal {DealId} not found for tenant {TenantId}", dealId, tenantId);
@@ -106,7 +102,7 @@ public class CrmDealService : ICrmDealService
     {
         try
         {
-            var deal = await _dealRepository.GetWithProductsAsync(dealId, tenantId, cancellationToken);
+            var deal = await _unitOfWork.Deals.GetWithProductsAsync(dealId, tenantId, cancellationToken);
             if (deal == null || deal.TenantId != tenantId)
                 return Enumerable.Empty<DealProductDto>();
 

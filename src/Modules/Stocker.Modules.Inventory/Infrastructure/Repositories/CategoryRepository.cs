@@ -119,4 +119,10 @@ public class CategoryRepository : BaseRepository<Category>, ICategoryRepository
 
         return await query.AnyAsync(cancellationToken);
     }
+
+    public async Task<bool> HasActiveProductsAsync(int categoryId, CancellationToken cancellationToken = default)
+    {
+        return await Context.Products
+            .AnyAsync(p => !p.IsDeleted && p.IsActive && p.CategoryId == categoryId, cancellationToken);
+    }
 }

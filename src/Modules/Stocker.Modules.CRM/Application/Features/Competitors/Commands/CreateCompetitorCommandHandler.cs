@@ -1,27 +1,22 @@
 using MediatR;
 using Stocker.Modules.CRM.Domain.Entities;
-using Stocker.Modules.CRM.Domain.Repositories;
-using Stocker.Modules.CRM.Infrastructure.Repositories;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Competitors.Commands;
 
 public class CreateCompetitorCommandHandler : IRequestHandler<CreateCompetitorCommand, Result<Guid>>
 {
-    private readonly ICompetitorRepository _repository;
-    private readonly SharedKernel.Interfaces.IUnitOfWork _unitOfWork;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public CreateCompetitorCommandHandler(
-        ICompetitorRepository repository,
-        SharedKernel.Interfaces.IUnitOfWork unitOfWork)
+    public CreateCompetitorCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<Result<Guid>> Handle(CreateCompetitorCommand request, CancellationToken cancellationToken)
     {
-        var competitor = new Competitor(request.TenantId, request.Name);
+        var competitor = new Competitor(_unitOfWork.TenantId, request.Name);
 
         competitor.UpdateDetails(request.Name, request.Code, request.Description);
         competitor.SetThreatLevel(request.ThreatLevel);
@@ -74,7 +69,7 @@ public class CreateCompetitorCommandHandler : IRequestHandler<CreateCompetitorCo
         if (!request.IsActive)
             competitor.Deactivate();
 
-        await _repository.CreateAsync(competitor, cancellationToken);
+        await _unitOfWork.Competitors.CreateAsync(competitor, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<Guid>.Success(competitor.Id);

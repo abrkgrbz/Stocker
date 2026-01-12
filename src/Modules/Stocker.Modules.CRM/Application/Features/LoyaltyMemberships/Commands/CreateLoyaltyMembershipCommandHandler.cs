@@ -1,27 +1,23 @@
 using MediatR;
-using Stocker.SharedKernel.Results;
 using Stocker.Modules.CRM.Domain.Entities;
-using Stocker.Modules.CRM.Infrastructure.Repositories;
+using Stocker.Modules.CRM.Interfaces;
+using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.LoyaltyMemberships.Commands;
 
 public class CreateLoyaltyMembershipCommandHandler : IRequestHandler<CreateLoyaltyMembershipCommand, Result<Guid>>
 {
-    private readonly ILoyaltyMembershipRepository _repository;
-    private readonly SharedKernel.Interfaces.IUnitOfWork _unitOfWork;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public CreateLoyaltyMembershipCommandHandler(
-        ILoyaltyMembershipRepository repository,
-        SharedKernel.Interfaces.IUnitOfWork unitOfWork)
+    public CreateLoyaltyMembershipCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<Result<Guid>> Handle(CreateLoyaltyMembershipCommand request, CancellationToken cancellationToken)
     {
         var membership = new LoyaltyMembership(
-            request.TenantId,
+            _unitOfWork.TenantId,
             request.LoyaltyProgramId,
             request.CustomerId,
             request.MembershipNumber);
@@ -35,7 +31,7 @@ public class CreateLoyaltyMembershipCommandHandler : IRequestHandler<CreateLoyal
         if (!request.IsActive)
             membership.Deactivate();
 
-        await _repository.CreateAsync(membership, cancellationToken);
+        await _unitOfWork.LoyaltyMemberships.CreateAsync(membership, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<Guid>.Success(membership.Id);

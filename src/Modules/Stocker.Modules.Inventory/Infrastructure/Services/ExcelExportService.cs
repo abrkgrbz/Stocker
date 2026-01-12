@@ -2,9 +2,8 @@ using ClosedXML.Excel;
 using Microsoft.Extensions.Logging;
 using Stocker.Modules.Inventory.Application.Services;
 using Stocker.Modules.Inventory.Domain.Enums;
-using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.Domain.Common.ValueObjects;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.Inventory.Infrastructure.Services;
 
@@ -13,13 +12,7 @@ namespace Stocker.Modules.Inventory.Infrastructure.Services;
 /// </summary>
 public class ExcelExportService : IExcelExportService
 {
-    private readonly IProductRepository _productRepository;
-    private readonly IStockRepository _stockRepository;
-    private readonly IWarehouseRepository _warehouseRepository;
-    private readonly ICategoryRepository _categoryRepository;
-    private readonly IBrandRepository _brandRepository;
-    private readonly IUnitRepository _unitRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
     private readonly ILogger<ExcelExportService> _logger;
 
     // Column definitions for product export/import
@@ -47,21 +40,9 @@ public class ExcelExportService : IExcelExportService
     };
 
     public ExcelExportService(
-        IProductRepository productRepository,
-        IStockRepository stockRepository,
-        IWarehouseRepository warehouseRepository,
-        ICategoryRepository categoryRepository,
-        IBrandRepository brandRepository,
-        IUnitRepository unitRepository,
-        IUnitOfWork unitOfWork,
+        IInventoryUnitOfWork unitOfWork,
         ILogger<ExcelExportService> logger)
     {
-        _productRepository = productRepository;
-        _stockRepository = stockRepository;
-        _warehouseRepository = warehouseRepository;
-        _categoryRepository = categoryRepository;
-        _brandRepository = brandRepository;
-        _unitRepository = unitRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
     }
@@ -73,8 +54,8 @@ public class ExcelExportService : IExcelExportService
             _logger.LogInformation("Starting product export");
 
             // Always get all active products (simplified approach)
-            var products = await _productRepository.GetActiveProductsAsync(cancellationToken);
-            
+            var products = await _unitOfWork.Products.GetActiveProductsAsync(cancellationToken);
+
             // Filter by IDs if provided
             var productList = products.ToList();
             if (productIds != null)
@@ -160,16 +141,16 @@ public class ExcelExportService : IExcelExportService
 
             if (warehouseId.HasValue)
             {
-                stocks = await _stockRepository.GetByWarehouseAsync(warehouseId.Value, cancellationToken);
+                stocks = await _unitOfWork.Stocks.GetByWarehouseAsync(warehouseId.Value, cancellationToken);
             }
             else
             {
                 // Get all products and their stocks
-                var products = await _productRepository.GetActiveProductsAsync(cancellationToken);
+                var products = await _unitOfWork.Products.GetActiveProductsAsync(cancellationToken);
                 var allStocks = new List<Domain.Entities.Stock>();
                 foreach (var product in products)
                 {
-                    var productStocks = await _stockRepository.GetByProductAsync(product.Id, cancellationToken);
+                    var productStocks = await _unitOfWork.Stocks.GetByProductAsync(product.Id, cancellationToken);
                     allStocks.AddRange(productStocks);
                 }
                 stocks = allStocks;
@@ -243,13 +224,13 @@ public class ExcelExportService : IExcelExportService
         {
             _logger.LogInformation("Starting stock summary export");
 
-            var products = await _productRepository.GetActiveProductsAsync(cancellationToken);
+            var products = await _unitOfWork.Products.GetActiveProductsAsync(cancellationToken);
 
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Stok Özeti");
 
             // Headers
-            string[] summaryColumns = { "Ürün Kodu", "Ürün Adı", "Toplam Miktar", "Rezerve", "Kullanılabilir", 
+            string[] summaryColumns = { "Ürün Kodu", "Ürün Adı", "Toplam Miktar", "Rezerve", "Kullanılabilir",
                                         "Min Stok", "Yeniden Sipariş", "Durum" };
 
             for (int i = 0; i < summaryColumns.Length; i++)
@@ -264,10 +245,10 @@ public class ExcelExportService : IExcelExportService
             int row = 2;
             foreach (var product in products)
             {
-                var totalStock = await _stockRepository.GetTotalQuantityByProductAsync(product.Id, cancellationToken);
-                
+                var totalStock = await _unitOfWork.Stocks.GetTotalQuantityByProductAsync(product.Id, cancellationToken);
+
                 // Get stocks and calculate reserved
-                var stocks = await _stockRepository.GetByProductAsync(product.Id, cancellationToken);
+                var stocks = await _unitOfWork.Stocks.GetByProductAsync(product.Id, cancellationToken);
                 var totalReserved = stocks.Sum(s => s.ReservedQuantity);
                 var available = totalStock - totalReserved;
 
@@ -286,10 +267,10 @@ public class ExcelExportService : IExcelExportService
                 worksheet.Cell(row, 5).Value = available;
                 worksheet.Cell(row, 6).Value = product.MinimumStock;
                 worksheet.Cell(row, 7).Value = product.ReorderPoint;
-                
+
                 var statusCell = worksheet.Cell(row, 8);
                 statusCell.Value = status;
-                
+
                 // Color code status
                 statusCell.Style.Fill.BackgroundColor = status switch
                 {
@@ -340,9 +321,9 @@ public class ExcelExportService : IExcelExportService
             result.TotalRows = rows.Count;
 
             // Get lookup data
-            var categories = await _categoryRepository.GetAllAsync(cancellationToken);
-            var brands = await _brandRepository.GetAllAsync(cancellationToken);
-            var units = await _unitRepository.GetAllAsync(cancellationToken);
+            var categories = await _unitOfWork.Categories.GetAllAsync(cancellationToken);
+            var brands = await _unitOfWork.Brands.GetAllAsync(cancellationToken);
+            var units = await _unitOfWork.Units.GetAllAsync(cancellationToken);
 
             var categoryLookup = categories.ToDictionary(c => c.Name.ToLowerInvariant(), c => c.Id);
             var brandLookup = brands.ToDictionary(b => b.Name.ToLowerInvariant(), b => b.Id);
@@ -368,7 +349,7 @@ public class ExcelExportService : IExcelExportService
                     }
 
                     // Check if product exists
-                    var existingProduct = await _productRepository.GetByCodeAsync(code, cancellationToken);
+                    var existingProduct = await _unitOfWork.Products.GetByCodeAsync(code, cancellationToken);
 
                     if (existingProduct != null && !updateExisting)
                     {
@@ -496,7 +477,7 @@ public class ExcelExportService : IExcelExportService
                             product.Deactivate("Excel Import", "Imported as inactive");
                         }
 
-                        await _productRepository.AddAsync(product, cancellationToken);
+                        await _unitOfWork.Products.AddAsync(product, cancellationToken);
                     }
 
                     result.SuccessCount++;
@@ -546,7 +527,7 @@ public class ExcelExportService : IExcelExportService
 
             result.TotalRows = rows.Count;
 
-            var warehouses = await _warehouseRepository.GetAllAsync(cancellationToken);
+            var warehouses = await _unitOfWork.Warehouses.GetAllAsync(cancellationToken);
             var warehouseLookup = warehouses.ToDictionary(w => w.Code.ToLowerInvariant(), w => w.Id);
 
             foreach (var row in rows)
@@ -568,7 +549,7 @@ public class ExcelExportService : IExcelExportService
                         continue;
                     }
 
-                    var product = await _productRepository.GetByCodeAsync(productCode, cancellationToken);
+                    var product = await _unitOfWork.Products.GetByCodeAsync(productCode, cancellationToken);
                     if (product == null)
                     {
                         result.Errors.Add(new ExcelImportError
@@ -614,13 +595,13 @@ public class ExcelExportService : IExcelExportService
                     if (string.IsNullOrEmpty(reason)) reason = "Excel import";
 
                     // Get or create stock record
-                    var stock = await _stockRepository.GetByProductAndWarehouseAsync(product.Id, warehouseId, cancellationToken);
+                    var stock = await _unitOfWork.Stocks.GetByProductAndWarehouseAsync(product.Id, warehouseId, cancellationToken);
 
                     if (stock == null)
                     {
                         // Create new stock record with initial quantity
                         stock = new Domain.Entities.Stock(product.Id, warehouseId, newQuantity);
-                        await _stockRepository.AddAsync(stock, cancellationToken);
+                        await _unitOfWork.Stocks.AddAsync(stock, cancellationToken);
                     }
                     else
                     {
@@ -845,8 +826,8 @@ public class ExcelExportService : IExcelExportService
 
     private async Task ValidateProductData(List<IXLRangeRow> rows, ExcelValidationResult result, CancellationToken cancellationToken)
     {
-        var categories = await _categoryRepository.GetAllAsync(cancellationToken);
-        var units = await _unitRepository.GetAllAsync(cancellationToken);
+        var categories = await _unitOfWork.Categories.GetAllAsync(cancellationToken);
+        var units = await _unitOfWork.Units.GetAllAsync(cancellationToken);
 
         var categoryNames = categories.Select(c => c.Name.ToLowerInvariant()).ToHashSet();
         var unitNames = units.Select(u => u.Name.ToLowerInvariant()).ToHashSet();
@@ -902,7 +883,7 @@ public class ExcelExportService : IExcelExportService
 
     private async Task ValidateStockAdjustmentData(List<IXLRangeRow> rows, ExcelValidationResult result, CancellationToken cancellationToken)
     {
-        var warehouses = await _warehouseRepository.GetAllAsync(cancellationToken);
+        var warehouses = await _unitOfWork.Warehouses.GetAllAsync(cancellationToken);
         var warehouseCodes = warehouses.Select(w => w.Code.ToLowerInvariant()).ToHashSet();
 
         foreach (var row in rows)

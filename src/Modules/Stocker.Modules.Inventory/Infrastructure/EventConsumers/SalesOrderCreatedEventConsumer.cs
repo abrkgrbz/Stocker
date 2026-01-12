@@ -2,9 +2,8 @@ using MassTransit;
 using Microsoft.Extensions.Logging;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Enums;
-using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.Shared.Events.Sales;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.Inventory.Infrastructure.EventConsumers;
 
@@ -14,25 +13,13 @@ namespace Stocker.Modules.Inventory.Infrastructure.EventConsumers;
 /// </summary>
 public class SalesOrderCreatedEventConsumer : IConsumer<SalesOrderCreatedEvent>
 {
-    private readonly IProductRepository _productRepository;
-    private readonly IStockRepository _stockRepository;
-    private readonly IStockReservationRepository _reservationRepository;
-    private readonly IWarehouseRepository _warehouseRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
     private readonly ILogger<SalesOrderCreatedEventConsumer> _logger;
 
     public SalesOrderCreatedEventConsumer(
-        IProductRepository productRepository,
-        IStockRepository stockRepository,
-        IStockReservationRepository reservationRepository,
-        IWarehouseRepository warehouseRepository,
-        IUnitOfWork unitOfWork,
+        IInventoryUnitOfWork unitOfWork,
         ILogger<SalesOrderCreatedEventConsumer> logger)
     {
-        _productRepository = productRepository;
-        _stockRepository = stockRepository;
-        _reservationRepository = reservationRepository;
-        _warehouseRepository = warehouseRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
     }
@@ -51,10 +38,10 @@ public class SalesOrderCreatedEventConsumer : IConsumer<SalesOrderCreatedEvent>
         try
         {
             // Get default warehouse for reservations
-            var defaultWarehouse = await _warehouseRepository.GetDefaultWarehouseAsync(context.CancellationToken);
+            var defaultWarehouse = await _unitOfWork.Warehouses.GetDefaultWarehouseAsync(context.CancellationToken);
             if (defaultWarehouse == null)
             {
-                var warehouses = await _warehouseRepository.GetActiveWarehousesAsync(context.CancellationToken);
+                var warehouses = await _unitOfWork.Warehouses.GetActiveWarehousesAsync(context.CancellationToken);
                 defaultWarehouse = warehouses.FirstOrDefault();
             }
 
@@ -82,13 +69,13 @@ public class SalesOrderCreatedEventConsumer : IConsumer<SalesOrderCreatedEvent>
                     }
 
                     // Find product by code first, then by ID
-                    var product = await _productRepository.GetByCodeAsync(
+                    var product = await _unitOfWork.Products.GetByCodeAsync(
                         orderItem.ProductCode, context.CancellationToken);
 
                     if (product == null)
                     {
                         // Try searching by name
-                        var products = await _productRepository.SearchAsync(
+                        var products = await _unitOfWork.Products.SearchAsync(
                             orderItem.ProductName, context.CancellationToken);
                         product = products.FirstOrDefault();
                     }
@@ -104,10 +91,10 @@ public class SalesOrderCreatedEventConsumer : IConsumer<SalesOrderCreatedEvent>
                     }
 
                     // Check available stock
-                    var availableStock = await _stockRepository.GetTotalAvailableQuantityAsync(
+                    var availableStock = await _unitOfWork.Stocks.GetTotalAvailableQuantityAsync(
                         product.Id, defaultWarehouse.Id, context.CancellationToken);
 
-                    var reservedStock = await _reservationRepository.GetTotalReservedQuantityAsync(
+                    var reservedStock = await _unitOfWork.StockReservations.GetTotalReservedQuantityAsync(
                         product.Id, defaultWarehouse.Id, context.CancellationToken);
 
                     var netAvailable = availableStock - reservedStock;
@@ -126,7 +113,7 @@ public class SalesOrderCreatedEventConsumer : IConsumer<SalesOrderCreatedEvent>
                     }
 
                     // Generate reservation number
-                    var reservationNumber = await _reservationRepository.GenerateReservationNumberAsync(context.CancellationToken);
+                    var reservationNumber = await _unitOfWork.StockReservations.GenerateReservationNumberAsync(context.CancellationToken);
 
                     // Create stock reservation for the sales order
                     var reservation = new StockReservation(
@@ -142,7 +129,7 @@ public class SalesOrderCreatedEventConsumer : IConsumer<SalesOrderCreatedEvent>
                     reservation.SetReference("SalesOrder", @event.OrderNumber, @event.OrderId);
                     reservation.SetNotes($"Auto-reserved for sales order {@event.OrderNumber} - Customer: {@event.CustomerName}");
 
-                    await _reservationRepository.AddAsync(reservation, context.CancellationToken);
+                    await _unitOfWork.StockReservations.AddAsync(reservation, context.CancellationToken);
 
                     _logger.LogInformation(
                         "Created stock reservation {ReservationNumber} for order {OrderNumber}: Product={ProductName}, Quantity={Quantity}",

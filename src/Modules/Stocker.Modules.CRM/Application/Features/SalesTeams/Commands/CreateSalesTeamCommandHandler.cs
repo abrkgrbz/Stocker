@@ -1,28 +1,23 @@
 using MediatR;
 using Stocker.Modules.CRM.Domain.Entities;
-using Stocker.Modules.CRM.Domain.Repositories;
-using Stocker.Modules.CRM.Infrastructure.Repositories;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.SalesTeams.Commands;
 
 public class CreateSalesTeamCommandHandler : IRequestHandler<CreateSalesTeamCommand, Result<Guid>>
 {
-    private readonly ISalesTeamRepository _repository;
-    private readonly SharedKernel.Interfaces.IUnitOfWork _unitOfWork;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public CreateSalesTeamCommandHandler(
-        ISalesTeamRepository repository,
-        SharedKernel.Interfaces.IUnitOfWork unitOfWork)
+    public CreateSalesTeamCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<Result<Guid>> Handle(CreateSalesTeamCommand request, CancellationToken cancellationToken)
     {
         var salesTeam = new SalesTeam(
-            request.TenantId,
+            _unitOfWork.TenantId,
             request.Name,
             request.Code);
 
@@ -53,7 +48,7 @@ public class CreateSalesTeamCommandHandler : IRequestHandler<CreateSalesTeamComm
         if (!request.IsActive)
             salesTeam.Deactivate();
 
-        await _repository.CreateAsync(salesTeam, cancellationToken);
+        await _unitOfWork.SalesTeams.CreateAsync(salesTeam, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<Guid>.Success(salesTeam.Id);

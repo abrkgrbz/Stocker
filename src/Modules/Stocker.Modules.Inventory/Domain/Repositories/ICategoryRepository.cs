@@ -51,4 +51,9 @@ public interface ICategoryRepository : IInventoryRepository<Category>
     /// Checks if a category has any subcategories
     /// </summary>
     Task<bool> HasSubcategoriesAsync(int categoryId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks if a category has any active products
+    /// </summary>
+    Task<bool> HasActiveProductsAsync(int categoryId, CancellationToken cancellationToken = default);
 }

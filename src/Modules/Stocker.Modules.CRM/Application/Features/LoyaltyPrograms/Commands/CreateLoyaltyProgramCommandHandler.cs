@@ -1,27 +1,23 @@
 using MediatR;
-using Stocker.SharedKernel.Results;
 using Stocker.Modules.CRM.Domain.Entities;
-using Stocker.Modules.CRM.Infrastructure.Repositories;
+using Stocker.Modules.CRM.Interfaces;
+using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.LoyaltyPrograms.Commands;
 
 public class CreateLoyaltyProgramCommandHandler : IRequestHandler<CreateLoyaltyProgramCommand, Result<Guid>>
 {
-    private readonly ILoyaltyProgramRepository _repository;
-    private readonly SharedKernel.Interfaces.IUnitOfWork _unitOfWork;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public CreateLoyaltyProgramCommandHandler(
-        ILoyaltyProgramRepository repository,
-        SharedKernel.Interfaces.IUnitOfWork unitOfWork)
+    public CreateLoyaltyProgramCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<Result<Guid>> Handle(CreateLoyaltyProgramCommand request, CancellationToken cancellationToken)
     {
         var program = new LoyaltyProgram(
-            request.TenantId,
+            _unitOfWork.TenantId,
             request.Name,
             request.Code,
             request.ProgramType);
@@ -59,7 +55,7 @@ public class CreateLoyaltyProgramCommandHandler : IRequestHandler<CreateLoyaltyP
         if (!request.IsActive)
             program.Deactivate();
 
-        await _repository.CreateAsync(program, cancellationToken);
+        await _unitOfWork.LoyaltyPrograms.CreateAsync(program, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<Guid>.Success(program.Id);

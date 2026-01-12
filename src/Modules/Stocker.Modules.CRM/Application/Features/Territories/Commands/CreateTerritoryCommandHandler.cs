@@ -1,27 +1,23 @@
 using MediatR;
-using Stocker.SharedKernel.Results;
 using Stocker.Modules.CRM.Domain.Entities;
-using Stocker.Modules.CRM.Infrastructure.Repositories;
+using Stocker.Modules.CRM.Interfaces;
+using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Territories.Commands;
 
 public class CreateTerritoryCommandHandler : IRequestHandler<CreateTerritoryCommand, Result<Guid>>
 {
-    private readonly ITerritoryRepository _repository;
-    private readonly SharedKernel.Interfaces.IUnitOfWork _unitOfWork;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public CreateTerritoryCommandHandler(
-        ITerritoryRepository repository,
-        SharedKernel.Interfaces.IUnitOfWork unitOfWork)
+    public CreateTerritoryCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<Result<Guid>> Handle(CreateTerritoryCommand request, CancellationToken cancellationToken)
     {
         var territory = new Territory(
-            request.TenantId,
+            _unitOfWork.TenantId,
             request.Name,
             request.Code,
             request.TerritoryType);
@@ -66,7 +62,7 @@ public class CreateTerritoryCommandHandler : IRequestHandler<CreateTerritoryComm
         if (!request.IsActive)
             territory.Deactivate();
 
-        await _repository.CreateAsync(territory, cancellationToken);
+        await _unitOfWork.Territories.CreateAsync(territory, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<Guid>.Success(territory.Id);

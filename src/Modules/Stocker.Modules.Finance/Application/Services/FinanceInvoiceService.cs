@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
+using Stocker.Modules.Finance.Interfaces;
 using Stocker.Shared.Contracts.Finance;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.Finance.Application.Services;
 
@@ -10,11 +10,11 @@ namespace Stocker.Modules.Finance.Application.Services;
 /// </summary>
 public class FinanceInvoiceService : IFinanceInvoiceService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IFinanceUnitOfWork _unitOfWork;
     private readonly ILogger<FinanceInvoiceService> _logger;
 
     public FinanceInvoiceService(
-        IUnitOfWork unitOfWork,
+        IFinanceUnitOfWork unitOfWork,
         ILogger<FinanceInvoiceService> logger)
     {
         _unitOfWork = unitOfWork;
@@ -27,7 +27,7 @@ public class FinanceInvoiceService : IFinanceInvoiceService
         {
             _logger.LogWarning("GetInvoiceByIdAsync not yet fully implemented - Invoice entity needed");
             // TODO: Implement once Invoice entity and repository are added
-            // var invoice = await _invoiceRepository.GetByIdAsync(invoiceId, cancellationToken);
+            // var invoice = await _unitOfWork.Invoices.GetByIdAsync(invoiceId, cancellationToken);
             // if (invoice == null || invoice.TenantId != tenantId)
             //     return null;
             // return MapToDto(invoice);
@@ -60,13 +60,13 @@ public class FinanceInvoiceService : IFinanceInvoiceService
         try
         {
             _logger.LogInformation("Creating invoice from sales order {OrderId} for tenant {TenantId}", orderId, tenantId);
-            
+
             // TODO: Implement once Invoice entity is added
             // 1. Get sales order details from Sales module
             // 2. Create invoice with order line items
             // 3. Set invoice status to "Draft"
             // 4. Save and return invoice ID
-            
+
             _logger.LogWarning("CreateInvoiceFromOrderAsync not yet fully implemented - Invoice entity needed");
             return Guid.Empty;
         }
@@ -82,14 +82,14 @@ public class FinanceInvoiceService : IFinanceInvoiceService
         try
         {
             _logger.LogInformation("Creating invoice from CRM deal {DealId} for tenant {TenantId}", dealId, tenantId);
-            
+
             // TODO: Implement once Invoice entity is added
             // 1. Get deal details using ICrmDealService
             // 2. Get deal products
             // 3. Create invoice with deal line items
             // 4. Mark deal as invoiced
             // 5. Save and return invoice ID
-            
+
             _logger.LogWarning("CreateInvoiceFromDealAsync not yet fully implemented - Invoice entity needed");
             return Guid.Empty;
         }
@@ -121,18 +121,18 @@ public class FinanceInvoiceService : IFinanceInvoiceService
         try
         {
             _logger.LogInformation(
-                "Recording payment of {Amount} for invoice {InvoiceId} on {PaymentDate}", 
-                amount, 
-                invoiceId, 
+                "Recording payment of {Amount} for invoice {InvoiceId} on {PaymentDate}",
+                amount,
+                invoiceId,
                 paymentDate);
-            
+
             // TODO: Implement once Invoice entity is added
             // 1. Get invoice
             // 2. Create payment record
             // 3. Update invoice paid amount
             // 4. Update invoice status if fully paid
             // 5. Publish InvoicePaidEvent if needed
-            
+
             _logger.LogWarning("RecordPaymentAsync not yet fully implemented - Invoice entity needed");
             return await Task.FromResult(false);
         }

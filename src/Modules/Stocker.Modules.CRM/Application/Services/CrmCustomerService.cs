@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
-using Stocker.Modules.CRM.Domain.Repositories;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.Shared.Contracts.CRM;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Services;
 
@@ -10,16 +9,13 @@ namespace Stocker.Modules.CRM.Application.Services;
 /// </summary>
 public class CrmCustomerService : ICrmCustomerService
 {
-    private readonly ICustomerRepository _customerRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ICRMUnitOfWork _unitOfWork;
     private readonly ILogger<CrmCustomerService> _logger;
 
     public CrmCustomerService(
-        ICustomerRepository customerRepository,
-        IUnitOfWork unitOfWork,
+        ICRMUnitOfWork unitOfWork,
         ILogger<CrmCustomerService> logger)
     {
-        _customerRepository = customerRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
     }
@@ -28,7 +24,7 @@ public class CrmCustomerService : ICrmCustomerService
     {
         try
         {
-            var customer = await _customerRepository.GetByIdAsync(customerId, cancellationToken);
+            var customer = await _unitOfWork.Customers.GetByIdAsync(customerId, cancellationToken);
             if (customer == null || customer.TenantId != tenantId)
                 return null;
 
@@ -60,7 +56,7 @@ public class CrmCustomerService : ICrmCustomerService
     {
         try
         {
-            var customer = await _customerRepository.GetByIdAsync(customerId, cancellationToken);
+            var customer = await _unitOfWork.Customers.GetByIdAsync(customerId, cancellationToken);
             return customer != null && customer.TenantId == tenantId;
         }
         catch (Exception ex)
@@ -74,7 +70,7 @@ public class CrmCustomerService : ICrmCustomerService
     {
         try
         {
-            var customers = await _customerRepository.GetActiveCustomersAsync(cancellationToken);
+            var customers = await _unitOfWork.Customers.GetActiveCustomersAsync(cancellationToken);
             return customers
                 .Where(c => c.TenantId == tenantId)
                 .Select(MapToDto)
@@ -91,7 +87,7 @@ public class CrmCustomerService : ICrmCustomerService
     {
         try
         {
-            var customer = await _customerRepository.GetByIdAsync(customerId, cancellationToken);
+            var customer = await _unitOfWork.Customers.GetByIdAsync(customerId, cancellationToken);
             if (customer == null || customer.TenantId != tenantId)
             {
                 _logger.LogWarning("Customer {CustomerId} not found for tenant {TenantId}", customerId, tenantId);
@@ -119,7 +115,7 @@ public class CrmCustomerService : ICrmCustomerService
     {
         try
         {
-            var customer = await _customerRepository.GetByIdAsync(customerId, cancellationToken);
+            var customer = await _unitOfWork.Customers.GetByIdAsync(customerId, cancellationToken);
             if (customer == null || customer.TenantId != tenantId)
             {
                 _logger.LogWarning("Customer {CustomerId} not found for tenant {TenantId}", customerId, tenantId);

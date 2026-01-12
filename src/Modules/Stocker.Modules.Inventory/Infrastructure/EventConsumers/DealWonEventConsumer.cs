@@ -2,9 +2,8 @@ using MassTransit;
 using Microsoft.Extensions.Logging;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Enums;
-using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.Shared.Events.CRM;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.Inventory.Infrastructure.EventConsumers;
 
@@ -14,25 +13,13 @@ namespace Stocker.Modules.Inventory.Infrastructure.EventConsumers;
 /// </summary>
 public class DealWonEventConsumer : IConsumer<DealWonEvent>
 {
-    private readonly IProductRepository _productRepository;
-    private readonly IStockRepository _stockRepository;
-    private readonly IStockReservationRepository _reservationRepository;
-    private readonly IWarehouseRepository _warehouseRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
     private readonly ILogger<DealWonEventConsumer> _logger;
 
     public DealWonEventConsumer(
-        IProductRepository productRepository,
-        IStockRepository stockRepository,
-        IStockReservationRepository reservationRepository,
-        IWarehouseRepository warehouseRepository,
-        IUnitOfWork unitOfWork,
+        IInventoryUnitOfWork unitOfWork,
         ILogger<DealWonEventConsumer> logger)
     {
-        _productRepository = productRepository;
-        _stockRepository = stockRepository;
-        _reservationRepository = reservationRepository;
-        _warehouseRepository = warehouseRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
     }
@@ -51,10 +38,10 @@ public class DealWonEventConsumer : IConsumer<DealWonEvent>
         try
         {
             // Get default warehouse for reservations
-            var defaultWarehouse = await _warehouseRepository.GetDefaultWarehouseAsync(context.CancellationToken);
+            var defaultWarehouse = await _unitOfWork.Warehouses.GetDefaultWarehouseAsync(context.CancellationToken);
             if (defaultWarehouse == null)
             {
-                var warehouses = await _warehouseRepository.GetActiveWarehousesAsync(context.CancellationToken);
+                var warehouses = await _unitOfWork.Warehouses.GetActiveWarehousesAsync(context.CancellationToken);
                 defaultWarehouse = warehouses.FirstOrDefault();
             }
 
@@ -71,13 +58,13 @@ public class DealWonEventConsumer : IConsumer<DealWonEvent>
                 try
                 {
                     // Find product by code/ID
-                    var product = await _productRepository.GetByCodeAsync(
+                    var product = await _unitOfWork.Products.GetByCodeAsync(
                         dealProduct.ProductId.ToString(), context.CancellationToken);
 
                     if (product == null)
                     {
                         // Try searching by name
-                        var products = await _productRepository.SearchAsync(
+                        var products = await _unitOfWork.Products.SearchAsync(
                             dealProduct.ProductName, context.CancellationToken);
                         product = products.FirstOrDefault();
                     }
@@ -93,10 +80,10 @@ public class DealWonEventConsumer : IConsumer<DealWonEvent>
                     }
 
                     // Check available stock
-                    var availableStock = await _stockRepository.GetTotalAvailableQuantityAsync(
+                    var availableStock = await _unitOfWork.Stocks.GetTotalAvailableQuantityAsync(
                         product.Id, defaultWarehouse.Id, context.CancellationToken);
 
-                    var reservedStock = await _reservationRepository.GetTotalReservedQuantityAsync(
+                    var reservedStock = await _unitOfWork.StockReservations.GetTotalReservedQuantityAsync(
                         product.Id, defaultWarehouse.Id, context.CancellationToken);
 
                     var netAvailable = availableStock - reservedStock;
@@ -115,7 +102,7 @@ public class DealWonEventConsumer : IConsumer<DealWonEvent>
                     }
 
                     // Generate reservation number
-                    var reservationNumber = await _reservationRepository.GenerateReservationNumberAsync(context.CancellationToken);
+                    var reservationNumber = await _unitOfWork.StockReservations.GenerateReservationNumberAsync(context.CancellationToken);
 
                     // Create soft reservation for the deal
                     var reservation = new StockReservation(
@@ -131,7 +118,7 @@ public class DealWonEventConsumer : IConsumer<DealWonEvent>
                     reservation.SetReference("CRM-Deal", @event.DealId.ToString(), @event.DealId);
                     reservation.SetNotes($"Auto-reserved for won deal {@event.DealId} - Customer: {@event.CustomerId}");
 
-                    await _reservationRepository.AddAsync(reservation, context.CancellationToken);
+                    await _unitOfWork.StockReservations.AddAsync(reservation, context.CancellationToken);
 
                     _logger.LogInformation(
                         "Created stock reservation {ReservationNumber} for deal {DealId}: Product={ProductName}, Quantity={Quantity}",

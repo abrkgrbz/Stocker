@@ -1,30 +1,26 @@
 using MediatR;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
-using Stocker.Modules.CRM.Infrastructure.Repositories;
 
 namespace Stocker.Modules.CRM.Application.Features.LoyaltyMemberships.Commands;
 
 public class UpdateLoyaltyMembershipCommandHandler : IRequestHandler<UpdateLoyaltyMembershipCommand, Result<bool>>
 {
-    private readonly ILoyaltyMembershipRepository _repository;
-    private readonly SharedKernel.Interfaces.IUnitOfWork _unitOfWork;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public UpdateLoyaltyMembershipCommandHandler(
-        ILoyaltyMembershipRepository repository,
-        SharedKernel.Interfaces.IUnitOfWork unitOfWork)
+    public UpdateLoyaltyMembershipCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<Result<bool>> Handle(UpdateLoyaltyMembershipCommand request, CancellationToken cancellationToken)
     {
-        var membership = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var membership = await _unitOfWork.LoyaltyMemberships.GetByIdAsync(request.Id, cancellationToken);
 
         if (membership == null)
             return Result<bool>.Failure(Error.NotFound("LoyaltyMembership.NotFound", "Loyalty membership not found"));
 
-        if (membership.TenantId != request.TenantId)
+        if (membership.TenantId != _unitOfWork.TenantId)
             return Result<bool>.Failure(Error.Forbidden("LoyaltyMembership.Forbidden", "Access denied"));
 
         if (request.CurrentTierId.HasValue)
@@ -55,7 +51,7 @@ public class UpdateLoyaltyMembershipCommandHandler : IRequestHandler<UpdateLoyal
                 membership.Deactivate();
         }
 
-        await _repository.UpdateAsync(membership, cancellationToken);
+        await _unitOfWork.LoyaltyMemberships.UpdateAsync(membership, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

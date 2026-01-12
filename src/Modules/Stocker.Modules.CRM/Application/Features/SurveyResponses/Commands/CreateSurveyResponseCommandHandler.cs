@@ -1,27 +1,23 @@
 using MediatR;
-using Stocker.SharedKernel.Results;
 using Stocker.Modules.CRM.Domain.Entities;
-using Stocker.Modules.CRM.Infrastructure.Repositories;
+using Stocker.Modules.CRM.Interfaces;
+using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.SurveyResponses.Commands;
 
 public class CreateSurveyResponseCommandHandler : IRequestHandler<CreateSurveyResponseCommand, Result<Guid>>
 {
-    private readonly ISurveyResponseRepository _repository;
-    private readonly SharedKernel.Interfaces.IUnitOfWork _unitOfWork;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public CreateSurveyResponseCommandHandler(
-        ISurveyResponseRepository repository,
-        SharedKernel.Interfaces.IUnitOfWork unitOfWork)
+    public CreateSurveyResponseCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<Result<Guid>> Handle(CreateSurveyResponseCommand request, CancellationToken cancellationToken)
     {
         var surveyResponse = new SurveyResponse(
-            request.TenantId,
+            _unitOfWork.TenantId,
             request.SurveyName,
             request.SurveyType);
 
@@ -51,7 +47,7 @@ public class CreateSurveyResponseCommandHandler : IRequestHandler<CreateSurveyRe
 
         surveyResponse.SetSource(request.Source);
 
-        await _repository.CreateAsync(surveyResponse, cancellationToken);
+        await _unitOfWork.SurveyResponses.CreateAsync(surveyResponse, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<Guid>.Success(surveyResponse.Id);

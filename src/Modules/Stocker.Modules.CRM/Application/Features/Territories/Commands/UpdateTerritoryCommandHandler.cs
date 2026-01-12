@@ -1,30 +1,26 @@
 using MediatR;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
-using Stocker.Modules.CRM.Infrastructure.Repositories;
 
 namespace Stocker.Modules.CRM.Application.Features.Territories.Commands;
 
 public class UpdateTerritoryCommandHandler : IRequestHandler<UpdateTerritoryCommand, Result<bool>>
 {
-    private readonly ITerritoryRepository _repository;
-    private readonly SharedKernel.Interfaces.IUnitOfWork _unitOfWork;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public UpdateTerritoryCommandHandler(
-        ITerritoryRepository repository,
-        SharedKernel.Interfaces.IUnitOfWork unitOfWork)
+    public UpdateTerritoryCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<Result<bool>> Handle(UpdateTerritoryCommand request, CancellationToken cancellationToken)
     {
-        var territory = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var territory = await _unitOfWork.Territories.GetByIdAsync(request.Id, cancellationToken);
 
         if (territory == null)
             return Result<bool>.Failure(Error.NotFound("Territory.NotFound", "Territory not found"));
 
-        if (territory.TenantId != request.TenantId)
+        if (territory.TenantId != _unitOfWork.TenantId)
             return Result<bool>.Failure(Error.Forbidden("Territory.Forbidden", "Access denied"));
 
         if (request.Name != null || request.Code != null)
@@ -68,7 +64,7 @@ public class UpdateTerritoryCommandHandler : IRequestHandler<UpdateTerritoryComm
                 territory.Deactivate();
         }
 
-        await _repository.UpdateAsync(territory, cancellationToken);
+        await _unitOfWork.Territories.UpdateAsync(territory, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

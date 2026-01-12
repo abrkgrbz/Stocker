@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 using CrmTask = Stocker.Modules.CRM.Domain.Entities.Task;
 
@@ -12,16 +12,13 @@ namespace Stocker.Modules.CRM.Application.Features.Workflows.ActionHandlers;
 /// </summary>
 public class CreateTaskActionHandler : IWorkflowActionHandler
 {
-    private readonly IRepository<CrmTask> _taskRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ICRMUnitOfWork _unitOfWork;
     private readonly ILogger<CreateTaskActionHandler> _logger;
 
     public CreateTaskActionHandler(
-        IRepository<CrmTask> taskRepository,
-        IUnitOfWork unitOfWork,
+        ICRMUnitOfWork unitOfWork,
         ILogger<CreateTaskActionHandler> logger)
     {
-        _taskRepository = taskRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
     }
@@ -46,8 +43,12 @@ public class CreateTaskActionHandler : IWorkflowActionHandler
                     Error.Validation("CreateTask", "Task subject is required"));
             }
 
-            // Get tenantId from trigger data
+            // Get tenantId from trigger data or unit of work
             var tenantId = ResolveTenantId(context);
+            if (tenantId == Guid.Empty)
+            {
+                tenantId = _unitOfWork.TenantId;
+            }
             if (tenantId == Guid.Empty)
             {
                 return Result<WorkflowActionResult>.Failure(
@@ -129,8 +130,8 @@ public class CreateTaskActionHandler : IWorkflowActionHandler
                 }
             }
 
-            // Save task
-            await _taskRepository.AddAsync(task, cancellationToken);
+            // Save task using the generic repository from base UnitOfWork
+            await _unitOfWork.Repository<CrmTask>().AddAsync(task, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation(
