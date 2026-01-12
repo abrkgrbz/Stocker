@@ -20,6 +20,7 @@ using Stocker.Modules.HR.Infrastructure.Persistence;
 using Stocker.Modules.Sales.Infrastructure.Persistence;
 using Stocker.Modules.Purchase.Infrastructure.Persistence;
 using Stocker.Modules.Manufacturing.Infrastructure.Data;
+using Stocker.Modules.Finance.Infrastructure.Persistence;
 using Npgsql;
 
 namespace Stocker.Persistence.Migrations;
@@ -2147,8 +2148,44 @@ public partial class MigrationService
                         "Finans modülü yapılandırılıyor...", progressPercent));
                 }
 
-                // TODO: Implement Finance module migrations when FinanceDbContext is available
-                _logger.LogInformation("Finance module migrations placeholder for tenant {TenantId}", tenantId);
+                try
+                {
+                    _logger.LogInformation("Applying Finance migrations for tenant {TenantId}...", tenantId);
+
+                    var financeOptionsBuilder = new DbContextOptionsBuilder<FinanceDbContext>();
+                    financeOptionsBuilder.UseNpgsql(connectionString, sqlOptions =>
+                    {
+                        sqlOptions.MigrationsAssembly(typeof(FinanceDbContext).Assembly.FullName);
+                        sqlOptions.CommandTimeout(60);
+                        sqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                    });
+                    // Suppress PendingModelChangesWarning - we're applying existing migrations
+                    financeOptionsBuilder.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
+
+                    var mockTenantService = new MockTenantService(tenantId, connectionString!);
+
+                    using var financeDbContext = new FinanceDbContext(
+                        financeOptionsBuilder.Options,
+                        mockTenantService);
+
+                    var pendingMigrations = await financeDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+                    var pendingList = pendingMigrations.ToList();
+
+                    if (pendingList.Any())
+                    {
+                        await financeDbContext.Database.MigrateAsync(cancellationToken);
+                        appliedMigrations.AddRange(pendingList.Select(m => $"Finance:{m}"));
+                        _logger.LogInformation("Finance migrations applied: {Migrations}", string.Join(", ", pendingList));
+                    }
+                    else
+                    {
+                        _logger.LogInformation("No pending Finance migrations for tenant {TenantId}", tenantId);
+                    }
+                }
+                catch (Exception financeEx)
+                {
+                    _logger.LogError(financeEx, "Error applying Finance migrations for tenant {TenantId}", tenantId);
+                }
             }
 
             // Apply Manufacturing module migrations
