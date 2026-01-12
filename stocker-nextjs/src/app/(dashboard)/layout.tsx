@@ -319,6 +319,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     '/sales': 'sales',
     '/purchase': 'purchase',
     '/finance': 'finance',
+    '/manufacturing': 'manufacturing',
   };
 
   // Paths that are always allowed (no module required)

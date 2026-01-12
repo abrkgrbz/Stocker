@@ -72,6 +72,13 @@ import {
   ScaleIcon,
   BuildingLibraryIcon,
   ReceiptRefundIcon,
+  CogIcon,
+  BeakerIcon,
+  WrenchScrewdriverIcon,
+  CpuChipIcon,
+  CircleStackIcon,
+  CommandLineIcon,
+  ListBulletIcon,
 } from '@heroicons/react/24/outline';
 import { colors } from '@/theme/colors';
 
@@ -82,7 +89,7 @@ import { colors } from '@/theme/colors';
 /**
  * All available module keys in the system
  */
-export type ModuleKey = 'crm' | 'inventory' | 'sales' | 'purchase' | 'hr' | 'finance' | 'settings' | 'communication' | 'modules';
+export type ModuleKey = 'crm' | 'inventory' | 'sales' | 'purchase' | 'hr' | 'finance' | 'manufacturing' | 'settings' | 'communication' | 'modules';
 
 // Define the structure for module menu items
 export interface MenuItem {
@@ -703,6 +710,86 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
       },
     ],
   },
+  manufacturing: {
+    title: 'Üretim',
+    icon: <CogIcon className="w-4 h-4" />,
+    color: '#8b5cf6', // Purple for manufacturing
+    moduleCode: 'manufacturing',
+    description: 'Üretim planlama ve kalite kontrol',
+    items: [
+      { key: '/manufacturing', icon: <ChartBarSquareIcon className="w-4 h-4" />, label: 'Dashboard' },
+      {
+        key: 'mfg-planning',
+        icon: <CalendarIcon className="w-4 h-4" />,
+        label: 'Planlama',
+        children: [
+          { key: '/manufacturing/production-plans', icon: <CalendarIcon className="w-4 h-4" />, label: 'Üretim Planları' },
+          { key: '/manufacturing/mrp', icon: <CalculatorIcon className="w-4 h-4" />, label: 'MRP' },
+          { key: '/manufacturing/capacity', icon: <ChartBarIcon className="w-4 h-4" />, label: 'Kapasite Planlama' },
+        ],
+      },
+      {
+        key: 'mfg-orders',
+        icon: <ClipboardDocumentListIcon className="w-4 h-4" />,
+        label: 'İş Emirleri',
+        children: [
+          { key: '/manufacturing/work-orders', icon: <ClipboardDocumentListIcon className="w-4 h-4" />, label: 'İş Emirleri' },
+          { key: '/manufacturing/operations', icon: <ListBulletIcon className="w-4 h-4" />, label: 'Operasyonlar' },
+          { key: '/manufacturing/production-tracking', icon: <ClockIcon className="w-4 h-4" />, label: 'Üretim Takibi' },
+        ],
+      },
+      {
+        key: 'mfg-bom',
+        icon: <CircleStackIcon className="w-4 h-4" />,
+        label: 'Reçete & BOM',
+        children: [
+          { key: '/manufacturing/bom', icon: <CircleStackIcon className="w-4 h-4" />, label: 'Ürün Ağaçları (BOM)' },
+          { key: '/manufacturing/recipes', icon: <DocumentTextIcon className="w-4 h-4" />, label: 'Üretim Reçeteleri' },
+          { key: '/manufacturing/routings', icon: <ArrowsRightLeftIcon className="w-4 h-4" />, label: 'Operasyon Rotaları' },
+        ],
+      },
+      {
+        key: 'mfg-resources',
+        icon: <CpuChipIcon className="w-4 h-4" />,
+        label: 'Kaynaklar',
+        children: [
+          { key: '/manufacturing/work-centers', icon: <BuildingOfficeIcon className="w-4 h-4" />, label: 'İş Merkezleri' },
+          { key: '/manufacturing/machines', icon: <CogIcon className="w-4 h-4" />, label: 'Makineler' },
+          { key: '/manufacturing/tools', icon: <WrenchScrewdriverIcon className="w-4 h-4" />, label: 'Takımlar' },
+        ],
+      },
+      {
+        key: 'mfg-quality',
+        icon: <BeakerIcon className="w-4 h-4" />,
+        label: 'Kalite Kontrol',
+        children: [
+          { key: '/manufacturing/quality-checks', icon: <ClipboardDocumentCheckIcon className="w-4 h-4" />, label: 'Kalite Kontrolleri' },
+          { key: '/manufacturing/quality-reports', icon: <DocumentCheckIcon className="w-4 h-4" />, label: 'Kalite Raporları' },
+          { key: '/manufacturing/non-conformance', icon: <ExclamationTriangleIcon className="w-4 h-4" />, label: 'Uygunsuzluklar' },
+        ],
+      },
+      {
+        key: 'mfg-maintenance',
+        icon: <WrenchIcon className="w-4 h-4" />,
+        label: 'Bakım',
+        children: [
+          { key: '/manufacturing/maintenance-plans', icon: <CalendarDaysIcon className="w-4 h-4" />, label: 'Bakım Planları' },
+          { key: '/manufacturing/maintenance-orders', icon: <WrenchIcon className="w-4 h-4" />, label: 'Bakım Emirleri' },
+          { key: '/manufacturing/spare-parts', icon: <CubeIcon className="w-4 h-4" />, label: 'Yedek Parçalar' },
+        ],
+      },
+      {
+        key: 'mfg-reports',
+        icon: <ChartBarIcon className="w-4 h-4" />,
+        label: 'Raporlar',
+        children: [
+          { key: '/manufacturing/reports', icon: <ChartBarIcon className="w-4 h-4" />, label: 'Üretim Raporları' },
+          { key: '/manufacturing/oee', icon: <PresentationChartLineIcon className="w-4 h-4" />, label: 'OEE Analizi' },
+          { key: '/manufacturing/costing', icon: <CalculatorIcon className="w-4 h-4" />, label: 'Maliyet Analizi' },
+        ],
+      },
+    ],
+  },
   modules: {
     title: 'Modüller',
     icon: <Squares2X2Icon className="w-4 h-4" />,
@@ -731,6 +818,7 @@ export function getCurrentModule(pathname: string): ModuleKey | null {
   if (pathname.startsWith('/purchase')) return 'purchase';
   if (pathname.startsWith('/hr')) return 'hr';
   if (pathname.startsWith('/finance')) return 'finance';
+  if (pathname.startsWith('/manufacturing')) return 'manufacturing';
   if (pathname.startsWith('/settings')) return 'settings';
   if (pathname.startsWith('/notifications') || pathname.startsWith('/reminders')) return 'communication';
   if (pathname.startsWith('/modules')) return 'modules';
