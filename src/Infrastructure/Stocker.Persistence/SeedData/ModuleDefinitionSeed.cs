@@ -19,10 +19,10 @@ public static class ModuleDefinitionSeed
 
     public static async Task SeedAsync(MasterDbContext context)
     {
-        if (await context.ModuleDefinitions.AnyAsync())
-        {
-            return; // Already seeded
-        }
+        // Get existing module codes to avoid duplicates
+        var existingModuleCodes = await context.ModuleDefinitions
+            .Select(m => m.Code)
+            .ToListAsync();
 
         var modules = new List<ModuleDefinition>
         {
@@ -138,8 +138,14 @@ public static class ModuleDefinitionSeed
         var manufacturingModule = modules.First(m => m.Code == "MANUFACTURING");
         manufacturingModule.AddDependency("INVENTORY");
 
-        context.ModuleDefinitions.AddRange(modules);
-        await context.SaveChangesAsync();
+        // Filter out existing modules - only add new ones
+        var newModules = modules.Where(m => !existingModuleCodes.Contains(m.Code)).ToList();
+
+        if (newModules.Any())
+        {
+            context.ModuleDefinitions.AddRange(newModules);
+            await context.SaveChangesAsync();
+        }
     }
 
     private static ModuleDefinition CreateModule(
