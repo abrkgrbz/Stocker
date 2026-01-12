@@ -386,6 +386,7 @@ public class MasterDataSeeder
         professionalPackage.AddModule("Inventory", "Stok Yönetimi", true, 100);
         professionalPackage.AddModule("HR", "İnsan Kaynakları", true, 50);
         professionalPackage.AddModule("Finance", "Profesyonel Finans", true, 200);
+        professionalPackage.AddModule("MANUFACTURING", "Üretim Yönetimi", true, 100);
 
         packages.Add(professionalPackage);
 
@@ -415,6 +416,7 @@ public class MasterDataSeeder
         enterprisePackage.AddModule("HR", "İnsan Kaynakları", true);
         enterprisePackage.AddModule("Projects", "Proje Yönetimi", true);
         enterprisePackage.AddModule("Finance", "Kurumsal Finans", true);
+        enterprisePackage.AddModule("MANUFACTURING", "Üretim Yönetimi", true);
 
         packages.Add(enterprisePackage);
 
