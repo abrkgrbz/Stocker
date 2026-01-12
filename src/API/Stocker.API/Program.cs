@@ -18,6 +18,7 @@ using Stocker.Modules.Inventory;
 using Stocker.Modules.HR;
 using Stocker.Modules.Purchase;
 using Stocker.Modules.CMS;
+using Stocker.Modules.Manufacturing;
 using Stocker.SharedKernel.Settings;
 using Stocker.SignalR.Extensions;
 using Stocker.Modules.CRM.Infrastructure.BackgroundJobs;
@@ -254,6 +255,13 @@ if (enabledModules.GetValue<bool>("CMS", true))
 {
     Log.Information("Loading CMS Module...");
     builder.Services.AddCMSModule(builder.Configuration);
+}
+
+// Manufacturing Module
+if (enabledModules.GetValue<bool>("Manufacturing"))
+{
+    Log.Information("Loading Manufacturing Module...");
+    builder.Services.AddManufacturingModule(builder.Configuration);
 }
 
 // SignalR Services
