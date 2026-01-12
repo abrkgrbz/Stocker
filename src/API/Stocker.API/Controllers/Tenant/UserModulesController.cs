@@ -155,6 +155,8 @@ public class UserModulesController : ApiController
             "PROJECTS" => "operations",
             "PURCHASE" => "operations",
             "FINANCE" => "finance",
+            "MANUFACTURING" => "operations",
+            "CMS" => "other",
             _ => "other"
         };
     }
