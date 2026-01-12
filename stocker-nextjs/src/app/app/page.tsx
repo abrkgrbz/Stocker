@@ -27,6 +27,7 @@ import {
   TrendingUp,
   Command,
   Wallet,
+  Factory,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -107,6 +108,16 @@ const MODULE_CONFIGS = [
     iconColor: 'text-green-600',
     path: '/finance',
     moduleCode: 'finance',
+  },
+  {
+    id: 'manufacturing',
+    title: 'Üretim',
+    description: 'Üretim planlama, iş emirleri ve kalite kontrol',
+    icon: Factory,
+    iconBg: 'bg-violet-50',
+    iconColor: 'text-violet-600',
+    path: '/manufacturing',
+    moduleCode: 'manufacturing',
   },
   {
     id: 'dashboards',
