@@ -7,7 +7,8 @@
       "pricing": "Pricing",
       "faq": "FAQ",
       "signIn": "Sign In",
-      "getStarted": "Get Started Free"
+      "getStarted": "Get Started Free",
+      "goToDashboard": "Go to Dashboard"
     },
     "hero": {
       "badge": "New Features Added",
