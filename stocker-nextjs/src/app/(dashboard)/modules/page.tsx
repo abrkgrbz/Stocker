@@ -22,6 +22,7 @@ import {
   Loader2,
   Sparkles,
   Wallet,
+  Factory,
 } from 'lucide-react';
 import { useActiveModules } from '@/lib/api/hooks/useUserModules';
 import { useToggleModule } from '@/lib/api/hooks/useTenantModules';
@@ -116,14 +117,14 @@ const MODULE_DEFINITIONS = [
     features: ['Dashboard Builder', 'KPI Takibi', 'Veri Görselleştirme', 'Export'],
   },
   {
-    id: 'production',
-    code: 'PROJECTS',
-    name: 'Üretim',
-    description: 'Üretim planlama ve kalite kontrol',
-    icon: Settings,
-    path: '/production',
+    id: 'manufacturing',
+    code: 'MANUFACTURING',
+    name: 'Üretim Yönetimi',
+    description: 'Üretim planlama, iş emirleri, MRP ve kalite kontrol',
+    icon: Factory,
+    path: '/manufacturing',
     tier: 'enterprise' as const,
-    features: ['Üretim Emirleri', 'Reçeteler', 'Kapasite Planlama', 'Kalite'],
+    features: ['Üretim Planlama', 'İş Emirleri', 'Reçete/BOM', 'Kalite Kontrol'],
   },
 ];
 
