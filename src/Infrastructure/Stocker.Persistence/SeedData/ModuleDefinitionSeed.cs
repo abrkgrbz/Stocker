@@ -15,6 +15,7 @@ public static class ModuleDefinitionSeed
     private static readonly Guid HrModuleId = new("10000000-0000-0000-0000-000000000005");
     private static readonly Guid PurchaseModuleId = new("10000000-0000-0000-0000-000000000006");
     private static readonly Guid CmsModuleId = new("10000000-0000-0000-0000-000000000007");
+    private static readonly Guid ManufacturingModuleId = new("10000000-0000-0000-0000-000000000008");
 
     public static async Task SeedAsync(MasterDbContext context)
     {
@@ -102,6 +103,21 @@ public static class ModuleDefinitionSeed
                     ("Blog Yönetimi", "Blog yazıları ve kategoriler"),
                     ("Medya Kütüphanesi", "Görsel ve dosya yönetimi"),
                     ("SEO Ayarları", "Arama motoru optimizasyonu")
+                }),
+
+            CreateModule(
+                ManufacturingModuleId, "MANUFACTURING", "Üretim Yönetimi",
+                "Üretim planlama, iş emirleri, malzeme ihtiyaç planlaması ve kalite kontrol",
+                "settings", 249m, "TRY", false, 8, "Operasyon",
+                new[] {
+                    ("Üretim Planlama", "MRP/MPS üretim planlaması ve kapasite yönetimi"),
+                    ("İş Emri Yönetimi", "Üretim iş emirleri oluşturma ve takibi"),
+                    ("Reçete Yönetimi", "Ürün ağaçları (BOM) ve üretim reçeteleri"),
+                    ("İş Merkezi Yönetimi", "Üretim hatları ve iş merkezleri tanımı"),
+                    ("Kalite Kontrol", "Kalite muayene ve uygunsuzluk raporları"),
+                    ("Bakım Yönetimi", "Makine bakım planları ve kayıtları"),
+                    ("Maliyet Muhasebesi", "Üretim maliyet analizi ve raporları"),
+                    ("OEE Takibi", "Ekipman etkinliği ve performans metrikleri")
                 })
         };
 
@@ -117,6 +133,10 @@ public static class ModuleDefinitionSeed
         // Purchase depends on Inventory (needs stock data)
         var purchaseModule = modules.First(m => m.Code == "PURCHASE");
         purchaseModule.AddDependency("INVENTORY");
+
+        // Manufacturing depends on Inventory (needs stock/material data)
+        var manufacturingModule = modules.First(m => m.Code == "MANUFACTURING");
+        manufacturingModule.AddDependency("INVENTORY");
 
         context.ModuleDefinitions.AddRange(modules);
         await context.SaveChangesAsync();
