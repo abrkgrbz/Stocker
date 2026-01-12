@@ -21,29 +21,39 @@ public class CreateCategoryCommand : IRequest<Result<CategoryDto>>
 /// </summary>
 public class CreateCategoryCommandValidator : AbstractValidator<CreateCategoryCommand>
 {
+    // Regex: Only letters (including Turkish chars), numbers, spaces, and hyphens allowed
+    private static readonly System.Text.RegularExpressions.Regex ValidNamePattern = 
+        new(@"^[\p{L}\p{N}\s\-]+$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
     public CreateCategoryCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Kiracı kimliği gereklidir");
 
         RuleFor(x => x.CategoryData)
-            .NotNull().WithMessage("Category data is required");
+            .NotNull().WithMessage("Kategori bilgileri gereklidir");
 
         When(x => x.CategoryData != null, () =>
         {
             RuleFor(x => x.CategoryData.Code)
-                .NotEmpty().WithMessage("Category code is required")
-                .MaximumLength(50).WithMessage("Category code must not exceed 50 characters");
+                .NotEmpty().WithMessage("Kategori kodu gereklidir")
+                .MinimumLength(2).WithMessage("Kategori kodu en az 2 karakter olmalıdır")
+                .MaximumLength(50).WithMessage("Kategori kodu en fazla 50 karakter olabilir")
+                .Must(code => !string.IsNullOrEmpty(code) && ValidNamePattern.IsMatch(code))
+                .WithMessage("Kategori kodu sadece harf, rakam, boşluk ve tire içerebilir. Özel karakterlere izin verilmez.");
 
             RuleFor(x => x.CategoryData.Name)
-                .NotEmpty().WithMessage("Category name is required")
-                .MaximumLength(100).WithMessage("Category name must not exceed 100 characters");
+                .NotEmpty().WithMessage("Kategori adı gereklidir")
+                .MinimumLength(2).WithMessage("Kategori adı en az 2 karakter olmalıdır")
+                .MaximumLength(100).WithMessage("Kategori adı en fazla 100 karakter olabilir")
+                .Must(name => !string.IsNullOrEmpty(name) && ValidNamePattern.IsMatch(name))
+                .WithMessage("Kategori adı sadece harf, rakam, boşluk ve tire içerebilir. Özel karakterlere izin verilmez.");
 
             RuleFor(x => x.CategoryData.Description)
-                .MaximumLength(500).WithMessage("Description must not exceed 500 characters");
+                .MaximumLength(500).WithMessage("Açıklama en fazla 500 karakter olabilir");
 
             RuleFor(x => x.CategoryData.DisplayOrder)
-                .GreaterThanOrEqualTo(0).WithMessage("Display order cannot be negative");
+                .GreaterThanOrEqualTo(0).WithMessage("Görüntüleme sırası negatif olamaz");
         });
     }
 }
@@ -68,7 +78,7 @@ public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComman
         if (existingCategory != null)
         {
             return Result<CategoryDto>.Failure(
-                Error.Conflict("Category.Code", "A category with this code already exists"));
+                Error.Conflict("Category.Code", "Bu kategori kodu zaten kullanılmaktadır"));
         }
 
         // If parent category specified, verify it exists
@@ -81,7 +91,7 @@ public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComman
             if (parentCategory == null)
             {
                 return Result<CategoryDto>.Failure(
-                    Error.NotFound("Category", $"Parent category with ID {request.CategoryData.ParentCategoryId} not found"));
+                    Error.NotFound("Category", $"Üst kategori bulunamadı (ID: {request.CategoryData.ParentCategoryId})"));
             }
         }
 

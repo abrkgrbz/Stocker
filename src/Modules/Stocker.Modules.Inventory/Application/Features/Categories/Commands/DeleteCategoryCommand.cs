@@ -22,10 +22,10 @@ public class DeleteCategoryCommandValidator : AbstractValidator<DeleteCategoryCo
     public DeleteCategoryCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Kiracı kimliği gereklidir");
 
         RuleFor(x => x.CategoryId)
-            .GreaterThan(0).WithMessage("Category ID must be greater than 0");
+            .GreaterThan(0).WithMessage("Kategori kimliği 0'dan büyük olmalıdır");
     }
 }
 
@@ -48,14 +48,14 @@ public class DeleteCategoryCommandHandler : IRequestHandler<DeleteCategoryComman
         if (category == null)
         {
             return Result<bool>.Failure(
-                Error.NotFound("Category", $"Category with ID {request.CategoryId} not found"));
+                Error.NotFound("Category", $"Kategori bulunamadı (ID: {request.CategoryId})"));
         }
 
         // Verify tenant ownership
         if (category.TenantId != request.TenantId)
         {
             return Result<bool>.Failure(
-                Error.NotFound("Category", $"Category with ID {request.CategoryId} not found"));
+                Error.NotFound("Category", $"Kategori bulunamadı (ID: {request.CategoryId})"));
         }
 
         // Check if category has products
@@ -63,7 +63,7 @@ public class DeleteCategoryCommandHandler : IRequestHandler<DeleteCategoryComman
         if (hasProducts)
         {
             return Result<bool>.Failure(
-                Error.Conflict("Category.HasProducts", "Cannot delete category that has products. Please move or delete the products first."));
+                Error.Conflict("Category.HasProducts", "Bu kategoride ürünler bulunmaktadır. Önce ürünleri taşıyın veya silin."));
         }
 
         // Check if category has subcategories
@@ -71,7 +71,7 @@ public class DeleteCategoryCommandHandler : IRequestHandler<DeleteCategoryComman
         if (hasSubcategories)
         {
             return Result<bool>.Failure(
-                Error.Conflict("Category.HasSubcategories", "Cannot delete category that has subcategories. Please delete the subcategories first."));
+                Error.Conflict("Category.HasSubcategories", "Bu kategorinin alt kategorileri bulunmaktadır. Önce alt kategorileri silin."));
         }
 
         // Delete the category

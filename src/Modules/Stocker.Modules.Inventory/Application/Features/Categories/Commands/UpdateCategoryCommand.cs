@@ -21,28 +21,35 @@ public class UpdateCategoryCommand : IRequest<Result<CategoryDto>>
 /// </summary>
 public class UpdateCategoryCommandValidator : AbstractValidator<UpdateCategoryCommand>
 {
+    // Regex: Only letters (including Turkish chars), numbers, spaces, and hyphens allowed
+    private static readonly System.Text.RegularExpressions.Regex ValidNamePattern = 
+        new(@"^[\p{L}\p{N}\s\-]+$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
     public UpdateCategoryCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Kiracı kimliği gereklidir");
 
         RuleFor(x => x.CategoryId)
-            .GreaterThan(0).WithMessage("Category ID must be greater than 0");
+            .GreaterThan(0).WithMessage("Kategori kimliği 0'dan büyük olmalıdır");
 
         RuleFor(x => x.CategoryData)
-            .NotNull().WithMessage("Category data is required");
+            .NotNull().WithMessage("Kategori bilgileri gereklidir");
 
         When(x => x.CategoryData != null, () =>
         {
             RuleFor(x => x.CategoryData.Name)
-                .NotEmpty().WithMessage("Category name is required")
-                .MaximumLength(100).WithMessage("Category name must not exceed 100 characters");
+                .NotEmpty().WithMessage("Kategori adı gereklidir")
+                .MinimumLength(2).WithMessage("Kategori adı en az 2 karakter olmalıdır")
+                .MaximumLength(100).WithMessage("Kategori adı en fazla 100 karakter olabilir")
+                .Must(name => !string.IsNullOrEmpty(name) && ValidNamePattern.IsMatch(name))
+                .WithMessage("Kategori adı sadece harf, rakam, boşluk ve tire içerebilir. Özel karakterlere izin verilmez.");
 
             RuleFor(x => x.CategoryData.Description)
-                .MaximumLength(500).WithMessage("Description must not exceed 500 characters");
+                .MaximumLength(500).WithMessage("Açıklama en fazla 500 karakter olabilir");
 
             RuleFor(x => x.CategoryData.DisplayOrder)
-                .GreaterThanOrEqualTo(0).WithMessage("Display order cannot be negative");
+                .GreaterThanOrEqualTo(0).WithMessage("Görüntüleme sırası negatif olamaz");
         });
     }
 }
@@ -66,14 +73,14 @@ public class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryComman
         if (category == null)
         {
             return Result<CategoryDto>.Failure(
-                Error.NotFound("Category", $"Category with ID {request.CategoryId} not found"));
+                Error.NotFound("Category", $"Kategori bulunamadı (ID: {request.CategoryId})"));
         }
 
         // Verify tenant ownership
         if (category.TenantId != request.TenantId)
         {
             return Result<CategoryDto>.Failure(
-                Error.NotFound("Category", $"Category with ID {request.CategoryId} not found"));
+                Error.NotFound("Category", $"Kategori bulunamadı (ID: {request.CategoryId})"));
         }
 
         // If parent category specified, verify it exists and is not the same category
@@ -83,7 +90,7 @@ public class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryComman
             if (request.CategoryData.ParentCategoryId.Value == request.CategoryId)
             {
                 return Result<CategoryDto>.Failure(
-                    Error.Validation("Category.ParentCategoryId", "A category cannot be its own parent"));
+                    Error.Validation("Category.ParentCategoryId", "Bir kategori kendi üst kategorisi olamaz"));
             }
 
             var parentCategory = await _unitOfWork.Categories.GetByIdAsync(
@@ -92,7 +99,7 @@ public class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryComman
             if (parentCategory == null)
             {
                 return Result<CategoryDto>.Failure(
-                    Error.NotFound("Category", $"Parent category with ID {request.CategoryData.ParentCategoryId} not found"));
+                    Error.NotFound("Category", $"Üst kategori bulunamadı (ID: {request.CategoryData.ParentCategoryId})"));
             }
 
             parentCategoryName = parentCategory.Name;
