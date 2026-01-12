@@ -17,12 +17,12 @@ public class CreateLocationCommandValidator : AbstractValidator<CreateLocationCo
 {
     public CreateLocationCommandValidator()
     {
-        RuleFor(x => x.TenantId).NotEmpty();
-        RuleFor(x => x.Data).NotNull();
-        RuleFor(x => x.Data.WarehouseId).NotEmpty();
-        RuleFor(x => x.Data.Code).NotEmpty().MaximumLength(50);
-        RuleFor(x => x.Data.Name).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.Data.Capacity).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.TenantId).NotEmpty().WithMessage("Kiracı kimliği gereklidir");
+        RuleFor(x => x.Data).NotNull().WithMessage("Konum bilgileri gereklidir");
+        RuleFor(x => x.Data.WarehouseId).NotEmpty().WithMessage("Depo kimliği gereklidir");
+        RuleFor(x => x.Data.Code).NotEmpty().WithMessage("Konum kodu gereklidir").MaximumLength(50).WithMessage("Konum kodu en fazla 50 karakter olabilir");
+        RuleFor(x => x.Data.Name).NotEmpty().WithMessage("Konum adı gereklidir").MaximumLength(200).WithMessage("Konum adı en fazla 200 karakter olabilir");
+        RuleFor(x => x.Data.Capacity).GreaterThanOrEqualTo(0).WithMessage("Kapasite negatif olamaz");
     }
 }
 
@@ -42,12 +42,12 @@ public class CreateLocationCommandHandler : IRequestHandler<CreateLocationComman
         var warehouse = await _unitOfWork.Warehouses.GetByIdAsync(data.WarehouseId, cancellationToken);
         if (warehouse == null)
         {
-            return Result<LocationDto>.Failure(new Error("Warehouse.NotFound", $"Warehouse with ID {data.WarehouseId} not found", ErrorType.NotFound));
+            return Result<LocationDto>.Failure(new Error("Warehouse.NotFound", $"Depo bulunamadı (ID: {data.WarehouseId})", ErrorType.NotFound));
         }
 
         if (await _unitOfWork.Locations.ExistsWithCodeAsync(data.WarehouseId, data.Code, null, cancellationToken))
         {
-            return Result<LocationDto>.Failure(new Error("Location.DuplicateCode", $"Location with code '{data.Code}' already exists in this warehouse", ErrorType.Conflict));
+            return Result<LocationDto>.Failure(new Error("Location.DuplicateCode", $"'{data.Code}' kodlu konum bu depoda zaten mevcut", ErrorType.Conflict));
         }
 
         var location = new Location(data.WarehouseId, data.Code, data.Name);

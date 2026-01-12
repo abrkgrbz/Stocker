@@ -23,11 +23,11 @@ public class AddSupplierProductCommandValidator : AbstractValidator<AddSupplierP
 {
     public AddSupplierProductCommandValidator()
     {
-        RuleFor(x => x.TenantId).NotEmpty();
-        RuleFor(x => x.SupplierId).GreaterThan(0);
-        RuleFor(x => x.ProductData).NotNull();
-        RuleFor(x => x.ProductData.ProductId).GreaterThan(0);
-        RuleFor(x => x.ProductData.UnitPrice).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.TenantId).NotEmpty().WithMessage("Kiracı kimliği gereklidir");
+        RuleFor(x => x.SupplierId).GreaterThan(0).WithMessage("Tedarikçi kimliği 0'dan büyük olmalıdır");
+        RuleFor(x => x.ProductData).NotNull().WithMessage("Ürün bilgileri gereklidir");
+        RuleFor(x => x.ProductData.ProductId).GreaterThan(0).WithMessage("Ürün kimliği 0'dan büyük olmalıdır");
+        RuleFor(x => x.ProductData.UnitPrice).GreaterThanOrEqualTo(0).WithMessage("Birim fiyatı negatif olamaz");
     }
 }
 
@@ -48,14 +48,14 @@ public class AddSupplierProductCommandHandler : IRequestHandler<AddSupplierProdu
         if (supplier == null)
         {
             return Result<SupplierProductDto>.Failure(
-                new Error("Supplier.NotFound", $"Supplier with ID {request.SupplierId} not found", ErrorType.NotFound));
+                new Error("Supplier.NotFound", $"Tedarikçi bulunamadı (ID: {request.SupplierId})", ErrorType.NotFound));
         }
 
         var product = await _unitOfWork.Products.GetByIdAsync(request.ProductData.ProductId, cancellationToken);
         if (product == null)
         {
             return Result<SupplierProductDto>.Failure(
-                new Error("Product.NotFound", $"Product with ID {request.ProductData.ProductId} not found", ErrorType.NotFound));
+                new Error("Product.NotFound", $"Ürün bulunamadı (ID: {request.ProductData.ProductId})", ErrorType.NotFound));
         }
 
         // Check if supplier product already exists
@@ -65,7 +65,7 @@ public class AddSupplierProductCommandHandler : IRequestHandler<AddSupplierProdu
         if (existingProduct != null)
         {
             return Result<SupplierProductDto>.Failure(
-                new Error("SupplierProduct.AlreadyExists", "This product is already linked to the supplier", ErrorType.Conflict));
+                new Error("SupplierProduct.AlreadyExists", "Bu ürün zaten tedarikçiye bağlı", ErrorType.Conflict));
         }
 
         var data = request.ProductData;
@@ -127,11 +127,11 @@ public class UpdateSupplierProductCommandValidator : AbstractValidator<UpdateSup
 {
     public UpdateSupplierProductCommandValidator()
     {
-        RuleFor(x => x.TenantId).NotEmpty();
-        RuleFor(x => x.SupplierId).GreaterThan(0);
-        RuleFor(x => x.SupplierProductId).GreaterThan(0);
-        RuleFor(x => x.ProductData).NotNull();
-        RuleFor(x => x.ProductData.UnitPrice).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.TenantId).NotEmpty().WithMessage("Kiracı kimliği gereklidir");
+        RuleFor(x => x.SupplierId).GreaterThan(0).WithMessage("Tedarikçi kimliği 0'dan büyük olmalıdır");
+        RuleFor(x => x.SupplierProductId).GreaterThan(0).WithMessage("Tedarikçi ürün kimliği 0'dan büyük olmalıdır");
+        RuleFor(x => x.ProductData).NotNull().WithMessage("Ürün bilgileri gereklidir");
+        RuleFor(x => x.ProductData.UnitPrice).GreaterThanOrEqualTo(0).WithMessage("Birim fiyatı negatif olamaz");
     }
 }
 
@@ -154,7 +154,7 @@ public class UpdateSupplierProductCommandHandler : IRequestHandler<UpdateSupplie
         if (supplierProduct == null)
         {
             return Result<SupplierProductDto>.Failure(
-                new Error("SupplierProduct.NotFound", "Supplier product not found", ErrorType.NotFound));
+                new Error("SupplierProduct.NotFound", "Tedarikçi ürünü bulunamadı", ErrorType.NotFound));
         }
 
         var product = await _unitOfWork.Products.GetByIdAsync(supplierProduct.ProductId, cancellationToken);
@@ -208,9 +208,9 @@ public class RemoveSupplierProductCommandValidator : AbstractValidator<RemoveSup
 {
     public RemoveSupplierProductCommandValidator()
     {
-        RuleFor(x => x.TenantId).NotEmpty();
-        RuleFor(x => x.SupplierId).GreaterThan(0);
-        RuleFor(x => x.SupplierProductId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty().WithMessage("Kiracı kimliği gereklidir");
+        RuleFor(x => x.SupplierId).GreaterThan(0).WithMessage("Tedarikçi kimliği 0'dan büyük olmalıdır");
+        RuleFor(x => x.SupplierProductId).GreaterThan(0).WithMessage("Tedarikçi ürün kimliği 0'dan büyük olmalıdır");
     }
 }
 
@@ -231,7 +231,7 @@ public class RemoveSupplierProductCommandHandler : IRequestHandler<RemoveSupplie
         if (supplierProduct == null)
         {
             return Result.Failure(
-                new Error("SupplierProduct.NotFound", "Supplier product not found", ErrorType.NotFound));
+                new Error("SupplierProduct.NotFound", "Tedarikçi ürünü bulunamadı", ErrorType.NotFound));
         }
 
         _dbContext.Set<SupplierProduct>().Remove(supplierProduct);

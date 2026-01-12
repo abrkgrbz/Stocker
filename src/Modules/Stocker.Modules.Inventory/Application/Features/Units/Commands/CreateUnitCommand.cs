@@ -23,12 +23,12 @@ public class CreateUnitCommandValidator : AbstractValidator<CreateUnitCommand>
 {
     public CreateUnitCommandValidator()
     {
-        RuleFor(x => x.TenantId).NotEmpty();
-        RuleFor(x => x.UnitData).NotNull();
-        RuleFor(x => x.UnitData.Code).NotEmpty().MaximumLength(20);
-        RuleFor(x => x.UnitData.Name).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.UnitData.Symbol).MaximumLength(10);
-        RuleFor(x => x.UnitData.ConversionFactor).NotEmpty();
+        RuleFor(x => x.TenantId).NotEmpty().WithMessage("Kiracı kimliği gereklidir");
+        RuleFor(x => x.UnitData).NotNull().WithMessage("Birim bilgileri gereklidir");
+        RuleFor(x => x.UnitData.Code).NotEmpty().WithMessage("Birim kodu gereklidir").MaximumLength(20).WithMessage("Birim kodu en fazla 20 karakter olabilir");
+        RuleFor(x => x.UnitData.Name).NotEmpty().WithMessage("Birim adı gereklidir").MaximumLength(100).WithMessage("Birim adı en fazla 100 karakter olabilir");
+        RuleFor(x => x.UnitData.Symbol).MaximumLength(10).WithMessage("Sembol en fazla 10 karakter olabilir");
+        RuleFor(x => x.UnitData.ConversionFactor).NotEmpty().WithMessage("Dönüşüm faktörü gereklidir");
     }
 }
 
@@ -53,7 +53,7 @@ public class CreateUnitCommandHandler : IRequestHandler<CreateUnitCommand, Resul
         var existingUnit = await _unitOfWork.Units.GetByCodeAsync(data.Code, cancellationToken);
         if (existingUnit != null)
         {
-            return Result<UnitDto>.Failure(new Error("Unit.DuplicateCode", $"Unit with code '{data.Code}' already exists", ErrorType.Conflict));
+            return Result<UnitDto>.Failure(new Error("Unit.DuplicateCode", $"'{data.Code}' kodlu birim zaten mevcut", ErrorType.Conflict));
         }
 
         InventoryUnit unit;
@@ -64,7 +64,7 @@ public class CreateUnitCommandHandler : IRequestHandler<CreateUnitCommand, Resul
             var baseUnit = await _unitOfWork.Units.GetByIdAsync(data.BaseUnitId.Value, cancellationToken);
             if (baseUnit == null)
             {
-                return Result<UnitDto>.Failure(new Error("Unit.BaseUnitNotFound", $"Base unit with ID {data.BaseUnitId} not found", ErrorType.NotFound));
+                return Result<UnitDto>.Failure(new Error("Unit.BaseUnitNotFound", $"Temel birim bulunamadı (ID: {data.BaseUnitId})", ErrorType.NotFound));
             }
 
             unit = InventoryUnit.CreateDerivedUnit(data.Code, data.Name, data.BaseUnitId.Value, data.ConversionFactor, data.Symbol);

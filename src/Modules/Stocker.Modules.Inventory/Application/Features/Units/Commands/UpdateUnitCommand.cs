@@ -23,12 +23,12 @@ public class UpdateUnitCommandValidator : AbstractValidator<UpdateUnitCommand>
 {
     public UpdateUnitCommandValidator()
     {
-        RuleFor(x => x.TenantId).NotEmpty();
-        RuleFor(x => x.UnitId).NotEmpty();
-        RuleFor(x => x.UnitData).NotNull();
-        RuleFor(x => x.UnitData.Name).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.UnitData.Symbol).MaximumLength(10);
-        RuleFor(x => x.UnitData.ConversionFactor).NotEmpty();
+        RuleFor(x => x.TenantId).NotEmpty().WithMessage("Kiracı kimliği gereklidir");
+        RuleFor(x => x.UnitId).NotEmpty().WithMessage("Birim kimliği gereklidir");
+        RuleFor(x => x.UnitData).NotNull().WithMessage("Birim bilgileri gereklidir");
+        RuleFor(x => x.UnitData.Name).NotEmpty().WithMessage("Birim adı gereklidir").MaximumLength(100).WithMessage("Birim adı en fazla 100 karakter olabilir");
+        RuleFor(x => x.UnitData.Symbol).MaximumLength(10).WithMessage("Sembol en fazla 10 karakter olabilir");
+        RuleFor(x => x.UnitData.ConversionFactor).NotEmpty().WithMessage("Dönüşüm faktörü gereklidir");
     }
 }
 
@@ -50,7 +50,7 @@ public class UpdateUnitCommandHandler : IRequestHandler<UpdateUnitCommand, Resul
 
         if (unit == null)
         {
-            return Result<UnitDto>.Failure(new Error("Unit.NotFound", $"Unit with ID {request.UnitId} not found", ErrorType.NotFound));
+            return Result<UnitDto>.Failure(new Error("Unit.NotFound", $"Birim bulunamadı (ID: {request.UnitId})", ErrorType.NotFound));
         }
 
         var data = request.UnitData;

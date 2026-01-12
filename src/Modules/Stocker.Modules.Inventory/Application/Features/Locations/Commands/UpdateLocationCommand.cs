@@ -17,11 +17,11 @@ public class UpdateLocationCommandValidator : AbstractValidator<UpdateLocationCo
 {
     public UpdateLocationCommandValidator()
     {
-        RuleFor(x => x.TenantId).NotEmpty();
-        RuleFor(x => x.LocationId).NotEmpty();
-        RuleFor(x => x.Data).NotNull();
-        RuleFor(x => x.Data.Name).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.Data.Capacity).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.TenantId).NotEmpty().WithMessage("Kiracı kimliği gereklidir");
+        RuleFor(x => x.LocationId).NotEmpty().WithMessage("Konum kimliği gereklidir");
+        RuleFor(x => x.Data).NotNull().WithMessage("Konum bilgileri gereklidir");
+        RuleFor(x => x.Data.Name).NotEmpty().WithMessage("Konum adı gereklidir").MaximumLength(200).WithMessage("Konum adı en fazla 200 karakter olabilir");
+        RuleFor(x => x.Data.Capacity).GreaterThanOrEqualTo(0).WithMessage("Kapasite negatif olamaz");
     }
 }
 
@@ -39,7 +39,7 @@ public class UpdateLocationCommandHandler : IRequestHandler<UpdateLocationComman
         var location = await _unitOfWork.Locations.GetByIdAsync(request.LocationId, cancellationToken);
         if (location == null)
         {
-            return Result<LocationDto>.Failure(new Error("Location.NotFound", $"Location with ID {request.LocationId} not found", ErrorType.NotFound));
+            return Result<LocationDto>.Failure(new Error("Location.NotFound", $"Konum bulunamadı (ID: {request.LocationId})", ErrorType.NotFound));
         }
 
         var data = request.Data;

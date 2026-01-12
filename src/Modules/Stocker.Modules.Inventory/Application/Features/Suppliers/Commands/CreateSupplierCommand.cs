@@ -24,12 +24,12 @@ public class CreateSupplierCommandValidator : AbstractValidator<CreateSupplierCo
 {
     public CreateSupplierCommandValidator()
     {
-        RuleFor(x => x.TenantId).NotEmpty();
-        RuleFor(x => x.SupplierData).NotNull();
-        RuleFor(x => x.SupplierData.Code).NotEmpty().MaximumLength(50);
-        RuleFor(x => x.SupplierData.Name).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.SupplierData.TaxNumber).MaximumLength(50);
-        RuleFor(x => x.SupplierData.Email).EmailAddress().When(x => !string.IsNullOrEmpty(x.SupplierData.Email));
+        RuleFor(x => x.TenantId).NotEmpty().WithMessage("Kiracı kimliği gereklidir");
+        RuleFor(x => x.SupplierData).NotNull().WithMessage("Tedarikçi bilgileri gereklidir");
+        RuleFor(x => x.SupplierData.Code).NotEmpty().WithMessage("Tedarikçi kodu gereklidir").MaximumLength(50).WithMessage("Tedarikçi kodu en fazla 50 karakter olabilir");
+        RuleFor(x => x.SupplierData.Name).NotEmpty().WithMessage("Tedarikçi adı gereklidir").MaximumLength(200).WithMessage("Tedarikçi adı en fazla 200 karakter olabilir");
+        RuleFor(x => x.SupplierData.TaxNumber).MaximumLength(50).WithMessage("Vergi numarası en fazla 50 karakter olabilir");
+        RuleFor(x => x.SupplierData.Email).EmailAddress().WithMessage("Geçerli bir e-posta adresi giriniz").When(x => !string.IsNullOrEmpty(x.SupplierData.Email));
     }
 }
 
@@ -53,7 +53,7 @@ public class CreateSupplierCommandHandler : IRequestHandler<CreateSupplierComman
         var existingSupplier = await _unitOfWork.Suppliers.GetByCodeAsync(data.Code, cancellationToken);
         if (existingSupplier != null)
         {
-            return Result<SupplierDto>.Failure(new Error("Supplier.DuplicateCode", $"Supplier with code '{data.Code}' already exists", ErrorType.Conflict));
+            return Result<SupplierDto>.Failure(new Error("Supplier.DuplicateCode", $"'{data.Code}' kodlu tedarikçi zaten mevcut", ErrorType.Conflict));
         }
 
         var supplier = new Supplier(data.Code, data.Name);

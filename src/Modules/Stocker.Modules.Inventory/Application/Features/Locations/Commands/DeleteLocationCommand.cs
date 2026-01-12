@@ -24,12 +24,12 @@ public class DeleteLocationCommandHandler : IRequestHandler<DeleteLocationComman
         var location = await _unitOfWork.Locations.GetByIdAsync(request.LocationId, cancellationToken);
         if (location == null)
         {
-            return Result<bool>.Failure(new Error("Location.NotFound", $"Location with ID {request.LocationId} not found", ErrorType.NotFound));
+            return Result<bool>.Failure(new Error("Location.NotFound", $"Konum bulunamadı (ID: {request.LocationId})", ErrorType.NotFound));
         }
 
         if (location.Stocks?.Any() == true)
         {
-            return Result<bool>.Failure(new Error("Location.HasStock", "Cannot delete location with existing stock", ErrorType.Validation));
+            return Result<bool>.Failure(new Error("Location.HasStock", "Stoku olan konum silinemez. Önce stokları taşıyın veya silin.", ErrorType.Validation));
         }
 
         location.Deactivate();

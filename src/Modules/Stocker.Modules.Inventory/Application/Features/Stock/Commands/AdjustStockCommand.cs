@@ -25,21 +25,21 @@ public class AdjustStockCommandValidator : AbstractValidator<AdjustStockCommand>
     public AdjustStockCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Kiracı kimliği gereklidir");
 
         RuleFor(x => x.AdjustmentData)
-            .NotNull().WithMessage("Adjustment data is required");
+            .NotNull().WithMessage("Düzeltme bilgileri gereklidir");
 
         When(x => x.AdjustmentData != null, () =>
         {
             RuleFor(x => x.AdjustmentData.ProductId)
-                .NotEmpty().WithMessage("Product ID is required");
+                .NotEmpty().WithMessage("Ürün kimliği gereklidir");
 
             RuleFor(x => x.AdjustmentData.WarehouseId)
-                .NotEmpty().WithMessage("Warehouse ID is required");
+                .NotEmpty().WithMessage("Depo kimliği gereklidir");
 
             RuleFor(x => x.AdjustmentData.NewQuantity)
-                .GreaterThanOrEqualTo(0).WithMessage("New quantity cannot be negative");
+                .GreaterThanOrEqualTo(0).WithMessage("Yeni miktar negatif olamaz");
         });
     }
 }
@@ -64,14 +64,14 @@ public class AdjustStockCommandHandler : IRequestHandler<AdjustStockCommand, Res
         if (product == null)
         {
             return Result<StockDto>.Failure(
-                Error.NotFound("Product", $"Product with ID {data.ProductId} not found"));
+                Error.NotFound("Product", $"Ürün bulunamadı (ID: {data.ProductId})"));
         }
 
         var warehouse = await _unitOfWork.Warehouses.GetByIdAsync(data.WarehouseId, cancellationToken);
         if (warehouse == null)
         {
             return Result<StockDto>.Failure(
-                Error.NotFound("Warehouse", $"Warehouse with ID {data.WarehouseId} not found"));
+                Error.NotFound("Warehouse", $"Depo bulunamadı (ID: {data.WarehouseId})"));
         }
 
         var stock = await _unitOfWork.Stocks.GetByProductAndLocationAsync(

@@ -25,29 +25,29 @@ public class MoveStockCommandValidator : AbstractValidator<MoveStockCommand>
     public MoveStockCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Kiracı kimliği gereklidir");
 
         RuleFor(x => x.MoveData)
-            .NotNull().WithMessage("Move data is required");
+            .NotNull().WithMessage("Transfer bilgileri gereklidir");
 
         When(x => x.MoveData != null, () =>
         {
             RuleFor(x => x.MoveData.ProductId)
-                .NotEmpty().WithMessage("Product ID is required");
+                .NotEmpty().WithMessage("Ürün kimliği gereklidir");
 
             RuleFor(x => x.MoveData.SourceWarehouseId)
-                .NotEmpty().WithMessage("Source warehouse ID is required");
+                .NotEmpty().WithMessage("Kaynak depo kimliği gereklidir");
 
             RuleFor(x => x.MoveData.DestinationWarehouseId)
-                .NotEmpty().WithMessage("Destination warehouse ID is required");
+                .NotEmpty().WithMessage("Hedef depo kimliği gereklidir");
 
             RuleFor(x => x.MoveData.Quantity)
-                .NotEmpty().WithMessage("Quantity must be greater than zero");
+                .NotEmpty().WithMessage("Miktar sıfırdan büyük olmalıdır");
 
             RuleFor(x => x)
                 .Must(x => !(x.MoveData.SourceWarehouseId == x.MoveData.DestinationWarehouseId
                            && x.MoveData.SourceLocationId == x.MoveData.DestinationLocationId))
-                .WithMessage("Source and destination must be different");
+                .WithMessage("Kaynak ve hedef farklı olmalıdır");
         });
     }
 }
@@ -73,7 +73,7 @@ public class MoveStockCommandHandler : IRequestHandler<MoveStockCommand, Result<
         if (product == null)
         {
             return Result<StockMovementDto>.Failure(
-                Error.NotFound("Product", $"Product with ID {data.ProductId} not found"));
+                Error.NotFound("Product", $"Ürün bulunamadı (ID: {data.ProductId})"));
         }
 
         // Validate source warehouse exists
@@ -81,7 +81,7 @@ public class MoveStockCommandHandler : IRequestHandler<MoveStockCommand, Result<
         if (sourceWarehouse == null)
         {
             return Result<StockMovementDto>.Failure(
-                Error.NotFound("Warehouse", $"Source warehouse with ID {data.SourceWarehouseId} not found"));
+                Error.NotFound("Warehouse", $"Kaynak depo bulunamadı (ID: {data.SourceWarehouseId})"));
         }
 
         // Validate destination warehouse exists
@@ -89,7 +89,7 @@ public class MoveStockCommandHandler : IRequestHandler<MoveStockCommand, Result<
         if (destWarehouse == null)
         {
             return Result<StockMovementDto>.Failure(
-                Error.NotFound("Warehouse", $"Destination warehouse with ID {data.DestinationWarehouseId} not found"));
+                Error.NotFound("Warehouse", $"Hedef depo bulunamadı (ID: {data.DestinationWarehouseId})"));
         }
 
         // Get source stock
@@ -99,7 +99,7 @@ public class MoveStockCommandHandler : IRequestHandler<MoveStockCommand, Result<
         if (sourceStock == null || sourceStock.AvailableQuantity < data.Quantity)
         {
             return Result<StockMovementDto>.Failure(
-                Error.Validation("Stock.Insufficient", "Insufficient available stock at source location"));
+                Error.Validation("Stock.Insufficient", "Kaynak konumda yeterli stok bulunmuyor"));
         }
 
         // Get or create destination stock
