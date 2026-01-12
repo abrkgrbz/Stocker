@@ -55,11 +55,10 @@ public class MasterDataSeeder
 
     private async Task SeedModuleDefinitionsAsync()
     {
-        if (await _context.ModuleDefinitions.AnyAsync())
-        {
-            _logger.LogInformation("Module definitions already seeded.");
-            return;
-        }
+        // Get existing module codes to support incremental seeding
+        var existingModuleCodes = await _context.ModuleDefinitions
+            .Select(m => m.Code)
+            .ToListAsync();
 
         var modules = new List<ModuleDefinition>();
 
@@ -256,6 +255,29 @@ public class MasterDataSeeder
         projectsModule.AddFeature("Proje Raporları", "İlerleme ve maliyet raporları");
         modules.Add(projectsModule);
 
+        // ==================== ÜRETİM YÖNETİMİ ====================
+
+        // Üretim Modülü
+        var manufacturingModule = ModuleDefinition.Create(
+            code: "MANUFACTURING",
+            name: "Üretim Yönetimi",
+            monthlyPrice: Money.Create(299m, "TRY"),
+            description: "Üretim planlama, iş emirleri, malzeme ihtiyaç planlaması (MRP) ve kalite kontrol",
+            icon: "🏭",
+            isCore: false,
+            displayOrder: 65,
+            category: "Operasyon");
+        manufacturingModule.AddFeature("Üretim Planlama", "MRP/MPS üretim planlaması ve kapasite yönetimi");
+        manufacturingModule.AddFeature("İş Emri Yönetimi", "Üretim iş emirleri oluşturma ve takibi");
+        manufacturingModule.AddFeature("Reçete Yönetimi", "Ürün ağaçları (BOM) ve üretim reçeteleri");
+        manufacturingModule.AddFeature("İş Merkezi Yönetimi", "Üretim hatları ve iş merkezleri tanımı");
+        manufacturingModule.AddFeature("Kalite Kontrol", "Kalite muayene ve uygunsuzluk raporları");
+        manufacturingModule.AddFeature("Bakım Yönetimi", "Makine bakım planları ve kayıtları");
+        manufacturingModule.AddFeature("Maliyet Muhasebesi", "Üretim maliyet analizi ve raporları");
+        manufacturingModule.AddFeature("OEE Takibi", "Ekipman etkinliği ve performans metrikleri");
+        manufacturingModule.AddDependency("Inventory"); // Stok modülüne bağımlı
+        modules.Add(manufacturingModule);
+
         // ==================== RAPORLAMA VE ANALİTİK ====================
 
         // Raporlama Modülü
@@ -275,8 +297,18 @@ public class MasterDataSeeder
         reportsModule.AddFeature("Zamanlanmış Raporlar", "Otomatik rapor gönderimi");
         modules.Add(reportsModule);
 
-        await _context.ModuleDefinitions.AddRangeAsync(modules);
-        _logger.LogInformation("Seeded {Count} module definitions.", modules.Count);
+        // Filter out existing modules - only add new ones (incremental seeding)
+        var newModules = modules.Where(m => !existingModuleCodes.Contains(m.Code)).ToList();
+
+        if (newModules.Any())
+        {
+            await _context.ModuleDefinitions.AddRangeAsync(newModules);
+            _logger.LogInformation("Seeded {Count} new module definitions.", newModules.Count);
+        }
+        else
+        {
+            _logger.LogInformation("All module definitions already exist.");
+        }
     }
 
     private async Task SeedPackagesAsync()
