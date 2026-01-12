@@ -19,6 +19,7 @@ COPY src/Modules/Stocker.Modules.Purchase/*.csproj ./src/Modules/Stocker.Modules
 COPY src/Modules/Stocker.Modules.Finance/*.csproj ./src/Modules/Stocker.Modules.Finance/
 COPY src/Modules/Stocker.Modules.HR/*.csproj ./src/Modules/Stocker.Modules.HR/
 COPY src/Modules/Stocker.Modules.CMS/*.csproj ./src/Modules/Stocker.Modules.CMS/
+COPY src/Modules/Stocker.Modules.Manufacturing/*.csproj ./src/Modules/Stocker.Modules.Manufacturing/
 COPY src/Shared/Stocker.Shared.Contracts/*.csproj ./src/Shared/Stocker.Shared.Contracts/
 COPY src/Shared/Stocker.Shared.Events/*.csproj ./src/Shared/Stocker.Shared.Events/
 
