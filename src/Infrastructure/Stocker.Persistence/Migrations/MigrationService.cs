@@ -19,6 +19,7 @@ using Stocker.Modules.Inventory.Infrastructure.Persistence;
 using Stocker.Modules.HR.Infrastructure.Persistence;
 using Stocker.Modules.Sales.Infrastructure.Persistence;
 using Stocker.Modules.Purchase.Infrastructure.Persistence;
+using Stocker.Modules.Manufacturing.Infrastructure.Data;
 using Npgsql;
 
 namespace Stocker.Persistence.Migrations;
@@ -2148,6 +2149,59 @@ public partial class MigrationService
 
                 // TODO: Implement Finance module migrations when FinanceDbContext is available
                 _logger.LogInformation("Finance module migrations placeholder for tenant {TenantId}", tenantId);
+            }
+
+            // Apply Manufacturing module migrations
+            if (subscribedModules.Contains("MANUFACTURING"))
+            {
+                currentModule++;
+                var progressPercent = (int)((currentModule / (double)totalModules) * 100 * 0.7) + 10;
+
+                if (progressNotifier != null)
+                {
+                    await progressNotifier.NotifyProgressAsync(SetupProgressUpdate.Create(
+                        tenantId, SetupStepType.ConfiguringModules,
+                        "Üretim modülü yapılandırılıyor...", progressPercent));
+                }
+
+                try
+                {
+                    _logger.LogInformation("Applying Manufacturing migrations for tenant {TenantId}...", tenantId);
+
+                    var manufacturingOptionsBuilder = new DbContextOptionsBuilder<ManufacturingDbContext>();
+                    manufacturingOptionsBuilder.UseNpgsql(connectionString, sqlOptions =>
+                    {
+                        sqlOptions.MigrationsAssembly(typeof(ManufacturingDbContext).Assembly.FullName);
+                        sqlOptions.CommandTimeout(60);
+                        sqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                    });
+                    // Suppress PendingModelChangesWarning - we're applying existing migrations
+                    manufacturingOptionsBuilder.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
+
+                    var mockTenantService = new MockTenantService(tenantId, connectionString!);
+
+                    using var manufacturingDbContext = new ManufacturingDbContext(
+                        manufacturingOptionsBuilder.Options,
+                        mockTenantService);
+
+                    var pendingMigrations = await manufacturingDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+                    var pendingList = pendingMigrations.ToList();
+
+                    if (pendingList.Any())
+                    {
+                        await manufacturingDbContext.Database.MigrateAsync(cancellationToken);
+                        appliedMigrations.AddRange(pendingList.Select(m => $"Manufacturing:{m}"));
+                        _logger.LogInformation("Manufacturing migrations applied: {Migrations}", string.Join(", ", pendingList));
+                    }
+                    else
+                    {
+                        _logger.LogInformation("No pending Manufacturing migrations for tenant {TenantId}", tenantId);
+                    }
+                }
+                catch (Exception mfgEx)
+                {
+                    _logger.LogError(mfgEx, "Error applying Manufacturing migrations for tenant {TenantId}", tenantId);
+                }
             }
 
             _logger.LogInformation("Module migrations completed for tenant {TenantId}. Applied: {Count} migrations",

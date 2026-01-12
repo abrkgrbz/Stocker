@@ -1,14 +1,21 @@
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.Manufacturing.Domain.Entities;
+using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.Manufacturing.Infrastructure.Data;
 
 public class ManufacturingDbContext : DbContext
 {
     public const string Schema = "manufacturing";
+    private readonly ITenantService? _tenantService;
 
     public ManufacturingDbContext(DbContextOptions<ManufacturingDbContext> options) : base(options)
     {
+    }
+
+    public ManufacturingDbContext(DbContextOptions<ManufacturingDbContext> options, ITenantService tenantService) : base(options)
+    {
+        _tenantService = tenantService;
     }
 
     public DbSet<WorkCenter> WorkCenters => Set<WorkCenter>();
