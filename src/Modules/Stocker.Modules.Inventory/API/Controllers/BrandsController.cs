@@ -171,8 +171,70 @@ public class BrandsController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Activate a brand
+    /// </summary>
+    [HttpPost("{id}/activate")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> ActivateBrand(int id)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new ActivateBrandCommand
+        {
+            TenantId = tenantId.Value,
+            BrandId = id
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(new { message = "Marka başarıyla aktifleştirildi" });
+    }
+
+    /// <summary>
+    /// Deactivate a brand
+    /// </summary>
+    [HttpPost("{id}/deactivate")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> DeactivateBrand(int id)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new DeactivateBrandCommand
+        {
+            TenantId = tenantId.Value,
+            BrandId = id
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(new { message = "Marka başarıyla pasifleştirildi" });
+    }
+
     private static Error CreateTenantError()
     {
-        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
+        return new Error("Tenant.Required", "Kiracı kimliği gereklidir", ErrorType.Validation);
     }
 }

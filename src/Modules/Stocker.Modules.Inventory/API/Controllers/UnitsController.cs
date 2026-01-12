@@ -143,8 +143,101 @@ public class UnitsController : ControllerBase
         return Ok(result.Value);
     }
 
+    /// <summary>
+    /// Delete a unit
+    /// </summary>
+    [HttpDelete("{id}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> DeleteUnit(int id)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new DeleteUnitCommand
+        {
+            TenantId = tenantId.Value,
+            UnitId = id
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Activate a unit
+    /// </summary>
+    [HttpPost("{id}/activate")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> ActivateUnit(int id)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new ActivateUnitCommand
+        {
+            TenantId = tenantId.Value,
+            UnitId = id
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(new { message = "Birim başarıyla aktifleştirildi" });
+    }
+
+    /// <summary>
+    /// Deactivate a unit
+    /// </summary>
+    [HttpPost("{id}/deactivate")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> DeactivateUnit(int id)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new DeactivateUnitCommand
+        {
+            TenantId = tenantId.Value,
+            UnitId = id
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(new { message = "Birim başarıyla pasifleştirildi" });
+    }
+
     private static Error CreateTenantError()
     {
-        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
+        return new Error("Tenant.Required", "Kiracı kimliği gereklidir", ErrorType.Validation);
     }
 }
