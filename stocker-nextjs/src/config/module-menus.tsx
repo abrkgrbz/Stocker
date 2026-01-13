@@ -761,7 +761,9 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
         label: 'Kalite',
         children: [
           { key: '/manufacturing/quality-inspections', icon: <ClipboardDocumentCheckIcon className="w-4 h-4" />, label: 'Kalite Kontrolleri' },
-          { key: '/manufacturing/quality-management', icon: <ShieldCheckIcon className="w-4 h-4" />, label: 'Kalite Yönetimi (NCR & CAPA)' },
+          { key: '/manufacturing/quality-management', icon: <ShieldCheckIcon className="w-4 h-4" />, label: 'Kalite Yönetimi' },
+          { key: '/manufacturing/quality-management/ncr', icon: <ExclamationTriangleIcon className="w-4 h-4" />, label: 'NCR (Uygunsuzluklar)' },
+          { key: '/manufacturing/quality-management/capa', icon: <ShieldExclamationIcon className="w-4 h-4" />, label: 'CAPA (Düzeltici Aksiyonlar)' },
         ],
       },
       {
@@ -778,6 +780,15 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
         label: 'Maliyet',
         children: [
           { key: '/manufacturing/cost-accounting', icon: <CalculatorIcon className="w-4 h-4" />, label: 'Maliyet Muhasebesi' },
+        ],
+      },
+      {
+        key: 'mfg-kpi',
+        icon: <PresentationChartLineIcon className="w-4 h-4" />,
+        label: 'KPI & Raporlar',
+        children: [
+          { key: '/manufacturing/kpi-dashboard', icon: <ChartBarIcon className="w-4 h-4" />, label: 'KPI Dashboard' },
+          { key: '/manufacturing/kpi-dashboard/definitions', icon: <ListBulletIcon className="w-4 h-4" />, label: 'KPI Tanımları' },
         ],
       },
     ],
