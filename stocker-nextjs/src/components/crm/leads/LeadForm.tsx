@@ -205,18 +205,6 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
                   />
                 </Form.Item>
               </div>
-              <div className="col-span-3">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Telefon</label>
-                <Form.Item name="phone" className="mb-0">
-                  <FormPhoneInput defaultCountry="TR" />
-                </Form.Item>
-              </div>
-              <div className="col-span-3">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Cep Telefonu</label>
-                <Form.Item name="mobilePhone" className="mb-0">
-                  <FormPhoneInput defaultCountry="TR" />
-                </Form.Item>
-              </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Web Sitesi</label>
                 <Form.Item name="website" className="mb-0">
@@ -224,6 +212,18 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
                     placeholder="https://www.firma.com"
                     className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Telefon</label>
+                <Form.Item name="phone" className="mb-0">
+                  <FormPhoneInput defaultCountry="TR" />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Cep Telefonu</label>
+                <Form.Item name="mobilePhone" className="mb-0">
+                  <FormPhoneInput defaultCountry="TR" />
                 </Form.Item>
               </div>
             </div>
