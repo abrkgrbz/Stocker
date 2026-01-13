@@ -16,7 +16,7 @@ export default function NewBillOfMaterialPage() {
   const handleSubmit = async (values: CreateBillOfMaterialRequest) => {
     try {
       await createBom.mutateAsync(values);
-      router.push('/manufacturing/bill-of-materials');
+      router.push('/manufacturing/bom');
     } catch {
       // Error handled by hook
     }
@@ -49,7 +49,7 @@ export default function NewBillOfMaterialPage() {
             </div>
           </div>
           <Space>
-            <Button onClick={() => router.push('/manufacturing/bill-of-materials')}>
+            <Button onClick={() => router.push('/manufacturing/bom')}>
               Vazgeç
             </Button>
             <Button

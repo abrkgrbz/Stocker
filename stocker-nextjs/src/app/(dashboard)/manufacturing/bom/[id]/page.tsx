@@ -59,7 +59,7 @@ export default function BillOfMaterialDetailPage() {
     if (confirmed) {
       try {
         await deleteBom.mutateAsync(bomId);
-        router.push('/manufacturing/bill-of-materials');
+        router.push('/manufacturing/bom');
       } catch {
         // Error handled by hook
       }
@@ -101,7 +101,7 @@ export default function BillOfMaterialDetailPage() {
           <ExclamationTriangleIcon className="w-12 h-12 text-slate-300 mb-4 mx-auto" />
           <h2 className="text-xl font-semibold text-slate-900 mb-2">Reçete Bulunamadı</h2>
           <p className="text-slate-500 mb-6">İstenen ürün reçetesi bulunamadı veya bir hata oluştu.</p>
-          <Button onClick={() => router.push('/manufacturing/bill-of-materials')} className="!border-slate-300">
+          <Button onClick={() => router.push('/manufacturing/bom')} className="!border-slate-300">
             Reçetelere Dön
           </Button>
         </div>
@@ -235,7 +235,7 @@ export default function BillOfMaterialDetailPage() {
             )}
             <Button
               icon={<PencilSquareIcon className="w-4 h-4" />}
-              onClick={() => router.push(`/manufacturing/bill-of-materials/${bomId}/edit`)}
+              onClick={() => router.push(`/manufacturing/bom/${bomId}/edit`)}
               className="!border-slate-300 !text-slate-600 hover:!text-slate-900"
             >
               Düzenle

@@ -116,11 +116,11 @@ export default function BillOfMaterialsPage() {
 
   // Action handlers
   const handleView = (id: string) => {
-    router.push(`/manufacturing/bill-of-materials/${id}`);
+    router.push(`/manufacturing/bom/${id}`);
   };
 
   const handleEdit = (id: string) => {
-    router.push(`/manufacturing/bill-of-materials/${id}/edit`);
+    router.push(`/manufacturing/bom/${id}/edit`);
   };
 
   const handleDelete = async (bom: BillOfMaterialListDto) => {
@@ -326,7 +326,7 @@ export default function BillOfMaterialsPage() {
           <Button
             type="primary"
             icon={<PlusIcon className="w-4 h-4" />}
-            onClick={() => router.push('/manufacturing/bill-of-materials/new')}
+            onClick={() => router.push('/manufacturing/bom/new')}
             className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
           >
             Yeni Reçete

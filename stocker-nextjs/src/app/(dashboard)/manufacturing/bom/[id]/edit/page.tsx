@@ -21,7 +21,7 @@ export default function EditBillOfMaterialPage() {
   const handleSubmit = async (values: UpdateBillOfMaterialRequest) => {
     try {
       await updateBom.mutateAsync({ id: bomId, data: values });
-      router.push(`/manufacturing/bill-of-materials/${bomId}`);
+      router.push(`/manufacturing/bom/${bomId}`);
     } catch {
       // Error handled by hook
     }
@@ -44,7 +44,7 @@ export default function EditBillOfMaterialPage() {
           type="error"
           showIcon
           action={
-            <Button onClick={() => router.push('/manufacturing/bill-of-materials')}>
+            <Button onClick={() => router.push('/manufacturing/bom')}>
               Reçetelere Dön
             </Button>
           }
@@ -91,7 +91,7 @@ export default function EditBillOfMaterialPage() {
             </div>
           </div>
           <Space>
-            <Button onClick={() => router.push(`/manufacturing/bill-of-materials/${bomId}`)}>
+            <Button onClick={() => router.push(`/manufacturing/bom/${bomId}`)}>
               Vazgeç
             </Button>
             <Button
