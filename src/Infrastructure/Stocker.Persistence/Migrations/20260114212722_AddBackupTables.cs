@@ -88,11 +88,11 @@ namespace Stocker.Persistence.Migrations
                 CREATE INDEX IF NOT EXISTS ""IX_TenantBackups_TenantId_BackupType"" ON master.""TenantBackups"" (""TenantId"", ""BackupType"");
             ");
 
-            // Drop old Master schema tables if they exist (from previous migration attempts)
+            // Drop old Master schema backup tables if they exist (from previous migration attempts)
+            // Note: Not dropping the schema itself as other tables may still use it
             migrationBuilder.Sql(@"
                 DROP TABLE IF EXISTS ""Master"".""TenantBackups"" CASCADE;
                 DROP TABLE IF EXISTS ""Master"".""BackupSchedules"" CASCADE;
-                DROP SCHEMA IF EXISTS ""Master"";
             ");
 
             // Add LemonSqueezy columns to Packages if they don't exist
