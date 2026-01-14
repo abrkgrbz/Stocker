@@ -9,8 +9,6 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Table, Select, Tabs, Modal, Spin, Empty, Alert } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
 import { usePayrolls, usePayrollParameters } from '@/lib/api/hooks/useHR';
 import { PayrollStatus } from '@/lib/api/services/hr.types';
 import {
@@ -27,14 +25,15 @@ import {
   BanknotesIcon,
   ShieldCheckIcon,
   DocumentDuplicateIcon,
+  XMarkIcon,
+  InformationCircleIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
 
 dayjs.locale('tr');
-
-// Table styles for monochrome design
-const tableClassName = "[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50";
 
 // Types
 type DeclarationStatus = 'draft' | 'calculating' | 'ready' | 'submitted' | 'accepted' | 'rejected' | 'paid';
@@ -81,7 +80,7 @@ interface EmployeePremiumDetail {
   exemptionCode?: string;
 }
 
-// Status configurations - using custom badges instead of colored Tags
+// Status configurations - using custom badges
 const statusConfig: Record<DeclarationStatus, { label: string; badgeClass: string; icon: React.ReactNode }> = {
   draft: { label: 'Taslak', badgeClass: 'bg-slate-100 text-slate-600', icon: <ClockIcon className="w-4 h-4" /> },
   calculating: { label: 'Hesaplanıyor', badgeClass: 'bg-slate-200 text-slate-700', icon: <DocumentDuplicateIcon className="w-4 h-4" /> },
@@ -141,12 +140,31 @@ const monthNames = [
   'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
 ];
 
+// Tab definitions
+type TabKey = 'declarations' | 'employees' | 'premium-rates' | 'eksik-gun';
+
+interface TabItem {
+  key: TabKey;
+  label: string;
+  icon: React.ReactNode;
+}
+
+const tabs: TabItem[] = [
+  { key: 'declarations', label: 'Bildirgeler', icon: <DocumentTextIcon className="w-4 h-4" /> },
+  { key: 'employees', label: 'Sigortalı Detayları', icon: <UserGroupIcon className="w-4 h-4" /> },
+  { key: 'premium-rates', label: 'Prim Oranları', icon: <BanknotesIcon className="w-4 h-4" /> },
+  { key: 'eksik-gun', label: 'Eksik Gün Kodları', icon: <CalendarDaysIcon className="w-4 h-4" /> },
+];
+
 export default function SGKDeclarationsPage() {
   const [selectedYear, setSelectedYear] = useState<number>(2025);
-  const [typeFilter, setTypeFilter] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
   const [selectedDeclaration, setSelectedDeclaration] = useState<SGKDeclaration | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabKey>('declarations');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   // Fetch payroll data from backend
   const { data: payrolls = [], isLoading, refetch } = usePayrolls();
@@ -281,219 +299,28 @@ export default function SGKDeclarationsPage() {
     });
   }, [declarations, typeFilter, statusFilter]);
 
-  const columns: ColumnsType<SGKDeclaration> = [
-    {
-      title: 'Dönem',
-      key: 'period',
-      width: 120,
-      fixed: 'left',
-      render: (_, record) => (
-        <div>
-          <div className="text-sm font-medium text-slate-900">{record.period}</div>
-          <div className="text-xs text-slate-500">
-            {declarationTypeConfig[record.declarationType].label}
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: 'İşyeri No',
-      dataIndex: 'workplaceNumber',
-      key: 'workplaceNumber',
-      width: 140,
-      render: (value) => <span className="font-mono text-sm">{value}</span>,
-    },
-    {
-      title: 'Sigortalı',
-      dataIndex: 'employeeCount',
-      key: 'employeeCount',
-      width: 90,
-      align: 'center',
-      render: (value) => (
-        <div className="flex items-center justify-center gap-1">
-          <UserGroupIcon className="w-4 h-4 text-slate-400" />
-          <span className="text-sm text-slate-700">{value}</span>
-        </div>
-      ),
-    },
-    {
-      title: 'Prim Matrahı',
-      dataIndex: 'sgkPremiumBase',
-      key: 'sgkPremiumBase',
-      width: 140,
-      align: 'right',
-      render: (value) => (
-        <span className="text-sm text-slate-700">{formatCurrency(value)}</span>
-      ),
-    },
-    {
-      title: 'Toplam Prim',
-      dataIndex: 'totalPremium',
-      key: 'totalPremium',
-      width: 130,
-      align: 'right',
-      render: (value) => (
-        <span className="text-sm text-slate-700 font-medium">{formatCurrency(value)}</span>
-      ),
-    },
-    {
-      title: 'Teşvik',
-      dataIndex: 'incentiveAmount',
-      key: 'incentiveAmount',
-      width: 110,
-      align: 'right',
-      render: (value) => (
-        <span className="text-sm text-slate-600">-{formatCurrency(value)}</span>
-      ),
-    },
-    {
-      title: 'Ödenecek',
-      dataIndex: 'netPayable',
-      key: 'netPayable',
-      width: 130,
-      align: 'right',
-      render: (value) => (
-        <span className="text-sm font-semibold text-slate-900">{formatCurrency(value)}</span>
-      ),
-    },
-    {
-      title: 'Son Tarih',
-      key: 'dueDate',
-      width: 110,
-      render: (_, record) => {
-        const isOverdue = dayjs(record.dueDate).isBefore(dayjs(), 'day') &&
-                          !['accepted', 'paid', 'submitted'].includes(record.status);
+  // Pagination
+  const paginatedDeclarations = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredDeclarations.slice(startIndex, startIndex + pageSize);
+  }, [filteredDeclarations, currentPage]);
 
-        return (
-          <div className={`text-sm ${isOverdue ? 'text-slate-600 font-medium' : 'text-slate-700'}`}>
-            {dayjs(record.dueDate).format('DD.MM.YYYY')}
-          </div>
-        );
+  const totalPages = Math.ceil(filteredDeclarations.length / pageSize);
+
+  // Employee details totals
+  const employeeTotals = useMemo(() => {
+    return employeeDetails.reduce(
+      (acc, emp) => {
+        acc.totalDays += emp.workDays;
+        acc.totalBase += emp.sgkBase;
+        acc.totalPremium += emp.totalPremium;
+        return acc;
       },
-    },
-    {
-      title: 'Durum',
-      key: 'status',
-      width: 130,
-      render: (_, record) => {
-        const config = statusConfig[record.status];
-        return (
-          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${config.badgeClass}`}>
-            {config.icon}
-            <span>{config.label}</span>
-          </span>
-        );
-      },
-    },
-    {
-      title: '',
-      key: 'actions',
-      width: 100,
-      fixed: 'right',
-      render: (_, record) => (
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => {
-              setSelectedDeclaration(record);
-              setIsDetailModalOpen(true);
-            }}
-            className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
-            title="Detay"
-          >
-            <EyeIcon className="w-4 h-4 text-slate-500" />
-          </button>
-          {record.status === 'ready' && (
-            <button
-              className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
-              title="SGK'ya Gönder"
-            >
-              <PaperAirplaneIcon className="w-4 h-4 text-slate-600" />
-            </button>
-          )}
-        </div>
-      ),
-    },
-  ];
+      { totalDays: 0, totalBase: 0, totalPremium: 0 }
+    );
+  }, [employeeDetails]);
 
-  const employeeColumns: ColumnsType<EmployeePremiumDetail> = [
-    {
-      title: 'TC Kimlik No',
-      dataIndex: 'tcNo',
-      key: 'tcNo',
-      width: 130,
-      render: (value) => <span className="font-mono text-sm">{value}</span>,
-    },
-    {
-      title: 'Ad Soyad',
-      dataIndex: 'name',
-      key: 'name',
-      width: 150,
-      render: (value) => <span className="text-sm text-slate-900">{value}</span>,
-    },
-    {
-      title: 'Gün',
-      key: 'days',
-      width: 100,
-      align: 'center',
-      render: (_, record) => (
-        <div className="text-sm">
-          <div className="text-slate-900">{record.workDays}</div>
-          {record.unpaidLeaveDays > 0 && (
-            <div className="text-xs text-slate-700">+{record.unpaidLeaveDays} eksik</div>
-          )}
-        </div>
-      ),
-    },
-    {
-      title: 'SPEK',
-      dataIndex: 'sgkBase',
-      key: 'sgkBase',
-      width: 120,
-      align: 'right',
-      render: (value) => <span className="text-sm">{formatCurrency(value)}</span>,
-    },
-    {
-      title: 'SGK Primi',
-      dataIndex: 'sgkPremium',
-      key: 'sgkPremium',
-      width: 110,
-      align: 'right',
-      render: (value) => <span className="text-sm text-slate-700">{formatCurrency(value)}</span>,
-    },
-    {
-      title: 'İşsizlik',
-      dataIndex: 'unemploymentPremium',
-      key: 'unemploymentPremium',
-      width: 100,
-      align: 'right',
-      render: (value) => <span className="text-sm text-slate-600">{formatCurrency(value)}</span>,
-    },
-    {
-      title: 'Toplam',
-      dataIndex: 'totalPremium',
-      key: 'totalPremium',
-      width: 110,
-      align: 'right',
-      render: (value) => <span className="text-sm font-semibold">{formatCurrency(value)}</span>,
-    },
-    {
-      title: 'Teşvik',
-      dataIndex: 'exemptionCode',
-      key: 'exemptionCode',
-      width: 80,
-      align: 'center',
-      render: (value) =>
-        value ? (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
-            {value}
-          </span>
-        ) : (
-          <span className="text-slate-400">-</span>
-        ),
-    },
-  ];
-
-  const yearOptions = [2023, 2024, 2025].map(year => ({ value: year, label: year.toString() }));
+  const yearOptions = [2023, 2024, 2025];
 
   // Get next due date from declarations
   const nextDueDate = useMemo(() => {
@@ -502,6 +329,12 @@ export default function SGKDeclarationsPage() {
       .sort((a, b) => dayjs(a.dueDate).diff(dayjs(b.dueDate)));
     return upcoming[0];
   }, [declarations]);
+
+  // Close modal handler
+  const closeModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedDeclaration(null);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 p-8">
@@ -537,13 +370,15 @@ export default function SGKDeclarationsPage() {
 
       {/* No Payroll Data Alert */}
       {!isLoading && payrolls.length === 0 && (
-        <Alert
-          message="Bordro Verisi Bulunamadı"
-          description="SGK bildirgeleri bordro verilerinden otomatik olarak oluşturulur. Önce bordro kayıtları oluşturun."
-          type="info"
-          showIcon
-          className="mb-6"
-        />
+        <div className="flex items-start gap-3 p-4 bg-slate-100 border border-slate-300 rounded-lg mb-6">
+          <InformationCircleIcon className="w-5 h-5 text-slate-600 mt-0.5" />
+          <div>
+            <div className="text-sm font-medium text-slate-800">Bordro Verisi Bulunamadı</div>
+            <div className="text-sm text-slate-600">
+              SGK bildirgeleri bordro verilerinden otomatik olarak oluşturulur. Önce bordro kayıtları oluşturun.
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Summary Cards */}
@@ -599,405 +434,562 @@ export default function SGKDeclarationsPage() {
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-2">
             <span className="text-sm text-slate-500">Yıl:</span>
-            <Select
+            <select
               value={selectedYear}
-              onChange={(value) => setSelectedYear(value)}
-              options={yearOptions}
-              className="w-24"
-            />
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
+            >
+              {yearOptions.map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-slate-500">Tür:</span>
-            <Select
-              placeholder="Tümü"
-              allowClear
+            <select
               value={typeFilter}
-              onChange={(value) => setTypeFilter(value)}
-              className="w-36"
-              options={Object.entries(declarationTypeConfig).map(([key, value]) => ({
-                value: key,
-                label: value.label,
-              }))}
-            />
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
+            >
+              <option value="">Tümü</option>
+              {Object.entries(declarationTypeConfig).map(([key, value]) => (
+                <option key={key} value={key}>{value.label}</option>
+              ))}
+            </select>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-slate-500">Durum:</span>
-            <Select
-              placeholder="Tümü"
-              allowClear
+            <select
               value={statusFilter}
-              onChange={(value) => setStatusFilter(value)}
-              className="w-36"
-              options={Object.entries(statusConfig).map(([key, value]) => ({
-                value: key,
-                label: value.label,
-              }))}
-            />
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
+            >
+              <option value="">Tümü</option>
+              {Object.entries(statusConfig).map(([key, value]) => (
+                <option key={key} value={key}>{value.label}</option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
 
-      {/* Main Content Tabs */}
-      <div className="bg-white border border-slate-200 rounded-xl p-6">
-        <Tabs
-          defaultActiveKey="declarations"
-          items={[
-            {
-              key: 'declarations',
-              label: (
-                <span className="flex items-center gap-2">
-                  <DocumentTextIcon className="w-4 h-4" />
-                  Bildirgeler
-                </span>
-              ),
-              children: (
-                <>
-                  {isLoading ? (
-                    <div className="flex items-center justify-center py-20">
-                      <Spin size="large" />
-                    </div>
-                  ) : filteredDeclarations.length === 0 ? (
-                    <Empty
-                      image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      description={
-                        <span className="text-slate-500">
-                          {payrolls.length === 0
-                            ? 'Bordro verisi bulunamadı - Önce bordro oluşturun'
-                            : 'Bildirge bulunmuyor'}
-                        </span>
-                      }
-                    />
-                  ) : (
-                    <Table
-                      columns={columns}
-                      dataSource={filteredDeclarations}
-                      rowKey="id"
-                      pagination={{
-                        pageSize: 10,
-                        showSizeChanger: true,
-                        showTotal: (total) => `Toplam ${total} bildirge`,
-                      }}
-                      scroll={{ x: 1200 }}
-                      className={tableClassName}
-                    />
-                  )}
-                </>
-              ),
-            },
-            {
-              key: 'employees',
-              label: (
-                <span className="flex items-center gap-2">
-                  <UserGroupIcon className="w-4 h-4" />
-                  Sigortalı Detayları
-                </span>
-              ),
-              children: (
-                <div>
-                  <div className="mb-4">
-                    <p className="text-sm text-slate-500">
-                      Sigortalı bazlı prim detayları (bordro verilerinden)
-                    </p>
-                  </div>
-                  {isLoading ? (
-                    <div className="flex items-center justify-center py-20">
-                      <Spin size="large" />
-                    </div>
-                  ) : employeeDetails.length === 0 ? (
-                    <Empty
-                      image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      description={<span className="text-slate-500">Sigortalı verisi bulunamadı</span>}
-                    />
-                  ) : (
-                    <Table
-                      columns={employeeColumns}
-                      dataSource={employeeDetails}
-                      rowKey="id"
-                      pagination={false}
-                      className={tableClassName}
-                      summary={(pageData) => {
-                        const totalDays = pageData.reduce((sum, item) => sum + item.workDays, 0);
-                        const totalBase = pageData.reduce((sum, item) => sum + item.sgkBase, 0);
-                        const totalPremium = pageData.reduce((sum, item) => sum + item.totalPremium, 0);
-                        return (
-                          <Table.Summary fixed>
-                            <Table.Summary.Row className="bg-slate-50">
-                              <Table.Summary.Cell index={0} colSpan={2}>
-                                <span className="font-semibold">Toplam ({pageData.length} sigortalı)</span>
-                              </Table.Summary.Cell>
-                              <Table.Summary.Cell index={2} align="center">
-                                <span className="font-semibold">{totalDays}</span>
-                              </Table.Summary.Cell>
-                              <Table.Summary.Cell index={3} align="right">
-                                <span className="font-semibold">{formatCurrency(totalBase)}</span>
-                              </Table.Summary.Cell>
-                              <Table.Summary.Cell index={4} colSpan={2} />
-                              <Table.Summary.Cell index={6} align="right">
-                                <span className="font-semibold text-slate-700">{formatCurrency(totalPremium)}</span>
-                              </Table.Summary.Cell>
-                              <Table.Summary.Cell index={7} />
-                            </Table.Summary.Row>
-                          </Table.Summary>
-                        );
-                      }}
-                    />
-                  )}
-                </div>
-              ),
-            },
-            {
-              key: 'premium-rates',
-              label: (
-                <span className="flex items-center gap-2">
-                  <BanknotesIcon className="w-4 h-4" />
-                  Prim Oranları
-                </span>
-              ),
-              children: (
-                <div className="space-y-6">
-                  <div className="mb-4">
-                    <p className="text-sm text-slate-500">
-                      5510 sayılı kanun kapsamında SGK prim oranları (2025)
-                    </p>
-                  </div>
+      {/* Main Content with Tabs */}
+      <div className="bg-white border border-slate-200 rounded-xl">
+        {/* Tab Headers */}
+        <div className="border-b border-slate-200">
+          <div className="flex gap-1 p-2">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === tab.key
+                    ? 'bg-slate-100 text-slate-900'
+                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
-                  {/* Premium Rates Table */}
-                  <div className="border border-slate-200 rounded-lg overflow-hidden">
-                    <table className="w-full">
-                      <thead className="bg-slate-50">
-                        <tr>
-                          <th className="text-left text-xs font-medium text-slate-500 uppercase p-3">Prim Türü</th>
-                          <th className="text-center text-xs font-medium text-slate-500 uppercase p-3">İşveren</th>
-                          <th className="text-center text-xs font-medium text-slate-500 uppercase p-3">İşçi</th>
-                          <th className="text-center text-xs font-medium text-slate-500 uppercase p-3">Toplam</th>
+        {/* Tab Content */}
+        <div className="p-6">
+          {/* Declarations Tab */}
+          {activeTab === 'declarations' && (
+            <>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-8 h-8 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+                    <span className="text-sm text-slate-500">Yükleniyor...</span>
+                  </div>
+                </div>
+              ) : filteredDeclarations.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <DocumentTextIcon className="w-12 h-12 text-slate-300 mb-3" />
+                  <span className="text-slate-500">
+                    {payrolls.length === 0
+                      ? 'Bordro verisi bulunamadı - Önce bordro oluşturun'
+                      : 'Bildirge bulunmuyor'}
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[1000px]">
+                      <thead>
+                        <tr className="border-b border-slate-200">
+                          <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-3">Dönem</th>
+                          <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-3">İşyeri No</th>
+                          <th className="text-center text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-3">Sigortalı</th>
+                          <th className="text-right text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-3">Prim Matrahı</th>
+                          <th className="text-right text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-3">Toplam Prim</th>
+                          <th className="text-right text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-3">Teşvik</th>
+                          <th className="text-right text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-3">Ödenecek</th>
+                          <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-3">Son Tarih</th>
+                          <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-3">Durum</th>
+                          <th className="text-right text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-3"></th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        <tr>
-                          <td className="p-3 text-sm text-slate-900">Kısa Vadeli Sigorta Primi</td>
-                          <td className="p-3 text-sm text-center font-medium">%2</td>
-                          <td className="p-3 text-sm text-center text-slate-400">-</td>
-                          <td className="p-3 text-sm text-center font-medium">%2</td>
-                        </tr>
-                        <tr className="bg-slate-50">
-                          <td className="p-3 text-sm text-slate-900">Malullük, Yaşlılık, Ölüm Sigortası</td>
-                          <td className="p-3 text-sm text-center font-medium">%11</td>
-                          <td className="p-3 text-sm text-center font-medium">%9</td>
-                          <td className="p-3 text-sm text-center font-medium">%20</td>
-                        </tr>
-                        <tr>
-                          <td className="p-3 text-sm text-slate-900">Genel Sağlık Sigortası</td>
-                          <td className="p-3 text-sm text-center font-medium">%7.5</td>
-                          <td className="p-3 text-sm text-center font-medium">%5</td>
-                          <td className="p-3 text-sm text-center font-medium">%12.5</td>
-                        </tr>
-                        <tr className="bg-slate-50">
-                          <td className="p-3 text-sm text-slate-700">5 Puan İşveren İndirimi (81/ı)</td>
-                          <td className="p-3 text-sm text-center font-medium text-slate-600">-%5</td>
-                          <td className="p-3 text-sm text-center text-slate-400">-</td>
-                          <td className="p-3 text-sm text-center font-medium text-slate-600">-%5</td>
-                        </tr>
-                        <tr className="bg-slate-100">
-                          <td className="p-3 text-sm font-semibold text-slate-900">SGK Primi Toplamı</td>
-                          <td className="p-3 text-sm text-center font-bold">%15.5</td>
-                          <td className="p-3 text-sm text-center font-bold">%14</td>
-                          <td className="p-3 text-sm text-center font-bold">%29.5</td>
-                        </tr>
-                        <tr>
-                          <td className="p-3 text-sm text-slate-900">İşsizlik Sigortası</td>
-                          <td className="p-3 text-sm text-center font-medium">%2</td>
-                          <td className="p-3 text-sm text-center font-medium">%1</td>
-                          <td className="p-3 text-sm text-center font-medium">%3</td>
-                        </tr>
+                        {paginatedDeclarations.map((record) => {
+                          const isOverdue = dayjs(record.dueDate).isBefore(dayjs(), 'day') &&
+                                            !['accepted', 'paid', 'submitted'].includes(record.status);
+                          const config = statusConfig[record.status];
+                          return (
+                            <tr key={record.id} className="hover:bg-slate-50 transition-colors">
+                              <td className="px-3 py-3">
+                                <div className="text-sm font-medium text-slate-900">{record.period}</div>
+                                <div className="text-xs text-slate-500">
+                                  {declarationTypeConfig[record.declarationType].label}
+                                </div>
+                              </td>
+                              <td className="px-3 py-3">
+                                <span className="font-mono text-sm text-slate-700">{record.workplaceNumber}</span>
+                              </td>
+                              <td className="px-3 py-3 text-center">
+                                <div className="flex items-center justify-center gap-1">
+                                  <UserGroupIcon className="w-4 h-4 text-slate-400" />
+                                  <span className="text-sm text-slate-700">{record.employeeCount}</span>
+                                </div>
+                              </td>
+                              <td className="px-3 py-3 text-right">
+                                <span className="text-sm text-slate-700">{formatCurrency(record.sgkPremiumBase)}</span>
+                              </td>
+                              <td className="px-3 py-3 text-right">
+                                <span className="text-sm text-slate-700 font-medium">{formatCurrency(record.totalPremium)}</span>
+                              </td>
+                              <td className="px-3 py-3 text-right">
+                                <span className="text-sm text-slate-600">-{formatCurrency(record.incentiveAmount)}</span>
+                              </td>
+                              <td className="px-3 py-3 text-right">
+                                <span className="text-sm font-semibold text-slate-900">{formatCurrency(record.netPayable)}</span>
+                              </td>
+                              <td className="px-3 py-3">
+                                <div className={`text-sm ${isOverdue ? 'text-slate-600 font-medium' : 'text-slate-700'}`}>
+                                  {dayjs(record.dueDate).format('DD.MM.YYYY')}
+                                </div>
+                              </td>
+                              <td className="px-3 py-3">
+                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${config.badgeClass}`}>
+                                  {config.icon}
+                                  <span>{config.label}</span>
+                                </span>
+                              </td>
+                              <td className="px-3 py-3 text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                  <button
+                                    onClick={() => {
+                                      setSelectedDeclaration(record);
+                                      setIsDetailModalOpen(true);
+                                    }}
+                                    className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+                                    title="Detay"
+                                  >
+                                    <EyeIcon className="w-4 h-4 text-slate-500" />
+                                  </button>
+                                  {record.status === 'ready' && (
+                                    <button
+                                      className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+                                      title="SGK'ya Gönder"
+                                    >
+                                      <PaperAirplaneIcon className="w-4 h-4 text-slate-600" />
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
-                      <tfoot className="bg-slate-200">
-                        <tr>
-                          <td className="p-3 text-sm font-bold text-slate-900">Genel Toplam</td>
-                          <td className="p-3 text-sm text-center font-bold text-slate-900">%17.5</td>
-                          <td className="p-3 text-sm text-center font-bold text-slate-900">%15</td>
-                          <td className="p-3 text-sm text-center font-bold text-slate-900">%32.5</td>
-                        </tr>
-                      </tfoot>
                     </table>
                   </div>
 
-                  {/* Info Boxes */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                      <div className="flex items-start gap-2">
-                        <CheckCircleIcon className="w-5 h-5 text-slate-600 mt-0.5" />
-                        <div>
-                          <div className="text-sm font-medium text-slate-800 mb-1">5 Puan İşveren İndirimi</div>
-                          <div className="text-xs text-slate-600">
-                            5510 sayılı Kanun'un 81/ı maddesi kapsamında, SGK'ya borcu olmayan ve
-                            kayıt dışı sigortalı çalıştırmayan işverenlere %5 prim indirimi uygulanır.
-                          </div>
-                        </div>
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+                      <span className="text-sm text-slate-500">
+                        Toplam {filteredDeclarations.length} bildirge
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          className="p-2 border border-slate-300 rounded-lg hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          <ChevronLeftIcon className="w-4 h-4" />
+                        </button>
+                        <span className="text-sm text-slate-600">
+                          Sayfa {currentPage} / {totalPages}
+                        </span>
+                        <button
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                          className="p-2 border border-slate-300 rounded-lg hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          <ChevronRightIcon className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
-                    <div className="bg-slate-100 border border-slate-300 rounded-lg p-4">
-                      <div className="flex items-start gap-2">
-                        <ExclamationTriangleIcon className="w-5 h-5 text-slate-600 mt-0.5" />
-                        <div>
-                          <div className="text-sm font-medium text-slate-800 mb-1">Prim Tavanı</div>
-                          <div className="text-xs text-slate-600">
-                            2025 yılı için SGK prim tavanı brüt asgari ücretin 7.5 katıdır.
-                            Bu tutarı aşan kazançlar için prim hesaplanmaz.
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ),
-            },
-            {
-              key: 'eksik-gun',
-              label: (
-                <span className="flex items-center gap-2">
-                  <CalendarDaysIcon className="w-4 h-4" />
-                  Eksik Gün Kodları
-                </span>
-              ),
-              children: (
-                <div className="space-y-4">
-                  <p className="text-sm text-slate-500 mb-4">
-                    SGK eksik gün bildirim nedeni kodları
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {eksikGunKodlari.map((item) => (
-                      <div
-                        key={item.code}
-                        className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-                      >
-                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                          <span className="text-sm font-bold text-slate-700">{item.code}</span>
-                        </div>
-                        <span className="text-sm text-slate-700">{item.description}</span>
-                      </div>
-                    ))}
-                  </div>
+                  )}
+                </>
+              )}
+            </>
+          )}
 
-                  <div className="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-lg">
-                    <div className="flex items-start gap-2">
-                      <DocumentTextIcon className="w-5 h-5 text-slate-600 mt-0.5" />
-                      <div className="text-sm text-slate-700">
-                        <strong>Önemli:</strong> 30 günden az çalışılan aylarda eksik gün
-                        bildirim formu doldurulması zorunludur. Belgelenemeyen eksik günler
-                        için idari para cezası uygulanabilir.
+          {/* Employees Tab */}
+          {activeTab === 'employees' && (
+            <div>
+              <div className="mb-4">
+                <p className="text-sm text-slate-500">
+                  Sigortalı bazlı prim detayları (bordro verilerinden)
+                </p>
+              </div>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-8 h-8 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+                    <span className="text-sm text-slate-500">Yükleniyor...</span>
+                  </div>
+                </div>
+              ) : employeeDetails.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <UserGroupIcon className="w-12 h-12 text-slate-300 mb-3" />
+                  <span className="text-slate-500">Sigortalı verisi bulunamadı</span>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-slate-200">
+                        <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-3">TC Kimlik No</th>
+                        <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-3">Ad Soyad</th>
+                        <th className="text-center text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-3">Gün</th>
+                        <th className="text-right text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-3">SPEK</th>
+                        <th className="text-right text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-3">SGK Primi</th>
+                        <th className="text-right text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-3">İşsizlik</th>
+                        <th className="text-right text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-3">Toplam</th>
+                        <th className="text-center text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-3">Teşvik</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {employeeDetails.map((emp) => (
+                        <tr key={emp.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-3 py-3">
+                            <span className="font-mono text-sm">{emp.tcNo}</span>
+                          </td>
+                          <td className="px-3 py-3">
+                            <span className="text-sm text-slate-900">{emp.name}</span>
+                          </td>
+                          <td className="px-3 py-3 text-center">
+                            <div className="text-sm">
+                              <div className="text-slate-900">{emp.workDays}</div>
+                              {emp.unpaidLeaveDays > 0 && (
+                                <div className="text-xs text-slate-700">+{emp.unpaidLeaveDays} eksik</div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 text-right">
+                            <span className="text-sm">{formatCurrency(emp.sgkBase)}</span>
+                          </td>
+                          <td className="px-3 py-3 text-right">
+                            <span className="text-sm text-slate-700">{formatCurrency(emp.sgkPremium)}</span>
+                          </td>
+                          <td className="px-3 py-3 text-right">
+                            <span className="text-sm text-slate-600">{formatCurrency(emp.unemploymentPremium)}</span>
+                          </td>
+                          <td className="px-3 py-3 text-right">
+                            <span className="text-sm font-semibold">{formatCurrency(emp.totalPremium)}</span>
+                          </td>
+                          <td className="px-3 py-3 text-center">
+                            {emp.exemptionCode ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
+                                {emp.exemptionCode}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">-</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot className="bg-slate-50">
+                      <tr className="border-t-2 border-slate-200">
+                        <td className="px-3 py-3" colSpan={2}>
+                          <span className="font-semibold">Toplam ({employeeDetails.length} sigortalı)</span>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <span className="font-semibold">{employeeTotals.totalDays}</span>
+                        </td>
+                        <td className="px-3 py-3 text-right">
+                          <span className="font-semibold">{formatCurrency(employeeTotals.totalBase)}</span>
+                        </td>
+                        <td className="px-3 py-3" colSpan={2}></td>
+                        <td className="px-3 py-3 text-right">
+                          <span className="font-semibold text-slate-700">{formatCurrency(employeeTotals.totalPremium)}</span>
+                        </td>
+                        <td className="px-3 py-3"></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Premium Rates Tab */}
+          {activeTab === 'premium-rates' && (
+            <div className="space-y-6">
+              <div className="mb-4">
+                <p className="text-sm text-slate-500">
+                  5510 sayılı kanun kapsamında SGK prim oranları (2025)
+                </p>
+              </div>
+
+              {/* Premium Rates Table */}
+              <div className="border border-slate-200 rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="text-left text-xs font-medium text-slate-500 uppercase p-3">Prim Türü</th>
+                      <th className="text-center text-xs font-medium text-slate-500 uppercase p-3">İşveren</th>
+                      <th className="text-center text-xs font-medium text-slate-500 uppercase p-3">İşçi</th>
+                      <th className="text-center text-xs font-medium text-slate-500 uppercase p-3">Toplam</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    <tr>
+                      <td className="p-3 text-sm text-slate-900">Kısa Vadeli Sigorta Primi</td>
+                      <td className="p-3 text-sm text-center font-medium">%2</td>
+                      <td className="p-3 text-sm text-center text-slate-400">-</td>
+                      <td className="p-3 text-sm text-center font-medium">%2</td>
+                    </tr>
+                    <tr className="bg-slate-50">
+                      <td className="p-3 text-sm text-slate-900">Malullük, Yaşlılık, Ölüm Sigortası</td>
+                      <td className="p-3 text-sm text-center font-medium">%11</td>
+                      <td className="p-3 text-sm text-center font-medium">%9</td>
+                      <td className="p-3 text-sm text-center font-medium">%20</td>
+                    </tr>
+                    <tr>
+                      <td className="p-3 text-sm text-slate-900">Genel Sağlık Sigortası</td>
+                      <td className="p-3 text-sm text-center font-medium">%7.5</td>
+                      <td className="p-3 text-sm text-center font-medium">%5</td>
+                      <td className="p-3 text-sm text-center font-medium">%12.5</td>
+                    </tr>
+                    <tr className="bg-slate-50">
+                      <td className="p-3 text-sm text-slate-700">5 Puan İşveren İndirimi (81/ı)</td>
+                      <td className="p-3 text-sm text-center font-medium text-slate-600">-%5</td>
+                      <td className="p-3 text-sm text-center text-slate-400">-</td>
+                      <td className="p-3 text-sm text-center font-medium text-slate-600">-%5</td>
+                    </tr>
+                    <tr className="bg-slate-100">
+                      <td className="p-3 text-sm font-semibold text-slate-900">SGK Primi Toplamı</td>
+                      <td className="p-3 text-sm text-center font-bold">%15.5</td>
+                      <td className="p-3 text-sm text-center font-bold">%14</td>
+                      <td className="p-3 text-sm text-center font-bold">%29.5</td>
+                    </tr>
+                    <tr>
+                      <td className="p-3 text-sm text-slate-900">İşsizlik Sigortası</td>
+                      <td className="p-3 text-sm text-center font-medium">%2</td>
+                      <td className="p-3 text-sm text-center font-medium">%1</td>
+                      <td className="p-3 text-sm text-center font-medium">%3</td>
+                    </tr>
+                  </tbody>
+                  <tfoot className="bg-slate-200">
+                    <tr>
+                      <td className="p-3 text-sm font-bold text-slate-900">Genel Toplam</td>
+                      <td className="p-3 text-sm text-center font-bold text-slate-900">%17.5</td>
+                      <td className="p-3 text-sm text-center font-bold text-slate-900">%15</td>
+                      <td className="p-3 text-sm text-center font-bold text-slate-900">%32.5</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              {/* Info Boxes */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                  <div className="flex items-start gap-2">
+                    <CheckCircleIcon className="w-5 h-5 text-slate-600 mt-0.5" />
+                    <div>
+                      <div className="text-sm font-medium text-slate-800 mb-1">5 Puan İşveren İndirimi</div>
+                      <div className="text-xs text-slate-600">
+                        5510 sayılı Kanun'un 81/ı maddesi kapsamında, SGK'ya borcu olmayan ve
+                        kayıt dışı sigortalı çalıştırmayan işverenlere %5 prim indirimi uygulanır.
                       </div>
                     </div>
                   </div>
                 </div>
-              ),
-            },
-          ]}
-        />
+                <div className="bg-slate-100 border border-slate-300 rounded-lg p-4">
+                  <div className="flex items-start gap-2">
+                    <ExclamationTriangleIcon className="w-5 h-5 text-slate-600 mt-0.5" />
+                    <div>
+                      <div className="text-sm font-medium text-slate-800 mb-1">Prim Tavanı</div>
+                      <div className="text-xs text-slate-600">
+                        2025 yılı için SGK prim tavanı brüt asgari ücretin 7.5 katıdır.
+                        Bu tutarı aşan kazançlar için prim hesaplanmaz.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Eksik Gün Tab */}
+          {activeTab === 'eksik-gun' && (
+            <div className="space-y-4">
+              <p className="text-sm text-slate-500 mb-4">
+                SGK eksik gün bildirim nedeni kodları
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {eksikGunKodlari.map((item) => (
+                  <div
+                    key={item.code}
+                    className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                      <span className="text-sm font-bold text-slate-700">{item.code}</span>
+                    </div>
+                    <span className="text-sm text-slate-700">{item.description}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <DocumentTextIcon className="w-5 h-5 text-slate-600 mt-0.5" />
+                  <div className="text-sm text-slate-700">
+                    <strong>Önemli:</strong> 30 günden az çalışılan aylarda eksik gün
+                    bildirim formu doldurulması zorunludur. Belgelenemeyen eksik günler
+                    için idari para cezası uygulanabilir.
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Detail Modal */}
-      <Modal
-        title={
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-              <ShieldCheckIcon className="w-5 h-5 text-slate-600" />
-            </div>
-            <div>
-              <div className="text-lg font-semibold">Bildirge Detayı</div>
-              <div className="text-sm text-slate-500">
-                {selectedDeclaration?.period} - {selectedDeclaration && declarationTypeConfig[selectedDeclaration.declarationType].label}
+      {isDetailModalOpen && selectedDeclaration && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={closeModal}
+          />
+
+          {/* Modal Content */}
+          <div className="relative bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-slate-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <ShieldCheckIcon className="w-5 h-5 text-slate-600" />
+                </div>
+                <div>
+                  <div className="text-lg font-semibold">Bildirge Detayı</div>
+                  <div className="text-sm text-slate-500">
+                    {selectedDeclaration.period} - {declarationTypeConfig[selectedDeclaration.declarationType].label}
+                  </div>
+                </div>
               </div>
+              <button
+                onClick={closeModal}
+                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <XMarkIcon className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6">
+              {/* Status */}
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                <div>
+                  <div className="text-xs text-slate-500 mb-1">Durum</div>
+                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig[selectedDeclaration.status].badgeClass}`}>
+                    {statusConfig[selectedDeclaration.status].icon}
+                    <span>{statusConfig[selectedDeclaration.status].label}</span>
+                  </span>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-slate-500 mb-1">İşyeri Sicil No</div>
+                  <div className="font-mono text-sm">{selectedDeclaration.workplaceNumber}</div>
+                </div>
+              </div>
+
+              {/* Summary Stats */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-3 border border-slate-200 rounded-lg text-center">
+                  <div className="text-xs text-slate-500 mb-1">Sigortalı</div>
+                  <div className="text-lg font-semibold">{selectedDeclaration.employeeCount}</div>
+                </div>
+                <div className="p-3 border border-slate-200 rounded-lg text-center">
+                  <div className="text-xs text-slate-500 mb-1">Toplam Gün</div>
+                  <div className="text-lg font-semibold">{selectedDeclaration.totalWorkDays}</div>
+                </div>
+                <div className="p-3 border border-slate-200 rounded-lg text-center">
+                  <div className="text-xs text-slate-500 mb-1">Prim Matrahı</div>
+                  <div className="text-lg font-semibold">{formatCurrency(selectedDeclaration.sgkPremiumBase)}</div>
+                </div>
+              </div>
+
+              {/* Premium Breakdown */}
+              <div className="border border-slate-200 rounded-lg overflow-hidden">
+                <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
+                  <span className="text-sm font-medium text-slate-700">Prim Dağılımı</span>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-slate-600">SGK İşveren Payı</span>
+                    <span className="text-sm font-medium">{formatCurrency(selectedDeclaration.sgkEmployer)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-slate-600">SGK İşçi Payı</span>
+                    <span className="text-sm font-medium">{formatCurrency(selectedDeclaration.sgkEmployee)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-slate-600">İşsizlik İşveren</span>
+                    <span className="text-sm font-medium">{formatCurrency(selectedDeclaration.unemploymentEmployer)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-slate-600">İşsizlik İşçi</span>
+                    <span className="text-sm font-medium">{formatCurrency(selectedDeclaration.unemploymentEmployee)}</span>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t border-slate-100">
+                    <span className="text-sm font-semibold text-slate-900">Toplam Prim</span>
+                    <span className="text-sm font-semibold text-slate-700">{formatCurrency(selectedDeclaration.totalPremium)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-slate-600">Teşvik İndirimi</span>
+                    <span className="text-sm font-medium text-slate-600">-{formatCurrency(selectedDeclaration.incentiveAmount)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Grand Total */}
+              <div className="bg-slate-900 text-white rounded-lg p-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Ödenecek Net Prim</span>
+                  <span className="text-xl font-bold">{formatCurrency(selectedDeclaration.netPayable)}</span>
+                </div>
+              </div>
+
+              {/* Reference Number */}
+              {selectedDeclaration.referenceNumber && (
+                <div className="text-center text-xs text-slate-500">
+                  Referans No: <span className="font-mono">{selectedDeclaration.referenceNumber}</span>
+                </div>
+              )}
             </div>
           </div>
-        }
-        open={isDetailModalOpen}
-        onCancel={() => setIsDetailModalOpen(false)}
-        footer={null}
-        width={700}
-      >
-        {selectedDeclaration && (
-          <div className="space-y-6 mt-6">
-            {/* Status */}
-            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-              <div>
-                <div className="text-xs text-slate-500 mb-1">Durum</div>
-                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig[selectedDeclaration.status].badgeClass}`}>
-                  {statusConfig[selectedDeclaration.status].icon}
-                  <span>{statusConfig[selectedDeclaration.status].label}</span>
-                </span>
-              </div>
-              <div className="text-right">
-                <div className="text-xs text-slate-500 mb-1">İşyeri Sicil No</div>
-                <div className="font-mono text-sm">{selectedDeclaration.workplaceNumber}</div>
-              </div>
-            </div>
-
-            {/* Summary Stats */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="p-3 border border-slate-200 rounded-lg text-center">
-                <div className="text-xs text-slate-500 mb-1">Sigortalı</div>
-                <div className="text-lg font-semibold">{selectedDeclaration.employeeCount}</div>
-              </div>
-              <div className="p-3 border border-slate-200 rounded-lg text-center">
-                <div className="text-xs text-slate-500 mb-1">Toplam Gün</div>
-                <div className="text-lg font-semibold">{selectedDeclaration.totalWorkDays}</div>
-              </div>
-              <div className="p-3 border border-slate-200 rounded-lg text-center">
-                <div className="text-xs text-slate-500 mb-1">Prim Matrahı</div>
-                <div className="text-lg font-semibold">{formatCurrency(selectedDeclaration.sgkPremiumBase)}</div>
-              </div>
-            </div>
-
-            {/* Premium Breakdown */}
-            <div className="border border-slate-200 rounded-lg overflow-hidden">
-              <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
-                <span className="text-sm font-medium text-slate-700">Prim Dağılımı</span>
-              </div>
-              <div className="p-4 space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm text-slate-600">SGK İşveren Payı</span>
-                  <span className="text-sm font-medium">{formatCurrency(selectedDeclaration.sgkEmployer)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-slate-600">SGK İşçi Payı</span>
-                  <span className="text-sm font-medium">{formatCurrency(selectedDeclaration.sgkEmployee)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-slate-600">İşsizlik İşveren</span>
-                  <span className="text-sm font-medium">{formatCurrency(selectedDeclaration.unemploymentEmployer)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-slate-600">İşsizlik İşçi</span>
-                  <span className="text-sm font-medium">{formatCurrency(selectedDeclaration.unemploymentEmployee)}</span>
-                </div>
-                <div className="flex justify-between pt-2 border-t border-slate-100">
-                  <span className="text-sm font-semibold text-slate-900">Toplam Prim</span>
-                  <span className="text-sm font-semibold text-slate-700">{formatCurrency(selectedDeclaration.totalPremium)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-slate-600">Teşvik İndirimi</span>
-                  <span className="text-sm font-medium text-slate-600">-{formatCurrency(selectedDeclaration.incentiveAmount)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Grand Total */}
-            <div className="bg-slate-900 text-white rounded-lg p-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Ödenecek Net Prim</span>
-                <span className="text-xl font-bold">{formatCurrency(selectedDeclaration.netPayable)}</span>
-              </div>
-            </div>
-
-            {/* Reference Number */}
-            {selectedDeclaration.referenceNumber && (
-              <div className="text-center text-xs text-slate-500">
-                Referans No: <span className="font-mono">{selectedDeclaration.referenceNumber}</span>
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
+        </div>
+      )}
     </div>
   );
 }
