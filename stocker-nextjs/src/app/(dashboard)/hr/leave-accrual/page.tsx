@@ -7,22 +7,18 @@
  * Monochrome design system following DESIGN_SYSTEM.md
  */
 
-import React, { useState, useMemo } from 'react';
-import { Form, DatePicker, InputNumber, Select, Table, Button, Card, Alert, Tag, Tooltip, Divider, Empty } from 'antd';
+import React, { useState } from 'react';
+import { Form, DatePicker, InputNumber, Select, Table, Button, Alert, Divider, Empty } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   CalendarDaysIcon,
   CalculatorIcon,
-  UserIcon,
   ClockIcon,
   InformationCircleIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
   DocumentTextIcon,
-  ArrowPathIcon,
   ChartBarIcon,
-  PlusCircleIcon,
-  MinusCircleIcon,
 } from '@heroicons/react/24/outline';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/tr';
@@ -234,9 +230,11 @@ export default function LeaveAccrualPage() {
       key: 'entitlement',
       align: 'center',
       render: (days) => (
-        <Tag color={days >= 20 ? 'green' : days > 0 ? 'blue' : 'default'}>
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          days >= 20 ? 'bg-slate-900 text-white' : days > 0 ? 'bg-slate-200 text-slate-800' : 'bg-slate-100 text-slate-500'
+        }`}>
           {days} gün
-        </Tag>
+        </span>
       ),
     },
     {
@@ -266,29 +264,29 @@ export default function LeaveAccrualPage() {
         description={
           <div className="text-sm">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-              <div className="bg-blue-50 rounded-lg p-3">
-                <p className="font-semibold text-blue-800">1-5 Yıl Arası</p>
-                <p className="text-2xl font-bold text-blue-900 mt-1">14 Gün</p>
+              <div className="bg-slate-100 rounded-lg p-3">
+                <p className="font-semibold text-slate-700">1-5 Yıl Arası</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">14 Gün</p>
               </div>
-              <div className="bg-green-50 rounded-lg p-3">
-                <p className="font-semibold text-green-800">5-15 Yıl Arası</p>
-                <p className="text-2xl font-bold text-green-900 mt-1">20 Gün</p>
+              <div className="bg-slate-200 rounded-lg p-3">
+                <p className="font-semibold text-slate-700">5-15 Yıl Arası</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">20 Gün</p>
               </div>
-              <div className="bg-purple-50 rounded-lg p-3">
-                <p className="font-semibold text-purple-800">15 Yıl ve Üzeri</p>
-                <p className="text-2xl font-bold text-purple-900 mt-1">26 Gün</p>
+              <div className="bg-slate-300 rounded-lg p-3">
+                <p className="font-semibold text-slate-800">15 Yıl ve Üzeri</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">26 Gün</p>
               </div>
             </div>
             <p className="mt-3 text-slate-600">
-              <strong>Not:</strong> 18 yaşından küçük ve 50 yaşından büyük işçilere en az 20 gün yıllık ücretli izin verilir.
+              <strong className="text-slate-700">Not:</strong> 18 yaşından küçük ve 50 yaşından büyük işçilere en az 20 gün yıllık ücretli izin verilir.
               Yeraltı işlerinde çalışanlara 4 gün ek izin hakkı tanınır.
             </p>
           </div>
         }
         type="info"
         showIcon
-        icon={<InformationCircleIcon className="w-5 h-5" />}
-        className="mb-8"
+        icon={<InformationCircleIcon className="w-5 h-5 text-slate-500" />}
+        className="mb-8 !border-slate-300 !bg-slate-50 [&_.ant-alert-message]:!text-slate-700"
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -439,55 +437,60 @@ export default function LeaveAccrualPage() {
           {result ? (
             <>
               {/* Summary Card */}
-              <div className={`rounded-xl p-6 ${result.isEligible ? 'bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200' : 'bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200'}`}>
+              <div className={`rounded-xl p-6 ${result.isEligible ? 'bg-white border border-slate-200' : 'bg-slate-100 border border-slate-300'}`}>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className={`w-10 h-10 rounded-lg ${result.isEligible ? 'bg-emerald-100' : 'bg-amber-100'} flex items-center justify-center`}>
+                  <div className={`w-10 h-10 rounded-lg ${result.isEligible ? 'bg-slate-100' : 'bg-slate-200'} flex items-center justify-center`}>
                     {result.isEligible ? (
-                      <CheckCircleIcon className={`w-5 h-5 ${result.isEligible ? 'text-emerald-600' : 'text-amber-600'}`} />
+                      <CheckCircleIcon className="w-5 h-5 text-slate-600" />
                     ) : (
-                      <ExclamationTriangleIcon className="w-5 h-5 text-amber-600" />
+                      <ExclamationTriangleIcon className="w-5 h-5 text-slate-600" />
                     )}
                   </div>
                   <div>
-                    <h3 className={`text-lg font-semibold ${result.isEligible ? 'text-emerald-900' : 'text-amber-900'}`}>
+                    <h3 className="text-lg font-semibold text-slate-900">
                       {result.isEligible ? 'İzin Hak Ediş Sonucu' : 'Henüz Hak Kazanılmadı'}
                     </h3>
-                    <p className={`text-sm ${result.isEligible ? 'text-emerald-700' : 'text-amber-700'}`}>
+                    <p className="text-sm text-slate-500">
                       Kıdem: {result.totalServiceYears} yıl {result.totalServiceMonths} ay
                     </p>
                   </div>
+                  {result.isEligible && (
+                    <span className="ml-auto inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-900 text-white">
+                      Hak Kazanıldı
+                    </span>
+                  )}
                 </div>
 
                 {result.isEligible ? (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-white/70 rounded-lg p-3">
-                      <p className="text-xs text-emerald-600 uppercase tracking-wider">Yıllık Hak</p>
-                      <p className="text-2xl font-bold text-emerald-900">{result.totalEntitlement}</p>
-                      <p className="text-xs text-emerald-600">gün</p>
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <p className="text-xs text-slate-500 uppercase tracking-wider">Yıllık Hak</p>
+                      <p className="text-2xl font-bold text-slate-900">{result.totalEntitlement}</p>
+                      <p className="text-xs text-slate-500">gün</p>
                     </div>
-                    <div className="bg-white/70 rounded-lg p-3">
-                      <p className="text-xs text-emerald-600 uppercase tracking-wider">Devreden</p>
-                      <p className="text-2xl font-bold text-emerald-900">{result.carriedOver}</p>
-                      <p className="text-xs text-emerald-600">gün</p>
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <p className="text-xs text-slate-500 uppercase tracking-wider">Devreden</p>
+                      <p className="text-2xl font-bold text-slate-900">{result.carriedOver}</p>
+                      <p className="text-xs text-slate-500">gün</p>
                     </div>
-                    <div className="bg-white/70 rounded-lg p-3">
-                      <p className="text-xs text-red-600 uppercase tracking-wider">Kullanılan</p>
-                      <p className="text-2xl font-bold text-red-700">{result.usedDays}</p>
-                      <p className="text-xs text-red-600">gün</p>
+                    <div className="bg-slate-100 rounded-lg p-3">
+                      <p className="text-xs text-slate-600 uppercase tracking-wider">Kullanılan</p>
+                      <p className="text-2xl font-bold text-slate-700">{result.usedDays}</p>
+                      <p className="text-xs text-slate-600">gün</p>
                     </div>
-                    <div className="bg-white/70 rounded-lg p-3">
-                      <p className="text-xs text-blue-600 uppercase tracking-wider">Kalan</p>
-                      <p className="text-2xl font-bold text-blue-900">{result.remainingDays}</p>
-                      <p className="text-xs text-blue-600">gün</p>
+                    <div className="bg-slate-200 rounded-lg p-3">
+                      <p className="text-xs text-slate-700 uppercase tracking-wider">Kalan</p>
+                      <p className="text-2xl font-bold text-slate-900">{result.remainingDays}</p>
+                      <p className="text-xs text-slate-700">gün</p>
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-white/70 rounded-lg p-4">
-                    <p className="text-sm text-amber-800">
+                  <div className="bg-white rounded-lg p-4">
+                    <p className="text-sm text-slate-700">
                       Yıllık ücretli izin hakkı kazanmak için en az <strong>1 yıl</strong> çalışmış olmak gerekir.
                     </p>
-                    <p className="text-sm text-amber-700 mt-2">
-                      İlk izin hak ediş tarihi: <strong>{result.eligibilityDate}</strong>
+                    <p className="text-sm text-slate-600 mt-2">
+                      İlk izin hak ediş tarihi: <strong className="text-slate-900">{result.eligibilityDate}</strong>
                     </p>
                   </div>
                 )}
@@ -509,24 +512,24 @@ export default function LeaveAccrualPage() {
                       <span className="text-sm font-semibold text-slate-900">{result.baseEntitlement} gün</span>
                     </div>
                     {result.additionalEntitlement > 0 && (
-                      <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                        <span className="text-sm text-green-700">Ek İzin Hakkı</span>
-                        <span className="text-sm font-semibold text-green-900">+{result.additionalEntitlement} gün</span>
+                      <div className="flex justify-between items-center p-3 bg-slate-100 rounded-lg">
+                        <span className="text-sm text-slate-700">Ek İzin Hakkı</span>
+                        <span className="text-sm font-semibold text-slate-900">+{result.additionalEntitlement} gün</span>
                       </div>
                     )}
                     <Divider className="my-2" />
-                    <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                      <span className="text-sm text-blue-700 font-medium">Toplam Yıllık İzin</span>
-                      <span className="text-lg font-bold text-blue-900">{result.totalEntitlement} gün</span>
+                    <div className="flex justify-between items-center p-3 bg-slate-200 rounded-lg">
+                      <span className="text-sm text-slate-700 font-medium">Toplam Yıllık İzin</span>
+                      <span className="text-lg font-bold text-slate-900">{result.totalEntitlement} gün</span>
                     </div>
                   </div>
 
                   {/* Next Milestone */}
                   {result.daysUntilNextMilestone > 0 && (
-                    <div className="mt-4 p-3 bg-purple-50 rounded-lg">
+                    <div className="mt-4 p-3 bg-slate-100 rounded-lg">
                       <div className="flex items-center gap-2">
-                        <ClockIcon className="w-4 h-4 text-purple-600" />
-                        <span className="text-sm text-purple-700">
+                        <ClockIcon className="w-4 h-4 text-slate-600" />
+                        <span className="text-sm text-slate-700">
                           <strong>{result.nextMilestone}</strong>: {result.daysUntilNextMilestone} gün kaldı
                         </span>
                       </div>

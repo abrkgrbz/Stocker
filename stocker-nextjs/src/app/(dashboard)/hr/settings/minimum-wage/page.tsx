@@ -8,19 +8,15 @@
  */
 
 import React, { useState } from 'react';
-import { Form, Input, InputNumber, DatePicker, Select, Table, Button, Modal, Empty, Spin, Tag, Tooltip, Alert } from 'antd';
+import { Form, Input, InputNumber, DatePicker, Select, Table, Button, Modal, Empty, Tooltip, Alert } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   BanknotesIcon,
   PlusIcon,
   PencilSquareIcon,
   TrashIcon,
-  CalendarDaysIcon,
-  ArrowPathIcon,
   InformationCircleIcon,
   CheckCircleIcon,
-  ExclamationTriangleIcon,
-  CurrencyDollarIcon,
   ChartBarIcon,
 } from '@heroicons/react/24/outline';
 import dayjs, { Dayjs } from 'dayjs';
@@ -338,9 +334,13 @@ export default function MinimumWageConfigPage() {
       align: 'center',
       render: (_, record) => (
         record.isActive ? (
-          <Tag color="green" className="m-0">Aktif</Tag>
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-900 text-white">
+            Aktif
+          </span>
         ) : (
-          <Tag color="default" className="m-0">Pasif</Tag>
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+            Pasif
+          </span>
         )
       ),
     },
@@ -355,7 +355,7 @@ export default function MinimumWageConfigPage() {
             <Tooltip title="Aktifleştir">
               <button
                 onClick={() => handleActivate(record)}
-                className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors"
+                className="p-1.5 text-slate-600 hover:bg-slate-100 rounded transition-colors"
               >
                 <CheckCircleIcon className="w-4 h-4" />
               </button>
@@ -373,7 +373,7 @@ export default function MinimumWageConfigPage() {
             <Tooltip title="Sil">
               <button
                 onClick={() => handleDelete(record)}
-                className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
               >
                 <TrashIcon className="w-4 h-4" />
               </button>
@@ -411,34 +411,37 @@ export default function MinimumWageConfigPage() {
 
       {/* Current Active Minimum Wage Card */}
       {activeMinWage && (
-        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-6 mb-8">
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-              <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <CheckCircleIcon className="w-5 h-5 text-slate-600" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-emerald-900">Güncel Asgari Ücret</h3>
-              <p className="text-sm text-emerald-700">
+              <h3 className="text-lg font-semibold text-slate-900">Güncel Asgari Ücret</h3>
+              <p className="text-sm text-slate-500">
                 {activeMinWage.year} - {periodLabels[activeMinWage.period]}
               </p>
             </div>
+            <span className="ml-auto inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-900 text-white">
+              Aktif
+            </span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div>
-              <p className="text-xs text-emerald-600 uppercase tracking-wider mb-1">Brüt Ücret</p>
-              <p className="text-2xl font-bold text-emerald-900">{formatCurrency(activeMinWage.grossAmount)}</p>
+              <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Brüt Ücret</p>
+              <p className="text-2xl font-bold text-slate-900">{formatCurrency(activeMinWage.grossAmount)}</p>
             </div>
             <div>
-              <p className="text-xs text-emerald-600 uppercase tracking-wider mb-1">Net Ücret</p>
-              <p className="text-2xl font-bold text-emerald-900">{formatCurrency(activeMinWage.netAmount)}</p>
+              <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Net Ücret</p>
+              <p className="text-2xl font-bold text-slate-900">{formatCurrency(activeMinWage.netAmount)}</p>
             </div>
             <div>
-              <p className="text-xs text-emerald-600 uppercase tracking-wider mb-1">SGK Tavanı</p>
-              <p className="text-2xl font-bold text-emerald-900">{formatCurrency(activeMinWage.sgkCeiling)}</p>
+              <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">SGK Tavanı</p>
+              <p className="text-2xl font-bold text-slate-900">{formatCurrency(activeMinWage.sgkCeiling)}</p>
             </div>
             <div>
-              <p className="text-xs text-emerald-600 uppercase tracking-wider mb-1">Geçerlilik</p>
-              <p className="text-sm font-medium text-emerald-800">
+              <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Geçerlilik</p>
+              <p className="text-sm font-medium text-slate-700">
                 {dayjs(activeMinWage.effectiveDate).format('DD.MM.YYYY')} - {activeMinWage.endDate ? dayjs(activeMinWage.endDate).format('DD.MM.YYYY') : 'Devam'}
               </p>
             </div>
@@ -450,19 +453,19 @@ export default function MinimumWageConfigPage() {
       <Alert
         message="Asgari Ücret Bilgisi"
         description={
-          <div className="text-sm">
+          <div className="text-sm text-slate-600">
             <p>Türkiye&apos;de asgari ücret yılda iki kez (Ocak ve Temmuz) güncellenir. SGK prim tavanı, brüt asgari ücretin 7.5 katı olarak hesaplanır.</p>
             <p className="mt-2">
-              <strong>SGK İşçi Kesintileri:</strong> %14 Sigorta + %1 İşsizlik = %15
+              <strong className="text-slate-700">SGK İşçi Kesintileri:</strong> %14 Sigorta + %1 İşsizlik = %15
               <br />
-              <strong>SGK İşveren Kesintileri:</strong> %20.5 Sigorta + %2 İşsizlik = %22.5 (5 puanlık indirim sonrası: %17.5)
+              <strong className="text-slate-700">SGK İşveren Kesintileri:</strong> %20.5 Sigorta + %2 İşsizlik = %22.5 (5 puanlık indirim sonrası: %17.5)
             </p>
           </div>
         }
         type="info"
         showIcon
-        icon={<InformationCircleIcon className="w-5 h-5" />}
-        className="mb-8"
+        icon={<InformationCircleIcon className="w-5 h-5 text-slate-500" />}
+        className="mb-8 !border-slate-300 !bg-slate-50 [&_.ant-alert-message]:!text-slate-700"
       />
 
       {/* Minimum Wage History Table */}
