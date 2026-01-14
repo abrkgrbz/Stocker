@@ -280,6 +280,100 @@ public class BackupJob
     }
 
     /// <summary>
+    /// Executes a restore operation from a backup
+    /// </summary>
+    [AutomaticRetry(Attempts = 2)]
+    [Queue("backups")]
+    public async Task ExecuteRestoreAsync(
+        Guid tenantId,
+        Guid backupId,
+        bool restoreDatabase,
+        bool restoreFiles,
+        bool restoreConfiguration,
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation(
+            "Starting restore operation. TenantId: {TenantId}, BackupId: {BackupId}",
+            tenantId, backupId);
+
+        try
+        {
+            // Get backup record
+            var backup = await _masterDbContext.TenantBackups
+                .FirstOrDefaultAsync(b => b.Id == backupId && b.TenantId == tenantId, cancellationToken);
+
+            if (backup == null)
+            {
+                _logger.LogError("Backup not found for restore. BackupId: {BackupId}", backupId);
+                return;
+            }
+
+            if (!backup.IsRestorable)
+            {
+                _logger.LogError("Backup is not restorable. BackupId: {BackupId}", backupId);
+                return;
+            }
+
+            // Send start notification
+            var startTime = DateTime.UtcNow;
+            await _notificationService.NotifyRestoreStartedAsync(
+                tenantId,
+                backupId,
+                backup.BackupName,
+                cancellationToken);
+
+            // Execute restore
+            var request = new RestoreExecutionRequest(
+                TenantId: tenantId,
+                BackupId: backupId,
+                RestoreDatabase: restoreDatabase && backup.IncludesDatabase,
+                RestoreFiles: restoreFiles && backup.IncludesFiles,
+                RestoreConfiguration: restoreConfiguration && backup.IncludesConfiguration);
+
+            var result = await _backupExecutionService.ExecuteRestoreAsync(request, cancellationToken);
+            var duration = DateTime.UtcNow - startTime;
+
+            if (result.IsSuccess)
+            {
+                // Record successful restore
+                backup.RecordRestore("Automated restore completed successfully");
+                await _masterDbContext.SaveChangesAsync(cancellationToken);
+
+                // Send success notification
+                await _notificationService.NotifyRestoreCompletedAsync(
+                    tenantId,
+                    backupId,
+                    backup.BackupName,
+                    duration,
+                    cancellationToken);
+
+                _logger.LogInformation(
+                    "Restore completed successfully. BackupId: {BackupId}, Duration: {Duration}",
+                    backupId, duration);
+            }
+            else
+            {
+                _logger.LogError(
+                    "Restore failed. BackupId: {BackupId}, Error: {Error}",
+                    backupId, result.Error.Description);
+
+                // Send failure notification
+                await _notificationService.NotifyRestoreFailedAsync(
+                    tenantId,
+                    backupId,
+                    backup.BackupName,
+                    result.Error.Description,
+                    cancellationToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error executing restore. BackupId: {BackupId}", backupId);
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Cleans up old backups based on retention policy
     /// </summary>
     [AutomaticRetry(Attempts = 3)]

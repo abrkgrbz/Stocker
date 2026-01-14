@@ -80,6 +80,12 @@ public interface IBackupSchedulingService
     string EnqueueManualBackup(Guid backupId);
 
     /// <summary>
+    /// Enqueues a restore job
+    /// </summary>
+    /// <returns>Hangfire job ID</returns>
+    string EnqueueRestore(Guid tenantId, Guid backupId, bool restoreDatabase = true, bool restoreFiles = true, bool restoreConfiguration = true);
+
+    /// <summary>
     /// Enqueues a cleanup job for old backups
     /// </summary>
     /// <returns>Hangfire job ID</returns>

@@ -12,13 +12,16 @@ namespace Stocker.Application.Features.Tenant.Backup.Commands;
 public class RestoreBackupCommandHandler : IRequestHandler<RestoreBackupCommand, Result>
 {
     private readonly IMasterDbContext _masterDbContext;
+    private readonly IBackupSchedulingService _backupSchedulingService;
     private readonly ILogger<RestoreBackupCommandHandler> _logger;
 
     public RestoreBackupCommandHandler(
         IMasterDbContext masterDbContext,
+        IBackupSchedulingService backupSchedulingService,
         ILogger<RestoreBackupCommandHandler> logger)
     {
         _masterDbContext = masterDbContext;
+        _backupSchedulingService = backupSchedulingService;
         _logger = logger;
     }
 
@@ -47,22 +50,21 @@ public class RestoreBackupCommandHandler : IRequestHandler<RestoreBackupCommand,
 
         try
         {
-            // Record restore attempt
-            backup.RecordRestore(request.Notes);
-            await _masterDbContext.SaveChangesAsync(cancellationToken);
-
             _logger.LogInformation(
                 "Backup restore initiated: {BackupId} by {RestoredBy}",
                 request.BackupId, request.RestoredBy);
 
-            // TODO: Implement actual restore logic
-            // This would typically:
-            // 1. Stop the tenant's services
-            // 2. Restore database from backup
-            // 3. Restore files from backup
-            // 4. Restore configuration
-            // 5. Restart services
-            // For now, we just record the restore attempt
+            // Enqueue background job to execute the restore
+            var jobId = _backupSchedulingService.EnqueueRestore(
+                request.TenantId,
+                request.BackupId,
+                request.RestoreDatabase,
+                request.RestoreFiles,
+                request.RestoreConfiguration);
+
+            _logger.LogInformation(
+                "Restore job enqueued: {JobId} for backup {BackupId}",
+                jobId, request.BackupId);
 
             return Result.Success();
         }

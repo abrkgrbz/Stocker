@@ -328,6 +328,13 @@ public class BackupSchedulingService : IBackupSchedulingService
     }
 
     /// <inheritdoc />
+    public string EnqueueRestore(Guid tenantId, Guid backupId, bool restoreDatabase = true, bool restoreFiles = true, bool restoreConfiguration = true)
+    {
+        return BackgroundJob.Enqueue<BackupJob>(
+            job => job.ExecuteRestoreAsync(tenantId, backupId, restoreDatabase, restoreFiles, restoreConfiguration, CancellationToken.None));
+    }
+
+    /// <inheritdoc />
     public string EnqueueCleanup(Guid tenantId, int retentionDays)
     {
         return BackgroundJob.Enqueue<BackupJob>(
