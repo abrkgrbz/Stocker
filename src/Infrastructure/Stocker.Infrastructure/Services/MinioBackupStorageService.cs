@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Minio;
@@ -16,6 +17,7 @@ namespace Stocker.Infrastructure.Services;
 public class MinioBackupStorageService : IBackupStorageService
 {
     private readonly IMinioClient _minioClient;
+    private readonly IMinioClient _publicMinioClient;
     private readonly ITenantStorageService _tenantStorageService;
     private readonly MinioStorageSettings _settings;
     private readonly ILogger<MinioBackupStorageService> _logger;
@@ -24,11 +26,13 @@ public class MinioBackupStorageService : IBackupStorageService
 
     public MinioBackupStorageService(
         IMinioClient minioClient,
+        [FromKeyedServices("PublicMinioClient")] IMinioClient publicMinioClient,
         ITenantStorageService tenantStorageService,
         IOptions<MinioStorageSettings> settings,
         ILogger<MinioBackupStorageService> logger)
     {
         _minioClient = minioClient;
+        _publicMinioClient = publicMinioClient;
         _tenantStorageService = tenantStorageService;
         _settings = settings.Value;
         _logger = logger;
@@ -179,13 +183,13 @@ public class MinioBackupStorageService : IBackupStorageService
 
             await _minioClient.StatObjectAsync(statArgs, cancellationToken);
 
-            // Generate presigned URL
+            // Generate presigned URL using public MinIO client to ensure signature matches public endpoint
             var presignedGetObjectArgs = new PresignedGetObjectArgs()
                 .WithBucket(bucketName)
                 .WithObject(objectPath)
                 .WithExpiry(expiryMinutes * 60); // Convert to seconds
 
-            var url = await _minioClient.PresignedGetObjectAsync(presignedGetObjectArgs);
+            var url = await _publicMinioClient.PresignedGetObjectAsync(presignedGetObjectArgs);
 
             _logger.LogDebug(
                 "Generated download URL. TenantId: {TenantId}, BackupId: {BackupId}, ExpiryMinutes: {Expiry}",
