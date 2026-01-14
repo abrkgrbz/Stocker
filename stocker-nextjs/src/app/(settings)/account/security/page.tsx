@@ -32,6 +32,8 @@ import {
   useActiveSessions,
   useSecurityEvents,
   useChangePassword,
+  useTerminateSession,
+  useTerminateAllSessions,
   type ActiveSessionDto,
   type ChangePasswordRequest,
 } from './hooks';
@@ -90,6 +92,8 @@ export default function SecurityPage() {
   const { mutate: enable2FA, isPending: isEnabling } = useEnable2FA();
   const { mutate: disable2FA, isPending: isDisabling } = useDisable2FA();
   const { mutate: changePassword, isPending: isChangingPassword } = useChangePassword();
+  const { mutate: terminateSession, isPending: isTerminatingSession } = useTerminateSession();
+  const { mutate: terminateAllSessions, isPending: isTerminatingAll } = useTerminateAllSessions();
 
   const [showSetupModal, setShowSetupModal] = useState(false);
   const [showDisableModal, setShowDisableModal] = useState(false);
@@ -105,6 +109,11 @@ export default function SecurityPage() {
     newPassword: '',
     confirmPassword: '',
   });
+  const [showEventsModal, setShowEventsModal] = useState(false);
+  const [eventsPage, setEventsPage] = useState(1);
+
+  // Get all events for modal (with pagination)
+  const { data: allSecurityEvents, isLoading: allEventsLoading } = useSecurityEvents(eventsPage, 10);
 
   // Get 2FA enabled status from API or profile
   const twoFactorEnabled = twoFactorStatus?.data?.enabled ?? securityOverview?.data?.twoFactorEnabled ?? profile?.data?.twoFactorEnabled ?? false;
@@ -269,6 +278,46 @@ export default function SecurityPage() {
       },
       onError: (error: any) => {
         setErrorMessage(error?.message || 'Sifre degistirilemedi');
+        setTimeout(() => setErrorMessage(''), 3000);
+      },
+    });
+  };
+
+  const handleTerminateSession = (sessionId: string) => {
+    terminateSession(sessionId, {
+      onSuccess: (response) => {
+        if (response.success) {
+          setSuccessMessage('Oturum sonlandirildi');
+          setTimeout(() => setSuccessMessage(''), 3000);
+        } else {
+          setErrorMessage(response.message || 'Oturum sonlandirilamadi');
+          setTimeout(() => setErrorMessage(''), 3000);
+        }
+      },
+      onError: (error: any) => {
+        setErrorMessage(error?.message || 'Oturum sonlandirilamadi');
+        setTimeout(() => setErrorMessage(''), 3000);
+      },
+    });
+  };
+
+  const handleTerminateAllSessions = () => {
+    if (!confirm('Mevcut oturum haric tum oturumlar sonlandirilacak. Devam etmek istiyor musunuz?')) {
+      return;
+    }
+
+    terminateAllSessions(undefined, {
+      onSuccess: (response) => {
+        if (response.success) {
+          setSuccessMessage('Tum oturumlar sonlandirildi');
+          setTimeout(() => setSuccessMessage(''), 3000);
+        } else {
+          setErrorMessage(response.message || 'Oturumlar sonlandirilamadi');
+          setTimeout(() => setErrorMessage(''), 3000);
+        }
+      },
+      onError: (error: any) => {
+        setErrorMessage(error?.message || 'Oturumlar sonlandirilamadi');
         setTimeout(() => setErrorMessage(''), 3000);
       },
     });
@@ -464,7 +513,13 @@ export default function SecurityPage() {
               </p>
             </div>
             {sessions.length > 1 && (
-              <button className="text-xs text-red-600 hover:text-red-700 font-medium">Tumunu Sonlandir</button>
+              <button
+                onClick={handleTerminateAllSessions}
+                disabled={isTerminatingAll}
+                className="text-xs text-red-600 hover:text-red-700 font-medium disabled:opacity-50"
+              >
+                {isTerminatingAll ? 'Sonlandiriliyor...' : 'Tumunu Sonlandir'}
+              </button>
             )}
           </div>
           <div className="divide-y divide-slate-100">
@@ -511,7 +566,12 @@ export default function SecurityPage() {
                     </div>
                   </div>
                   {!session.isCurrent && (
-                    <button className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                    <button
+                      onClick={() => handleTerminateSession(session.id)}
+                      disabled={isTerminatingSession}
+                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                      title="Oturumu sonlandir"
+                    >
                       <X className="w-4 h-4" />
                     </button>
                   )}
@@ -558,7 +618,13 @@ export default function SecurityPage() {
         </div>
         {securityEvents?.data?.totalItems && securityEvents.data.totalItems > 5 && (
           <div className="px-6 py-3 border-t border-slate-100">
-            <button className="text-sm text-slate-600 hover:text-slate-900 font-medium">
+            <button
+              onClick={() => {
+                setEventsPage(1);
+                setShowEventsModal(true);
+              }}
+              className="text-sm text-slate-600 hover:text-slate-900 font-medium"
+            >
               Tum etkinlikleri goruntule ({securityEvents.data.totalItems})
             </button>
           </div>
@@ -821,6 +887,73 @@ export default function SecurityPage() {
               {isChangingPassword ? 'Degistiriliyor...' : 'Sifreyi Degistir'}
             </button>
           </div>
+        </div>
+      </Modal>
+
+      {/* Security Events Modal */}
+      <Modal
+        isOpen={showEventsModal}
+        onClose={() => setShowEventsModal(false)}
+        title="Tum Guvenlik Etkinlikleri"
+      >
+        <div className="space-y-4">
+          {allEventsLoading ? (
+            <div className="py-8 text-center text-sm text-slate-500">Yukleniyor...</div>
+          ) : allSecurityEvents?.data?.items?.length ? (
+            <>
+              <div className="divide-y divide-slate-100 -mx-6">
+                {allSecurityEvents.data.items.map((event, idx) => (
+                  <div key={event.id || idx} className="px-6 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${event.success ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">{event.action}</p>
+                        <p className="text-xs text-slate-500 truncate">{event.description}</p>
+                        <p className="text-xs text-slate-400">IP: {event.ipAddress}</p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-500 flex-shrink-0 ml-2">
+                      {event.timestamp
+                        ? new Date(event.timestamp).toLocaleDateString('tr-TR', {
+                            day: 'numeric',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })
+                        : '-'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {allSecurityEvents.data.totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                  <button
+                    onClick={() => setEventsPage((p) => Math.max(1, p - 1))}
+                    disabled={eventsPage === 1}
+                    className="px-3 py-1.5 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Onceki
+                  </button>
+                  <span className="text-sm text-slate-600">
+                    Sayfa {eventsPage} / {allSecurityEvents.data.totalPages}
+                  </span>
+                  <button
+                    onClick={() => setEventsPage((p) => Math.min(allSecurityEvents.data?.totalPages ?? 1, p + 1))}
+                    disabled={eventsPage === allSecurityEvents.data?.totalPages}
+                    className="px-3 py-1.5 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Sonraki
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="py-8 text-center text-sm text-slate-500">
+              Henuz guvenlik etkinligi yok
+            </div>
+          )}
         </div>
       </Modal>
     </div>
