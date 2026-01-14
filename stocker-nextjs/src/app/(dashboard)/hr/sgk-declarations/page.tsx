@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { usePayrolls, usePayrollParameters } from '@/lib/api/hooks/useHR';
 import { PayrollStatus } from '@/lib/api/services/hr.types';
 import {
@@ -157,6 +157,7 @@ const tabs: TabItem[] = [
 ];
 
 export default function SGKDeclarationsPage() {
+  const router = useRouter();
   const [selectedYear, setSelectedYear] = useState<number>(2025);
   const [typeFilter, setTypeFilter] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -352,17 +353,18 @@ export default function SGKDeclarationsPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => refetch()}
-                className="p-2.5 border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors"
+                className="flex items-center gap-2 px-4 py-2.5 border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors"
               >
-                <ArrowPathIcon className={`w-5 h-5 text-slate-600 ${isLoading ? 'animate-spin' : ''}`} />
+                <ArrowPathIcon className={`w-4 h-4 text-slate-600 ${isLoading ? 'animate-spin' : ''}`} />
+                <span className="text-sm text-slate-700">Yenile</span>
               </button>
-              <Link
-                href="/hr/sgk-declarations/new"
+              <button
+                onClick={() => router.push('/hr/sgk-declarations/new')}
                 className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
               >
-                <PlusIcon className="w-5 h-5" />
+                <PlusIcon className="w-4 h-4" />
                 <span className="text-sm font-medium">Yeni Bildirge</span>
-              </Link>
+              </button>
             </div>
           </div>
         </div>
