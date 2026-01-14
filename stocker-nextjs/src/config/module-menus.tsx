@@ -79,6 +79,7 @@ import {
   CircleStackIcon,
   CommandLineIcon,
   ListBulletIcon,
+  DocumentDuplicateIcon,
 } from '@heroicons/react/24/outline';
 import { colors } from '@/theme/colors';
 
@@ -438,6 +439,7 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
           { key: '/hr/attendance', icon: <ClockIcon className="w-4 h-4" />, label: 'Devam Takibi' },
           { key: '/hr/leaves', icon: <CalendarIcon className="w-4 h-4" />, label: 'İzinler' },
           { key: '/hr/leave-types', icon: <TagIcon className="w-4 h-4" />, label: 'İzin Türleri' },
+          { key: '/hr/leave-accrual', icon: <CalculatorIcon className="w-4 h-4" />, label: 'İzin Hak Ediş Hesabı' },
           { key: '/hr/holidays', icon: <CalendarIcon className="w-4 h-4" />, label: 'Tatil Günleri' },
           { key: '/hr/time-sheets', icon: <CalendarDaysIcon className="w-4 h-4" />, label: 'Puantaj' },
         ],
@@ -450,6 +452,15 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
           { key: '/hr/payroll', icon: <CurrencyDollarIcon className="w-4 h-4" />, label: 'Bordro' },
           { key: '/hr/payslips', icon: <DocumentTextIcon className="w-4 h-4" />, label: 'Bordro Makbuzları' },
           { key: '/hr/expenses', icon: <WalletIcon className="w-4 h-4" />, label: 'Masraflar' },
+          { key: '/hr/severance-calculator', icon: <CalculatorIcon className="w-4 h-4" />, label: 'Tazminat Hesaplama' },
+        ],
+      },
+      {
+        key: 'hr-sgk',
+        icon: <ShieldCheckIcon className="w-4 h-4" />,
+        label: 'SGK İşlemleri',
+        children: [
+          { key: '/hr/sgk-declarations', icon: <DocumentTextIcon className="w-4 h-4" />, label: 'SGK Bildirgeleri' },
         ],
       },
       {
@@ -510,6 +521,15 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
           { key: '/hr/shifts', icon: <ClockIcon className="w-4 h-4" />, label: 'Vardiyalar' },
           { key: '/hr/work-schedules', icon: <CalendarIcon className="w-4 h-4" />, label: 'Çalışma Programları' },
           { key: '/hr/work-locations', icon: <MapPinIcon className="w-4 h-4" />, label: 'Lokasyonlar' },
+        ],
+      },
+      {
+        key: 'hr-settings',
+        icon: <AdjustmentsHorizontalIcon className="w-4 h-4" />,
+        label: 'Türkiye Mevzuatı',
+        children: [
+          { key: '/hr/settings/minimum-wage', icon: <BanknotesIcon className="w-4 h-4" />, label: 'Asgari Ücret Yönetimi' },
+          { key: '/hr/settings/tax-rates', icon: <CalculatorIcon className="w-4 h-4" />, label: 'Vergi Oranları' },
         ],
       },
     ],
@@ -699,6 +719,30 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
         ],
       },
       {
+        key: 'finance-tax-compliance',
+        icon: <ShieldCheckIcon className="w-4 h-4" />,
+        label: 'Vergi İşlemleri (GİB)',
+        children: [
+          { key: '/finance/tax/ba-bs', icon: <DocumentTextIcon className="w-4 h-4" />, label: 'Ba-Bs Formu' },
+          { key: '/finance/tax/declarations', icon: <ClipboardDocumentListIcon className="w-4 h-4" />, label: 'Vergi Beyannameleri' },
+          { key: '/finance/tax/muhtasar', icon: <DocumentTextIcon className="w-4 h-4" />, label: 'Muhtasar Beyanname' },
+          { key: '/finance/tax/provisional', icon: <CalculatorIcon className="w-4 h-4" />, label: 'Geçici Vergi' },
+          { key: '/finance/tax/calendar', icon: <CalendarDaysIcon className="w-4 h-4" />, label: 'Vergi Takvimi' },
+          { key: '/finance/inflation-accounting', icon: <ArrowTrendingUpIcon className="w-4 h-4" />, label: 'Enflasyon Muhasebesi' },
+        ],
+      },
+      {
+        key: 'finance-einvoice',
+        icon: <DocumentDuplicateIcon className="w-4 h-4" />,
+        label: 'e-Belge (GİB)',
+        children: [
+          { key: '/finance/e-invoice', icon: <DocumentDuplicateIcon className="w-4 h-4" />, label: 'e-Fatura' },
+          { key: '/finance/e-invoice/waybill', icon: <DocumentTextIcon className="w-4 h-4" />, label: 'e-İrsaliye' },
+          { key: '/finance/e-ledger', icon: <BookOpenIcon className="w-4 h-4" />, label: 'e-Defter' },
+          { key: '/finance/e-invoice/settings', icon: <Cog6ToothIcon className="w-4 h-4" />, label: 'GİB Ayarları' },
+        ],
+      },
+      {
         key: 'finance-reports',
         icon: <ChartBarIcon className="w-4 h-4" />,
         label: 'Raporlar',
@@ -706,6 +750,8 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
           { key: '/finance/reports', icon: <ChartBarIcon className="w-4 h-4" />, label: 'Finansal Raporlar' },
           { key: '/finance/aging-reports', icon: <ClockIcon className="w-4 h-4" />, label: 'Yaşlandırma Raporları' },
           { key: '/finance/cash-flow', icon: <PresentationChartLineIcon className="w-4 h-4" />, label: 'Nakit Akışı' },
+          { key: '/finance/reports/vat', icon: <CalculatorIcon className="w-4 h-4" />, label: 'KDV Raporu' },
+          { key: '/finance/reports/withholding', icon: <ScaleIcon className="w-4 h-4" />, label: 'Stopaj Raporu' },
         ],
       },
     ],
