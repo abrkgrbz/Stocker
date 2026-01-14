@@ -259,8 +259,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (!response.ok) {
           logger.warn('/auth/me endpoint returned error', { component: 'AuthContext', metadata: { status: response.status } });
 
-          // Fallback to temp user if endpoint not available yet (401/404)
-          if (response.status === 401 || response.status === 404) {
+          // 401 = Unauthorized - token is invalid or expired
+          if (response.status === 401) {
+            logger.warn('Token invalid or expired - clearing auth state', { component: 'AuthContext' });
+            setUser(null);
+            return;
+          }
+
+          // 404 = Endpoint not available - try fallback to JWT only in development
+          if (response.status === 404 && process.env.NODE_ENV === 'development' && jwtPayload) {
             const userData: User = {
               id: (jwtPayload?.nameid as string) || 'temp-user-id',
               email: (jwtPayload?.email as string) || '',
@@ -270,7 +277,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
               tenantId: (jwtPayload?.TenantId as string) || '',
               tenantCode: (jwtPayload?.TenantName as string) || tenantCode,
             };
-            logger.debug('Using fallback user from JWT', { component: 'AuthContext' });
+            logger.debug('Using fallback user from JWT (dev mode, 404)', { component: 'AuthContext' });
             setUser(userData);
             return;
           }
