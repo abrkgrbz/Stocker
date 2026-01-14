@@ -396,7 +396,7 @@ export default function HeroSection() {
                   <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 6c1.4 0 2.8 1.1 2.8 2.5V11c.6.3 1 .9 1 1.5v3c0 1-.8 1.5-1.8 1.5h-4c-1 0-1.8-.5-1.8-1.5v-3c0-.6.4-1.2 1-1.5V9.5C9.2 8.1 10.6 7 12 7z" />
                   </svg>
-                  app.stoocker.com
+                  stoocker.app
                 </div>
               </div>
             </div>
