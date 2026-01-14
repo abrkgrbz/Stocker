@@ -74,6 +74,7 @@ export default function RegisterPage() {
   const {
     isConnected,
     validateEmail: signalRValidateEmail,
+    checkEmailExists: signalRCheckEmailExists,
     checkPasswordStrength: signalRCheckPasswordStrength,
     validateTenantCode: signalRValidateTenantCode
   } = useSignalRValidation()
@@ -135,7 +136,7 @@ export default function RegisterPage() {
     }
   }, [])
 
-  // Email validation with SignalR
+  // Email validation with SignalR (format + existence check)
   useEffect(() => {
     if (!email) {
       setEmailValid(false)
@@ -151,15 +152,30 @@ export default function RegisterPage() {
     }
 
     if (isConnected) {
-      signalRValidateEmail(email, (result) => {
-        setEmailValid(result.isValid)
-        setEmailError(result.isValid ? '' : result.message)
+      // Step 1: Validate email format
+      signalRValidateEmail(email, (formatResult) => {
+        if (!formatResult.isValid) {
+          setEmailValid(false)
+          setEmailError(formatResult.message)
+          return
+        }
+
+        // Step 2: Check if email already exists
+        signalRCheckEmailExists(email, (existsResult) => {
+          if (existsResult.exists) {
+            setEmailValid(false)
+            setEmailError(existsResult.message || 'Bu e-posta adresi zaten kayıtlı')
+          } else {
+            setEmailValid(true)
+            setEmailError('')
+          }
+        })
       })
     } else {
       setEmailValid(true)
       setEmailError('')
     }
-  }, [email, isConnected, signalRValidateEmail])
+  }, [email, isConnected, signalRValidateEmail, signalRCheckEmailExists])
 
   // Password validation with SignalR
   useEffect(() => {

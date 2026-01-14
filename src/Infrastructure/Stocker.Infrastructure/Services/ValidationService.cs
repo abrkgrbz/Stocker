@@ -951,4 +951,65 @@ public class ValidationService : IValidationService
             return result;
         }
     }
+
+    public async Task<EmailExistsResult> CheckEmailExistsAsync(string email)
+    {
+        var result = new EmailExistsResult
+        {
+            Details = new Dictionary<string, string>()
+        };
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                result.Exists = false;
+                result.Message = "Email adresi boş olamaz";
+                return result;
+            }
+
+            email = email.Trim().ToLower();
+
+            // Use MediatR to check if email exists in database
+            var query = new Features.Identity.Queries.CheckEmail.CheckEmailQuery { Email = email };
+            var checkResult = await _mediator.Send(query);
+
+            if (checkResult.IsSuccess && checkResult.Value != null)
+            {
+                result.Exists = checkResult.Value.Exists;
+                result.IsRegisteredUser = checkResult.Value.Exists;
+                result.IsTenantAdmin = checkResult.Value.Tenants?.Any() ?? false;
+
+                if (result.Exists)
+                {
+                    result.Message = "Bu e-posta adresi zaten kayıtlı";
+
+                    if (result.IsTenantAdmin)
+                    {
+                        result.Details["info"] = "Bu e-posta ile kayıtlı hesaplarınız bulunmaktadır";
+                    }
+                }
+                else
+                {
+                    result.Message = "E-posta adresi kullanılabilir";
+                }
+            }
+            else
+            {
+                // Query failed, assume email doesn't exist
+                result.Exists = false;
+                result.Message = "E-posta adresi kullanılabilir";
+                result.Details["warning"] = "Veritabanı kontrolü yapılamadı";
+            }
+
+            return result;
+        }
+        catch (System.Exception ex)
+        {
+            _logger.LogError(ex, "Error checking email existence: {Email}", email);
+            result.Exists = false;
+            result.Message = "E-posta kontrolü sırasında bir hata oluştu";
+            return result;
+        }
+    }
 }

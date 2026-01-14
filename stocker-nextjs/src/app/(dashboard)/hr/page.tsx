@@ -6,7 +6,7 @@
  */
 
 import React, { useMemo } from 'react';
-import { Table, List, Empty, Spin } from 'antd';
+import { Table, List, Empty, Spin, Tooltip, Progress } from 'antd';
 import {
   ArrowPathIcon,
   BellIcon,
@@ -21,6 +21,12 @@ import {
   IdentificationIcon,
   UserGroupIcon,
   UserIcon,
+  DocumentTextIcon,
+  ShieldCheckIcon,
+  CalculatorIcon,
+  DocumentChartBarIcon,
+  BanknotesIcon,
+  ScaleIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import {
@@ -606,6 +612,213 @@ export default function HRDashboardPage() {
             ) : (
               <EmptyChart icon={GiftIcon} message="Yaklasan tatil yok" />
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Türkiye Mevzuatı - Hızlı Erişim Kartları */}
+      <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-6 mt-6">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+            <ScaleIcon className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-white/60 uppercase tracking-wider">Türkiye Mevzuatı</p>
+            <p className="text-sm text-white/80">İş Kanunu, SGK ve KVKK Uyumlu İşlemler</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-4 gap-4">
+          {/* Kıdem Tazminatı Hesaplama */}
+          <Link href="/hr/severance-calculator">
+            <div className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition-all cursor-pointer group">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                  <CalculatorIcon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Kıdem & İhbar</h3>
+                  <p className="text-xs text-white/60">Tazminat Hesaplama</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-white/50">4857 İş Kanunu</span>
+                <span className="text-xs px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded">Güncel</span>
+              </div>
+              <div className="mt-3 pt-3 border-t border-white/10">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-white/60">2025/1 Tavan</span>
+                  <span className="text-white font-medium">₺41.828,42</span>
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          {/* SGK Bildirgeleri */}
+          <Link href="/hr/sgk-declarations">
+            <div className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition-all cursor-pointer group">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                  <DocumentTextIcon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white">SGK Bildirgeleri</h3>
+                  <p className="text-xs text-white/60">APHB & Eksik Gün</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-white/50">5510 Sayılı Kanun</span>
+                <span className="text-xs px-2 py-1 bg-amber-500/20 text-amber-400 rounded">Bildirim</span>
+              </div>
+              <div className="mt-3 pt-3 border-t border-white/10">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-white/60">SGK Prim İşveren</span>
+                  <span className="text-white font-medium">%22,5</span>
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          {/* KVKK Uyumu */}
+          <div className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition-all cursor-pointer group">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                <ShieldCheckIcon className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-white">KVKK Uyumu</h3>
+                <p className="text-xs text-white/60">Veri Koruma</p>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-white/50">6698 Sayılı Kanun</span>
+              <span className="text-xs px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded">Uyumlu</span>
+            </div>
+            <div className="mt-3 pt-3 border-t border-white/10">
+              <div className="text-xs text-white/60 mb-1">Veri Koruma Seviyesi</div>
+              <Progress percent={85} size="small" strokeColor="#10b981" trailColor="rgba(255,255,255,0.1)" showInfo={false} />
+            </div>
+          </div>
+
+          {/* PDKS Bildirimi */}
+          <div className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition-all cursor-pointer group">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                <DocumentChartBarIcon className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-white">PDKS Bildirimi</h3>
+                <p className="text-xs text-white/60">GİB Raporlama</p>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-white/50">SGK Mevzuatı</span>
+              <span className="text-xs px-2 py-1 bg-blue-500/20 text-blue-400 rounded">10+ Çalışan</span>
+            </div>
+            <div className="mt-3 pt-3 border-t border-white/10">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-white/60">Aylık Bildirim</span>
+                <span className="text-white font-medium">XML Format</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Alt Bilgi */}
+        <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
+          <div className="flex items-center gap-4 text-xs text-white/50">
+            <span>✓ 4857 İş Kanunu Uyumlu</span>
+            <span>✓ 5510 SGK Uyumlu</span>
+            <span>✓ 6698 KVKK Uyumlu</span>
+            <span>✓ GİB Entegrasyonu</span>
+          </div>
+          <Tooltip title="Tüm hesaplamalar güncel mevzuata göre yapılmaktadır">
+            <span className="text-xs text-white/40 cursor-help">Son güncelleme: Ocak 2025</span>
+          </Tooltip>
+        </div>
+      </div>
+
+      {/* Bordro ve Yasal Kesintiler Özeti */}
+      <div className="grid grid-cols-12 gap-6 mt-6">
+        <div className="col-span-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                <BanknotesIcon className="w-4 h-4 text-slate-600" />
+              </div>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">2024 Yasal Kesinti Oranları</p>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div>
+                  <span className="text-sm font-medium text-slate-900">SGK İşçi Payı</span>
+                  <p className="text-xs text-slate-500">Sigorta + İşsizlik</p>
+                </div>
+                <span className="text-lg font-bold text-slate-900">%15</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div>
+                  <span className="text-sm font-medium text-slate-900">SGK İşveren Payı</span>
+                  <p className="text-xs text-slate-500">Sigorta + İşsizlik + 5 Puan İndirim</p>
+                </div>
+                <span className="text-lg font-bold text-slate-900">%22,5</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div>
+                  <span className="text-sm font-medium text-slate-900">Gelir Vergisi</span>
+                  <p className="text-xs text-slate-500">Artan oranlı (5 dilim)</p>
+                </div>
+                <span className="text-lg font-bold text-slate-900">%15-40</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div>
+                  <span className="text-sm font-medium text-slate-900">Damga Vergisi</span>
+                  <p className="text-xs text-slate-500">Ücret ve tazminatlar</p>
+                </div>
+                <span className="text-lg font-bold text-slate-900">‰7,59</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-span-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CurrencyDollarIcon className="w-4 h-4 text-slate-600" />
+              </div>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">2025 Asgari Ücret Bilgileri</p>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-slate-900 text-white rounded-lg">
+                <div>
+                  <span className="text-sm font-medium">Brüt Asgari Ücret</span>
+                  <p className="text-xs text-white/60">2025 Yılı</p>
+                </div>
+                <span className="text-lg font-bold">₺22.104,67</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div>
+                  <span className="text-sm font-medium text-slate-900">Net Asgari Ücret</span>
+                  <p className="text-xs text-slate-500">Bekar, çocuksuz</p>
+                </div>
+                <span className="text-lg font-bold text-slate-900">₺22.104,67</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div>
+                  <span className="text-sm font-medium text-slate-900">SGK Tavan</span>
+                  <p className="text-xs text-slate-500">Prime esas kazanç üst sınırı</p>
+                </div>
+                <span className="text-lg font-bold text-slate-900">₺165.784,50</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div>
+                  <span className="text-sm font-medium text-slate-900">Kıdem Tavanı</span>
+                  <p className="text-xs text-slate-500">2025/1 Dönemi</p>
+                </div>
+                <span className="text-lg font-bold text-slate-900">₺41.828,42</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

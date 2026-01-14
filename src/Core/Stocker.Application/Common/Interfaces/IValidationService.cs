@@ -3,6 +3,7 @@ namespace Stocker.Application.Common.Interfaces;
 public interface IValidationService
 {
     Task<EmailValidationResult> ValidateEmailAsync(string email);
+    Task<EmailExistsResult> CheckEmailExistsAsync(string email);
     Task<PhoneValidationResult> ValidatePhoneAsync(string phoneNumber, string countryCode = "TR");
     Task<PasswordStrengthResult> CheckPasswordStrengthAsync(string password);
     Task<DomainAvailabilityResult> CheckDomainAvailabilityAsync(string domain);
@@ -85,5 +86,14 @@ public class TenantCodeValidationResult
     public string Message { get; set; } = string.Empty;
     public List<string> SuggestedCodes { get; set; } = new();
     public bool IsReserved { get; set; }
+    public Dictionary<string, string> Details { get; set; } = new();
+}
+
+public class EmailExistsResult
+{
+    public bool Exists { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public bool IsRegisteredUser { get; set; }
+    public bool IsTenantAdmin { get; set; }
     public Dictionary<string, string> Details { get; set; } = new();
 }

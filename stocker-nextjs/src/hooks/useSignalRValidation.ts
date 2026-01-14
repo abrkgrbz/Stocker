@@ -29,6 +29,14 @@ interface IdentityValidationResult {
   details: Record<string, string>
 }
 
+interface EmailExistsResult {
+  exists: boolean
+  message: string
+  isRegisteredUser: boolean
+  isTenantAdmin: boolean
+  details: Record<string, string>
+}
+
 export function useSignalRValidation() {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null)
   const [isConnected, setIsConnected] = useState(false)
@@ -209,6 +217,27 @@ export function useSignalRValidation() {
     })
   }, [connection, isConnected])
 
+  const checkEmailExists = useCallback((
+    email: string,
+    onResult: (result: EmailExistsResult) => void
+  ) => {
+    if (!connection || !isConnected || connection.state !== signalR.HubConnectionState.Connected) {
+      logger.info('[SignalR] Skipping email exists check - connection not ready');
+      return
+    }
+
+    debounce('emailExists', () => {
+      const handler = (result: EmailExistsResult) => {
+        onResult(result)
+        connection.off('EmailExistsChecked', handler)
+      }
+
+      connection.on('EmailExistsChecked', handler)
+      connection.invoke('CheckEmailExists', email)
+        .catch(err => logger.error('[SignalR] Email exists check error:', err));
+    })
+  }, [connection, isConnected])
+
   return {
     isConnected,
     validateEmail,
@@ -216,6 +245,7 @@ export function useSignalRValidation() {
     checkPasswordStrength,
     validateTenantCode,
     checkCompanyName,
-    validateIdentity
+    validateIdentity,
+    checkEmailExists
   }
 }

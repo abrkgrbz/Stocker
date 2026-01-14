@@ -212,6 +212,11 @@ public static class SignalREvents
     public const string EmailValidated = "EmailValidated";
 
     /// <summary>
+    /// Email exists check result
+    /// </summary>
+    public const string EmailExistsChecked = "EmailExistsChecked";
+
+    /// <summary>
     /// Password strength check result
     /// </summary>
     public const string PasswordStrengthChecked = "PasswordStrengthChecked";

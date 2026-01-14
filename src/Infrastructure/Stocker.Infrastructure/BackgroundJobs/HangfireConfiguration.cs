@@ -101,6 +101,9 @@ public static class HangfireConfiguration
         // Trial subscription check - runs daily at 09:00 UTC
         TrialSubscriptionCheckJob.Schedule();
 
+        // Expired invitation cleanup - runs daily at 02:00 UTC
+        ExpiredInvitationCleanupJob.Schedule();
+
         // System monitoring metrics - runs every 15 seconds
         RecurringJob.AddOrUpdate<MonitoringMetricsJob>(
             "monitoring-metrics",

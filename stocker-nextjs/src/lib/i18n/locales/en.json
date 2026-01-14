@@ -46,6 +46,14 @@
         "title": "Enterprise Security",
         "description": "Role-based access control, 2FA, and detailed audit logs."
       },
+      "compliance": {
+        "title": "Turkey Compliance",
+        "description": "e-Invoice, e-Archive, Ba-Bs forms, SGK declarations and KVKK compliant. Full regulatory compliance with GIB integration."
+      },
+      "hr": {
+        "title": "Human Resources",
+        "description": "Payroll calculation, severance pay, SGK premium declarations and PDKS reporting. Compliant with Turkish labor law."
+      },
       "viewAll": "View all features"
     },
     "industries": {

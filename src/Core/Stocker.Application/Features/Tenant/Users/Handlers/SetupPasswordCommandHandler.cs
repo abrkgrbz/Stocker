@@ -127,11 +127,24 @@ public class SetupPasswordCommandHandler : IRequestHandler<SetupPasswordCommand,
         }
         var primaryRole = roles.FirstOrDefault() ?? "User";
 
-        // 10. Get user permissions
-        var permissions = await tenantDbContext.UserPermissions
+        // 10. Get user permissions (both direct user permissions AND role-based permissions)
+        // Direct user permissions
+        var userPermissions = await tenantDbContext.UserPermissions
             .Where(up => up.UserId == user.Id)
-            .Select(up => $"{up.Resource}:{up.PermissionType}")
+            .Select(up => $"{up.Resource}:{(int)up.PermissionType}")
             .ToListAsync(cancellationToken);
+
+        // Role-based permissions (from assigned roles)
+        var rolePermissions = await tenantDbContext.RolePermissions
+            .Where(rp => userRoleIds.Contains(rp.RoleId))
+            .Select(rp => $"{rp.Resource}:{(int)rp.PermissionType}")
+            .ToListAsync(cancellationToken);
+
+        // Combine and deduplicate permissions
+        var permissions = userPermissions
+            .Union(rolePermissions)
+            .Distinct()
+            .ToList();
 
         // 11. Generate JWT token for auto-login
         var authToken = _jwtService.GenerateToken(

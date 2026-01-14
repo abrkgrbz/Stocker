@@ -305,4 +305,217 @@ public class Employee : BaseEntity
                ProbationEndDate.HasValue &&
                ProbationEndDate.Value > DateTime.UtcNow;
     }
+
+    #region KVKK Compliance Methods
+
+    /// <summary>
+    /// KVKK Madde 7 - Kişisel verilerin silinmesi (Unutulma Hakkı)
+    /// Yasal saklama süreleri dışındaki kişisel verileri siler
+    /// </summary>
+    public void DeletePersonalData()
+    {
+        // Kişisel bilgiler
+        FirstName = "SİLİNDİ";
+        LastName = "SİLİNDİ";
+        MiddleName = null;
+        NationalId = "***********";
+        BirthPlace = null;
+        MaritalStatus = null;
+        Nationality = null;
+        BloodType = null;
+
+        // İletişim bilgileri
+        PersonalEmail = null;
+        MobilePhone = null;
+        Address = null;
+
+        // Banka bilgileri
+        BankName = null;
+        BankBranch = null;
+        BankAccountNumber = null;
+        IBAN = null;
+
+        // Acil durum iletişim
+        EmergencyContactName = null;
+        EmergencyContactPhone = null;
+        EmergencyContactRelation = null;
+
+        // Ek bilgiler
+        PhotoUrl = null;
+        Notes = null;
+    }
+
+    /// <summary>
+    /// KVKK Madde 7 - Kişisel verilerin anonim hale getirilmesi
+    /// Verileri geri dönüşü olmayacak şekilde anonimleştirir
+    /// </summary>
+    public void AnonymizePersonalData()
+    {
+        var anonymizedId = $"ANON-{Guid.NewGuid():N}".Substring(0, 20);
+
+        // Kişisel bilgiler - anonimleştir
+        FirstName = "Anonim";
+        LastName = anonymizedId;
+        MiddleName = null;
+        NationalId = new string('*', 11);
+        BirthDate = new DateTime(1900, 1, 1); // Tarihi anonimleştir
+        BirthPlace = null;
+        MaritalStatus = null;
+        Nationality = null;
+        BloodType = null;
+
+        // İletişim bilgileri - anonimleştir
+        Email = Email.Create($"{anonymizedId}@anonymized.local");
+        PersonalEmail = null;
+        Phone = PhoneNumber.Create("+900000000000");
+        MobilePhone = null;
+        Address = null;
+
+        // Banka bilgileri - temizle
+        BankName = null;
+        BankBranch = null;
+        BankAccountNumber = null;
+        IBAN = null;
+
+        // Acil durum iletişim - temizle
+        EmergencyContactName = null;
+        EmergencyContactPhone = null;
+        EmergencyContactRelation = null;
+
+        // SGK ve Vergi bilgileri - anonimleştir
+        SocialSecurityNumber = new string('*', 11);
+        TaxNumber = null;
+        TaxOffice = null;
+
+        // Ek bilgiler - temizle
+        PhotoUrl = null;
+        Notes = null;
+    }
+
+    /// <summary>
+    /// KVKK Madde 11 - Kişisel veri taşınabilirliği hakkı
+    /// Tüm kişisel verileri makine tarafından okunabilir formatta dışa aktarır
+    /// </summary>
+    /// <returns>JSON formatında kişisel veriler</returns>
+    public Dictionary<string, object?> ExportPersonalData()
+    {
+        return new Dictionary<string, object?>
+        {
+            // Kimlik bilgileri
+            { "employeeCode", EmployeeCode },
+            { "firstName", FirstName },
+            { "lastName", LastName },
+            { "middleName", MiddleName },
+            { "nationalId", NationalId },
+            { "birthDate", BirthDate.ToString("yyyy-MM-dd") },
+            { "birthPlace", BirthPlace },
+            { "gender", Gender.ToString() },
+            { "maritalStatus", MaritalStatus },
+            { "nationality", Nationality },
+            { "bloodType", BloodType },
+
+            // İletişim bilgileri
+            { "email", Email?.Value },
+            { "personalEmail", PersonalEmail?.Value },
+            { "phone", Phone?.Value },
+            { "mobilePhone", MobilePhone?.Value },
+            { "address", Address != null ? new Dictionary<string, string?>
+                {
+                    { "street", Address.Street },
+                    { "city", Address.City },
+                    { "state", Address.State },
+                    { "country", Address.Country },
+                    { "postalCode", Address.PostalCode }
+                } : null
+            },
+
+            // İş bilgileri
+            { "hireDate", HireDate.ToString("yyyy-MM-dd") },
+            { "originalHireDate", OriginalHireDate?.ToString("yyyy-MM-dd") },
+            { "terminationDate", TerminationDate?.ToString("yyyy-MM-dd") },
+            { "terminationReason", TerminationReason },
+            { "employmentType", EmploymentType.ToString() },
+            { "status", Status.ToString() },
+
+            // Maaş bilgileri
+            { "baseSalary", BaseSalary },
+            { "currency", Currency },
+            { "payrollPeriod", PayrollPeriod.ToString() },
+
+            // Banka bilgileri
+            { "bankName", BankName },
+            { "bankBranch", BankBranch },
+            { "bankAccountNumber", BankAccountNumber != null ? MaskBankAccount(BankAccountNumber) : null },
+            { "iban", IBAN != null ? MaskIban(IBAN) : null },
+
+            // Acil durum iletişim
+            { "emergencyContactName", EmergencyContactName },
+            { "emergencyContactPhone", EmergencyContactPhone },
+            { "emergencyContactRelation", EmergencyContactRelation },
+
+            // SGK ve Vergi bilgileri
+            { "socialSecurityNumber", SocialSecurityNumber != null ? MaskSocialSecurity(SocialSecurityNumber) : null },
+            { "taxNumber", TaxNumber },
+            { "taxOffice", TaxOffice },
+
+            // Meta veriler
+            { "exportDate", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ") },
+            { "dataController", "Stocker ERP" }
+        };
+    }
+
+    /// <summary>
+    /// KVKK kapsamında kişisel verilerin işlenme durumunu kontrol eder
+    /// </summary>
+    /// <returns>Veri saklama süresinin dolup dolmadığı</returns>
+    public bool IsDataRetentionExpired()
+    {
+        // İş Kanunu'na göre 10 yıl saklama süresi
+        const int retentionYears = 10;
+
+        if (!TerminationDate.HasValue)
+            return false;
+
+        return TerminationDate.Value.AddYears(retentionYears) < DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Veri sorumlusuna bildirim için kişisel veri envanteri oluşturur
+    /// </summary>
+    public Dictionary<string, string> GetPersonalDataInventory()
+    {
+        return new Dictionary<string, string>
+        {
+            { "Kimlik Bilgileri", "Ad, Soyad, TC Kimlik No, Doğum Tarihi/Yeri" },
+            { "İletişim Bilgileri", "E-posta, Telefon, Adres" },
+            { "Finansal Bilgiler", "Maaş, Banka Hesap Bilgileri, IBAN" },
+            { "Çalışma Bilgileri", "İşe Giriş Tarihi, Departman, Pozisyon" },
+            { "Sağlık Bilgileri", "Kan Grubu" },
+            { "Resmi Kimlik Bilgileri", "SGK No, Vergi No" },
+            { "Acil Durum Bilgileri", "Acil İletişim Kişisi" }
+        };
+    }
+
+    private static string MaskBankAccount(string accountNumber)
+    {
+        if (string.IsNullOrEmpty(accountNumber) || accountNumber.Length < 4)
+            return new string('*', accountNumber?.Length ?? 0);
+        return new string('*', accountNumber.Length - 4) + accountNumber.Substring(accountNumber.Length - 4);
+    }
+
+    private static string MaskIban(string iban)
+    {
+        if (string.IsNullOrEmpty(iban) || iban.Length < 4)
+            return new string('*', iban?.Length ?? 0);
+        return iban.Substring(0, 4) + new string('*', iban.Length - 8) + iban.Substring(iban.Length - 4);
+    }
+
+    private static string MaskSocialSecurity(string ssn)
+    {
+        if (string.IsNullOrEmpty(ssn) || ssn.Length < 4)
+            return new string('*', ssn?.Length ?? 0);
+        return new string('*', ssn.Length - 4) + ssn.Substring(ssn.Length - 4);
+    }
+
+    #endregion
 }

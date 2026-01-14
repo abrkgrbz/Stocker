@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { Table, Spin, Button, Progress } from 'antd';
+import { Table, Spin, Button, Progress, Tooltip } from 'antd';
 import {
   BanknotesIcon,
   BuildingLibraryIcon,
@@ -23,6 +23,10 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon,
   ClockIcon,
+  ShieldCheckIcon,
+  CalculatorIcon,
+  DocumentDuplicateIcon,
+  ReceiptRefundIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import {
@@ -343,6 +347,211 @@ export default function FinanceDashboardPage() {
           </div>
           <div className="text-2xl font-bold text-slate-900">{metrics.overdueInvoices}</div>
           <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Vadesi Gecmis</div>
+        </div>
+      </div>
+
+      {/* Turkey Regulatory Compliance Section */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-medium text-slate-900 uppercase tracking-wider">Türkiye Mevzuatı</h2>
+          <span className="text-xs text-slate-400">GİB | SGK | VUK Uyumlu</span>
+        </div>
+
+        {/* Regulatory Compliance Quick Access */}
+        <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-6 mb-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* e-Fatura / e-Arşiv */}
+            <Link href="/finance/e-invoice">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 hover:bg-white/20 transition-all cursor-pointer">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                    <DocumentDuplicateIcon className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-white">e-Fatura</h3>
+                    <p className="text-xs text-slate-400">e-Arşiv & GİB</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 text-xs font-medium bg-emerald-500/20 text-emerald-400 rounded">
+                    GİB Entegre
+                  </span>
+                </div>
+              </div>
+            </Link>
+
+            {/* Stopaj (Withholding Tax) */}
+            <Link href="/finance/reports/withholding">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 hover:bg-white/20 transition-all cursor-pointer">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                    <CalculatorIcon className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-white">Stopaj</h3>
+                    <p className="text-xs text-slate-400">Tevkifat Hesabı</p>
+                  </div>
+                </div>
+                <Tooltip title="24+ GİB muhtasar beyanname kodu desteklenir">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 text-xs font-medium bg-blue-500/20 text-blue-400 rounded">
+                      GVK 94 & KVK 15
+                    </span>
+                  </div>
+                </Tooltip>
+              </div>
+            </Link>
+
+            {/* Tevkifat (VAT Withholding) */}
+            <Link href="/finance/invoices">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 hover:bg-white/20 transition-all cursor-pointer">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                    <ReceiptRefundIcon className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-white">Tevkifat</h3>
+                    <p className="text-xs text-slate-400">KDV Tevkifatı</p>
+                  </div>
+                </div>
+                <div className="text-xs text-slate-400">
+                  2/10, 5/10, 7/10, 9/10
+                </div>
+              </div>
+            </Link>
+
+            {/* Muhtasar */}
+            <Link href="/finance/tax/declarations">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 hover:bg-white/20 transition-all cursor-pointer">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                    <ClipboardDocumentListIcon className="w-5 h-5 text-amber-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-white">Muhtasar</h3>
+                    <p className="text-xs text-slate-400">Beyanname</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 text-xs font-medium bg-amber-500/20 text-amber-400 rounded">
+                    Her Ay 26
+                  </span>
+                </div>
+              </div>
+            </Link>
+          </div>
+        </div>
+
+        {/* 2025 Tax Rates & Thresholds */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+          {/* KDV Rates */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                <ScaleIcon className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">KDV Oranları</h3>
+                <p className="text-xs text-slate-500">3065 Sayılı KDV Kanunu</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center py-1.5 px-2 bg-slate-50 rounded">
+                <span className="text-xs text-slate-600">Genel Oran</span>
+                <span className="text-sm font-bold text-slate-900">%20</span>
+              </div>
+              <div className="flex justify-between items-center py-1.5 px-2 bg-slate-50 rounded">
+                <span className="text-xs text-slate-600">İndirimli I</span>
+                <span className="text-sm font-bold text-slate-900">%10</span>
+              </div>
+              <div className="flex justify-between items-center py-1.5 px-2 bg-slate-50 rounded">
+                <span className="text-xs text-slate-600">İndirimli II</span>
+                <span className="text-sm font-bold text-slate-900">%1</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Withholding Tax Rates */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                <CalculatorIcon className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">Stopaj Oranları</h3>
+                <p className="text-xs text-slate-500">GVK 94 - Temel Oranlar</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center py-1.5 px-2 bg-slate-50 rounded">
+                <span className="text-xs text-slate-600">Kira (Gerçek Kişi)</span>
+                <span className="text-sm font-bold text-slate-900">%20</span>
+              </div>
+              <div className="flex justify-between items-center py-1.5 px-2 bg-slate-50 rounded">
+                <span className="text-xs text-slate-600">Serbest Meslek</span>
+                <span className="text-sm font-bold text-slate-900">%20</span>
+              </div>
+              <div className="flex justify-between items-center py-1.5 px-2 bg-slate-50 rounded">
+                <span className="text-xs text-slate-600">Yıllara Sari İnşaat</span>
+                <span className="text-sm font-bold text-slate-900">%5</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Income Tax Brackets 2025 */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                <BanknotesIcon className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">Gelir Vergisi 2025</h3>
+                <p className="text-xs text-slate-500">Artan Oranlı Dilimler</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center py-1.5 px-2 bg-slate-50 rounded">
+                <span className="text-xs text-slate-600">0 - 158.000 TL</span>
+                <span className="text-sm font-bold text-slate-900">%15</span>
+              </div>
+              <div className="flex justify-between items-center py-1.5 px-2 bg-slate-50 rounded">
+                <span className="text-xs text-slate-600">158K - 330K TL</span>
+                <span className="text-sm font-bold text-slate-900">%20</span>
+              </div>
+              <div className="flex justify-between items-center py-1.5 px-2 bg-slate-50 rounded">
+                <span className="text-xs text-slate-600">330K+ TL</span>
+                <span className="text-sm font-bold text-slate-900">%27-40</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Legal References */}
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <ShieldCheckIcon className="w-4 h-4 text-slate-500" />
+            <span className="text-xs font-medium text-slate-600">Yasal Dayanak</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <span className="px-2 py-1 text-xs bg-white border border-slate-200 rounded text-slate-600">
+              193 Sayılı GVK
+            </span>
+            <span className="px-2 py-1 text-xs bg-white border border-slate-200 rounded text-slate-600">
+              5520 Sayılı KVK
+            </span>
+            <span className="px-2 py-1 text-xs bg-white border border-slate-200 rounded text-slate-600">
+              3065 Sayılı KDV
+            </span>
+            <span className="px-2 py-1 text-xs bg-white border border-slate-200 rounded text-slate-600">
+              213 Sayılı VUK
+            </span>
+            <span className="px-2 py-1 text-xs bg-white border border-slate-200 rounded text-slate-600">
+              e-Fatura Uygulaması
+            </span>
+            <span className="px-2 py-1 text-xs bg-white border border-slate-200 rounded text-slate-600">
+              Ba-Bs Bildirimi
+            </span>
+          </div>
         </div>
       </div>
 

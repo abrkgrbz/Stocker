@@ -82,6 +82,33 @@ public class ValidationHub : Hub
     }
 
     /// <summary>
+    /// Check if email already exists in the system
+    /// </summary>
+    public async Task CheckEmailExists(string email)
+    {
+        try
+        {
+            var existsResult = await _validationService.CheckEmailExistsAsync(email);
+
+            var result = new ValidationModels.EmailExistsResult
+            {
+                Exists = existsResult.Exists,
+                Message = existsResult.Message,
+                IsRegisteredUser = existsResult.IsRegisteredUser,
+                IsTenantAdmin = existsResult.IsTenantAdmin,
+                Details = existsResult.Details
+            };
+
+            await Clients.Caller.SendAsync(SignalREvents.EmailExistsChecked, result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking email existence: {Email}", email);
+            await Clients.Caller.SendAsync(SignalREvents.ValidationError, "Email varlık kontrolü sırasında bir hata oluştu");
+        }
+    }
+
+    /// <summary>
     /// Check password strength in real-time
     /// </summary>
     public async Task CheckPasswordStrength(string password)

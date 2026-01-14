@@ -198,6 +198,56 @@ const FeatureSnippets = {
       </div>
     </div>
   ),
+
+  compliance: () => (
+    <div className="bg-white rounded-lg border border-slate-200 p-3 shadow-sm">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+          </svg>
+        </div>
+        <div>
+          <div className="text-[10px] font-medium text-slate-700">Türkiye Mevzuatı</div>
+          <div className="text-[9px] text-blue-600">Tam Uyumlu</div>
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        {[
+          { label: 'e-Fatura / GİB', code: '✓' },
+          { label: 'SGK Bildirgeleri', code: '✓' },
+          { label: 'Ba-Bs Formu', code: '✓' },
+          { label: 'KVKK Uyumu', code: '✓' },
+        ].map((item, i) => (
+          <div key={i} className="flex items-center justify-between text-[9px]">
+            <span className="text-slate-500">{item.label}</span>
+            <span className="text-emerald-500 font-medium">{item.code}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  ),
+
+  hr: () => (
+    <div className="bg-white rounded-lg border border-slate-200 p-3 shadow-sm">
+      <div className="text-[10px] font-medium text-slate-700 mb-3">İK Yönetimi</div>
+      <div className="space-y-2">
+        {[
+          { label: 'Kıdem Tazminatı', value: '₺41.828', desc: '2025 Tavan' },
+          { label: 'SGK İşveren', value: '%22,5', desc: 'Prim Oranı' },
+          { label: 'Asgari Ücret', value: '₺22.104', desc: '2025 Brüt' },
+        ].map((item, i) => (
+          <div key={i} className="flex items-center justify-between p-1.5 bg-slate-50 rounded">
+            <div>
+              <div className="text-[9px] text-slate-600">{item.label}</div>
+              <div className="text-[8px] text-slate-400">{item.desc}</div>
+            </div>
+            <span className="text-[10px] font-semibold text-slate-900">{item.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  ),
 };
 
 const featureIcons = {
@@ -231,6 +281,16 @@ const featureIcons = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
     </svg>
   ),
+  compliance: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+    </svg>
+  ),
+  hr: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+    </svg>
+  ),
 };
 
 // Bento grid layout configuration
@@ -238,7 +298,9 @@ const bentoConfig = [
   { key: 'inventory', colSpan: 2, rowSpan: 1, size: 'large' },
   { key: 'invoice', colSpan: 1, rowSpan: 1, size: 'small' },
   { key: 'reports', colSpan: 1, rowSpan: 1, size: 'small' },
-  { key: 'crm', colSpan: 2, rowSpan: 1, size: 'large' },
+  { key: 'compliance', colSpan: 2, rowSpan: 1, size: 'large' },
+  { key: 'crm', colSpan: 1, rowSpan: 1, size: 'small' },
+  { key: 'hr', colSpan: 1, rowSpan: 1, size: 'small' },
   { key: 'multitenancy', colSpan: 1, rowSpan: 1, size: 'small' },
   { key: 'security', colSpan: 1, rowSpan: 1, size: 'small' },
 ] as const;

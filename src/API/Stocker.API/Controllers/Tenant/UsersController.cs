@@ -9,6 +9,7 @@ using Stocker.Application.Features.Tenant.Users.Commands;
 using Stocker.Application.Features.Tenant.Users.Queries;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.Application.Common.Exceptions;
+using Stocker.Infrastructure.Middleware.RateLimiting;
 
 namespace Stocker.API.Controllers.Tenant;
 
@@ -84,8 +85,10 @@ public class UsersController : ApiController
     }
 
     [HttpPost]
+    [RateLimit(limit: 10, periodInSeconds: 60)] // Max 10 user creations per minute to prevent bulk spam
     [ProducesResponseType(typeof(ApiResponse<UserDto>), 201)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 429)]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserDto dto)
     {
         if (!ModelState.IsValid)
@@ -350,8 +353,10 @@ public class UsersController : ApiController
     /// Resend invitation email to a pending user.
     /// </summary>
     [HttpPost("{id}/resend-invitation")]
+    [RateLimit(limit: 5, periodInSeconds: 300)] // Max 5 resends per 5 minutes to prevent email spam
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 404)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 429)]
     public async Task<IActionResult> ResendInvitation(Guid id)
     {
         var tenantId = _currentUserService.TenantId ?? Guid.Empty;

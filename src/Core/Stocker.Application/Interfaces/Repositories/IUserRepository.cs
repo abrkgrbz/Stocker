@@ -19,6 +19,13 @@ public interface IUserRepository
     Task<RoleDto?> GetRoleByIdAsync(Guid tenantId, Guid roleId, CancellationToken cancellationToken = default);
     Task<bool> AssignRoleAsync(Guid tenantId, Guid userId, Guid roleId, CancellationToken cancellationToken = default);
     Task<int> GetTenantUserCountAsync(Guid tenantId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the count of active users (excludes PendingActivation) in a tenant.
+    /// Use this when you want to count only users who have completed activation.
+    /// </summary>
+    Task<int> GetActiveUserCountAsync(Guid tenantId, CancellationToken cancellationToken = default);
+
     Task<bool> UsernameExistsAsync(Guid tenantId, string username, CancellationToken cancellationToken = default);
     Task<bool> EmailExistsAsync(Guid tenantId, string email, CancellationToken cancellationToken = default);
 

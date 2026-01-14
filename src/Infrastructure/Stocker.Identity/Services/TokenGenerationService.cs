@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Stocker.Domain.Master.Entities;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Domain.Master.Enums;
@@ -15,13 +16,19 @@ public class TokenGenerationService : ITokenGenerationService
 {
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IMasterDbContext _masterContext;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
+    private readonly ILogger<TokenGenerationService> _logger;
 
     public TokenGenerationService(
         IJwtTokenService jwtTokenService,
-        IMasterDbContext masterContext)
+        IMasterDbContext masterContext,
+        ITenantDbContextFactory tenantDbContextFactory,
+        ILogger<TokenGenerationService> logger)
     {
         _jwtTokenService = jwtTokenService;
         _masterContext = masterContext;
+        _tenantDbContextFactory = tenantDbContextFactory;
+        _logger = logger;
     }
 
     public async Task<AuthenticationResult> GenerateForMasterUserAsync(MasterUser user, Guid? tenantId = null)
@@ -61,8 +68,8 @@ public class TokenGenerationService : ITokenGenerationService
 
     public async Task<AuthenticationResult> GenerateForTenantUserAsync(TenantUser tenantUser, MasterUser masterUser)
     {
-        var claims = await BuildTenantUserClaimsAsync(tenantUser, masterUser);
-        
+        var (claims, roleNames) = await BuildTenantUserClaimsAsync(tenantUser, masterUser);
+
         var accessToken = _jwtTokenService.GenerateAccessToken(claims);
         var refreshToken = _jwtTokenService.GenerateRefreshToken();
 
@@ -89,7 +96,7 @@ public class TokenGenerationService : ITokenGenerationService
                 TenantName = tenantInfo.Name,
                 TenantCode = tenantInfo.Code,
                 IsMasterUser = false,
-                Roles = tenantUser.UserRoles.Select(r => r.RoleId.ToString()).ToList()
+                Roles = roleNames
             }
         };
     }
@@ -147,7 +154,7 @@ public class TokenGenerationService : ITokenGenerationService
         return claims;
     }
 
-    private async Task<List<Claim>> BuildTenantUserClaimsAsync(TenantUser tenantUser, MasterUser masterUser)
+    private async Task<(List<Claim> Claims, List<string> RoleNames)> BuildTenantUserClaimsAsync(TenantUser tenantUser, MasterUser masterUser)
     {
         var claims = new List<Claim>
         {
@@ -166,13 +173,77 @@ public class TokenGenerationService : ITokenGenerationService
             claims.Add(new Claim("TenantName", tenant.Name));
         }
 
-        // Add role claims
-        foreach (var userRole in tenantUser.UserRoles)
+        // Collect role IDs from navigation property
+        var userRoleIds = tenantUser.UserRoles.Select(ur => ur.RoleId).ToList();
+        var roleNames = new List<string>();
+
+        // Add role claims - use role names instead of IDs
+        try
         {
-            claims.Add(new Claim(ClaimTypes.Role, userRole.RoleId.ToString()));
+            await using var tenantContext = await _tenantDbContextFactory.CreateDbContextAsync(tenantUser.TenantId);
+
+            // Get role names for the user's roles
+            roleNames = await tenantContext.Roles
+                .Where(r => userRoleIds.Contains(r.Id))
+                .Select(r => r.Name)
+                .ToListAsync();
+
+            foreach (var roleName in roleNames)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, roleName));
+            }
+
+            // If no roles found, add default "User" role
+            if (!roleNames.Any())
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "User"));
+                roleNames.Add("User");
+            }
+
+            // Get user permissions (both direct user permissions AND role-based permissions)
+            // Direct user permissions
+            var userPermissions = await tenantContext.UserPermissions
+                .Where(up => up.UserId == tenantUser.Id)
+                .Select(up => $"{up.Resource}:{(int)up.PermissionType}")
+                .ToListAsync();
+
+            // Role-based permissions (from assigned roles)
+            var rolePermissions = await tenantContext.RolePermissions
+                .Where(rp => userRoleIds.Contains(rp.RoleId))
+                .Select(rp => $"{rp.Resource}:{(int)rp.PermissionType}")
+                .ToListAsync();
+
+            // Combine and deduplicate permissions
+            var allPermissions = userPermissions
+                .Union(rolePermissions)
+                .Distinct()
+                .ToList();
+
+            // Add permission claims
+            foreach (var permission in allPermissions)
+            {
+                claims.Add(new Claim("Permission", permission));
+            }
+
+            _logger.LogDebug(
+                "Built claims for TenantUser {UserId}: {RoleCount} roles, {PermissionCount} permissions",
+                tenantUser.Id,
+                roleNames.Count,
+                allPermissions.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not load roles/permissions for TenantUser {UserId}", tenantUser.Id);
+
+            // Fallback: Add role IDs if we can't get names
+            foreach (var userRole in tenantUser.UserRoles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, userRole.RoleId.ToString()));
+                roleNames.Add(userRole.RoleId.ToString());
+            }
         }
 
-        return claims;
+        return (claims, roleNames);
     }
 
     private List<string> GetRolesForUserType(Domain.Master.Enums.UserType userType)

@@ -46,6 +46,14 @@
         "title": "Kurumsal Güvenlik",
         "description": "Rol tabanlı erişim kontrolü, 2FA ve detaylı denetim kayıtları."
       },
+      "compliance": {
+        "title": "Türkiye Mevzuatı",
+        "description": "e-Fatura, e-Arşiv, Ba-Bs formu, SGK bildirgeleri ve KVKK uyumlu. GİB entegrasyonu ile tam mevzuat uyumu."
+      },
+      "hr": {
+        "title": "İnsan Kaynakları",
+        "description": "Bordro hesaplama, kıdem-ihbar tazminatı, SGK prim bildirimi ve PDKS raporlama. Türk iş mevzuatına uyumlu."
+      },
       "viewAll": "Tüm özellikleri görüntüle"
     },
     "industries": {

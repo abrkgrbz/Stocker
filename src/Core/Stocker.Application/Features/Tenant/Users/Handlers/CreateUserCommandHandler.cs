@@ -47,13 +47,28 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
         if (subscription != null)
         {
             // 2. Get current user count from tenant database
+            // Note: GetTenantUserCountAsync counts ALL users including PendingActivation
+            // This prevents creating more invitations than allowed by the package limit.
+            // If you want to only count active users (excluding pending invitations),
+            // use GetActiveUserCountAsync instead - but this allows over-inviting.
             var currentUserCount = await _userRepository.GetTenantUserCountAsync(request.TenantId, cancellationToken);
             var maxUsers = subscription.Package.Limits.MaxUsers;
 
             // 3. Check if limit exceeded
             if (currentUserCount >= maxUsers)
             {
-                throw new InvalidOperationException($"Kullanıcı limiti aşıldı. Paketiniz maksimum {maxUsers} kullanıcıya izin veriyor. Lütfen paketinizi yükseltin.");
+                // Check if there are expired pending invitations that could be cleaned up
+                var activeUserCount = await _userRepository.GetActiveUserCountAsync(request.TenantId, cancellationToken);
+                var pendingCount = currentUserCount - activeUserCount;
+
+                var message = $"Kullanıcı limiti aşıldı. Paketiniz maksimum {maxUsers} kullanıcıya izin veriyor.";
+                if (pendingCount > 0)
+                {
+                    message += $" ({pendingCount} bekleyen davet var. Süresi dolmuş davetler gece otomatik temizlenecektir veya bekleyen kullanıcıları manuel silebilirsiniz.)";
+                }
+                message += " Lütfen paketinizi yükseltin.";
+
+                throw new InvalidOperationException(message);
             }
         }
 

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Stocker.Application.DTOs.Tenant.Users;
 using Stocker.Application.Interfaces.Repositories;
 using Stocker.Domain.Tenant.Entities;
+using Stocker.Domain.Tenant.Enums;
 using Stocker.Persistence.Contexts;
 using BCrypt.Net;
 
@@ -361,6 +362,14 @@ public class UserRepository : IUserRepository
     {
         return await _tenantContext.TenantUsers
             .Where(u => u.TenantId == tenantId)
+            .CountAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<int> GetActiveUserCountAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        return await _tenantContext.TenantUsers
+            .Where(u => u.TenantId == tenantId && u.Status != TenantUserStatus.PendingActivation)
             .CountAsync(cancellationToken);
     }
 
