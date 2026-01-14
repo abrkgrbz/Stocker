@@ -12,7 +12,7 @@ using Stocker.Persistence.Contexts;
 namespace Stocker.Persistence.Migrations
 {
     [DbContext(typeof(MasterDbContext))]
-    [Migration("20260114205705_AddBackupTables")]
+    [Migration("20260114212722_AddBackupTables")]
     partial class AddBackupTables
     {
         /// <inheritdoc />
