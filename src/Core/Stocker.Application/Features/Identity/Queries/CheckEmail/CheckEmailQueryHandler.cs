@@ -28,11 +28,21 @@ public class CheckEmailQueryHandler : IRequestHandler<CheckEmailQuery, Result<Ch
 
         try
         {
+            var normalizedEmail = request.Email.Trim().ToLower();
+
             // Find user by email in master database
             var user = await _masterContext.MasterUsers
-                .FirstOrDefaultAsync(u => u.Email.Value == request.Email, cancellationToken);
+                .FirstOrDefaultAsync(u => u.Email.Value == normalizedEmail, cancellationToken);
 
-            if (user == null)
+            // Also check TenantRegistrations for pending/approved registrations (any status)
+            // Load into memory first to avoid EF Core translation issues with ValueObject
+            var allRegistrations = await _masterContext.TenantRegistrations
+                .ToListAsync(cancellationToken);
+
+            var registrationWithEmail = allRegistrations
+                .FirstOrDefault(r => r.AdminEmail.Value.ToLower() == normalizedEmail);
+
+            if (user == null && registrationWithEmail == null)
             {
                 _logger.LogInformation("Email not found: {Email}", request.Email);
                 return Result.Success(new CheckEmailResponse
@@ -42,15 +52,9 @@ public class CheckEmailQueryHandler : IRequestHandler<CheckEmailQuery, Result<Ch
                 });
             }
 
-            // Find tenant registrations where this email is the admin
-            // This ensures users only see tenants they created or have access to
-            // Load into memory first to avoid EF Core translation issues with ValueObject
-            var allRegistrations = await _masterContext.TenantRegistrations
-                .Where(r => r.TenantId.HasValue)
-                .ToListAsync(cancellationToken);
-
+            // Find tenant registrations where this email is the admin (with completed tenants)
             var tenantRegistrations = allRegistrations
-                .Where(r => r.AdminEmail.Value == request.Email)
+                .Where(r => r.AdminEmail.Value.ToLower() == normalizedEmail && r.TenantId.HasValue)
                 .Select(r => r.TenantId!.Value)
                 .ToList();
 
