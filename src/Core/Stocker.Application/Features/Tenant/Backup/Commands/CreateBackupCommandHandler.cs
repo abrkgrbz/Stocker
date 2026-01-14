@@ -13,13 +13,16 @@ namespace Stocker.Application.Features.Tenant.Backup.Commands;
 public class CreateBackupCommandHandler : IRequestHandler<CreateBackupCommand, Result<BackupDto>>
 {
     private readonly IMasterDbContext _masterDbContext;
+    private readonly IBackupSchedulingService _backupSchedulingService;
     private readonly ILogger<CreateBackupCommandHandler> _logger;
 
     public CreateBackupCommandHandler(
         IMasterDbContext masterDbContext,
+        IBackupSchedulingService backupSchedulingService,
         ILogger<CreateBackupCommandHandler> logger)
     {
         _masterDbContext = masterDbContext;
+        _backupSchedulingService = backupSchedulingService;
         _logger = logger;
     }
 
@@ -47,6 +50,13 @@ public class CreateBackupCommandHandler : IRequestHandler<CreateBackupCommand, R
             _logger.LogInformation(
                 "Backup created: {BackupId} for tenant {TenantId} by {CreatedBy}",
                 backup.Id, request.TenantId, request.CreatedBy);
+
+            // Enqueue background job to execute the backup
+            var jobId = _backupSchedulingService.EnqueueManualBackup(backup.Id);
+
+            _logger.LogInformation(
+                "Backup job enqueued: {JobId} for backup {BackupId}",
+                jobId, backup.Id);
 
             // Return DTO
             var dto = new BackupDto
