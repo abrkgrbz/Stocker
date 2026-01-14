@@ -8,9 +8,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { Form, DatePicker, InputNumber, Select, Table, Button, Alert, Divider, Empty, Spin } from 'antd';
 import { useEmployees } from '@/lib/api/hooks/useHR';
-import type { ColumnsType } from 'antd/es/table';
 import {
   CalendarDaysIcon,
   CalculatorIcon,
@@ -20,20 +18,21 @@ import {
   ExclamationTriangleIcon,
   DocumentTextIcon,
   ChartBarIcon,
+  ChevronUpDownIcon,
 } from '@heroicons/react/24/outline';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
 
 dayjs.locale('tr');
 
 // Types
 interface LeaveAccrualInput {
-  employeeId: number;
-  startDate: Dayjs;
-  calculationDate: Dayjs;
-  birthDate?: Dayjs;
-  isUnderground?: boolean; // Yeraltı işçisi
-  isHandicapped?: boolean; // Engelli
+  employeeId: number | null;
+  startDate: string;
+  calculationDate: string;
+  birthDate: string;
+  isUnderground: boolean;
+  isHandicapped: boolean;
   usedLeaveDays: number;
   carriedOverDays: number;
 }
@@ -78,12 +77,21 @@ const ADDITIONAL_ENTITLEMENTS = {
   over50: 4, // 50 yaş üstü için +4 gün (2023 değişiklik)
 };
 
-// Table styles for monochrome design
-const tableClassName = "[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50";
-
 export default function LeaveAccrualPage() {
-  const [form] = Form.useForm<LeaveAccrualInput>();
   const [result, setResult] = useState<LeaveAccrualResult | null>(null);
+  const [formData, setFormData] = useState<LeaveAccrualInput>({
+    employeeId: null,
+    startDate: '',
+    calculationDate: dayjs().format('YYYY-MM-DD'),
+    birthDate: '',
+    isUnderground: false,
+    isHandicapped: false,
+    usedLeaveDays: 0,
+    carriedOverDays: 0,
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isEmployeeDropdownOpen, setIsEmployeeDropdownOpen] = useState(false);
+  const [employeeSearch, setEmployeeSearch] = useState('');
 
   // Fetch employees from backend
   const { data: employees = [], isLoading: employeesLoading } = useEmployees();
@@ -97,10 +105,24 @@ export default function LeaveAccrualPage() {
     }));
   }, [employees]);
 
+  // Filter employees based on search
+  const filteredEmployees = useMemo(() => {
+    if (!employeeSearch) return employeeOptions;
+    return employeeOptions.filter((emp) =>
+      emp.label.toLowerCase().includes(employeeSearch.toLowerCase())
+    );
+  }, [employeeOptions, employeeSearch]);
+
+  // Get selected employee name
+  const selectedEmployeeName = useMemo(() => {
+    const selected = employeeOptions.find((e) => e.value === formData.employeeId);
+    return selected?.label || '';
+  }, [employeeOptions, formData.employeeId]);
+
   const calculateLeaveAccrual = (values: LeaveAccrualInput): LeaveAccrualResult => {
-    const startDate = values.startDate;
-    const calcDate = values.calculationDate;
-    const birthDate = values.birthDate;
+    const startDate = dayjs(values.startDate);
+    const calcDate = dayjs(values.calculationDate);
+    const birthDate = values.birthDate ? dayjs(values.birthDate) : null;
 
     // Calculate service duration
     const totalDays = calcDate.diff(startDate, 'day');
@@ -125,12 +147,10 @@ export default function LeaveAccrualPage() {
 
     // Calculate additional entitlements
     let additionalEntitlement = 0;
-    const additionalNotes: string[] = [];
 
     // Underground worker check
     if (values.isUnderground) {
       additionalEntitlement += ADDITIONAL_ENTITLEMENTS.underground;
-      additionalNotes.push(`Yeraltı işçisi: +${ADDITIONAL_ENTITLEMENTS.underground} gün`);
     }
 
     // Age-based additional leave
@@ -141,11 +161,9 @@ export default function LeaveAccrualPage() {
         if (baseEntitlement < 20) {
           const diff = 20 - baseEntitlement;
           additionalEntitlement += diff;
-          additionalNotes.push(`18 yaş altı: +${diff} gün (minimum 20 gün)`);
         }
       } else if (age >= 50) {
         additionalEntitlement += ADDITIONAL_ENTITLEMENTS.over50;
-        additionalNotes.push(`50 yaş üstü: +${ADDITIONAL_ENTITLEMENTS.over50} gün`);
       }
     }
 
@@ -225,38 +243,42 @@ export default function LeaveAccrualPage() {
     };
   };
 
-  const handleCalculate = (values: LeaveAccrualInput) => {
-    const calculatedResult = calculateLeaveAccrual(values);
-    setResult(calculatedResult);
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.employeeId) {
+      newErrors.employeeId = 'Çalışan seçiniz';
+    }
+    if (!formData.startDate) {
+      newErrors.startDate = 'İşe başlama tarihi seçiniz';
+    }
+    if (!formData.calculationDate) {
+      newErrors.calculationDate = 'Hesaplama tarihi seçiniz';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const breakdownColumns: ColumnsType<LeaveBreakdown> = [
-    {
-      title: 'Yıl',
-      dataIndex: 'period',
-      key: 'period',
-      width: 100,
-    },
-    {
-      title: 'İzin Hakkı',
-      dataIndex: 'entitlement',
-      key: 'entitlement',
-      align: 'center',
-      render: (days) => (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          days >= 20 ? 'bg-slate-900 text-white' : days > 0 ? 'bg-slate-200 text-slate-800' : 'bg-slate-100 text-slate-500'
-        }`}>
-          {days} gün
-        </span>
-      ),
-    },
-    {
-      title: 'Kategori',
-      dataIndex: 'notes',
-      key: 'notes',
-      render: (notes) => <span className="text-sm text-slate-600">{notes}</span>,
-    },
-  ];
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validateForm()) {
+      const calculatedResult = calculateLeaveAccrual(formData);
+      setResult(calculatedResult);
+    }
+  };
+
+  const handleEmployeeSelect = (employeeId: number) => {
+    const selected = employeeOptions.find((e) => e.value === employeeId);
+    setFormData((prev) => ({
+      ...prev,
+      employeeId,
+      startDate: selected?.startDate ? dayjs(selected.startDate).format('YYYY-MM-DD') : prev.startDate,
+    }));
+    setIsEmployeeDropdownOpen(false);
+    setEmployeeSearch('');
+    setErrors((prev) => ({ ...prev, employeeId: '' }));
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 p-8">
@@ -271,36 +293,33 @@ export default function LeaveAccrualPage() {
         </div>
       </div>
 
-      {/* Info Alert */}
-      <Alert
-        message="Türkiye Yıllık İzin Hakları (4857 sayılı İş Kanunu Madde 53)"
-        description={
-          <div className="text-sm">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-              <div className="bg-slate-100 rounded-lg p-3">
-                <p className="font-semibold text-slate-700">1-5 Yıl Arası</p>
-                <p className="text-2xl font-bold text-slate-900 mt-1">14 Gün</p>
-              </div>
-              <div className="bg-slate-200 rounded-lg p-3">
-                <p className="font-semibold text-slate-700">5-15 Yıl Arası</p>
-                <p className="text-2xl font-bold text-slate-900 mt-1">20 Gün</p>
-              </div>
-              <div className="bg-slate-300 rounded-lg p-3">
-                <p className="font-semibold text-slate-800">15 Yıl ve Üzeri</p>
-                <p className="text-2xl font-bold text-slate-900 mt-1">26 Gün</p>
-              </div>
-            </div>
-            <p className="mt-3 text-slate-600">
-              <strong className="text-slate-700">Not:</strong> 18 yaşından küçük ve 50 yaşından büyük işçilere en az 20 gün yıllık ücretli izin verilir.
-              Yeraltı işlerinde çalışanlara 4 gün ek izin hakkı tanınır.
-            </p>
+      {/* Info Box */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-8">
+        <div className="flex items-start gap-3 mb-4">
+          <InformationCircleIcon className="w-5 h-5 text-slate-500 mt-0.5" />
+          <div>
+            <h3 className="font-medium text-slate-700">Türkiye Yıllık İzin Hakları (4857 sayılı İş Kanunu Madde 53)</h3>
           </div>
-        }
-        type="info"
-        showIcon
-        icon={<InformationCircleIcon className="w-5 h-5 text-slate-500" />}
-        className="mb-8 !border-slate-300 !bg-slate-50 [&_.ant-alert-message]:!text-slate-700"
-      />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-slate-50 rounded-lg p-4">
+            <p className="text-sm font-medium text-slate-600">1-5 Yıl Arası</p>
+            <p className="text-3xl font-bold text-slate-900 mt-1">14 Gün</p>
+          </div>
+          <div className="bg-slate-100 rounded-lg p-4">
+            <p className="text-sm font-medium text-slate-600">5-15 Yıl Arası</p>
+            <p className="text-3xl font-bold text-slate-900 mt-1">20 Gün</p>
+          </div>
+          <div className="bg-slate-200 rounded-lg p-4">
+            <p className="text-sm font-medium text-slate-700">15 Yıl ve Üzeri</p>
+            <p className="text-3xl font-bold text-slate-900 mt-1">26 Gün</p>
+          </div>
+        </div>
+        <p className="mt-4 text-sm text-slate-600">
+          <strong className="text-slate-700">Not:</strong> 18 yaşından küçük ve 50 yaşından büyük işçilere en az 20 gün yıllık ücretli izin verilir.
+          Yeraltı işlerinde çalışanlara 4 gün ek izin hakkı tanınır.
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Calculator Form */}
@@ -312,144 +331,186 @@ export default function LeaveAccrualPage() {
             <h3 className="text-lg font-semibold text-slate-900">Hesaplama Formu</h3>
           </div>
 
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleCalculate}
-            initialValues={{
-              calculationDate: dayjs(),
-              usedLeaveDays: 0,
-              carriedOverDays: 0,
-              isUnderground: false,
-              isHandicapped: false,
-            }}
-          >
-            <Form.Item
-              name="employeeId"
-              label="Çalışan"
-              rules={[{ required: true, message: 'Çalışan seçiniz' }]}
-            >
-              <Select
-                showSearch
-                placeholder="Çalışan seçiniz"
-                optionFilterProp="label"
-                loading={employeesLoading}
-                options={employeeOptions}
-                onChange={(value) => {
-                  // Auto-fill dates when employee is selected
-                  const selected = employeeOptions.find((e) => e.value === value);
-                  if (selected) {
-                    if (selected.startDate) {
-                      form.setFieldValue('startDate', dayjs(selected.startDate));
-                    }
-                  }
-                }}
-                notFoundContent={employeesLoading ? <Spin size="small" /> : 'Çalışan bulunamadı'}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Employee Select */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                Çalışan <span className="text-slate-400">*</span>
+              </label>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsEmployeeDropdownOpen(!isEmployeeDropdownOpen)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 border rounded-lg text-left transition-colors ${
+                    errors.employeeId
+                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                      : 'border-slate-300 hover:border-slate-400 focus:ring-slate-500 focus:border-slate-500'
+                  }`}
+                >
+                  <span className={selectedEmployeeName ? 'text-slate-900' : 'text-slate-400'}>
+                    {selectedEmployeeName || 'Çalışan seçiniz'}
+                  </span>
+                  <ChevronUpDownIcon className="w-5 h-5 text-slate-400" />
+                </button>
+
+                {isEmployeeDropdownOpen && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-auto">
+                    <div className="p-2 border-b border-slate-100">
+                      <input
+                        type="text"
+                        placeholder="Ara..."
+                        value={employeeSearch}
+                        onChange={(e) => setEmployeeSearch(e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-slate-500"
+                        autoFocus
+                      />
+                    </div>
+                    {employeesLoading ? (
+                      <div className="p-4 text-center text-sm text-slate-500">Yükleniyor...</div>
+                    ) : filteredEmployees.length === 0 ? (
+                      <div className="p-4 text-center text-sm text-slate-500">Çalışan bulunamadı</div>
+                    ) : (
+                      filteredEmployees.map((emp) => (
+                        <button
+                          key={emp.value}
+                          type="button"
+                          onClick={() => handleEmployeeSelect(emp.value)}
+                          className={`w-full px-4 py-2.5 text-left text-sm hover:bg-slate-50 transition-colors ${
+                            formData.employeeId === emp.value ? 'bg-slate-100 text-slate-900' : 'text-slate-700'
+                          }`}
+                        >
+                          {emp.label}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+              {errors.employeeId && <p className="mt-1 text-sm text-red-500">{errors.employeeId}</p>}
+            </div>
+
+            {/* Date Fields */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  İşe Başlama Tarihi <span className="text-slate-400">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={formData.startDate}
+                  onChange={(e) => {
+                    setFormData((prev) => ({ ...prev, startDate: e.target.value }));
+                    setErrors((prev) => ({ ...prev, startDate: '' }));
+                  }}
+                  className={`w-full px-3 py-2.5 border rounded-lg focus:outline-none focus:ring-1 ${
+                    errors.startDate
+                      ? 'border-red-300 focus:ring-red-500'
+                      : 'border-slate-300 focus:ring-slate-500'
+                  }`}
+                />
+                {errors.startDate && <p className="mt-1 text-sm text-red-500">{errors.startDate}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Hesaplama Tarihi <span className="text-slate-400">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={formData.calculationDate}
+                  onChange={(e) => {
+                    setFormData((prev) => ({ ...prev, calculationDate: e.target.value }));
+                    setErrors((prev) => ({ ...prev, calculationDate: '' }));
+                  }}
+                  className={`w-full px-3 py-2.5 border rounded-lg focus:outline-none focus:ring-1 ${
+                    errors.calculationDate
+                      ? 'border-red-300 focus:ring-red-500'
+                      : 'border-slate-300 focus:ring-slate-500'
+                  }`}
+                />
+                {errors.calculationDate && <p className="mt-1 text-sm text-red-500">{errors.calculationDate}</p>}
+              </div>
+            </div>
+
+            {/* Birth Date */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                Doğum Tarihi
+                <span className="text-xs text-slate-400 ml-2">(18 yaş altı veya 50 yaş üstü için ek izin)</span>
+              </label>
+              <input
+                type="date"
+                value={formData.birthDate}
+                onChange={(e) => setFormData((prev) => ({ ...prev, birthDate: e.target.value }))}
+                className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
               />
-            </Form.Item>
-
-            <div className="grid grid-cols-2 gap-4">
-              <Form.Item
-                name="startDate"
-                label="İşe Başlama Tarihi"
-                rules={[{ required: true, message: 'İşe başlama tarihi seçiniz' }]}
-              >
-                <DatePicker
-                  className="w-full"
-                  format="DD.MM.YYYY"
-                  placeholder="Tarih seçiniz"
-                />
-              </Form.Item>
-
-              <Form.Item
-                name="calculationDate"
-                label="Hesaplama Tarihi"
-                rules={[{ required: true, message: 'Hesaplama tarihi seçiniz' }]}
-              >
-                <DatePicker
-                  className="w-full"
-                  format="DD.MM.YYYY"
-                  placeholder="Tarih seçiniz"
-                />
-              </Form.Item>
             </div>
 
-            <Form.Item
-              name="birthDate"
-              label="Doğum Tarihi"
-              tooltip="18 yaş altı veya 50 yaş üstü çalışanlar için ek izin hakkı"
-            >
-              <DatePicker
-                className="w-full"
-                format="DD.MM.YYYY"
-                placeholder="Tarih seçiniz (isteğe bağlı)"
-              />
-            </Form.Item>
-
+            {/* Leave Days */}
             <div className="grid grid-cols-2 gap-4">
-              <Form.Item
-                name="usedLeaveDays"
-                label="Kullanılan İzin (Gün)"
-                rules={[{ required: true, message: 'Kullanılan izin giriniz' }]}
-              >
-                <InputNumber
-                  className="w-full"
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Kullanılan İzin (Gün)
+                </label>
+                <input
+                  type="number"
                   min={0}
-                  placeholder="0"
+                  value={formData.usedLeaveDays}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, usedLeaveDays: parseInt(e.target.value) || 0 }))}
+                  className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
                 />
-              </Form.Item>
+              </div>
 
-              <Form.Item
-                name="carriedOverDays"
-                label="Devreden İzin (Gün)"
-                tooltip="Önceki yıldan devreden izin günleri"
-              >
-                <InputNumber
-                  className="w-full"
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Devreden İzin (Gün)
+                </label>
+                <input
+                  type="number"
                   min={0}
-                  placeholder="0"
+                  value={formData.carriedOverDays}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, carriedOverDays: parseInt(e.target.value) || 0 }))}
+                  className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
                 />
-              </Form.Item>
+              </div>
             </div>
 
+            {/* Special Conditions */}
             <div className="grid grid-cols-2 gap-4">
-              <Form.Item
-                name="isUnderground"
-                label="Yeraltı İşçisi"
-                valuePropName="checked"
-              >
-                <Select
-                  options={[
-                    { value: false, label: 'Hayır' },
-                    { value: true, label: 'Evet (+4 gün ek izin)' },
-                  ]}
-                />
-              </Form.Item>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Yeraltı İşçisi</label>
+                <select
+                  value={formData.isUnderground ? 'true' : 'false'}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, isUnderground: e.target.value === 'true' }))}
+                  className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
+                >
+                  <option value="false">Hayır</option>
+                  <option value="true">Evet (+4 gün ek izin)</option>
+                </select>
+              </div>
 
-              <Form.Item
-                name="isHandicapped"
-                label="Engelli Çalışan"
-                valuePropName="checked"
-              >
-                <Select
-                  options={[
-                    { value: false, label: 'Hayır' },
-                    { value: true, label: 'Evet' },
-                  ]}
-                />
-              </Form.Item>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Engelli Çalışan</label>
+                <select
+                  value={formData.isHandicapped ? 'true' : 'false'}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, isHandicapped: e.target.value === 'true' }))}
+                  className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
+                >
+                  <option value="false">Hayır</option>
+                  <option value="true">Evet</option>
+                </select>
+              </div>
             </div>
 
-            <Button
-              type="primary"
-              htmlType="submit"
-              icon={<CalculatorIcon className="w-4 h-4" />}
-              className="w-full bg-slate-900 hover:bg-slate-800 border-slate-900"
-              size="large"
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium"
             >
+              <CalculatorIcon className="w-5 h-5" />
               Hesapla
-            </Button>
-          </Form>
+            </button>
+          </form>
         </div>
 
         {/* Results */}
@@ -537,7 +598,7 @@ export default function LeaveAccrualPage() {
                         <span className="text-sm font-semibold text-slate-900">+{result.additionalEntitlement} gün</span>
                       </div>
                     )}
-                    <Divider className="my-2" />
+                    <div className="border-t border-slate-200 my-2" />
                     <div className="flex justify-between items-center p-3 bg-slate-200 rounded-lg">
                       <span className="text-sm text-slate-700 font-medium">Toplam Yıllık İzin</span>
                       <span className="text-lg font-bold text-slate-900">{result.totalEntitlement} gün</span>
@@ -567,27 +628,49 @@ export default function LeaveAccrualPage() {
                   <h3 className="text-lg font-semibold text-slate-900">Yıllık Hak Ediş Tablosu</h3>
                 </div>
 
-                <Table
-                  columns={breakdownColumns}
-                  dataSource={result.breakdown}
-                  rowKey="year"
-                  pagination={false}
-                  size="small"
-                  className={tableClassName}
-                  rowClassName={(record) =>
-                    record.year === result.totalServiceYears + 1 ? 'bg-blue-50' : ''
-                  }
-                />
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-slate-200">
+                        <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider py-3 px-4">Yıl</th>
+                        <th className="text-center text-xs font-medium text-slate-500 uppercase tracking-wider py-3 px-4">İzin Hakkı</th>
+                        <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider py-3 px-4">Kategori</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {result.breakdown.map((row) => (
+                        <tr
+                          key={row.year}
+                          className={row.year === result.totalServiceYears + 1 ? 'bg-slate-50' : 'hover:bg-slate-50'}
+                        >
+                          <td className="py-3 px-4 text-sm text-slate-900">{row.period}</td>
+                          <td className="py-3 px-4 text-center">
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                row.entitlement >= 20
+                                  ? 'bg-slate-900 text-white'
+                                  : row.entitlement > 0
+                                  ? 'bg-slate-200 text-slate-800'
+                                  : 'bg-slate-100 text-slate-500'
+                              }`}
+                            >
+                              {row.entitlement} gün
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-slate-600">{row.notes}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </>
           ) : (
             <div className="bg-white border border-slate-200 rounded-xl p-12">
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description={
-                  <span className="text-slate-500">Hesaplama sonuçları burada görünecek</span>
-                }
-              />
+              <div className="text-center">
+                <CalendarDaysIcon className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-500">Hesaplama sonuçları burada görünecek</p>
+              </div>
             </div>
           )}
         </div>
