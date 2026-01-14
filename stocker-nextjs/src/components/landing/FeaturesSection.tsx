@@ -293,16 +293,19 @@ const featureIcons = {
   ),
 };
 
-// Bento grid layout configuration
+// Feature grid layout - clean 2x3 grid with 2 featured cards
 const bentoConfig = [
-  { key: 'inventory', colSpan: 2, rowSpan: 1, size: 'large' },
-  { key: 'invoice', colSpan: 1, rowSpan: 1, size: 'small' },
-  { key: 'reports', colSpan: 1, rowSpan: 1, size: 'small' },
-  { key: 'compliance', colSpan: 2, rowSpan: 1, size: 'large' },
-  { key: 'crm', colSpan: 1, rowSpan: 1, size: 'small' },
-  { key: 'hr', colSpan: 1, rowSpan: 1, size: 'small' },
-  { key: 'multitenancy', colSpan: 1, rowSpan: 1, size: 'small' },
-  { key: 'security', colSpan: 1, rowSpan: 1, size: 'small' },
+  // Row 1: Featured large cards (2)
+  { key: 'inventory', size: 'featured' as const },
+  { key: 'compliance', size: 'featured' as const },
+  // Row 2: Standard cards (3)
+  { key: 'invoice', size: 'standard' as const },
+  { key: 'reports', size: 'standard' as const },
+  { key: 'crm', size: 'standard' as const },
+  // Row 3: Standard cards (3)
+  { key: 'hr', size: 'standard' as const },
+  { key: 'multitenancy', size: 'standard' as const },
+  { key: 'security', size: 'standard' as const },
 ] as const;
 
 export default function FeaturesSection() {
@@ -350,72 +353,97 @@ export default function FeaturesSection() {
           </motion.p>
         </motion.div>
 
-        {/* Bento Grid - with staggered animation */}
+        {/* Featured Cards - Top Row */}
         <motion.div
           ref={ref}
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: '-50px' }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-fr"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6"
         >
-          {bentoConfig.map((item, index) => {
+          {bentoConfig.filter(item => item.size === 'featured').map((item) => {
             const SnippetComponent = FeatureSnippets[item.key];
-            const isLarge = item.colSpan === 2;
 
             return (
               <motion.div
                 key={item.key}
                 variants={cardVariants}
                 whileHover={{
-                  y: -6,
-                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.1)',
+                  y: -4,
+                  boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.08)',
                   transition: { duration: 0.3 }
                 }}
-                className={`
-                  group relative p-6 bg-white border border-slate-200/80 rounded-2xl
-                  hover:border-slate-300
-                  transition-colors duration-300
-                  ${isLarge ? 'lg:col-span-2' : 'lg:col-span-1'}
-                `}
+                className="group relative p-8 bg-white border border-slate-200/80 rounded-2xl hover:border-slate-300 transition-colors duration-300"
               >
                 {/* Background Gradient on Hover */}
                 <div className="absolute inset-0 bg-gradient-to-br from-slate-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl" />
 
-                <div className={`relative z-10 ${isLarge ? 'flex gap-6' : ''}`}>
+                <div className="relative z-10 flex flex-col lg:flex-row gap-6">
                   {/* Left Side - Content */}
-                  <div className={isLarge ? 'flex-1' : ''}>
+                  <div className="flex-1">
                     {/* Icon */}
-                    <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 mb-4 group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all duration-300">
+                    <div className="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 mb-5 group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all duration-300">
                       {featureIcons[item.key]}
                     </div>
 
                     {/* Content */}
-                    <h3 className="text-[16px] font-semibold text-slate-900 mb-2">
+                    <h3 className="text-[18px] font-semibold text-slate-900 mb-3">
                       {t(`landing.features.${item.key}.title`)}
                     </h3>
-                    <p className="text-[14px] text-slate-500 leading-relaxed">
+                    <p className="text-[15px] text-slate-500 leading-relaxed">
                       {t(`landing.features.${item.key}.description`)}
                     </p>
                   </div>
 
-                  {/* Right Side - UI Snippet (only for large cards) */}
-                  {isLarge && (
-                    <div className="hidden lg:block w-56 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity">
-                      <SnippetComponent />
-                    </div>
-                  )}
-                </div>
-
-                {/* Small card snippet - show below content */}
-                {!isLarge && (
-                  <div className="mt-4 opacity-60 group-hover:opacity-100 transition-opacity">
+                  {/* Right Side - UI Snippet */}
+                  <div className="hidden lg:block w-52 shrink-0 opacity-60 group-hover:opacity-100 transition-opacity">
                     <SnippetComponent />
                   </div>
-                )}
+                </div>
               </motion.div>
             );
           })}
+        </motion.div>
+
+        {/* Standard Cards - 3 Column Grid */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-50px' }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+        >
+          {bentoConfig.filter(item => item.size === 'standard').map((item) => (
+            <motion.div
+              key={item.key}
+              variants={cardVariants}
+              whileHover={{
+                y: -4,
+                boxShadow: '0 16px 32px -12px rgba(0, 0, 0, 0.06)',
+                transition: { duration: 0.3 }
+              }}
+              className="group relative p-6 bg-white border border-slate-200/80 rounded-xl hover:border-slate-300 transition-colors duration-300"
+            >
+              {/* Background Gradient on Hover */}
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
+
+              <div className="relative z-10">
+                {/* Icon */}
+                <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 mb-4 group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all duration-300">
+                  {featureIcons[item.key]}
+                </div>
+
+                {/* Content */}
+                <h3 className="text-[15px] font-semibold text-slate-900 mb-2">
+                  {t(`landing.features.${item.key}.title`)}
+                </h3>
+                <p className="text-[13px] text-slate-500 leading-relaxed">
+                  {t(`landing.features.${item.key}.description`)}
+                </p>
+              </div>
+            </motion.div>
+          ))}
         </motion.div>
 
         {/* Bottom Link */}
