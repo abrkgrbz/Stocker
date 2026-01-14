@@ -76,7 +76,7 @@ public class SeveranceCalculationService : ISeveranceCalculationService
         if (terminationInfo.SeveranceEligible && workDuration.TotalYears >= 1)
         {
             // Her tam yıl için 30 günlük ücret
-            var severanceDays = workDuration.TotalYears * 30;
+            decimal severanceDays = workDuration.TotalYears * 30;
             // Kalan aylar için orantılı hesaplama
             severanceDays += (workDuration.RemainingMonths * 30) / 12m;
 

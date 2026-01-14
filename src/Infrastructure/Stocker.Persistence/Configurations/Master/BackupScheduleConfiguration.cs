@@ -8,7 +8,7 @@ public class BackupScheduleConfiguration : IEntityTypeConfiguration<BackupSchedu
 {
     public void Configure(EntityTypeBuilder<BackupSchedule> builder)
     {
-        builder.ToTable("BackupSchedules", "Master");
+        builder.ToTable("BackupSchedules", "master");
 
         builder.HasKey(x => x.Id);
 

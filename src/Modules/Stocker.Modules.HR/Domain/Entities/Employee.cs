@@ -365,9 +365,9 @@ public class Employee : BaseEntity
         BloodType = null;
 
         // İletişim bilgileri - anonimleştir
-        Email = Email.Create($"{anonymizedId}@anonymized.local");
+        Email = Email.Create($"{anonymizedId}@anonymized.local").Value;
         PersonalEmail = null;
-        Phone = PhoneNumber.Create("+900000000000");
+        Phone = PhoneNumber.Create("+900000000000").Value;
         MobilePhone = null;
         Address = null;
 

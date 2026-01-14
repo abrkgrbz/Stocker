@@ -8,7 +8,7 @@ public class TenantBackupConfiguration : IEntityTypeConfiguration<TenantBackup>
 {
     public void Configure(EntityTypeBuilder<TenantBackup> builder)
     {
-        builder.ToTable("TenantBackups", "Master");
+        builder.ToTable("TenantBackups", "master");
 
         builder.HasKey(x => x.Id);
 

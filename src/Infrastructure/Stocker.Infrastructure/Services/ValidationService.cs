@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using MediatR;
 using Stocker.Application.Features.Tenants.Queries.CheckSubdomainAvailability;
+using Stocker.Application.Features.Identity.Queries.CheckEmail;
 using Stocker.Application.Common.Exceptions;
 using Stocker.SharedKernel.Exceptions;
 
@@ -971,7 +972,7 @@ public class ValidationService : IValidationService
             email = email.Trim().ToLower();
 
             // Use MediatR to check if email exists in database
-            var query = new Features.Identity.Queries.CheckEmail.CheckEmailQuery { Email = email };
+            var query = new CheckEmailQuery { Email = email };
             var checkResult = await _mediator.Send(query);
 
             if (checkResult.IsSuccess && checkResult.Value != null)
