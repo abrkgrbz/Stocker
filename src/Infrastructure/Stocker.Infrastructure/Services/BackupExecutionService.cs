@@ -478,28 +478,27 @@ public class BackupExecutionService : IBackupExecutionService
                     sqlDump.AppendLine($"-- Rows: {count}");
                 }
 
-                // Export data as COPY format for efficiency
-                await using (var cmd = new NpgsqlCommand($"COPY \"{table}\" TO STDOUT WITH (FORMAT csv, HEADER true)", connection))
+                // Export data as CSV format using Npgsql's COPY API
+                sqlDump.AppendLine($"-- BEGIN DATA: {table}");
+
+                // Create a separate CSV file for each table using proper Npgsql COPY API
+                var tableEntry = archive.CreateEntry($"database/tables/{table}.csv");
+                using (var tableStream = tableEntry.Open())
+                using (var writer = new StreamWriter(tableStream))
                 {
-                    await using var reader = cmd.ExecuteReader();
-                    sqlDump.AppendLine($"-- BEGIN DATA: {table}");
-
-                    var csvData = new StringBuilder();
-                    using (var textReader = reader.GetTextReader(0))
+                    // Use BeginTextExport for proper COPY TO STDOUT handling
+                    using (var textExporter = connection.BeginTextExport($"COPY \"{table}\" TO STDOUT WITH (FORMAT csv, HEADER true)"))
                     {
-                        csvData.Append(await textReader.ReadToEndAsync());
+                        var buffer = new char[8192];
+                        int charsRead;
+                        while ((charsRead = await textExporter.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                        {
+                            await writer.WriteAsync(buffer, 0, charsRead);
+                        }
                     }
-
-                    // Create a separate CSV file for each table
-                    var tableEntry = archive.CreateEntry($"database/tables/{table}.csv");
-                    using (var tableStream = tableEntry.Open())
-                    using (var writer = new StreamWriter(tableStream))
-                    {
-                        await writer.WriteAsync(csvData.ToString());
-                    }
-
-                    sqlDump.AppendLine($"-- END DATA: {table}");
                 }
+
+                sqlDump.AppendLine($"-- END DATA: {table}");
 
                 sqlDump.AppendLine();
             }
