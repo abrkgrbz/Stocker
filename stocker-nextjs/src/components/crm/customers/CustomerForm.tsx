@@ -10,8 +10,9 @@
  */
 
 import React, { useEffect, useState, useCallback, useRef, useImperativeHandle, forwardRef } from 'react';
-import { BuildingOfficeIcon, UserIcon } from '@heroicons/react/24/outline';
+import { BuildingOfficeIcon, UserIcon, ShieldCheckIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import type { Customer } from '@/lib/api/services/crm.service';
+import { TurkishBusinessEntityType, TurkishBusinessEntityTypeLabels } from '@/lib/api/services/crm.types';
 
 // Primitives
 import {
@@ -70,6 +71,12 @@ const industryOptions = [
   { value: 'Other', label: 'Diğer' },
 ];
 
+// Turkish Business Entity Types (Türk Ticaret Kanunu)
+const businessEntityTypeOptions = Object.entries(TurkishBusinessEntityTypeLabels).map(([value, label]) => ({
+  value,
+  label,
+}));
+
 // =====================================
 // TYPES
 // =====================================
@@ -101,6 +108,22 @@ export interface CustomerFormData {
   paymentTerms: string;
   status: string;
   notes: string;
+  // ═══════════════════════════════════════════════════════════════
+  // TURKISH COMPLIANCE FIELDS
+  // ═══════════════════════════════════════════════════════════════
+  // Business Entity (Şirket Türü)
+  businessEntityType: string;           // A.Ş., Ltd. Şti., etc.
+  mersisNo: string;                     // MERSIS No (16 hane)
+  tradeRegistryNo: string;              // Ticaret Sicil No
+  // e-Fatura (GİB)
+  kepAddress: string;                   // KEP Adresi
+  eInvoiceRegistered: boolean;          // e-Fatura Mükellefi
+  // Individual (Bireysel)
+  tcKimlikNo: string;                   // TC Kimlik No (11 hane)
+  // KVKK Consent
+  kvkkDataProcessingConsent: boolean;   // Veri işleme izni
+  kvkkMarketingConsent: boolean;        // Pazarlama izni
+  kvkkCommunicationConsent: boolean;    // İletişim izni
 }
 
 export interface CustomerFormRef {
@@ -151,6 +174,16 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
     paymentTerms: '',
     status: 'Active',
     notes: '',
+    // Turkish Compliance Fields
+    businessEntityType: '',
+    mersisNo: '',
+    tradeRegistryNo: '',
+    kepAddress: '',
+    eInvoiceRegistered: false,
+    tcKimlikNo: '',
+    kvkkDataProcessingConsent: false,
+    kvkkMarketingConsent: false,
+    kvkkCommunicationConsent: false,
   });
 
   // Validation errors
@@ -189,6 +222,16 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
         paymentTerms: initialValues.paymentTerms || '',
         status: initialValues.status || 'Active',
         notes: initialValues.notes || '',
+        // Turkish Compliance Fields
+        businessEntityType: initialValues.businessEntityType || '',
+        mersisNo: initialValues.mersisNo || '',
+        tradeRegistryNo: initialValues.tradeRegistryNo || '',
+        kepAddress: initialValues.kepAddress || '',
+        eInvoiceRegistered: initialValues.eInvoiceRegistered || false,
+        tcKimlikNo: initialValues.tcKimlikNo || '',
+        kvkkDataProcessingConsent: initialValues.kvkkConsent?.dataProcessingConsent || false,
+        kvkkMarketingConsent: initialValues.kvkkConsent?.marketingConsent || false,
+        kvkkCommunicationConsent: initialValues.kvkkConsent?.communicationConsent || false,
       });
     }
   }, [initialValues]);
@@ -234,6 +277,34 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
 
     if (formData.taxId && !/^[0-9]{10,11}$/.test(formData.taxId)) {
       newErrors.taxId = 'Geçerli bir vergi numarası girin (10-11 hane)';
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // TURKISH COMPLIANCE VALIDATIONS
+    // ═══════════════════════════════════════════════════════════════
+
+    // TC Kimlik No validation (Individual customers)
+    if (formData.customerType === 'Individual' && formData.tcKimlikNo) {
+      if (!/^[0-9]{11}$/.test(formData.tcKimlikNo)) {
+        newErrors.tcKimlikNo = 'TC Kimlik No 11 haneli olmalıdır';
+      } else if (formData.tcKimlikNo[0] === '0') {
+        newErrors.tcKimlikNo = 'TC Kimlik No 0 ile başlayamaz';
+      }
+    }
+
+    // MERSIS No validation (Corporate customers)
+    if (formData.customerType === 'Corporate' && formData.mersisNo) {
+      if (!/^[0-9]{16}$/.test(formData.mersisNo)) {
+        newErrors.mersisNo = 'MERSIS No 16 haneli olmalıdır';
+      }
+    }
+
+    // KEP Address validation (Corporate customers)
+    if (formData.customerType === 'Corporate' && formData.kepAddress) {
+      // KEP addresses typically end with .kep.tr
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.kepAddress)) {
+        newErrors.kepAddress = 'Geçerli bir KEP adresi girin';
+      }
     }
 
     setErrors(newErrors);
@@ -377,7 +448,20 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
 
           {/* ─────────────── İŞLETME BİLGİLERİ ─────────────── */}
           <FormSection title="İşletme Bilgileri">
-            <FormField label="Sektör" span={4}>
+            {/* Şirket Türü - Sadece Kurumsal için */}
+            {formData.customerType === 'Corporate' && (
+              <FormField label="Şirket Türü" span={4}>
+                <Select
+                  value={formData.businessEntityType || null}
+                  onChange={(value) => handleChange('businessEntityType', value || '')}
+                  options={businessEntityTypeOptions}
+                  placeholder="Seçin"
+                  disabled={loading}
+                />
+              </FormField>
+            )}
+
+            <FormField label="Sektör" span={formData.customerType === 'Corporate' ? 4 : 6}>
               <Select
                 value={formData.industry || null}
                 onChange={(value) => handleChange('industry', value || '')}
@@ -387,7 +471,7 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
               />
             </FormField>
 
-            <FormField label="Yıllık Gelir" span={4}>
+            <FormField label="Yıllık Gelir" span={formData.customerType === 'Corporate' ? 4 : 6}>
               <CurrencyInput
                 value={formData.annualRevenue ?? undefined}
                 onChange={(value) => handleChange('annualRevenue', value ?? null)}
@@ -478,7 +562,24 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
               />
             </FormField>
 
-            <FormField label="Kredi Limiti" span={4}>
+            {/* TC Kimlik No - Sadece Bireysel için */}
+            {formData.customerType === 'Individual' && (
+              <FormField label="TC Kimlik No" span={6} error={errors.tcKimlikNo}>
+                <Input
+                  value={formData.tcKimlikNo}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 11);
+                    handleChange('tcKimlikNo', value);
+                  }}
+                  placeholder="11 haneli TC Kimlik No"
+                  maxLength={11}
+                  error={!!errors.tcKimlikNo}
+                  disabled={loading}
+                />
+              </FormField>
+            )}
+
+            <FormField label="Kredi Limiti" span={formData.customerType === 'Individual' ? 6 : 4}>
               <CurrencyInput
                 value={formData.creditLimit}
                 onChange={(value) => handleChange('creditLimit', value ?? 0)}
@@ -503,6 +604,150 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
                 options={statusOptions}
                 disabled={loading}
               />
+            </FormField>
+          </FormSection>
+
+          {/* ─────────────── RESMİ KAYIT & e-FATURA BİLGİLERİ ─────────────── */}
+          {formData.customerType === 'Corporate' && (
+            <FormSection title="Resmi Kayıt & e-Fatura Bilgileri">
+              <FormField label="MERSIS No" span={6} error={errors.mersisNo}>
+                <Input
+                  value={formData.mersisNo}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 16);
+                    handleChange('mersisNo', value);
+                  }}
+                  placeholder="16 haneli MERSIS numarası"
+                  maxLength={16}
+                  error={!!errors.mersisNo}
+                  disabled={loading}
+                />
+              </FormField>
+
+              <FormField label="Ticaret Sicil No" span={6}>
+                <Input
+                  value={formData.tradeRegistryNo}
+                  onChange={(e) => handleChange('tradeRegistryNo', e.target.value)}
+                  placeholder="Ticaret sicil numarası"
+                  disabled={loading}
+                />
+              </FormField>
+
+              <FormField label="KEP Adresi" span={6} error={errors.kepAddress}>
+                <Input
+                  type="email"
+                  value={formData.kepAddress}
+                  onChange={(e) => handleChange('kepAddress', e.target.value)}
+                  placeholder="ornek@hs01.kep.tr"
+                  error={!!errors.kepAddress}
+                  disabled={loading}
+                />
+                <p className="mt-1 text-xs text-slate-500">
+                  e-Fatura göndermek için KEP adresi gereklidir
+                </p>
+              </FormField>
+
+              <FormField label="e-Fatura Mükellefi" span={6}>
+                <div className="flex items-center h-10">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.eInvoiceRegistered}
+                      onChange={(e) => handleChange('eInvoiceRegistered', e.target.checked)}
+                      disabled={loading}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <span className="ml-3 text-sm font-medium text-slate-700">
+                      {formData.eInvoiceRegistered ? 'Evet' : 'Hayır'}
+                    </span>
+                  </label>
+                </div>
+              </FormField>
+            </FormSection>
+          )}
+
+          {/* ─────────────── KVKK RIZA YÖNETİMİ ─────────────── */}
+          <FormSection
+            title="KVKK Rıza Yönetimi"
+            description="6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında müşteri onayları"
+          >
+            <FormField span={12}>
+              <div className="space-y-4">
+                {/* Veri İşleme İzni */}
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={formData.kvkkDataProcessingConsent}
+                    onChange={(e) => handleChange('kvkkDataProcessingConsent', e.target.checked)}
+                    disabled={loading}
+                    className="mt-0.5 h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                  />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">
+                      Kişisel Veri İşleme İzni
+                    </span>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Müşteri, kişisel verilerinin toplanması, işlenmesi ve saklanmasına izin vermektedir.
+                    </p>
+                  </div>
+                  <span className="text-xs font-medium text-red-500">Zorunlu</span>
+                </label>
+
+                {/* Pazarlama İzni */}
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={formData.kvkkMarketingConsent}
+                    onChange={(e) => handleChange('kvkkMarketingConsent', e.target.checked)}
+                    disabled={loading}
+                    className="mt-0.5 h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                  />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">
+                      Pazarlama İletişimi İzni
+                    </span>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Müşteri, tanıtım ve pazarlama amaçlı iletişim almayı kabul etmektedir.
+                    </p>
+                  </div>
+                  <span className="text-xs font-medium text-slate-400">İsteğe Bağlı</span>
+                </label>
+
+                {/* İletişim İzni */}
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={formData.kvkkCommunicationConsent}
+                    onChange={(e) => handleChange('kvkkCommunicationConsent', e.target.checked)}
+                    disabled={loading}
+                    className="mt-0.5 h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                  />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">
+                      Elektronik İletişim İzni
+                    </span>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Müşteri, e-posta, SMS ve telefon ile iletişim kurulmasını kabul etmektedir.
+                    </p>
+                  </div>
+                  <span className="text-xs font-medium text-slate-400">İsteğe Bağlı</span>
+                </label>
+
+                {/* KVKK Bilgilendirme Notu */}
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                  <div className="flex gap-2">
+                    <InformationCircleIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                    <div className="text-xs text-blue-700">
+                      <p className="font-medium">KVKK Bilgilendirmesi</p>
+                      <p className="mt-1">
+                        Bu izinler 6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında alınmaktadır.
+                        Müşteri istediği zaman bu izinleri geri çekme hakkına sahiptir.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </FormField>
           </FormSection>
 

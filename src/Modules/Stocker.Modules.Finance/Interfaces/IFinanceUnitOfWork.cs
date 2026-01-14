@@ -96,5 +96,17 @@ public interface IFinanceUnitOfWork : IUnitOfWork
     /// </summary>
     IJournalEntryRepository JournalEntries { get; }
 
+    /// <summary>
+    /// Gets the BaBsForm (Ba-Bs Formu) repository.
+    /// 5.000 TL ve üzeri mal/hizmet alım-satım bildirimi için GİB yasal zorunluluk.
+    /// </summary>
+    IBaBsFormRepository BaBsForms { get; }
+
+    /// <summary>
+    /// Gets the TaxDeclaration (Vergi Beyannamesi) repository.
+    /// KDV, Muhtasar, Geçici Vergi vb. beyannamelerin yönetimi.
+    /// </summary>
+    ITaxDeclarationRepository TaxDeclarations { get; }
+
     #endregion
 }

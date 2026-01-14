@@ -95,6 +95,50 @@ import type {
   FinanceDashboardStatsDto,
   CashFlowReportDto,
   AgingReportDto,
+  // Ba-Bs Forms
+  BaBsFormDto,
+  BaBsFormSummaryDto,
+  BaBsFormFilterDto,
+  CreateBaBsFormDto,
+  UpdateBaBsFormDto,
+  ApproveBaBsFormDto,
+  FileBaBsFormDto,
+  BaBsGibResultDto,
+  CreateBaBsCorrectionDto,
+  CancelBaBsFormDto,
+  BaBsValidationResultDto,
+  BaBsFormStatsDto,
+  GenerateBaBsFromInvoicesDto,
+  BaBsFormStatus,
+  // Tax Declarations
+  TaxDeclarationDto,
+  TaxDeclarationSummaryDto,
+  TaxDeclarationFilterDto,
+  CreateTaxDeclarationDto,
+  ApproveTaxDeclarationDto,
+  FileTaxDeclarationDto,
+  TaxDeclarationGibResultDto,
+  RecordTaxPaymentDto,
+  CreateTaxAmendmentDto,
+  CancelTaxDeclarationDto,
+  TaxDeclarationStatsDto,
+  TaxCalendarItemDto,
+  TaxDeclarationStatus,
+  // VAT & Withholding Reports
+  VatReportDto,
+  WithholdingReportDto,
+  // e-Invoice (GİB)
+  EInvoiceDto,
+  EInvoiceSummaryDto,
+  EInvoiceFilterDto,
+  EInvoiceStatsDto,
+  EInvoiceGibStatus,
+  EInvoiceType,
+  EInvoiceDirection,
+  SendEInvoiceDto,
+  EInvoiceResponseDto,
+  GibSettingsDto,
+  UpdateGibSettingsDto,
 } from '../services/finance.types';
 
 // =====================================
@@ -185,6 +229,24 @@ export const financeKeys = {
   receivablesAging: ['finance', 'reports', 'aging', 'receivables'] as const,
   payablesAging: ['finance', 'reports', 'aging', 'payables'] as const,
   revenueVsExpenses: (start: DateTime, end: DateTime) => ['finance', 'reports', 'revenue-vs-expenses', start, end] as const,
+
+  // Ba-Bs Forms (GİB)
+  babsForms: ['finance', 'babs-forms'] as const,
+  babsForm: (id: number) => ['finance', 'babs-forms', id] as const,
+
+  // Tax Declarations (Vergi Beyannameleri)
+  taxDeclarations: ['finance', 'tax-declarations'] as const,
+  taxDeclaration: (id: number) => ['finance', 'tax-declarations', id] as const,
+
+  // VAT & Withholding Reports
+  vatReport: (year: number, month: number) => ['finance', 'reports', 'vat', year, month] as const,
+  withholdingReport: (year: number, month: number) => ['finance', 'reports', 'withholding', year, month] as const,
+
+  // e-Invoice (GİB)
+  eInvoices: ['finance', 'e-invoices'] as const,
+  eInvoice: (id: number) => ['finance', 'e-invoices', id] as const,
+  eInvoiceStats: (year: number, month: number) => ['finance', 'e-invoices', 'stats', year, month] as const,
+  gibSettings: ['finance', 'gib-settings'] as const,
 };
 
 // =====================================
@@ -1675,5 +1737,588 @@ export function useRevenueVsExpenses(startDate: DateTime, endDate: DateTime) {
     queryKey: financeKeys.revenueVsExpenses(startDate, endDate),
     queryFn: () => FinanceService.getRevenueVsExpenses(startDate, endDate),
     ...queryOptions.detail({ enabled: !!startDate && !!endDate }),
+  });
+}
+
+// =====================================
+// BA-BS FORMS HOOKS - Ba-Bs Formu (GİB)
+// 5.000 TL üzeri işlem bildirimi
+// =====================================
+
+/**
+ * Ba-Bs Formları listesi
+ */
+export function useBaBsForms(filters?: BaBsFormFilterDto) {
+  return useQuery<PaginatedResponse<BaBsFormSummaryDto>>({
+    queryKey: [...financeKeys.babsForms, filters],
+    queryFn: () => FinanceService.getBaBsForms(filters),
+    ...queryOptions.list(),
+  });
+}
+
+export function useBaBsForm(id: number) {
+  return useQuery<BaBsFormDto>({
+    queryKey: financeKeys.babsForm(id),
+    queryFn: () => FinanceService.getBaBsForm(id),
+    ...queryOptions.detail({ enabled: !!id }),
+  });
+}
+
+export function useOverdueBaBsForms() {
+  return useQuery<BaBsFormSummaryDto[]>({
+    queryKey: [...financeKeys.babsForms, 'overdue'],
+    queryFn: () => FinanceService.getOverdueBaBsForms(),
+    ...queryOptions.list(),
+  });
+}
+
+export function useBaBsFormStats(year?: number) {
+  return useQuery<BaBsFormStatsDto>({
+    queryKey: [...financeKeys.babsForms, 'stats', year],
+    queryFn: () => FinanceService.getBaBsFormStats(year),
+    ...queryOptions.detail(),
+  });
+}
+
+export function useCreateBaBsForm() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateBaBsFormDto) => FinanceService.createBaBsForm(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: financeKeys.babsForms });
+      showSuccess('Ba-Bs formu oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ba-Bs formu oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateBaBsForm() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateBaBsFormDto }) =>
+      FinanceService.updateBaBsForm(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: financeKeys.babsForm(variables.id) });
+      queryClient.invalidateQueries({ queryKey: financeKeys.babsForms });
+      showSuccess('Ba-Bs formu güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ba-Bs formu güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteBaBsForm() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => FinanceService.deleteBaBsForm(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: financeKeys.babsForms });
+      showSuccess('Ba-Bs formu silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ba-Bs formu silinemedi');
+    },
+  });
+}
+
+export function useApproveBaBsForm() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data?: ApproveBaBsFormDto }) =>
+      FinanceService.approveBaBsForm(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: financeKeys.babsForm(id) });
+      queryClient.invalidateQueries({ queryKey: financeKeys.babsForms });
+      showSuccess('Ba-Bs formu onaylandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ba-Bs formu onaylanamadı');
+    },
+  });
+}
+
+export function useFileBaBsForm() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data?: FileBaBsFormDto }) =>
+      FinanceService.fileBaBsForm(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: financeKeys.babsForm(id) });
+      queryClient.invalidateQueries({ queryKey: financeKeys.babsForms });
+      showSuccess('Ba-Bs formu GİB\'e gönderildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ba-Bs formu gönderilemedi');
+    },
+  });
+}
+
+export function useCancelBaBsForm() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: CancelBaBsFormDto }) =>
+      FinanceService.cancelBaBsForm(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: financeKeys.babsForm(id) });
+      queryClient.invalidateQueries({ queryKey: financeKeys.babsForms });
+      showSuccess('Ba-Bs formu iptal edildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ba-Bs formu iptal edilemedi');
+    },
+  });
+}
+
+export function useCreateBaBsCorrection() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: CreateBaBsCorrectionDto }) =>
+      FinanceService.createBaBsCorrection(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: financeKeys.babsForms });
+      showSuccess('Ba-Bs düzeltme formu oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ba-Bs düzeltme formu oluşturulamadı');
+    },
+  });
+}
+
+export function useValidateBaBsForm() {
+  return useMutation({
+    mutationFn: (id: number) => FinanceService.validateBaBsForm(id),
+    onError: (error) => {
+      showApiError(error, 'Ba-Bs formu doğrulanamadı');
+    },
+  });
+}
+
+export function useGenerateBaBsFromInvoices() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: GenerateBaBsFromInvoicesDto) =>
+      FinanceService.generateBaBsFromInvoices(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: financeKeys.babsForms });
+      showSuccess('Ba-Bs formu faturalardan oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ba-Bs formu oluşturulamadı');
+    },
+  });
+}
+
+// =====================================
+// TAX DECLARATIONS HOOKS - Vergi Beyannameleri
+// KDV, Muhtasar, Geçici Vergi vb.
+// =====================================
+
+/**
+ * Vergi Beyannameleri listesi
+ */
+export function useTaxDeclarations(filters?: TaxDeclarationFilterDto) {
+  return useQuery<PaginatedResponse<TaxDeclarationSummaryDto>>({
+    queryKey: [...financeKeys.taxDeclarations, filters],
+    queryFn: () => FinanceService.getTaxDeclarations(filters),
+    ...queryOptions.list(),
+  });
+}
+
+export function useTaxDeclaration(id: number) {
+  return useQuery<TaxDeclarationDto>({
+    queryKey: financeKeys.taxDeclaration(id),
+    queryFn: () => FinanceService.getTaxDeclaration(id),
+    ...queryOptions.detail({ enabled: !!id }),
+  });
+}
+
+export function useOverdueTaxDeclarations() {
+  return useQuery<TaxDeclarationSummaryDto[]>({
+    queryKey: [...financeKeys.taxDeclarations, 'overdue'],
+    queryFn: () => FinanceService.getOverdueTaxDeclarations(),
+    ...queryOptions.list(),
+  });
+}
+
+export function useTaxDeclarationStats(year?: number) {
+  return useQuery<TaxDeclarationStatsDto>({
+    queryKey: [...financeKeys.taxDeclarations, 'stats', year],
+    queryFn: () => FinanceService.getTaxDeclarationStats(year),
+    ...queryOptions.detail(),
+  });
+}
+
+export function useTaxCalendar(year: number, month?: number) {
+  return useQuery<TaxCalendarItemDto[]>({
+    queryKey: [...financeKeys.taxDeclarations, 'calendar', year, month],
+    queryFn: () => FinanceService.getTaxCalendar(year, month),
+    ...queryOptions.list({ enabled: !!year }),
+  });
+}
+
+export function useCreateTaxDeclaration() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateTaxDeclarationDto) => FinanceService.createTaxDeclaration(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: financeKeys.taxDeclarations });
+      showSuccess('Vergi beyannamesi oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Vergi beyannamesi oluşturulamadı');
+    },
+  });
+}
+
+export function useDeleteTaxDeclaration() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => FinanceService.deleteTaxDeclaration(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: financeKeys.taxDeclarations });
+      showSuccess('Vergi beyannamesi silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Vergi beyannamesi silinemedi');
+    },
+  });
+}
+
+export function useApproveTaxDeclaration() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data?: ApproveTaxDeclarationDto }) =>
+      FinanceService.approveTaxDeclaration(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: financeKeys.taxDeclaration(id) });
+      queryClient.invalidateQueries({ queryKey: financeKeys.taxDeclarations });
+      showSuccess('Vergi beyannamesi onaylandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Vergi beyannamesi onaylanamadı');
+    },
+  });
+}
+
+export function useFileTaxDeclaration() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data?: FileTaxDeclarationDto }) =>
+      FinanceService.fileTaxDeclaration(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: financeKeys.taxDeclaration(id) });
+      queryClient.invalidateQueries({ queryKey: financeKeys.taxDeclarations });
+      showSuccess('Vergi beyannamesi GİB\'e gönderildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Vergi beyannamesi gönderilemedi');
+    },
+  });
+}
+
+export function useRecordTaxPayment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: RecordTaxPaymentDto }) =>
+      FinanceService.recordTaxPayment(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: financeKeys.taxDeclaration(id) });
+      queryClient.invalidateQueries({ queryKey: financeKeys.taxDeclarations });
+      showSuccess('Vergi ödemesi kaydedildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Vergi ödemesi kaydedilemedi');
+    },
+  });
+}
+
+export function useCreateTaxAmendment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: CreateTaxAmendmentDto }) =>
+      FinanceService.createTaxAmendment(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: financeKeys.taxDeclarations });
+      showSuccess('Düzeltme beyannamesi oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Düzeltme beyannamesi oluşturulamadı');
+    },
+  });
+}
+
+export function useCancelTaxDeclaration() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: CancelTaxDeclarationDto }) =>
+      FinanceService.cancelTaxDeclaration(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: financeKeys.taxDeclaration(id) });
+      queryClient.invalidateQueries({ queryKey: financeKeys.taxDeclarations });
+      showSuccess('Vergi beyannamesi iptal edildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Vergi beyannamesi iptal edilemedi');
+    },
+  });
+}
+
+// =====================================
+// VAT & WITHHOLDING REPORTS HOOKS
+// KDV ve Stopaj Raporları
+// =====================================
+
+/**
+ * KDV Raporu
+ */
+export function useVatReport(year: number, month: number) {
+  return useQuery<VatReportDto>({
+    queryKey: financeKeys.vatReport(year, month),
+    queryFn: () => FinanceService.getVatReport(year, month),
+    ...queryOptions.detail({ enabled: !!year && !!month }),
+  });
+}
+
+/**
+ * Stopaj Raporu
+ */
+export function useWithholdingReport(year: number, month: number) {
+  return useQuery<WithholdingReportDto>({
+    queryKey: financeKeys.withholdingReport(year, month),
+    queryFn: () => FinanceService.getWithholdingReport(year, month),
+    ...queryOptions.detail({ enabled: !!year && !!month }),
+  });
+}
+
+// =====================================
+// E-INVOICE HOOKS - e-Fatura (GİB)
+// =====================================
+
+/**
+ * e-Fatura listesi
+ */
+export function useEInvoices(filters?: EInvoiceFilterDto) {
+  return useQuery<PaginatedResponse<EInvoiceSummaryDto>>({
+    queryKey: [...financeKeys.eInvoices, filters],
+    queryFn: async () => {
+      // TODO: Backend API hazır olduğunda aktif edilecek
+      // return FinanceService.getEInvoices(filters);
+
+      // Mock data for development
+      return {
+        items: [],
+        pageNumber: filters?.pageNumber || 1,
+        pageSize: filters?.pageSize || 10,
+        totalCount: 0,
+        totalPages: 0,
+      };
+    },
+    ...queryOptions.list(),
+  });
+}
+
+/**
+ * Tekil e-Fatura detayı
+ */
+export function useEInvoice(id: number) {
+  return useQuery<EInvoiceDto>({
+    queryKey: financeKeys.eInvoice(id),
+    queryFn: async () => {
+      // TODO: Backend API hazır olduğunda aktif edilecek
+      // return FinanceService.getEInvoice(id);
+      throw new Error('e-Fatura bulunamadı');
+    },
+    ...queryOptions.detail({ enabled: !!id }),
+  });
+}
+
+/**
+ * e-Fatura istatistikleri
+ */
+export function useEInvoiceStats(year: number, month: number) {
+  return useQuery<EInvoiceStatsDto>({
+    queryKey: financeKeys.eInvoiceStats(year, month),
+    queryFn: async () => {
+      // TODO: Backend API hazır olduğunda aktif edilecek
+
+      // Mock data for development
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0);
+      return {
+        totalCount: 0,
+        draftCount: 0,
+        sentCount: 0,
+        deliveredCount: 0,
+        acceptedCount: 0,
+        rejectedCount: 0,
+        errorCount: 0,
+        outgoingCount: 0,
+        incomingCount: 0,
+        eFaturaCount: 0,
+        eArsivCount: 0,
+        eIrsaliyeCount: 0,
+        outgoingTotal: 0,
+        incomingTotal: 0,
+        periodStart: startDate.toISOString(),
+        periodEnd: endDate.toISOString(),
+      };
+    },
+    ...queryOptions.detail({ enabled: !!year && !!month }),
+  });
+}
+
+/**
+ * e-Fatura gönder (GİB'e)
+ */
+export function useSendEInvoice() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: SendEInvoiceDto) => {
+      // TODO: Backend API hazır olduğunda aktif edilecek
+      throw new Error('GİB entegrasyonu henüz aktif değil');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: financeKeys.eInvoices });
+      showSuccess('e-Fatura GİB\'e başarıyla gönderildi');
+    },
+    onError: (error) => {
+      showApiError(error);
+    },
+  });
+}
+
+/**
+ * e-Fatura yanıtla (gelen faturalar için)
+ */
+export function useRespondEInvoice() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: EInvoiceResponseDto) => {
+      // TODO: Backend API hazır olduğunda aktif edilecek
+      throw new Error('GİB entegrasyonu henüz aktif değil');
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: financeKeys.eInvoices });
+      queryClient.invalidateQueries({ queryKey: financeKeys.eInvoice(variables.eInvoiceId) });
+      showSuccess(variables.accepted ? 'e-Fatura kabul edildi' : 'e-Fatura reddedildi');
+    },
+    onError: (error) => {
+      showApiError(error);
+    },
+  });
+}
+
+/**
+ * GİB durumu sorgula
+ */
+export function useCheckGibStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (eInvoiceId: number) => {
+      // TODO: Backend API hazır olduğunda aktif edilecek
+      throw new Error('GİB entegrasyonu henüz aktif değil');
+    },
+    onSuccess: (_, eInvoiceId) => {
+      queryClient.invalidateQueries({ queryKey: financeKeys.eInvoice(eInvoiceId) });
+      queryClient.invalidateQueries({ queryKey: financeKeys.eInvoices });
+      showSuccess('GİB durumu güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error);
+    },
+  });
+}
+
+/**
+ * GİB entegrasyon ayarları
+ */
+export function useGibSettings() {
+  return useQuery<GibSettingsDto>({
+    queryKey: financeKeys.gibSettings,
+    queryFn: async () => {
+      // TODO: Backend API hazır olduğunda aktif edilecek
+
+      // Mock data for development
+      return {
+        id: 1,
+        integrationEnabled: false,
+        companyVkn: '',
+        companyTitle: '',
+        gbEtiketi: undefined,
+        pkEtiketi: undefined,
+        provider: 'Foriba',
+        providerUsername: undefined,
+        isTestMode: true,
+        autoSendEnabled: false,
+        autoArchiveEnabled: true,
+        defaultScenario: 'TEMEL',
+        defaultProfileId: 'TEMELFATURA',
+        emailNotificationsEnabled: false,
+        notificationEmail: undefined,
+        lastSyncDate: undefined,
+        connectionStatus: 'Bağlantı yok',
+      };
+    },
+    ...queryOptions.detail(),
+  });
+}
+
+/**
+ * GİB ayarlarını güncelle
+ */
+export function useUpdateGibSettings() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: UpdateGibSettingsDto) => {
+      // TODO: Backend API hazır olduğunda aktif edilecek
+      throw new Error('GİB ayarları güncellenemedi');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: financeKeys.gibSettings });
+      showSuccess('GİB ayarları başarıyla güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error);
+    },
+  });
+}
+
+/**
+ * GİB bağlantısını test et
+ */
+export function useTestGibConnection() {
+  return useMutation({
+    mutationFn: async () => {
+      // TODO: Backend API hazır olduğunda aktif edilecek
+      throw new Error('GİB bağlantı testi başarısız');
+    },
+    onSuccess: () => {
+      showSuccess('GİB bağlantısı başarılı');
+    },
+    onError: (error) => {
+      showApiError(error);
+    },
   });
 }

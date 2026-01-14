@@ -2092,3 +2092,878 @@ export interface FinanceApiError {
   message: string;
   details?: string[];
 }
+
+// =====================================
+// E-INVOICE DTOS - e-Fatura (GİB)
+// e-Fatura, e-Arşiv, e-İrsaliye
+// =====================================
+
+/**
+ * e-Invoice Type - e-Fatura Türü
+ */
+export enum EInvoiceType {
+  EFatura = 'EFatura',           // e-Fatura (B2B)
+  EArsiv = 'EArsiv',             // e-Arşiv (B2C)
+  EIrsaliye = 'EIrsaliye',       // e-İrsaliye (Waybill)
+  EMustahsil = 'EMustahsil',     // e-Müstahsil Makbuzu
+  ESerbest = 'ESerbest',         // e-Serbest Meslek Makbuzu
+}
+
+/**
+ * e-Invoice Direction - e-Fatura Yönü
+ */
+export enum EInvoiceDirection {
+  Outgoing = 'Outgoing',   // Giden
+  Incoming = 'Incoming',   // Gelen
+}
+
+/**
+ * e-Invoice Status - e-Fatura Durumu (GİB)
+ */
+export enum EInvoiceGibStatus {
+  Draft = 'Draft',                     // Taslak
+  WaitingForSend = 'WaitingForSend',   // Gönderim Bekliyor
+  Sent = 'Sent',                       // Gönderildi
+  Delivered = 'Delivered',             // Teslim Edildi
+  Accepted = 'Accepted',               // Kabul Edildi
+  Rejected = 'Rejected',               // Reddedildi
+  Cancelled = 'Cancelled',             // İptal Edildi
+  Archived = 'Archived',               // Arşivlendi
+  Error = 'Error',                     // Hata
+}
+
+/**
+ * e-Invoice DTO - e-Fatura
+ */
+export interface EInvoiceDto {
+  id: number;
+  invoiceId: number;
+  invoiceNumber: string;
+  uuid: string;
+
+  eInvoiceType: EInvoiceType;
+  direction: EInvoiceDirection;
+
+  gibStatus: EInvoiceGibStatus;
+  gibStatusDate?: DateTime;
+  gibReference?: string;
+  gibErrorMessage?: string;
+
+  senderVkn: string;
+  senderTitle: string;
+  receiverVkn: string;
+  receiverTitle: string;
+  receiverAlias?: string;
+
+  invoiceDate: DateTime;
+  issueDate: DateTime;
+  sendDate?: DateTime;
+  deliveryDate?: DateTime;
+  responseDate?: DateTime;
+
+  subtotal: number;
+  kdvTotal: number;
+  withholdingTotal?: number;
+  grandTotal: number;
+  currency: string;
+
+  profileId: string;
+  scenario: string;
+  documentType: string;
+
+  xmlContent?: string;
+  htmlContent?: string;
+  pdfContent?: string;
+
+  applicationResponse?: string;
+  responseNote?: string;
+
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+  createdByName?: string;
+}
+
+/**
+ * e-Invoice Summary DTO
+ */
+export interface EInvoiceSummaryDto {
+  id: number;
+  invoiceId: number;
+  invoiceNumber: string;
+  uuid: string;
+  eInvoiceType: EInvoiceType;
+  direction: EInvoiceDirection;
+  gibStatus: EInvoiceGibStatus;
+  gibStatusDate?: DateTime;
+  senderTitle: string;
+  receiverTitle: string;
+  invoiceDate: DateTime;
+  grandTotal: number;
+  currency: string;
+}
+
+/**
+ * e-Invoice Filter DTO
+ */
+export interface EInvoiceFilterDto {
+  pageNumber?: number;
+  pageSize?: number;
+  searchTerm?: string;
+  eInvoiceType?: EInvoiceType;
+  direction?: EInvoiceDirection;
+  gibStatus?: EInvoiceGibStatus;
+  senderVkn?: string;
+  receiverVkn?: string;
+  startDate?: DateTime;
+  endDate?: DateTime;
+  minAmount?: number;
+  maxAmount?: number;
+  sortBy?: string;
+  sortDescending?: boolean;
+}
+
+/**
+ * Send e-Invoice DTO
+ */
+export interface SendEInvoiceDto {
+  invoiceId: number;
+  receiverAlias?: string;
+  scenario?: string;
+  profileId?: string;
+}
+
+/**
+ * e-Invoice Response DTO
+ */
+export interface EInvoiceResponseDto {
+  eInvoiceId: number;
+  accepted: boolean;
+  responseNote?: string;
+}
+
+/**
+ * e-Invoice Statistics DTO
+ */
+export interface EInvoiceStatsDto {
+  totalCount: number;
+  draftCount: number;
+  sentCount: number;
+  deliveredCount: number;
+  acceptedCount: number;
+  rejectedCount: number;
+  errorCount: number;
+  outgoingCount: number;
+  incomingCount: number;
+  eFaturaCount: number;
+  eArsivCount: number;
+  eIrsaliyeCount: number;
+  outgoingTotal: number;
+  incomingTotal: number;
+  periodStart: DateTime;
+  periodEnd: DateTime;
+}
+
+/**
+ * GİB Integration Settings DTO
+ */
+export interface GibSettingsDto {
+  id: number;
+  integrationEnabled: boolean;
+  companyVkn: string;
+  companyTitle: string;
+  gbEtiketi?: string;
+  pkEtiketi?: string;
+  provider: string;
+  providerUsername?: string;
+  isTestMode: boolean;
+  autoSendEnabled: boolean;
+  autoArchiveEnabled: boolean;
+  defaultScenario: string;
+  defaultProfileId: string;
+  emailNotificationsEnabled: boolean;
+  notificationEmail?: string;
+  lastSyncDate?: DateTime;
+  connectionStatus: string;
+}
+
+/**
+ * Update GİB Settings DTO
+ */
+export interface UpdateGibSettingsDto {
+  integrationEnabled?: boolean;
+  provider?: string;
+  providerUsername?: string;
+  providerPassword?: string;
+  isTestMode?: boolean;
+  autoSendEnabled?: boolean;
+  autoArchiveEnabled?: boolean;
+  defaultScenario?: string;
+  defaultProfileId?: string;
+  emailNotificationsEnabled?: boolean;
+  notificationEmail?: string;
+}
+
+// =====================================
+// BA-BS FORM DTOS - Ba-Bs Formu (GİB)
+// 5.000 TL üzeri işlem bildirimi
+// =====================================
+
+/**
+ * Ba-Bs Form Type - Form Türü
+ * Ba: Mal ve Hizmet Alımları (Purchases)
+ * Bs: Mal ve Hizmet Satışları (Sales)
+ */
+export type BaBsFormType = 'Ba' | 'Bs';
+
+/**
+ * Ba-Bs Document Type - Belge Türü
+ */
+export enum BaBsDocumentType {
+  Invoice = 'Invoice',                              // Fatura
+  ProfessionalServiceReceipt = 'ProfessionalServiceReceipt', // Serbest Meslek Makbuzu
+  ExpenseVoucher = 'ExpenseVoucher',               // Gider Pusulası
+  ProducerReceipt = 'ProducerReceipt',             // Müstahsil Makbuzu
+  Other = 'Other',                                  // Diğer
+}
+
+/**
+ * Ba-Bs Form Status - Form Durumu
+ */
+export enum BaBsFormStatus {
+  Draft = 'Draft',           // Taslak
+  Ready = 'Ready',           // Hazır
+  Approved = 'Approved',     // Onaylandı
+  Filed = 'Filed',           // GİB'e Gönderildi
+  Accepted = 'Accepted',     // Kabul Edildi
+  Rejected = 'Rejected',     // Reddedildi
+  Cancelled = 'Cancelled',   // İptal
+}
+
+/**
+ * Ba-Bs Form DTO - Ba-Bs Formu
+ */
+export interface BaBsFormDto {
+  id: number;
+  formNumber: string;
+  formType: BaBsFormType;
+  formTypeName: string;
+  status: BaBsFormStatus;
+  statusName: string;
+
+  // Period
+  periodYear: number;
+  periodMonth: number;
+  periodStart: DateTime;
+  periodEnd: DateTime;
+  filingDeadline: DateTime;
+
+  // Totals
+  totalRecordCount: number;
+  totalAmountExcludingVat: number;
+  totalVat: number;
+  totalAmountIncludingVat: number;
+  currency: string;
+
+  // Correction Info
+  isCorrection: boolean;
+  correctedFormId?: number;
+  correctionSequence: number;
+  correctionReason?: string;
+
+  // Company Info
+  taxId: string;
+  taxOffice?: string;
+  companyName: string;
+
+  // Workflow
+  preparedBy?: string;
+  preparationDate?: DateTime;
+  approvedBy?: string;
+  approvalDate?: DateTime;
+  filingDate?: DateTime;
+
+  // GIB Info
+  gibApprovalNumber?: string;
+  gibSubmissionReference?: string;
+
+  // Relations
+  accountingPeriodId?: number;
+  notes?: string;
+
+  // Items
+  items: BaBsFormItemDto[];
+
+  // Audit
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+}
+
+/**
+ * Ba-Bs Form Item DTO - Ba-Bs Form Kalemi
+ */
+export interface BaBsFormItemDto {
+  id: number;
+  baBsFormId: number;
+  sequenceNumber: number;
+
+  // Counterparty Info
+  counterpartyTaxId: string;
+  counterpartyName: string;
+  countryCode?: string;
+
+  // Document Info
+  documentType: BaBsDocumentType;
+  documentTypeName: string;
+  documentCount: number;
+
+  // Amount
+  amountExcludingVat: number;
+  vatAmount: number;
+  totalAmountIncludingVat: number;
+  currency: string;
+
+  // Notes
+  notes?: string;
+}
+
+/**
+ * Ba-Bs Form Summary DTO
+ */
+export interface BaBsFormSummaryDto {
+  id: number;
+  formNumber: string;
+  formType: BaBsFormType;
+  formTypeName: string;
+  periodYear: number;
+  periodMonth: number;
+  periodDisplay: string;
+  filingDeadline: DateTime;
+  totalRecordCount: number;
+  totalAmountIncludingVat: number;
+  currency: string;
+  status: BaBsFormStatus;
+  statusName: string;
+  isCorrection: boolean;
+  isOverdue: boolean;
+}
+
+/**
+ * Ba-Bs Form Filter DTO
+ */
+export interface BaBsFormFilterDto {
+  pageNumber?: number;
+  pageSize?: number;
+  searchTerm?: string;
+  formType?: BaBsFormType;
+  status?: BaBsFormStatus;
+  periodYear?: number;
+  periodMonth?: number;
+  isCorrection?: boolean;
+  isOverdue?: boolean;
+  sortBy?: string;
+  sortDescending?: boolean;
+}
+
+/**
+ * Create Ba-Bs Form DTO
+ */
+export interface CreateBaBsFormDto {
+  formType: BaBsFormType;
+  periodYear: number;
+  periodMonth: number;
+  taxId: string;
+  taxOffice?: string;
+  companyName: string;
+  accountingPeriodId?: number;
+  notes?: string;
+  items?: CreateBaBsFormItemDto[];
+}
+
+/**
+ * Create Ba-Bs Form Item DTO
+ */
+export interface CreateBaBsFormItemDto {
+  counterpartyTaxId: string;
+  counterpartyName: string;
+  countryCode?: string;
+  documentType?: BaBsDocumentType;
+  documentCount: number;
+  amountExcludingVat: number;
+  vatAmount: number;
+  notes?: string;
+}
+
+/**
+ * Update Ba-Bs Form DTO
+ */
+export interface UpdateBaBsFormDto {
+  taxOffice?: string;
+  accountingPeriodId?: number;
+  notes?: string;
+}
+
+/**
+ * Approve Ba-Bs Form DTO
+ */
+export interface ApproveBaBsFormDto {
+  note?: string;
+}
+
+/**
+ * File Ba-Bs Form DTO
+ */
+export interface FileBaBsFormDto {
+  gibSubmissionReference?: string;
+}
+
+/**
+ * Ba-Bs GIB Result DTO
+ */
+export interface BaBsGibResultDto {
+  isAccepted: boolean;
+  approvalNumber?: string;
+  rejectionReason?: string;
+}
+
+/**
+ * Create Ba-Bs Correction DTO
+ */
+export interface CreateBaBsCorrectionDto {
+  correctionReason: string;
+}
+
+/**
+ * Cancel Ba-Bs Form DTO
+ */
+export interface CancelBaBsFormDto {
+  reason: string;
+}
+
+/**
+ * Ba-Bs Validation Result DTO
+ */
+export interface BaBsValidationResultDto {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+/**
+ * Ba-Bs Form Stats DTO
+ */
+export interface BaBsFormStatsDto {
+  totalForms: number;
+  draftForms: number;
+  readyForms: number;
+  approvedForms: number;
+  filedForms: number;
+  acceptedForms: number;
+  rejectedForms: number;
+  overdueForms: number;
+  totalBaAmount: number;
+  totalBsAmount: number;
+}
+
+/**
+ * Generate Ba-Bs From Invoices DTO
+ */
+export interface GenerateBaBsFromInvoicesDto {
+  formType: BaBsFormType;
+  periodYear: number;
+  periodMonth: number;
+  taxId: string;
+  companyName: string;
+  taxOffice?: string;
+}
+
+// =====================================
+// TAX DECLARATION DTOS - Vergi Beyannamesi
+// =====================================
+
+/**
+ * Tax Declaration Type - Beyanname Türü
+ */
+export enum TaxDeclarationType {
+  Kdv = 'Kdv',                               // KDV Beyannamesi
+  Kdv2 = 'Kdv2',                             // KDV 2 Beyannamesi
+  Muhtasar = 'Muhtasar',                     // Muhtasar Beyanname
+  MuhtasarPrimHizmet = 'MuhtasarPrimHizmet', // Muhtasar ve Prim Hizmet Beyannamesi
+  GeciciVergi = 'GeciciVergi',               // Geçici Vergi
+  KurumlarVergisi = 'KurumlarVergisi',       // Kurumlar Vergisi
+  GelirVergisi = 'GelirVergisi',             // Gelir Vergisi
+  DamgaVergisi = 'DamgaVergisi',             // Damga Vergisi
+  Otv = 'Otv',                               // Özel Tüketim Vergisi
+  VerasetIntikal = 'VerasetIntikal',         // Veraset ve İntikal Vergisi
+}
+
+/**
+ * Tax Declaration Status - Beyanname Durumu
+ */
+export enum TaxDeclarationStatus {
+  Draft = 'Draft',           // Taslak
+  PendingApproval = 'PendingApproval', // Onay Bekliyor
+  Approved = 'Approved',     // Onaylandı
+  Filed = 'Filed',           // GİB'e Gönderildi
+  Accepted = 'Accepted',     // Kabul Edildi
+  Rejected = 'Rejected',     // Reddedildi
+  Paid = 'Paid',             // Ödendi
+  PartiallyPaid = 'PartiallyPaid', // Kısmi Ödendi
+  Cancelled = 'Cancelled',   // İptal
+}
+
+/**
+ * Tax Payment Method - Vergi Ödeme Yöntemi
+ */
+export enum TaxPaymentMethod {
+  BankTransfer = 'BankTransfer',      // Havale/EFT
+  CreditCard = 'CreditCard',          // Kredi Kartı
+  Cash = 'Cash',                      // Nakit
+  DirectDebit = 'DirectDebit',        // Otomatik Ödeme
+  InteractiveVD = 'InteractiveVD',    // İnteraktif Vergi Dairesi
+}
+
+/**
+ * Tax Declaration DTO - Vergi Beyannamesi
+ */
+export interface TaxDeclarationDto {
+  id: number;
+  declarationNumber: string;
+  declarationType: TaxDeclarationType;
+  declarationTypeName: string;
+
+  // Period
+  taxYear: number;
+  taxMonth?: number;
+  taxQuarter?: number;
+  periodStart: DateTime;
+  periodEnd: DateTime;
+  periodDisplay: string;
+
+  // Deadlines
+  filingDeadline: DateTime;
+  paymentDeadline: DateTime;
+
+  // Amounts
+  taxBase: number;
+  calculatedTax: number;
+  deductibleTax?: number;
+  carriedForwardTax?: number;
+  broughtForwardTax?: number;
+  deferredTax?: number;
+  netTax: number;
+  paidAmount: number;
+  remainingBalance: number;
+  lateInterest?: number;
+  latePenalty?: number;
+  currency: string;
+
+  // Status
+  status: TaxDeclarationStatus;
+  statusName: string;
+  filingDate?: DateTime;
+  gibApprovalNumber?: string;
+
+  // Amendment Info
+  isAmendment: boolean;
+  amendedDeclarationId?: number;
+  amendmentSequence: number;
+  amendmentReason?: string;
+
+  // Tax Office
+  taxOfficeCode?: string;
+  taxOfficeName?: string;
+  accrualSlipNumber?: string;
+
+  // Workflow
+  preparedBy?: string;
+  preparationDate?: DateTime;
+  approvedBy?: string;
+  approvalDate?: DateTime;
+
+  // Relations
+  accountId?: number;
+  accountingPeriodId?: number;
+  notes?: string;
+
+  // Details & Payments
+  details: TaxDeclarationDetailDto[];
+  payments: TaxDeclarationPaymentDto[];
+
+  // Audit
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+}
+
+/**
+ * Tax Declaration Summary DTO
+ */
+export interface TaxDeclarationSummaryDto {
+  id: number;
+  declarationNumber: string;
+  declarationType: TaxDeclarationType;
+  declarationTypeName: string;
+  taxYear: number;
+  taxMonth?: number;
+  taxQuarter?: number;
+  periodDisplay: string;
+  filingDeadline: DateTime;
+  paymentDeadline: DateTime;
+  netTax: number;
+  paidAmount: number;
+  remainingBalance: number;
+  currency: string;
+  status: TaxDeclarationStatus;
+  statusName: string;
+  isAmendment: boolean;
+  isOverdue: boolean;
+  isPaymentOverdue: boolean;
+}
+
+/**
+ * Tax Declaration Detail DTO - Beyanname Detay
+ */
+export interface TaxDeclarationDetailDto {
+  id: number;
+  taxDeclarationId: number;
+  code: string;
+  description: string;
+  taxBase: number;
+  taxRate?: number;
+  taxAmount: number;
+  currency: string;
+  sequenceNumber: number;
+}
+
+/**
+ * Tax Declaration Payment DTO - Beyanname Ödemesi
+ */
+export interface TaxDeclarationPaymentDto {
+  id: number;
+  taxDeclarationId: number;
+  paymentDate: DateTime;
+  amount: number;
+  currency: string;
+  paymentMethod: string;
+  receiptNumber?: string;
+  bankTransactionId?: number;
+  notes?: string;
+}
+
+/**
+ * Create Tax Declaration DTO
+ */
+export interface CreateTaxDeclarationDto {
+  declarationType: TaxDeclarationType;
+  taxYear: number;
+  taxMonth?: number;
+  taxQuarter?: number;
+  taxBase: number;
+  calculatedTax: number;
+  deductibleTax?: number;
+  broughtForwardTax?: number;
+  taxOfficeCode?: string;
+  taxOfficeName?: string;
+  accountId?: number;
+  accountingPeriodId?: number;
+  notes?: string;
+  details?: CreateTaxDeclarationDetailDto[];
+}
+
+/**
+ * Create Tax Declaration Detail DTO
+ */
+export interface CreateTaxDeclarationDetailDto {
+  code: string;
+  description: string;
+  taxBase: number;
+  taxRate: number;
+  taxAmount: number;
+  notes?: string;
+}
+
+/**
+ * Tax Declaration Filter DTO
+ */
+export interface TaxDeclarationFilterDto {
+  pageNumber?: number;
+  pageSize?: number;
+  searchTerm?: string;
+  declarationType?: TaxDeclarationType;
+  status?: TaxDeclarationStatus;
+  taxYear?: number;
+  taxMonth?: number;
+  taxQuarter?: number;
+  isAmendment?: boolean;
+  isOverdue?: boolean;
+  hasUnpaidBalance?: boolean;
+  sortBy?: string;
+  sortDescending?: boolean;
+}
+
+/**
+ * Approve Tax Declaration DTO
+ */
+export interface ApproveTaxDeclarationDto {
+  note?: string;
+}
+
+/**
+ * File Tax Declaration DTO
+ */
+export interface FileTaxDeclarationDto {
+  gibSubmissionReference?: string;
+}
+
+/**
+ * Tax Declaration GIB Result DTO
+ */
+export interface TaxDeclarationGibResultDto {
+  isAccepted: boolean;
+  approvalNumber?: string;
+  accrualSlipNumber?: string;
+  rejectionReason?: string;
+}
+
+/**
+ * Record Tax Payment DTO
+ */
+export interface RecordTaxPaymentDto {
+  paymentDate: DateTime;
+  amount: number;
+  paymentMethod: TaxPaymentMethod;
+  receiptNumber?: string;
+  bankTransactionId?: number;
+  notes?: string;
+}
+
+/**
+ * Create Tax Amendment DTO
+ */
+export interface CreateTaxAmendmentDto {
+  amendmentReason: string;
+  newTaxBase?: number;
+  newCalculatedTax?: number;
+  newDeductibleTax?: number;
+}
+
+/**
+ * Cancel Tax Declaration DTO
+ */
+export interface CancelTaxDeclarationDto {
+  reason: string;
+}
+
+/**
+ * Tax Declaration Stats DTO
+ */
+export interface TaxDeclarationStatsDto {
+  totalDeclarations: number;
+  draftDeclarations: number;
+  pendingApproval: number;
+  filedDeclarations: number;
+  paidDeclarations: number;
+  overdueDeclarations: number;
+  totalTaxLiability: number;
+  totalPaidAmount: number;
+  totalUnpaidAmount: number;
+  kdvDeclarations: number;
+  muhtasarDeclarations: number;
+  geciciVergiDeclarations: number;
+}
+
+/**
+ * Tax Calendar Item DTO
+ */
+export interface TaxCalendarItemDto {
+  declarationType: TaxDeclarationType;
+  declarationTypeName: string;
+  taxYear: number;
+  taxMonth?: number;
+  taxQuarter?: number;
+  periodDisplay: string;
+  filingDeadline: DateTime;
+  paymentDeadline: DateTime;
+  declarationId?: number;
+  status?: TaxDeclarationStatus;
+  statusName?: string;
+  isFiled: boolean;
+  isPaid: boolean;
+  isOverdue: boolean;
+  daysUntilDeadline: number;
+}
+
+// =====================================
+// VAT REPORT DTOS - KDV Raporu
+// =====================================
+
+/**
+ * VAT Report DTO - KDV Raporu
+ */
+export interface VatReportDto {
+  periodYear: number;
+  periodMonth: number;
+  periodStartDate: DateTime;
+  periodEndDate: DateTime;
+
+  // Sales KDV (Hesaplanan)
+  salesKdv20: number;
+  salesKdv10: number;
+  salesKdv1: number;
+  totalSalesKdv: number;
+
+  // Purchase KDV (İndirilecek)
+  purchaseKdv20: number;
+  purchaseKdv10: number;
+  purchaseKdv1: number;
+  totalPurchaseKdv: number;
+
+  // Net KDV
+  netKdv: number;
+  previousPeriodCredit: number;
+  payableKdv: number;
+  carryForwardCredit: number;
+
+  // Withholding (Tevkifat)
+  withholdingKdv: number;
+
+  // Exemptions
+  exemptSales: number;
+  exportSales: number;
+}
+
+/**
+ * Withholding Report DTO - Stopaj Raporu
+ */
+export interface WithholdingReportDto {
+  periodYear: number;
+  periodMonth: number;
+  periodStartDate: DateTime;
+  periodEndDate: DateTime;
+
+  // By Rate
+  withholding2_10: number;  // 2/10
+  withholding3_10: number;  // 3/10
+  withholding5_10: number;  // 5/10
+  withholding7_10: number;  // 7/10
+  withholding9_10: number;  // 9/10
+
+  totalWithholding: number;
+
+  // Details
+  items: WithholdingReportItemDto[];
+}
+
+/**
+ * Withholding Report Item DTO
+ */
+export interface WithholdingReportItemDto {
+  invoiceId: number;
+  invoiceNumber: string;
+  invoiceDate: DateTime;
+  currentAccountName: string;
+  taxNumber: string;
+  withholdingCode: string;
+  withholdingRate: string;
+  baseAmount: number;
+  withholdingAmount: number;
+}

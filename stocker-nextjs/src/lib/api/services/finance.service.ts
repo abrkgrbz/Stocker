@@ -85,6 +85,36 @@ import type {
   FinanceDashboardStatsDto,
   CashFlowReportDto,
   AgingReportDto,
+  // Ba-Bs Forms
+  BaBsFormDto,
+  BaBsFormSummaryDto,
+  BaBsFormFilterDto,
+  CreateBaBsFormDto,
+  UpdateBaBsFormDto,
+  ApproveBaBsFormDto,
+  FileBaBsFormDto,
+  BaBsGibResultDto,
+  CreateBaBsCorrectionDto,
+  CancelBaBsFormDto,
+  BaBsValidationResultDto,
+  BaBsFormStatsDto,
+  GenerateBaBsFromInvoicesDto,
+  // Tax Declarations
+  TaxDeclarationDto,
+  TaxDeclarationSummaryDto,
+  TaxDeclarationFilterDto,
+  CreateTaxDeclarationDto,
+  ApproveTaxDeclarationDto,
+  FileTaxDeclarationDto,
+  TaxDeclarationGibResultDto,
+  RecordTaxPaymentDto,
+  CreateTaxAmendmentDto,
+  CancelTaxDeclarationDto,
+  TaxDeclarationStatsDto,
+  TaxCalendarItemDto,
+  // VAT & Withholding Reports
+  VatReportDto,
+  WithholdingReportDto,
   // Enums
   InvoiceStatus,
   ExpenseStatus,
@@ -1241,6 +1271,285 @@ export class FinanceService {
     return ApiService.get<{ revenue: number; expenses: number; net: number }>(
       this.getPath('reports/revenue-vs-expenses'),
       { params: { startDate, endDate } }
+    );
+  }
+
+  // =====================================
+  // BA-BS FORMS - Ba-Bs Formu (GİB)
+  // 5.000 TL üzeri işlem bildirimi
+  // =====================================
+
+  /**
+   * Get all Ba-Bs forms with pagination
+   */
+  static async getBaBsForms(
+    filters?: BaBsFormFilterDto
+  ): Promise<PaginatedResponse<BaBsFormSummaryDto>> {
+    const params = {
+      pageNumber: filters?.pageNumber || 1,
+      pageSize: filters?.pageSize || 10,
+      searchTerm: filters?.searchTerm,
+      formType: filters?.formType,
+      status: filters?.status,
+      periodYear: filters?.periodYear,
+      periodMonth: filters?.periodMonth,
+      isCorrection: filters?.isCorrection,
+      isOverdue: filters?.isOverdue,
+      sortBy: filters?.sortBy,
+      sortDescending: filters?.sortDescending,
+    };
+
+    return ApiService.get<PaginatedResponse<BaBsFormSummaryDto>>(
+      this.getPath('babs-forms'),
+      { params }
+    );
+  }
+
+  /**
+   * Get single Ba-Bs form by ID
+   */
+  static async getBaBsForm(id: number): Promise<BaBsFormDto> {
+    return ApiService.get<BaBsFormDto>(this.getPath(`babs-forms/${id}`));
+  }
+
+  /**
+   * Create new Ba-Bs form
+   */
+  static async createBaBsForm(data: CreateBaBsFormDto): Promise<BaBsFormDto> {
+    logger.info('📤 Creating Ba-Bs form', { metadata: { data } });
+    return ApiService.post<BaBsFormDto>(this.getPath('babs-forms'), data);
+  }
+
+  /**
+   * Update existing Ba-Bs form
+   */
+  static async updateBaBsForm(id: number, data: UpdateBaBsFormDto): Promise<BaBsFormDto> {
+    return ApiService.put<BaBsFormDto>(this.getPath(`babs-forms/${id}`), data);
+  }
+
+  /**
+   * Delete Ba-Bs form
+   */
+  static async deleteBaBsForm(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`babs-forms/${id}`));
+  }
+
+  /**
+   * Approve Ba-Bs form
+   */
+  static async approveBaBsForm(id: number, data?: ApproveBaBsFormDto): Promise<BaBsFormDto> {
+    return ApiService.post<BaBsFormDto>(this.getPath(`babs-forms/${id}/approve`), data || {});
+  }
+
+  /**
+   * File Ba-Bs form to GİB
+   */
+  static async fileBaBsForm(id: number, data?: FileBaBsFormDto): Promise<BaBsGibResultDto> {
+    return ApiService.post<BaBsGibResultDto>(this.getPath(`babs-forms/${id}/file`), data || {});
+  }
+
+  /**
+   * Record GİB response for Ba-Bs form
+   */
+  static async recordBaBsGibResult(id: number, data: BaBsGibResultDto): Promise<BaBsFormDto> {
+    return ApiService.post<BaBsFormDto>(this.getPath(`babs-forms/${id}/gib-result`), data);
+  }
+
+  /**
+   * Cancel Ba-Bs form
+   */
+  static async cancelBaBsForm(id: number, data: CancelBaBsFormDto): Promise<BaBsFormDto> {
+    return ApiService.post<BaBsFormDto>(this.getPath(`babs-forms/${id}/cancel`), data);
+  }
+
+  /**
+   * Create Ba-Bs correction form
+   */
+  static async createBaBsCorrection(id: number, data: CreateBaBsCorrectionDto): Promise<BaBsFormDto> {
+    logger.info('📤 Creating Ba-Bs correction', { metadata: { originalId: id, data } });
+    return ApiService.post<BaBsFormDto>(this.getPath(`babs-forms/${id}/correction`), data);
+  }
+
+  /**
+   * Validate Ba-Bs form
+   */
+  static async validateBaBsForm(id: number): Promise<BaBsValidationResultDto> {
+    return ApiService.get<BaBsValidationResultDto>(this.getPath(`babs-forms/${id}/validate`));
+  }
+
+  /**
+   * Get Ba-Bs form statistics
+   */
+  static async getBaBsFormStats(year?: number): Promise<BaBsFormStatsDto> {
+    return ApiService.get<BaBsFormStatsDto>(
+      this.getPath('babs-forms/stats'),
+      { params: { year } }
+    );
+  }
+
+  /**
+   * Get overdue Ba-Bs forms
+   */
+  static async getOverdueBaBsForms(): Promise<BaBsFormSummaryDto[]> {
+    return ApiService.get<BaBsFormSummaryDto[]>(this.getPath('babs-forms/overdue'));
+  }
+
+  /**
+   * Generate Ba-Bs form from invoices
+   */
+  static async generateBaBsFromInvoices(data: GenerateBaBsFromInvoicesDto): Promise<BaBsFormDto> {
+    logger.info('📤 Generating Ba-Bs from invoices', { metadata: { data } });
+    return ApiService.post<BaBsFormDto>(this.getPath('babs-forms/generate-from-invoices'), data);
+  }
+
+  // =====================================
+  // TAX DECLARATIONS - Vergi Beyannameleri
+  // KDV, Muhtasar, Geçici Vergi vb.
+  // =====================================
+
+  /**
+   * Get all tax declarations with pagination
+   */
+  static async getTaxDeclarations(
+    filters?: TaxDeclarationFilterDto
+  ): Promise<PaginatedResponse<TaxDeclarationSummaryDto>> {
+    const params = {
+      pageNumber: filters?.pageNumber || 1,
+      pageSize: filters?.pageSize || 10,
+      searchTerm: filters?.searchTerm,
+      declarationType: filters?.declarationType,
+      status: filters?.status,
+      taxYear: filters?.taxYear,
+      taxMonth: filters?.taxMonth,
+      taxQuarter: filters?.taxQuarter,
+      isAmendment: filters?.isAmendment,
+      isOverdue: filters?.isOverdue,
+      hasUnpaidBalance: filters?.hasUnpaidBalance,
+      sortBy: filters?.sortBy,
+      sortDescending: filters?.sortDescending,
+    };
+
+    return ApiService.get<PaginatedResponse<TaxDeclarationSummaryDto>>(
+      this.getPath('tax-declarations'),
+      { params }
+    );
+  }
+
+  /**
+   * Get single tax declaration by ID
+   */
+  static async getTaxDeclaration(id: number): Promise<TaxDeclarationDto> {
+    return ApiService.get<TaxDeclarationDto>(this.getPath(`tax-declarations/${id}`));
+  }
+
+  /**
+   * Create new tax declaration
+   */
+  static async createTaxDeclaration(data: CreateTaxDeclarationDto): Promise<TaxDeclarationDto> {
+    logger.info('📤 Creating tax declaration', { metadata: { data } });
+    return ApiService.post<TaxDeclarationDto>(this.getPath('tax-declarations'), data);
+  }
+
+  /**
+   * Delete tax declaration
+   */
+  static async deleteTaxDeclaration(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`tax-declarations/${id}`));
+  }
+
+  /**
+   * Approve tax declaration
+   */
+  static async approveTaxDeclaration(id: number, data?: ApproveTaxDeclarationDto): Promise<TaxDeclarationDto> {
+    return ApiService.post<TaxDeclarationDto>(this.getPath(`tax-declarations/${id}/approve`), data || {});
+  }
+
+  /**
+   * File tax declaration to GİB
+   */
+  static async fileTaxDeclaration(id: number, data?: FileTaxDeclarationDto): Promise<TaxDeclarationGibResultDto> {
+    return ApiService.post<TaxDeclarationGibResultDto>(this.getPath(`tax-declarations/${id}/file`), data || {});
+  }
+
+  /**
+   * Record GİB response for tax declaration
+   */
+  static async recordTaxDeclarationGibResult(id: number, data: TaxDeclarationGibResultDto): Promise<TaxDeclarationDto> {
+    return ApiService.post<TaxDeclarationDto>(this.getPath(`tax-declarations/${id}/gib-result`), data);
+  }
+
+  /**
+   * Record tax payment
+   */
+  static async recordTaxPayment(id: number, data: RecordTaxPaymentDto): Promise<TaxDeclarationDto> {
+    logger.info('📤 Recording tax payment', { metadata: { declarationId: id, data } });
+    return ApiService.post<TaxDeclarationDto>(this.getPath(`tax-declarations/${id}/payments`), data);
+  }
+
+  /**
+   * Create tax declaration amendment
+   */
+  static async createTaxAmendment(id: number, data: CreateTaxAmendmentDto): Promise<TaxDeclarationDto> {
+    logger.info('📤 Creating tax declaration amendment', { metadata: { originalId: id, data } });
+    return ApiService.post<TaxDeclarationDto>(this.getPath(`tax-declarations/${id}/amendment`), data);
+  }
+
+  /**
+   * Cancel tax declaration
+   */
+  static async cancelTaxDeclaration(id: number, data: CancelTaxDeclarationDto): Promise<TaxDeclarationDto> {
+    return ApiService.post<TaxDeclarationDto>(this.getPath(`tax-declarations/${id}/cancel`), data);
+  }
+
+  /**
+   * Get tax declaration statistics
+   */
+  static async getTaxDeclarationStats(year?: number): Promise<TaxDeclarationStatsDto> {
+    return ApiService.get<TaxDeclarationStatsDto>(
+      this.getPath('tax-declarations/stats'),
+      { params: { year } }
+    );
+  }
+
+  /**
+   * Get overdue tax declarations
+   */
+  static async getOverdueTaxDeclarations(): Promise<TaxDeclarationSummaryDto[]> {
+    return ApiService.get<TaxDeclarationSummaryDto[]>(this.getPath('tax-declarations/overdue'));
+  }
+
+  /**
+   * Get tax calendar items
+   */
+  static async getTaxCalendar(year: number, month?: number): Promise<TaxCalendarItemDto[]> {
+    return ApiService.get<TaxCalendarItemDto[]>(
+      this.getPath('tax-declarations/calendar'),
+      { params: { year, month } }
+    );
+  }
+
+  // =====================================
+  // VAT & WITHHOLDING REPORTS
+  // KDV ve Stopaj Raporları
+  // =====================================
+
+  /**
+   * Get VAT report for period
+   */
+  static async getVatReport(year: number, month: number): Promise<VatReportDto> {
+    return ApiService.get<VatReportDto>(
+      this.getPath('reports/vat'),
+      { params: { year, month } }
+    );
+  }
+
+  /**
+   * Get withholding report for period
+   */
+  static async getWithholdingReport(year: number, month: number): Promise<WithholdingReportDto> {
+    return ApiService.get<WithholdingReportDto>(
+      this.getPath('reports/withholding'),
+      { params: { year, month } }
     );
   }
 }

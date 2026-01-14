@@ -7,6 +7,115 @@ export type Guid = string;
 export type DateTime = string; // ISO 8601 format
 
 // =====================================
+// TURKISH COMPLIANCE - BUSINESS ENTITY TYPES
+// =====================================
+
+/**
+ * Turkish Business Entity Types (Türk Ticaret Kanunu)
+ * Required for e-Fatura/e-Arşiv compliance and tax reporting
+ */
+export enum TurkishBusinessEntityType {
+  AnonimSirket = 'AnonimSirket',           // A.Ş. - Anonim Şirket
+  LimitedSirket = 'LimitedSirket',         // Ltd. Şti. - Limited Şirket
+  SahisIsletmesi = 'SahisIsletmesi',       // Şahıs İşletmesi
+  AdiOrtaklik = 'AdiOrtaklik',             // Adi Ortaklık
+  KollektifSirket = 'KollektifSirket',     // Kollektif Şirket
+  KomanditSirket = 'KomanditSirket',       // Komandit Şirket
+  Kooperatif = 'Kooperatif',               // Kooperatif
+  Dernek = 'Dernek',                       // Dernek
+  Vakif = 'Vakif',                         // Vakıf
+  KamuKurumu = 'KamuKurumu',               // Kamu Kurumu
+  YabanciSirketSubesi = 'YabanciSirketSubesi', // Yabancı Şirket Şubesi
+  SerbertMeslek = 'SerbestMeslek',         // Serbest Meslek Erbabı
+  Diger = 'Diger',                         // Diğer
+}
+
+// Turkish Business Entity Type Labels
+export const TurkishBusinessEntityTypeLabels: Record<TurkishBusinessEntityType, string> = {
+  [TurkishBusinessEntityType.AnonimSirket]: 'Anonim Şirket (A.Ş.)',
+  [TurkishBusinessEntityType.LimitedSirket]: 'Limited Şirket (Ltd. Şti.)',
+  [TurkishBusinessEntityType.SahisIsletmesi]: 'Şahıs İşletmesi',
+  [TurkishBusinessEntityType.AdiOrtaklik]: 'Adi Ortaklık',
+  [TurkishBusinessEntityType.KollektifSirket]: 'Kollektif Şirket',
+  [TurkishBusinessEntityType.KomanditSirket]: 'Komandit Şirket',
+  [TurkishBusinessEntityType.Kooperatif]: 'Kooperatif',
+  [TurkishBusinessEntityType.Dernek]: 'Dernek',
+  [TurkishBusinessEntityType.Vakif]: 'Vakıf',
+  [TurkishBusinessEntityType.KamuKurumu]: 'Kamu Kurumu',
+  [TurkishBusinessEntityType.YabanciSirketSubesi]: 'Yabancı Şirket Şubesi',
+  [TurkishBusinessEntityType.SerbertMeslek]: 'Serbest Meslek Erbabı',
+  [TurkishBusinessEntityType.Diger]: 'Diğer',
+};
+
+// =====================================
+// KVKK COMPLIANCE (Turkish GDPR)
+// =====================================
+
+/**
+ * KVKK Consent Management
+ * Required by Law No. 6698 (Kişisel Verilerin Korunması Kanunu)
+ */
+export interface KVKKConsentDto {
+  id: Guid;
+  entityId: Guid;
+  entityType: 'Customer' | 'Lead' | 'Contact';
+  // Consent flags
+  dataProcessingConsent: boolean;       // Veri işleme izni
+  marketingConsent: boolean;            // Pazarlama izni
+  communicationConsent: boolean;        // İletişim izni
+  thirdPartyShareConsent: boolean;      // 3. taraf paylaşım izni
+  profilingConsent: boolean;            // Profilleme izni
+  // Consent metadata
+  consentDate: DateTime;
+  consentVersion: string;               // Privacy policy version
+  consentMethod: KVKKConsentMethod;     // How consent was obtained
+  ipAddress?: string;                   // IP at consent time
+  // Withdrawal
+  isWithdrawn: boolean;
+  withdrawalDate?: DateTime;
+  withdrawalReason?: string;
+  // Data retention
+  retentionPeriodMonths: number;        // Data retention period
+  dataExpiryDate?: DateTime;            // When data should be deleted
+  // Audit
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+}
+
+export enum KVKKConsentMethod {
+  WebForm = 'WebForm',                 // Web form checkbox
+  WrittenDocument = 'WrittenDocument', // Physical signature
+  Email = 'Email',                     // Email confirmation
+  Verbal = 'Verbal',                   // Phone/verbal (logged)
+  API = 'API',                         // API integration
+}
+
+export interface CreateKVKKConsentDto {
+  entityId: Guid;
+  entityType: 'Customer' | 'Lead' | 'Contact';
+  dataProcessingConsent: boolean;
+  marketingConsent?: boolean;
+  communicationConsent?: boolean;
+  thirdPartyShareConsent?: boolean;
+  profilingConsent?: boolean;
+  consentVersion: string;
+  consentMethod: KVKKConsentMethod;
+  retentionPeriodMonths?: number;
+}
+
+export interface UpdateKVKKConsentDto {
+  marketingConsent?: boolean;
+  communicationConsent?: boolean;
+  thirdPartyShareConsent?: boolean;
+  profilingConsent?: boolean;
+}
+
+export interface WithdrawKVKKConsentDto {
+  entityId: Guid;
+  withdrawalReason?: string;
+}
+
+// =====================================
 // STATISTICS & ANALYTICS
 // =====================================
 
@@ -84,6 +193,22 @@ export interface CustomerDto {
   createdAt: DateTime;
   updatedAt?: DateTime;
   contacts: ContactDto[];
+  // ═══════════════════════════════════════════════════════════════
+  // TURKISH COMPLIANCE FIELDS
+  // ═══════════════════════════════════════════════════════════════
+  // Tax & Legal (Vergi ve Hukuki)
+  taxOffice?: string;                           // Vergi Dairesi
+  businessEntityType?: TurkishBusinessEntityType; // Şirket Türü (A.Ş., Ltd. Şti., vs.)
+  mersisNo?: string;                            // MERSIS Numarası (16 hane)
+  tradeRegistryNo?: string;                     // Ticaret Sicil Numarası
+  // e-Fatura/e-Arşiv (GİB)
+  kepAddress?: string;                          // KEP Adresi (e-Fatura için zorunlu)
+  eInvoiceRegistered?: boolean;                 // e-Fatura mükellefi mi?
+  eInvoiceStartDate?: DateTime;                 // e-Fatura başlangıç tarihi
+  // Individual Customer (Bireysel Müşteri)
+  tcKimlikNo?: string;                          // TC Kimlik No (11 hane, bireysel için)
+  // KVKK Consent
+  kvkkConsent?: KVKKConsentDto;                 // KVKK rıza bilgileri
 }
 
 export enum CustomerType {
@@ -124,6 +249,18 @@ export interface CreateCustomerDto {
   taxId?: string;
   paymentTerms?: string;
   contactPerson?: string;
+  // Turkish Compliance Fields
+  taxOffice?: string;
+  businessEntityType?: TurkishBusinessEntityType;
+  mersisNo?: string;
+  tradeRegistryNo?: string;
+  kepAddress?: string;
+  eInvoiceRegistered?: boolean;
+  tcKimlikNo?: string;
+  // KVKK Consent
+  kvkkDataProcessingConsent?: boolean;
+  kvkkMarketingConsent?: boolean;
+  kvkkCommunicationConsent?: boolean;
 }
 
 export interface UpdateCustomerDto extends CreateCustomerDto {}

@@ -87,6 +87,8 @@ public sealed class FinanceUnitOfWork : IFinanceUnitOfWork, IAsyncDisposable
     private IExchangeRateRepository? _exchangeRates;
     private IAccountingPeriodRepository? _accountingPeriods;
     private IJournalEntryRepository? _journalEntries;
+    private IBaBsFormRepository? _babsForms;
+    private ITaxDeclarationRepository? _taxDeclarations;
 
     #endregion
 
@@ -172,6 +174,14 @@ public sealed class FinanceUnitOfWork : IFinanceUnitOfWork, IAsyncDisposable
     /// <inheritdoc />
     public IJournalEntryRepository JournalEntries =>
         _journalEntries ??= GetOrAddSpecificRepository<IJournalEntryRepository, JournalEntryRepository>();
+
+    /// <inheritdoc />
+    public IBaBsFormRepository BaBsForms =>
+        _babsForms ??= GetOrAddSpecificRepository<IBaBsFormRepository, BaBsFormRepository>();
+
+    /// <inheritdoc />
+    public ITaxDeclarationRepository TaxDeclarations =>
+        _taxDeclarations ??= GetOrAddSpecificRepository<ITaxDeclarationRepository, TaxDeclarationRepository>();
 
     #endregion
 

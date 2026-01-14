@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { Form, Input, InputNumber, Select } from 'antd';
-import { UserIcon } from '@heroicons/react/24/outline';
+import { UserIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import type { Lead } from '@/lib/api/services/crm.service';
+import { TurkishBusinessEntityType, TurkishBusinessEntityTypeLabels } from '@/lib/api/services/crm.types';
 import { FormPhoneInput } from '@/components/ui/InternationalPhoneInput';
 import { CascadeLocationSelect } from '@/components/ui/CascadeLocationSelect';
 import type { SelectedLocation } from '@/lib/api/services/location.types';
@@ -38,6 +39,12 @@ const ratingOptions = [
   { value: 'Warm', label: 'Ilık' },
   { value: 'Hot', label: 'Sıcak' },
 ];
+
+// Turkish Business Entity Types (for company-associated leads)
+const businessEntityTypeOptions = Object.entries(TurkishBusinessEntityTypeLabels).map(([value, label]) => ({
+  value,
+  label,
+}));
 
 interface LeadFormProps {
   form: ReturnType<typeof Form.useForm>[0];
@@ -245,6 +252,17 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
                 </Form.Item>
               </div>
               <div className="col-span-3">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Şirket Türü</label>
+                <Form.Item name="businessEntityType" className="mb-0">
+                  <Select
+                    placeholder="Seçin"
+                    allowClear
+                    options={businessEntityTypeOptions}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-3">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Pozisyon</label>
                 <Form.Item name="jobTitle" className="mb-0">
                   <Input
@@ -390,6 +408,88 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
                     addonAfter="/ 100"
                   />
                 </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── KVKK RIZA YÖNETİMİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              KVKK Rıza Yönetimi
+            </h3>
+            <p className="text-xs text-slate-500 mb-4">
+              6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında rıza bilgileri
+            </p>
+            <div className="space-y-4">
+              {/* Veri İşleme İzni */}
+              <Form.Item name="kvkkDataProcessingConsent" valuePropName="checked" className="mb-0">
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                  />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">
+                      Kişisel Veri İşleme İzni
+                    </span>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Lead, kişisel verilerinin toplanması, işlenmesi ve saklanmasına izin vermektedir.
+                    </p>
+                  </div>
+                  <span className="text-xs font-medium text-red-500">Zorunlu</span>
+                </label>
+              </Form.Item>
+
+              {/* Pazarlama İzni */}
+              <Form.Item name="kvkkMarketingConsent" valuePropName="checked" className="mb-0">
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                  />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">
+                      Pazarlama İletişimi İzni
+                    </span>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Lead, tanıtım ve pazarlama amaçlı iletişim almayı kabul etmektedir.
+                    </p>
+                  </div>
+                  <span className="text-xs font-medium text-slate-400">İsteğe Bağlı</span>
+                </label>
+              </Form.Item>
+
+              {/* İletişim İzni */}
+              <Form.Item name="kvkkCommunicationConsent" valuePropName="checked" className="mb-0">
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                  />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">
+                      Elektronik İletişim İzni
+                    </span>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Lead, e-posta, SMS ve telefon ile iletişim kurulmasını kabul etmektedir.
+                    </p>
+                  </div>
+                  <span className="text-xs font-medium text-slate-400">İsteğe Bağlı</span>
+                </label>
+              </Form.Item>
+
+              {/* KVKK Bilgilendirme Notu */}
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                <div className="flex gap-2">
+                  <InformationCircleIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                  <div className="text-xs text-blue-700">
+                    <p className="font-medium">KVKK Bilgilendirmesi</p>
+                    <p className="mt-1">
+                      Bu izinler 6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında alınmaktadır.
+                      Lead istediği zaman bu izinleri geri çekme hakkına sahiptir.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

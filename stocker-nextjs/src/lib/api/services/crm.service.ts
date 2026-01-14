@@ -168,6 +168,29 @@ export interface Customer {
   contacts?: Contact[]; // Contact array if backend provides it
   createdAt: string;
   updatedAt: string;
+  // ═══════════════════════════════════════════════════════════════
+  // TURKISH COMPLIANCE FIELDS
+  // ═══════════════════════════════════════════════════════════════
+  // Business Entity (Şirket Türü) - TTK uyumlu
+  businessEntityType?: string | null;    // A.Ş., Ltd. Şti., Şahıs İşletmesi, etc.
+  mersisNo?: string | null;              // MERSIS No (16 hane)
+  tradeRegistryNo?: string | null;       // Ticaret Sicil No
+  // e-Fatura (GİB)
+  kepAddress?: string | null;            // KEP Adresi (Kayıtlı Elektronik Posta)
+  eInvoiceRegistered?: boolean;          // e-Fatura Mükellefi mi?
+  eInvoiceStartDate?: string | null;     // e-Fatura başlangıç tarihi
+  // Individual (Bireysel)
+  tcKimlikNo?: string | null;            // TC Kimlik No (11 hane)
+  // KVKK Consent (Kişisel Verilerin Korunması)
+  kvkkConsent?: {
+    dataProcessingConsent: boolean;
+    marketingConsent: boolean;
+    communicationConsent: boolean;
+    thirdPartyShareConsent?: boolean;
+    profilingConsent?: boolean;
+    consentDate?: string;
+    consentVersion?: string;
+  } | null;
 }
 
 export interface Lead {
@@ -205,6 +228,18 @@ export interface Lead {
   // Related data from backend
   activities?: Activity[];
   notes?: Note[];
+  // ═══════════════════════════════════════════════════════════════
+  // TURKISH COMPLIANCE FIELDS
+  // ═══════════════════════════════════════════════════════════════
+  // Business Entity (if company exists)
+  businessEntityType?: string | null;    // A.Ş., Ltd. Şti., etc.
+  // KVKK Consent (Kişisel Verilerin Korunması)
+  kvkkConsent?: {
+    dataProcessingConsent: boolean;
+    marketingConsent: boolean;
+    communicationConsent: boolean;
+    consentDate?: string;
+  } | null;
 }
 
 export interface Deal {

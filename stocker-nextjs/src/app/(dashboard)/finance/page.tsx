@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { Table, Spin, Button } from 'antd';
+import { Table, Spin, Button, Progress } from 'antd';
 import {
   BanknotesIcon,
   BuildingLibraryIcon,
@@ -18,6 +18,11 @@ import {
   ReceiptPercentIcon,
   WalletIcon,
   ArrowPathIcon,
+  ScaleIcon,
+  ClipboardDocumentListIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import {
@@ -26,6 +31,9 @@ import {
   useExpenses,
   useBankAccounts,
   useFinanceDashboard,
+  useVatReport,
+  useBaBsForms,
+  useTaxDeclarations,
 } from '@/lib/api/hooks/useFinance';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
@@ -37,6 +45,11 @@ dayjs.locale('tr');
 const tableClassName = "[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50";
 
 export default function FinanceDashboardPage() {
+  // Current period for tax reports
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth() + 1;
+
   // Fetch Finance data
   const { data: invoicesData, isLoading: invoicesLoading, refetch: refetchInvoices } = useInvoices({ pageSize: 5 });
   const { data: currentAccountsData, isLoading: currentAccountsLoading } = useCurrentAccounts({ pageSize: 10 });
@@ -44,10 +57,59 @@ export default function FinanceDashboardPage() {
   const { data: bankAccountsData, isLoading: bankAccountsLoading } = useBankAccounts({ pageSize: 10 });
   const { data: dashboardData, isLoading: dashboardLoading } = useFinanceDashboard();
 
+  // Fetch Tax related data
+  const { data: vatReport, isLoading: vatLoading } = useVatReport(currentYear, currentMonth);
+  const { data: baBsFormsData, isLoading: baBsLoading } = useBaBsForms({ pageSize: 5 });
+  const { data: taxDeclarationsData, isLoading: taxDeclarationsLoading } = useTaxDeclarations({ pageSize: 5 });
+
   const invoices = invoicesData?.items || [];
   const currentAccounts = currentAccountsData?.items || [];
   const expenses = expensesData?.items || [];
   const bankAccounts = bankAccountsData?.items || [];
+  const baBsForms = baBsFormsData?.items || [];
+  const taxDeclarations = taxDeclarationsData?.items || [];
+
+  // Turkish month names
+  const monthNames = [
+    'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+    'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+  ];
+
+  // KDV Summary from VAT report
+  const kdvSummary = {
+    salesKdv: vatReport?.totalSalesKdv || 0,
+    purchaseKdv: vatReport?.totalPurchaseKdv || 0,
+    netKdv: vatReport?.netKdv || 0,
+    payable: vatReport?.payableKdv || 0,
+    carryForward: vatReport?.carryForwardCredit || 0,
+  };
+
+  // Tax Calendar - Important dates
+  const getTaxCalendar = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+
+    // Key Turkish tax deadlines
+    const deadlines = [
+      { type: 'KDV Beyannamesi', day: 26, description: 'Aylık KDV beyannamesi son gün' },
+      { type: 'Muhtasar', day: 26, description: 'Muhtasar beyanname son gün' },
+      { type: 'Ba-Bs Formu', day: 31, description: 'Aylık Ba-Bs formu bildirimi' },
+      { type: 'SGK Bildirimi', day: 26, description: 'Aylık SGK prim bildirimi' },
+    ];
+
+    return deadlines.map(d => {
+      let deadlineDate = new Date(year, month, d.day);
+      // If deadline has passed, show next month's deadline
+      if (deadlineDate < now) {
+        deadlineDate = new Date(year, month + 1, d.day);
+      }
+      const daysUntil = Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      return { ...d, date: deadlineDate, daysUntil };
+    }).sort((a, b) => a.daysUntil - b.daysUntil);
+  };
+
+  const taxCalendar = getTaxCalendar();
 
   // Calculate metrics from dashboard data or fallback to calculated values
   const metrics = {
@@ -281,6 +343,231 @@ export default function FinanceDashboardPage() {
           </div>
           <div className="text-2xl font-bold text-slate-900">{metrics.overdueInvoices}</div>
           <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Vadesi Gecmis</div>
+        </div>
+      </div>
+
+      {/* Tax & Compliance Section */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-medium text-slate-900 uppercase tracking-wider">Vergi & Uyum</h2>
+          <Link href="/finance/tax/declarations" className="text-xs text-slate-500 hover:text-slate-700">
+            Tüm vergi işlemleri
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* KDV Summary Widget */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                  <ScaleIcon className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900">KDV Özeti</h3>
+                  <p className="text-xs text-slate-500">{monthNames[currentMonth - 1]} {currentYear}</p>
+                </div>
+              </div>
+              <Link href="/finance/reports/vat">
+                <ChevronRightIcon className="w-4 h-4 text-slate-400 hover:text-slate-600" />
+              </Link>
+            </div>
+
+            {vatLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Spin size="small" />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-slate-500">Hesaplanan KDV</span>
+                  <span className="text-sm font-medium text-slate-900">{formatCurrency(kdvSummary.salesKdv)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-slate-500">İndirilecek KDV</span>
+                  <span className="text-sm font-medium text-slate-900">{formatCurrency(kdvSummary.purchaseKdv)}</span>
+                </div>
+                <div className="border-t border-slate-100 pt-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-medium text-slate-700">
+                      {kdvSummary.payable > 0 ? 'Ödenecek KDV' : 'Devreden KDV'}
+                    </span>
+                    <span className={`text-sm font-bold ${kdvSummary.payable > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                      {formatCurrency(kdvSummary.payable > 0 ? kdvSummary.payable : kdvSummary.carryForward)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Ba-Bs Forms Widget */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <ClipboardDocumentListIcon className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900">Ba-Bs Formu</h3>
+                  <p className="text-xs text-slate-500">5.000 TL üzeri bildirim</p>
+                </div>
+              </div>
+              <Link href="/finance/tax/ba-bs">
+                <ChevronRightIcon className="w-4 h-4 text-slate-400 hover:text-slate-600" />
+              </Link>
+            </div>
+
+            {baBsLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Spin size="small" />
+              </div>
+            ) : baBsForms.length === 0 ? (
+              <div className="text-center py-4">
+                <p className="text-xs text-slate-500 mb-2">Bu dönem için form yok</p>
+                <Link href="/finance/tax/ba-bs/new">
+                  <Button size="small" className="!text-xs">
+                    Form Oluştur
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {baBsForms.slice(0, 3).map((form: any) => (
+                  <div key={form.id} className="flex items-center justify-between py-2 px-2 bg-slate-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${
+                        form.formType === 'Ba' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                      }`}>
+                        {form.formType}
+                      </span>
+                      <span className="text-xs text-slate-600">{form.period}</span>
+                    </div>
+                    <span className={`px-2 py-0.5 text-xs rounded ${
+                      form.status === 'Filed' ? 'bg-emerald-100 text-emerald-700' :
+                      form.status === 'Approved' ? 'bg-blue-100 text-blue-700' :
+                      'bg-slate-200 text-slate-600'
+                    }`}>
+                      {form.status === 'Filed' ? 'Gönderildi' :
+                       form.status === 'Approved' ? 'Onaylandı' : 'Taslak'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Tax Calendar Widget */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                  <CalendarIcon className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900">Vergi Takvimi</h3>
+                  <p className="text-xs text-slate-500">Yaklaşan son tarihler</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {taxCalendar.slice(0, 4).map((item, index) => (
+                <div key={index} className="flex items-center justify-between py-2 px-2 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    {item.daysUntil <= 3 ? (
+                      <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
+                    ) : item.daysUntil <= 7 ? (
+                      <ClockIcon className="w-4 h-4 text-amber-500" />
+                    ) : (
+                      <CheckCircleIcon className="w-4 h-4 text-emerald-500" />
+                    )}
+                    <div>
+                      <div className="text-xs font-medium text-slate-700">{item.type}</div>
+                      <div className="text-xs text-slate-500">{dayjs(item.date).format('DD MMM')}</div>
+                    </div>
+                  </div>
+                  <span className={`px-2 py-0.5 text-xs font-medium rounded ${
+                    item.daysUntil <= 3 ? 'bg-red-100 text-red-700' :
+                    item.daysUntil <= 7 ? 'bg-amber-100 text-amber-700' :
+                    'bg-emerald-100 text-emerald-700'
+                  }`}>
+                    {item.daysUntil} gün
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tax Declarations Quick View */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-medium text-slate-900 uppercase tracking-wider">Vergi Beyannameleri</h2>
+          <Link href="/finance/tax/declarations" className="text-xs text-slate-500 hover:text-slate-700">
+            Tümünü gör
+          </Link>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          {taxDeclarationsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Spin size="large" />
+            </div>
+          ) : taxDeclarations.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center mx-auto mb-3">
+                <DocumentTextIcon className="w-6 h-6 text-slate-400" />
+              </div>
+              <h3 className="text-sm font-medium text-slate-700 mb-1">Beyanname bulunmuyor</h3>
+              <p className="text-xs text-slate-400 mb-4">
+                Vergi beyannamelerinizi buradan takip edebilirsiniz
+              </p>
+              <Link href="/finance/tax/declarations/new">
+                <Button
+                  type="primary"
+                  size="small"
+                  className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+                >
+                  Beyanname Ekle
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {taxDeclarations.slice(0, 4).map((declaration: any) => (
+                <Link key={declaration.id} href={`/finance/tax/declarations/${declaration.id}`}>
+                  <div className="p-4 border border-slate-200 rounded-xl hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-700 rounded">
+                        {declaration.declarationType}
+                      </span>
+                      <span className={`px-2 py-0.5 text-xs rounded ${
+                        declaration.status === 'Filed' ? 'bg-emerald-100 text-emerald-700' :
+                        declaration.status === 'Paid' ? 'bg-blue-100 text-blue-700' :
+                        declaration.status === 'Approved' ? 'bg-purple-100 text-purple-700' :
+                        'bg-slate-200 text-slate-600'
+                      }`}>
+                        {declaration.status === 'Filed' ? 'Gönderildi' :
+                         declaration.status === 'Paid' ? 'Ödendi' :
+                         declaration.status === 'Approved' ? 'Onaylandı' : 'Taslak'}
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-500 mb-1">{declaration.period}</div>
+                    <div className="text-lg font-bold text-slate-900">
+                      {formatCurrency(declaration.taxAmount || 0)}
+                    </div>
+                    {declaration.dueDate && (
+                      <div className="text-xs text-slate-500 mt-1">
+                        Son: {dayjs(declaration.dueDate).format('DD MMM YYYY')}
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
