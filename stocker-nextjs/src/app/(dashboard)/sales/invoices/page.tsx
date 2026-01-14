@@ -2,16 +2,12 @@
 
 /**
  * Invoices List Page
- * Monochrome Design System
+ * Türkiye mevzuatına uygun fatura yönetimi
+ * Monochrome Design System - DESIGN_SYSTEM.md
  */
 
 import React, { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  Table,
-  DatePicker,
-  Dropdown,
-} from 'antd';
 import {
   ArrowPathIcon,
   CheckCircleIcon,
@@ -29,6 +25,9 @@ import {
   PlusIcon,
   TrashIcon,
   XCircleIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import {
@@ -40,7 +39,6 @@ import {
 } from '@/lib/api/hooks/useInvoices';
 import type { InvoiceListItem, InvoiceStatus, GetInvoicesParams } from '@/lib/api/services/invoice.service';
 import { InvoiceService } from '@/lib/api/services/invoice.service';
-import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { generateInvoicePDF } from '@/lib/utils/pdf-export';
 import {
@@ -50,8 +48,6 @@ import {
   confirmDelete,
   confirmAction,
 } from '@/lib/utils/sweetalert';
-
-const { RangePicker } = DatePicker;
 
 const statusConfig: Record<InvoiceStatus, { bgColor: string; textColor: string; label: string }> = {
   Draft: { bgColor: 'bg-slate-100', textColor: 'text-slate-600', label: 'Taslak' },
@@ -79,6 +75,16 @@ const typeOptions = [
   { value: 'Debit', label: 'Borç' },
 ];
 
+// Sort options for invoices
+const sortOptions = [
+  { value: 'InvoiceDate-desc', label: 'Tarih (Yeniden Eskiye)' },
+  { value: 'InvoiceDate-asc', label: 'Tarih (Eskiden Yeniye)' },
+  { value: 'grandTotal-desc', label: 'Tutar (Yüksekten Düşüğe)' },
+  { value: 'grandTotal-asc', label: 'Tutar (Düşükten Yükseğe)' },
+  { value: 'dueDate-asc', label: 'Vade (Yakından Uzağa)' },
+  { value: 'dueDate-desc', label: 'Vade (Uzaktan Yakına)' },
+];
+
 export default function InvoicesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -95,6 +101,9 @@ export default function InvoicesPage() {
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [fromDate, setFromDate] = useState<string>('');
+  const [toDate, setToDate] = useState<string>('');
 
   const { data, isLoading, refetch } = useInvoices(filters);
   const deleteInvoice = useDeleteInvoice();
@@ -104,6 +113,7 @@ export default function InvoicesPage() {
 
   const invoices = data?.items || [];
   const totalCount = data?.totalCount || 0;
+  const totalPages = Math.ceil(totalCount / (filters.pageSize || 20));
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -118,6 +128,7 @@ export default function InvoicesPage() {
     try {
       await issueInvoice.mutateAsync(id);
       showSuccess('Başarılı', 'Fatura kesildi');
+      setOpenDropdownId(null);
     } catch {
       showError('Fatura kesme başarısız');
     }
@@ -127,6 +138,7 @@ export default function InvoicesPage() {
     try {
       await sendInvoice.mutateAsync(id);
       showSuccess('Başarılı', 'Fatura gönderildi');
+      setOpenDropdownId(null);
     } catch {
       showError('Gönderim başarısız');
     }
@@ -142,6 +154,7 @@ export default function InvoicesPage() {
       try {
         await cancelInvoice.mutateAsync(invoice.id);
         showSuccess('Başarılı', 'Fatura iptal edildi');
+        setOpenDropdownId(null);
       } catch {
         showError('İptal işlemi başarısız');
       }
@@ -154,6 +167,7 @@ export default function InvoicesPage() {
       try {
         await deleteInvoice.mutateAsync(invoice.id);
         showSuccess('Başarılı', 'Fatura silindi');
+        setOpenDropdownId(null);
       } catch {
         showError('Silme işlemi başarısız');
       }
@@ -289,214 +303,51 @@ export default function InvoicesPage() {
     }
   };
 
-  const rowSelection = {
-    selectedRowKeys,
-    onChange: (keys: React.Key[]) => setSelectedRowKeys(keys as string[]),
+  const handleSelectAll = () => {
+    if (selectedRowKeys.length === invoices.length) {
+      setSelectedRowKeys([]);
+    } else {
+      setSelectedRowKeys(invoices.map(i => i.id));
+    }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleTableChange = (pagination: any, _filters: any, sorter: any) => {
-    setFilters((prev) => ({
+  const handleSelectRow = (id: string) => {
+    if (selectedRowKeys.includes(id)) {
+      setSelectedRowKeys(selectedRowKeys.filter(key => key !== id));
+    } else {
+      setSelectedRowKeys([...selectedRowKeys, id]);
+    }
+  };
+
+  const handleSort = (value: string) => {
+    const [sortBy, order] = value.split('-');
+    setFilters(prev => ({
       ...prev,
-      page: pagination.current,
-      pageSize: pagination.pageSize,
-      sortBy: sorter.field || 'InvoiceDate',
-      sortDescending: sorter.order === 'descend',
+      sortBy,
+      sortDescending: order === 'desc',
+      page: 1,
     }));
   };
 
-  const columns: ColumnsType<InvoiceListItem> = [
-    {
-      title: 'Fatura',
-      key: 'invoice',
-      render: (_, record) => (
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-            <DocumentTextIcon className="w-5 h-5 text-slate-600" />
-          </div>
-          <div>
-            <Link
-              href={`/sales/invoices/${record.id}`}
-              className="text-sm font-medium text-slate-900 hover:text-slate-600"
-            >
-              {record.invoiceNumber}
-            </Link>
-            <div className="text-xs text-slate-500">
-              {record.customerName}
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: 'Tarih',
-      dataIndex: 'invoiceDate',
-      key: 'invoiceDate',
-      width: 100,
-      sorter: true,
-      render: (date) => (
-        <div className="text-sm text-slate-600">
-          {dayjs(date).format('DD.MM.YYYY')}
-        </div>
-      ),
-    },
-    {
-      title: 'Vade',
-      dataIndex: 'dueDate',
-      key: 'dueDate',
-      width: 100,
-      sorter: true,
-      render: (date, record) => {
-        const isOverdue = record.status === 'Overdue';
-        return (
-          <div className={`text-sm ${isOverdue ? 'text-slate-900 font-medium' : 'text-slate-600'}`}>
-            {dayjs(date).format('DD.MM.YYYY')}
-          </div>
-        );
-      },
-    },
-    {
-      title: 'Durum',
-      dataIndex: 'status',
-      key: 'status',
-      width: 130,
-      render: (status: InvoiceStatus) => {
-        const config = statusConfig[status];
-        return (
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bgColor} ${config.textColor}`}>
-            {config.label}
-          </span>
-        );
-      },
-    },
-    {
-      title: 'Toplam',
-      dataIndex: 'grandTotal',
-      key: 'grandTotal',
-      width: 130,
-      sorter: true,
-      align: 'right',
-      render: (total, record) => (
-        <div className="text-sm font-medium text-slate-900">
-          {total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {record.currency}
-        </div>
-      ),
-    },
-    {
-      title: 'Ödenen',
-      dataIndex: 'paidAmount',
-      key: 'paidAmount',
-      width: 130,
-      align: 'right',
-      render: (amount, record) => (
-        <div className="text-sm text-slate-600">
-          {amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {record.currency}
-        </div>
-      ),
-    },
-    {
-      title: 'Kalan',
-      dataIndex: 'balanceDue',
-      key: 'balanceDue',
-      width: 130,
-      align: 'right',
-      render: (balance, record) => (
-        <div className={`text-sm font-medium ${balance > 0 ? 'text-slate-900' : 'text-slate-500'}`}>
-          {balance.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {record.currency}
-        </div>
-      ),
-    },
-    {
-      title: 'E-Fatura',
-      dataIndex: 'isEInvoice',
-      key: 'isEInvoice',
-      width: 90,
-      align: 'center',
-      render: (isEInvoice) => (
-        <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${isEInvoice ? 'bg-slate-200 text-slate-700' : 'bg-slate-100 text-slate-600'}`}>
-          {isEInvoice ? 'E-Fatura' : 'Normal'}
-        </span>
-      ),
-    },
-    {
-      title: '',
-      key: 'actions',
-      width: 60,
-      fixed: 'right',
-      render: (_, record) => {
-        const menuItems: ({ key: string; icon: React.ReactNode; label: string; onClick: () => void; danger?: boolean } | { type: 'divider' })[] = [
-          {
-            key: 'view',
-            icon: <EyeIcon className="w-4 h-4" />,
-            label: 'Görüntüle',
-            onClick: () => router.push(`/sales/invoices/${record.id}`),
-          },
-        ];
+  const handleDateFilter = () => {
+    setFilters(prev => ({
+      ...prev,
+      fromDate: fromDate ? dayjs(fromDate).toISOString() : undefined,
+      toDate: toDate ? dayjs(toDate).toISOString() : undefined,
+      page: 1,
+    }));
+  };
 
-        if (record.status === 'Draft') {
-          menuItems.push(
-            {
-              key: 'edit',
-              icon: <PencilIcon className="w-4 h-4" />,
-              label: 'Düzenle',
-              onClick: () => router.push(`/sales/invoices/${record.id}/edit`),
-            },
-            {
-              key: 'issue',
-              icon: <CheckCircleIcon className="w-4 h-4" />,
-              label: 'Kes',
-              onClick: () => handleIssue(record.id),
-            },
-            { type: 'divider' as const },
-            {
-              key: 'delete',
-              icon: <TrashIcon className="w-4 h-4" />,
-              label: 'Sil',
-              danger: true,
-              onClick: () => handleDelete(record),
-            }
-          );
-        }
-
-        if (record.status === 'Issued') {
-          menuItems.push({
-            key: 'send',
-            icon: <EnvelopeIcon className="w-4 h-4" />,
-            label: 'Gönder',
-            onClick: () => handleSend(record.id),
-          });
-        }
-
-        if (record.status !== 'Cancelled' && record.status !== 'Paid' && record.status !== 'Draft') {
-          menuItems.push({
-            key: 'cancel',
-            icon: <XCircleIcon className="w-4 h-4" />,
-            label: 'İptal Et',
-            danger: true,
-            onClick: () => handleCancel(record),
-          });
-        }
-
-        if (record.status === 'Cancelled') {
-          menuItems.push({
-            key: 'delete',
-            icon: <TrashIcon className="w-4 h-4" />,
-            label: 'Sil',
-            danger: true,
-            onClick: () => handleDelete(record),
-          });
-        }
-
-        return (
-          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <EllipsisHorizontalIcon className="w-4 h-4" />
-            </button>
-          </Dropdown>
-        );
-      },
-    },
-  ];
+  const clearDateFilter = () => {
+    setFromDate('');
+    setToDate('');
+    setFilters(prev => ({
+      ...prev,
+      fromDate: undefined,
+      toDate: undefined,
+      page: 1,
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 p-8">
@@ -518,16 +369,17 @@ export default function InvoicesPage() {
           <button
             onClick={() => refetch()}
             disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50"
           >
-            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+            <ArrowPathIcon className={`w-4 h-4 text-slate-600 ${isLoading ? 'animate-spin' : ''}`} />
+            <span className="text-sm text-slate-700">Yenile</span>
           </button>
           <button
             onClick={() => router.push('/sales/invoices/new')}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
           >
             <PlusIcon className="w-4 h-4" />
-            Yeni Fatura
+            <span className="text-sm font-medium">Yeni Fatura</span>
           </button>
         </div>
       </div>
@@ -655,54 +507,279 @@ export default function InvoicesPage() {
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
-          <RangePicker
-            placeholder={['Başlangıç', 'Bitiş']}
-            style={{ width: 280 }}
-            onChange={(dates) => {
-              if (dates) {
-                setFilters((prev) => ({
-                  ...prev,
-                  fromDate: dates[0]?.toISOString(),
-                  toDate: dates[1]?.toISOString(),
-                  page: 1,
-                }));
-              } else {
-                setFilters((prev) => ({
-                  ...prev,
-                  fromDate: undefined,
-                  toDate: undefined,
-                  page: 1,
-                }));
-              }
-            }}
-          />
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+              placeholder="Başlangıç"
+            />
+            <span className="text-slate-400">-</span>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+              placeholder="Bitiş"
+            />
+            <button
+              onClick={handleDateFilter}
+              className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm text-slate-700 transition-colors"
+            >
+              Uygula
+            </button>
+            {(fromDate || toDate) && (
+              <button
+                onClick={clearDateFilter}
+                className="p-2 text-slate-400 hover:text-slate-600"
+              >
+                <XMarkIcon className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          <select
+            className="px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+            value={`${filters.sortBy}-${filters.sortDescending ? 'desc' : 'asc'}`}
+            onChange={(e) => handleSort(e.target.value)}
+          >
+            {sortOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-slate-200 rounded-xl p-6">
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="w-8 h-8 border-2 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div>
           </div>
+        ) : invoices.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+              <DocumentTextIcon className="w-8 h-8 text-slate-400" />
+            </div>
+            <p className="text-slate-500 text-sm">Fatura bulunamadı</p>
+          </div>
         ) : (
-          <Table
-            rowSelection={rowSelection}
-            columns={columns}
-            dataSource={invoices}
-            rowKey="id"
-            loading={isLoading}
-            pagination={{
-              current: filters.page,
-              pageSize: filters.pageSize,
-              total: totalCount,
-              showSizeChanger: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} fatura`,
-            }}
-            onChange={handleTableChange}
-            scroll={{ x: 1200 }}
-            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
-          />
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="w-12 px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedRowKeys.length === invoices.length && invoices.length > 0}
+                        onChange={handleSelectAll}
+                        className="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                      />
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Fatura</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tarih</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Vade</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Durum</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Toplam</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Ödenen</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Kalan</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">E-Fatura</th>
+                    <th className="w-16 px-4 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {invoices.map((invoice) => (
+                    <tr key={invoice.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-4 py-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedRowKeys.includes(invoice.id)}
+                          onChange={() => handleSelectRow(invoice.id)}
+                          className="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                        />
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                            <DocumentTextIcon className="w-5 h-5 text-slate-600" />
+                          </div>
+                          <div>
+                            <Link
+                              href={`/sales/invoices/${invoice.id}`}
+                              className="text-sm font-medium text-slate-900 hover:text-slate-600"
+                            >
+                              {invoice.invoiceNumber}
+                            </Link>
+                            <div className="text-xs text-slate-500">
+                              {invoice.customerName}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="text-sm text-slate-600">
+                          {dayjs(invoice.invoiceDate).format('DD.MM.YYYY')}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className={`text-sm ${invoice.status === 'Overdue' ? 'text-slate-900 font-medium' : 'text-slate-600'}`}>
+                          {invoice.dueDate ? dayjs(invoice.dueDate).format('DD.MM.YYYY') : '-'}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusConfig[invoice.status as InvoiceStatus]?.bgColor || 'bg-slate-100'} ${statusConfig[invoice.status as InvoiceStatus]?.textColor || 'text-slate-600'}`}>
+                          {statusConfig[invoice.status as InvoiceStatus]?.label || invoice.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        <div className="text-sm font-medium text-slate-900">
+                          {(invoice.grandTotal || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {invoice.currency}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        <div className="text-sm text-slate-600">
+                          {(invoice.paidAmount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {invoice.currency}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        <div className={`text-sm font-medium ${(invoice.balanceDue || 0) > 0 ? 'text-slate-900' : 'text-slate-500'}`}>
+                          {(invoice.balanceDue || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {invoice.currency}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${invoice.isEInvoice ? 'bg-slate-200 text-slate-700' : 'bg-slate-100 text-slate-600'}`}>
+                          {invoice.isEInvoice ? 'E-Fatura' : 'Normal'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 relative">
+                        <button
+                          onClick={() => setOpenDropdownId(openDropdownId === invoice.id ? null : invoice.id)}
+                          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+                        >
+                          <EllipsisHorizontalIcon className="w-4 h-4" />
+                        </button>
+                        {openDropdownId === invoice.id && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-10"
+                              onClick={() => setOpenDropdownId(null)}
+                            />
+                            <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-20">
+                              <div className="py-1">
+                                <button
+                                  onClick={() => {
+                                    router.push(`/sales/invoices/${invoice.id}`);
+                                    setOpenDropdownId(null);
+                                  }}
+                                  className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                                >
+                                  <EyeIcon className="w-4 h-4" />
+                                  Görüntüle
+                                </button>
+                                {invoice.status === 'Draft' && (
+                                  <>
+                                    <button
+                                      onClick={() => {
+                                        router.push(`/sales/invoices/${invoice.id}/edit`);
+                                        setOpenDropdownId(null);
+                                      }}
+                                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                                    >
+                                      <PencilIcon className="w-4 h-4" />
+                                      Düzenle
+                                    </button>
+                                    <button
+                                      onClick={() => handleIssue(invoice.id)}
+                                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                                    >
+                                      <CheckCircleIcon className="w-4 h-4" />
+                                      Kes
+                                    </button>
+                                    <div className="border-t border-slate-100 my-1" />
+                                    <button
+                                      onClick={() => handleDelete(invoice)}
+                                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                                    >
+                                      <TrashIcon className="w-4 h-4" />
+                                      Sil
+                                    </button>
+                                  </>
+                                )}
+                                {invoice.status === 'Issued' && (
+                                  <button
+                                    onClick={() => handleSend(invoice.id)}
+                                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                                  >
+                                    <EnvelopeIcon className="w-4 h-4" />
+                                    Gönder
+                                  </button>
+                                )}
+                                {invoice.status !== 'Cancelled' && invoice.status !== 'Paid' && invoice.status !== 'Draft' && (
+                                  <button
+                                    onClick={() => handleCancel(invoice)}
+                                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                                  >
+                                    <XCircleIcon className="w-4 h-4" />
+                                    İptal Et
+                                  </button>
+                                )}
+                                {invoice.status === 'Cancelled' && (
+                                  <button
+                                    onClick={() => handleDelete(invoice)}
+                                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                                  >
+                                    <TrashIcon className="w-4 h-4" />
+                                    Sil
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200">
+              <div className="text-sm text-slate-500">
+                {((filters.page || 1) - 1) * (filters.pageSize || 20) + 1}-{Math.min((filters.page || 1) * (filters.pageSize || 20), totalCount)} / {totalCount} fatura
+              </div>
+              <div className="flex items-center gap-2">
+                <select
+                  className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                  value={filters.pageSize}
+                  onChange={(e) => setFilters(prev => ({ ...prev, pageSize: Number(e.target.value), page: 1 }))}
+                >
+                  <option value={10}>10 / sayfa</option>
+                  <option value={20}>20 / sayfa</option>
+                  <option value={50}>50 / sayfa</option>
+                  <option value={100}>100 / sayfa</option>
+                </select>
+                <button
+                  onClick={() => setFilters(prev => ({ ...prev, page: (prev.page || 1) - 1 }))}
+                  disabled={(filters.page || 1) <= 1}
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeftIcon className="w-4 h-4" />
+                </button>
+                <span className="text-sm text-slate-600">
+                  {filters.page || 1} / {totalPages || 1}
+                </span>
+                <button
+                  onClick={() => setFilters(prev => ({ ...prev, page: (prev.page || 1) + 1 }))}
+                  disabled={(filters.page || 1) >= totalPages}
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronRightIcon className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>

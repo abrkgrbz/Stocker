@@ -359,6 +359,17 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
           { key: '/sales/warranty', icon: <ShieldCheckIcon className="w-4 h-4" />, label: 'Garanti Sorgulama' },
         ],
       },
+      {
+        key: 'sales-turkey-compliance',
+        icon: <ShieldCheckIcon className="w-4 h-4" />,
+        label: 'Türkiye Mevzuatı',
+        children: [
+          { key: '/sales/withholding', icon: <ReceiptPercentIcon className="w-4 h-4" />, label: 'Tevkifat Yönetimi' },
+          { key: '/sales/vat-rates', icon: <CalculatorIcon className="w-4 h-4" />, label: 'KDV Oranları' },
+          { key: '/sales/e-archive', icon: <DocumentDuplicateIcon className="w-4 h-4" />, label: 'E-Arşiv Fatura' },
+          { key: '/sales/gib-settings', icon: <Cog6ToothIcon className="w-4 h-4" />, label: 'GİB Ayarları' },
+        ],
+      },
     ],
   },
   settings: {
