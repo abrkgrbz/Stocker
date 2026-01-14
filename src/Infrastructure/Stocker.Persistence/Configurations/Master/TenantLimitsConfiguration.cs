@@ -8,7 +8,7 @@ public class TenantLimitsConfiguration : IEntityTypeConfiguration<TenantLimits>
 {
     public void Configure(EntityTypeBuilder<TenantLimits> builder)
     {
-        builder.ToTable("TenantLimits", "Master");
+        builder.ToTable("TenantLimits", "master");
         
         builder.HasKey(x => x.Id);
         

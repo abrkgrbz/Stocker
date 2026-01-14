@@ -8,7 +8,7 @@ public class TenantHealthCheckConfiguration : IEntityTypeConfiguration<TenantHea
 {
     public void Configure(EntityTypeBuilder<TenantHealthCheck> builder)
     {
-        builder.ToTable("TenantHealthChecks", "Master");
+        builder.ToTable("TenantHealthChecks", "master");
 
         builder.HasKey(x => x.Id);
 

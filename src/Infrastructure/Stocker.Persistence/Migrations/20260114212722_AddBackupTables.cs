@@ -88,11 +88,53 @@ namespace Stocker.Persistence.Migrations
                 CREATE INDEX IF NOT EXISTS ""IX_TenantBackups_TenantId_BackupType"" ON master.""TenantBackups"" (""TenantId"", ""BackupType"");
             ");
 
-            // Drop old Master schema backup tables if they exist (from previous migration attempts)
-            // Note: Not dropping the schema itself as other tables may still use it
+            // Move all tables from "Master" schema to "master" schema
+            // This fixes case-sensitivity issues in PostgreSQL
             migrationBuilder.Sql(@"
-                DROP TABLE IF EXISTS ""Master"".""TenantBackups"" CASCADE;
-                DROP TABLE IF EXISTS ""Master"".""BackupSchedules"" CASCADE;
+                -- Move tables from Master to master schema if they exist
+                DO $$
+                BEGIN
+                    -- TenantBillings
+                    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'Master' AND table_name = 'TenantBillings') THEN
+                        ALTER TABLE ""Master"".""TenantBillings"" SET SCHEMA master;
+                    END IF;
+                    -- TenantContracts
+                    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'Master' AND table_name = 'TenantContracts') THEN
+                        ALTER TABLE ""Master"".""TenantContracts"" SET SCHEMA master;
+                    END IF;
+                    -- TenantHealthChecks
+                    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'Master' AND table_name = 'TenantHealthChecks') THEN
+                        ALTER TABLE ""Master"".""TenantHealthChecks"" SET SCHEMA master;
+                    END IF;
+                    -- TenantLimits
+                    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'Master' AND table_name = 'TenantLimits') THEN
+                        ALTER TABLE ""Master"".""TenantLimits"" SET SCHEMA master;
+                    END IF;
+                    -- MigrationSessions
+                    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'Master' AND table_name = 'MigrationSessions') THEN
+                        ALTER TABLE ""Master"".""MigrationSessions"" SET SCHEMA master;
+                    END IF;
+                    -- MigrationChunks
+                    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'Master' AND table_name = 'MigrationChunks') THEN
+                        ALTER TABLE ""Master"".""MigrationChunks"" SET SCHEMA master;
+                    END IF;
+                    -- MigrationValidationResults
+                    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'Master' AND table_name = 'MigrationValidationResults') THEN
+                        ALTER TABLE ""Master"".""MigrationValidationResults"" SET SCHEMA master;
+                    END IF;
+                    -- TenantBackups (if exists in Master schema)
+                    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'Master' AND table_name = 'TenantBackups') THEN
+                        DROP TABLE ""Master"".""TenantBackups"" CASCADE;
+                    END IF;
+                    -- BackupSchedules (if exists in Master schema)
+                    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'Master' AND table_name = 'BackupSchedules') THEN
+                        DROP TABLE ""Master"".""BackupSchedules"" CASCADE;
+                    END IF;
+                    -- Drop Master schema if empty
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'Master') THEN
+                        DROP SCHEMA IF EXISTS ""Master"";
+                    END IF;
+                END $$;
             ");
 
             // Add LemonSqueezy columns to Packages if they don't exist

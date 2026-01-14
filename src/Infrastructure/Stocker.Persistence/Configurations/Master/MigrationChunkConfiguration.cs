@@ -9,7 +9,7 @@ public class MigrationChunkConfiguration : IEntityTypeConfiguration<MigrationChu
 {
     public void Configure(EntityTypeBuilder<MigrationChunk> builder)
     {
-        builder.ToTable("MigrationChunks", "Master");
+        builder.ToTable("MigrationChunks", "master");
 
         builder.HasKey(x => x.Id);
 

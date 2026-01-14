@@ -9,7 +9,7 @@ public class MigrationSessionConfiguration : IEntityTypeConfiguration<MigrationS
 {
     public void Configure(EntityTypeBuilder<MigrationSession> builder)
     {
-        builder.ToTable("MigrationSessions", "Master");
+        builder.ToTable("MigrationSessions", "master");
 
         builder.HasKey(x => x.Id);
 

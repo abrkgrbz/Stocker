@@ -9,7 +9,7 @@ public class MigrationValidationResultConfiguration : IEntityTypeConfiguration<M
 {
     public void Configure(EntityTypeBuilder<MigrationValidationResult> builder)
     {
-        builder.ToTable("MigrationValidationResults", "Master");
+        builder.ToTable("MigrationValidationResults", "master");
 
         builder.HasKey(x => x.Id);
 
