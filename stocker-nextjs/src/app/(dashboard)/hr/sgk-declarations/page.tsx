@@ -7,10 +7,12 @@
  * Monochrome design system following DESIGN_SYSTEM.md
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Table, Select, Tabs, Modal, Spin, Empty } from 'antd';
+import { Table, Select, Tabs, Modal, Spin, Empty, Alert } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { usePayrolls, usePayrollParameters } from '@/lib/api/hooks/useHR';
+import { PayrollStatus } from '@/lib/api/services/hr.types';
 import {
   DocumentTextIcon,
   ArrowPathIcon,
@@ -23,7 +25,6 @@ import {
   CalendarDaysIcon,
   UserGroupIcon,
   BanknotesIcon,
-  BuildingOfficeIcon,
   ShieldCheckIcon,
   DocumentDuplicateIcon,
 } from '@heroicons/react/24/outline';
@@ -99,151 +100,14 @@ const declarationTypeConfig: Record<DeclarationType, { label: string; descriptio
   eksik_gun: { label: 'Eksik Gün', description: 'Eksik Gün Bildirim Formu' },
 };
 
-// Mock data
-const mockDeclarations: SGKDeclaration[] = [
-  {
-    id: 1,
-    declarationType: 'aphb',
-    period: '2025-01',
-    year: 2025,
-    month: 1,
-    status: 'paid',
-    workplaceNumber: '1234567-34-01',
-    employeeCount: 47,
-    totalWorkDays: 1269,
-    grossEarnings: 1320000,
-    sgkPremiumBase: 1320000,
-    sgkEmployer: 290400,
-    sgkEmployee: 184800,
-    unemploymentEmployer: 26400,
-    unemploymentEmployee: 13200,
-    totalPremium: 514800,
-    incentiveAmount: 66000,
-    netPayable: 448800,
-    dueDate: '2025-02-28',
-    submittedAt: '2025-02-20',
-    acceptedAt: '2025-02-20',
-    referenceNumber: 'SGK2025010001234',
-    createdAt: '2025-02-01',
-  },
-  {
-    id: 2,
-    declarationType: 'aphb',
-    period: '2025-02',
-    year: 2025,
-    month: 2,
-    status: 'ready',
-    workplaceNumber: '1234567-34-01',
-    employeeCount: 48,
-    totalWorkDays: 1296,
-    grossEarnings: 1380000,
-    sgkPremiumBase: 1380000,
-    sgkEmployer: 303600,
-    sgkEmployee: 193200,
-    unemploymentEmployer: 27600,
-    unemploymentEmployee: 13800,
-    totalPremium: 538200,
-    incentiveAmount: 69000,
-    netPayable: 469200,
-    dueDate: '2025-03-31',
-    createdAt: '2025-03-01',
-  },
-  {
-    id: 3,
-    declarationType: 'eksik_gun',
-    period: '2025-01',
-    year: 2025,
-    month: 1,
-    status: 'accepted',
-    workplaceNumber: '1234567-34-01',
-    employeeCount: 5,
-    totalWorkDays: 45,
-    grossEarnings: 0,
-    sgkPremiumBase: 0,
-    sgkEmployer: 0,
-    sgkEmployee: 0,
-    unemploymentEmployer: 0,
-    unemploymentEmployee: 0,
-    totalPremium: 0,
-    incentiveAmount: 0,
-    netPayable: 0,
-    dueDate: '2025-02-28',
-    submittedAt: '2025-02-20',
-    acceptedAt: '2025-02-20',
-    referenceNumber: 'EKS2025010001234',
-    createdAt: '2025-02-01',
-  },
-];
-
-const mockEmployeeDetails: EmployeePremiumDetail[] = [
-  {
-    id: 1,
-    tcNo: '12345678901',
-    name: 'Ahmet Yılmaz',
-    workDays: 30,
-    paidLeaveDays: 0,
-    unpaidLeaveDays: 0,
-    grossEarnings: 45000,
-    sgkBase: 45000,
-    sgkPremium: 16200,
-    unemploymentPremium: 1350,
-    totalPremium: 17550,
-  },
-  {
-    id: 2,
-    tcNo: '23456789012',
-    name: 'Ayşe Demir',
-    workDays: 30,
-    paidLeaveDays: 0,
-    unpaidLeaveDays: 0,
-    grossEarnings: 38000,
-    sgkBase: 38000,
-    sgkPremium: 13680,
-    unemploymentPremium: 1140,
-    totalPremium: 14820,
-  },
-  {
-    id: 3,
-    tcNo: '34567890123',
-    name: 'Mehmet Kaya',
-    workDays: 25,
-    paidLeaveDays: 5,
-    unpaidLeaveDays: 0,
-    grossEarnings: 32000,
-    sgkBase: 32000,
-    sgkPremium: 11520,
-    unemploymentPremium: 960,
-    totalPremium: 12480,
-    exemptionCode: '06111',
-  },
-  {
-    id: 4,
-    tcNo: '45678901234',
-    name: 'Fatma Öz',
-    workDays: 20,
-    paidLeaveDays: 0,
-    unpaidLeaveDays: 10,
-    grossEarnings: 25000,
-    sgkBase: 25000,
-    sgkPremium: 9000,
-    unemploymentPremium: 750,
-    totalPremium: 9750,
-    exemptionCode: '01',
-  },
-  {
-    id: 5,
-    tcNo: '56789012345',
-    name: 'Ali Çelik',
-    workDays: 30,
-    paidLeaveDays: 0,
-    unpaidLeaveDays: 0,
-    grossEarnings: 52000,
-    sgkBase: 52000,
-    sgkPremium: 18720,
-    unemploymentPremium: 1560,
-    totalPremium: 20280,
-  },
-];
+// SGK Premium rates (from TurkishPayrollCalculationService)
+const SGK_RATES = {
+  employeeInsurance: 0.14, // %14
+  employeeUnemployment: 0.01, // %1
+  employerInsurance: 0.205, // %20.5
+  employerUnemployment: 0.02, // %2
+  employerIncentiveDiscount: 0.05, // %5 (81/ı maddesi)
+};
 
 // Eksik gün kodları
 const eksikGunKodlari = [
@@ -271,34 +135,151 @@ const eksikGunKodlari = [
   { code: '23', description: 'Pandemi Ücretsiz İzin' },
 ];
 
+// Turkish month names
+const monthNames = [
+  'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+  'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+];
+
 export default function SGKDeclarationsPage() {
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedYear, setSelectedYear] = useState<number>(2025);
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [selectedDeclaration, setSelectedDeclaration] = useState<SGKDeclaration | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
+  // Fetch payroll data from backend
+  const { data: payrolls = [], isLoading, refetch } = usePayrolls();
+  const { data: payrollParams } = usePayrollParameters();
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(amount);
   };
 
-  // Calculate totals
-  const totals = mockDeclarations.reduce(
-    (acc, dec) => {
-      if (dec.declarationType === 'aphb') {
-        acc.totalPremium += dec.totalPremium;
-        acc.totalIncentive += dec.incentiveAmount;
-        acc.netPayable += dec.netPayable;
-        acc.employeeCount = Math.max(acc.employeeCount, dec.employeeCount);
+  // Generate SGK declarations from payroll data
+  const declarations = useMemo<SGKDeclaration[]>(() => {
+    if (!payrolls || payrolls.length === 0) return [];
+
+    // Group payrolls by month/year using year and month from PayrollDto
+    const groupedByPeriod = payrolls.reduce((acc, payroll) => {
+      const key = `${payroll.year}-${payroll.month}`;
+      if (!acc[key]) {
+        acc[key] = [];
       }
-      if (dec.status === 'paid') {
-        acc.paidAmount += dec.netPayable;
-      }
+      acc[key].push(payroll);
       return acc;
-    },
-    { totalPremium: 0, totalIncentive: 0, netPayable: 0, employeeCount: 0, paidAmount: 0 }
-  );
+    }, {} as Record<string, typeof payrolls>);
+
+    return Object.entries(groupedByPeriod).map(([key, periodPayrolls], index) => {
+      const [year, month] = key.split('-').map(Number);
+      const totalGross = periodPayrolls.reduce((sum, p) => sum + (p.grossSalary || 0), 0);
+      const employeeCount = periodPayrolls.length;
+      const totalWorkDays = employeeCount * 30; // Simplified
+
+      // Calculate SGK premiums
+      const sgkBase = totalGross;
+      const sgkEmployee = sgkBase * SGK_RATES.employeeInsurance;
+      const sgkEmployer = sgkBase * SGK_RATES.employerInsurance;
+      const unemploymentEmployee = sgkBase * SGK_RATES.employeeUnemployment;
+      const unemploymentEmployer = sgkBase * SGK_RATES.employerUnemployment;
+      const totalPremium = sgkEmployee + sgkEmployer + unemploymentEmployee + unemploymentEmployer;
+      const incentiveAmount = sgkBase * SGK_RATES.employerIncentiveDiscount;
+      const netPayable = totalPremium - incentiveAmount;
+
+      // Determine status based on payroll status (using PayrollStatus enum)
+      let status: DeclarationStatus = 'draft';
+      const allApproved = periodPayrolls.every(p => p.status === PayrollStatus.Approved || p.status === PayrollStatus.Paid);
+      const allPaid = periodPayrolls.every(p => p.status === PayrollStatus.Paid);
+      if (allPaid) {
+        status = 'paid';
+      } else if (allApproved) {
+        status = 'ready';
+      }
+
+      // Due date is the last day of the following month
+      const dueDate = dayjs().year(year).month(month).endOf('month');
+
+      return {
+        id: index + 1,
+        declarationType: 'aphb' as DeclarationType,
+        period: `${monthNames[month - 1]} ${year}`,
+        year,
+        month,
+        status,
+        workplaceNumber: '1234567-89-01-02', // Would come from company settings
+        employeeCount,
+        totalWorkDays,
+        grossEarnings: totalGross,
+        sgkPremiumBase: sgkBase,
+        sgkEmployer: Math.round(sgkEmployer * 100) / 100,
+        sgkEmployee: Math.round(sgkEmployee * 100) / 100,
+        unemploymentEmployer: Math.round(unemploymentEmployer * 100) / 100,
+        unemploymentEmployee: Math.round(unemploymentEmployee * 100) / 100,
+        totalPremium: Math.round(totalPremium * 100) / 100,
+        incentiveAmount: Math.round(incentiveAmount * 100) / 100,
+        netPayable: Math.round(netPayable * 100) / 100,
+        dueDate: dueDate.format('YYYY-MM-DD'),
+        createdAt: dayjs().format('YYYY-MM-DD'),
+      };
+    }).filter(d => d.year === selectedYear);
+  }, [payrolls, selectedYear]);
+
+  // Generate employee premium details from payroll data
+  const employeeDetails = useMemo<EmployeePremiumDetail[]>(() => {
+    if (!payrolls || payrolls.length === 0) return [];
+
+    // Get latest month's payrolls
+    const latestPayrolls = payrolls.slice(0, 10); // Show first 10 for now
+
+    return latestPayrolls.map((payroll, index) => {
+      const grossEarnings = payroll.grossSalary || 0;
+      const sgkBase = grossEarnings;
+      const sgkPremium = sgkBase * (SGK_RATES.employeeInsurance + SGK_RATES.employerInsurance);
+      const unemploymentPremium = sgkBase * (SGK_RATES.employeeUnemployment + SGK_RATES.employerUnemployment);
+
+      return {
+        id: index + 1,
+        tcNo: payroll.employeeCode || '-', // TC no backend'de tutulabilir, şimdilik employeeCode kullanıyoruz
+        name: payroll.employeeName || 'Bilinmeyen',
+        workDays: 30,
+        paidLeaveDays: 0,
+        unpaidLeaveDays: 0,
+        grossEarnings,
+        sgkBase,
+        sgkPremium: Math.round(sgkPremium * 100) / 100,
+        unemploymentPremium: Math.round(unemploymentPremium * 100) / 100,
+        totalPremium: Math.round((sgkPremium + unemploymentPremium) * 100) / 100,
+      };
+    });
+  }, [payrolls]);
+
+  // Calculate totals
+  const totals = useMemo(() => {
+    return declarations.reduce(
+      (acc, dec) => {
+        if (dec.declarationType === 'aphb') {
+          acc.totalPremium += dec.totalPremium;
+          acc.totalIncentive += dec.incentiveAmount;
+          acc.netPayable += dec.netPayable;
+          acc.employeeCount = Math.max(acc.employeeCount, dec.employeeCount);
+        }
+        if (dec.status === 'paid') {
+          acc.paidAmount += dec.netPayable;
+        }
+        return acc;
+      },
+      { totalPremium: 0, totalIncentive: 0, netPayable: 0, employeeCount: 0, paidAmount: 0 }
+    );
+  }, [declarations]);
+
+  // Filter declarations
+  const filteredDeclarations = useMemo(() => {
+    return declarations.filter(dec => {
+      if (typeFilter && dec.declarationType !== typeFilter) return false;
+      if (statusFilter && dec.status !== statusFilter) return false;
+      return true;
+    });
+  }, [declarations, typeFilter, statusFilter]);
 
   const columns: ColumnsType<SGKDeclaration> = [
     {
@@ -512,12 +493,15 @@ export default function SGKDeclarationsPage() {
     },
   ];
 
-  const handleRefresh = () => {
-    setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 1000);
-  };
-
   const yearOptions = [2023, 2024, 2025].map(year => ({ value: year, label: year.toString() }));
+
+  // Get next due date from declarations
+  const nextDueDate = useMemo(() => {
+    const upcoming = declarations
+      .filter(d => d.status !== 'paid' && dayjs(d.dueDate).isAfter(dayjs()))
+      .sort((a, b) => dayjs(a.dueDate).diff(dayjs(b.dueDate)));
+    return upcoming[0];
+  }, [declarations]);
 
   return (
     <div className="min-h-screen bg-slate-50 p-8">
@@ -534,7 +518,7 @@ export default function SGKDeclarationsPage() {
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={handleRefresh}
+                onClick={() => refetch()}
                 className="p-2.5 border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors"
               >
                 <ArrowPathIcon className={`w-5 h-5 text-slate-600 ${isLoading ? 'animate-spin' : ''}`} />
@@ -550,6 +534,17 @@ export default function SGKDeclarationsPage() {
           </div>
         </div>
       </div>
+
+      {/* No Payroll Data Alert */}
+      {!isLoading && payrolls.length === 0 && (
+        <Alert
+          message="Bordro Verisi Bulunamadı"
+          description="SGK bildirgeleri bordro verilerinden otomatik olarak oluşturulur. Önce bordro kayıtları oluşturun."
+          type="info"
+          showIcon
+          className="mb-6"
+        />
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
@@ -590,8 +585,12 @@ export default function SGKDeclarationsPage() {
             <CalendarDaysIcon className="w-5 h-5 text-slate-600" />
             <span className="text-xs text-slate-500">Sonraki Son Tarih</span>
           </div>
-          <div className="text-xl font-bold text-slate-600">31.03.2025</div>
-          <div className="text-xs text-slate-500 mt-1">Şubat 2025 dönemi</div>
+          <div className="text-xl font-bold text-slate-600">
+            {nextDueDate ? dayjs(nextDueDate.dueDate).format('DD.MM.YYYY') : '-'}
+          </div>
+          <div className="text-xs text-slate-500 mt-1">
+            {nextDueDate ? nextDueDate.period : 'Bekleyen bildirge yok'}
+          </div>
         </div>
       </div>
 
@@ -657,15 +656,21 @@ export default function SGKDeclarationsPage() {
                     <div className="flex items-center justify-center py-20">
                       <Spin size="large" />
                     </div>
-                  ) : mockDeclarations.length === 0 ? (
+                  ) : filteredDeclarations.length === 0 ? (
                     <Empty
                       image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      description={<span className="text-slate-500">Bildirge bulunmuyor</span>}
+                      description={
+                        <span className="text-slate-500">
+                          {payrolls.length === 0
+                            ? 'Bordro verisi bulunamadı - Önce bordro oluşturun'
+                            : 'Bildirge bulunmuyor'}
+                        </span>
+                      }
                     />
                   ) : (
                     <Table
                       columns={columns}
-                      dataSource={mockDeclarations}
+                      dataSource={filteredDeclarations}
                       rowKey="id"
                       pagination={{
                         pageSize: 10,
@@ -691,41 +696,52 @@ export default function SGKDeclarationsPage() {
                 <div>
                   <div className="mb-4">
                     <p className="text-sm text-slate-500">
-                      Şubat 2025 dönemi sigortalı bazlı prim detayları
+                      Sigortalı bazlı prim detayları (bordro verilerinden)
                     </p>
                   </div>
-                  <Table
-                    columns={employeeColumns}
-                    dataSource={mockEmployeeDetails}
-                    rowKey="id"
-                    pagination={false}
-                    className={tableClassName}
-                    summary={(pageData) => {
-                      const totalDays = pageData.reduce((sum, item) => sum + item.workDays, 0);
-                      const totalBase = pageData.reduce((sum, item) => sum + item.sgkBase, 0);
-                      const totalPremium = pageData.reduce((sum, item) => sum + item.totalPremium, 0);
-                      return (
-                        <Table.Summary fixed>
-                          <Table.Summary.Row className="bg-slate-50">
-                            <Table.Summary.Cell index={0} colSpan={2}>
-                              <span className="font-semibold">Toplam ({pageData.length} sigortalı)</span>
-                            </Table.Summary.Cell>
-                            <Table.Summary.Cell index={2} align="center">
-                              <span className="font-semibold">{totalDays}</span>
-                            </Table.Summary.Cell>
-                            <Table.Summary.Cell index={3} align="right">
-                              <span className="font-semibold">{formatCurrency(totalBase)}</span>
-                            </Table.Summary.Cell>
-                            <Table.Summary.Cell index={4} colSpan={2} />
-                            <Table.Summary.Cell index={6} align="right">
-                              <span className="font-semibold text-slate-700">{formatCurrency(totalPremium)}</span>
-                            </Table.Summary.Cell>
-                            <Table.Summary.Cell index={7} />
-                          </Table.Summary.Row>
-                        </Table.Summary>
-                      );
-                    }}
-                  />
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-20">
+                      <Spin size="large" />
+                    </div>
+                  ) : employeeDetails.length === 0 ? (
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description={<span className="text-slate-500">Sigortalı verisi bulunamadı</span>}
+                    />
+                  ) : (
+                    <Table
+                      columns={employeeColumns}
+                      dataSource={employeeDetails}
+                      rowKey="id"
+                      pagination={false}
+                      className={tableClassName}
+                      summary={(pageData) => {
+                        const totalDays = pageData.reduce((sum, item) => sum + item.workDays, 0);
+                        const totalBase = pageData.reduce((sum, item) => sum + item.sgkBase, 0);
+                        const totalPremium = pageData.reduce((sum, item) => sum + item.totalPremium, 0);
+                        return (
+                          <Table.Summary fixed>
+                            <Table.Summary.Row className="bg-slate-50">
+                              <Table.Summary.Cell index={0} colSpan={2}>
+                                <span className="font-semibold">Toplam ({pageData.length} sigortalı)</span>
+                              </Table.Summary.Cell>
+                              <Table.Summary.Cell index={2} align="center">
+                                <span className="font-semibold">{totalDays}</span>
+                              </Table.Summary.Cell>
+                              <Table.Summary.Cell index={3} align="right">
+                                <span className="font-semibold">{formatCurrency(totalBase)}</span>
+                              </Table.Summary.Cell>
+                              <Table.Summary.Cell index={4} colSpan={2} />
+                              <Table.Summary.Cell index={6} align="right">
+                                <span className="font-semibold text-slate-700">{formatCurrency(totalPremium)}</span>
+                              </Table.Summary.Cell>
+                              <Table.Summary.Cell index={7} />
+                            </Table.Summary.Row>
+                          </Table.Summary>
+                        );
+                      }}
+                    />
+                  )}
                 </div>
               ),
             },

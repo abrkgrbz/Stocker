@@ -7,8 +7,9 @@
  * Monochrome design system following DESIGN_SYSTEM.md
  */
 
-import React, { useState } from 'react';
-import { Form, DatePicker, InputNumber, Select, Table, Button, Alert, Divider, Empty } from 'antd';
+import React, { useState, useMemo } from 'react';
+import { Form, DatePicker, InputNumber, Select, Table, Button, Alert, Divider, Empty, Spin } from 'antd';
+import { useEmployees } from '@/lib/api/hooks/useHR';
 import type { ColumnsType } from 'antd/es/table';
 import {
   CalendarDaysIcon,
@@ -27,7 +28,7 @@ dayjs.locale('tr');
 
 // Types
 interface LeaveAccrualInput {
-  employeeName: string;
+  employeeId: number;
   startDate: Dayjs;
   calculationDate: Dayjs;
   birthDate?: Dayjs;
@@ -83,6 +84,18 @@ const tableClassName = "[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead
 export default function LeaveAccrualPage() {
   const [form] = Form.useForm<LeaveAccrualInput>();
   const [result, setResult] = useState<LeaveAccrualResult | null>(null);
+
+  // Fetch employees from backend
+  const { data: employees = [], isLoading: employeesLoading } = useEmployees();
+
+  // Transform employees for Select options
+  const employeeOptions = useMemo(() => {
+    return employees.map((emp) => ({
+      value: emp.id,
+      label: emp.fullName,
+      startDate: emp.hireDate,
+    }));
+  }, [employees]);
 
   const calculateLeaveAccrual = (values: LeaveAccrualInput): LeaveAccrualResult => {
     const startDate = values.startDate;
@@ -312,19 +325,26 @@ export default function LeaveAccrualPage() {
             }}
           >
             <Form.Item
-              name="employeeName"
-              label="Çalışan Adı"
-              rules={[{ required: true, message: 'Çalışan adı giriniz' }]}
+              name="employeeId"
+              label="Çalışan"
+              rules={[{ required: true, message: 'Çalışan seçiniz' }]}
             >
               <Select
                 showSearch
-                placeholder="Çalışan seçiniz veya isim giriniz"
+                placeholder="Çalışan seçiniz"
                 optionFilterProp="label"
-                options={[
-                  { value: 'Ahmet Yılmaz', label: 'Ahmet Yılmaz' },
-                  { value: 'Mehmet Demir', label: 'Mehmet Demir' },
-                  { value: 'Ayşe Kaya', label: 'Ayşe Kaya' },
-                ]}
+                loading={employeesLoading}
+                options={employeeOptions}
+                onChange={(value) => {
+                  // Auto-fill dates when employee is selected
+                  const selected = employeeOptions.find((e) => e.value === value);
+                  if (selected) {
+                    if (selected.startDate) {
+                      form.setFieldValue('startDate', dayjs(selected.startDate));
+                    }
+                  }
+                }}
+                notFoundContent={employeesLoading ? <Spin size="small" /> : 'Çalışan bulunamadı'}
               />
             </Form.Item>
 

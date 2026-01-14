@@ -3694,3 +3694,15 @@ export function useCloseJobPosting() {
     },
   });
 }
+
+// =====================================
+// PAYROLL PARAMETERS (Turkish Compliance)
+// =====================================
+
+export function usePayrollParameters() {
+  return useQuery({
+    queryKey: ['hr', 'payroll', 'parameters'] as const,
+    queryFn: () => HRService.getPayrollParameters(),
+    ...queryOptions,
+  });
+}
