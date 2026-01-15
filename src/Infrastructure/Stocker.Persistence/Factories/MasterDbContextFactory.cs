@@ -28,7 +28,10 @@ public class MasterDbContextFactory : IDesignTimeDbContextFactory<MasterDbContex
             connectionString = "Host=localhost;Port=5432;Database=stocker_master;Username=postgres;Password=postgres";
         }
 
-        optionsBuilder.UseNpgsql(connectionString);
+        optionsBuilder.UseNpgsql(connectionString, npgsqlOptions =>
+        {
+            npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "master");
+        });
 
         return new MasterDbContext(optionsBuilder.Options);
     }

@@ -25,7 +25,11 @@ public static class DependencyInjection
         services.AddDbContext<MasterDbContext>((serviceProvider, options) =>
             options.UseNpgsql(
                 configuration.GetConnectionString("MasterConnection"),
-                b => b.MigrationsAssembly(typeof(MasterDbContext).Assembly.FullName)));
+                b =>
+                {
+                    b.MigrationsAssembly(typeof(MasterDbContext).Assembly.FullName);
+                    b.MigrationsHistoryTable("__EFMigrationsHistory", "master");
+                }));
 
         // Register MasterDbContext as IMasterDbContext
         services.AddScoped<IMasterDbContext>(provider => provider.GetRequiredService<MasterDbContext>());
