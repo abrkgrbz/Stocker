@@ -204,13 +204,13 @@ public class TokenGenerationService : ITokenGenerationService
             // Direct user permissions
             var userPermissions = await tenantContext.UserPermissions
                 .Where(up => up.UserId == tenantUser.Id)
-                .Select(up => $"{up.Resource}:{(int)up.PermissionType}")
+                .Select(up => $"{up.Resource}:{up.PermissionType}")
                 .ToListAsync();
 
             // Role-based permissions (from assigned roles)
             var rolePermissions = await tenantContext.RolePermissions
                 .Where(rp => userRoleIds.Contains(rp.RoleId))
-                .Select(rp => $"{rp.Resource}:{(int)rp.PermissionType}")
+                .Select(rp => $"{rp.Resource}:{rp.PermissionType}")
                 .ToListAsync();
 
             // Combine and deduplicate permissions

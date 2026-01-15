@@ -131,13 +131,13 @@ public class SetupPasswordCommandHandler : IRequestHandler<SetupPasswordCommand,
         // Direct user permissions
         var userPermissions = await tenantDbContext.UserPermissions
             .Where(up => up.UserId == user.Id)
-            .Select(up => $"{up.Resource}:{(int)up.PermissionType}")
+            .Select(up => $"{up.Resource}:{up.PermissionType}")
             .ToListAsync(cancellationToken);
 
         // Role-based permissions (from assigned roles)
         var rolePermissions = await tenantDbContext.RolePermissions
             .Where(rp => userRoleIds.Contains(rp.RoleId))
-            .Select(rp => $"{rp.Resource}:{(int)rp.PermissionType}")
+            .Select(rp => $"{rp.Resource}:{rp.PermissionType}")
             .ToListAsync(cancellationToken);
 
         // Combine and deduplicate permissions
