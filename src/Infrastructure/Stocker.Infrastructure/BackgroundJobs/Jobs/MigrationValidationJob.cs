@@ -286,6 +286,12 @@ public class MigrationValidationJob
         {
             if (TryParseDecimal(vatValue.ToString(), out var vat))
             {
+                // If value is greater than 100, it might be stored as percentage * 100 (e.g., 2000 for 20%)
+                if (vat > 100)
+                {
+                    vat = vat / 100;
+                }
+
                 var validRates = new[] { 0m, 1m, 8m, 10m, 18m, 20m };
                 if (!validRates.Contains(vat))
                 {
