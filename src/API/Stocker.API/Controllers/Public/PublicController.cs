@@ -305,9 +305,21 @@ public class PublicController : ControllerBase
 
             var masterUser = masterUsers.FirstOrDefault(u => u.Email.ToLowerInvariant() == normalizedEmail);
 
-            if (masterUser == null)
+            // Also check TenantUserEmails table for invited users
+            var allTenantUserEmails = await _masterContext.TenantUserEmails
+                .ToListAsync();
+
+            var invitedUserTenantIds = allTenantUserEmails
+                .Where(e => e.Email.Value.ToLowerInvariant() == normalizedEmail)
+                .Select(e => e.TenantId)
+                .ToList();
+
+            _logger.LogInformation(
+                "Email check for {Email}: MasterUser={HasMasterUser}, InvitedTenants={InvitedCount}",
+                normalizedEmail, masterUser != null, invitedUserTenantIds.Count);
+
+            if (masterUser == null && invitedUserTenantIds.Count == 0)
             {
-                // TODO: Also check TenantUserEmails table for invited users
                 // Log email check - not found
                 await _auditService.LogAuthEventAsync(new SecurityAuditEvent
                 {
@@ -341,9 +353,15 @@ public class PublicController : ControllerBase
                 .Select(r => r.TenantId)
                 .ToList();
 
-            // Get tenant details for these registrations
+            // Combine tenant IDs from registrations and invited user emails
+            var allTenantIds = tenantRegistrations
+                .Union(invitedUserTenantIds)
+                .Distinct()
+                .ToList();
+
+            // Get tenant details for all tenant IDs
             var tenantsData = await _masterContext.Tenants
-                .Where(t => tenantRegistrations.Contains(t.Id) && t.IsActive)
+                .Where(t => allTenantIds.Contains(t.Id) && t.IsActive)
                 .OrderBy(t => t.Name)
                 .Select(t => new
                 {
@@ -362,7 +380,7 @@ public class PublicController : ControllerBase
             {
                 Event = "email_check_success",
                 Email = normalizedEmail,
-                UserId = masterUser.Id,
+                UserId = masterUser?.Id,
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
                 DurationMs = (int)stopwatch.ElapsedMilliseconds,
