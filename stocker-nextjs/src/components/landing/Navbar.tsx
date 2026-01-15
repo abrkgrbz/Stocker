@@ -28,11 +28,11 @@ export default function Navbar() {
   }, []);
 
   const menuItems = [
-    { name: t('landing.navbar.features'), href: '#features' },
-    { name: t('landing.navbar.industries'), href: '#industries' },
-    { name: t('landing.navbar.integrations'), href: '#integrations' },
-    { name: t('landing.navbar.pricing'), href: '#pricing' },
-    { name: t('landing.navbar.faq'), href: '#faq' },
+    { name: t('landing.navbar.features'), href: '/features' },
+    { name: t('landing.navbar.industries'), href: '/industries' },
+    { name: t('landing.navbar.integrations'), href: '/integrations' },
+    { name: t('landing.navbar.pricing'), href: '/pricing' },
+    { name: t('landing.navbar.faq'), href: '/faq' },
   ];
 
   return (
@@ -69,12 +69,9 @@ export default function Navbar() {
           {/* Desktop Menu - Navigation Links */}
           <div className="hidden md:flex items-center gap-8">
             {menuItems.map((item, index) => (
-              <motion.a
+              <Link
                 key={item.name}
                 href={item.href}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
                 className={`text-sm font-medium transition-colors ${
                   isScrolled
                     ? 'text-gray-900 hover:text-black'
@@ -82,7 +79,7 @@ export default function Navbar() {
                 }`}
               >
                 {item.name}
-              </motion.a>
+              </Link>
             ))}
           </div>
 
@@ -141,17 +138,14 @@ export default function Navbar() {
           >
             <div className="px-4 py-6 space-y-4">
               {menuItems.map((item, index) => (
-                <motion.a
+                <Link
                   key={item.name}
                   href={item.href}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="block py-2 text-gray-900 font-medium hover:text-black transition-colors"
                 >
                   {item.name}
-                </motion.a>
+                </Link>
               ))}
               <div className="pt-4 space-y-3 border-t border-gray-200">
                 <div className="flex justify-center pb-3">

@@ -181,13 +181,13 @@ export default function HeroSection() {
 
           {/* Nav Links */}
           <div className="hidden md:flex items-center gap-8">
-            <Link href="#features" className="text-[13px] text-slate-400 hover:text-white transition-colors">
+            <Link href="/features" className="text-[13px] text-slate-400 hover:text-white transition-colors">
               {t('landing.navbar.features')}
             </Link>
-            <Link href="#pricing" className="text-[13px] text-slate-400 hover:text-white transition-colors">
+            <Link href="/pricing" className="text-[13px] text-slate-400 hover:text-white transition-colors">
               {t('landing.navbar.pricing')}
             </Link>
-            <Link href="#faq" className="text-[13px] text-slate-400 hover:text-white transition-colors">
+            <Link href="/faq" className="text-[13px] text-slate-400 hover:text-white transition-colors">
               {t('landing.navbar.faq')}
             </Link>
           </div>

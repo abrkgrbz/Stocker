@@ -12,8 +12,8 @@ export default function Footer() {
 
   const footerLinks = {
     product: [
-      { name: t('landing.footer.links.features'), href: '#features' },
-      { name: t('landing.footer.links.pricing'), href: '#pricing' },
+      { name: t('landing.footer.links.features'), href: '/features' },
+      { name: t('landing.footer.links.pricing'), href: '/pricing' },
       { name: t('landing.footer.links.integrations'), href: '/integrations' },
       { name: t('landing.footer.links.changelog'), href: '/changelog' },
     ],
