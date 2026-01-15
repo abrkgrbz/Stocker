@@ -109,6 +109,45 @@ public class AuthenticationService : IAuthenticationService
                 
                 if (tenantUser != null)
                 {
+                    // Check if user is active first
+                    if (tenantUser.Status != TenantUserStatus.Active)
+                    {
+                        _logger.LogWarning("Inactive tenant user {Username} attempted to login", request.Username);
+                        return new AuthenticationResult
+                        {
+                            Success = false,
+                            Errors = new List<string> { "Kullanıcı hesabı aktif değil" }
+                        };
+                    }
+
+                    // Check if this is an invited user (no MasterUser association)
+                    // Invited users have their password stored directly in TenantUser.PasswordHash
+                    if (tenantUser.MasterUserId == Guid.Empty)
+                    {
+                        _logger.LogDebug("Tenant user {Username} is an invited user (no MasterUser association)", request.Username);
+
+                        // Verify password directly from TenantUser.PasswordHash
+                        if (!_passwordService.VerifyPasswordHash(tenantUser.PasswordHash, request.Password))
+                        {
+                            _logger.LogWarning("Invalid password attempt for invited tenant user {Username}", request.Username);
+                            return new AuthenticationResult
+                            {
+                                Success = false,
+                                Errors = new List<string> { "Geçersiz kullanıcı adı veya şifre" }
+                            };
+                        }
+
+                        // Update last login
+                        await _userManagementService.UpdateLastLoginAsync(tenantUser);
+
+                        // Generate token for invited user (pass null for masterUser)
+                        var invitedResult = await _tokenGenerationService.GenerateForTenantUserAsync(tenantUser, null);
+
+                        _logger.LogInformation("Invited tenant user {Username} logged in successfully", request.Username);
+                        return invitedResult;
+                    }
+
+                    // Regular tenant user with MasterUser association
                     // Get master user for password verification
                     var masterUserForTenant = await _masterContext.MasterUsers
                         .FirstOrDefaultAsync(u => u.Id == tenantUser.MasterUserId);
@@ -134,23 +173,12 @@ public class AuthenticationService : IAuthenticationService
                         };
                     }
 
-                    // Check if user is active
-                    if (tenantUser.Status != TenantUserStatus.Active)
-                    {
-                        _logger.LogWarning("Inactive tenant user {Username} attempted to login", request.Username);
-                        return new AuthenticationResult
-                        {
-                            Success = false,
-                            Errors = new List<string> { "Kullanıcı hesabı aktif değil" }
-                        };
-                    }
-
                     // Update last login
                     await _userManagementService.UpdateLastLoginAsync(tenantUser);
 
                     // Generate token
                     var result = await _tokenGenerationService.GenerateForTenantUserAsync(tenantUser, masterUserForTenant);
-                    
+
                     _logger.LogInformation("Tenant user {Username} logged in successfully", request.Username);
                     return result;
                 }

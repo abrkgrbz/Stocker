@@ -9,6 +9,11 @@ public interface IPasswordService
     HashedPassword CreateHashedPassword(string plainPassword, string? username = null, string? email = null);
     HashedPassword HashPassword(string plainPassword); // Simplified version
     bool VerifyPassword(HashedPassword hashedPassword, string plainPassword);
+    /// <summary>
+    /// Verifies a password against a combined hash string (salt+hash stored together).
+    /// Used for TenantUser.PasswordHash which stores combined format.
+    /// </summary>
+    bool VerifyPasswordHash(string combinedHash, string plainPassword);
     string GetCombinedHash(HashedPassword hashedPassword);
     PasswordStrength CalculatePasswordStrength(string plainPassword);
 }

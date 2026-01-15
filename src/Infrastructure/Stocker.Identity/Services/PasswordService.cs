@@ -149,6 +149,64 @@ public class PasswordService : IPasswordService, Application.Common.Interfaces.I
     }
 
     /// <summary>
+    /// Verifies a password against a combined hash string (salt+hash stored together).
+    /// Used for TenantUser.PasswordHash which stores the combined format from GetCombinedHash.
+    /// </summary>
+    public bool VerifyPasswordHash(string combinedHash, string plainPassword)
+    {
+        if (string.IsNullOrWhiteSpace(combinedHash) || string.IsNullOrWhiteSpace(plainPassword))
+        {
+            return false;
+        }
+
+        try
+        {
+            // Decode the combined hash
+            byte[] combined = Convert.FromBase64String(combinedHash);
+
+            // Extract salt (first SaltSize bytes) and hash (remaining bytes)
+            if (combined.Length < SaltSize + KeySize)
+            {
+                _logger.LogWarning("Combined hash is too short for expected format");
+                return false;
+            }
+
+            byte[] salt = new byte[SaltSize];
+            byte[] storedHash = new byte[KeySize];
+            Array.Copy(combined, 0, salt, 0, SaltSize);
+            Array.Copy(combined, SaltSize, storedHash, 0, KeySize);
+
+            // Hash the provided password with the extracted salt
+            byte[] testHash = KeyDerivation.Pbkdf2(
+                password: plainPassword,
+                salt: salt,
+                prf: KeyDerivationPrf.HMACSHA256,
+                iterationCount: Iterations,
+                numBytesRequested: KeySize);
+
+            // Compare using constant-time comparison
+            var result = CryptographicOperations.FixedTimeEquals(storedHash, testHash);
+
+            if (!result)
+            {
+                _logger.LogDebug(
+                    new EventId(IdentityLogEvents.PasswordVerificationFailed, nameof(IdentityLogEvents.PasswordVerificationFailed)),
+                    "Password hash verification failed for provided credentials");
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                new EventId(IdentityLogEvents.PasswordError, nameof(IdentityLogEvents.PasswordError)),
+                ex,
+                "Error during password hash verification");
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Calculates the strength of a password
     /// </summary>
     public PasswordStrength CalculatePasswordStrength(string plainPassword)
@@ -207,6 +265,15 @@ public interface IPasswordService
     /// <param name="hashedPassword">The hashed password value object.</param>
     /// <returns>A Base64-encoded string combining salt and hash.</returns>
     string GetCombinedHash(HashedPassword hashedPassword);
+
+    /// <summary>
+    /// Verifies a password against a combined hash string (salt+hash stored together).
+    /// Used for TenantUser.PasswordHash which stores the combined format.
+    /// </summary>
+    /// <param name="combinedHash">The Base64-encoded combined salt+hash string.</param>
+    /// <param name="plainPassword">The plain text password to verify.</param>
+    /// <returns>True if the password matches; otherwise, false.</returns>
+    bool VerifyPasswordHash(string combinedHash, string plainPassword);
 
     /// <summary>
     /// Calculates the strength score for a password.

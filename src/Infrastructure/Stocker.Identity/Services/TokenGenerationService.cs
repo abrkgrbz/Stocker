@@ -66,18 +66,27 @@ public class TokenGenerationService : ITokenGenerationService
         };
     }
 
-    public async Task<AuthenticationResult> GenerateForTenantUserAsync(TenantUser tenantUser, MasterUser masterUser)
+    public async Task<AuthenticationResult> GenerateForTenantUserAsync(TenantUser tenantUser, MasterUser? masterUser)
     {
         var (claims, roleNames) = await BuildTenantUserClaimsAsync(tenantUser, masterUser);
 
         var accessToken = _jwtTokenService.GenerateAccessToken(claims);
         var refreshToken = _jwtTokenService.GenerateRefreshToken();
 
-        // Save refresh token on master user
-        masterUser.SetRefreshToken(refreshToken, _jwtTokenService.GetRefreshTokenExpiration());
-        await _masterContext.SaveChangesAsync();
+        // Save refresh token on master user (only if exists)
+        // Invited users (MasterUserId = Guid.Empty) don't have a master user record
+        if (masterUser != null)
+        {
+            masterUser.SetRefreshToken(refreshToken, _jwtTokenService.GetRefreshTokenExpiration());
+            await _masterContext.SaveChangesAsync();
+        }
+        // For invited users without MasterUser, refresh token is not persisted
+        // They will need to re-login when access token expires
 
         var tenantInfo = await GetTenantInfoAsync(tenantUser.TenantId);
+
+        // Use tenantUser.Id for invited users (no MasterUser), masterUser.Id otherwise
+        var userId = masterUser?.Id ?? tenantUser.Id;
 
         return new AuthenticationResult
         {
@@ -88,7 +97,7 @@ public class TokenGenerationService : ITokenGenerationService
             RefreshTokenExpiration = _jwtTokenService.GetRefreshTokenExpiration(),
             User = new UserInfo
             {
-                Id = masterUser.Id,
+                Id = userId,
                 Username = tenantUser.Username,
                 Email = tenantUser.Email.Value,
                 FullName = tenantUser.GetFullName(),
@@ -154,16 +163,20 @@ public class TokenGenerationService : ITokenGenerationService
         return claims;
     }
 
-    private async Task<(List<Claim> Claims, List<string> RoleNames)> BuildTenantUserClaimsAsync(TenantUser tenantUser, MasterUser masterUser)
+    private async Task<(List<Claim> Claims, List<string> RoleNames)> BuildTenantUserClaimsAsync(TenantUser tenantUser, MasterUser? masterUser)
     {
+        // For invited users without MasterUser, use tenantUser.Id as the identifier
+        var userId = masterUser?.Id ?? tenantUser.Id;
+
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, masterUser.Id.ToString()),
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             new Claim(ClaimTypes.Name, tenantUser.Username),
             new Claim(ClaimTypes.Email, tenantUser.Email.Value),
             new Claim("TenantId", tenantUser.TenantId.ToString()),
             new Claim("TenantUserId", tenantUser.Id.ToString()),
-            new Claim("IsMasterUser", "false")
+            new Claim("IsMasterUser", "false"),
+            new Claim("IsInvitedUser", (masterUser == null).ToString().ToLower())
         };
 
         // Add tenant name
@@ -273,5 +286,10 @@ public class TokenGenerationService : ITokenGenerationService
 public interface ITokenGenerationService
 {
     Task<AuthenticationResult> GenerateForMasterUserAsync(MasterUser user, Guid? tenantId = null);
-    Task<AuthenticationResult> GenerateForTenantUserAsync(TenantUser tenantUser, MasterUser masterUser);
+    /// <summary>
+    /// Generates authentication tokens for a tenant user.
+    /// </summary>
+    /// <param name="tenantUser">The tenant user to generate tokens for</param>
+    /// <param name="masterUser">The associated master user. Can be null for invited users without MasterUser association.</param>
+    Task<AuthenticationResult> GenerateForTenantUserAsync(TenantUser tenantUser, MasterUser? masterUser);
 }
