@@ -339,50 +339,40 @@ public class MigrationImportJob
             throw new InvalidOperationException("Customer name is required");
         }
 
-        // Check if customer already exists by name
-        var existing = await context.Customers.FirstOrDefaultAsync(c => c.Name == name, ct);
-        if (existing != null)
-        {
-            _logger.LogDebug("Customer {Name} already exists, skipping", name);
-            return;
-        }
-
-        var phone = GetStringValue(data, "Phone", "Telefon", "Tel") ?? "0000000000";
+        var phone = GetStringValue(data, "Phone", "Telefon", "Tel");
         var emailStr = GetStringValue(data, "Email", "Eposta", "Mail") ?? $"{name.Replace(" ", "").ToLowerInvariant()}@import.local";
-        var addressLine = GetStringValue(data, "Address", "Adres") ?? string.Empty;
-        var city = GetStringValue(data, "City", "Sehir", "Il") ?? string.Empty;
-        var district = GetStringValue(data, "District", "Ilce") ?? string.Empty;
+        var addressLine = GetStringValue(data, "Address", "Adres");
+        var city = GetStringValue(data, "City", "Sehir", "Il");
+        var district = GetStringValue(data, "District", "Ilce");
         var country = GetStringValue(data, "Country", "Ulke") ?? "Türkiye";
-        var postalCode = GetStringValue(data, "PostalCode", "PostaKodu") ?? string.Empty;
-
-        var emailResult = Email.Create(emailStr);
-        if (!emailResult.IsSuccess)
-        {
-            throw new InvalidOperationException($"Invalid email: {emailResult.Error}");
-        }
-
-        var phoneResult = PhoneNumber.Create(phone);
-        if (!phoneResult.IsSuccess)
-        {
-            throw new InvalidOperationException($"Invalid phone number: {phoneResult.Error}");
-        }
-
-        var address = Address.Create(addressLine, city, district, postalCode, country);
-
-        var customer = Customer.Create(tenantId, name, emailResult.Value!, phoneResult.Value!, address);
-
-        // Set tax info if available
+        var postalCode = GetStringValue(data, "PostalCode", "PostaKodu");
         var taxNumber = GetStringValue(data, "TaxNumber", "VergiNo", "VKN");
         var taxOffice = GetStringValue(data, "TaxOffice", "VergiDairesi");
-        if (!string.IsNullOrEmpty(taxNumber))
-        {
-            customer.SetTaxInfo(taxNumber, taxOffice ?? string.Empty);
-        }
+        var website = GetStringValue(data, "Website", "WebSitesi");
+        var industry = GetStringValue(data, "Industry", "Sektor", "Sektör");
+        var description = GetStringValue(data, "Description", "Aciklama", "Açıklama", "Not");
+        var creditLimit = GetDecimalValue(data, "CreditLimit", "KrediLimiti", "Limit");
+        var contactPerson = GetStringValue(data, "ContactPerson", "YetkiliKisi", "Yetkili");
 
-        await context.Customers.AddAsync(customer, ct);
-
-        // Also create CRM Customer so it shows up in CRM module
-        await CreateCrmCustomerAsync(tenantId, name, emailStr, phone, addressLine, city, district, country, postalCode, taxNumber, ct);
+        // Create CRM Customer directly (Core Customer table is deprecated)
+        await CreateCrmCustomerAsync(
+            tenantId, 
+            name, 
+            emailStr, 
+            phone, 
+            website,
+            industry,
+            addressLine, 
+            city, 
+            district, 
+            country, 
+            postalCode, 
+            taxNumber,
+            taxOffice,
+            description,
+            creditLimit,
+            contactPerson,
+            ct);
     }
 
 
@@ -394,12 +384,18 @@ public class MigrationImportJob
         string companyName,
         string email,
         string? phone,
+        string? website,
+        string? industry,
         string? address,
         string? city,
         string? district,
         string? country,
         string? postalCode,
         string? taxId,
+        string? taxOffice,
+        string? description,
+        decimal creditLimit,
+        string? contactPerson,
         CancellationToken ct)
     {
         using var scope = _serviceProvider.CreateScope();
@@ -414,8 +410,7 @@ public class MigrationImportJob
             var tenantInfo = await tenantResolver.ResolveByIdAsync(tenantId);
             if (tenantInfo == null)
             {
-                _logger.LogWarning("Tenant not found for CRM customer creation. TenantId: {TenantId}", tenantId);
-                return;
+                throw new InvalidOperationException($"Tenant not found: {tenantId}");
             }
 
             // Set tenant context for this scope
@@ -427,9 +422,9 @@ public class MigrationImportJob
             // Get CRM DbContext with proper tenant context
             var crmContext = scopedProvider.GetRequiredService<CRMDbContext>();
 
-            // Check if CRM customer already exists
+            // Check if CRM customer already exists by company name or email
             var existingCrm = await crmContext.Customers
-                .FirstOrDefaultAsync(c => c.CompanyName == companyName, ct);
+                .FirstOrDefaultAsync(c => c.CompanyName == companyName || c.Email == email.ToLowerInvariant(), ct);
 
             if (existingCrm != null)
             {
@@ -442,13 +437,13 @@ public class MigrationImportJob
                 tenantId,
                 companyName,
                 email,
-                phone);
+                phone,
+                website,
+                industry);
 
             if (!crmCustomerResult.IsSuccess)
             {
-                _logger.LogWarning("Failed to create CRM customer {CompanyName}: {Error}",
-                    companyName, crmCustomerResult.Error);
-                return;
+                throw new InvalidOperationException($"Failed to create CRM customer: {crmCustomerResult.Error}");
             }
 
             var crmCustomer = crmCustomerResult.Value!;
@@ -459,23 +454,31 @@ public class MigrationImportJob
                 crmCustomer.UpdateAddressLegacy(address, city, district, country, postalCode);
             }
 
-            // Set tax ID if available
-            if (!string.IsNullOrEmpty(taxId))
+            // Set business info if available
+            if (!string.IsNullOrEmpty(description))
             {
-                crmCustomer.UpdateFinancialInfo(null, null, null, taxId, null, null);
+                crmCustomer.UpdateBusinessInfo(null, null, description);
+            }
+
+            // Set financial info (tax ID, credit limit, contact person)
+            if (!string.IsNullOrEmpty(taxId) || creditLimit > 0 || !string.IsNullOrEmpty(contactPerson))
+            {
+                // PaymentTerms could include tax office info
+                var paymentTerms = !string.IsNullOrEmpty(taxOffice) ? $"Vergi Dairesi: {taxOffice}" : null;
+                crmCustomer.UpdateFinancialInfo(null, null, creditLimit, taxId, paymentTerms, contactPerson);
             }
 
             await crmContext.Customers.AddAsync(crmCustomer, ct);
             await crmContext.SaveChangesAsync(ct);
 
-            _logger.LogDebug("Created CRM customer {CompanyName} for tenant {TenantId}",
-                companyName, tenantId);
+            _logger.LogInformation("Created CRM customer {CompanyName} (ID: {CustomerId}) for tenant {TenantId}",
+                companyName, crmCustomer.Id, tenantId);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to create CRM customer {CompanyName}: {Message}",
+            _logger.LogError(ex, "Failed to create CRM customer {CompanyName}: {Message}",
                 companyName, ex.Message);
-            // Don't throw - CRM customer creation is secondary, core customer was already created
+            throw; // Re-throw since this is now the primary customer creation
         }
     }
 
