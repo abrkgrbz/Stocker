@@ -348,7 +348,11 @@ public class GetMappingSuggestionsQueryHandler : IRequestHandler<GetMappingSugge
             .Count();
 
         var requiredCoverage = requiredFields.Count > 0 ? (double)mappedRequiredCount / requiredFields.Count : 1.0;
-        var averageConfidence = suggestions.Where(s => !string.IsNullOrEmpty(s.SourceField)).Average(s => s.Confidence);
+
+        var mappedSuggestions = suggestions.Where(s => !string.IsNullOrEmpty(s.SourceField)).ToList();
+        var averageConfidence = mappedSuggestions.Count > 0
+            ? mappedSuggestions.Average(s => s.Confidence)
+            : 0.0;
 
         return (requiredCoverage * 0.6 + averageConfidence * 0.4);
     }
