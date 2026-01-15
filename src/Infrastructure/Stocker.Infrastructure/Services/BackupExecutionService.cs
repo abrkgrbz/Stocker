@@ -235,18 +235,14 @@ public class BackupExecutionService : IBackupExecutionService
             // 3. Restore database if requested and available
             if (request.RestoreDatabase && manifest.IncludesDatabase)
             {
-                var dbEntry = archive.GetEntry("database/dump.sql");
-                if (dbEntry != null)
-                {
-                    var restoreDbResult = await RestoreDatabaseAsync(
-                        request.TenantId,
-                        dbEntry,
-                        cancellationToken);
+                var restoreDbResult = await RestoreDatabaseAsync(
+                    request.TenantId,
+                    archive,
+                    cancellationToken);
 
-                    if (restoreDbResult.IsFailure)
-                    {
-                        return Result.Failure(restoreDbResult.Error);
-                    }
+                if (restoreDbResult.IsFailure)
+                {
+                    return Result.Failure(restoreDbResult.Error);
                 }
             }
 
@@ -613,29 +609,88 @@ public class BackupExecutionService : IBackupExecutionService
 
     private async Task<Result> RestoreDatabaseAsync(
         Guid tenantId,
-        ZipArchiveEntry dbEntry,
+        ZipArchive archive,
         CancellationToken cancellationToken)
     {
         try
         {
             var connectionString = await _tenantDbContextFactory.GetTenantConnectionStringAsync(tenantId);
 
-            // Read SQL dump
-            using var stream = dbEntry.Open();
-            using var reader = new StreamReader(stream);
-            var sqlContent = await reader.ReadToEndAsync();
+            _logger.LogInformation("Starting database restore. TenantId: {TenantId}", tenantId);
 
-            // For safety, log what we would do but don't execute automatically
-            _logger.LogWarning(
-                "Database restore requires manual execution for safety. TenantId: {TenantId}",
-                tenantId);
+            await using var connection = new NpgsqlConnection(connectionString);
+            await connection.OpenAsync(cancellationToken);
 
-            // In a production implementation, you would:
-            // 1. Create a new database or truncate existing tables
-            // 2. Execute the SQL dump
-            // 3. Verify data integrity
+            // Get list of CSV files in database/tables folder
+            var tableEntries = archive.Entries
+                .Where(e => e.FullName.StartsWith("database/tables/") && e.FullName.EndsWith(".csv"))
+                .ToList();
 
-            return Result.Success();
+            if (tableEntries.Count == 0)
+            {
+                _logger.LogWarning("No table CSV files found in backup. TenantId: {TenantId}", tenantId);
+                return Result.Success();
+            }
+
+            // Get the order of tables based on foreign key dependencies
+            var tableOrder = await GetTableRestoreOrderAsync(connection, cancellationToken);
+
+            // First, disable all foreign key constraints
+            await using (var cmd = new NpgsqlCommand("SET session_replication_role = 'replica';", connection))
+            {
+                await cmd.ExecuteNonQueryAsync(cancellationToken);
+            }
+
+            try
+            {
+                foreach (var tableEntry in tableEntries)
+                {
+                    var tableName = Path.GetFileNameWithoutExtension(tableEntry.Name);
+
+                    _logger.LogInformation("Restoring table: {TableName}", tableName);
+
+                    // Truncate table first
+                    await using (var truncateCmd = new NpgsqlCommand($"TRUNCATE TABLE \"{tableName}\" CASCADE;", connection))
+                    {
+                        try
+                        {
+                            await truncateCmd.ExecuteNonQueryAsync(cancellationToken);
+                        }
+                        catch (PostgresException ex) when (ex.SqlState == "42P01") // Table doesn't exist
+                        {
+                            _logger.LogWarning("Table {TableName} doesn't exist, skipping", tableName);
+                            continue;
+                        }
+                    }
+
+                    // Read CSV content from backup
+                    using var csvStream = tableEntry.Open();
+                    using var csvReader = new StreamReader(csvStream);
+                    var csvContent = await csvReader.ReadToEndAsync();
+
+                    if (string.IsNullOrWhiteSpace(csvContent))
+                    {
+                        _logger.LogInformation("Table {TableName} is empty, skipping", tableName);
+                        continue;
+                    }
+
+                    // Use COPY FROM to import data
+                    using var textImporter = connection.BeginTextImport($"COPY \"{tableName}\" FROM STDIN WITH (FORMAT csv, HEADER true)");
+                    await textImporter.WriteAsync(csvContent);
+                }
+
+                _logger.LogInformation(
+                    "Database restore completed successfully. TenantId: {TenantId}, Tables: {TableCount}",
+                    tenantId, tableEntries.Count);
+
+                return Result.Success();
+            }
+            finally
+            {
+                // Re-enable foreign key constraints
+                await using var cmd = new NpgsqlCommand("SET session_replication_role = 'origin';", connection);
+                await cmd.ExecuteNonQueryAsync(cancellationToken);
+            }
         }
         catch (Exception ex)
         {
@@ -643,6 +698,50 @@ public class BackupExecutionService : IBackupExecutionService
             return Result.Failure(
                 Error.Failure("Backup.RestoreDbFailed", $"Database restore failed: {ex.Message}"));
         }
+    }
+
+    private async Task<List<string>> GetTableRestoreOrderAsync(
+        NpgsqlConnection connection,
+        CancellationToken cancellationToken)
+    {
+        // Get tables ordered by foreign key dependencies (tables with no dependencies first)
+        var tables = new List<string>();
+
+        await using var cmd = new NpgsqlCommand(@"
+            WITH RECURSIVE table_deps AS (
+                SELECT
+                    c.relname AS table_name,
+                    0 AS depth
+                FROM pg_class c
+                JOIN pg_namespace n ON n.oid = c.relnamespace
+                WHERE n.nspname = 'public'
+                AND c.relkind = 'r'
+                AND NOT EXISTS (
+                    SELECT 1 FROM pg_constraint con
+                    WHERE con.conrelid = c.oid AND con.contype = 'f'
+                )
+                UNION ALL
+                SELECT
+                    c.relname,
+                    td.depth + 1
+                FROM pg_class c
+                JOIN pg_namespace n ON n.oid = c.relnamespace
+                JOIN pg_constraint con ON con.conrelid = c.oid AND con.contype = 'f'
+                JOIN pg_class ref ON ref.oid = con.confrelid
+                JOIN table_deps td ON td.table_name = ref.relname
+                WHERE n.nspname = 'public' AND c.relkind = 'r'
+            )
+            SELECT DISTINCT table_name
+            FROM table_deps
+            ORDER BY table_name;", connection);
+
+        await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            tables.Add(reader.GetString(0));
+        }
+
+        return tables;
     }
 
     private Task<Result> RestoreFilesAsync(
