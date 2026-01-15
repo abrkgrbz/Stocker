@@ -9,12 +9,13 @@ namespace Stocker.Infrastructure.BackgroundJobs.Jobs;
 /// <summary>
 /// Background job for validating migration data.
 /// Updates existing validation result records that were created during upload.
+/// Processes records in batches to handle large datasets efficiently.
 /// </summary>
 public class MigrationValidationJob
 {
     private readonly ITenantDbContextFactory _tenantDbContextFactory;
     private readonly ILogger<MigrationValidationJob> _logger;
-    private const int BATCH_SIZE = 500; // Save every 500 records for progress visibility
+    private const int BATCH_SIZE = 500; // Process 500 records at a time
 
     public MigrationValidationJob(
         ITenantDbContextFactory tenantDbContextFactory,
@@ -48,88 +49,95 @@ public class MigrationValidationJob
             session.UpdateStatus(MigrationSessionStatus.Validating);
             await context.SaveChangesAsync(cancellationToken);
 
-            // Get all pending validation results for this session (created during upload)
-            var pendingResults = await context.MigrationValidationResults
-                .Include(r => r.Chunk)
-                .Where(r => r.SessionId == sessionId && r.Status == ValidationStatus.Pending)
-                .OrderBy(r => r.GlobalRowIndex)
-                .ToListAsync(cancellationToken);
+            // Get total count of pending validation results
+            var totalPendingCount = await context.MigrationValidationResults
+                .CountAsync(r => r.SessionId == sessionId && r.Status == ValidationStatus.Pending, cancellationToken);
 
             _logger.LogInformation("Found {Count} pending validation results for session {SessionId}",
-                pendingResults.Count, sessionId);
+                totalPendingCount, sessionId);
 
             int totalRecords = 0;
             int validRecords = 0;
             int errorRecords = 0;
             int warningRecords = 0;
-            int batchCount = 0;
+            int processedBatches = 0;
 
-            foreach (var result in pendingResults)
+            // Process in batches to avoid memory issues with large datasets
+            while (true)
             {
-                try
-                {
-                    totalRecords++;
+                // Fetch next batch of pending records
+                var batch = await context.MigrationValidationResults
+                    .Where(r => r.SessionId == sessionId && r.Status == ValidationStatus.Pending)
+                    .OrderBy(r => r.GlobalRowIndex)
+                    .Take(BATCH_SIZE)
+                    .ToListAsync(cancellationToken);
 
-                    // Parse original data
-                    var record = JsonSerializer.Deserialize<Dictionary<string, object?>>(result.OriginalDataJson);
-                    if (record == null)
+                if (batch.Count == 0)
+                    break;
+
+                foreach (var result in batch)
+                {
+                    try
                     {
+                        totalRecords++;
+
+                        // Parse original data
+                        var record = JsonSerializer.Deserialize<Dictionary<string, object?>>(result.OriginalDataJson);
+                        if (record == null)
+                        {
+                            result.SetValidationResult(
+                                ValidationStatus.Error,
+                                new List<string> { "Veri okunamadı" },
+                                new List<string>());
+                            errorRecords++;
+                            continue;
+                        }
+
+                        // Validate the record
+                        var validationResult = ValidateRecord(record, result.EntityType, session.MappingConfigJson);
+
+                        if (validationResult.Errors.Count > 0)
+                        {
+                            result.SetValidationResult(
+                                ValidationStatus.Error,
+                                validationResult.Errors,
+                                validationResult.Warnings);
+                            errorRecords++;
+                        }
+                        else if (validationResult.Warnings.Count > 0)
+                        {
+                            result.SetValidationResult(
+                                ValidationStatus.Warning,
+                                validationResult.Errors,
+                                validationResult.Warnings);
+                            warningRecords++;
+                        }
+                        else
+                        {
+                            result.SetValidationResult(
+                                ValidationStatus.Valid,
+                                new List<string>(),
+                                new List<string>());
+                            validRecords++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error validating record {RecordId}", result.Id);
                         result.SetValidationResult(
                             ValidationStatus.Error,
-                            new List<string> { "Veri okunamadı" },
+                            new List<string> { $"Doğrulama hatası: {ex.Message}" },
                             new List<string>());
                         errorRecords++;
-                        continue;
-                    }
-
-                    // Validate the record
-                    var validationResult = ValidateRecord(record, result.EntityType, session.MappingConfigJson);
-
-                    if (validationResult.Errors.Count > 0)
-                    {
-                        result.SetValidationResult(
-                            ValidationStatus.Error,
-                            validationResult.Errors,
-                            validationResult.Warnings);
-                        errorRecords++;
-                    }
-                    else if (validationResult.Warnings.Count > 0)
-                    {
-                        result.SetValidationResult(
-                            ValidationStatus.Warning,
-                            validationResult.Errors,
-                            validationResult.Warnings);
-                        warningRecords++;
-                    }
-                    else
-                    {
-                        result.SetValidationResult(
-                            ValidationStatus.Valid,
-                            new List<string>(),
-                            new List<string>());
-                        validRecords++;
-                    }
-
-                    batchCount++;
-
-                    // Save in batches for progress visibility
-                    if (batchCount >= BATCH_SIZE)
-                    {
-                        await context.SaveChangesAsync(cancellationToken);
-                        batchCount = 0;
-                        _logger.LogDebug("Validation progress: {Current}/{Total} records processed",
-                            totalRecords, pendingResults.Count);
                     }
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error validating record {RecordId}", result.Id);
-                    result.SetValidationResult(
-                        ValidationStatus.Error,
-                        new List<string> { $"Doğrulama hatası: {ex.Message}" },
-                        new List<string>());
-                    errorRecords++;
-                }
+
+                // Save batch changes
+                await context.SaveChangesAsync(cancellationToken);
+                processedBatches++;
+
+                _logger.LogDebug("Validation progress: {Current}/{Total} records processed (batch {Batch})",
+                    totalRecords, totalPendingCount, processedBatches);
             }
 
             // Mark all chunks as validated
@@ -142,7 +150,6 @@ public class MigrationValidationJob
                 chunk.MarkAsValidated();
             }
 
-            // Save any remaining changes
             await context.SaveChangesAsync(cancellationToken);
 
             // Update session statistics and status
