@@ -35,7 +35,7 @@ namespace Stocker.Persistence.Migrations.Master
             // Recreate tables if rolling back (copy from AddDataMigrationTables migration)
             migrationBuilder.CreateTable(
                 name: "MigrationSessions",
-                schema: "Master",
+                schema: "master",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -68,7 +68,7 @@ namespace Stocker.Persistence.Migrations.Master
 
             migrationBuilder.CreateTable(
                 name: "MigrationChunks",
-                schema: "Master",
+                schema: "master",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -89,7 +89,7 @@ namespace Stocker.Persistence.Migrations.Master
                     table.ForeignKey(
                         name: "FK_MigrationChunks_MigrationSessions_SessionId",
                         column: x => x.SessionId,
-                        principalSchema: "Master",
+                        principalSchema: "master",
                         principalTable: "MigrationSessions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -97,7 +97,7 @@ namespace Stocker.Persistence.Migrations.Master
 
             migrationBuilder.CreateTable(
                 name: "MigrationValidationResults",
-                schema: "Master",
+                schema: "master",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -123,14 +123,14 @@ namespace Stocker.Persistence.Migrations.Master
                     table.ForeignKey(
                         name: "FK_MigrationValidationResults_MigrationChunks_ChunkId",
                         column: x => x.ChunkId,
-                        principalSchema: "Master",
+                        principalSchema: "master",
                         principalTable: "MigrationChunks",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_MigrationValidationResults_MigrationSessions_SessionId",
                         column: x => x.SessionId,
-                        principalSchema: "Master",
+                        principalSchema: "master",
                         principalTable: "MigrationSessions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -139,85 +139,85 @@ namespace Stocker.Persistence.Migrations.Master
             // Recreate indexes
             migrationBuilder.CreateIndex(
                 name: "IX_MigrationChunks_SessionId",
-                schema: "Master",
+                schema: "master",
                 table: "MigrationChunks",
                 column: "SessionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MigrationChunks_SessionId_ChunkIndex",
-                schema: "Master",
+                schema: "master",
                 table: "MigrationChunks",
                 columns: new[] { "SessionId", "ChunkIndex" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_MigrationChunks_SessionId_EntityType",
-                schema: "Master",
+                schema: "master",
                 table: "MigrationChunks",
                 columns: new[] { "SessionId", "EntityType" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_MigrationSessions_ExpiresAt",
-                schema: "Master",
+                schema: "master",
                 table: "MigrationSessions",
                 column: "ExpiresAt");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MigrationSessions_Status",
-                schema: "Master",
+                schema: "master",
                 table: "MigrationSessions",
                 column: "Status");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MigrationSessions_TenantId",
-                schema: "Master",
+                schema: "master",
                 table: "MigrationSessions",
                 column: "TenantId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MigrationSessions_TenantId_CreatedAt",
-                schema: "Master",
+                schema: "master",
                 table: "MigrationSessions",
                 columns: new[] { "TenantId", "CreatedAt" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_MigrationSessions_TenantId_Status",
-                schema: "Master",
+                schema: "master",
                 table: "MigrationSessions",
                 columns: new[] { "TenantId", "Status" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_MigrationValidationResults_ChunkId",
-                schema: "Master",
+                schema: "master",
                 table: "MigrationValidationResults",
                 column: "ChunkId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MigrationValidationResults_SessionId",
-                schema: "Master",
+                schema: "master",
                 table: "MigrationValidationResults",
                 column: "SessionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MigrationValidationResults_SessionId_EntityType",
-                schema: "Master",
+                schema: "master",
                 table: "MigrationValidationResults",
                 columns: new[] { "SessionId", "EntityType" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_MigrationValidationResults_SessionId_GlobalRowIndex",
-                schema: "Master",
+                schema: "master",
                 table: "MigrationValidationResults",
                 columns: new[] { "SessionId", "GlobalRowIndex" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_MigrationValidationResults_SessionId_Status",
-                schema: "Master",
+                schema: "master",
                 table: "MigrationValidationResults",
                 columns: new[] { "SessionId", "Status" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_MigrationValidationResults_Status",
-                schema: "Master",
+                schema: "master",
                 table: "MigrationValidationResults",
                 column: "Status");
         }

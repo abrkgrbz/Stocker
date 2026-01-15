@@ -19,7 +19,7 @@ namespace Stocker.Persistence.Migrations
                 name: "dbo");
 
             migrationBuilder.EnsureSchema(
-                name: "Master");
+                name: "master");
 
             migrationBuilder.CreateTable(
                 name: "Invoices",
@@ -422,7 +422,7 @@ namespace Stocker.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "TenantBackups",
-                schema: "Master",
+                schema: "master",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -475,7 +475,7 @@ namespace Stocker.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "TenantBillings",
-                schema: "Master",
+                schema: "master",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -548,7 +548,7 @@ namespace Stocker.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "TenantContracts",
-                schema: "Master",
+                schema: "master",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -636,7 +636,7 @@ namespace Stocker.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "TenantHealthChecks",
-                schema: "Master",
+                schema: "master",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -697,7 +697,7 @@ namespace Stocker.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "TenantLimits",
-                schema: "Master",
+                schema: "master",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -788,7 +788,7 @@ namespace Stocker.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "TenantRegistrations",
-                schema: "Master",
+                schema: "master",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -1220,105 +1220,105 @@ namespace Stocker.Persistence.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantBackups_CreatedAt",
-                schema: "Master",
+                schema: "master",
                 table: "TenantBackups",
                 column: "CreatedAt");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantBackups_TenantId",
-                schema: "Master",
+                schema: "master",
                 table: "TenantBackups",
                 column: "TenantId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantBackups_TenantId_BackupType",
-                schema: "Master",
+                schema: "master",
                 table: "TenantBackups",
                 columns: new[] { "TenantId", "BackupType" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantBackups_TenantId_CreatedAt",
-                schema: "Master",
+                schema: "master",
                 table: "TenantBackups",
                 columns: new[] { "TenantId", "CreatedAt" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantBackups_TenantId_Status",
-                schema: "Master",
+                schema: "master",
                 table: "TenantBackups",
                 columns: new[] { "TenantId", "Status" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantBackups_TenantId1",
-                schema: "Master",
+                schema: "master",
                 table: "TenantBackups",
                 column: "TenantId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantBillings_IsActive",
-                schema: "Master",
+                schema: "master",
                 table: "TenantBillings",
                 column: "IsActive");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantBillings_PreferredPaymentMethod",
-                schema: "Master",
+                schema: "master",
                 table: "TenantBillings",
                 column: "PreferredPaymentMethod");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantBillings_TenantId",
-                schema: "Master",
+                schema: "master",
                 table: "TenantBillings",
                 column: "TenantId",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantContracts_ContractNumber",
-                schema: "Master",
+                schema: "master",
                 table: "TenantContracts",
                 column: "ContractNumber",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantContracts_EndDate",
-                schema: "Master",
+                schema: "master",
                 table: "TenantContracts",
                 column: "EndDate");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantContracts_StartDate",
-                schema: "Master",
+                schema: "master",
                 table: "TenantContracts",
                 column: "StartDate");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantContracts_Status",
-                schema: "Master",
+                schema: "master",
                 table: "TenantContracts",
                 column: "Status");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantContracts_Status_EndDate",
-                schema: "Master",
+                schema: "master",
                 table: "TenantContracts",
                 columns: new[] { "Status", "EndDate" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantContracts_TenantId",
-                schema: "Master",
+                schema: "master",
                 table: "TenantContracts",
                 column: "TenantId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantContracts_TenantId_Status",
-                schema: "Master",
+                schema: "master",
                 table: "TenantContracts",
                 columns: new[] { "TenantId", "Status" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantContracts_TenantId1",
-                schema: "Master",
+                schema: "master",
                 table: "TenantContracts",
                 column: "TenantId1",
                 unique: true);
@@ -1340,93 +1340,93 @@ namespace Stocker.Persistence.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantHealthChecks_CheckedAt",
-                schema: "Master",
+                schema: "master",
                 table: "TenantHealthChecks",
                 column: "CheckedAt");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantHealthChecks_TenantId",
-                schema: "Master",
+                schema: "master",
                 table: "TenantHealthChecks",
                 column: "TenantId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantHealthChecks_TenantId_CheckedAt",
-                schema: "Master",
+                schema: "master",
                 table: "TenantHealthChecks",
                 columns: new[] { "TenantId", "CheckedAt" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantHealthChecks_TenantId1",
-                schema: "Master",
+                schema: "master",
                 table: "TenantHealthChecks",
                 column: "TenantId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantLimits_IsActive",
-                schema: "Master",
+                schema: "master",
                 table: "TenantLimits",
                 column: "IsActive");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantLimits_LastResetDate",
-                schema: "Master",
+                schema: "master",
                 table: "TenantLimits",
                 column: "LastResetDate");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantLimits_NextResetDate",
-                schema: "Master",
+                schema: "master",
                 table: "TenantLimits",
                 column: "NextResetDate");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantLimits_TenantId",
-                schema: "Master",
+                schema: "master",
                 table: "TenantLimits",
                 column: "TenantId",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantRegistrations_AdminEmail",
-                schema: "Master",
+                schema: "master",
                 table: "TenantRegistrations",
                 column: "AdminEmail");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantRegistrations_RegistrationCode",
-                schema: "Master",
+                schema: "master",
                 table: "TenantRegistrations",
                 column: "RegistrationCode",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantRegistrations_RegistrationDate",
-                schema: "Master",
+                schema: "master",
                 table: "TenantRegistrations",
                 column: "RegistrationDate");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantRegistrations_SelectedPackageId",
-                schema: "Master",
+                schema: "master",
                 table: "TenantRegistrations",
                 column: "SelectedPackageId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantRegistrations_Status",
-                schema: "Master",
+                schema: "master",
                 table: "TenantRegistrations",
                 column: "Status");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantRegistrations_Status_RegistrationDate",
-                schema: "Master",
+                schema: "master",
                 table: "TenantRegistrations",
                 columns: new[] { "Status", "RegistrationDate" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantRegistrations_TenantId",
-                schema: "Master",
+                schema: "master",
                 table: "TenantRegistrations",
                 column: "TenantId",
                 unique: true);
@@ -1514,15 +1514,15 @@ namespace Stocker.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "TenantBackups",
-                schema: "Master");
+                schema: "master");
 
             migrationBuilder.DropTable(
                 name: "TenantBillings",
-                schema: "Master");
+                schema: "master");
 
             migrationBuilder.DropTable(
                 name: "TenantContracts",
-                schema: "Master");
+                schema: "master");
 
             migrationBuilder.DropTable(
                 name: "TenantDomains",
@@ -1530,15 +1530,15 @@ namespace Stocker.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "TenantHealthChecks",
-                schema: "Master");
+                schema: "master");
 
             migrationBuilder.DropTable(
                 name: "TenantLimits",
-                schema: "Master");
+                schema: "master");
 
             migrationBuilder.DropTable(
                 name: "TenantRegistrations",
-                schema: "Master");
+                schema: "master");
 
             migrationBuilder.DropTable(
                 name: "TenantSettings",

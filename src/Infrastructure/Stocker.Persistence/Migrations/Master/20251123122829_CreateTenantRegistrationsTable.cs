@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -10,21 +10,13 @@ namespace Stocker.Persistence.Migrations.Master
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameTable(
-                name: "TenantRegistrations",
-                schema: "Master",
-                newName: "TenantRegistrations",
-                newSchema: "master");
+            // No-op: Schema is now consistently "master" (lowercase) from InitialPostgreSQL migration
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameTable(
-                name: "TenantRegistrations",
-                schema: "master",
-                newName: "TenantRegistrations",
-                newSchema: "Master");
+            // No-op
         }
     }
 }

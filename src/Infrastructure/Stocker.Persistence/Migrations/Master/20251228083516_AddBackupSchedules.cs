@@ -13,7 +13,7 @@ namespace Stocker.Persistence.Migrations.Master
         {
             migrationBuilder.CreateTable(
                 name: "BackupSchedules",
-                schema: "Master",
+                schema: "master",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -54,19 +54,19 @@ namespace Stocker.Persistence.Migrations.Master
 
             migrationBuilder.CreateIndex(
                 name: "IX_BackupSchedules_HangfireJobId",
-                schema: "Master",
+                schema: "master",
                 table: "BackupSchedules",
                 column: "HangfireJobId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_BackupSchedules_TenantId",
-                schema: "Master",
+                schema: "master",
                 table: "BackupSchedules",
                 column: "TenantId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_BackupSchedules_TenantId_IsEnabled",
-                schema: "Master",
+                schema: "master",
                 table: "BackupSchedules",
                 columns: new[] { "TenantId", "IsEnabled" });
         }
@@ -76,7 +76,7 @@ namespace Stocker.Persistence.Migrations.Master
         {
             migrationBuilder.DropTable(
                 name: "BackupSchedules",
-                schema: "Master");
+                schema: "master");
         }
     }
 }
