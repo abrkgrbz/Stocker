@@ -26,44 +26,65 @@ namespace Stocker.Persistence.Migrations.TenantDb
             modelBuilder.Entity("Stocker.Domain.Migration.Entities.MigrationChunk", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("Id");
 
                     b.Property<int>("ChunkIndex")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("ChunkIndex");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAt");
 
-                    b.Property<int>("EntityType")
-                        .HasColumnType("integer");
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("EntityType");
 
                     b.Property<DateTime?>("ImportedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ImportedAt");
 
                     b.Property<string>("RawDataJson")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("text")
+                        .HasColumnName("RawDataJson");
 
                     b.Property<int>("RecordCount")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("RecordCount");
 
                     b.Property<Guid>("SessionId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("SessionId");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("Status");
 
                     b.Property<int>("TotalChunks")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("TotalChunks");
 
                     b.Property<DateTime?>("ValidatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ValidatedAt");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SessionId");
+                    b.HasIndex("SessionId")
+                        .HasDatabaseName("IX_MigrationChunks_SessionId");
+
+                    b.HasIndex("SessionId", "ChunkIndex")
+                        .HasDatabaseName("IX_MigrationChunks_SessionId_ChunkIndex");
+
+                    b.HasIndex("SessionId", "EntityType")
+                        .HasDatabaseName("IX_MigrationChunks_SessionId_EntityType");
 
                     b.ToTable("MigrationChunks", "tenant");
                 });
@@ -71,80 +92,132 @@ namespace Stocker.Persistence.Migrations.TenantDb
             modelBuilder.Entity("Stocker.Domain.Migration.Entities.MigrationSession", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("Id");
 
                     b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CompletedAt");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAt");
 
                     b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatedByUserId");
 
-                    b.PrimitiveCollection<int[]>("Entities")
+                    b.Property<string>("Entities")
                         .IsRequired()
-                        .HasColumnType("integer[]");
+                        .HasColumnType("text")
+                        .HasColumnName("Entities");
 
                     b.Property<string>("ErrorMessage")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("ErrorMessage");
 
                     b.Property<int>("ErrorRecords")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("ErrorRecords");
 
                     b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ExpiresAt");
 
                     b.Property<string>("ImportJobId")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("ImportJobId");
 
                     b.Property<DateTime?>("ImportStartedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ImportStartedAt");
 
                     b.Property<int>("ImportedRecords")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("ImportedRecords");
 
                     b.Property<string>("MappingConfigJson")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("text")
+                        .HasColumnName("MappingConfigJson");
 
                     b.Property<string>("OptionsJson")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("text")
+                        .HasColumnName("OptionsJson");
 
                     b.Property<int>("SkippedRecords")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("SkippedRecords");
 
                     b.Property<string>("SourceName")
                         .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("SourceName");
 
-                    b.Property<int>("SourceType")
-                        .HasColumnType("integer");
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("SourceType");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("Status");
 
                     b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
 
                     b.Property<int>("TotalRecords")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("TotalRecords");
 
                     b.Property<int>("ValidRecords")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("ValidRecords");
 
                     b.Property<DateTime?>("ValidatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ValidatedAt");
 
                     b.Property<int>("WarningRecords")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("WarningRecords");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("IX_MigrationSessions_ExpiresAt");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_MigrationSessions_Status");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_MigrationSessions_TenantId");
+
+                    b.HasIndex("TenantId", "CreatedAt")
+                        .HasDatabaseName("IX_MigrationSessions_TenantId_CreatedAt");
+
+                    b.HasIndex("TenantId", "Status")
+                        .HasDatabaseName("IX_MigrationSessions_TenantId_Status");
 
                     b.ToTable("MigrationSessions", "tenant");
                 });
@@ -152,66 +225,99 @@ namespace Stocker.Persistence.Migrations.TenantDb
             modelBuilder.Entity("Stocker.Domain.Migration.Entities.MigrationValidationResult", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("Id");
 
                     b.Property<Guid>("ChunkId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("ChunkId");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAt");
 
-                    b.Property<int>("EntityType")
-                        .HasColumnType("integer");
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("EntityType");
 
                     b.Property<string>("ErrorsJson")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("text")
+                        .HasColumnName("ErrorsJson");
 
                     b.Property<string>("FixedDataJson")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("text")
+                        .HasColumnName("FixedDataJson");
 
                     b.Property<int>("GlobalRowIndex")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("GlobalRowIndex");
 
                     b.Property<DateTime?>("ImportedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ImportedAt");
 
                     b.Property<string>("OriginalDataJson")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("text")
+                        .HasColumnName("OriginalDataJson");
 
                     b.Property<int>("RowIndex")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("RowIndex");
 
                     b.Property<Guid>("SessionId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("SessionId");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("Status");
 
                     b.Property<string>("TransformedDataJson")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("text")
+                        .HasColumnName("TransformedDataJson");
 
                     b.Property<string>("UserAction")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("UserAction");
 
                     b.Property<DateTime?>("ValidatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ValidatedAt");
 
                     b.Property<string>("WarningsJson")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("text")
+                        .HasColumnName("WarningsJson");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ChunkId");
+                    b.HasIndex("ChunkId")
+                        .HasDatabaseName("IX_MigrationValidationResults_ChunkId");
 
-                    b.HasIndex("SessionId");
+                    b.HasIndex("SessionId")
+                        .HasDatabaseName("IX_MigrationValidationResults_SessionId");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_MigrationValidationResults_Status");
+
+                    b.HasIndex("SessionId", "EntityType")
+                        .HasDatabaseName("IX_MigrationValidationResults_SessionId_EntityType");
+
+                    b.HasIndex("SessionId", "GlobalRowIndex")
+                        .HasDatabaseName("IX_MigrationValidationResults_SessionId_GlobalRowIndex");
+
+                    b.HasIndex("SessionId", "Status")
+                        .HasDatabaseName("IX_MigrationValidationResults_SessionId_Status");
 
                     b.ToTable("MigrationValidationResults", "tenant");
                 });
