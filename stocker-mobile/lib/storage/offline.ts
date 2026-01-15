@@ -130,6 +130,11 @@ class OfflineStorage {
         return raw ? JSON.parse(raw) : [];
     }
 
+    // Alias for getQueue - used by SyncContext
+    async getQueueItems(): Promise<QueueItem[]> {
+        return this.getQueue();
+    }
+
     async removeFromQueue(id: string): Promise<void> {
         const queue = await this.getQueue();
         const filtered = queue.filter(item => item.id !== id);

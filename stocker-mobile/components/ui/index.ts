@@ -69,6 +69,9 @@ export {
 
 // Sync Components
 export { SyncIndicator, OfflineNotice } from './SyncIndicator';
+export { OfflineBanner } from './OfflineBanner';
+export { PendingMutationsCounter } from './PendingMutationsCounter';
+export { SyncQueueManager } from './SyncQueueManager';
 
 // Data Display Components
 export { DataTable } from './DataTable';

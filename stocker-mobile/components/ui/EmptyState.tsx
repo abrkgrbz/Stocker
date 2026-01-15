@@ -170,7 +170,7 @@ export function SearchEmptyState({ query, style }: SearchEmptyStateProps) {
                     textAlign: 'center',
                 }}
             >
-                "{query}" için sonuç bulunamadı.{'\n'}
+                &quot;{query}&quot; için sonuç bulunamadı.{'\n'}
                 Farklı bir arama terimi deneyin.
             </Text>
         </View>

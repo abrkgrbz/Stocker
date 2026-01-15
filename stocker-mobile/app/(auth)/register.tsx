@@ -611,7 +611,7 @@ export default function RegisterScreen() {
                                         {acceptTerms && <Check size={12} color="#ffffff" />}
                                     </View>
                                     <Text className="text-slate-600 flex-1 text-sm">
-                                        <Text className="text-slate-900 font-medium">Kullanım Koşulları</Text>'nı okudum ve kabul ediyorum
+                                        <Text className="text-slate-900 font-medium">Kullanım Koşulları</Text>&apos;nı okudum ve kabul ediyorum
                                     </Text>
                                 </Pressable>
 
@@ -626,7 +626,7 @@ export default function RegisterScreen() {
                                         {acceptPrivacy && <Check size={12} color="#ffffff" />}
                                     </View>
                                     <Text className="text-slate-600 flex-1 text-sm">
-                                        <Text className="text-slate-900 font-medium">Gizlilik Politikası</Text>'nı okudum ve kabul ediyorum
+                                        <Text className="text-slate-900 font-medium">Gizlilik Politikası</Text>&apos;nı okudum ve kabul ediyorum
                                     </Text>
                                 </Pressable>
                             </View>

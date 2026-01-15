@@ -10,9 +10,14 @@ import { ThemeProvider, useTheme } from '@/lib/theme';
 import { SyncProvider } from '@/lib/sync';
 import { NotificationProvider } from '@/lib/notifications';
 import { ToastProvider } from '@/components/ui';
+import { ScreenErrorBoundary, errorLogger } from '@/lib/error';
+import { AccessibilityProvider } from '@/lib/accessibility';
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
+
+// Initialize error logger
+errorLogger.initialize();
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -75,18 +80,22 @@ export default function RootLayout() {
     }
 
     return (
-        <QueryClientProvider client={queryClient}>
-            <SafeAreaProvider>
-                <ThemeProvider>
-                    <ToastProvider>
-                        <SyncProvider>
-                            <NotificationProvider>
-                                <AppContent />
-                            </NotificationProvider>
-                        </SyncProvider>
-                    </ToastProvider>
-                </ThemeProvider>
-            </SafeAreaProvider>
-        </QueryClientProvider>
+        <ScreenErrorBoundary>
+            <QueryClientProvider client={queryClient}>
+                <SafeAreaProvider>
+                    <AccessibilityProvider>
+                        <ThemeProvider>
+                            <ToastProvider>
+                                <SyncProvider>
+                                    <NotificationProvider>
+                                        <AppContent />
+                                    </NotificationProvider>
+                                </SyncProvider>
+                            </ToastProvider>
+                        </ThemeProvider>
+                    </AccessibilityProvider>
+                </SafeAreaProvider>
+            </QueryClientProvider>
+        </ScreenErrorBoundary>
     );
 }

@@ -13,6 +13,10 @@ interface SyncContextType {
     queueMutation: (entity: string, type: 'create' | 'update' | 'delete', payload: any) => Promise<void>;
     // Force refresh all caches
     refreshAllCaches: () => Promise<void>;
+    // Queue management
+    getQueueItems: () => QueueItem[];
+    removeFromQueue: (id: string) => Promise<void>;
+    clearQueue: () => Promise<void>;
 }
 
 const SyncContext = createContext<SyncContextType | null>(null);
@@ -115,6 +119,29 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         await queryClient.invalidateQueries();
     }, [queryClient]);
 
+    // Queue management methods
+    const [queueItems, setQueueItems] = useState<QueueItem[]>([]);
+
+    // Load queue items on mount and when status changes
+    useEffect(() => {
+        offlineStorage.getQueueItems().then(setQueueItems);
+    }, [status.pendingCount]);
+
+    const getQueueItems = useCallback(() => {
+        return queueItems;
+    }, [queueItems]);
+
+    const removeFromQueue = useCallback(async (id: string) => {
+        await offlineStorage.removeFromQueue(id);
+        const items = await offlineStorage.getQueueItems();
+        setQueueItems(items);
+    }, []);
+
+    const clearQueue = useCallback(async () => {
+        await offlineStorage.clearQueue();
+        setQueueItems([]);
+    }, []);
+
     const value: SyncContextType = {
         status,
         syncNow,
@@ -124,6 +151,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         lastSyncTime: status.lastSyncTime ? new Date(status.lastSyncTime) : null,
         queueMutation,
         refreshAllCaches,
+        getQueueItems,
+        removeFromQueue,
+        clearQueue,
     };
 
     return (

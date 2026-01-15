@@ -9,6 +9,7 @@ import Animated, {
     Easing,
 } from 'react-native-reanimated';
 import { lightHaptic } from '@/lib/haptics';
+import { useReducedMotion, MIN_TOUCH_TARGET } from '@/lib/accessibility';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -62,6 +63,10 @@ interface AnimatedButtonProps extends PressableProps {
     iconPosition?: 'left' | 'right';
     size?: 'sm' | 'md' | 'lg';
     haptic?: boolean;
+    /** Accessibility label override (defaults to title) */
+    accessibilityLabel?: string;
+    /** Accessibility hint describing what happens when pressed */
+    accessibilityHint?: string;
 }
 
 export function AnimatedButton({
@@ -74,32 +79,40 @@ export function AnimatedButton({
     size = 'md',
     onPress,
     haptic = true,
+    accessibilityLabel,
+    accessibilityHint,
     ...props
 }: AnimatedButtonProps) {
     const scale = useSharedValue(1);
     const [ripples, setRipples] = useState<Array<{ id: number; x: number; y: number }>>([]);
     const [buttonDimensions, setButtonDimensions] = useState({ width: 0, height: 0 });
     const rippleIdRef = React.useRef(0);
+    const reduceMotion = useReducedMotion();
 
     const animatedStyle = useAnimatedStyle(() => ({
         transform: [{ scale: scale.value }],
     }));
 
     const handlePressIn = (e: GestureResponderEvent) => {
-        scale.value = withSpring(0.97, { damping: 15, stiffness: 400 });
+        // Skip animations if reduce motion is enabled
+        if (!reduceMotion) {
+            scale.value = withSpring(0.97, { damping: 15, stiffness: 400 });
 
-        // Add ripple effect
-        const { locationX, locationY } = e.nativeEvent;
-        const newRipple = {
-            id: rippleIdRef.current++,
-            x: locationX,
-            y: locationY,
-        };
-        setRipples((prev) => [...prev, newRipple]);
+            // Add ripple effect
+            const { locationX, locationY } = e.nativeEvent;
+            const newRipple = {
+                id: rippleIdRef.current++,
+                x: locationX,
+                y: locationY,
+            };
+            setRipples((prev) => [...prev, newRipple]);
+        }
     };
 
     const handlePressOut = () => {
-        scale.value = withSpring(1, { damping: 15, stiffness: 400 });
+        if (!reduceMotion) {
+            scale.value = withSpring(1, { damping: 15, stiffness: 400 });
+        }
     };
 
     const handlePress = (e: GestureResponderEvent) => {
@@ -171,6 +184,11 @@ export function AnimatedButton({
     const isDisabled = disabled || loading;
     const rippleSize = Math.max(buttonDimensions.width, buttonDimensions.height) * 2;
 
+    // Generate accessibility label
+    const a11yLabel = accessibilityLabel || title;
+    const a11yState = loading ? 'Yükleniyor' : '';
+    const fullA11yLabel = a11yState ? `${a11yLabel}, ${a11yState}` : a11yLabel;
+
     return (
         <AnimatedPressable
             style={[
@@ -184,6 +202,15 @@ export function AnimatedButton({
             onLayout={handleLayout}
             disabled={isDisabled}
             className={`w-full ${sizes[size]} rounded-2xl items-center justify-center flex-row ${v.bg} ${v.border} ${isDisabled ? '' : v.bgActive}`}
+            // Accessibility props
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel={fullA11yLabel}
+            accessibilityHint={accessibilityHint}
+            accessibilityState={{
+                disabled: isDisabled,
+                busy: loading,
+            }}
             {...props}
         >
             {/* Ripple effects */}
@@ -214,5 +241,6 @@ export function AnimatedButton({
 const styles = StyleSheet.create({
     button: {
         overflow: 'hidden',
+        minHeight: MIN_TOUCH_TARGET, // WCAG minimum touch target
     },
 });

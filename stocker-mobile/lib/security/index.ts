@@ -1,10 +1,378 @@
 /**
  * Security Utilities
- * Rate limiting, session timeout, and security monitoring
+ * Rate limiting, session timeout, security monitoring,
+ * biometric authentication, and secure storage.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus, Platform } from 'react-native';
+import * as LocalAuthentication from 'expo-local-authentication';
+import * as SecureStore from 'expo-secure-store';
+
+// ============================================
+// Types - Biometric
+// ============================================
+
+export type BiometryType = 'fingerprint' | 'facial' | 'iris' | 'none';
+
+export interface BiometricResult {
+    success: boolean;
+    error?: string;
+    biometryType?: BiometryType;
+}
+
+export interface SecureStorageOptions {
+    requireBiometric?: boolean;
+    expiresIn?: number;
+}
+
+// ============================================
+// Constants - Biometric
+// ============================================
+
+const BIOMETRIC_ENABLED_KEY = '@security/biometric_enabled';
+const LAST_ACTIVE_KEY = '@security/last_active';
+const APP_LOCK_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+
+// ============================================
+// Biometric Authentication Service
+// ============================================
+
+class BiometricService {
+    private isAvailable: boolean | null = null;
+    private biometryType: BiometryType = 'none';
+
+    async checkAvailability(): Promise<{
+        available: boolean;
+        biometryType: BiometryType;
+        enrolled: boolean;
+    }> {
+        try {
+            const hasHardware = await LocalAuthentication.hasHardwareAsync();
+            const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+            const supportedTypes = await LocalAuthentication.supportedAuthenticationTypesAsync();
+
+            this.isAvailable = hasHardware && isEnrolled;
+
+            if (supportedTypes.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
+                this.biometryType = 'facial';
+            } else if (supportedTypes.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
+                this.biometryType = 'fingerprint';
+            } else if (supportedTypes.includes(LocalAuthentication.AuthenticationType.IRIS)) {
+                this.biometryType = 'iris';
+            } else {
+                this.biometryType = 'none';
+            }
+
+            return {
+                available: this.isAvailable,
+                biometryType: this.biometryType,
+                enrolled: isEnrolled,
+            };
+        } catch (error) {
+            console.error('[Security] Biometric check failed:', error);
+            return { available: false, biometryType: 'none', enrolled: false };
+        }
+    }
+
+    async authenticate(options?: {
+        promptMessage?: string;
+        cancelLabel?: string;
+        fallbackLabel?: string;
+        disableDeviceFallback?: boolean;
+    }): Promise<BiometricResult> {
+        try {
+            if (this.isAvailable === null) {
+                await this.checkAvailability();
+            }
+
+            if (!this.isAvailable) {
+                return { success: false, error: 'Biometric not available' };
+            }
+
+            const result = await LocalAuthentication.authenticateAsync({
+                promptMessage: options?.promptMessage || 'Kimliginizi dogrulayin',
+                cancelLabel: options?.cancelLabel || 'Iptal',
+                fallbackLabel: options?.fallbackLabel || 'PIN kullan',
+                disableDeviceFallback: options?.disableDeviceFallback ?? false,
+            });
+
+            if (result.success) {
+                return { success: true, biometryType: this.biometryType };
+            }
+
+            return { success: false, error: result.error || 'Authentication failed' };
+        } catch (error) {
+            console.error('[Security] Biometric auth error:', error);
+            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+        }
+    }
+
+    getBiometryTypeName(): string {
+        switch (this.biometryType) {
+            case 'facial':
+                return Platform.OS === 'ios' ? 'Face ID' : 'Yuz Tanima';
+            case 'fingerprint':
+                return Platform.OS === 'ios' ? 'Touch ID' : 'Parmak Izi';
+            case 'iris':
+                return 'Iris Tarama';
+            default:
+                return 'Biyometrik';
+        }
+    }
+
+    async isBiometricEnabled(): Promise<boolean> {
+        try {
+            const value = await AsyncStorage.getItem(BIOMETRIC_ENABLED_KEY);
+            return value === 'true';
+        } catch {
+            return false;
+        }
+    }
+
+    async setBiometricEnabled(enabled: boolean): Promise<void> {
+        await AsyncStorage.setItem(BIOMETRIC_ENABLED_KEY, enabled.toString());
+    }
+}
+
+// ============================================
+// Secure Storage Service
+// ============================================
+
+class SecureStorageService {
+    async setItem(key: string, value: string, options?: SecureStorageOptions): Promise<boolean> {
+        try {
+            const storeOptions: SecureStore.SecureStoreOptions = {};
+            if (options?.requireBiometric) {
+                storeOptions.requireAuthentication = true;
+            }
+
+            await SecureStore.setItemAsync(key, value, storeOptions);
+
+            if (options?.expiresIn) {
+                const expirationKey = `${key}_expires`;
+                const expirationTime = Date.now() + options.expiresIn;
+                await SecureStore.setItemAsync(expirationKey, expirationTime.toString());
+            }
+
+            return true;
+        } catch (error) {
+            console.error('[Security] Secure storage set error:', error);
+            return false;
+        }
+    }
+
+    async getItem(key: string): Promise<string | null> {
+        try {
+            const expirationKey = `${key}_expires`;
+            const expirationTime = await SecureStore.getItemAsync(expirationKey);
+
+            if (expirationTime && Date.now() > parseInt(expirationTime, 10)) {
+                await this.removeItem(key);
+                return null;
+            }
+
+            return await SecureStore.getItemAsync(key);
+        } catch (error) {
+            console.error('[Security] Secure storage get error:', error);
+            return null;
+        }
+    }
+
+    async removeItem(key: string): Promise<boolean> {
+        try {
+            await SecureStore.deleteItemAsync(key);
+            await SecureStore.deleteItemAsync(`${key}_expires`);
+            return true;
+        } catch (error) {
+            console.error('[Security] Secure storage remove error:', error);
+            return false;
+        }
+    }
+
+    async setEncrypted<T>(key: string, value: T, options?: SecureStorageOptions): Promise<boolean> {
+        try {
+            const jsonString = JSON.stringify(value);
+            return await this.setItem(key, jsonString, options);
+        } catch (error) {
+            console.error('[Security] Secure storage encrypt error:', error);
+            return false;
+        }
+    }
+
+    async getEncrypted<T>(key: string): Promise<T | null> {
+        try {
+            const jsonString = await this.getItem(key);
+            if (!jsonString) return null;
+            return JSON.parse(jsonString) as T;
+        } catch (error) {
+            console.error('[Security] Secure storage decrypt error:', error);
+            return null;
+        }
+    }
+}
+
+// ============================================
+// Singleton Instances
+// ============================================
+
+export const biometricService = new BiometricService();
+export const secureStorage = new SecureStorageService();
+
+// ============================================
+// React Hooks - Biometric
+// ============================================
+
+export function useBiometric() {
+    const [isAvailable, setIsAvailable] = useState(false);
+    const [biometryType, setBiometryType] = useState<BiometryType>('none');
+    const [isEnabled, setIsEnabled] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const checkBiometric = async () => {
+            const availability = await biometricService.checkAvailability();
+            setIsAvailable(availability.available);
+            setBiometryType(availability.biometryType);
+
+            const enabled = await biometricService.isBiometricEnabled();
+            setIsEnabled(enabled);
+            setIsLoading(false);
+        };
+
+        checkBiometric();
+    }, []);
+
+    const authenticate = useCallback(async (promptMessage?: string) => {
+        return biometricService.authenticate({ promptMessage });
+    }, []);
+
+    const setEnabled = useCallback(async (enabled: boolean) => {
+        await biometricService.setBiometricEnabled(enabled);
+        setIsEnabled(enabled);
+    }, []);
+
+    return {
+        isAvailable,
+        biometryType,
+        biometryTypeName: biometricService.getBiometryTypeName(),
+        isEnabled,
+        isLoading,
+        authenticate,
+        setEnabled,
+    };
+}
+
+export function useAppLock() {
+    const [isLocked, setIsLocked] = useState(false);
+    const [isChecking, setIsChecking] = useState(true);
+
+    const checkShouldLock = async (): Promise<boolean> => {
+        try {
+            const biometricEnabled = await biometricService.isBiometricEnabled();
+            if (!biometricEnabled) return false;
+
+            const lastActive = await AsyncStorage.getItem(LAST_ACTIVE_KEY);
+            if (!lastActive) return true;
+
+            const elapsed = Date.now() - parseInt(lastActive, 10);
+            return elapsed > APP_LOCK_TIMEOUT;
+        } catch {
+            return false;
+        }
+    };
+
+    useEffect(() => {
+        const checkLock = async () => {
+            const shouldLock = await checkShouldLock();
+            setIsLocked(shouldLock);
+            setIsChecking(false);
+        };
+
+        checkLock();
+
+        const subscription = AppState.addEventListener('change', async (nextAppState: AppStateStatus) => {
+            if (nextAppState === 'active') {
+                const shouldLock = await checkShouldLock();
+                setIsLocked(shouldLock);
+            } else if (nextAppState === 'background') {
+                await AsyncStorage.setItem(LAST_ACTIVE_KEY, Date.now().toString());
+            }
+        });
+
+        return () => {
+            subscription.remove();
+        };
+    }, []);
+
+    const unlock = useCallback(async () => {
+        const result = await biometricService.authenticate({
+            promptMessage: 'Uygulamayi acmak icin kimliginizi dogrulayin',
+        });
+
+        if (result.success) {
+            await AsyncStorage.setItem(LAST_ACTIVE_KEY, Date.now().toString());
+            setIsLocked(false);
+            return true;
+        }
+        return false;
+    }, []);
+
+    const lock = useCallback(() => {
+        setIsLocked(true);
+    }, []);
+
+    return { isLocked, isChecking, unlock, lock };
+}
+
+export function useSecureStorage<T>(key: string, defaultValue?: T) {
+    const [value, setValue] = useState<T | null>(defaultValue ?? null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const loadValue = async () => {
+            try {
+                const storedValue = await secureStorage.getEncrypted<T>(key);
+                setValue(storedValue ?? defaultValue ?? null);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to load');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadValue();
+    }, [key, defaultValue]);
+
+    const setSecureValue = useCallback(async (newValue: T, options?: SecureStorageOptions) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const success = await secureStorage.setEncrypted(key, newValue, options);
+            if (success) setValue(newValue);
+            else throw new Error('Failed to store');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to store');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [key]);
+
+    const removeSecureValue = useCallback(async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            await secureStorage.removeItem(key);
+            setValue(defaultValue ?? null);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to remove');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [key, defaultValue]);
+
+    return { value, isLoading, error, setValue: setSecureValue, removeValue: removeSecureValue };
+}
 
 // ============================================
 // Rate Limiting

@@ -151,7 +151,7 @@ export function DataTable<T>({
                         {searchEmptyTitle}
                     </Text>
                     <Text style={{ color: colors.text.tertiary, textAlign: 'center' }}>
-                        "{searchValue}" için sonuç bulunamadı
+                        &quot;{searchValue}&quot; için sonuç bulunamadı
                     </Text>
                 </View>
             );

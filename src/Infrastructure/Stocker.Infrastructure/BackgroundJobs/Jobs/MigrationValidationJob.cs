@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Domain.Migration.Enums;
+using System.Globalization;
 using System.Text.Json;
 
 namespace Stocker.Infrastructure.BackgroundJobs.Jobs;
@@ -268,7 +269,7 @@ public class MigrationValidationJob
             var sourceField = mappings?.GetValueOrDefault(field) ?? field;
             if (record.TryGetValue(sourceField, out var value) && value != null)
             {
-                if (!decimal.TryParse(value.ToString(), out var price))
+                if (!TryParseDecimal(value.ToString(), out var price))
                 {
                     errors.Add($"{field} geçerli bir sayı değil");
                 }
@@ -283,7 +284,7 @@ public class MigrationValidationJob
         var vatField = mappings?.GetValueOrDefault("VatRate") ?? "VatRate";
         if (record.TryGetValue(vatField, out var vatValue) && vatValue != null)
         {
-            if (decimal.TryParse(vatValue.ToString(), out var vat))
+            if (TryParseDecimal(vatValue.ToString(), out var vat))
             {
                 var validRates = new[] { 0m, 1m, 8m, 10m, 18m, 20m };
                 if (!validRates.Contains(vat))
@@ -292,6 +293,31 @@ public class MigrationValidationJob
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Tries to parse a decimal value supporting both Turkish (comma) and English (dot) formats
+    /// </summary>
+    private static bool TryParseDecimal(string? value, out decimal result)
+    {
+        result = 0;
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        // Try invariant culture first (dot as decimal separator)
+        if (decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out result))
+            return true;
+
+        // Try Turkish culture (comma as decimal separator)
+        if (decimal.TryParse(value, NumberStyles.Any, new CultureInfo("tr-TR"), out result))
+            return true;
+
+        // Try replacing comma with dot and parse again
+        var normalized = value.Replace(",", ".");
+        if (decimal.TryParse(normalized, NumberStyles.Any, CultureInfo.InvariantCulture, out result))
+            return true;
+
+        return false;
     }
 
     private void ValidateCustomerSupplier(
@@ -341,7 +367,7 @@ public class MigrationValidationJob
         var qtyField = mappings?.GetValueOrDefault("Quantity") ?? "Quantity";
         if (record.TryGetValue(qtyField, out var qtyValue) && qtyValue != null)
         {
-            if (!decimal.TryParse(qtyValue.ToString(), out _))
+            if (!TryParseDecimal(qtyValue.ToString(), out _))
             {
                 errors.Add("Miktar geçerli bir sayı değil");
             }

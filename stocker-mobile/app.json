@@ -12,10 +12,52 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.stocker.mobile"
+      "bundleIdentifier": "com.stocker.mobile",
+      "associatedDomains": [
+        "applinks:stocker.app",
+        "applinks:app.stocker.com"
+      ],
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": ["stocker", "stockerapp"]
+          }
+        ]
+      }
     },
     "android": {
-      "package": "com.stocker.mobile"
+      "package": "com.stocker.mobile",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "stocker.app",
+              "pathPrefix": "/"
+            },
+            {
+              "scheme": "https",
+              "host": "app.stocker.com",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        },
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "stocker"
+            },
+            {
+              "scheme": "stockerapp"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -23,7 +65,9 @@
     },
     "plugins": [
       "expo-router",
-      "expo-asset"
+      "expo-asset",
+      "expo-secure-store",
+      "expo-local-authentication"
     ],
     "experiments": {
       "typedRoutes": true

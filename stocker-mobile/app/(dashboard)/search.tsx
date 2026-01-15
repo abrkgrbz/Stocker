@@ -380,7 +380,7 @@ export default function SearchScreen() {
                             textAlign: 'center',
                         }}
                     >
-                        "{debouncedQuery}" için sonuç bulunamadı.{'\n'}
+                        &quot;{debouncedQuery}&quot; için sonuç bulunamadı.{'\n'}
                         Farklı anahtar kelimeler deneyin.
                     </Text>
                 </Animated.View>
