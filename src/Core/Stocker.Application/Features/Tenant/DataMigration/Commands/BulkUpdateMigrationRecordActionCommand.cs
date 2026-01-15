@@ -17,18 +17,20 @@ public class BulkUpdateMigrationRecordActionCommand : IRequest<Result<BulkAction
 
 public class BulkUpdateMigrationRecordActionCommandHandler : IRequestHandler<BulkUpdateMigrationRecordActionCommand, Result<BulkActionResponse>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
 
-    public BulkUpdateMigrationRecordActionCommandHandler(IMasterDbContext context)
+    public BulkUpdateMigrationRecordActionCommandHandler(ITenantDbContextFactory tenantDbContextFactory)
     {
-        _context = context;
+        _tenantDbContextFactory = tenantDbContextFactory;
     }
 
     public async Task<Result<BulkActionResponse>> Handle(BulkUpdateMigrationRecordActionCommand request, CancellationToken cancellationToken)
     {
+        await using var context = await _tenantDbContextFactory.CreateDbContextAsync(request.TenantId);
+
         // Validate session
-        var session = await _context.MigrationSessions
-            .FirstOrDefaultAsync(s => s.Id == request.SessionId && s.TenantId == request.TenantId, cancellationToken);
+        var session = await context.MigrationSessions
+            .FirstOrDefaultAsync(s => s.Id == request.SessionId, cancellationToken);
 
         if (session == null)
         {
@@ -47,7 +49,7 @@ public class BulkUpdateMigrationRecordActionCommandHandler : IRequestHandler<Bul
         }
 
         // Get records
-        var records = await _context.MigrationValidationResults
+        var records = await context.MigrationValidationResults
             .Where(r => request.RecordIds.Contains(r.Id) && r.SessionId == request.SessionId)
             .ToListAsync(cancellationToken);
 
@@ -77,7 +79,7 @@ public class BulkUpdateMigrationRecordActionCommandHandler : IRequestHandler<Bul
             }
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
 
         return Result<BulkActionResponse>.Success(new BulkActionResponse
         {

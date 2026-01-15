@@ -15,18 +15,20 @@ public class GetImportProgressQuery : IRequest<Result<ImportProgressDto>>
 
 public class GetImportProgressQueryHandler : IRequestHandler<GetImportProgressQuery, Result<ImportProgressDto>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
 
-    public GetImportProgressQueryHandler(IMasterDbContext context)
+    public GetImportProgressQueryHandler(ITenantDbContextFactory tenantDbContextFactory)
     {
-        _context = context;
+        _tenantDbContextFactory = tenantDbContextFactory;
     }
 
     public async Task<Result<ImportProgressDto>> Handle(GetImportProgressQuery request, CancellationToken cancellationToken)
     {
-        var session = await _context.MigrationSessions
+        await using var context = await _tenantDbContextFactory.CreateDbContextAsync(request.TenantId);
+
+        var session = await context.MigrationSessions
             .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.Id == request.SessionId && s.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Id == request.SessionId, cancellationToken);
 
         if (session == null)
         {
@@ -34,12 +36,12 @@ public class GetImportProgressQueryHandler : IRequestHandler<GetImportProgressQu
         }
 
         // Count imported records
-        var importedCount = await _context.MigrationValidationResults
+        var importedCount = await context.MigrationValidationResults
             .Where(r => r.SessionId == request.SessionId && r.ImportedAt != null)
             .CountAsync(cancellationToken);
 
         // Calculate total importable
-        var totalImportable = await _context.MigrationValidationResults
+        var totalImportable = await context.MigrationValidationResults
             .Where(r => r.SessionId == request.SessionId)
             .Where(r => r.Status == ValidationStatus.Valid ||
                        r.Status == ValidationStatus.Warning ||

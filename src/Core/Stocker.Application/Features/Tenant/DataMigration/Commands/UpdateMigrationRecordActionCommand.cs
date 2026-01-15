@@ -17,18 +17,20 @@ public class UpdateMigrationRecordActionCommand : IRequest<Result<bool>>
 
 public class UpdateMigrationRecordActionCommandHandler : IRequestHandler<UpdateMigrationRecordActionCommand, Result<bool>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
 
-    public UpdateMigrationRecordActionCommandHandler(IMasterDbContext context)
+    public UpdateMigrationRecordActionCommandHandler(ITenantDbContextFactory tenantDbContextFactory)
     {
-        _context = context;
+        _tenantDbContextFactory = tenantDbContextFactory;
     }
 
     public async Task<Result<bool>> Handle(UpdateMigrationRecordActionCommand request, CancellationToken cancellationToken)
     {
+        await using var context = await _tenantDbContextFactory.CreateDbContextAsync(request.TenantId);
+
         // Validate session
-        var session = await _context.MigrationSessions
-            .FirstOrDefaultAsync(s => s.Id == request.SessionId && s.TenantId == request.TenantId, cancellationToken);
+        var session = await context.MigrationSessions
+            .FirstOrDefaultAsync(s => s.Id == request.SessionId, cancellationToken);
 
         if (session == null)
         {
@@ -41,7 +43,7 @@ public class UpdateMigrationRecordActionCommandHandler : IRequestHandler<UpdateM
         }
 
         // Get record
-        var record = await _context.MigrationValidationResults
+        var record = await context.MigrationValidationResults
             .FirstOrDefaultAsync(r => r.Id == request.RecordId && r.SessionId == request.SessionId, cancellationToken);
 
         if (record == null)
@@ -72,7 +74,7 @@ public class UpdateMigrationRecordActionCommandHandler : IRequestHandler<UpdateM
                 return Result<bool>.Failure(Error.Validation("InvalidAction", $"Geçersiz işlem: {request.Action}"));
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);
     }

@@ -12,16 +12,16 @@ public class MigrationJobScheduler : IMigrationJobScheduler
     /// <summary>
     /// Enqueues a validation job for the given session
     /// </summary>
-    public void EnqueueValidationJob(Guid sessionId)
+    public void EnqueueValidationJob(Guid tenantId, Guid sessionId)
     {
-        BackgroundJob.Enqueue<MigrationValidationJob>(job => job.ExecuteAsync(sessionId, CancellationToken.None));
+        BackgroundJob.Enqueue<MigrationValidationJob>(job => job.ExecuteAsync(tenantId, sessionId, CancellationToken.None));
     }
 
     /// <summary>
     /// Enqueues an import job for the given session
     /// </summary>
-    public string EnqueueImportJob(Guid sessionId)
+    public string EnqueueImportJob(Guid tenantId, Guid sessionId)
     {
-        return BackgroundJob.Enqueue<MigrationImportJob>(job => job.ExecuteAsync(sessionId, CancellationToken.None));
+        return BackgroundJob.Enqueue<MigrationImportJob>(job => job.ExecuteAsync(tenantId, sessionId, CancellationToken.None));
     }
 }

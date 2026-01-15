@@ -14,17 +14,19 @@ public class CompleteMigrationUploadCommand : IRequest<Result<bool>>
 
 public class CompleteMigrationUploadCommandHandler : IRequestHandler<CompleteMigrationUploadCommand, Result<bool>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
 
-    public CompleteMigrationUploadCommandHandler(IMasterDbContext context)
+    public CompleteMigrationUploadCommandHandler(ITenantDbContextFactory tenantDbContextFactory)
     {
-        _context = context;
+        _tenantDbContextFactory = tenantDbContextFactory;
     }
 
     public async Task<Result<bool>> Handle(CompleteMigrationUploadCommand request, CancellationToken cancellationToken)
     {
-        var session = await _context.MigrationSessions
-            .FirstOrDefaultAsync(s => s.Id == request.SessionId && s.TenantId == request.TenantId, cancellationToken);
+        await using var context = await _tenantDbContextFactory.CreateDbContextAsync(request.TenantId);
+
+        var session = await context.MigrationSessions
+            .FirstOrDefaultAsync(s => s.Id == request.SessionId, cancellationToken);
 
         if (session == null)
         {
@@ -37,7 +39,7 @@ public class CompleteMigrationUploadCommandHandler : IRequestHandler<CompleteMig
         }
 
         // Count total records
-        var totalRecords = await _context.MigrationValidationResults
+        var totalRecords = await context.MigrationValidationResults
             .Where(r => r.SessionId == request.SessionId)
             .CountAsync(cancellationToken);
 
@@ -47,7 +49,7 @@ public class CompleteMigrationUploadCommandHandler : IRequestHandler<CompleteMig
         }
 
         session.MarkAsUploaded(totalRecords);
-        await _context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);
     }

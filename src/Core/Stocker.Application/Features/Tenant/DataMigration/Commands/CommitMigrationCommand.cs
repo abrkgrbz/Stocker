@@ -16,21 +16,23 @@ public class CommitMigrationCommand : IRequest<Result<CommitMigrationResponse>>
 
 public class CommitMigrationCommandHandler : IRequestHandler<CommitMigrationCommand, Result<CommitMigrationResponse>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
     private readonly IMigrationJobScheduler _jobScheduler;
 
     public CommitMigrationCommandHandler(
-        IMasterDbContext context,
+        ITenantDbContextFactory tenantDbContextFactory,
         IMigrationJobScheduler jobScheduler)
     {
-        _context = context;
+        _tenantDbContextFactory = tenantDbContextFactory;
         _jobScheduler = jobScheduler;
     }
 
     public async Task<Result<CommitMigrationResponse>> Handle(CommitMigrationCommand request, CancellationToken cancellationToken)
     {
-        var session = await _context.MigrationSessions
-            .FirstOrDefaultAsync(s => s.Id == request.SessionId && s.TenantId == request.TenantId, cancellationToken);
+        await using var context = await _tenantDbContextFactory.CreateDbContextAsync(request.TenantId);
+
+        var session = await context.MigrationSessions
+            .FirstOrDefaultAsync(s => s.Id == request.SessionId, cancellationToken);
 
         if (session == null)
         {
@@ -43,7 +45,7 @@ public class CommitMigrationCommandHandler : IRequestHandler<CommitMigrationComm
         }
 
         // Count importable records
-        var importableCount = await _context.MigrationValidationResults
+        var importableCount = await context.MigrationValidationResults
             .Where(r => r.SessionId == request.SessionId)
             .Where(r => r.Status == ValidationStatus.Valid ||
                        r.Status == ValidationStatus.Warning ||
@@ -64,10 +66,10 @@ public class CommitMigrationCommandHandler : IRequestHandler<CommitMigrationComm
         }
 
         // Enqueue import job
-        var jobId = _jobScheduler.EnqueueImportJob(request.SessionId);
+        var jobId = _jobScheduler.EnqueueImportJob(request.TenantId, request.SessionId);
 
         session.StartImport(jobId);
-        await _context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
 
         return Result<CommitMigrationResponse>.Success(new CommitMigrationResponse
         {

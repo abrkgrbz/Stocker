@@ -14,21 +14,23 @@ public class StartMigrationValidationCommand : IRequest<Result<bool>>
 
 public class StartMigrationValidationCommandHandler : IRequestHandler<StartMigrationValidationCommand, Result<bool>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
     private readonly IMigrationJobScheduler _jobScheduler;
 
     public StartMigrationValidationCommandHandler(
-        IMasterDbContext context,
+        ITenantDbContextFactory tenantDbContextFactory,
         IMigrationJobScheduler jobScheduler)
     {
-        _context = context;
+        _tenantDbContextFactory = tenantDbContextFactory;
         _jobScheduler = jobScheduler;
     }
 
     public async Task<Result<bool>> Handle(StartMigrationValidationCommand request, CancellationToken cancellationToken)
     {
-        var session = await _context.MigrationSessions
-            .FirstOrDefaultAsync(s => s.Id == request.SessionId && s.TenantId == request.TenantId, cancellationToken);
+        await using var context = await _tenantDbContextFactory.CreateDbContextAsync(request.TenantId);
+
+        var session = await context.MigrationSessions
+            .FirstOrDefaultAsync(s => s.Id == request.SessionId, cancellationToken);
 
         if (session == null)
         {
@@ -47,10 +49,10 @@ public class StartMigrationValidationCommandHandler : IRequestHandler<StartMigra
         }
 
         session.StartValidation();
-        await _context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
 
         // Enqueue background validation job
-        _jobScheduler.EnqueueValidationJob(request.SessionId);
+        _jobScheduler.EnqueueValidationJob(request.TenantId, request.SessionId);
 
         return Result<bool>.Success(true);
     }

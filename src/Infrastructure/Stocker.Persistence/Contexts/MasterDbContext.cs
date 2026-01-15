@@ -3,7 +3,6 @@ using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Master.Entities.GeoLocation;
 using Stocker.Domain.Entities.Settings;
 using Stocker.Domain.Entities.Migration;
-using Stocker.Domain.Migration.Entities;
 using Stocker.Application.Common.Interfaces;
 
 namespace Stocker.Persistence.Contexts;
@@ -85,10 +84,7 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
     // Migration Management
     public DbSet<ScheduledMigration> ScheduledMigrations => Set<ScheduledMigration>();
 
-    // Data Migration (ERP/CRM Import)
-    public DbSet<MigrationSession> MigrationSessions => Set<MigrationSession>();
-    public DbSet<MigrationChunk> MigrationChunks => Set<MigrationChunk>();
-    public DbSet<MigrationValidationResult> MigrationValidationResults => Set<MigrationValidationResult>();
+    // Data Migration entities moved to Tenant DB for proper tenant isolation
 
     // GeoLocation (Shared Reference Data)
     public DbSet<Country> Countries => Set<Country>();

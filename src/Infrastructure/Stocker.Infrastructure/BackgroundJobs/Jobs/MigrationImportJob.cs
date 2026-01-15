@@ -13,16 +13,13 @@ namespace Stocker.Infrastructure.BackgroundJobs.Jobs;
 /// </summary>
 public class MigrationImportJob
 {
-    private readonly IMasterDbContext _context;
     private readonly ITenantDbContextFactory _tenantDbContextFactory;
     private readonly ILogger<MigrationImportJob> _logger;
 
     public MigrationImportJob(
-        IMasterDbContext context,
         ITenantDbContextFactory tenantDbContextFactory,
         ILogger<MigrationImportJob> logger)
     {
-        _context = context;
         _tenantDbContextFactory = tenantDbContextFactory;
         _logger = logger;
     }
@@ -30,27 +27,29 @@ public class MigrationImportJob
     /// <summary>
     /// Executes the import job for the given session
     /// </summary>
-    public async Task ExecuteAsync(Guid sessionId, CancellationToken cancellationToken)
+    public async Task ExecuteAsync(Guid tenantId, Guid sessionId, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting import for session {SessionId}", sessionId);
+        _logger.LogInformation("Starting import for session {SessionId} in tenant {TenantId}", sessionId, tenantId);
 
         try
         {
-            var session = await _context.MigrationSessions
+            await using var context = await _tenantDbContextFactory.CreateDbContextAsync(tenantId);
+
+            var session = await context.MigrationSessions
                 .FirstOrDefaultAsync(s => s.Id == sessionId, cancellationToken);
 
             if (session == null)
             {
-                _logger.LogError("Session {SessionId} not found", sessionId);
+                _logger.LogError("Session {SessionId} not found in tenant {TenantId}", sessionId, tenantId);
                 return;
             }
 
             // Update status to importing
             session.UpdateStatus(MigrationSessionStatus.Importing);
-            await _context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
 
             // Get all valid records that should be imported
-            var recordsToImport = await _context.MigrationValidationResults
+            var recordsToImport = await context.MigrationValidationResults
                 .Where(r => r.SessionId == sessionId &&
                            (r.Status == ValidationStatus.Valid ||
                             r.Status == ValidationStatus.Warning ||
@@ -91,7 +90,8 @@ public class MigrationImportJob
 
                         // Import the record to tenant database
                         var success = await ImportRecordAsync(
-                            session.TenantId,
+                            context,
+                            tenantId,
                             group.Key,
                             data,
                             session.MappingConfigJson,
@@ -117,7 +117,7 @@ public class MigrationImportJob
                 }
 
                 // Save progress after each entity type batch
-                await _context.SaveChangesAsync(cancellationToken);
+                await context.SaveChangesAsync(cancellationToken);
             }
 
             // Update session with final status
@@ -145,20 +145,28 @@ public class MigrationImportJob
                     sessionId, failedCount);
             }
 
-            await _context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Import job failed for session {SessionId}", sessionId);
 
             // Update session status to failed
-            var session = await _context.MigrationSessions
-                .FirstOrDefaultAsync(s => s.Id == sessionId, cancellationToken);
-
-            if (session != null)
+            try
             {
-                session.SetError($"Import failed: {ex.Message}");
-                await _context.SaveChangesAsync(cancellationToken);
+                await using var context = await _tenantDbContextFactory.CreateDbContextAsync(tenantId);
+                var session = await context.MigrationSessions
+                    .FirstOrDefaultAsync(s => s.Id == sessionId, cancellationToken);
+
+                if (session != null)
+                {
+                    session.SetError($"Import failed: {ex.Message}");
+                    await context.SaveChangesAsync(cancellationToken);
+                }
+            }
+            catch (Exception innerEx)
+            {
+                _logger.LogError(innerEx, "Failed to update session status after import failure");
             }
         }
     }
@@ -167,6 +175,7 @@ public class MigrationImportJob
     /// Imports a single record to the tenant database
     /// </summary>
     private async Task<bool> ImportRecordAsync(
+        ITenantDbContext context,
         Guid tenantId,
         MigrationEntityType entityType,
         Dictionary<string, object?> data,
@@ -193,42 +202,39 @@ public class MigrationImportJob
         _logger.LogDebug("Importing {EntityType} record to tenant {TenantId}: {Data}",
             entityType, tenantId, JsonSerializer.Serialize(mappedData));
 
-        // Get tenant database context
-        await using var tenantContext = await _tenantDbContextFactory.CreateDbContextAsync(tenantId);
-
         switch (entityType)
         {
             case MigrationEntityType.Product:
-                await ImportProductAsync(tenantContext, mappedData, cancellationToken);
+                await ImportProductAsync(context, tenantId, mappedData, cancellationToken);
                 break;
 
             case MigrationEntityType.Category:
-                await ImportCategoryAsync(tenantContext, mappedData, cancellationToken);
+                await ImportCategoryAsync(context, mappedData, cancellationToken);
                 break;
 
             case MigrationEntityType.Customer:
-                await ImportCustomerAsync(tenantContext, mappedData, cancellationToken);
+                await ImportCustomerAsync(context, tenantId, mappedData, cancellationToken);
                 break;
 
             case MigrationEntityType.Supplier:
-                await ImportSupplierAsync(tenantContext, mappedData, cancellationToken);
+                await ImportSupplierAsync(context, mappedData, cancellationToken);
                 break;
 
             case MigrationEntityType.Brand:
-                await ImportBrandAsync(tenantContext, mappedData, cancellationToken);
+                await ImportBrandAsync(context, mappedData, cancellationToken);
                 break;
 
             case MigrationEntityType.Unit:
-                await ImportUnitAsync(tenantContext, mappedData, cancellationToken);
+                await ImportUnitAsync(context, mappedData, cancellationToken);
                 break;
 
             case MigrationEntityType.Warehouse:
-                await ImportWarehouseAsync(tenantContext, mappedData, cancellationToken);
+                await ImportWarehouseAsync(context, mappedData, cancellationToken);
                 break;
 
             case MigrationEntityType.Stock:
             case MigrationEntityType.OpeningBalance:
-                await ImportStockAsync(tenantContext, mappedData, cancellationToken);
+                await ImportStockAsync(context, mappedData, cancellationToken);
                 break;
 
             default:
@@ -236,13 +242,12 @@ public class MigrationImportJob
                 return false;
         }
 
-        await tenantContext.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
         return true;
     }
 
-    private async Task ImportProductAsync(ITenantDbContext context, Dictionary<string, object?> data, CancellationToken ct)
+    private async Task ImportProductAsync(ITenantDbContext context, Guid tenantId, Dictionary<string, object?> data, CancellationToken ct)
     {
-        var tenantId = await GetTenantIdFromContextAsync(context, ct);
         var code = GetStringValue(data, "Code", "ProductCode", "Kod", "StokKodu");
         var name = GetStringValue(data, "Name", "ProductName", "Ad", "StokAdi");
 
@@ -302,9 +307,8 @@ public class MigrationImportJob
         return Task.CompletedTask;
     }
 
-    private async Task ImportCustomerAsync(ITenantDbContext context, Dictionary<string, object?> data, CancellationToken ct)
+    private async Task ImportCustomerAsync(ITenantDbContext context, Guid tenantId, Dictionary<string, object?> data, CancellationToken ct)
     {
-        var tenantId = await GetTenantIdFromContextAsync(context, ct);
         var name = GetStringValue(data, "Name", "CustomerName", "Ad", "CariUnvani", "MusteriAdi");
 
         if (string.IsNullOrEmpty(name))
@@ -393,26 +397,6 @@ public class MigrationImportJob
         var productCode = GetStringValue(data, "ProductCode", "StokKodu", "Kod");
         _logger.LogInformation("Stock import for product: {Code} - Use Inventory module for stock management", productCode);
         return Task.CompletedTask;
-    }
-
-    private async Task<Guid> GetTenantIdFromContextAsync(ITenantDbContext context, CancellationToken ct)
-    {
-        // Get tenantId from first existing entity or return empty guid
-        var existingProduct = await context.Products.FirstOrDefaultAsync(ct);
-        if (existingProduct != null)
-        {
-            return existingProduct.TenantId;
-        }
-
-        var existingCustomer = await context.Customers.FirstOrDefaultAsync(ct);
-        if (existingCustomer != null)
-        {
-            return existingCustomer.TenantId;
-        }
-
-        // If no entities exist, we need to get it from session
-        _logger.LogWarning("Could not determine tenant ID from context");
-        return Guid.Empty;
     }
 
     #region Helper Methods

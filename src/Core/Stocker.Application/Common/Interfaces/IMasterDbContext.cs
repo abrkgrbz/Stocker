@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Entities.Settings;
-using Stocker.Domain.Migration.Entities;
 
 namespace Stocker.Application.Common.Interfaces;
 
@@ -48,12 +47,8 @@ public interface IMasterDbContext
     DbSet<IndustryRecommendedModule> IndustryRecommendedModules { get; }
     DbSet<UserTier> UserTiers { get; }
 
-    // Data Migration (ERP/CRM Import)
-    DbSet<MigrationSession> MigrationSessions { get; }
-    DbSet<MigrationChunk> MigrationChunks { get; }
-    DbSet<MigrationValidationResult> MigrationValidationResults { get; }
-
     // All entities requiring tenant isolation have been moved to Tenant DB
+    // Data Migration entities moved to Tenant DB for proper tenant isolation
     
     // REMOVED - Moved to Tenant DB (All phases completed):
     // Phase 1-2: TenantApiKey, TenantActivityLog, TenantSecuritySettings, TenantNotification

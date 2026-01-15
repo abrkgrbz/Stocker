@@ -17,19 +17,21 @@ public class GetMappingSuggestionsQuery : IRequest<Result<AutoMappingResultDto>>
 
 public class GetMappingSuggestionsQueryHandler : IRequestHandler<GetMappingSuggestionsQuery, Result<AutoMappingResultDto>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
 
-    public GetMappingSuggestionsQueryHandler(IMasterDbContext context)
+    public GetMappingSuggestionsQueryHandler(ITenantDbContextFactory tenantDbContextFactory)
     {
-        _context = context;
+        _tenantDbContextFactory = tenantDbContextFactory;
     }
 
     public async Task<Result<AutoMappingResultDto>> Handle(GetMappingSuggestionsQuery request, CancellationToken cancellationToken)
     {
+        await using var context = await _tenantDbContextFactory.CreateDbContextAsync(request.TenantId);
+
         // Validate session
-        var session = await _context.MigrationSessions
+        var session = await context.MigrationSessions
             .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.Id == request.SessionId && s.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Id == request.SessionId, cancellationToken);
 
         if (session == null)
         {
@@ -42,7 +44,7 @@ public class GetMappingSuggestionsQueryHandler : IRequestHandler<GetMappingSugge
         }
 
         // Get sample data to analyze columns
-        var sampleRecord = await _context.MigrationValidationResults
+        var sampleRecord = await context.MigrationValidationResults
             .AsNoTracking()
             .Where(r => r.SessionId == request.SessionId && r.EntityType == entityType)
             .FirstOrDefaultAsync(cancellationToken);

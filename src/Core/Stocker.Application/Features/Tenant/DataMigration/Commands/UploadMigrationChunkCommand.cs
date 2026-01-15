@@ -21,19 +21,21 @@ public class UploadMigrationChunkCommand : IRequest<Result<UploadChunkResponse>>
 
 public class UploadMigrationChunkCommandHandler : IRequestHandler<UploadMigrationChunkCommand, Result<UploadChunkResponse>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
     private const int MaxRecordsPerChunk = 1000;
 
-    public UploadMigrationChunkCommandHandler(IMasterDbContext context)
+    public UploadMigrationChunkCommandHandler(ITenantDbContextFactory tenantDbContextFactory)
     {
-        _context = context;
+        _tenantDbContextFactory = tenantDbContextFactory;
     }
 
     public async Task<Result<UploadChunkResponse>> Handle(UploadMigrationChunkCommand request, CancellationToken cancellationToken)
     {
+        await using var context = await _tenantDbContextFactory.CreateDbContextAsync(request.TenantId);
+
         // Get session
-        var session = await _context.MigrationSessions
-            .FirstOrDefaultAsync(s => s.Id == request.SessionId && s.TenantId == request.TenantId, cancellationToken);
+        var session = await context.MigrationSessions
+            .FirstOrDefaultAsync(s => s.Id == request.SessionId, cancellationToken);
 
         if (session == null)
         {
@@ -70,7 +72,7 @@ public class UploadMigrationChunkCommandHandler : IRequestHandler<UploadMigratio
         }
 
         // Check for duplicate chunk
-        var existingChunk = await _context.MigrationChunks
+        var existingChunk = await context.MigrationChunks
             .AnyAsync(c => c.SessionId == request.SessionId && c.EntityType == entityType && c.ChunkIndex == request.ChunkIndex, cancellationToken);
 
         if (existingChunk)
@@ -96,10 +98,10 @@ public class UploadMigrationChunkCommandHandler : IRequestHandler<UploadMigratio
             rawDataJson,
             request.Data.Count);
 
-        _context.MigrationChunks.Add(chunk);
+        context.MigrationChunks.Add(chunk);
 
         // Create validation results for each record
-        var globalRowOffset = await _context.MigrationValidationResults
+        var globalRowOffset = await context.MigrationValidationResults
             .Where(r => r.SessionId == request.SessionId && r.EntityType == entityType)
             .CountAsync(cancellationToken);
 
@@ -118,16 +120,16 @@ public class UploadMigrationChunkCommandHandler : IRequestHandler<UploadMigratio
             validationResults.Add(result);
         }
 
-        _context.MigrationValidationResults.AddRange(validationResults);
+        context.MigrationValidationResults.AddRange(validationResults);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
 
         // Get upload progress
-        var uploadedChunks = await _context.MigrationChunks
+        var uploadedChunks = await context.MigrationChunks
             .Where(c => c.SessionId == request.SessionId && c.EntityType == entityType)
             .CountAsync(cancellationToken);
 
-        var totalRecords = await _context.MigrationValidationResults
+        var totalRecords = await context.MigrationValidationResults
             .Where(r => r.SessionId == request.SessionId)
             .CountAsync(cancellationToken);
 

@@ -19,26 +19,28 @@ public class GetValidationPreviewQuery : IRequest<Result<ValidationPreviewRespon
 
 public class GetValidationPreviewQueryHandler : IRequestHandler<GetValidationPreviewQuery, Result<ValidationPreviewResponse>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
 
-    public GetValidationPreviewQueryHandler(IMasterDbContext context)
+    public GetValidationPreviewQueryHandler(ITenantDbContextFactory tenantDbContextFactory)
     {
-        _context = context;
+        _tenantDbContextFactory = tenantDbContextFactory;
     }
 
     public async Task<Result<ValidationPreviewResponse>> Handle(GetValidationPreviewQuery request, CancellationToken cancellationToken)
     {
+        await using var context = await _tenantDbContextFactory.CreateDbContextAsync(request.TenantId);
+
         // Validate session
-        var session = await _context.MigrationSessions
+        var session = await context.MigrationSessions
             .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.Id == request.SessionId && s.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Id == request.SessionId, cancellationToken);
 
         if (session == null)
         {
             return Result<ValidationPreviewResponse>.Failure(Error.NotFound("SessionNotFound", "Migrasyon oturumu bulunamadı"));
         }
 
-        var query = _context.MigrationValidationResults
+        var query = context.MigrationValidationResults
             .AsNoTracking()
             .Where(r => r.SessionId == request.SessionId);
 
@@ -63,7 +65,7 @@ public class GetValidationPreviewQueryHandler : IRequestHandler<GetValidationPre
             .ToListAsync(cancellationToken);
 
         // Get summary statistics
-        var summaryQuery = _context.MigrationValidationResults
+        var summaryQuery = context.MigrationValidationResults
             .Where(r => r.SessionId == request.SessionId);
 
         var validCount = await summaryQuery.CountAsync(r => r.Status == ValidationStatus.Valid, cancellationToken);

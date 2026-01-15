@@ -18,11 +18,11 @@ public class CreateMigrationSessionCommand : IRequest<Result<MigrationSessionRes
 
 public class CreateMigrationSessionCommandHandler : IRequestHandler<CreateMigrationSessionCommand, Result<MigrationSessionResponse>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
 
-    public CreateMigrationSessionCommandHandler(IMasterDbContext context)
+    public CreateMigrationSessionCommandHandler(ITenantDbContextFactory tenantDbContextFactory)
     {
-        _context = context;
+        _tenantDbContextFactory = tenantDbContextFactory;
     }
 
     public async Task<Result<MigrationSessionResponse>> Handle(CreateMigrationSessionCommand request, CancellationToken cancellationToken)
@@ -52,6 +52,8 @@ public class CreateMigrationSessionCommandHandler : IRequestHandler<CreateMigrat
             return Result<MigrationSessionResponse>.Failure(Error.Validation("NoEntities", "En az bir veri türü seçilmelidir"));
         }
 
+        await using var context = await _tenantDbContextFactory.CreateDbContextAsync(request.TenantId);
+
         var session = new MigrationSession(
             request.TenantId,
             request.UserId,
@@ -59,8 +61,8 @@ public class CreateMigrationSessionCommandHandler : IRequestHandler<CreateMigrat
             request.SourceName,
             entityTypes);
 
-        _context.MigrationSessions.Add(session);
-        await _context.SaveChangesAsync(cancellationToken);
+        context.MigrationSessions.Add(session);
+        await context.SaveChangesAsync(cancellationToken);
 
         return Result<MigrationSessionResponse>.Success(new MigrationSessionResponse
         {

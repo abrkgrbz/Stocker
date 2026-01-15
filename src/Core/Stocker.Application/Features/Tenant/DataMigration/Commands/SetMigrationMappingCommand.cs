@@ -16,17 +16,19 @@ public class SetMigrationMappingCommand : IRequest<Result<bool>>
 
 public class SetMigrationMappingCommandHandler : IRequestHandler<SetMigrationMappingCommand, Result<bool>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
 
-    public SetMigrationMappingCommandHandler(IMasterDbContext context)
+    public SetMigrationMappingCommandHandler(ITenantDbContextFactory tenantDbContextFactory)
     {
-        _context = context;
+        _tenantDbContextFactory = tenantDbContextFactory;
     }
 
     public async Task<Result<bool>> Handle(SetMigrationMappingCommand request, CancellationToken cancellationToken)
     {
-        var session = await _context.MigrationSessions
-            .FirstOrDefaultAsync(s => s.Id == request.SessionId && s.TenantId == request.TenantId, cancellationToken);
+        await using var context = await _tenantDbContextFactory.CreateDbContextAsync(request.TenantId);
+
+        var session = await context.MigrationSessions
+            .FirstOrDefaultAsync(s => s.Id == request.SessionId, cancellationToken);
 
         if (session == null)
         {
@@ -42,7 +44,7 @@ public class SetMigrationMappingCommandHandler : IRequestHandler<SetMigrationMap
         var mappingConfigJson = System.Text.Json.JsonSerializer.Serialize(request.MappingConfig);
         session.SetMappingConfig(mappingConfigJson);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);
     }

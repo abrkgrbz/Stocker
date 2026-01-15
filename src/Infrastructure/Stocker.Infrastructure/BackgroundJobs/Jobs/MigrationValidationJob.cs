@@ -11,42 +11,44 @@ namespace Stocker.Infrastructure.BackgroundJobs.Jobs;
 /// </summary>
 public class MigrationValidationJob
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
     private readonly ILogger<MigrationValidationJob> _logger;
     private const int BATCH_SIZE = 500; // Save every 500 records for progress visibility
 
     public MigrationValidationJob(
-        IMasterDbContext context,
+        ITenantDbContextFactory tenantDbContextFactory,
         ILogger<MigrationValidationJob> logger)
     {
-        _context = context;
+        _tenantDbContextFactory = tenantDbContextFactory;
         _logger = logger;
     }
 
     /// <summary>
     /// Executes the validation job for the given session
     /// </summary>
-    public async Task ExecuteAsync(Guid sessionId, CancellationToken cancellationToken)
+    public async Task ExecuteAsync(Guid tenantId, Guid sessionId, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting validation for session {SessionId}", sessionId);
+        _logger.LogInformation("Starting validation for session {SessionId} in tenant {TenantId}", sessionId, tenantId);
 
         try
         {
-            var session = await _context.MigrationSessions
+            await using var context = await _tenantDbContextFactory.CreateDbContextAsync(tenantId);
+
+            var session = await context.MigrationSessions
                 .FirstOrDefaultAsync(s => s.Id == sessionId, cancellationToken);
 
             if (session == null)
             {
-                _logger.LogError("Session {SessionId} not found", sessionId);
+                _logger.LogError("Session {SessionId} not found in tenant {TenantId}", sessionId, tenantId);
                 return;
             }
 
             // Update status to validating
             session.UpdateStatus(MigrationSessionStatus.Validating);
-            await _context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
 
             // Get all chunks for this session
-            var chunks = await _context.MigrationChunks
+            var chunks = await context.MigrationChunks
                 .Where(c => c.SessionId == sessionId)
                 .OrderBy(c => c.EntityType)
                 .ThenBy(c => c.ChunkIndex)
@@ -109,13 +111,13 @@ public class MigrationValidationJob
                             validRecords++;
                         }
 
-                        _context.MigrationValidationResults.Add(resultEntity);
+                        context.MigrationValidationResults.Add(resultEntity);
                         batchCount++;
 
                         // Save in batches for progress visibility
                         if (batchCount >= BATCH_SIZE)
                         {
-                            await _context.SaveChangesAsync(cancellationToken);
+                            await context.SaveChangesAsync(cancellationToken);
                             batchCount = 0;
                             _logger.LogDebug("Validation progress: {Current}/{Total} records processed", totalRecords, session.TotalRecords);
                         }
@@ -134,13 +136,13 @@ public class MigrationValidationJob
             // Save any remaining validation results
             if (batchCount > 0)
             {
-                await _context.SaveChangesAsync(cancellationToken);
+                await context.SaveChangesAsync(cancellationToken);
             }
 
             // Update session statistics and status
             session.SetStatistics(totalRecords, validRecords, errorRecords, warningRecords);
             session.UpdateStatus(MigrationSessionStatus.Validated);
-            await _context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation(
                 "Validation completed for session {SessionId}. Total: {Total}, Valid: {Valid}, Errors: {Errors}, Warnings: {Warnings}",
@@ -151,13 +153,21 @@ public class MigrationValidationJob
             _logger.LogError(ex, "Validation failed for session {SessionId}", sessionId);
 
             // Update session status to failed
-            var session = await _context.MigrationSessions
-                .FirstOrDefaultAsync(s => s.Id == sessionId, cancellationToken);
-
-            if (session != null)
+            try
             {
-                session.SetError($"Validation failed: {ex.Message}");
-                await _context.SaveChangesAsync(cancellationToken);
+                await using var context = await _tenantDbContextFactory.CreateDbContextAsync(tenantId);
+                var session = await context.MigrationSessions
+                    .FirstOrDefaultAsync(s => s.Id == sessionId, cancellationToken);
+
+                if (session != null)
+                {
+                    session.SetError($"Validation failed: {ex.Message}");
+                    await context.SaveChangesAsync(cancellationToken);
+                }
+            }
+            catch (Exception innerEx)
+            {
+                _logger.LogError(innerEx, "Failed to update session status after validation failure");
             }
         }
     }

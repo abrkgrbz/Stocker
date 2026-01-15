@@ -13,17 +13,19 @@ public class CancelMigrationSessionCommand : IRequest<Result<bool>>
 
 public class CancelMigrationSessionCommandHandler : IRequestHandler<CancelMigrationSessionCommand, Result<bool>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
 
-    public CancelMigrationSessionCommandHandler(IMasterDbContext context)
+    public CancelMigrationSessionCommandHandler(ITenantDbContextFactory tenantDbContextFactory)
     {
-        _context = context;
+        _tenantDbContextFactory = tenantDbContextFactory;
     }
 
     public async Task<Result<bool>> Handle(CancelMigrationSessionCommand request, CancellationToken cancellationToken)
     {
-        var session = await _context.MigrationSessions
-            .FirstOrDefaultAsync(s => s.Id == request.SessionId && s.TenantId == request.TenantId, cancellationToken);
+        await using var context = await _tenantDbContextFactory.CreateDbContextAsync(request.TenantId);
+
+        var session = await context.MigrationSessions
+            .FirstOrDefaultAsync(s => s.Id == request.SessionId, cancellationToken);
 
         if (session == null)
         {
@@ -33,7 +35,7 @@ public class CancelMigrationSessionCommandHandler : IRequestHandler<CancelMigrat
         try
         {
             session.Cancel();
-            await _context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
             return Result<bool>.Success(true);
         }
         catch (InvalidOperationException ex)

@@ -14,18 +14,20 @@ public class GetMigrationSessionQuery : IRequest<Result<MigrationSessionResponse
 
 public class GetMigrationSessionQueryHandler : IRequestHandler<GetMigrationSessionQuery, Result<MigrationSessionResponse>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
 
-    public GetMigrationSessionQueryHandler(IMasterDbContext context)
+    public GetMigrationSessionQueryHandler(ITenantDbContextFactory tenantDbContextFactory)
     {
-        _context = context;
+        _tenantDbContextFactory = tenantDbContextFactory;
     }
 
     public async Task<Result<MigrationSessionResponse>> Handle(GetMigrationSessionQuery request, CancellationToken cancellationToken)
     {
-        var session = await _context.MigrationSessions
+        await using var context = await _tenantDbContextFactory.CreateDbContextAsync(request.TenantId);
+
+        var session = await context.MigrationSessions
             .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.Id == request.SessionId && s.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Id == request.SessionId, cancellationToken);
 
         if (session == null)
         {
@@ -37,7 +39,7 @@ public class GetMigrationSessionQueryHandler : IRequestHandler<GetMigrationSessi
         if (session.Status == Domain.Migration.Enums.MigrationSessionStatus.Validating && session.TotalRecords > 0)
         {
             // Count validated records from validation results
-            var validatedCount = await _context.MigrationValidationResults
+            var validatedCount = await context.MigrationValidationResults
                 .CountAsync(r => r.SessionId == session.Id, cancellationToken);
             validationProgress = Math.Round((double)validatedCount / session.TotalRecords * 100, 1);
         }

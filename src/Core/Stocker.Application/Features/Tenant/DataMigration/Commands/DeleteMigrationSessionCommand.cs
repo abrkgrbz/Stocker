@@ -13,17 +13,19 @@ public class DeleteMigrationSessionCommand : IRequest<Result<bool>>
 
 public class DeleteMigrationSessionCommandHandler : IRequestHandler<DeleteMigrationSessionCommand, Result<bool>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
 
-    public DeleteMigrationSessionCommandHandler(IMasterDbContext context)
+    public DeleteMigrationSessionCommandHandler(ITenantDbContextFactory tenantDbContextFactory)
     {
-        _context = context;
+        _tenantDbContextFactory = tenantDbContextFactory;
     }
 
     public async Task<Result<bool>> Handle(DeleteMigrationSessionCommand request, CancellationToken cancellationToken)
     {
-        var session = await _context.MigrationSessions
-            .FirstOrDefaultAsync(s => s.Id == request.SessionId && s.TenantId == request.TenantId, cancellationToken);
+        await using var context = await _tenantDbContextFactory.CreateDbContextAsync(request.TenantId);
+
+        var session = await context.MigrationSessions
+            .FirstOrDefaultAsync(s => s.Id == request.SessionId, cancellationToken);
 
         if (session == null)
         {
@@ -36,21 +38,21 @@ public class DeleteMigrationSessionCommandHandler : IRequestHandler<DeleteMigrat
         }
 
         // Delete related records first (due to FK constraints)
-        var validationResults = await _context.MigrationValidationResults
+        var validationResults = await context.MigrationValidationResults
             .Where(r => r.SessionId == request.SessionId)
             .ToListAsync(cancellationToken);
 
-        _context.MigrationValidationResults.RemoveRange(validationResults);
+        context.MigrationValidationResults.RemoveRange(validationResults);
 
-        var chunks = await _context.MigrationChunks
+        var chunks = await context.MigrationChunks
             .Where(c => c.SessionId == request.SessionId)
             .ToListAsync(cancellationToken);
 
-        _context.MigrationChunks.RemoveRange(chunks);
+        context.MigrationChunks.RemoveRange(chunks);
 
-        _context.MigrationSessions.Remove(session);
+        context.MigrationSessions.Remove(session);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);
     }

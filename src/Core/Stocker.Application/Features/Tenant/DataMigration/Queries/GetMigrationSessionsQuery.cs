@@ -26,18 +26,19 @@ public class PagedMigrationSessionsResponse
 
 public class GetMigrationSessionsQueryHandler : IRequestHandler<GetMigrationSessionsQuery, Result<PagedMigrationSessionsResponse>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
 
-    public GetMigrationSessionsQueryHandler(IMasterDbContext context)
+    public GetMigrationSessionsQueryHandler(ITenantDbContextFactory tenantDbContextFactory)
     {
-        _context = context;
+        _tenantDbContextFactory = tenantDbContextFactory;
     }
 
     public async Task<Result<PagedMigrationSessionsResponse>> Handle(GetMigrationSessionsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.MigrationSessions
-            .AsNoTracking()
-            .Where(s => s.TenantId == request.TenantId);
+        await using var context = await _tenantDbContextFactory.CreateDbContextAsync(request.TenantId);
+
+        var query = context.MigrationSessions
+            .AsNoTracking();
 
         // Filter by status
         if (!string.IsNullOrEmpty(request.Status) && Enum.TryParse<MigrationSessionStatus>(request.Status, true, out var status))

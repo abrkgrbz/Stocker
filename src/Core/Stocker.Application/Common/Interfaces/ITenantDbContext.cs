@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Stocker.Domain.Tenant.Entities;
 using Stocker.Domain.Master.Entities;
+using Stocker.Domain.Migration.Entities;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -67,7 +68,12 @@ public interface ITenantDbContext : IDisposable, IAsyncDisposable
     DbSet<Domain.Tenant.Entities.Invoice> Invoices { get; }
     DbSet<Domain.Tenant.Entities.InvoiceItem> InvoiceItems { get; }
     DbSet<Domain.Tenant.Entities.Payment> Payments { get; }
-    
+
+    // Data Migration (ERP/CRM Import) - Tenant-specific migration data
+    DbSet<MigrationSession> MigrationSessions { get; }
+    DbSet<MigrationChunk> MigrationChunks { get; }
+    DbSet<MigrationValidationResult> MigrationValidationResults { get; }
+
     // Common methods
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     int SaveChanges();

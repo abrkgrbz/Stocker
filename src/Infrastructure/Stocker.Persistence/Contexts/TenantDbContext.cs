@@ -1,5 +1,6 @@
-using Microsoft.EntityFrameworkCore; 
+using Microsoft.EntityFrameworkCore;
 using Stocker.Domain.Tenant.Entities;
+using Stocker.Domain.Migration.Entities;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.Application.Common.Interfaces;
@@ -111,6 +112,11 @@ public class TenantDbContext : BaseDbContext, ITenantDbContext
     // Customer & Product Management
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Product> Products => Set<Product>();
+
+    // Data Migration (ERP/CRM Import) - Tenant-specific migration data
+    public DbSet<MigrationSession> MigrationSessions => Set<MigrationSession>();
+    public DbSet<MigrationChunk> MigrationChunks => Set<MigrationChunk>();
+    public DbSet<MigrationValidationResult> MigrationValidationResults => Set<MigrationValidationResult>();
 
     // Inventory - Moved to Stocker.Modules.Inventory
     // public DbSet<Product> Products => Set<Product>();
