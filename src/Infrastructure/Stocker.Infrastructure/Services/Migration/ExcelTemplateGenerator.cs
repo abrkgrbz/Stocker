@@ -293,19 +293,28 @@ public class ExcelTemplateGenerator : IExcelTemplateGenerator
             {
                 new()
                 {
-                    ["Code"] = "MUS-001",
                     ["Name"] = "Örnek Müşteri A.Ş.",
+                    ["Email"] = "info@ornek.com",
+                    ["Phone"] = "0216 555 1234",
                     ["TaxNumber"] = "1234567890",
                     ["TaxOffice"] = "Kadıköy",
-                    ["Phone"] = "0216 555 1234",
-                    ["Email"] = "info@ornek.com"
+                    ["Address"] = "Atatürk Cad. No:123",
+                    ["City"] = "İstanbul",
+                    ["District"] = "Kadıköy",
+                    ["Website"] = "www.ornek.com",
+                    ["Industry"] = "Perakende",
+                    ["ContactPerson"] = "Mehmet Yılmaz",
+                    ["CreditLimit"] = "50000",
+                    ["Description"] = "Kurumsal müşteri"
                 },
                 new()
                 {
-                    ["Code"] = "MUS-002",
                     ["Name"] = "Ahmet Yılmaz",
+                    ["Email"] = "ahmet@email.com",
+                    ["Phone"] = "0532 555 4321",
                     ["TaxNumber"] = "12345678901",
-                    ["Phone"] = "0532 555 4321"
+                    ["City"] = "Ankara",
+                    ["Industry"] = "Bilişim"
                 }
             },
             MigrationEntityType.Supplier => new List<Dictionary<string, string>>
@@ -490,19 +499,24 @@ public class ExcelTemplateGenerator : IExcelTemplateGenerator
             MigrationEntityType.Customer => new EntitySchema
             {
                 DisplayName = "Müşteriler",
-                Description = "Müşteri/Cari kartları için import şablonu",
+                Description = "CRM müşteri kartları için import şablonu",
                 Fields = new List<FieldSchema>
                 {
-                    new("Code", "Cari Kodu", "string", true, 50, "Benzersiz cari kodu"),
-                    new("Name", "Firma/Kişi Adı", "string", true, 200),
+                    new("Name", "Firma/Kişi Adı", "string", true, 200, "Zorunlu - Müşteri veya firma adı"),
+                    new("Email", "E-posta", "string", true, 100, "Zorunlu - Geçerli e-posta adresi"),
+                    new("Phone", "Telefon", "string", false, 20, "İletişim telefon numarası"),
                     new("TaxNumber", "Vergi/TC No", "string", false, 20, "VKN (10 hane) veya TCKN (11 hane)"),
-                    new("TaxOffice", "Vergi Dairesi", "string", false, 100),
-                    new("Phone", "Telefon", "string", false, 20),
-                    new("Email", "E-posta", "string", false, 100),
-                    new("Address", "Adres", "string", false, 500),
-                    new("City", "İl", "string", false, 50),
-                    new("District", "İlçe", "string", false, 50),
+                    new("TaxOffice", "Vergi Dairesi", "string", false, 100, "Vergi dairesi adı"),
+                    new("Address", "Adres", "string", false, 500, "Açık adres"),
+                    new("City", "İl", "string", false, 50, "Şehir/İl"),
+                    new("District", "İlçe", "string", false, 50, "İlçe"),
+                    new("Country", "Ülke", "string", false, 50, "Ülke (varsayılan: Türkiye)", "Türkiye"),
+                    new("PostalCode", "Posta Kodu", "string", false, 10, "Posta kodu"),
+                    new("Website", "Web Sitesi", "string", false, 200, "Firma web sitesi"),
+                    new("Industry", "Sektör", "string", false, 100, "Faaliyet sektörü"),
+                    new("ContactPerson", "Yetkili Kişi", "string", false, 100, "İlgili/yetkili kişi adı"),
                     new("CreditLimit", "Kredi Limiti", "decimal", false, null, "TL cinsinden kredi limiti"),
+                    new("Description", "Açıklama", "string", false, 500, "Müşteri hakkında notlar"),
                 }
             },
             MigrationEntityType.Supplier => new EntitySchema
