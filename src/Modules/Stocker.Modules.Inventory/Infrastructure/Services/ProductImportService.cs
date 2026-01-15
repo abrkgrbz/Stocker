@@ -64,14 +64,14 @@ public class ProductImportService : IProductImportService
             // Set brand if provided
             if (!string.IsNullOrWhiteSpace(request.BrandCode))
             {
-                var brand = await FindOrCreateBrandAsync(request.BrandCode, cancellationToken);
+                var brand = await FindOrCreateBrandAsync(request.BrandCode, request.TenantId, cancellationToken);
                 existingProduct.SetBrand(brand.Id);
             }
 
             // Set supplier if provided
             if (!string.IsNullOrWhiteSpace(request.SupplierCode))
             {
-                var supplier = await FindOrCreateSupplierAsync(request.SupplierCode, cancellationToken);
+                var supplier = await FindOrCreateSupplierAsync(request.SupplierCode, request.TenantId, cancellationToken);
                 existingProduct.SetSupplier(supplier.Id);
             }
 
@@ -110,10 +110,10 @@ public class ProductImportService : IProductImportService
         }
 
         // Find or create category
-        var category = await FindOrCreateCategoryAsync(request.CategoryCode, cancellationToken);
+        var category = await FindOrCreateCategoryAsync(request.CategoryCode, request.TenantId, cancellationToken);
 
         // Find or create unit
-        var unit = await FindOrCreateUnitAsync(request.Unit, cancellationToken);
+        var unit = await FindOrCreateUnitAsync(request.Unit, request.TenantId, cancellationToken);
 
         // Parse product type
         var parsedProductType = ParseProductType(request.ProductType);
@@ -131,6 +131,9 @@ public class ProductImportService : IProductImportService
             unitId: unit.Id,
             reorderQuantity: request.ReorderQuantity,
             leadTimeDays: request.LeadTimeDays);
+
+        // Set TenantId for new product
+        product.SetTenantId(request.TenantId);
 
         // Set description and cost price
         product.UpdateProductInfo(
@@ -152,14 +155,14 @@ public class ProductImportService : IProductImportService
         // Set brand if provided
         if (!string.IsNullOrWhiteSpace(request.BrandCode))
         {
-            var brand = await FindOrCreateBrandAsync(request.BrandCode, cancellationToken);
+            var brand = await FindOrCreateBrandAsync(request.BrandCode, request.TenantId, cancellationToken);
             product.SetBrand(brand.Id);
         }
 
         // Set supplier if provided
         if (!string.IsNullOrWhiteSpace(request.SupplierCode))
         {
-            var supplier = await FindOrCreateSupplierAsync(request.SupplierCode, cancellationToken);
+            var supplier = await FindOrCreateSupplierAsync(request.SupplierCode, request.TenantId, cancellationToken);
             product.SetSupplier(supplier.Id);
         }
 
@@ -197,7 +200,7 @@ public class ProductImportService : IProductImportService
         return product.Id;
     }
 
-    private async Task<Category> FindOrCreateCategoryAsync(string? categoryCode, CancellationToken cancellationToken)
+    private async Task<Category> FindOrCreateCategoryAsync(string? categoryCode, Guid tenantId, CancellationToken cancellationToken)
     {
         // If no category code, find or create default category
         if (string.IsNullOrWhiteSpace(categoryCode))
@@ -213,10 +216,11 @@ public class ProductImportService : IProductImportService
             return category;
         }
 
-        // Create new category
+        // Create new category with TenantId
         category = new Category(
             code: categoryCode,
             name: GetCategoryNameFromCode(categoryCode));
+        category.SetTenantId(tenantId);
 
         _context.Categories.Add(category);
         await _context.SaveChangesAsync(cancellationToken);
@@ -228,7 +232,7 @@ public class ProductImportService : IProductImportService
         return category;
     }
 
-    private async Task<Unit> FindOrCreateUnitAsync(string unitName, CancellationToken cancellationToken)
+    private async Task<Unit> FindOrCreateUnitAsync(string unitName, Guid tenantId, CancellationToken cancellationToken)
     {
         // Normalize unit name
         var normalizedName = NormalizeUnitName(unitName);
@@ -243,10 +247,11 @@ public class ProductImportService : IProductImportService
             return unit;
         }
 
-        // Create new unit
+        // Create new unit with TenantId
         var (symbol, allowDecimals, decimalPlaces) = GetUnitProperties(unitCode);
         unit = new Unit(unitCode, normalizedName, symbol);
         unit.SetDecimalSettings(allowDecimals, decimalPlaces);
+        unit.SetTenantId(tenantId);
 
         _context.Units.Add(unit);
         await _context.SaveChangesAsync(cancellationToken);
@@ -380,7 +385,7 @@ public class ProductImportService : IProductImportService
         };
     }
 
-    private async Task<Brand> FindOrCreateBrandAsync(string brandCode, CancellationToken cancellationToken)
+    private async Task<Brand> FindOrCreateBrandAsync(string brandCode, Guid tenantId, CancellationToken cancellationToken)
     {
         var brand = await _context.Brands
             .FirstOrDefaultAsync(b => b.Code == brandCode, cancellationToken);
@@ -390,10 +395,11 @@ public class ProductImportService : IProductImportService
             return brand;
         }
 
-        // Create new brand
+        // Create new brand with TenantId
         brand = new Brand(
             code: brandCode,
             name: brandCode);
+        brand.SetTenantId(tenantId);
 
         _context.Brands.Add(brand);
         await _context.SaveChangesAsync(cancellationToken);
@@ -405,7 +411,7 @@ public class ProductImportService : IProductImportService
         return brand;
     }
 
-    private async Task<Supplier> FindOrCreateSupplierAsync(string supplierCode, CancellationToken cancellationToken)
+    private async Task<Supplier> FindOrCreateSupplierAsync(string supplierCode, Guid tenantId, CancellationToken cancellationToken)
     {
         var supplier = await _context.Suppliers
             .FirstOrDefaultAsync(s => s.Code == supplierCode, cancellationToken);
@@ -415,10 +421,11 @@ public class ProductImportService : IProductImportService
             return supplier;
         }
 
-        // Create new supplier
+        // Create new supplier with TenantId
         supplier = new Supplier(
             code: supplierCode,
             name: supplierCode);
+        supplier.SetTenantId(tenantId);
 
         _context.Suppliers.Add(supplier);
         await _context.SaveChangesAsync(cancellationToken);
