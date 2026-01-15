@@ -112,12 +112,13 @@ export default function DataMigrationPage() {
     // Only update step for sessions that have progressed beyond creation
     switch (currentSession.status) {
       case 'Created':
-        // Created status means user should be uploading files
+      case 'Uploading':
+        // Created/Uploading status means user should be uploading files
         setCurrentStep('upload');
         break;
-      case 'Uploading':
       case 'Uploaded':
-        setCurrentStep('upload');
+        // Uploaded means ready for mapping
+        setCurrentStep('mapping');
         break;
       case 'Validating':
       case 'Validated':
@@ -179,8 +180,11 @@ export default function DataMigrationPage() {
     switch (session.status) {
       case 'Created':
       case 'Uploading':
-      case 'Uploaded':
         setCurrentStep('upload');
+        break;
+      case 'Uploaded':
+        // Uploaded means ready for mapping
+        setCurrentStep('mapping');
         break;
       case 'Validating':
       case 'Validated':
