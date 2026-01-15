@@ -13,6 +13,7 @@ public class MigrationValidationJob
 {
     private readonly IMasterDbContext _context;
     private readonly ILogger<MigrationValidationJob> _logger;
+    private const int BATCH_SIZE = 500; // Save every 500 records for progress visibility
 
     public MigrationValidationJob(
         IMasterDbContext context,
@@ -55,6 +56,7 @@ public class MigrationValidationJob
             int validRecords = 0;
             int errorRecords = 0;
             int warningRecords = 0;
+            int batchCount = 0;
 
             foreach (var chunk in chunks)
             {
@@ -104,6 +106,15 @@ public class MigrationValidationJob
                         }
 
                         _context.MigrationValidationResults.Add(resultEntity);
+                        batchCount++;
+
+                        // Save in batches for progress visibility
+                        if (batchCount >= BATCH_SIZE)
+                        {
+                            await _context.SaveChangesAsync(cancellationToken);
+                            batchCount = 0;
+                            _logger.LogDebug("Validation progress: {Current}/{Total} records processed", totalRecords, session.TotalRecords);
+                        }
                     }
 
                     // Update chunk status
@@ -116,8 +127,11 @@ public class MigrationValidationJob
                 }
             }
 
-            // Save all validation results
-            await _context.SaveChangesAsync(cancellationToken);
+            // Save any remaining validation results
+            if (batchCount > 0)
+            {
+                await _context.SaveChangesAsync(cancellationToken);
+            }
 
             // Update session statistics and status
             session.SetStatistics(totalRecords, validRecords, errorRecords, warningRecords);
