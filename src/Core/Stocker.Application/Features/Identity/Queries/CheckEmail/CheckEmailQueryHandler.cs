@@ -43,10 +43,14 @@ public class CheckEmailQueryHandler : IRequestHandler<CheckEmailQuery, Result<Ch
                 .FirstOrDefault(r => r.AdminEmail.Value.ToLower() == normalizedEmail);
 
             // Also check TenantUserEmails for invited users
-            var tenantUserEmails = await _masterContext.TenantUserEmails
-                .Where(e => e.Email.Value == normalizedEmail)
-                .Select(e => e.TenantId)
+            // Load into memory first to avoid EF Core translation issues with ValueObject
+            var allTenantUserEmails = await _masterContext.TenantUserEmails
                 .ToListAsync(cancellationToken);
+
+            var tenantUserEmails = allTenantUserEmails
+                .Where(e => e.Email.Value.ToLower() == normalizedEmail)
+                .Select(e => e.TenantId)
+                .ToList();
 
             if (user == null && registrationWithEmail == null && tenantUserEmails.Count == 0)
             {
