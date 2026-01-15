@@ -223,6 +223,23 @@ export interface PagedResult<T> {
   hasPrevious: boolean;
 }
 
+// Backend response type for validation preview
+interface ValidationPreviewBackendResponse {
+  sessionId: string;
+  totalRecords: number;
+  validCount: number;
+  warningCount: number;
+  errorCount: number;
+  fixedCount: number;
+  skippedCount: number;
+  pendingCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  filter: string;
+  records: MigrationValidationResultDto[];
+}
+
 export interface ApiResponseWrapper<T> {
   success: boolean;
   data: T;
@@ -514,12 +531,26 @@ export const MigrationService = {
 
   async getValidationResults(filters: ValidationFilters): Promise<PagedResult<MigrationValidationResultDto>> {
     // Backend endpoint: GET /sessions/{sessionId}/preview
+    // Backend returns ValidationPreviewResponse, we convert it to PagedResult format
     const { sessionId, ...params } = filters;
-    const response = await apiClient.get<PagedResult<MigrationValidationResultDto>>(
+    const response = await apiClient.get<ValidationPreviewBackendResponse>(
       `/api/tenant/data-migration/sessions/${sessionId}/preview`,
       params
     );
-    return (response as any)?.data || response;
+
+    // Extract the actual response data (may be wrapped in ApiResponse)
+    const backendData = (response as any)?.data || response;
+
+    // Convert backend response to PagedResult format expected by frontend
+    return {
+      items: backendData.records || [],
+      totalCount: backendData.totalRecords || 0,
+      pageNumber: backendData.pageNumber || 1,
+      pageSize: backendData.pageSize || 50,
+      totalPages: backendData.totalPages || 1,
+      hasNext: (backendData.pageNumber || 1) < (backendData.totalPages || 1),
+      hasPrevious: (backendData.pageNumber || 1) > 1,
+    };
   },
 
   async getStatistics(sessionId: string): Promise<MigrationStatisticsDto> {
