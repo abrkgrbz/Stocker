@@ -7,7 +7,8 @@ using System.Text.Json;
 namespace Stocker.Infrastructure.BackgroundJobs.Jobs;
 
 /// <summary>
-/// Background job for validating migration data
+/// Background job for validating migration data.
+/// Updates existing validation result records that were created during upload.
 /// </summary>
 public class MigrationValidationJob
 {
@@ -47,12 +48,15 @@ public class MigrationValidationJob
             session.UpdateStatus(MigrationSessionStatus.Validating);
             await context.SaveChangesAsync(cancellationToken);
 
-            // Get all chunks for this session
-            var chunks = await context.MigrationChunks
-                .Where(c => c.SessionId == sessionId)
-                .OrderBy(c => c.EntityType)
-                .ThenBy(c => c.ChunkIndex)
+            // Get all pending validation results for this session (created during upload)
+            var pendingResults = await context.MigrationValidationResults
+                .Include(r => r.Chunk)
+                .Where(r => r.SessionId == sessionId && r.Status == ValidationStatus.Pending)
+                .OrderBy(r => r.GlobalRowIndex)
                 .ToListAsync(cancellationToken);
+
+            _logger.LogInformation("Found {Count} pending validation results for session {SessionId}",
+                pendingResults.Count, sessionId);
 
             int totalRecords = 0;
             int validRecords = 0;
@@ -60,84 +64,86 @@ public class MigrationValidationJob
             int warningRecords = 0;
             int batchCount = 0;
 
-            foreach (var chunk in chunks)
+            foreach (var result in pendingResults)
             {
                 try
                 {
-                    // Parse chunk data
-                    var records = JsonSerializer.Deserialize<List<Dictionary<string, object?>>>(chunk.DataJson);
-                    if (records == null) continue;
+                    totalRecords++;
 
-                    int rowInChunk = 0;
-                    foreach (var record in records)
+                    // Parse original data
+                    var record = JsonSerializer.Deserialize<Dictionary<string, object?>>(result.OriginalDataJson);
+                    if (record == null)
                     {
-                        totalRecords++;
-                        rowInChunk++;
-
-                        // Validate the record
-                        var validationResult = ValidateRecord(record, chunk.EntityType, session.MappingConfigJson);
-
-                        // Create validation result entity with chunk reference
-                        var resultEntity = new Domain.Migration.Entities.MigrationValidationResult(
-                            sessionId: sessionId,
-                            chunkId: chunk.Id,
-                            entityType: chunk.EntityType,
-                            rowIndex: rowInChunk,
-                            originalDataJson: JsonSerializer.Serialize(record));
-                        resultEntity.SetGlobalRowIndex(totalRecords);
-
-                        if (validationResult.Errors.Count > 0)
-                        {
-                            resultEntity.SetValidationResult(
-                                ValidationStatus.Error,
-                                validationResult.Errors,
-                                validationResult.Warnings);
-                            errorRecords++;
-                        }
-                        else if (validationResult.Warnings.Count > 0)
-                        {
-                            resultEntity.SetValidationResult(
-                                ValidationStatus.Warning,
-                                validationResult.Errors,
-                                validationResult.Warnings);
-                            warningRecords++;
-                        }
-                        else
-                        {
-                            resultEntity.SetValidationResult(
-                                ValidationStatus.Valid,
-                                new List<string>(),
-                                new List<string>());
-                            validRecords++;
-                        }
-
-                        context.MigrationValidationResults.Add(resultEntity);
-                        batchCount++;
-
-                        // Save in batches for progress visibility
-                        if (batchCount >= BATCH_SIZE)
-                        {
-                            await context.SaveChangesAsync(cancellationToken);
-                            batchCount = 0;
-                            _logger.LogDebug("Validation progress: {Current}/{Total} records processed", totalRecords, session.TotalRecords);
-                        }
+                        result.SetValidationResult(
+                            ValidationStatus.Error,
+                            new List<string> { "Veri okunamadı" },
+                            new List<string>());
+                        errorRecords++;
+                        continue;
                     }
 
-                    // Update chunk status
-                    chunk.MarkAsValidated();
+                    // Validate the record
+                    var validationResult = ValidateRecord(record, result.EntityType, session.MappingConfigJson);
+
+                    if (validationResult.Errors.Count > 0)
+                    {
+                        result.SetValidationResult(
+                            ValidationStatus.Error,
+                            validationResult.Errors,
+                            validationResult.Warnings);
+                        errorRecords++;
+                    }
+                    else if (validationResult.Warnings.Count > 0)
+                    {
+                        result.SetValidationResult(
+                            ValidationStatus.Warning,
+                            validationResult.Errors,
+                            validationResult.Warnings);
+                        warningRecords++;
+                    }
+                    else
+                    {
+                        result.SetValidationResult(
+                            ValidationStatus.Valid,
+                            new List<string>(),
+                            new List<string>());
+                        validRecords++;
+                    }
+
+                    batchCount++;
+
+                    // Save in batches for progress visibility
+                    if (batchCount >= BATCH_SIZE)
+                    {
+                        await context.SaveChangesAsync(cancellationToken);
+                        batchCount = 0;
+                        _logger.LogDebug("Validation progress: {Current}/{Total} records processed",
+                            totalRecords, pendingResults.Count);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error processing chunk {ChunkId}", chunk.Id);
-                    chunk.MarkAsFailed(ex.Message);
+                    _logger.LogError(ex, "Error validating record {RecordId}", result.Id);
+                    result.SetValidationResult(
+                        ValidationStatus.Error,
+                        new List<string> { $"Doğrulama hatası: {ex.Message}" },
+                        new List<string>());
+                    errorRecords++;
                 }
             }
 
-            // Save any remaining validation results
-            if (batchCount > 0)
+            // Mark all chunks as validated
+            var chunks = await context.MigrationChunks
+                .Where(c => c.SessionId == sessionId)
+                .ToListAsync(cancellationToken);
+
+            foreach (var chunk in chunks)
             {
-                await context.SaveChangesAsync(cancellationToken);
+                chunk.MarkAsValidated();
             }
+
+            // Save any remaining changes
+            await context.SaveChangesAsync(cancellationToken);
 
             // Update session statistics and status
             session.SetStatistics(totalRecords, validRecords, errorRecords, warningRecords);
