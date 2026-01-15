@@ -17,23 +17,50 @@ public interface IProductImportService
 
 /// <summary>
 /// Request model for product import operations.
+/// Maps to Inventory.Domain.Entities.Product
 /// </summary>
 public record ProductImportRequest(
+    // Required fields
     Guid TenantId,
     string Code,
     string Name,
+
+    // Basic info
     string? Description = null,
     string? Barcode = null,
     string? Sku = null,
+
+    // Classification
+    string? ProductType = null,          // Raw, SemiFinished, Finished, Service, Consumable, FixedAsset
+    string? CategoryCode = null,
+    string? BrandCode = null,
+    string? SupplierCode = null,
+
+    // Unit & Pricing
     string Unit = "Adet",
     decimal SalePrice = 0,
     decimal CostPrice = 0,
     string Currency = "TRY",
     decimal VatRate = 18,
-    string? CategoryCode = null,
+
+    // Stock levels
     decimal MinimumStock = 0,
     decimal MaximumStock = 0,
     decimal ReorderPoint = 0,
+    decimal ReorderQuantity = 0,
+    int LeadTimeDays = 0,
+
+    // Physical properties
     decimal Weight = 0,
-    string WeightUnit = "kg"
+    string WeightUnit = "kg",
+    decimal Length = 0,
+    decimal Width = 0,
+    decimal Height = 0,
+    string DimensionUnit = "cm",
+
+    // Tracking options
+    bool IsActive = true,
+    bool IsStockTracked = true,
+    bool IsSerialTracked = false,
+    bool IsLotTracked = false
 );

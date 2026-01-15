@@ -277,16 +277,30 @@ public class ExcelTemplateGenerator : IExcelTemplateGenerator
                     ["Description"] = "Akıllı telefon, 256GB dahili hafıza, 12GB RAM",
                     ["Barcode"] = "8806095050256",
                     ["SKU"] = "SM-S928B-256",
+                    ["ProductType"] = "Mamul",
                     ["CategoryCode"] = "ELEKTRONIK",
+                    ["BrandCode"] = "SAMSUNG",
+                    ["SupplierCode"] = "TED-001",
                     ["Unit"] = "Adet",
                     ["VatRate"] = "18",
                     ["SalePrice"] = "74990,00",
                     ["CostPrice"] = "65000,00",
+                    ["Currency"] = "TRY",
                     ["MinStock"] = "5",
                     ["MaxStock"] = "100",
                     ["ReorderPoint"] = "10",
+                    ["ReorderQuantity"] = "20",
+                    ["LeadTimeDays"] = "7",
                     ["Weight"] = "0,233",
-                    ["WeightUnit"] = "kg"
+                    ["WeightUnit"] = "kg",
+                    ["Length"] = "16,3",
+                    ["Width"] = "7,9",
+                    ["Height"] = "0,86",
+                    ["DimensionUnit"] = "cm",
+                    ["IsActive"] = "Evet",
+                    ["IsStockTracked"] = "Evet",
+                    ["IsSerialTracked"] = "Evet",
+                    ["IsLotTracked"] = "Hayır"
                 },
                 new()
                 {
@@ -295,16 +309,30 @@ public class ExcelTemplateGenerator : IExcelTemplateGenerator
                     ["Description"] = "Dizüstü bilgisayar, M3 çip, 16GB RAM, 512GB SSD",
                     ["Barcode"] = "0194253939504",
                     ["SKU"] = "MBP14-M3-512",
+                    ["ProductType"] = "Mamul",
                     ["CategoryCode"] = "BILGISAYAR",
+                    ["BrandCode"] = "APPLE",
+                    ["SupplierCode"] = "TED-002",
                     ["Unit"] = "Adet",
                     ["VatRate"] = "18",
                     ["SalePrice"] = "89990,00",
                     ["CostPrice"] = "78000,00",
+                    ["Currency"] = "TRY",
                     ["MinStock"] = "3",
                     ["MaxStock"] = "50",
                     ["ReorderPoint"] = "5",
+                    ["ReorderQuantity"] = "10",
+                    ["LeadTimeDays"] = "14",
                     ["Weight"] = "1,55",
-                    ["WeightUnit"] = "kg"
+                    ["WeightUnit"] = "kg",
+                    ["Length"] = "31,26",
+                    ["Width"] = "22,12",
+                    ["Height"] = "1,55",
+                    ["DimensionUnit"] = "cm",
+                    ["IsActive"] = "Evet",
+                    ["IsStockTracked"] = "Evet",
+                    ["IsSerialTracked"] = "Evet",
+                    ["IsLotTracked"] = "Hayır"
                 },
                 new()
                 {
@@ -312,14 +340,23 @@ public class ExcelTemplateGenerator : IExcelTemplateGenerator
                     ["Name"] = "Organik Zeytinyağı 5Lt",
                     ["Description"] = "Soğuk sıkım, natürel sızma zeytinyağı",
                     ["Barcode"] = "8690123456789",
+                    ["ProductType"] = "Mamul",
                     ["CategoryCode"] = "GIDA",
+                    ["BrandCode"] = "NATUREL",
                     ["Unit"] = "Lt",
                     ["VatRate"] = "1",
                     ["SalePrice"] = "850,00",
                     ["CostPrice"] = "650,00",
+                    ["Currency"] = "TRY",
                     ["MinStock"] = "20",
                     ["MaxStock"] = "500",
-                    ["ReorderPoint"] = "50"
+                    ["ReorderPoint"] = "50",
+                    ["ReorderQuantity"] = "100",
+                    ["LeadTimeDays"] = "3",
+                    ["IsActive"] = "Evet",
+                    ["IsStockTracked"] = "Evet",
+                    ["IsSerialTracked"] = "Hayır",
+                    ["IsLotTracked"] = "Evet"
                 }
             },
             MigrationEntityType.Customer => new List<Dictionary<string, string>>
@@ -516,21 +553,46 @@ public class ExcelTemplateGenerator : IExcelTemplateGenerator
                 Description = "Inventory modülü ürün kartları için import şablonu",
                 Fields = new List<FieldSchema>
                 {
+                    // Temel bilgiler
                     new("Code", "Ürün Kodu", "string", true, 50, "Zorunlu - Benzersiz ürün kodu"),
                     new("Name", "Ürün Adı", "string", true, 200, "Zorunlu - Ürün adı"),
                     new("Description", "Detaylı Açıklama", "string", false, 500, "Ürün detaylı açıklaması"),
                     new("Barcode", "Barkod", "string", false, 50, "EAN13, UPC veya özel barkod"),
                     new("SKU", "SKU", "string", false, 50, "Stok Tutma Birimi kodu"),
+
+                    // Sınıflandırma
+                    new("ProductType", "Ürün Tipi", "string", false, 20, "Hammadde, YarimAmul, Mamul, Hizmet, Sarf, DuranVarlik", "Mamul"),
                     new("CategoryCode", "Kategori Kodu", "string", false, 50, "Kategori kodu (yoksa otomatik oluşturulur)"),
+                    new("BrandCode", "Marka Kodu", "string", false, 50, "Marka kodu (yoksa otomatik oluşturulur)"),
+                    new("SupplierCode", "Tedarikçi Kodu", "string", false, 50, "Varsayılan tedarikçi kodu"),
+
+                    // Birim ve fiyatlandırma
                     new("Unit", "Birim", "string", true, 20, "Zorunlu - Adet, Kg, Lt, Mt vb.", "Adet"),
                     new("VatRate", "KDV Oranı (%)", "decimal", false, null, "0, 1, 8, 10, 18, 20", "18"),
                     new("CostPrice", "Maliyet Fiyatı", "decimal", false, null, "KDV hariç alış/maliyet fiyatı"),
                     new("SalePrice", "Satış Fiyatı", "decimal", false, null, "KDV hariç satış fiyatı"),
+                    new("Currency", "Para Birimi", "string", false, 3, "TRY, USD, EUR", "TRY"),
+
+                    // Stok seviyeleri
                     new("MinStock", "Minimum Stok", "decimal", false, null, "Kritik stok seviyesi"),
                     new("MaxStock", "Maksimum Stok", "decimal", false, null, "Maksimum stok seviyesi"),
                     new("ReorderPoint", "Yeniden Sipariş Noktası", "decimal", false, null, "Otomatik sipariş tetikleme seviyesi"),
+                    new("ReorderQuantity", "Sipariş Miktarı", "decimal", false, null, "Varsayılan sipariş miktarı"),
+                    new("LeadTimeDays", "Tedarik Süresi (Gün)", "int", false, null, "Tedarikçiden teslim alma süresi", "0"),
+
+                    // Fiziksel özellikler
                     new("Weight", "Ağırlık", "decimal", false, null, "Ürün ağırlığı"),
                     new("WeightUnit", "Ağırlık Birimi", "string", false, 10, "kg, gr, ton vb.", "kg"),
+                    new("Length", "Uzunluk", "decimal", false, null, "Ürün boyu"),
+                    new("Width", "Genişlik", "decimal", false, null, "Ürün eni"),
+                    new("Height", "Yükseklik", "decimal", false, null, "Ürün yüksekliği"),
+                    new("DimensionUnit", "Boyut Birimi", "string", false, 10, "cm, m, mm vb.", "cm"),
+
+                    // Takip seçenekleri
+                    new("IsActive", "Aktif", "bool", false, null, "Ürün aktif mi?", "Evet"),
+                    new("IsStockTracked", "Stok Takibi", "bool", false, null, "Stok takibi yapılsın mı?", "Evet"),
+                    new("IsSerialTracked", "Seri No Takibi", "bool", false, null, "Seri numarası takibi yapılsın mı?", "Hayır"),
+                    new("IsLotTracked", "Lot/Parti Takibi", "bool", false, null, "Lot/parti takibi yapılsın mı?", "Hayır"),
                 }
             },
             MigrationEntityType.Customer => new EntitySchema

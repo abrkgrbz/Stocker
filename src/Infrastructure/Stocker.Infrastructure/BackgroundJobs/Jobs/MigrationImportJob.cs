@@ -277,40 +277,53 @@ public class MigrationImportJob
             throw new InvalidOperationException("Product code and name are required");
         }
 
+        // Basic info
         var description = GetStringValue(data, "Description", "Aciklama", "Açıklama");
+        var barcode = GetStringValue(data, "Barcode", "Barkod");
+        var sku = GetStringValue(data, "SKU", "StokKodu2");
+
+        // Classification
+        var productType = GetStringValue(data, "ProductType", "UrunTipi", "StokTipi");
+        var categoryCode = GetStringValue(data, "CategoryCode", "KategoriKodu", "Kategori");
+        var brandCode = GetStringValue(data, "BrandCode", "MarkaKodu", "Marka");
+        var supplierCode = GetStringValue(data, "SupplierCode", "TedarikciKodu", "Tedarikci");
+
+        // Unit & Pricing
+        var unit = GetStringValue(data, "UnitCode", "BirimKodu", "Unit", "Birim") ?? "Adet";
         var salePrice = GetDecimalValue(data, "SalePrice", "SatisFiyati", "Fiyat");
         var costPrice = GetDecimalValue(data, "CostPrice", "PurchasePrice", "AlisFiyati", "Maliyet");
         var currency = GetStringValue(data, "Currency", "ParaBirimi") ?? "TRY";
-        var barcode = GetStringValue(data, "Barcode", "Barkod");
-        var sku = GetStringValue(data, "SKU", "StokKodu2");
-        var unit = GetStringValue(data, "UnitCode", "BirimKodu", "Unit", "Birim") ?? "Adet";
         var vatRate = GetDecimalValue(data, "VatRate", "KdvOrani", "Kdv");
-        var categoryCode = GetStringValue(data, "CategoryCode", "KategoriKodu", "Kategori");
+
+        // Stock levels
         var minStock = GetDecimalValue(data, "MinStock", "MinimumStok", "MinStok");
         var maxStock = GetDecimalValue(data, "MaxStock", "MaksimumStok", "MaxStok");
         var reorderPoint = GetDecimalValue(data, "ReorderPoint", "YenidenSiparisNoktasi", "SiparisNoktasi");
+        var reorderQuantity = GetDecimalValue(data, "ReorderQuantity", "SiparisMiktari", "YenidenSiparisMiktari");
+        var leadTimeDays = (int)GetDecimalValue(data, "LeadTimeDays", "TedarikSuresi", "TeslimSuresi");
+
+        // Physical properties
         var weight = GetDecimalValue(data, "Weight", "Agirlik", "Ağırlık");
         var weightUnit = GetStringValue(data, "WeightUnit", "AgirlikBirimi") ?? "kg";
+        var length = GetDecimalValue(data, "Length", "Uzunluk", "Boy");
+        var width = GetDecimalValue(data, "Width", "Genislik", "En");
+        var height = GetDecimalValue(data, "Height", "Yukseklik", "Yükseklik");
+        var dimensionUnit = GetStringValue(data, "DimensionUnit", "BoyutBirimi") ?? "cm";
+
+        // Tracking options
+        var isActive = GetBoolValue(data, "IsActive", "Aktif", "AktifMi");
+        var isStockTracked = GetBoolValue(data, "IsStockTracked", "StokTakibi", "StokTakipli");
+        var isSerialTracked = GetBoolValue(data, "IsSerialTracked", "SeriTakibi", "SeriNoTakibi");
+        var isLotTracked = GetBoolValue(data, "IsLotTracked", "LotTakibi", "PartiTakibi");
 
         // Create Inventory Product directly (Core Product table is deprecated)
         await CreateInventoryProductAsync(
-            tenantId,
-            code,
-            name,
-            description,
-            barcode,
-            sku,
-            unit,
-            salePrice,
-            costPrice,
-            currency,
-            vatRate > 0 ? vatRate : 18, // Default 18% VAT
-            categoryCode,
-            minStock,
-            maxStock,
-            reorderPoint,
-            weight,
-            weightUnit,
+            tenantId, code, name, description, barcode, sku,
+            productType, categoryCode, brandCode, supplierCode,
+            unit, salePrice, costPrice, currency, vatRate > 0 ? vatRate : 18,
+            minStock, maxStock, reorderPoint, reorderQuantity, leadTimeDays,
+            weight, weightUnit, length, width, height, dimensionUnit,
+            isActive ?? true, isStockTracked ?? true, isSerialTracked ?? false, isLotTracked ?? false,
             ct);
     }
 
@@ -485,17 +498,35 @@ public class MigrationImportJob
         string? description,
         string? barcode,
         string? sku,
+        // Classification
+        string? productType,
+        string? categoryCode,
+        string? brandCode,
+        string? supplierCode,
+        // Unit & Pricing
         string unit,
         decimal salePrice,
         decimal costPrice,
         string currency,
         decimal vatRate,
-        string? categoryCode,
+        // Stock levels
         decimal minStock,
         decimal maxStock,
         decimal reorderPoint,
+        decimal reorderQuantity,
+        int leadTimeDays,
+        // Physical properties
         decimal weight,
         string weightUnit,
+        decimal length,
+        decimal width,
+        decimal height,
+        string dimensionUnit,
+        // Tracking options
+        bool isActive,
+        bool isStockTracked,
+        bool isSerialTracked,
+        bool isLotTracked,
         CancellationToken ct)
     {
         using var scope = _serviceProvider.CreateScope();
@@ -530,17 +561,30 @@ public class MigrationImportJob
                 Description: description,
                 Barcode: barcode,
                 Sku: sku,
+                ProductType: productType,
+                CategoryCode: categoryCode,
+                BrandCode: brandCode,
+                SupplierCode: supplierCode,
                 Unit: unit,
                 SalePrice: salePrice,
                 CostPrice: costPrice,
                 Currency: currency,
                 VatRate: vatRate,
-                CategoryCode: categoryCode,
                 MinimumStock: minStock,
                 MaximumStock: maxStock,
                 ReorderPoint: reorderPoint,
+                ReorderQuantity: reorderQuantity,
+                LeadTimeDays: leadTimeDays,
                 Weight: weight,
-                WeightUnit: weightUnit);
+                WeightUnit: weightUnit,
+                Length: length,
+                Width: width,
+                Height: height,
+                DimensionUnit: dimensionUnit,
+                IsActive: isActive,
+                IsStockTracked: isStockTracked,
+                IsSerialTracked: isSerialTracked,
+                IsLotTracked: isLotTracked);
 
             var productId = await productImportService.ImportProductAsync(request, ct);
 
@@ -704,6 +748,55 @@ public class MigrationImportJob
             return true;
 
         return false;
+    }
+
+    private bool? GetBoolValue(Dictionary<string, object?> data, params string[] keys)
+    {
+        foreach (var key in keys)
+        {
+            if (data.TryGetValue(key, out var value) && value != null)
+            {
+                if (value is JsonElement jsonElement)
+                {
+                    if (jsonElement.ValueKind == JsonValueKind.True)
+                        return true;
+                    if (jsonElement.ValueKind == JsonValueKind.False)
+                        return false;
+                    if (jsonElement.ValueKind == JsonValueKind.String)
+                    {
+                        var strValue = jsonElement.GetString()?.ToLowerInvariant();
+                        return ParseBoolString(strValue);
+                    }
+                    if (jsonElement.ValueKind == JsonValueKind.Number)
+                    {
+                        return jsonElement.GetInt32() != 0;
+                    }
+                }
+                else if (value is bool boolVal)
+                {
+                    return boolVal;
+                }
+                else
+                {
+                    var strValue = value.ToString()?.ToLowerInvariant();
+                    return ParseBoolString(strValue);
+                }
+            }
+        }
+        return null;
+    }
+
+    private static bool? ParseBoolString(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        return value switch
+        {
+            "true" or "1" or "yes" or "evet" or "e" or "aktif" or "var" => true,
+            "false" or "0" or "no" or "hayir" or "hayır" or "h" or "pasif" or "yok" => false,
+            _ => null
+        };
     }
 
     #endregion
