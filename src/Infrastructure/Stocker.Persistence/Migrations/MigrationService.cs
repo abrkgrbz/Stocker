@@ -136,8 +136,14 @@ public partial class MigrationService : IMigrationService
 
         try
         {
-            _logger.LogInformation("Starting master database migration...");
-            
+            var connectionString = context.Database.GetConnectionString();
+            _logger.LogInformation("Starting master database migration to: {Database}",
+                connectionString?.Split(';').FirstOrDefault(s => s.StartsWith("Database=", StringComparison.OrdinalIgnoreCase)) ?? "unknown");
+
+            // Check pending migrations
+            var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+            _logger.LogInformation("Pending migrations: {Migrations}", string.Join(", ", pendingMigrations));
+
             // MigrateAsync will create database if it doesn't exist
             _logger.LogInformation("Applying migrations and creating database if needed...");
             await context.Database.MigrateAsync();
