@@ -17,6 +17,30 @@ public class MigrationValidationJob
     private readonly ILogger<MigrationValidationJob> _logger;
     private const int BATCH_SIZE = 500; // Process 500 records at a time
 
+    // Turkish field name patterns for auto-detection (target field -> possible source names)
+    private static readonly Dictionary<string, string[]> TurkishFieldPatterns = new()
+    {
+        ["Code"] = new[] { "kod", "kodu", "code", "no", "numara", "cari kodu", "ürün kodu", "urun kodu" },
+        ["Name"] = new[] { "ad", "adi", "adı", "isim", "ismi", "name", "tanim", "tanım", "firma", "kişi", "kisi", "firma/kişi adı", "ürün adı", "urun adi" },
+        ["Unit"] = new[] { "birim", "unit", "olcu", "ölçü" },
+        ["TaxNumber"] = new[] { "vergi", "vergino", "vergi no", "vergi/tc no", "vkn", "tc", "tc no" },
+        ["Email"] = new[] { "email", "eposta", "e-posta", "mail" },
+        ["Phone"] = new[] { "tel", "telefon", "phone", "gsm", "cep" },
+        ["Address"] = new[] { "adres", "address" },
+        ["City"] = new[] { "il", "sehir", "şehir", "city" },
+        ["District"] = new[] { "ilce", "ilçe", "district" },
+        ["Barcode"] = new[] { "barkod", "barcode", "ean" },
+        ["CategoryCode"] = new[] { "kategori", "kategori kodu", "category" },
+        ["PurchasePrice"] = new[] { "alış", "alis", "alış fiyatı", "alis fiyati", "maliyet" },
+        ["SalePrice"] = new[] { "satış", "satis", "satış fiyatı", "satis fiyati" },
+        ["VatRate"] = new[] { "kdv", "kdv oranı", "kdv orani", "vat" },
+        ["MinStock"] = new[] { "min", "minimum", "minimum stok", "min stok" },
+        ["MaxStock"] = new[] { "max", "maksimum", "maksimum stok", "max stok" },
+        ["CreditLimit"] = new[] { "kredi", "kredi limiti", "limit" },
+        ["TaxOffice"] = new[] { "vergi dairesi", "vd" },
+        ["Description"] = new[] { "açıklama", "aciklama", "detay", "detaylı açıklama" },
+    };
+
     public MigrationValidationJob(
         ITenantDbContextFactory tenantDbContextFactory,
         ILogger<MigrationValidationJob> logger)
@@ -196,24 +220,13 @@ public class MigrationValidationJob
         // Get required fields for entity type
         var requiredFields = GetRequiredFields(entityType);
 
-        // Parse mapping config if available
-        Dictionary<string, string>? fieldMappings = null;
-        if (!string.IsNullOrEmpty(mappingConfigJson))
-        {
-            try
-            {
-                fieldMappings = JsonSerializer.Deserialize<Dictionary<string, string>>(mappingConfigJson);
-            }
-            catch
-            {
-                // If mapping config is invalid, use direct field names
-            }
-        }
+        // Build field mappings from config or auto-detect from Turkish patterns
+        var fieldMappings = BuildFieldMappings(record, entityType, mappingConfigJson);
 
         // Validate required fields
         foreach (var requiredField in requiredFields)
         {
-            var sourceField = fieldMappings?.GetValueOrDefault(requiredField) ?? requiredField;
+            var sourceField = fieldMappings.GetValueOrDefault(requiredField) ?? requiredField;
 
             if (!record.TryGetValue(sourceField, out var value) ||
                 value == null ||
@@ -360,6 +373,113 @@ public class MigrationValidationJob
             MigrationEntityType.PriceList => new List<string> { "ProductCode", "PriceListCode", "Price" },
             _ => new List<string>()
         };
+    }
+
+    /// <summary>
+    /// Builds field mappings from config or auto-detects from Turkish patterns.
+    /// Returns a dictionary mapping target field names to source field names.
+    /// </summary>
+    private Dictionary<string, string> BuildFieldMappings(
+        Dictionary<string, object?> record,
+        MigrationEntityType entityType,
+        string? mappingConfigJson)
+    {
+        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        // Try to parse mapping config if available
+        if (!string.IsNullOrEmpty(mappingConfigJson))
+        {
+            try
+            {
+                // Try parsing as simple Dictionary<string, string> first
+                var simpleMappings = JsonSerializer.Deserialize<Dictionary<string, string>>(mappingConfigJson);
+                if (simpleMappings != null)
+                {
+                    foreach (var kv in simpleMappings)
+                    {
+                        result[kv.Key] = kv.Value;
+                    }
+                    return result;
+                }
+            }
+            catch
+            {
+                // Try parsing as MappingConfigDto structure
+                try
+                {
+                    using var doc = JsonDocument.Parse(mappingConfigJson);
+                    if (doc.RootElement.TryGetProperty("EntityMappings", out var entityMappings) ||
+                        doc.RootElement.TryGetProperty("entityMappings", out entityMappings))
+                    {
+                        var entityKey = entityType.ToString();
+                        if (entityMappings.TryGetProperty(entityKey, out var entityMapping) ||
+                            entityMappings.TryGetProperty(entityKey.ToLower(), out entityMapping))
+                        {
+                            if (entityMapping.TryGetProperty("FieldMappings", out var fieldMappings) ||
+                                entityMapping.TryGetProperty("fieldMappings", out fieldMappings))
+                            {
+                                foreach (var fm in fieldMappings.EnumerateArray())
+                                {
+                                    var sourceField = fm.TryGetProperty("SourceField", out var sf) ? sf.GetString() :
+                                                      fm.TryGetProperty("sourceField", out sf) ? sf.GetString() : null;
+                                    var targetField = fm.TryGetProperty("TargetField", out var tf) ? tf.GetString() :
+                                                      fm.TryGetProperty("targetField", out tf) ? tf.GetString() : null;
+
+                                    if (!string.IsNullOrEmpty(targetField) && !string.IsNullOrEmpty(sourceField))
+                                    {
+                                        result[targetField] = sourceField;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Ignore parsing errors, fall through to auto-detection
+                }
+            }
+        }
+
+        // Auto-detect field mappings from record keys using Turkish patterns
+        var sourceFields = record.Keys.ToList();
+        foreach (var sourceField in sourceFields)
+        {
+            var normalizedSource = sourceField.ToLowerInvariant()
+                .Replace("*", "")
+                .Replace("(", "")
+                .Replace(")", "")
+                .Replace("%", "")
+                .Trim();
+
+            foreach (var (targetField, patterns) in TurkishFieldPatterns)
+            {
+                // Skip if already mapped
+                if (result.ContainsKey(targetField))
+                    continue;
+
+                foreach (var pattern in patterns)
+                {
+                    if (normalizedSource.Contains(pattern) || pattern.Contains(normalizedSource))
+                    {
+                        result[targetField] = sourceField;
+                        break;
+                    }
+                }
+            }
+
+            // Direct match (case-insensitive)
+            foreach (var targetField in TurkishFieldPatterns.Keys)
+            {
+                if (!result.ContainsKey(targetField) &&
+                    string.Equals(normalizedSource, targetField, StringComparison.OrdinalIgnoreCase))
+                {
+                    result[targetField] = sourceField;
+                }
+            }
+        }
+
+        return result;
     }
 
     private record ValidationResult(List<string> Errors, List<string> Warnings);
