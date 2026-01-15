@@ -162,6 +162,68 @@ public partial class MigrationService : IMigrationService
 
     public async Task MigrateTenantDatabaseAsync(Guid tenantId)
     {
+        // Retry configuration for transient failures (connection drops, admin commands, etc.)
+        const int maxRetries = 3;
+        const int initialDelayMs = 1000;
+        
+        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            try
+            {
+                await MigrateTenantDatabaseInternalAsync(tenantId);
+                return; // Success - exit retry loop
+            }
+            catch (PostgresException ex) when (IsTransientPostgresError(ex) && attempt < maxRetries)
+            {
+                var delay = initialDelayMs * (int)Math.Pow(2, attempt - 1); // Exponential backoff
+                _logger.LogWarning(ex, 
+                    "Transient PostgreSQL error (SqlState: {SqlState}) during tenant {TenantId} migration. Attempt {Attempt}/{MaxRetries}. Retrying in {Delay}ms...", 
+                    ex.SqlState, tenantId, attempt, maxRetries, delay);
+                await Task.Delay(delay);
+            }
+            catch (NpgsqlException ex) when (IsTransientNpgsqlError(ex) && attempt < maxRetries)
+            {
+                var delay = initialDelayMs * (int)Math.Pow(2, attempt - 1);
+                _logger.LogWarning(ex, 
+                    "Transient Npgsql error during tenant {TenantId} migration. Attempt {Attempt}/{MaxRetries}. Retrying in {Delay}ms...", 
+                    tenantId, attempt, maxRetries, delay);
+                await Task.Delay(delay);
+            }
+        }
+    }
+    
+    private static bool IsTransientPostgresError(PostgresException ex)
+    {
+        // PostgreSQL error codes that are transient and worth retrying
+        return ex.SqlState switch
+        {
+            "57P01" => true, // admin_shutdown - terminating connection due to administrator command
+            "57P02" => true, // crash_shutdown
+            "57P03" => true, // cannot_connect_now
+            "08000" => true, // connection_exception
+            "08003" => true, // connection_does_not_exist
+            "08006" => true, // connection_failure
+            "08001" => true, // sqlclient_unable_to_establish_sqlconnection
+            "08004" => true, // sqlserver_rejected_establishment_of_sqlconnection
+            "40001" => true, // serialization_failure
+            "40P01" => true, // deadlock_detected
+            "55P03" => true, // lock_not_available
+            "57014" => true, // query_canceled
+            _ => false
+        };
+    }
+    
+    private static bool IsTransientNpgsqlError(NpgsqlException ex)
+    {
+        // Check for connection-related transient errors
+        return ex.InnerException is System.Net.Sockets.SocketException ||
+               ex.InnerException is System.IO.IOException ||
+               ex.Message.Contains("connection") ||
+               ex.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task MigrateTenantDatabaseInternalAsync(Guid tenantId)
+    {
         using var scope = _serviceProvider.CreateScope();
         var masterContext = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
         var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
@@ -231,7 +293,7 @@ public partial class MigrationService : IMigrationService
                 npgsqlOptions.EnableRetryOnFailure(
                     maxRetryCount: 5,
                     maxRetryDelay: TimeSpan.FromSeconds(30),
-                    errorCodesToAdd: null);
+                    errorCodesToAdd: new[] { "57P01", "57P02", "57P03" }); // Add admin shutdown codes
             });
 
             // Suppress PendingModelChangesWarning for navigation configuration changes
