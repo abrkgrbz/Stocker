@@ -1,11 +1,16 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Domain.Migration.Enums;
 using Stocker.Domain.Tenant.Entities;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
+using Stocker.SharedKernel.Interfaces;
+using Stocker.SharedKernel.MultiTenancy;
 using System.Globalization;
 using System.Text.Json;
+using CrmCustomer = Stocker.Modules.CRM.Domain.Entities.Customer;
 
 namespace Stocker.Infrastructure.BackgroundJobs.Jobs;
 
@@ -16,6 +21,7 @@ public class MigrationImportJob
 {
     private readonly ITenantDbContextFactory _tenantDbContextFactory;
     private readonly ILogger<MigrationImportJob> _logger;
+    private readonly IServiceProvider _serviceProvider;
 
     // Turkish field name patterns for auto-detection (target field -> possible source names)
     private static readonly Dictionary<string, string[]> TurkishFieldPatterns = new()
@@ -43,10 +49,12 @@ public class MigrationImportJob
 
     public MigrationImportJob(
         ITenantDbContextFactory tenantDbContextFactory,
-        ILogger<MigrationImportJob> logger)
+        ILogger<MigrationImportJob> logger,
+        IServiceProvider serviceProvider)
     {
         _tenantDbContextFactory = tenantDbContextFactory;
         _logger = logger;
+        _serviceProvider = serviceProvider;
     }
 
     /// <summary>
@@ -372,6 +380,103 @@ public class MigrationImportJob
         }
 
         await context.Customers.AddAsync(customer, ct);
+
+        // Also create CRM Customer so it shows up in CRM module
+        await CreateCrmCustomerAsync(tenantId, name, emailStr, phone, addressLine, city, district, country, postalCode, taxNumber, ct);
+    }
+
+
+    /// <summary>
+    /// Creates a customer in the CRM module database
+    /// </summary>
+    private async Task CreateCrmCustomerAsync(
+        Guid tenantId,
+        string companyName,
+        string email,
+        string? phone,
+        string? address,
+        string? city,
+        string? district,
+        string? country,
+        string? postalCode,
+        string? taxId,
+        CancellationToken ct)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var scopedProvider = scope.ServiceProvider;
+
+        try
+        {
+            // Set up tenant context for CRM module
+            var tenantResolver = scopedProvider.GetRequiredService<ITenantResolver>();
+            var backgroundTenantService = scopedProvider.GetRequiredService<IBackgroundTenantService>();
+
+            var tenantInfo = await tenantResolver.ResolveByIdAsync(tenantId);
+            if (tenantInfo == null)
+            {
+                _logger.LogWarning("Tenant not found for CRM customer creation. TenantId: {TenantId}", tenantId);
+                return;
+            }
+
+            // Set tenant context for this scope
+            backgroundTenantService.SetTenantInfo(
+                tenantId,
+                tenantInfo.Name,
+                tenantInfo.ConnectionString);
+
+            // Get CRM DbContext with proper tenant context
+            var crmContext = scopedProvider.GetRequiredService<CRMDbContext>();
+
+            // Check if CRM customer already exists
+            var existingCrm = await crmContext.Customers
+                .FirstOrDefaultAsync(c => c.CompanyName == companyName, ct);
+
+            if (existingCrm != null)
+            {
+                _logger.LogDebug("CRM Customer {CompanyName} already exists, skipping", companyName);
+                return;
+            }
+
+            // Create CRM Customer
+            var crmCustomerResult = CrmCustomer.Create(
+                tenantId,
+                companyName,
+                email,
+                phone);
+
+            if (!crmCustomerResult.IsSuccess)
+            {
+                _logger.LogWarning("Failed to create CRM customer {CompanyName}: {Error}",
+                    companyName, crmCustomerResult.Error);
+                return;
+            }
+
+            var crmCustomer = crmCustomerResult.Value!;
+
+            // Set address if available
+            if (!string.IsNullOrEmpty(address) || !string.IsNullOrEmpty(city))
+            {
+                crmCustomer.UpdateAddressLegacy(address, city, district, country, postalCode);
+            }
+
+            // Set tax ID if available
+            if (!string.IsNullOrEmpty(taxId))
+            {
+                crmCustomer.UpdateFinancialInfo(null, null, null, taxId, null, null);
+            }
+
+            await crmContext.Customers.AddAsync(crmCustomer, ct);
+            await crmContext.SaveChangesAsync(ct);
+
+            _logger.LogDebug("Created CRM customer {CompanyName} for tenant {TenantId}",
+                companyName, tenantId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to create CRM customer {CompanyName}: {Message}",
+                companyName, ex.Message);
+            // Don't throw - CRM customer creation is secondary, core customer was already created
+        }
     }
 
     private Task ImportSupplierAsync(ITenantDbContext context, Dictionary<string, object?> data, CancellationToken ct)
