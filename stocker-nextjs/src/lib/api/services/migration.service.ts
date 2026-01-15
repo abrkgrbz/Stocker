@@ -224,6 +224,20 @@ export interface PagedResult<T> {
 }
 
 // Backend response type for validation preview
+// Note: Backend returns errors/warnings as JSON strings, not arrays
+interface ValidationResultItemBackend {
+  recordId: string;
+  rowIndex: number;
+  entityType: string;
+  status: string;
+  originalData: string; // JSON string
+  transformedData?: string; // JSON string
+  fixedData?: string; // JSON string
+  errors?: string; // JSON array string like '["error1", "error2"]'
+  warnings?: string; // JSON array string like '["warn1", "warn2"]'
+  userAction?: string;
+}
+
 interface ValidationPreviewBackendResponse {
   sessionId: string;
   totalRecords: number;
@@ -237,7 +251,39 @@ interface ValidationPreviewBackendResponse {
   pageSize: number;
   totalPages: number;
   filter: string;
-  records: MigrationValidationResultDto[];
+  records: ValidationResultItemBackend[];
+}
+
+// Helper to safely parse JSON strings
+function safeJsonParse<T>(json: string | undefined | null, fallback: T): T {
+  if (!json) return fallback;
+  try {
+    return JSON.parse(json) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+// Convert backend record to frontend DTO
+function mapBackendRecordToDto(record: ValidationResultItemBackend): MigrationValidationResultDto {
+  return {
+    id: record.recordId,
+    sessionId: '', // Not provided in backend response
+    chunkId: '', // Not provided in backend response
+    entityType: record.entityType as MigrationEntityType,
+    rowIndex: record.rowIndex,
+    globalRowIndex: record.rowIndex,
+    originalData: safeJsonParse<Record<string, any>>(record.originalData, {}),
+    transformedData: record.transformedData ? safeJsonParse<Record<string, any>>(record.transformedData, {}) : undefined,
+    status: record.status as ValidationStatus,
+    errors: safeJsonParse<string[]>(record.errors, []),
+    warnings: safeJsonParse<string[]>(record.warnings, []),
+    userAction: record.userAction as 'import' | 'skip' | 'fix' | undefined,
+    fixedData: record.fixedData ? safeJsonParse<Record<string, any>>(record.fixedData, {}) : undefined,
+    createdAt: '',
+    validatedAt: undefined,
+    importedAt: undefined,
+  };
 }
 
 export interface ApiResponseWrapper<T> {
@@ -541,9 +587,12 @@ export const MigrationService = {
     // Extract the actual response data (may be wrapped in ApiResponse)
     const backendData = (response as any)?.data || response;
 
+    // Convert backend records to frontend DTOs (parse JSON strings to arrays/objects)
+    const mappedRecords = (backendData.records || []).map(mapBackendRecordToDto);
+
     // Convert backend response to PagedResult format expected by frontend
     return {
-      items: backendData.records || [],
+      items: mappedRecords,
       totalCount: backendData.totalRecords || 0,
       pageNumber: backendData.pageNumber || 1,
       pageSize: backendData.pageSize || 50,
