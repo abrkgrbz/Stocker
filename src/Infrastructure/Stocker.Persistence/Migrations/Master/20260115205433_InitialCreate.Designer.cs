@@ -12,8 +12,8 @@ using Stocker.Persistence.Contexts;
 namespace Stocker.Persistence.Migrations.Master
 {
     [DbContext(typeof(MasterDbContext))]
-    [Migration("20260103200002_AddLemonSqueezyFieldsToPackage")]
-    partial class AddLemonSqueezyFieldsToPackage
+    [Migration("20260115205433_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -330,7 +330,7 @@ namespace Stocker.Persistence.Migrations.Master
                     b.HasIndex("TenantId", "IsEnabled")
                         .HasDatabaseName("IX_BackupSchedules_TenantId_IsEnabled");
 
-                    b.ToTable("BackupSchedules", "Master");
+                    b.ToTable("BackupSchedules", "master");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.DeviceToken", b =>
@@ -1459,6 +1459,14 @@ namespace Stocker.Persistence.Migrations.Master
                     b.Property<bool>("IsPublic")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("LemonSqueezyProductId")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("LemonSqueezyVariantId")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -1870,7 +1878,6 @@ namespace Stocker.Persistence.Migrations.Master
             modelBuilder.Entity("Stocker.Domain.Master.Entities.SubscriptionModule", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("AddedAt")
@@ -1894,7 +1901,12 @@ namespace Stocker.Persistence.Migrations.Master
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SubscriptionId");
+                    b.HasIndex("SubscriptionId")
+                        .HasDatabaseName("IX_SubscriptionModules_SubscriptionId");
+
+                    b.HasIndex("SubscriptionId", "ModuleCode")
+                        .IsUnique()
+                        .HasDatabaseName("IX_SubscriptionModules_SubscriptionId_ModuleCode");
 
                     b.ToTable("SubscriptionModules", "master");
                 });
@@ -2157,7 +2169,7 @@ namespace Stocker.Persistence.Migrations.Master
                     b.HasIndex("TenantId", "Status")
                         .HasDatabaseName("IX_TenantBackups_TenantId_Status");
 
-                    b.ToTable("TenantBackups", "Master");
+                    b.ToTable("TenantBackups", "master");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantBilling", b =>
@@ -2370,7 +2382,7 @@ namespace Stocker.Persistence.Migrations.Master
                     b.HasIndex("TenantId")
                         .IsUnique();
 
-                    b.ToTable("TenantBillings", "Master");
+                    b.ToTable("TenantBillings", "master");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantContract", b =>
@@ -2542,7 +2554,7 @@ namespace Stocker.Persistence.Migrations.Master
 
                     b.HasIndex("TenantId", "Status");
 
-                    b.ToTable("TenantContracts", "Master");
+                    b.ToTable("TenantContracts", "master");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantDomain", b =>
@@ -2752,7 +2764,7 @@ namespace Stocker.Persistence.Migrations.Master
                     b.HasIndex("TenantId", "CheckedAt")
                         .HasDatabaseName("IX_TenantHealthChecks_TenantId_CheckedAt");
 
-                    b.ToTable("TenantHealthChecks", "Master");
+                    b.ToTable("TenantHealthChecks", "master");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantLimits", b =>
@@ -3006,7 +3018,7 @@ namespace Stocker.Persistence.Migrations.Master
                     b.HasIndex("TenantId")
                         .IsUnique();
 
-                    b.ToTable("TenantLimits", "Master");
+                    b.ToTable("TenantLimits", "master");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantRegistration", b =>
@@ -3368,6 +3380,37 @@ namespace Stocker.Persistence.Migrations.Master
                     b.ToTable("TenantSettings", "master");
                 });
 
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantUserEmail", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ActivatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActivated")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "TenantUserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_TenantUserEmails_TenantId_TenantUserId");
+
+                    b.ToTable("TenantUserEmails", "master");
+                });
+
             modelBuilder.Entity("Stocker.Domain.Master.Entities.UserLoginHistory", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3515,7 +3558,7 @@ namespace Stocker.Persistence.Migrations.Master
                     b.HasIndex("SessionId", "EntityType")
                         .HasDatabaseName("IX_MigrationChunks_SessionId_EntityType");
 
-                    b.ToTable("MigrationChunks", "Master");
+                    b.ToTable("MigrationChunks", "master");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Migration.Entities.MigrationSession", b =>
@@ -3648,7 +3691,7 @@ namespace Stocker.Persistence.Migrations.Master
                     b.HasIndex("TenantId", "Status")
                         .HasDatabaseName("IX_MigrationSessions_TenantId_Status");
 
-                    b.ToTable("MigrationSessions", "Master");
+                    b.ToTable("MigrationSessions", "master");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Migration.Entities.MigrationValidationResult", b =>
@@ -3748,7 +3791,7 @@ namespace Stocker.Persistence.Migrations.Master
                     b.HasIndex("SessionId", "Status")
                         .HasDatabaseName("IX_MigrationValidationResults_SessionId_Status");
 
-                    b.ToTable("MigrationValidationResults", "Master");
+                    b.ToTable("MigrationValidationResults", "master");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.AddOn", b =>
@@ -4615,7 +4658,7 @@ namespace Stocker.Persistence.Migrations.Master
 
                             b1.HasKey("TenantBillingId");
 
-                            b1.ToTable("TenantBillings", "Master");
+                            b1.ToTable("TenantBillings", "master");
 
                             b1.WithOwner()
                                 .HasForeignKey("TenantBillingId");
@@ -4634,7 +4677,7 @@ namespace Stocker.Persistence.Migrations.Master
 
                             b1.HasKey("TenantBillingId");
 
-                            b1.ToTable("TenantBillings", "Master");
+                            b1.ToTable("TenantBillings", "master");
 
                             b1.WithOwner()
                                 .HasForeignKey("TenantBillingId");
@@ -4653,7 +4696,7 @@ namespace Stocker.Persistence.Migrations.Master
 
                             b1.HasKey("TenantBillingId");
 
-                            b1.ToTable("TenantBillings", "Master");
+                            b1.ToTable("TenantBillings", "master");
 
                             b1.WithOwner()
                                 .HasForeignKey("TenantBillingId");
@@ -4742,6 +4785,42 @@ namespace Stocker.Persistence.Migrations.Master
                         .WithMany()
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantUserEmail", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.Email", "Email", b1 =>
+                        {
+                            b1.Property<Guid>("TenantUserEmailId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(256)
+                                .HasColumnType("character varying(256)")
+                                .HasColumnName("Email");
+
+                            b1.HasKey("TenantUserEmailId");
+
+                            b1.HasIndex("Value")
+                                .HasDatabaseName("IX_TenantUserEmails_Email");
+
+                            b1.ToTable("TenantUserEmails", "master");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TenantUserEmailId");
+                        });
+
+                    b.Navigation("Email")
                         .IsRequired();
 
                     b.Navigation("Tenant");

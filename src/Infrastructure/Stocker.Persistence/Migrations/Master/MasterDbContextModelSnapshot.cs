@@ -2,7 +2,6 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Stocker.Persistence.Contexts;
@@ -12,11 +11,9 @@ using Stocker.Persistence.Contexts;
 namespace Stocker.Persistence.Migrations.Master
 {
     [DbContext(typeof(MasterDbContext))]
-    [Migration("20251215111703_AddTenantSecureConnectionStringFields")]
-    partial class AddTenantSecureConnectionStringFields
+    partial class MasterDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -205,6 +202,572 @@ namespace Stocker.Persistence.Migrations.Master
                     b.ToTable("AddOnFeatures", "master");
                 });
 
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.BackupSchedule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("Id");
+
+                    b.Property<string>("BackupType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("BackupType");
+
+                    b.Property<bool>("Compress")
+                        .HasColumnType("boolean")
+                        .HasColumnName("Compress");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("CreatedBy");
+
+                    b.Property<string>("CronExpression")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("CronExpression");
+
+                    b.Property<bool>("Encrypt")
+                        .HasColumnType("boolean")
+                        .HasColumnName("Encrypt");
+
+                    b.Property<int>("FailureCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("FailureCount");
+
+                    b.Property<string>("HangfireJobId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("HangfireJobId");
+
+                    b.Property<bool>("IncludeConfiguration")
+                        .HasColumnType("boolean")
+                        .HasColumnName("IncludeConfiguration");
+
+                    b.Property<bool>("IncludeDatabase")
+                        .HasColumnType("boolean")
+                        .HasColumnName("IncludeDatabase");
+
+                    b.Property<bool>("IncludeFiles")
+                        .HasColumnType("boolean")
+                        .HasColumnName("IncludeFiles");
+
+                    b.Property<bool>("IsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IsEnabled");
+
+                    b.Property<string>("LastErrorMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("LastErrorMessage");
+
+                    b.Property<DateTime?>("LastExecutedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastExecutedAt");
+
+                    b.Property<DateTime>("LastModifiedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModifiedAt");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("ModifiedBy");
+
+                    b.Property<DateTime?>("NextExecutionAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("NextExecutionAt");
+
+                    b.Property<int>("RetentionDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(30)
+                        .HasColumnName("RetentionDays");
+
+                    b.Property<string>("ScheduleName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("ScheduleName");
+
+                    b.Property<string>("ScheduleType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("ScheduleType");
+
+                    b.Property<int>("SuccessCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("SuccessCount");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HangfireJobId")
+                        .HasDatabaseName("IX_BackupSchedules_HangfireJobId");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_BackupSchedules_TenantId");
+
+                    b.HasIndex("TenantId", "IsEnabled")
+                        .HasDatabaseName("IX_BackupSchedules_TenantId_IsEnabled");
+
+                    b.ToTable("BackupSchedules", "master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.DeviceToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AppVersion")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeviceId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("DeviceModel")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("DeviceName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime?>("ExpiredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("FailedDeliveryCount")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastFailedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastFailureReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("LastUsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("OsVersion")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("ProviderToken")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("ReceiveCriticalAlerts")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ReceiveMarketingNotifications")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ReceivePushNotifications")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ReceiveSystemNotifications")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("SilentMode")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SilentModeSchedule")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeviceId")
+                        .HasDatabaseName("IX_DeviceTokens_DeviceId");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_DeviceTokens_IsActive");
+
+                    b.HasIndex("Platform")
+                        .HasDatabaseName("IX_DeviceTokens_Platform");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_DeviceTokens_TenantId");
+
+                    b.HasIndex("Token")
+                        .IsUnique()
+                        .HasDatabaseName("IX_DeviceTokens_Token");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_DeviceTokens_UserId");
+
+                    b.HasIndex("UserId", "IsActive")
+                        .HasDatabaseName("IX_DeviceTokens_UserId_IsActive");
+
+                    b.ToTable("DeviceTokens", "master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.EmailTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("HtmlBody")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsSystem")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasDefaultValue("tr");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("PlainTextBody")
+                        .HasMaxLength(256)
+                        .HasColumnType("text");
+
+                    b.Property<string>("SampleData")
+                        .HasMaxLength(256)
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("TemplateKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Variables")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(256)
+                        .HasColumnType("jsonb")
+                        .HasDefaultValue("[]");
+
+                    b.Property<int>("Version")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category")
+                        .HasDatabaseName("IX_EmailTemplates_Category");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_EmailTemplates_IsActive");
+
+                    b.HasIndex("IsSystem")
+                        .HasDatabaseName("IX_EmailTemplates_IsSystem");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_EmailTemplates_TenantId");
+
+                    b.HasIndex("TemplateKey", "Language", "TenantId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_EmailTemplates_TemplateKey_Language_TenantId");
+
+                    b.ToTable("EmailTemplates", "master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.GeoLocation.City", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AreaCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<Guid>("CountryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<decimal?>("Latitude")
+                        .HasPrecision(10, 7)
+                        .HasColumnType("numeric(10,7)");
+
+                    b.Property<decimal?>("Longitude")
+                        .HasPrecision(10, 7)
+                        .HasColumnType("numeric(10,7)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("PlateCode")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
+                    b.Property<int?>("Population")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Region")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CountryId")
+                        .HasDatabaseName("IX_Cities_CountryId");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_Cities_IsActive");
+
+                    b.HasIndex("Name")
+                        .HasDatabaseName("IX_Cities_Name");
+
+                    b.HasIndex("PlateCode")
+                        .HasDatabaseName("IX_Cities_PlateCode");
+
+                    b.HasIndex("Region")
+                        .HasDatabaseName("IX_Cities_Region");
+
+                    b.HasIndex("CountryId", "Name")
+                        .HasDatabaseName("IX_Cities_CountryId_Name");
+
+                    b.HasIndex("CountryId", "PlateCode")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Cities_CountryId_PlateCode");
+
+                    b.ToTable("Cities", "master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.GeoLocation.Country", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)");
+
+                    b.Property<string>("Code3")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("PhoneCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Countries_Code");
+
+                    b.HasIndex("Code3")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Countries_Code3");
+
+                    b.HasIndex("DisplayOrder")
+                        .HasDatabaseName("IX_Countries_DisplayOrder");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_Countries_IsActive");
+
+                    b.HasIndex("Name")
+                        .HasDatabaseName("IX_Countries_Name");
+
+                    b.ToTable("Countries", "master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.GeoLocation.District", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsCentral")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<decimal?>("Latitude")
+                        .HasPrecision(10, 7)
+                        .HasColumnType("numeric(10,7)");
+
+                    b.Property<decimal?>("Longitude")
+                        .HasPrecision(10, 7)
+                        .HasColumnType("numeric(10,7)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int?>("Population")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PostalCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CityId")
+                        .HasDatabaseName("IX_Districts_CityId");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_Districts_IsActive");
+
+                    b.HasIndex("IsCentral")
+                        .HasDatabaseName("IX_Districts_IsCentral");
+
+                    b.HasIndex("Name")
+                        .HasDatabaseName("IX_Districts_Name");
+
+                    b.HasIndex("PostalCode")
+                        .HasDatabaseName("IX_Districts_PostalCode");
+
+                    b.HasIndex("CityId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Districts_CityId_Name");
+
+                    b.ToTable("Districts", "master");
+                });
+
             modelBuilder.Entity("Stocker.Domain.Master.Entities.Industry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -353,6 +916,319 @@ namespace Stocker.Persistence.Migrations.Master
                         .HasDatabaseName("IX_InvoiceItems_InvoiceId");
 
                     b.ToTable("InvoiceItems", "master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.LemonSqueezySubscription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BillingAnchor")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("BillingInterval")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("month");
+
+                    b.Property<int>("BillingIntervalCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CardBrand")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("CardLastFour")
+                        .HasMaxLength(4)
+                        .HasColumnType("character varying(4)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasDefaultValue("TRY");
+
+                    b.Property<string>("CustomerEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("CustomerPortalUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("EndsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastWebhookAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastWebhookEventId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("LsCustomerId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("LsOrderId")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("LsProductId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("LsSubscriptionId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("LsVariantId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("PausedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ProductName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime?>("RenewsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("StatusFormatted")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid?>("SubscriptionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("TrialEndsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UnitPrice")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UpdatePaymentMethodUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VariantName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LsCustomerId")
+                        .HasDatabaseName("IX_LemonSqueezySubscriptions_LsCustomerId");
+
+                    b.HasIndex("LsSubscriptionId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_LemonSqueezySubscriptions_LsSubscriptionId");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_LemonSqueezySubscriptions_Status");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_LemonSqueezySubscriptions_TenantId");
+
+                    b.HasIndex("TenantId", "Status")
+                        .HasDatabaseName("IX_LemonSqueezySubscriptions_TenantId_Status");
+
+                    b.ToTable("LemonSqueezySubscriptions", "master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.MasterNotification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActionText")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ActionType")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("ActionUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Actions")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BannerUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("DeliveredCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(5000)
+                        .HasColumnType("character varying(5000)");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("FailedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("IconColor")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("IconName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("IsGlobal")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsScheduled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Metadata")
+                        .HasMaxLength(5000)
+                        .HasColumnType("character varying(5000)");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("ReadCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ScheduledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("SendEmail")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("SendInApp")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("SendPush")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("SendSms")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Tags")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TargetCountries")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TargetPackages")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TargetTenantIds")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TargetType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<int>("TotalRecipients")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_MasterNotifications_CreatedAt");
+
+                    b.HasIndex("IsGlobal")
+                        .HasDatabaseName("IX_MasterNotifications_IsGlobal");
+
+                    b.HasIndex("ScheduledAt")
+                        .HasDatabaseName("IX_MasterNotifications_ScheduledAt");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_MasterNotifications_Status");
+
+                    b.HasIndex("Type")
+                        .HasDatabaseName("IX_MasterNotifications_Type");
+
+                    b.HasIndex("Status", "ScheduledAt")
+                        .HasDatabaseName("IX_MasterNotifications_Status_ScheduledAt");
+
+                    b.ToTable("MasterNotifications", "master");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.MasterUser", b =>
@@ -579,6 +1455,14 @@ namespace Stocker.Persistence.Migrations.Master
 
                     b.Property<bool>("IsPublic")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("LemonSqueezyProductId")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("LemonSqueezyVariantId")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -991,7 +1875,6 @@ namespace Stocker.Persistence.Migrations.Master
             modelBuilder.Entity("Stocker.Domain.Master.Entities.SubscriptionModule", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("AddedAt")
@@ -1015,7 +1898,12 @@ namespace Stocker.Persistence.Migrations.Master
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SubscriptionId");
+                    b.HasIndex("SubscriptionId")
+                        .HasDatabaseName("IX_SubscriptionModules_SubscriptionId");
+
+                    b.HasIndex("SubscriptionId", "ModuleCode")
+                        .IsUnique()
+                        .HasDatabaseName("IX_SubscriptionModules_SubscriptionId_ModuleCode");
 
                     b.ToTable("SubscriptionModules", "master");
                 });
@@ -1278,7 +2166,7 @@ namespace Stocker.Persistence.Migrations.Master
                     b.HasIndex("TenantId", "Status")
                         .HasDatabaseName("IX_TenantBackups_TenantId_Status");
 
-                    b.ToTable("TenantBackups", "Master");
+                    b.ToTable("TenantBackups", "master");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantBilling", b =>
@@ -1491,7 +2379,7 @@ namespace Stocker.Persistence.Migrations.Master
                     b.HasIndex("TenantId")
                         .IsUnique();
 
-                    b.ToTable("TenantBillings", "Master");
+                    b.ToTable("TenantBillings", "master");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantContract", b =>
@@ -1663,7 +2551,7 @@ namespace Stocker.Persistence.Migrations.Master
 
                     b.HasIndex("TenantId", "Status");
 
-                    b.ToTable("TenantContracts", "Master");
+                    b.ToTable("TenantContracts", "master");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantDomain", b =>
@@ -1873,7 +2761,7 @@ namespace Stocker.Persistence.Migrations.Master
                     b.HasIndex("TenantId", "CheckedAt")
                         .HasDatabaseName("IX_TenantHealthChecks_TenantId_CheckedAt");
 
-                    b.ToTable("TenantHealthChecks", "Master");
+                    b.ToTable("TenantHealthChecks", "master");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantLimits", b =>
@@ -2127,7 +3015,7 @@ namespace Stocker.Persistence.Migrations.Master
                     b.HasIndex("TenantId")
                         .IsUnique();
 
-                    b.ToTable("TenantLimits", "Master");
+                    b.ToTable("TenantLimits", "master");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantRegistration", b =>
@@ -2489,6 +3377,37 @@ namespace Stocker.Persistence.Migrations.Master
                     b.ToTable("TenantSettings", "master");
                 });
 
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantUserEmail", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ActivatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActivated")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "TenantUserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_TenantUserEmails_TenantId_TenantUserId");
+
+                    b.ToTable("TenantUserEmails", "master");
+                });
+
             modelBuilder.Entity("Stocker.Domain.Master.Entities.UserLoginHistory", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2573,6 +3492,305 @@ namespace Stocker.Persistence.Migrations.Master
                     b.ToTable("UserTiers", "master");
                 });
 
+            modelBuilder.Entity("Stocker.Domain.Migration.Entities.MigrationChunk", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("Id");
+
+                    b.Property<int>("ChunkIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("ChunkIndex");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("EntityType");
+
+                    b.Property<DateTime?>("ImportedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ImportedAt");
+
+                    b.Property<string>("RawDataJson")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("text")
+                        .HasColumnName("RawDataJson");
+
+                    b.Property<int>("RecordCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("RecordCount");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("SessionId");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("Status");
+
+                    b.Property<int>("TotalChunks")
+                        .HasColumnType("integer")
+                        .HasColumnName("TotalChunks");
+
+                    b.Property<DateTime?>("ValidatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ValidatedAt");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId")
+                        .HasDatabaseName("IX_MigrationChunks_SessionId");
+
+                    b.HasIndex("SessionId", "ChunkIndex")
+                        .HasDatabaseName("IX_MigrationChunks_SessionId_ChunkIndex");
+
+                    b.HasIndex("SessionId", "EntityType")
+                        .HasDatabaseName("IX_MigrationChunks_SessionId_EntityType");
+
+                    b.ToTable("MigrationChunks", "master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Migration.Entities.MigrationSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("Id");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CompletedAt");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatedByUserId");
+
+                    b.Property<string>("Entities")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("Entities");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("ErrorMessage");
+
+                    b.Property<int>("ErrorRecords")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("ErrorRecords");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ExpiresAt");
+
+                    b.Property<string>("ImportJobId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("ImportJobId");
+
+                    b.Property<DateTime?>("ImportStartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ImportStartedAt");
+
+                    b.Property<int>("ImportedRecords")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("ImportedRecords");
+
+                    b.Property<string>("MappingConfigJson")
+                        .HasMaxLength(256)
+                        .HasColumnType("text")
+                        .HasColumnName("MappingConfigJson");
+
+                    b.Property<string>("OptionsJson")
+                        .HasMaxLength(256)
+                        .HasColumnType("text")
+                        .HasColumnName("OptionsJson");
+
+                    b.Property<int>("SkippedRecords")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("SkippedRecords");
+
+                    b.Property<string>("SourceName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("SourceName");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("SourceType");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("Status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.Property<int>("TotalRecords")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("TotalRecords");
+
+                    b.Property<int>("ValidRecords")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("ValidRecords");
+
+                    b.Property<DateTime?>("ValidatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ValidatedAt");
+
+                    b.Property<int>("WarningRecords")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("WarningRecords");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("IX_MigrationSessions_ExpiresAt");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_MigrationSessions_Status");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_MigrationSessions_TenantId");
+
+                    b.HasIndex("TenantId", "CreatedAt")
+                        .HasDatabaseName("IX_MigrationSessions_TenantId_CreatedAt");
+
+                    b.HasIndex("TenantId", "Status")
+                        .HasDatabaseName("IX_MigrationSessions_TenantId_Status");
+
+                    b.ToTable("MigrationSessions", "master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Migration.Entities.MigrationValidationResult", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("Id");
+
+                    b.Property<Guid>("ChunkId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ChunkId");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("EntityType");
+
+                    b.Property<string>("ErrorsJson")
+                        .HasMaxLength(256)
+                        .HasColumnType("text")
+                        .HasColumnName("ErrorsJson");
+
+                    b.Property<string>("FixedDataJson")
+                        .HasMaxLength(256)
+                        .HasColumnType("text")
+                        .HasColumnName("FixedDataJson");
+
+                    b.Property<int>("GlobalRowIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("GlobalRowIndex");
+
+                    b.Property<DateTime?>("ImportedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ImportedAt");
+
+                    b.Property<string>("OriginalDataJson")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("text")
+                        .HasColumnName("OriginalDataJson");
+
+                    b.Property<int>("RowIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("RowIndex");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("SessionId");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("Status");
+
+                    b.Property<string>("TransformedDataJson")
+                        .HasMaxLength(256)
+                        .HasColumnType("text")
+                        .HasColumnName("TransformedDataJson");
+
+                    b.Property<string>("UserAction")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("UserAction");
+
+                    b.Property<DateTime?>("ValidatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ValidatedAt");
+
+                    b.Property<string>("WarningsJson")
+                        .HasMaxLength(256)
+                        .HasColumnType("text")
+                        .HasColumnName("WarningsJson");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChunkId")
+                        .HasDatabaseName("IX_MigrationValidationResults_ChunkId");
+
+                    b.HasIndex("SessionId")
+                        .HasDatabaseName("IX_MigrationValidationResults_SessionId");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_MigrationValidationResults_Status");
+
+                    b.HasIndex("SessionId", "EntityType")
+                        .HasDatabaseName("IX_MigrationValidationResults_SessionId_EntityType");
+
+                    b.HasIndex("SessionId", "GlobalRowIndex")
+                        .HasDatabaseName("IX_MigrationValidationResults_SessionId_GlobalRowIndex");
+
+                    b.HasIndex("SessionId", "Status")
+                        .HasDatabaseName("IX_MigrationValidationResults_SessionId_Status");
+
+                    b.ToTable("MigrationValidationResults", "master");
+                });
+
             modelBuilder.Entity("Stocker.Domain.Master.Entities.AddOn", b =>
                 {
                     b.OwnsOne("Stocker.Domain.Common.ValueObjects.Money", "MonthlyPrice", b1 =>
@@ -2612,6 +3830,39 @@ namespace Stocker.Persistence.Migrations.Master
                         .HasForeignKey("AddOnId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.BackupSchedule", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.GeoLocation.City", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.GeoLocation.Country", "Country")
+                        .WithMany("Cities")
+                        .HasForeignKey("CountryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Country");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.GeoLocation.District", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.GeoLocation.City", "City")
+                        .WithMany("Districts")
+                        .HasForeignKey("CityId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("City");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.IndustryRecommendedModule", b =>
@@ -2853,6 +4104,17 @@ namespace Stocker.Persistence.Migrations.Master
 
                     b.Navigation("UnitPrice")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.LemonSqueezySubscription", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.MasterUser", b =>
@@ -3393,7 +4655,7 @@ namespace Stocker.Persistence.Migrations.Master
 
                             b1.HasKey("TenantBillingId");
 
-                            b1.ToTable("TenantBillings", "Master");
+                            b1.ToTable("TenantBillings", "master");
 
                             b1.WithOwner()
                                 .HasForeignKey("TenantBillingId");
@@ -3412,7 +4674,7 @@ namespace Stocker.Persistence.Migrations.Master
 
                             b1.HasKey("TenantBillingId");
 
-                            b1.ToTable("TenantBillings", "Master");
+                            b1.ToTable("TenantBillings", "master");
 
                             b1.WithOwner()
                                 .HasForeignKey("TenantBillingId");
@@ -3431,7 +4693,7 @@ namespace Stocker.Persistence.Migrations.Master
 
                             b1.HasKey("TenantBillingId");
 
-                            b1.ToTable("TenantBillings", "Master");
+                            b1.ToTable("TenantBillings", "master");
 
                             b1.WithOwner()
                                 .HasForeignKey("TenantBillingId");
@@ -3525,6 +4787,42 @@ namespace Stocker.Persistence.Migrations.Master
                     b.Navigation("Tenant");
                 });
 
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantUserEmail", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.Email", "Email", b1 =>
+                        {
+                            b1.Property<Guid>("TenantUserEmailId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(256)
+                                .HasColumnType("character varying(256)")
+                                .HasColumnName("Email");
+
+                            b1.HasKey("TenantUserEmailId");
+
+                            b1.HasIndex("Value")
+                                .HasDatabaseName("IX_TenantUserEmails_Email");
+
+                            b1.ToTable("TenantUserEmails", "master");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TenantUserEmailId");
+                        });
+
+                    b.Navigation("Email")
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
             modelBuilder.Entity("Stocker.Domain.Master.Entities.UserLoginHistory", b =>
                 {
                     b.HasOne("Stocker.Domain.Master.Entities.MasterUser", null)
@@ -3594,9 +4892,49 @@ namespace Stocker.Persistence.Migrations.Master
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Stocker.Domain.Migration.Entities.MigrationChunk", b =>
+                {
+                    b.HasOne("Stocker.Domain.Migration.Entities.MigrationSession", "Session")
+                        .WithMany("Chunks")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Session");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Migration.Entities.MigrationValidationResult", b =>
+                {
+                    b.HasOne("Stocker.Domain.Migration.Entities.MigrationChunk", "Chunk")
+                        .WithMany()
+                        .HasForeignKey("ChunkId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Stocker.Domain.Migration.Entities.MigrationSession", "Session")
+                        .WithMany("ValidationResults")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Chunk");
+
+                    b.Navigation("Session");
+                });
+
             modelBuilder.Entity("Stocker.Domain.Master.Entities.AddOn", b =>
                 {
                     b.Navigation("Features");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.GeoLocation.City", b =>
+                {
+                    b.Navigation("Districts");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.GeoLocation.Country", b =>
+                {
+                    b.Navigation("Cities");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.Industry", b =>
@@ -3656,6 +4994,13 @@ namespace Stocker.Persistence.Migrations.Master
                     b.Navigation("Registration");
 
                     b.Navigation("Subscriptions");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Migration.Entities.MigrationSession", b =>
+                {
+                    b.Navigation("Chunks");
+
+                    b.Navigation("ValidationResults");
                 });
 #pragma warning restore 612, 618
         }
