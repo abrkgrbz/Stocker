@@ -66,19 +66,23 @@ public class MigrationValidationJob
                     var records = JsonSerializer.Deserialize<List<Dictionary<string, object?>>>(chunk.DataJson);
                     if (records == null) continue;
 
+                    int rowInChunk = 0;
                     foreach (var record in records)
                     {
                         totalRecords++;
+                        rowInChunk++;
 
                         // Validate the record
                         var validationResult = ValidateRecord(record, chunk.EntityType, session.MappingConfigJson);
 
-                        // Create validation result entity
+                        // Create validation result entity with chunk reference
                         var resultEntity = new Domain.Migration.Entities.MigrationValidationResult(
                             sessionId: sessionId,
+                            chunkId: chunk.Id,
                             entityType: chunk.EntityType,
-                            rowNumber: totalRecords,
+                            rowIndex: rowInChunk,
                             originalDataJson: JsonSerializer.Serialize(record));
+                        resultEntity.SetGlobalRowIndex(totalRecords);
 
                         if (validationResult.Errors.Count > 0)
                         {
