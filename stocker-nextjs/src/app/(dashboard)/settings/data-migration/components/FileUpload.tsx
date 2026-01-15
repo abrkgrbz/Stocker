@@ -196,6 +196,21 @@ export default function FileUpload({ sessionId, session, onNext, onBack }: FileU
   );
 
   const hasAnyUploads = uploadedFiles.some(f => f.status === 'uploaded');
+  const [isCompletingUpload, setIsCompletingUpload] = useState(false);
+
+  // Handle next step - complete upload first
+  const handleNext = async () => {
+    try {
+      setIsCompletingUpload(true);
+      // Complete the upload before moving to mapping step
+      await completeUpload.mutateAsync(sessionId);
+      onNext();
+    } catch (error) {
+      console.error('Failed to complete upload:', error);
+    } finally {
+      setIsCompletingUpload(false);
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -409,12 +424,21 @@ export default function FileUpload({ sessionId, session, onNext, onBack }: FileU
           Geri
         </button>
         <button
-          onClick={onNext}
-          disabled={!hasAnyUploads}
+          onClick={handleNext}
+          disabled={!hasAnyUploads || isCompletingUpload}
           className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-md hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          Alan Eşlemeye Devam Et
-          <ChevronRight className="w-4 h-4" />
+          {isCompletingUpload ? (
+            <>
+              <Spinner size="sm" />
+              Yükleme Tamamlanıyor...
+            </>
+          ) : (
+            <>
+              Alan Eşlemeye Devam Et
+              <ChevronRight className="w-4 h-4" />
+            </>
+          )}
         </button>
       </div>
     </div>
