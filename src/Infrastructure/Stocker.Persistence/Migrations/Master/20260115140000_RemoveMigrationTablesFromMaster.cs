@@ -11,19 +11,22 @@ namespace Stocker.Persistence.Migrations.Master
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             // Drop Migration tables from Master schema - they are now in Tenant DB
-            // Order matters: drop tables with foreign keys first
+            // Use raw SQL with IF EXISTS to handle both "Master" and "master" schemas
+            // and avoid errors if tables don't exist
 
-            migrationBuilder.DropTable(
-                name: "MigrationValidationResults",
-                schema: "Master");
+            // Try dropping from "Master" schema (original migration used uppercase)
+            migrationBuilder.Sql(@"
+                DROP TABLE IF EXISTS ""Master"".""MigrationValidationResults"" CASCADE;
+                DROP TABLE IF EXISTS ""Master"".""MigrationChunks"" CASCADE;
+                DROP TABLE IF EXISTS ""Master"".""MigrationSessions"" CASCADE;
+            ");
 
-            migrationBuilder.DropTable(
-                name: "MigrationChunks",
-                schema: "Master");
-
-            migrationBuilder.DropTable(
-                name: "MigrationSessions",
-                schema: "Master");
+            // Also try dropping from "master" schema (lowercase) in case they were moved
+            migrationBuilder.Sql(@"
+                DROP TABLE IF EXISTS ""master"".""MigrationValidationResults"" CASCADE;
+                DROP TABLE IF EXISTS ""master"".""MigrationChunks"" CASCADE;
+                DROP TABLE IF EXISTS ""master"".""MigrationSessions"" CASCADE;
+            ");
         }
 
         /// <inheritdoc />
