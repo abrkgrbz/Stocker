@@ -56,12 +56,30 @@ public class UserManagementService : IUserManagementService
 
     public async Task<TenantUser?> FindTenantUserAsync(Guid tenantId, string usernameOrEmail)
     {
-        // TODO: Fix tenant context creation after architecture refactoring
-        // await using var tenantContext = await _tenantDbContextFactory.CreateDbContextAsync(tenantId);
-        // return await tenantContext.TenantUsers
-        //     .Include(u => u.UserRoles)
-        //     .FirstOrDefaultAsync(u => u.Username == usernameOrEmail && u.TenantId == tenantId);
-        return null;
+        try
+        {
+            await using var tenantContext = await _tenantDbContextFactory.CreateDbContextAsync(tenantId);
+
+            // First try to find by username
+            var user = await tenantContext.TenantUsers
+                .Include(u => u.UserRoles)
+                .FirstOrDefaultAsync(u => u.Username == usernameOrEmail && u.TenantId == tenantId);
+
+            // If not found by username, try to find by email
+            if (user == null)
+            {
+                user = await tenantContext.TenantUsers
+                    .Include(u => u.UserRoles)
+                    .FirstOrDefaultAsync(u => u.Email.Value == usernameOrEmail && u.TenantId == tenantId);
+            }
+
+            return user;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to find tenant user {UsernameOrEmail} in tenant {TenantId}", usernameOrEmail, tenantId);
+            return null;
+        }
     }
 
     public async Task<MasterUser> CreateMasterUserAsync(
@@ -199,11 +217,18 @@ public class UserManagementService : IUserManagementService
 
     public async Task UpdateLastLoginAsync(TenantUser user)
     {
-        user.RecordLogin();
-        // TODO: Fix tenant context creation after architecture refactoring
-        // await using var tenantContext = await _tenantDbContextFactory.CreateDbContextAsync(user.TenantId);
-        // tenantContext.TenantUsers.Update(user);
-        // await tenantContext.SaveChangesAsync();
+        try
+        {
+            user.RecordLogin();
+            await using var tenantContext = await _tenantDbContextFactory.CreateDbContextAsync(user.TenantId);
+            tenantContext.TenantUsers.Update(user);
+            await tenantContext.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update last login for tenant user {UserId} in tenant {TenantId}", user.Id, user.TenantId);
+            // Don't throw - login should still succeed even if last login update fails
+        }
     }
 }
 

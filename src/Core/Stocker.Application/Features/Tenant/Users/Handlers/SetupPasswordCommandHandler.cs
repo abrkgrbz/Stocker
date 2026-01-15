@@ -105,6 +105,21 @@ public class SetupPasswordCommandHandler : IRequestHandler<SetupPasswordCommand,
         tenantDbContext.TenantUsers.Update(user);
         await tenantDbContext.SaveChangesAsync(cancellationToken);
 
+        // 8.1 Mark TenantUserEmail as activated in Master DB
+        var tenantUserEmail = await _masterDbContext.TenantUserEmails
+            .FirstOrDefaultAsync(e => e.TenantUserId == user.Id && e.TenantId == request.TenantId, cancellationToken);
+
+        if (tenantUserEmail != null)
+        {
+            tenantUserEmail.MarkAsActivated();
+            await _masterDbContext.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation(
+                "TenantUserEmail marked as activated for user {UserId} in tenant {TenantId}",
+                request.UserId,
+                request.TenantId);
+        }
+
         _logger.LogInformation(
             "User {UserId} in tenant {TenantId} successfully activated their account",
             request.UserId,

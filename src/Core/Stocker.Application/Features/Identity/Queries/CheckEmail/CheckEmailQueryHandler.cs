@@ -42,7 +42,13 @@ public class CheckEmailQueryHandler : IRequestHandler<CheckEmailQuery, Result<Ch
             var registrationWithEmail = allRegistrations
                 .FirstOrDefault(r => r.AdminEmail.Value.ToLower() == normalizedEmail);
 
-            if (user == null && registrationWithEmail == null)
+            // Also check TenantUserEmails for invited users
+            var tenantUserEmails = await _masterContext.TenantUserEmails
+                .Where(e => e.Email.Value == normalizedEmail)
+                .Select(e => e.TenantId)
+                .ToListAsync(cancellationToken);
+
+            if (user == null && registrationWithEmail == null && tenantUserEmails.Count == 0)
             {
                 _logger.LogInformation("Email not found: {Email}", request.Email);
                 return Result.Success(new CheckEmailResponse
@@ -58,9 +64,15 @@ public class CheckEmailQueryHandler : IRequestHandler<CheckEmailQuery, Result<Ch
                 .Select(r => r.TenantId!.Value)
                 .ToList();
 
-            // Get tenant details for these registrations
+            // Combine tenant IDs from registrations and invited user emails
+            var allTenantIds = tenantRegistrations
+                .Union(tenantUserEmails)
+                .Distinct()
+                .ToList();
+
+            // Get tenant details for all tenant IDs
             var tenantList = await _masterContext.Tenants
-                .Where(t => tenantRegistrations.Contains(t.Id) && t.IsActive)
+                .Where(t => allTenantIds.Contains(t.Id) && t.IsActive)
                 .OrderBy(t => t.Name)
                 .Select(t => new
                 {

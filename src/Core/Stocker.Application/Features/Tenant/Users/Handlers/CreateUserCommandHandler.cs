@@ -5,6 +5,7 @@ using Stocker.Application.Common.Interfaces;
 using Stocker.Application.DTOs.Tenant.Users;
 using Stocker.Application.Features.Tenant.Users.Commands;
 using Stocker.Application.Interfaces.Repositories;
+using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Tenant.Entities;
 using Stocker.Domain.Tenant.Enums;
 
@@ -130,6 +131,16 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
         );
 
         var createdUser = await _userRepository.CreateTenantUserAsync(user, cancellationToken);
+
+        // Add TenantUserEmail record to Master DB for efficient email lookup during login
+        var tenantUserEmail = TenantUserEmail.Create(emailResult.Value, request.TenantId, createdUser.Id);
+        _masterDbContext.TenantUserEmails.Add(tenantUserEmail);
+        await _masterDbContext.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation(
+            "TenantUserEmail record created for {Email} in tenant {TenantId}",
+            emailResult.Value.Value,
+            request.TenantId);
 
         // 4. Assign roles if RoleIds provided
         var assignedRoleNames = new List<string>();

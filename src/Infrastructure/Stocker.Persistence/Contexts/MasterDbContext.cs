@@ -29,6 +29,9 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
     public DbSet<TenantContract> TenantContracts => Set<TenantContract>();
     public DbSet<TenantBilling> TenantBillings => Set<TenantBilling>();
     public DbSet<TenantSettings> TenantSettings => Set<TenantSettings>();
+
+    // Invited User Emails (for efficient email lookup during login)
+    public DbSet<TenantUserEmail> TenantUserEmails => Set<TenantUserEmail>();
     
     // All tenant-specific entities have been moved to Tenant DB
     

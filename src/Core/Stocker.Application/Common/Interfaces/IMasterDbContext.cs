@@ -35,6 +35,7 @@ public interface IMasterDbContext
     DbSet<TenantDomain> TenantDomains { get; }
     DbSet<TenantRegistration> TenantRegistrations { get; }
     DbSet<TenantSettings> TenantSettings { get; }
+    DbSet<TenantUserEmail> TenantUserEmails { get; }
     DbSet<SecurityAuditLog> SecurityAuditLogs { get; }
     DbSet<BackupSchedule> BackupSchedules { get; }
     DbSet<LemonSqueezySubscription> LemonSqueezySubscriptions { get; }
