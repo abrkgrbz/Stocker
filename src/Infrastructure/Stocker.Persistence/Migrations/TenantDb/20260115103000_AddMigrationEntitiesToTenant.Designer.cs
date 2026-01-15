@@ -9,13 +9,12 @@ using Stocker.Persistence.Contexts;
 
 #nullable disable
 
-namespace Stocker.Persistence.Migrations.Tenant
+namespace Stocker.Persistence.Migrations.TenantDb
 {
     [DbContext(typeof(TenantDbContext))]
-    [Migration("20260115095252_AddMigrationEntitiesToTenant")]
+    [Migration("20260115103000_AddMigrationEntitiesToTenant")]
     partial class AddMigrationEntitiesToTenant
     {
-        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
