@@ -307,6 +307,7 @@ public class PublicController : ControllerBase
 
             if (masterUser == null)
             {
+                // TODO: Also check TenantUserEmails table for invited users
                 // Log email check - not found
                 await _auditService.LogAuthEventAsync(new SecurityAuditEvent
                 {
