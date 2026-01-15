@@ -422,7 +422,26 @@ public class MigrationImportJob
         {
             if (data.TryGetValue(key, out var value) && value != null)
             {
-                var strValue = value.ToString();
+                string? strValue = null;
+
+                if (value is JsonElement jsonElement)
+                {
+                    // Handle different JSON value types
+                    strValue = jsonElement.ValueKind switch
+                    {
+                        JsonValueKind.String => jsonElement.GetString(),
+                        JsonValueKind.Number => jsonElement.ToString(),
+                        JsonValueKind.True => "true",
+                        JsonValueKind.False => "false",
+                        JsonValueKind.Null => null,
+                        _ => jsonElement.ToString()
+                    };
+                }
+                else
+                {
+                    strValue = value.ToString();
+                }
+
                 if (!string.IsNullOrWhiteSpace(strValue))
                 {
                     return strValue.Trim();
@@ -438,28 +457,43 @@ public class MigrationImportJob
         {
             if (data.TryGetValue(key, out var value) && value != null)
             {
+                decimal decVal = 0;
+                bool parsed = false;
+
                 if (value is JsonElement jsonElement)
                 {
-                    if (jsonElement.TryGetDecimal(out var decVal))
+                    // Handle different JSON value types
+                    if (jsonElement.ValueKind == JsonValueKind.Number)
                     {
-                        // Normalize VAT rate if stored as percentage * 100
-                        if (key.Contains("Vat", StringComparison.OrdinalIgnoreCase) ||
-                            key.Contains("Kdv", StringComparison.OrdinalIgnoreCase))
+                        if (jsonElement.TryGetDecimal(out decVal))
                         {
-                            if (decVal > 100) decVal /= 100;
+                            parsed = true;
                         }
-                        return decVal;
+                    }
+                    else if (jsonElement.ValueKind == JsonValueKind.String)
+                    {
+                        // Value is stored as string in JSON, parse it
+                        var strValue = jsonElement.GetString();
+                        if (TryParseDecimal(strValue, out decVal))
+                        {
+                            parsed = true;
+                        }
                     }
                 }
-                else if (TryParseDecimal(value.ToString(), out var parsed))
+                else if (TryParseDecimal(value.ToString(), out decVal))
+                {
+                    parsed = true;
+                }
+
+                if (parsed)
                 {
                     // Normalize VAT rate if stored as percentage * 100
                     if (key.Contains("Vat", StringComparison.OrdinalIgnoreCase) ||
                         key.Contains("Kdv", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (parsed > 100) parsed /= 100;
+                        if (decVal > 100) decVal /= 100;
                     }
-                    return parsed;
+                    return decVal;
                 }
             }
         }
