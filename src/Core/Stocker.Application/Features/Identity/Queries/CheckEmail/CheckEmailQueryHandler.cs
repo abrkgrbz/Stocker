@@ -47,14 +47,26 @@ public class CheckEmailQueryHandler : IRequestHandler<CheckEmailQuery, Result<Ch
             var allTenantUserEmails = await _masterContext.TenantUserEmails
                 .ToListAsync(cancellationToken);
 
+            _logger.LogInformation(
+                "TenantUserEmails check - Total records: {Count}, Looking for: '{Email}', Records: [{Emails}]",
+                allTenantUserEmails.Count,
+                normalizedEmail,
+                string.Join(", ", allTenantUserEmails.Select(e => $"'{e.Email.Value}'")));
+
             var tenantUserEmails = allTenantUserEmails
                 .Where(e => e.Email.Value.ToLower() == normalizedEmail)
                 .Select(e => e.TenantId)
                 .ToList();
 
+            _logger.LogInformation(
+                "TenantUserEmails matched: {Count} tenants for email '{Email}'",
+                tenantUserEmails.Count,
+                normalizedEmail);
+
             if (user == null && registrationWithEmail == null && tenantUserEmails.Count == 0)
             {
-                _logger.LogInformation("Email not found: {Email}", request.Email);
+                _logger.LogInformation("Email not found: {Email} (user={User}, reg={Reg}, tenantEmails={TenantEmails})",
+                    request.Email, user != null, registrationWithEmail != null, tenantUserEmails.Count);
                 return Result.Success(new CheckEmailResponse
                 {
                     Exists = false,
