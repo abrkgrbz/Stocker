@@ -361,9 +361,34 @@ public class AuthController : ControllerBase
             throw new Stocker.Application.Common.Exceptions.UnauthorizedException("User not found");
         }
 
-        _logger.LogInformation("Getting current user information for userId: {UserId}", userId);
+        // Extract additional claims for invited user support
+        var isInvitedUserClaim = User.FindFirst("IsInvitedUser")?.Value;
+        var isInvitedUser = isInvitedUserClaim?.ToLower() == "true";
 
-        var query = new GetCurrentUserQuery { UserId = userId };
+        var tenantUserIdClaim = User.FindFirst("TenantUserId")?.Value;
+        Guid? tenantUserId = null;
+        if (!string.IsNullOrEmpty(tenantUserIdClaim) && Guid.TryParse(tenantUserIdClaim, out var parsedTenantUserId))
+        {
+            tenantUserId = parsedTenantUserId;
+        }
+
+        var tenantIdClaim = User.FindFirst("TenantId")?.Value;
+        Guid? tenantId = null;
+        if (!string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out var parsedTenantId))
+        {
+            tenantId = parsedTenantId;
+        }
+
+        _logger.LogInformation("Getting current user information for userId: {UserId} (IsInvitedUser: {IsInvitedUser}, TenantUserId: {TenantUserId})",
+            userId, isInvitedUser, tenantUserId);
+
+        var query = new GetCurrentUserQuery
+        {
+            UserId = userId,
+            IsInvitedUser = isInvitedUser,
+            TenantUserId = tenantUserId,
+            TenantId = tenantId
+        };
         var result = await _mediator.Send(query);
 
         if (result.IsSuccess)

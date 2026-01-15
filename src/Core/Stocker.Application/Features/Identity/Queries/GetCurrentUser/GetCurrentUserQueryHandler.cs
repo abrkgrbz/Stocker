@@ -13,24 +13,34 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, R
     private readonly ILogger<GetCurrentUserQueryHandler> _logger;
     private readonly IMasterDbContext _masterContext;
     private readonly ITenantService _tenantService;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
 
     public GetCurrentUserQueryHandler(
         ILogger<GetCurrentUserQueryHandler> logger,
         IMasterDbContext masterContext,
-        ITenantService tenantService)
+        ITenantService tenantService,
+        ITenantDbContextFactory tenantDbContextFactory)
     {
         _logger = logger;
         _masterContext = masterContext;
         _tenantService = tenantService;
+        _tenantDbContextFactory = tenantDbContextFactory;
     }
 
     public async Task<Result<UserInfo>> Handle(GetCurrentUserQuery request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Getting current user information for userId: {UserId}", request.UserId);
+        _logger.LogInformation("Handling GetCurrentUserQuery for User {UserId} (IsInvitedUser: {IsInvitedUser}, TenantUserId: {TenantUserId})",
+            request.UserId, request.IsInvitedUser, request.TenantUserId);
 
         try
         {
-            // Fetch user from master database
+            // Handle invited users (no MasterUser record, only TenantUser)
+            if (request.IsInvitedUser && request.TenantUserId.HasValue && request.TenantId.HasValue)
+            {
+                return await HandleInvitedUserAsync(request, cancellationToken);
+            }
+
+            // Fetch user from master database (regular users)
             var user = await _masterContext.MasterUsers
                 .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
 
@@ -42,7 +52,7 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, R
             }
 
             // Get current tenant information if available
-            var tenantId = _tenantService.GetCurrentTenantId();
+            var tenantId = request.TenantId ?? _tenantService.GetCurrentTenantId();
             string? tenantName = null;
             string? tenantCode = null;
 
@@ -88,6 +98,68 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, R
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting current user: {UserId}", request.UserId);
+            return Result.Failure<UserInfo>(
+                Error.Failure("User.GetError", "An error occurred while retrieving user information"));
+        }
+    }
+
+    private async Task<Result<UserInfo>> HandleInvitedUserAsync(GetCurrentUserQuery request, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Handling invited user: TenantUserId={TenantUserId}, TenantId={TenantId}",
+            request.TenantUserId, request.TenantId);
+
+        try
+        {
+            // Get tenant context
+            await using var tenantContext = await _tenantDbContextFactory.CreateDbContextAsync(request.TenantId!.Value);
+
+            // Find the tenant user
+            var tenantUser = await tenantContext.TenantUsers
+                .Include(u => u.UserRoles)
+                .FirstOrDefaultAsync(u => u.Id == request.TenantUserId!.Value, cancellationToken);
+
+            if (tenantUser == null)
+            {
+                _logger.LogWarning("Invited tenant user not found: {TenantUserId}", request.TenantUserId);
+                return Result.Failure<UserInfo>(
+                    Error.NotFound("User.NotFound", "User not found"));
+            }
+
+            // Get tenant info
+            var tenant = await _masterContext.Tenants
+                .FirstOrDefaultAsync(t => t.Id == request.TenantId!.Value, cancellationToken);
+
+            // Get user roles
+            var userRoleIds = tenantUser.UserRoles.Select(ur => ur.RoleId).ToList();
+            var roles = await tenantContext.Roles
+                .Where(r => userRoleIds.Contains(r.Id))
+                .Select(r => r.Name)
+                .ToListAsync(cancellationToken);
+
+            if (!roles.Any())
+            {
+                roles.Add("User"); // Default role
+            }
+
+            var userInfo = new UserInfo
+            {
+                Id = tenantUser.Id,
+                Email = tenantUser.Email.Value,
+                Username = tenantUser.Username,
+                FullName = tenantUser.GetFullName(),
+                Roles = roles,
+                TenantId = request.TenantId,
+                TenantName = tenant?.Name,
+                TenantCode = tenant?.Code
+            };
+
+            _logger.LogInformation("Successfully retrieved invited user information for: {Username}", tenantUser.Username);
+
+            return Result.Success(userInfo);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting invited user info: TenantUserId={TenantUserId}", request.TenantUserId);
             return Result.Failure<UserInfo>(
                 Error.Failure("User.GetError", "An error occurred while retrieving user information"));
         }
