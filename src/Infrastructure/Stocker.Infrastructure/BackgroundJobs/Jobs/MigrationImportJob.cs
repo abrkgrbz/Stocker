@@ -2,9 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
-using Stocker.Domain.Common.ValueObjects;
 using Stocker.Domain.Migration.Enums;
-using Stocker.Domain.Tenant.Entities;
 using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.MultiTenancy;
@@ -269,7 +267,7 @@ public class MigrationImportJob
         return true;
     }
 
-    private async Task ImportProductAsync(ITenantDbContext context, Guid tenantId, Dictionary<string, object?> data, CancellationToken ct)
+    private async Task ImportProductAsync(ITenantDbContext _, Guid tenantId, Dictionary<string, object?> data, CancellationToken ct)
     {
         var code = GetStringValue(data, "Code", "ProductCode", "Kod", "StokKodu");
         var name = GetStringValue(data, "Name", "ProductName", "Ad", "StokAdi");
@@ -279,47 +277,41 @@ public class MigrationImportJob
             throw new InvalidOperationException("Product code and name are required");
         }
 
-        // Check if product already exists
-        var existing = await context.Products.FirstOrDefaultAsync(p => p.Code == code, ct);
-        if (existing != null)
-        {
-            _logger.LogDebug("Product {Code} already exists, skipping", code);
-            return;
-        }
-
-        var description = GetStringValue(data, "Description", "Aciklama") ?? string.Empty;
+        var description = GetStringValue(data, "Description", "Aciklama", "Açıklama");
         var salePrice = GetDecimalValue(data, "SalePrice", "SatisFiyati", "Fiyat");
+        var costPrice = GetDecimalValue(data, "CostPrice", "PurchasePrice", "AlisFiyati", "Maliyet");
         var currency = GetStringValue(data, "Currency", "ParaBirimi") ?? "TRY";
-
-        var price = Money.Create(salePrice, currency);
-        var product = Product.Create(tenantId, name, description, code, price);
-
-        // Set optional fields
         var barcode = GetStringValue(data, "Barcode", "Barkod");
-        if (!string.IsNullOrEmpty(barcode))
-        {
-            product.SetBarcode(barcode);
-        }
-
-        var unit = GetStringValue(data, "UnitCode", "BirimKodu", "Unit", "Birim");
-        if (!string.IsNullOrEmpty(unit))
-        {
-            product.SetUnit(unit);
-        }
-
+        var sku = GetStringValue(data, "SKU", "StokKodu2");
+        var unit = GetStringValue(data, "UnitCode", "BirimKodu", "Unit", "Birim") ?? "Adet";
         var vatRate = GetDecimalValue(data, "VatRate", "KdvOrani", "Kdv");
-        if (vatRate > 0)
-        {
-            product.SetVatRate(vatRate);
-        }
+        var categoryCode = GetStringValue(data, "CategoryCode", "KategoriKodu", "Kategori");
+        var minStock = GetDecimalValue(data, "MinStock", "MinimumStok", "MinStok");
+        var maxStock = GetDecimalValue(data, "MaxStock", "MaksimumStok", "MaxStok");
+        var reorderPoint = GetDecimalValue(data, "ReorderPoint", "YenidenSiparisNoktasi", "SiparisNoktasi");
+        var weight = GetDecimalValue(data, "Weight", "Agirlik", "Ağırlık");
+        var weightUnit = GetStringValue(data, "WeightUnit", "AgirlikBirimi") ?? "kg";
 
-        var costPrice = GetDecimalValue(data, "PurchasePrice", "AlisFiyati", "Maliyet");
-        if (costPrice > 0)
-        {
-            product.UpdatePricing(price, Money.Create(costPrice, currency));
-        }
-
-        await context.Products.AddAsync(product, ct);
+        // Create Inventory Product directly (Core Product table is deprecated)
+        await CreateInventoryProductAsync(
+            tenantId,
+            code,
+            name,
+            description,
+            barcode,
+            sku,
+            unit,
+            salePrice,
+            costPrice,
+            currency,
+            vatRate > 0 ? vatRate : 18, // Default 18% VAT
+            categoryCode,
+            minStock,
+            maxStock,
+            reorderPoint,
+            weight,
+            weightUnit,
+            ct);
     }
 
     private Task ImportCategoryAsync(ITenantDbContext context, Dictionary<string, object?> data, CancellationToken ct)
@@ -479,6 +471,87 @@ public class MigrationImportJob
             _logger.LogError(ex, "Failed to create CRM customer {CompanyName}: {Message}",
                 companyName, ex.Message);
             throw; // Re-throw since this is now the primary customer creation
+        }
+    }
+
+    /// <summary>
+    /// Creates a product in the Inventory module database using IProductImportService interface.
+    /// This decouples Infrastructure from Inventory module to avoid circular dependencies.
+    /// </summary>
+    private async Task CreateInventoryProductAsync(
+        Guid tenantId,
+        string code,
+        string name,
+        string? description,
+        string? barcode,
+        string? sku,
+        string unit,
+        decimal salePrice,
+        decimal costPrice,
+        string currency,
+        decimal vatRate,
+        string? categoryCode,
+        decimal minStock,
+        decimal maxStock,
+        decimal reorderPoint,
+        decimal weight,
+        string weightUnit,
+        CancellationToken ct)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var scopedProvider = scope.ServiceProvider;
+
+        try
+        {
+            // Set up tenant context for Inventory module
+            var tenantResolver = scopedProvider.GetRequiredService<ITenantResolver>();
+            var backgroundTenantService = scopedProvider.GetRequiredService<IBackgroundTenantService>();
+
+            var tenantInfo = await tenantResolver.ResolveByIdAsync(tenantId);
+            if (tenantInfo == null)
+            {
+                throw new InvalidOperationException($"Tenant not found: {tenantId}");
+            }
+
+            // Set tenant context for this scope
+            backgroundTenantService.SetTenantInfo(
+                tenantId,
+                tenantInfo.Name,
+                tenantInfo.ConnectionString);
+
+            // Use IProductImportService interface to import product
+            // This is implemented in Inventory module and registered via DI
+            var productImportService = scopedProvider.GetRequiredService<IProductImportService>();
+
+            var request = new ProductImportRequest(
+                TenantId: tenantId,
+                Code: code,
+                Name: name,
+                Description: description,
+                Barcode: barcode,
+                Sku: sku,
+                Unit: unit,
+                SalePrice: salePrice,
+                CostPrice: costPrice,
+                Currency: currency,
+                VatRate: vatRate,
+                CategoryCode: categoryCode,
+                MinimumStock: minStock,
+                MaximumStock: maxStock,
+                ReorderPoint: reorderPoint,
+                Weight: weight,
+                WeightUnit: weightUnit);
+
+            var productId = await productImportService.ImportProductAsync(request, ct);
+
+            _logger.LogInformation("Imported Inventory product {Code} - {Name} (ID: {ProductId}) for tenant {TenantId}",
+                code, name, productId, tenantId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to import Inventory product {Code}: {Message}",
+                code, ex.Message);
+            throw;
         }
     }
 

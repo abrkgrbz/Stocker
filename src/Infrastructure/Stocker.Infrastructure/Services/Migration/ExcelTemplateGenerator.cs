@@ -273,20 +273,53 @@ public class ExcelTemplateGenerator : IExcelTemplateGenerator
                 new()
                 {
                     ["Code"] = "PRD-001",
-                    ["Name"] = "Örnek Ürün 1",
+                    ["Name"] = "Samsung Galaxy S24 Ultra 256GB",
+                    ["Description"] = "Akıllı telefon, 256GB dahili hafıza, 12GB RAM",
+                    ["Barcode"] = "8806095050256",
+                    ["SKU"] = "SM-S928B-256",
+                    ["CategoryCode"] = "ELEKTRONIK",
                     ["Unit"] = "Adet",
                     ["VatRate"] = "18",
-                    ["SalePrice"] = "150,00",
-                    ["PurchasePrice"] = "100,00"
+                    ["SalePrice"] = "74990,00",
+                    ["CostPrice"] = "65000,00",
+                    ["MinStock"] = "5",
+                    ["MaxStock"] = "100",
+                    ["ReorderPoint"] = "10",
+                    ["Weight"] = "0,233",
+                    ["WeightUnit"] = "kg"
                 },
                 new()
                 {
                     ["Code"] = "PRD-002",
-                    ["Name"] = "Örnek Ürün 2",
-                    ["Unit"] = "Kg",
-                    ["VatRate"] = "8",
-                    ["SalePrice"] = "45,50",
-                    ["PurchasePrice"] = "30,00"
+                    ["Name"] = "Apple MacBook Pro 14\" M3",
+                    ["Description"] = "Dizüstü bilgisayar, M3 çip, 16GB RAM, 512GB SSD",
+                    ["Barcode"] = "0194253939504",
+                    ["SKU"] = "MBP14-M3-512",
+                    ["CategoryCode"] = "BILGISAYAR",
+                    ["Unit"] = "Adet",
+                    ["VatRate"] = "18",
+                    ["SalePrice"] = "89990,00",
+                    ["CostPrice"] = "78000,00",
+                    ["MinStock"] = "3",
+                    ["MaxStock"] = "50",
+                    ["ReorderPoint"] = "5",
+                    ["Weight"] = "1,55",
+                    ["WeightUnit"] = "kg"
+                },
+                new()
+                {
+                    ["Code"] = "PRD-003",
+                    ["Name"] = "Organik Zeytinyağı 5Lt",
+                    ["Description"] = "Soğuk sıkım, natürel sızma zeytinyağı",
+                    ["Barcode"] = "8690123456789",
+                    ["CategoryCode"] = "GIDA",
+                    ["Unit"] = "Lt",
+                    ["VatRate"] = "1",
+                    ["SalePrice"] = "850,00",
+                    ["CostPrice"] = "650,00",
+                    ["MinStock"] = "20",
+                    ["MaxStock"] = "500",
+                    ["ReorderPoint"] = "50"
                 }
             },
             MigrationEntityType.Customer => new List<Dictionary<string, string>>
@@ -480,20 +513,24 @@ public class ExcelTemplateGenerator : IExcelTemplateGenerator
             MigrationEntityType.Product => new EntitySchema
             {
                 DisplayName = "Ürünler",
-                Description = "Stok/Ürün kartları için import şablonu",
+                Description = "Inventory modülü ürün kartları için import şablonu",
                 Fields = new List<FieldSchema>
                 {
-                    new("Code", "Ürün Kodu", "string", true, 50, "Benzersiz ürün kodu"),
-                    new("Name", "Ürün Adı", "string", true, 200, "Ürün adı/açıklaması"),
-                    new("Description", "Detaylı Açıklama", "string", false, 500),
+                    new("Code", "Ürün Kodu", "string", true, 50, "Zorunlu - Benzersiz ürün kodu"),
+                    new("Name", "Ürün Adı", "string", true, 200, "Zorunlu - Ürün adı"),
+                    new("Description", "Detaylı Açıklama", "string", false, 500, "Ürün detaylı açıklaması"),
                     new("Barcode", "Barkod", "string", false, 50, "EAN13, UPC veya özel barkod"),
-                    new("CategoryCode", "Kategori Kodu", "string", false, 50),
-                    new("Unit", "Birim", "string", true, 20, "Adet, Kg, Lt, Mt vb.", "Adet"),
+                    new("SKU", "SKU", "string", false, 50, "Stok Tutma Birimi kodu"),
+                    new("CategoryCode", "Kategori Kodu", "string", false, 50, "Kategori kodu (yoksa otomatik oluşturulur)"),
+                    new("Unit", "Birim", "string", true, 20, "Zorunlu - Adet, Kg, Lt, Mt vb.", "Adet"),
                     new("VatRate", "KDV Oranı (%)", "decimal", false, null, "0, 1, 8, 10, 18, 20", "18"),
-                    new("PurchasePrice", "Alış Fiyatı", "decimal", false, null, "KDV hariç alış fiyatı"),
+                    new("CostPrice", "Maliyet Fiyatı", "decimal", false, null, "KDV hariç alış/maliyet fiyatı"),
                     new("SalePrice", "Satış Fiyatı", "decimal", false, null, "KDV hariç satış fiyatı"),
                     new("MinStock", "Minimum Stok", "decimal", false, null, "Kritik stok seviyesi"),
                     new("MaxStock", "Maksimum Stok", "decimal", false, null, "Maksimum stok seviyesi"),
+                    new("ReorderPoint", "Yeniden Sipariş Noktası", "decimal", false, null, "Otomatik sipariş tetikleme seviyesi"),
+                    new("Weight", "Ağırlık", "decimal", false, null, "Ürün ağırlığı"),
+                    new("WeightUnit", "Ağırlık Birimi", "string", false, 10, "kg, gr, ton vb.", "kg"),
                 }
             },
             MigrationEntityType.Customer => new EntitySchema

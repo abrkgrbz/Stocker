@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Minio;
+using Stocker.Application.Common.Interfaces;
 using Stocker.Modules.Inventory.Application.Contracts;
 using Stocker.Modules.Inventory.Application.Services;
 using Stocker.Modules.Inventory.Domain.Repositories;
@@ -146,6 +147,9 @@ public static class DependencyInjection
 
         // Register Inventory Analysis Service (ABC/XYZ, turnover, dead stock)
         services.AddScoped<IInventoryAnalysisService, InventoryAnalysisService>();
+
+        // Register Product Import Service (for data migration from Excel)
+        services.AddScoped<IProductImportService, ProductImportService>();
 
         // Register Event Handler Infrastructure Services
         services.AddScoped<IInventoryNotificationService, InventoryNotificationService>();
