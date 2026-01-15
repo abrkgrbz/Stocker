@@ -49,6 +49,7 @@ public class MigrationImportJob
             await context.SaveChangesAsync(cancellationToken);
 
             // Get all valid records that should be imported
+            // Note: Use GlobalRowIndex instead of RowNumber (computed property) for EF Core translation
             var recordsToImport = await context.MigrationValidationResults
                 .Where(r => r.SessionId == sessionId &&
                            (r.Status == ValidationStatus.Valid ||
@@ -56,7 +57,7 @@ public class MigrationImportJob
                             r.Status == ValidationStatus.Fixed) &&
                            r.UserAction != "skip")
                 .OrderBy(r => r.EntityType)
-                .ThenBy(r => r.RowNumber)
+                .ThenBy(r => r.GlobalRowIndex)
                 .ToListAsync(cancellationToken);
 
             int importedCount = 0;
@@ -84,7 +85,7 @@ public class MigrationImportJob
                         if (data == null)
                         {
                             failedCount++;
-                            importErrors.Add($"Row {record.RowNumber}: Data deserialization failed");
+                            importErrors.Add($"Row {record.GlobalRowIndex}: Data deserialization failed");
                             continue;
                         }
 
@@ -105,13 +106,13 @@ public class MigrationImportJob
                         else
                         {
                             failedCount++;
-                            importErrors.Add($"Row {record.RowNumber}: Import failed");
+                            importErrors.Add($"Row {record.GlobalRowIndex}: Import failed");
                         }
                     }
                     catch (Exception ex)
                     {
                         failedCount++;
-                        importErrors.Add($"Row {record.RowNumber}: {ex.Message}");
+                        importErrors.Add($"Row {record.GlobalRowIndex}: {ex.Message}");
                         _logger.LogError(ex, "Error importing record {RecordId}", record.Id);
                     }
                 }
