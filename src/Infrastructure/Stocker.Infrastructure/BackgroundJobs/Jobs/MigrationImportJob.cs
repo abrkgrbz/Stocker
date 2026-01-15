@@ -4,6 +4,7 @@ using Stocker.Application.Common.Interfaces;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Domain.Migration.Enums;
 using Stocker.Domain.Tenant.Entities;
+using System.Globalization;
 using System.Text.Json;
 
 namespace Stocker.Infrastructure.BackgroundJobs.Jobs;
@@ -15,6 +16,30 @@ public class MigrationImportJob
 {
     private readonly ITenantDbContextFactory _tenantDbContextFactory;
     private readonly ILogger<MigrationImportJob> _logger;
+
+    // Turkish field name patterns for auto-detection (target field -> possible source names)
+    private static readonly Dictionary<string, string[]> TurkishFieldPatterns = new()
+    {
+        ["Code"] = new[] { "kod", "kodu", "code", "no", "numara", "cari kodu", "ürün kodu", "urun kodu", "stok kodu", "stokkodu" },
+        ["Name"] = new[] { "ad", "adi", "adı", "isim", "ismi", "name", "tanim", "tanım", "firma", "kişi", "kisi", "firma/kişi adı", "ürün adı", "urun adi", "stok adı", "stokadi" },
+        ["Unit"] = new[] { "birim", "unit", "olcu", "ölçü" },
+        ["TaxNumber"] = new[] { "vergi", "vergino", "vergi no", "vergi/tc no", "vkn", "tc", "tc no" },
+        ["Email"] = new[] { "email", "eposta", "e-posta", "mail" },
+        ["Phone"] = new[] { "tel", "telefon", "phone", "gsm", "cep" },
+        ["Address"] = new[] { "adres", "address" },
+        ["City"] = new[] { "il", "sehir", "şehir", "city" },
+        ["District"] = new[] { "ilce", "ilçe", "district" },
+        ["Barcode"] = new[] { "barkod", "barcode", "ean" },
+        ["CategoryCode"] = new[] { "kategori", "kategori kodu", "category" },
+        ["PurchasePrice"] = new[] { "alış", "alis", "alış fiyatı", "alis fiyati", "maliyet" },
+        ["SalePrice"] = new[] { "satış", "satis", "satış fiyatı", "satis fiyati", "fiyat" },
+        ["VatRate"] = new[] { "kdv", "kdv oranı", "kdv orani", "vat" },
+        ["MinStock"] = new[] { "min", "minimum", "minimum stok", "min stok" },
+        ["MaxStock"] = new[] { "max", "maksimum", "maksimum stok", "max stok" },
+        ["CreditLimit"] = new[] { "kredi", "kredi limiti", "limit" },
+        ["TaxOffice"] = new[] { "vergi dairesi", "vd" },
+        ["Description"] = new[] { "açıklama", "aciklama", "detay", "detaylı açıklama" },
+    };
 
     public MigrationImportJob(
         ITenantDbContextFactory tenantDbContextFactory,
@@ -183,22 +208,11 @@ public class MigrationImportJob
         string? mappingConfigJson,
         CancellationToken cancellationToken)
     {
-        // Parse mapping config
-        Dictionary<string, string>? fieldMappings = null;
-        if (!string.IsNullOrEmpty(mappingConfigJson))
-        {
-            try
-            {
-                fieldMappings = JsonSerializer.Deserialize<Dictionary<string, string>>(mappingConfigJson);
-            }
-            catch
-            {
-                // Use direct field names if mapping config is invalid
-            }
-        }
+        // Build field mappings from config or auto-detect from Turkish patterns
+        var fieldMappings = BuildFieldMappings(data, entityType, mappingConfigJson);
 
-        // Map source fields to target fields
-        var mappedData = MapFields(data, fieldMappings);
+        // Map source fields to target fields using the mappings
+        var mappedData = MapFieldsWithMappings(data, fieldMappings);
 
         _logger.LogDebug("Importing {EntityType} record to tenant {TenantId}: {Data}",
             entityType, tenantId, JsonSerializer.Serialize(mappedData));
@@ -427,10 +441,24 @@ public class MigrationImportJob
                 if (value is JsonElement jsonElement)
                 {
                     if (jsonElement.TryGetDecimal(out var decVal))
+                    {
+                        // Normalize VAT rate if stored as percentage * 100
+                        if (key.Contains("Vat", StringComparison.OrdinalIgnoreCase) ||
+                            key.Contains("Kdv", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (decVal > 100) decVal /= 100;
+                        }
                         return decVal;
+                    }
                 }
-                else if (decimal.TryParse(value.ToString(), out var parsed))
+                else if (TryParseDecimal(value.ToString(), out var parsed))
                 {
+                    // Normalize VAT rate if stored as percentage * 100
+                    if (key.Contains("Vat", StringComparison.OrdinalIgnoreCase) ||
+                        key.Contains("Kdv", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (parsed > 100) parsed /= 100;
+                    }
                     return parsed;
                 }
             }
@@ -438,22 +466,156 @@ public class MigrationImportJob
         return 0;
     }
 
+    /// <summary>
+    /// Tries to parse a decimal value supporting both Turkish (comma) and English (dot) formats
+    /// </summary>
+    private static bool TryParseDecimal(string? value, out decimal result)
+    {
+        result = 0;
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        // Try invariant culture first (dot as decimal separator)
+        if (decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out result))
+            return true;
+
+        // Try Turkish culture (comma as decimal separator)
+        if (decimal.TryParse(value, NumberStyles.Any, new CultureInfo("tr-TR"), out result))
+            return true;
+
+        // Try replacing comma with dot and parse again
+        var normalized = value.Replace(",", ".");
+        if (decimal.TryParse(normalized, NumberStyles.Any, CultureInfo.InvariantCulture, out result))
+            return true;
+
+        return false;
+    }
+
     #endregion
 
     /// <summary>
-    /// Maps source field names to target field names based on mapping configuration
+    /// Builds field mappings from config or auto-detects from Turkish patterns.
+    /// Returns a dictionary mapping target field names to source field names.
     /// </summary>
-    private Dictionary<string, object?> MapFields(
-        Dictionary<string, object?> sourceData,
-        Dictionary<string, string>? fieldMappings)
+    private Dictionary<string, string> BuildFieldMappings(
+        Dictionary<string, object?> record,
+        MigrationEntityType entityType,
+        string? mappingConfigJson)
     {
-        if (fieldMappings == null || fieldMappings.Count == 0)
+        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        // Try to parse mapping config if available
+        if (!string.IsNullOrEmpty(mappingConfigJson))
         {
-            return sourceData;
+            try
+            {
+                // Try parsing as simple Dictionary<string, string> first
+                var simpleMappings = JsonSerializer.Deserialize<Dictionary<string, string>>(mappingConfigJson);
+                if (simpleMappings != null && simpleMappings.Count > 0)
+                {
+                    foreach (var kv in simpleMappings)
+                    {
+                        result[kv.Key] = kv.Value;
+                    }
+                    return result;
+                }
+            }
+            catch
+            {
+                // Try parsing as MappingConfigDto structure
+                try
+                {
+                    using var doc = JsonDocument.Parse(mappingConfigJson);
+                    if (doc.RootElement.TryGetProperty("EntityMappings", out var entityMappings) ||
+                        doc.RootElement.TryGetProperty("entityMappings", out entityMappings))
+                    {
+                        var entityKey = entityType.ToString();
+                        if (entityMappings.TryGetProperty(entityKey, out var entityMapping) ||
+                            entityMappings.TryGetProperty(entityKey.ToLower(), out entityMapping))
+                        {
+                            if (entityMapping.TryGetProperty("FieldMappings", out var fieldMappings) ||
+                                entityMapping.TryGetProperty("fieldMappings", out fieldMappings))
+                            {
+                                foreach (var fm in fieldMappings.EnumerateArray())
+                                {
+                                    var sourceField = fm.TryGetProperty("SourceField", out var sf) ? sf.GetString() :
+                                                      fm.TryGetProperty("sourceField", out sf) ? sf.GetString() : null;
+                                    var targetField = fm.TryGetProperty("TargetField", out var tf) ? tf.GetString() :
+                                                      fm.TryGetProperty("targetField", out tf) ? tf.GetString() : null;
+
+                                    if (!string.IsNullOrEmpty(targetField) && !string.IsNullOrEmpty(sourceField))
+                                    {
+                                        result[targetField] = sourceField;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Ignore parsing errors, fall through to auto-detection
+                }
+            }
         }
 
-        var result = new Dictionary<string, object?>();
+        // Auto-detect field mappings from record keys using Turkish patterns
+        var sourceFields = record.Keys.ToList();
+        foreach (var sourceField in sourceFields)
+        {
+            var normalizedSource = sourceField.ToLowerInvariant()
+                .Replace("*", "")
+                .Replace("(", "")
+                .Replace(")", "")
+                .Replace("%", "")
+                .Trim();
 
+            foreach (var (targetField, patterns) in TurkishFieldPatterns)
+            {
+                // Skip if already mapped
+                if (result.ContainsKey(targetField))
+                    continue;
+
+                foreach (var pattern in patterns)
+                {
+                    if (normalizedSource.Contains(pattern) || pattern.Contains(normalizedSource))
+                    {
+                        result[targetField] = sourceField;
+                        break;
+                    }
+                }
+            }
+
+            // Direct match (case-insensitive)
+            foreach (var targetField in TurkishFieldPatterns.Keys)
+            {
+                if (!result.ContainsKey(targetField) &&
+                    string.Equals(normalizedSource, targetField, StringComparison.OrdinalIgnoreCase))
+                {
+                    result[targetField] = sourceField;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Maps source field names to target field names based on field mappings
+    /// </summary>
+    private Dictionary<string, object?> MapFieldsWithMappings(
+        Dictionary<string, object?> sourceData,
+        Dictionary<string, string> fieldMappings)
+    {
+        var result = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+
+        // First, copy all original data
+        foreach (var kv in sourceData)
+        {
+            result[kv.Key] = kv.Value;
+        }
+
+        // Then apply mappings (target field -> source field value)
         foreach (var mapping in fieldMappings)
         {
             var targetField = mapping.Key;
