@@ -15,6 +15,10 @@ import {
   CheckIcon,
   CheckCircleIcon,
   ArrowLeftIcon,
+  TrashIcon,
+  ArchiveBoxIcon,
+  BellSlashIcon,
+  InformationCircleIcon,
 } from '@heroicons/react/24/outline';
 import { ChatBubbleLeftRightIcon as ChatBubbleLeftRightIconSolid } from '@heroicons/react/24/solid';
 import { useChatHub, ChatMessage as SignalRMessage, ChatUser } from '@/lib/signalr/chat-hub';
@@ -38,8 +42,10 @@ export default function MessagingPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<TabType>('conversations');
   const [isMobileListVisible, setIsMobileListVisible] = useState(true);
+  const [showChatMenu, setShowChatMenu] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const chatMenuRef = useRef<HTMLDivElement>(null);
 
   const { conversations, fetchConversations, isLoading: storeLoading } = useChat();
 
@@ -165,6 +171,47 @@ export default function MessagingPage() {
     setIsMobileListVisible(true);
   };
 
+  const handleNewChat = () => {
+    setActiveTab('online');
+  };
+
+  const handleChatMenuToggle = () => {
+    setShowChatMenu(!showChatMenu);
+  };
+
+  const handleDeleteConversation = () => {
+    // TODO: Implement delete conversation
+    setShowChatMenu(false);
+    setSelectedConversation(null);
+  };
+
+  const handleMuteConversation = () => {
+    // TODO: Implement mute conversation
+    setShowChatMenu(false);
+  };
+
+  const handleArchiveConversation = () => {
+    // TODO: Implement archive conversation
+    setShowChatMenu(false);
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (chatMenuRef.current && !chatMenuRef.current.contains(event.target as Node)) {
+        setShowChatMenu(false);
+      }
+    };
+
+    if (showChatMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showChatMenu]);
+
   const filteredOnlineUsers = onlineUsers.filter(
     (chatUser) =>
       chatUser.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -229,7 +276,11 @@ export default function MessagingPage() {
                 </span>
               )}
             </div>
-            <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+            <button
+              onClick={handleNewChat}
+              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              title="Yeni sohbet başlat"
+            >
               <PlusIcon className="w-5 h-5 text-slate-600" />
             </button>
           </div>
@@ -471,9 +522,51 @@ export default function MessagingPage() {
                 </div>
               </div>
 
-              <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-                <EllipsisHorizontalIcon className="w-5 h-5 text-slate-600" />
-              </button>
+              {/* Chat Menu */}
+              <div className="relative" ref={chatMenuRef}>
+                <button
+                  onClick={handleChatMenuToggle}
+                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  <EllipsisHorizontalIcon className="w-5 h-5 text-slate-600" />
+                </button>
+
+                {/* Dropdown Menu */}
+                <AnimatePresence>
+                  {showChatMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-50"
+                    >
+                      <button
+                        onClick={handleMuteConversation}
+                        className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                      >
+                        <BellSlashIcon className="w-5 h-5 text-slate-400" />
+                        Bildirimleri kapat
+                      </button>
+                      <button
+                        onClick={handleArchiveConversation}
+                        className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                      >
+                        <ArchiveBoxIcon className="w-5 h-5 text-slate-400" />
+                        Arşivle
+                      </button>
+                      <div className="my-1 border-t border-slate-100" />
+                      <button
+                        onClick={handleDeleteConversation}
+                        className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <TrashIcon className="w-5 h-5" />
+                        Sohbeti sil
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </header>
 
             {/* Messages Area */}
