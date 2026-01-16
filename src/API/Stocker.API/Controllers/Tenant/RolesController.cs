@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.API.Controllers.Base;
+using Stocker.API.Authorization;
 using Stocker.Application.Common.Exceptions;
 using Stocker.Application.DTOs.Tenant.Users;
 using Stocker.Application.Features.Tenant.Roles.Commands;
@@ -13,6 +14,7 @@ namespace Stocker.API.Controllers.Tenant;
 [Route("api/tenant/[controller]")]
 [ApiController]
 [Authorize]
+[HasPermission("Settings.Roles", "View")] // Default permission for controller
 public class RolesController : ApiController
 {
     private readonly IMediator _mediator;
@@ -76,6 +78,7 @@ public class RolesController : ApiController
     }
 
     [HttpPost]
+    [HasPermission("Settings.Roles", "Create")]
     [ProducesResponseType(typeof(ApiResponse<RoleDto>), 201)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
     public async Task<IActionResult> CreateRole([FromBody] CreateRoleDto dto)
@@ -113,6 +116,7 @@ public class RolesController : ApiController
     }
 
     [HttpPut("{id}")]
+    [HasPermission("Settings.Roles", "Edit")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 404)]
     public async Task<IActionResult> UpdateRole(Guid id, [FromBody] UpdateRoleDto dto)
@@ -154,6 +158,7 @@ public class RolesController : ApiController
     }
 
     [HttpDelete("{id}")]
+    [HasPermission("Settings.Roles", "Delete")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 404)]
     public async Task<IActionResult> DeleteRole(Guid id)

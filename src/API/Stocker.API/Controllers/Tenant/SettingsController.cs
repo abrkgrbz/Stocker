@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.API.Controllers.Base;
+using Stocker.API.Authorization;
 using Stocker.Application.DTOs.Tenant.Settings;
 using Stocker.Application.Features.Tenant.Settings.Commands;
 using Stocker.Application.Features.Tenant.Settings.Queries;
@@ -13,6 +14,7 @@ namespace Stocker.API.Controllers.Tenant;
 [Route("api/tenant/[controller]")]
 [ApiController]
 [Authorize]
+[HasPermission("Settings", "View")] // Default permission for controller
 public class SettingsController : ApiController
 {
     private readonly IMediator _mediator;
@@ -82,6 +84,7 @@ public class SettingsController : ApiController
     }
 
     [HttpPost]
+    [HasPermission("Settings", "Create")]
     [ProducesResponseType(typeof(ApiResponse<SettingDto>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
     [ProducesResponseType(typeof(ApiResponse<object>), 500)]
@@ -116,6 +119,7 @@ public class SettingsController : ApiController
     }
 
     [HttpPut("{key}")]
+    [HasPermission("Settings", "Edit")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<bool>), 404)]
     [ProducesResponseType(typeof(ApiResponse<bool>), 400)]

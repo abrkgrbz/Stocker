@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.API.Controllers.Base;
+using Stocker.API.Authorization;
 using Stocker.Application.DTOs.Tenant.Security;
 using Stocker.Application.Features.Tenant.SecuritySettings.Commands;
 using Stocker.Application.Features.Tenant.SecuritySettings.Queries;
@@ -15,6 +16,7 @@ namespace Stocker.API.Controllers.Tenant;
 [Route("api/tenant/[controller]")]
 [ApiController]
 [Authorize]
+[HasPermission("Settings.Security", "View")] // Default permission for controller
 public class SecuritySettingsController : ApiController
 {
     /// <summary>
@@ -50,6 +52,7 @@ public class SecuritySettingsController : ApiController
     /// <param name="request">Password policy settings</param>
     /// <returns>Success result</returns>
     [HttpPut("password-policy")]
+    [HasPermission("Settings.Security", "Edit")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
     [ProducesResponseType(typeof(ApiResponse<object>), 401)]
@@ -93,6 +96,7 @@ public class SecuritySettingsController : ApiController
     /// <param name="request">2FA settings</param>
     /// <returns>Success result</returns>
     [HttpPut("two-factor")]
+    [HasPermission("Settings.Security", "Edit")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
     [ProducesResponseType(typeof(ApiResponse<object>), 401)]
@@ -133,6 +137,7 @@ public class SecuritySettingsController : ApiController
     /// <param name="request">Session settings</param>
     /// <returns>Success result</returns>
     [HttpPut("session")]
+    [HasPermission("Settings.Security", "Edit")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
     [ProducesResponseType(typeof(ApiResponse<object>), 401)]
@@ -172,6 +177,7 @@ public class SecuritySettingsController : ApiController
     /// <param name="request">API security settings</param>
     /// <returns>Success result</returns>
     [HttpPut("api-security")]
+    [HasPermission("Settings.Security", "Edit")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
     [ProducesResponseType(typeof(ApiResponse<object>), 401)]

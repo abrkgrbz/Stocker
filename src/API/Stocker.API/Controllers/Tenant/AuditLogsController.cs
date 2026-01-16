@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.API.Controllers.Base;
+using Stocker.API.Authorization;
 using Stocker.Application.DTOs.Security;
 using Stocker.Application.DTOs.Tenant.AuditLogs;
 using Stocker.Application.Features.Tenant.AuditLogs.Queries;
@@ -16,6 +17,7 @@ namespace Stocker.API.Controllers.Tenant;
 [Route("api/tenant/[controller]")]
 [ApiController]
 [Authorize]
+[HasPermission("Settings.AuditLogs", "View")] // Default permission for controller
 public class AuditLogsController : ApiController
 {
     private readonly IMediator _mediator;
@@ -141,6 +143,7 @@ public class AuditLogsController : ApiController
     /// Export tenant audit logs to CSV
     /// </summary>
     [HttpGet("export/csv")]
+    [HasPermission("Settings.AuditLogs", "Export")]
     [ProducesResponseType(typeof(FileContentResult), 200)]
     public async Task<IActionResult> ExportToCsv(
         [FromQuery] DateTime? fromDate = null,

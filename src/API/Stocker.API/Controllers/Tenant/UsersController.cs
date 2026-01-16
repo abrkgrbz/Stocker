@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.API.Controllers.Base;
+using Stocker.API.Authorization;
 using Stocker.Application.DTOs.Tenant;
 using Stocker.Application.DTOs.Tenant.Users;
 using Stocker.Application.Features.Tenant.Subscription.Queries;
@@ -16,6 +17,7 @@ namespace Stocker.API.Controllers.Tenant;
 [Route("api/tenant/[controller]")]
 [ApiController]
 [Authorize]
+[HasPermission("Settings.Users", "View")] // Default permission for controller
 public class UsersController : ApiController
 {
     private readonly IMediator _mediator;
@@ -85,6 +87,7 @@ public class UsersController : ApiController
     }
 
     [HttpPost]
+    [HasPermission("Settings.Users", "Create")]
     [RateLimit(limit: 10, periodInSeconds: 60)] // Max 10 user creations per minute to prevent bulk spam
     [ProducesResponseType(typeof(ApiResponse<UserDto>), 201)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
@@ -132,6 +135,7 @@ public class UsersController : ApiController
     }
 
     [HttpPut("{id}")]
+    [HasPermission("Settings.Users", "Edit")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 404)]
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserDto dto)
@@ -171,6 +175,7 @@ public class UsersController : ApiController
     }
 
     [HttpDelete("{id}")]
+    [HasPermission("Settings.Users", "Delete")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 404)]
     public async Task<IActionResult> DeleteUser(Guid id)
@@ -200,6 +205,7 @@ public class UsersController : ApiController
     }
 
     [HttpPost("{id}/toggle-status")]
+    [HasPermission("Settings.Users", "Edit")]
     [ProducesResponseType(typeof(ApiResponse<ToggleUserStatusResult>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 404)]
     public async Task<IActionResult> ToggleUserStatus(Guid id)
@@ -226,6 +232,7 @@ public class UsersController : ApiController
     }
 
     [HttpPost("{id}/reset-password")]
+    [HasPermission("Settings.Users", "Edit")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 404)]
     public async Task<IActionResult> ResetPassword(Guid id, [FromBody] ResetPasswordDto dto)
@@ -308,6 +315,7 @@ public class UsersController : ApiController
     }
 
     [HttpPost("{id}/assign-role")]
+    [HasPermission("Settings.Users", "Edit")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 404)]
     public async Task<IActionResult> AssignRole(Guid id, [FromBody] AssignRoleDto dto)
@@ -353,6 +361,7 @@ public class UsersController : ApiController
     /// Resend invitation email to a pending user.
     /// </summary>
     [HttpPost("{id}/resend-invitation")]
+    [HasPermission("Settings.Users", "Edit")]
     [RateLimit(limit: 5, periodInSeconds: 300)] // Max 5 resends per 5 minutes to prevent email spam
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 404)]
