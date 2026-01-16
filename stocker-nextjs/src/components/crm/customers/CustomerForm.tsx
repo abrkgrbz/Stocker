@@ -130,6 +130,7 @@ export interface CustomerFormRef {
   submit: () => void;
   getValues: () => CustomerFormData;
   validate: () => boolean;
+  isDirty: () => boolean;
 }
 
 export interface CustomerFormProps {
@@ -189,6 +190,9 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
   // Validation errors
   const [errors, setErrors] = useState<Partial<Record<keyof CustomerFormData, string>>>({});
 
+  // Form dirty state (has user made changes)
+  const [isDirty, setIsDirty] = useState(false);
+
   // Form ref for submit
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -242,6 +246,8 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
     value: CustomerFormData[K]
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // Mark form as dirty when user makes changes
+    setIsDirty(true);
     // Clear error on change
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
@@ -259,6 +265,7 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
       city: location.cityName || '',
       state: location.districtName || '',  // district maps to state for legacy
     }));
+    setIsDirty(true);
   }, []);
 
   // Validate form
@@ -289,6 +296,17 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
         newErrors.tcKimlikNo = 'TC Kimlik No 11 haneli olmalıdır';
       } else if (formData.tcKimlikNo[0] === '0') {
         newErrors.tcKimlikNo = 'TC Kimlik No 0 ile başlayamaz';
+      } else {
+        // TC Kimlik No algoritma kontrolü
+        const digits = formData.tcKimlikNo.split('').map(Number);
+        const oddSum = digits[0] + digits[2] + digits[4] + digits[6] + digits[8];
+        const evenSum = digits[1] + digits[3] + digits[5] + digits[7];
+        const digit10 = (oddSum * 7 - evenSum) % 10;
+        const digit11 = (digits.slice(0, 10).reduce((a, b) => a + b, 0)) % 10;
+
+        if (digits[9] !== digit10 || digits[10] !== digit11) {
+          newErrors.tcKimlikNo = 'Geçersiz TC Kimlik No';
+        }
       }
     }
 
@@ -328,7 +346,8 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
     },
     getValues: () => formData,
     validate,
-  }), [validate, onFinish, formData]);
+    isDirty: () => isDirty,
+  }), [validate, onFinish, formData, isDirty]);
 
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="w-full">

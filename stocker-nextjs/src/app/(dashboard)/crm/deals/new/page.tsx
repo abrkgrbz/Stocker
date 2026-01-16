@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Form } from 'antd';
 import { CrmFormPageLayout } from '@/components/crm/shared';
@@ -12,6 +12,15 @@ export default function NewDealPage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createDeal = useCreateDeal();
+  const [isDirty, setIsDirty] = useState(false);
+
+  // Check if form has been touched
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsDirty(form.isFieldsTouched());
+    }, 500);
+    return () => clearInterval(interval);
+  }, [form]);
 
   const handleSubmit = async (values: any) => {
     try {
@@ -40,6 +49,7 @@ export default function NewDealPage() {
       cancelPath="/crm/deals"
       loading={createDeal.isPending}
       onSave={() => form.submit()}
+      isDirty={isDirty}
     >
       <DealForm
         form={form}

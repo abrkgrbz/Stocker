@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Form } from 'antd';
 import { CrmFormPageLayout } from '@/components/crm/shared';
@@ -11,6 +11,15 @@ export default function NewCampaignPage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createCampaign = useCreateCampaign();
+  const [isDirty, setIsDirty] = useState(false);
+
+  // Check if form has been touched
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsDirty(form.isFieldsTouched());
+    }, 500);
+    return () => clearInterval(interval);
+  }, [form]);
 
   const handleSubmit = async (values: any) => {
     try {
@@ -28,6 +37,7 @@ export default function NewCampaignPage() {
       cancelPath="/crm/campaigns"
       loading={createCampaign.isPending}
       onSave={() => form.submit()}
+      isDirty={isDirty}
     >
       <CampaignForm
         form={form}

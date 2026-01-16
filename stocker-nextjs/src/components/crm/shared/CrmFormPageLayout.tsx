@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { Button, Spinner } from '@/components/primitives';
 
 interface CrmFormPageLayoutProps {
@@ -32,6 +32,8 @@ interface CrmFormPageLayoutProps {
   extraActions?: React.ReactNode;
   /** Optional: Save button text (default: "Kaydet") */
   saveButtonText?: string;
+  /** Optional: Whether form has unsaved changes */
+  isDirty?: boolean;
 }
 
 /**
@@ -44,6 +46,7 @@ interface CrmFormPageLayoutProps {
  * - Cancel and Save buttons
  * - Premium slate theme styling
  * - Loading and error states for edit pages
+ * - Unsaved changes warning
  */
 export function CrmFormPageLayout({
   title,
@@ -59,8 +62,54 @@ export function CrmFormPageLayout({
   errorDescription = 'İstenen kayıt bulunamadı veya bir hata oluştu.',
   extraActions,
   saveButtonText = 'Kaydet',
+  isDirty = false,
 }: CrmFormPageLayoutProps) {
   const router = useRouter();
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
+
+  // Warn user about unsaved changes when leaving the page
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = 'Kaydedilmemiş değişiklikleriniz var. Sayfadan ayrılmak istediğinize emin misiniz?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
+
+  // Handle navigation with unsaved changes check
+  const handleNavigation = useCallback((path: string | 'back') => {
+    if (isDirty) {
+      setPendingNavigation(path);
+      setShowUnsavedModal(true);
+    } else {
+      if (path === 'back') {
+        router.back();
+      } else {
+        router.push(path);
+      }
+    }
+  }, [isDirty, router]);
+
+  const confirmNavigation = useCallback(() => {
+    setShowUnsavedModal(false);
+    if (pendingNavigation === 'back') {
+      router.back();
+    } else if (pendingNavigation) {
+      router.push(pendingNavigation);
+    }
+    setPendingNavigation(null);
+  }, [pendingNavigation, router]);
+
+  const cancelNavigation = useCallback(() => {
+    setShowUnsavedModal(false);
+    setPendingNavigation(null);
+  }, []);
 
   // Loading state
   if (isDataLoading) {
@@ -88,6 +137,48 @@ export function CrmFormPageLayout({
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Unsaved Changes Modal */}
+      {showUnsavedModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={cancelNavigation}
+          />
+          {/* Modal */}
+          <div className="relative bg-white rounded-xl shadow-2xl p-6 max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                <ExclamationTriangleIcon className="w-6 h-6 text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-slate-900 mb-1">
+                  Kaydedilmemiş Değişiklikler
+                </h3>
+                <p className="text-sm text-slate-600 mb-4">
+                  Kaydetmediğiniz değişiklikler var. Sayfadan ayrılırsanız bu değişiklikler kaybolacaktır.
+                </p>
+                <div className="flex items-center gap-3 justify-end">
+                  <Button
+                    variant="secondary"
+                    onClick={cancelNavigation}
+                  >
+                    Kalıp Düzenle
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={confirmNavigation}
+                    className="!bg-amber-600 hover:!bg-amber-700"
+                  >
+                    Değişiklikleri Kaydetmeden Çık
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Glass Effect Sticky Header */}
       <div
         className="sticky top-0 z-50 px-8 py-4"
@@ -100,7 +191,7 @@ export function CrmFormPageLayout({
         <div className="flex items-center justify-between max-w-4xl mx-auto">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => router.back()}
+              onClick={() => handleNavigation('back')}
               className="p-2 rounded-md text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
             >
               <ArrowLeftIcon className="h-5 w-5" />
@@ -111,13 +202,18 @@ export function CrmFormPageLayout({
                   {title}
                 </h1>
                 {titleExtra}
+                {isDirty && (
+                  <span className="px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">
+                    Kaydedilmedi
+                  </span>
+                )}
               </div>
               <p className="text-sm text-slate-400">{subtitle}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             {extraActions}
-            <Button variant="secondary" onClick={() => router.push(cancelPath)}>
+            <Button variant="secondary" onClick={() => handleNavigation(cancelPath)}>
               Vazgeç
             </Button>
             <Button

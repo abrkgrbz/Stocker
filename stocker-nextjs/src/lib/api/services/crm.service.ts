@@ -466,6 +466,7 @@ export interface CreateCustomerDto {
   email: string;
   phone?: string;
   website?: string;
+  industry?: string;
   address?: string;
   // GeoLocation IDs (FK to Master DB)
   countryId?: string;
@@ -478,19 +479,29 @@ export interface CreateCustomerDto {
   country?: string;
   postalCode?: string;
   customerType: 'Individual' | 'Corporate';
+  status?: 'Active' | 'Inactive' | 'Prospect' | 'Suspended';
   creditLimit?: number;
   taxId?: string;
   taxOffice?: string;
   paymentTerms?: string;
   notes?: string;
-}
-
-export interface UpdateCustomerDto extends Partial<CreateCustomerDto> {
-  industry?: string;
   annualRevenue?: number;
   numberOfEmployees?: number;
   description?: string;
+  // Turkish Compliance Fields
+  businessEntityType?: string;
+  mersisNo?: string;
+  tradeRegistryNo?: string;
+  kepAddress?: string;
+  eInvoiceRegistered?: boolean;
+  tcKimlikNo?: string;
+  // KVKK Consent
+  kvkkDataProcessingConsent?: boolean;
+  kvkkMarketingConsent?: boolean;
+  kvkkCommunicationConsent?: boolean;
 }
+
+export interface UpdateCustomerDto extends CreateCustomerDto {}
 
 // =====================================
 // CRM API SERVICE
@@ -572,20 +583,45 @@ export class CRMService {
    */
   static async createCustomer(data: CreateCustomerDto): Promise<Customer> {
     // CRM module expects: CreateCustomerDto directly (controller wraps in command)
-    const dto = {
+    const dto: Record<string, any> = {
       companyName: data.companyName,
+      customerType: data.customerType || 'Corporate',
+      contactPerson: data.contactPerson || null,
       email: data.email,
       phone: this.formatPhoneNumber(data.phone),
       website: data.website || null,
-      industry: null, // Not collected in frontend yet
+      industry: data.industry || null,
       address: data.address || null,
       city: data.city || null,
       state: data.state || null,
       country: data.country || null,
       postalCode: data.postalCode || null,
-      annualRevenue: null, // Not collected in frontend yet
-      numberOfEmployees: null, // Not collected in frontend yet
-      description: data.notes || null,
+      // GeoLocation IDs
+      countryId: data.countryId || null,
+      cityId: data.cityId || null,
+      districtId: data.districtId || null,
+      // Financial
+      taxId: data.taxId || null,
+      taxOffice: data.taxOffice || null,
+      creditLimit: data.creditLimit || 0,
+      paymentTerms: data.paymentTerms || null,
+      annualRevenue: data.annualRevenue || null,
+      numberOfEmployees: data.numberOfEmployees || null,
+      description: data.description || data.notes || null,
+      status: data.status || 'Active',
+      // Turkish Compliance Fields
+      businessEntityType: data.businessEntityType || null,
+      mersisNo: data.mersisNo || null,
+      tradeRegistryNo: data.tradeRegistryNo || null,
+      kepAddress: data.kepAddress || null,
+      eInvoiceRegistered: data.eInvoiceRegistered || false,
+      tcKimlikNo: data.tcKimlikNo || null,
+      // KVKK Consent
+      kvkkConsent: {
+        dataProcessingConsent: data.kvkkDataProcessingConsent || false,
+        marketingConsent: data.kvkkMarketingConsent || false,
+        communicationConsent: data.kvkkCommunicationConsent || false,
+      },
     };
 
     logger.info('📤 Sending CreateCustomerDto to CRM module', { metadata: { dto } });
@@ -600,8 +636,10 @@ export class CRMService {
     data: UpdateCustomerDto
   ): Promise<Customer> {
     // CRM module expects: UpdateCustomerDto directly (controller wraps in command)
-    const dto = {
+    const dto: Record<string, any> = {
       companyName: data.companyName,
+      customerType: data.customerType,
+      contactPerson: data.contactPerson,
       email: data.email,
       phone: data.phone ? this.formatPhoneNumber(data.phone) : undefined,
       website: data.website,
@@ -611,9 +649,32 @@ export class CRMService {
       state: data.state,
       country: data.country,
       postalCode: data.postalCode,
+      // GeoLocation IDs
+      countryId: data.countryId,
+      cityId: data.cityId,
+      districtId: data.districtId,
+      // Financial
+      taxId: data.taxId,
+      taxOffice: data.taxOffice,
+      creditLimit: data.creditLimit,
+      paymentTerms: data.paymentTerms,
       annualRevenue: data.annualRevenue,
       numberOfEmployees: data.numberOfEmployees,
       description: data.description,
+      status: data.status,
+      // Turkish Compliance Fields
+      businessEntityType: data.businessEntityType,
+      mersisNo: data.mersisNo,
+      tradeRegistryNo: data.tradeRegistryNo,
+      kepAddress: data.kepAddress,
+      eInvoiceRegistered: data.eInvoiceRegistered,
+      tcKimlikNo: data.tcKimlikNo,
+      // KVKK Consent
+      kvkkConsent: {
+        dataProcessingConsent: data.kvkkDataProcessingConsent || false,
+        marketingConsent: data.kvkkMarketingConsent || false,
+        communicationConsent: data.kvkkCommunicationConsent || false,
+      },
     };
 
     logger.info('📤 Sending UpdateCustomerDto to CRM module', { metadata: { dto } });
@@ -657,7 +718,13 @@ export class CRMService {
    * Create new lead
    * Backend expects: CreateLeadDto directly (controller wraps in command)
    */
-  static async createLead(data: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>): Promise<Lead> {
+  static async createLead(data: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'> & {
+    // Extended fields for lead creation
+    businessEntityType?: string;
+    kvkkDataProcessingConsent?: boolean;
+    kvkkMarketingConsent?: boolean;
+    kvkkCommunicationConsent?: boolean;
+  }): Promise<Lead> {
     // CRM module expects: CreateLeadDto directly (controller wraps in command)
     const dto = {
       firstName: data.firstName,
@@ -671,6 +738,7 @@ export class CRMService {
       source: data.source,
       status: data.status || 'New',
       rating: data.rating || 'Unrated',
+      score: data.score ?? 50, // Lead score (0-100)
       address: data.address,
       city: data.city,
       state: data.state,
@@ -680,7 +748,14 @@ export class CRMService {
       annualRevenue: data.annualRevenue,
       numberOfEmployees: data.numberOfEmployees,
       description: data.description,
+      notes: data.notes,
       assignedToUserId: data.assignedToUserId,
+      // Business entity type for company-associated leads
+      businessEntityType: data.businessEntityType,
+      // KVKK Consent
+      kvkkDataProcessingConsent: data.kvkkDataProcessingConsent,
+      kvkkMarketingConsent: data.kvkkMarketingConsent,
+      kvkkCommunicationConsent: data.kvkkCommunicationConsent,
     };
 
     logger.info('📤 Sending CreateLeadDto to CRM module', { metadata: { dto } });

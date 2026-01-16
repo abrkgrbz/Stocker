@@ -1366,6 +1366,8 @@ export function useCampaigns() {
   return useQuery({
     queryKey: crmKeys.campaigns,
     queryFn: () => CRMService.getCampaigns(),
+    staleTime: 0, // Always fetch fresh data
+    refetchOnMount: 'always', // Refetch when component mounts (e.g., navigating back)
   });
 }
 

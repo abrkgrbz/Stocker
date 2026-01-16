@@ -593,6 +593,27 @@ export default function DealsPage() {
               );
             })}
 
+            {/* Unassigned Column - for deals without stageId */}
+            {dealsWithoutStage.length > 0 && (
+              <div className="flex-shrink-0" style={{ width: 300 }}>
+                <div className="bg-white border-2 border-amber-300 rounded-lg h-full">
+                  <div className="p-3 border-b border-amber-200 bg-amber-50">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                      <span className="text-sm font-medium text-slate-900">Aşama Atanmamış</span>
+                      <span className="px-1.5 py-0.5 text-xs bg-amber-200 text-amber-700 rounded">{dealsWithoutStage.length}</span>
+                    </div>
+                    <div className="text-xs text-slate-600">₺{dealsWithoutStage.reduce((sum, d) => sum + d.amount, 0).toLocaleString('tr-TR')}</div>
+                  </div>
+                  <div className="p-3 max-h-[600px] overflow-y-auto bg-amber-50/50">
+                    {dealsWithoutStage.map((deal) => (
+                      <DraggableDealCard key={deal.id} deal={deal} onNavigate={handleNavigate} onCloseWon={handleCloseWon} onCloseLost={handleCloseLost} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Lost Column */}
             <div className="flex-shrink-0" style={{ width: 300 }}>
               <div className="bg-white border-2 border-slate-300 rounded-lg h-full">

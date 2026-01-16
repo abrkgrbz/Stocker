@@ -149,27 +149,29 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
 
             {/* Rating Selector */}
             <div className="flex-shrink-0">
-              <Form.Item name="rating" className="mb-0" initialValue="Warm">
-                <div className="flex bg-slate-100 p-1 rounded-lg">
-                  {ratingOptions.map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => {
-                        setRating(opt.value);
-                        form.setFieldValue('rating', opt.value);
-                      }}
-                      className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-                        rating === opt.value
-                          ? 'bg-white shadow-sm text-slate-900'
-                          : 'text-slate-500 hover:text-slate-700'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
+              <Form.Item name="rating" hidden initialValue="Warm">
+                <input type="hidden" />
               </Form.Item>
+              <div className="flex bg-slate-100 p-1 rounded-lg">
+                {ratingOptions.filter(opt => opt.value !== 'Unrated').map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      setRating(opt.value);
+                      form.setFieldValue('rating', opt.value);
+                    }}
+                    disabled={loading}
+                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      rating === opt.value
+                        ? 'bg-white shadow-sm text-slate-900'
+                        : 'text-slate-500 hover:text-slate-700'
+                    } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

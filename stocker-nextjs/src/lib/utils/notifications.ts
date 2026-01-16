@@ -1,4 +1,5 @@
 import Swal from 'sweetalert2';
+import { translateError } from './error-translations';
 
 /**
  * SweetAlert2 based notification utilities for consistent UX across the app
@@ -93,6 +94,7 @@ export const closeLoading = () => {
 /**
  * Show API error with detailed information
  * Parses error response and displays in user-friendly format
+ * Automatically translates common error messages to Turkish
  */
 export const showApiError = (error: any, defaultMessage: string = 'İşlem başarısız') => {
   const apiError = error?.response?.data;
@@ -100,15 +102,16 @@ export const showApiError = (error: any, defaultMessage: string = 'İşlem başa
   let errorDetails: string[] = [];
 
   if (apiError) {
-    // Try to extract main error message
-    errorMessage = apiError.description || apiError.detail || apiError.title || apiError.message || defaultMessage;
+    // Try to extract main error message and translate it
+    const rawMessage = apiError.description || apiError.detail || apiError.title || apiError.message || defaultMessage;
+    errorMessage = translateError(rawMessage);
 
-    // Collect all error details
+    // Collect all error details and translate them
     if (apiError.errors) {
       if (Array.isArray(apiError.errors)) {
         // Array format: [{ field, message }]
         errorDetails = apiError.errors.map((e: any) =>
-          e.field ? `<strong>${e.field}:</strong> ${e.message}` : e.message
+          e.field ? `<strong>${e.field}:</strong> ${translateError(e.message)}` : translateError(e.message)
         );
       } else {
         // Object format: { field1: ["error1", "error2"], field2: ["error3"] }
@@ -116,14 +119,14 @@ export const showApiError = (error: any, defaultMessage: string = 'İşlem başa
           const fieldErrors = apiError.errors[field];
           if (Array.isArray(fieldErrors)) {
             fieldErrors.forEach(msg => {
-              errorDetails.push(`<strong>${field}:</strong> ${msg}`);
+              errorDetails.push(`<strong>${field}:</strong> ${translateError(msg)}`);
             });
           }
         });
       }
     }
   } else if (error?.message) {
-    errorMessage = error.message;
+    errorMessage = translateError(error.message);
   }
 
   return Swal.fire({
