@@ -19,8 +19,10 @@ import {
   ArchiveBoxIcon,
   BellSlashIcon,
   InformationCircleIcon,
+  HomeIcon,
 } from '@heroicons/react/24/outline';
 import { ChatBubbleLeftRightIcon as ChatBubbleLeftRightIconSolid } from '@heroicons/react/24/solid';
+import { useRouter } from 'next/navigation';
 import { useChatHub, ChatMessage as SignalRMessage, ChatUser } from '@/lib/signalr/chat-hub';
 import { useChat } from '@/features/chat/hooks/useChat';
 import { ChatConversation } from '@/features/chat/types/chat.types';
@@ -36,6 +38,7 @@ dayjs.locale('tr');
 type TabType = 'conversations' | 'online';
 
 export default function MessagingPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const [messageInput, setMessageInput] = useState('');
   const [selectedConversation, setSelectedConversation] = useState<ChatConversation | null>(null);
@@ -267,14 +270,24 @@ export default function MessagingPage() {
         {/* Header */}
         <div className="p-4 lg:p-5 border-b border-slate-100">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <ChatBubbleLeftRightIconSolid className="w-6 h-6 text-indigo-600" />
-              <h1 className="text-xl font-semibold text-slate-900">Mesajlar</h1>
-              {unreadCount > 0 && (
-                <span className="px-2 py-0.5 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full">
-                  {unreadCount}
-                </span>
-              )}
+            <div className="flex items-center gap-3">
+              {/* Back to App button */}
+              <button
+                onClick={() => router.push('/app')}
+                className="p-2 -ml-2 hover:bg-slate-100 rounded-lg transition-colors"
+                title="Ana sayfaya dön"
+              >
+                <HomeIcon className="w-5 h-5 text-slate-600" />
+              </button>
+              <div className="flex items-center gap-2">
+                <ChatBubbleLeftRightIconSolid className="w-6 h-6 text-indigo-600" />
+                <h1 className="text-xl font-semibold text-slate-900">Mesajlar</h1>
+                {unreadCount > 0 && (
+                  <span className="px-2 py-0.5 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
             </div>
             <button
               onClick={handleNewChat}
