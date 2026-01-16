@@ -86,15 +86,27 @@ export default function MessagingPage() {
   const handleSendMessage = async () => {
     if (!messageInput.trim()) return;
 
-    if (selectedConversation?.isPrivate && selectedConversation.userId) {
-      await sendPrivateMessage(selectedConversation.userId, messageInput);
-    } else if (currentRoom) {
-      await sendMessage(messageInput, currentRoom);
-    }
+    try {
+      if (selectedConversation?.isPrivate && selectedConversation.userId) {
+        // Private message
+        console.log('Sending private message to:', selectedConversation.userId);
+        await sendPrivateMessage(selectedConversation.userId, messageInput);
+      } else if (currentRoom) {
+        // Room message
+        console.log('Sending room message to:', currentRoom);
+        await sendMessage(messageInput, currentRoom);
+      } else {
+        // No conversation selected - send to global or default room
+        console.log('No room selected, sending to global');
+        await sendMessage(messageInput);
+      }
 
-    setMessageInput('');
-    stopTyping(currentRoom || undefined);
-    inputRef.current?.focus();
+      setMessageInput('');
+      stopTyping(currentRoom || undefined);
+      inputRef.current?.focus();
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
