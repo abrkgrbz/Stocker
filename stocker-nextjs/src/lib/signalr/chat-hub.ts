@@ -346,12 +346,16 @@ export function useChatHub(options: UseChatHubOptions = {}) {
   );
 
   // Fetch online users and unread count when connected
+  // Note: We intentionally exclude function dependencies to prevent infinite loops
+  // These functions are stable enough that calling them once on connection is sufficient
   useEffect(() => {
     if (isConnected) {
-      getOnlineUsers();
-      getUnreadCount();
+      // Call directly via invoke to avoid dependency issues
+      invoke('GetOnlineUsers').catch(() => {});
+      invoke('GetUnreadCount').catch(() => {});
     }
-  }, [isConnected, getOnlineUsers, getUnreadCount]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected]);
 
   return {
     // Connection state

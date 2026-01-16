@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useSignalR as useSignalRContext } from './signalr-context';
 import { SignalRClient } from './signalr-client';
 
@@ -14,6 +14,9 @@ interface UseSignalRHubOptions {
   };
   enabled?: boolean;
 }
+
+// Stable empty function for when hub is not available
+const noopInvoke = async () => {};
 
 export function useSignalRHub({ hub, events, enabled = true }: UseSignalRHubOptions) {
   const context = useSignalRContext();
@@ -36,6 +39,18 @@ export function useSignalRHub({ hub, events, enabled = true }: UseSignalRHubOpti
       ? context.isInventoryConnected ?? false
       : context.isOrderConnected ?? false;
 
+  // Store hubInstance in a ref to avoid recreating invoke callback
+  const hubInstanceRef = useRef(hubInstance);
+  hubInstanceRef.current = hubInstance;
+
+  // Stable invoke function that uses ref internally
+  const invoke = useCallback(async (methodName: string, ...args: any[]) => {
+    if (!hubInstanceRef.current) {
+      return;
+    }
+    return hubInstanceRef.current.invoke(methodName, ...args);
+  }, []);
+
   useEffect(() => {
     if (!enabled || !isConnected || !hubInstance) return;
 
@@ -54,6 +69,6 @@ export function useSignalRHub({ hub, events, enabled = true }: UseSignalRHubOpti
 
   return {
     isConnected,
-    invoke: hubInstance ? hubInstance.invoke.bind(hubInstance) : async () => {},
+    invoke: hubInstance ? invoke : noopInvoke,
   };
 }
