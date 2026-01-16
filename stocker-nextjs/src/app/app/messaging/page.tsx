@@ -135,7 +135,12 @@ export default function MessagingPage() {
       await leaveRoom(currentRoom);
     }
 
-    if (!conversation.isPrivate && conversation.roomName) {
+    if (conversation.isPrivate && conversation.userId) {
+      // Load private message history for this user
+      if (isConnected) {
+        await loadPrivateMessages(conversation.userId);
+      }
+    } else if (conversation.roomName) {
       await joinRoom(conversation.roomName);
     }
   };
