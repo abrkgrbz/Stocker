@@ -30,6 +30,11 @@ interface SignalRContextValue {
   // Global message notification control
   setMessageNotificationsEnabled: (enabled: boolean) => void;
   isMessageNotificationsEnabled: boolean;
+
+  // Chat popup control
+  openChatPopup: (userId: string, userName: string) => void;
+  closeChatPopup: () => void;
+  chatPopupState: { isOpen: boolean; userId: string; userName: string } | null;
 }
 
 const SignalRContext = createContext<SignalRContextValue | undefined>(undefined);
@@ -51,6 +56,21 @@ export function SignalRProvider({ children }: { children: React.ReactNode }) {
   const [isChatConnected, setIsChatConnected] = useState(false);
   const [isMessageNotificationsEnabled, setMessageNotificationsEnabled] = useState(true);
   const globalHandlersRegisteredRef = useRef(false);
+
+  // Chat popup state
+  const [chatPopupState, setChatPopupState] = useState<{
+    isOpen: boolean;
+    userId: string;
+    userName: string;
+  } | null>(null);
+
+  const openChatPopup = useCallback((userId: string, userName: string) => {
+    setChatPopupState({ isOpen: true, userId, userName });
+  }, []);
+
+  const closeChatPopup = useCallback(() => {
+    setChatPopupState(null);
+  }, []);
 
   const connectAll = useCallback(async () => {
     // Note: No token needed - authentication via HttpOnly cookies
@@ -122,14 +142,10 @@ export function SignalRProvider({ children }: { children: React.ReactNode }) {
         toast.info(`💬 ${message.userName}`, {
           description: truncatedMessage,
           action: {
-            label: 'Görüntüle',
+            label: 'Yanıtla',
             onClick: () => {
-              // Navigate to messaging page with user context
-              const params = new URLSearchParams({
-                userId: message.userId,
-                userName: message.userName,
-              });
-              window.location.href = `/app/messaging?${params.toString()}`;
+              // Open chat popup instead of navigating
+              openChatPopup(message.userId, message.userName);
             },
           },
           duration: 5000,
@@ -168,7 +184,7 @@ export function SignalRProvider({ children }: { children: React.ReactNode }) {
       globalHandlersRegisteredRef.current = false;
       logger.info('Global chat message handlers unregistered');
     };
-  }, [isChatConnected, isMessageNotificationsEnabled]);
+  }, [isChatConnected, isMessageNotificationsEnabled, openChatPopup]);
 
   const value: SignalRContextValue = {
     notificationHub,
@@ -179,6 +195,9 @@ export function SignalRProvider({ children }: { children: React.ReactNode }) {
     disconnectAll,
     setMessageNotificationsEnabled,
     isMessageNotificationsEnabled,
+    openChatPopup,
+    closeChatPopup,
+    chatPopupState,
   };
 
   return (
