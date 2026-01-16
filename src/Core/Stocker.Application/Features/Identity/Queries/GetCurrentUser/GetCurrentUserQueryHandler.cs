@@ -113,9 +113,10 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, R
             // Get tenant context
             await using var tenantContext = await _tenantDbContextFactory.CreateDbContextAsync(request.TenantId!.Value);
 
-            // Find the tenant user
+            // Find the tenant user with roles
             var tenantUser = await tenantContext.TenantUsers
                 .Include(u => u.UserRoles)
+                .Include(u => u.UserPermissions)
                 .FirstOrDefaultAsync(u => u.Id == request.TenantUserId!.Value, cancellationToken);
 
             if (tenantUser == null)
@@ -141,6 +142,29 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, R
                 roles.Add("User"); // Default role
             }
 
+            // Get permissions from user's roles
+            var rolePermissions = await tenantContext.RolePermissions
+                .Where(rp => userRoleIds.Contains(rp.RoleId))
+                .ToListAsync(cancellationToken);
+
+            // Get user's direct permissions
+            var userPermissions = tenantUser.UserPermissions?.ToList() ?? new List<Domain.Tenant.Entities.UserPermission>();
+
+            // Combine and format permissions as "Resource:PermissionType"
+            var allPermissions = new HashSet<string>();
+
+            foreach (var rp in rolePermissions)
+            {
+                allPermissions.Add($"{rp.Resource}:{rp.PermissionType}");
+            }
+
+            foreach (var up in userPermissions)
+            {
+                allPermissions.Add($"{up.Resource}:{up.PermissionType}");
+            }
+
+            _logger.LogDebug("User {Username} has {PermissionCount} permissions", tenantUser.Username, allPermissions.Count);
+
             var userInfo = new UserInfo
             {
                 Id = tenantUser.Id,
@@ -150,10 +174,12 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, R
                 Roles = roles,
                 TenantId = request.TenantId,
                 TenantName = tenant?.Name,
-                TenantCode = tenant?.Code
+                TenantCode = tenant?.Code,
+                Permissions = allPermissions.ToList()
             };
 
-            _logger.LogInformation("Successfully retrieved invited user information for: {Username}", tenantUser.Username);
+            _logger.LogInformation("Successfully retrieved invited user information for: {Username} with {PermissionCount} permissions",
+                tenantUser.Username, allPermissions.Count);
 
             return Result.Success(userInfo);
         }

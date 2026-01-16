@@ -1,3 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
+using Stocker.API.Authorization;
+
 namespace Stocker.API.Extensions;
 
 /// <summary>
@@ -10,6 +13,12 @@ public static class AuthorizationExtensions
     /// </summary>
     public static IServiceCollection AddAuthorizationPolicies(this IServiceCollection services)
     {
+        // Register permission authorization handler
+        services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+
+        // Register permission policy provider for dynamic permission policies
+        services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+
         services.AddAuthorization(options =>
         {
             // System Admin - Full system access

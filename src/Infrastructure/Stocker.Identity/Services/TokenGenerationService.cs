@@ -68,7 +68,7 @@ public class TokenGenerationService : ITokenGenerationService
 
     public async Task<AuthenticationResult> GenerateForTenantUserAsync(TenantUser tenantUser, MasterUser? masterUser)
     {
-        var (claims, roleNames) = await BuildTenantUserClaimsAsync(tenantUser, masterUser);
+        var (claims, roleNames, permissions) = await BuildTenantUserClaimsAsync(tenantUser, masterUser);
 
         var accessToken = _jwtTokenService.GenerateAccessToken(claims);
         var refreshToken = _jwtTokenService.GenerateRefreshToken();
@@ -105,7 +105,8 @@ public class TokenGenerationService : ITokenGenerationService
                 TenantName = tenantInfo.Name,
                 TenantCode = tenantInfo.Code,
                 IsMasterUser = false,
-                Roles = roleNames
+                Roles = roleNames,
+                Permissions = permissions
             }
         };
     }
@@ -163,7 +164,7 @@ public class TokenGenerationService : ITokenGenerationService
         return claims;
     }
 
-    private async Task<(List<Claim> Claims, List<string> RoleNames)> BuildTenantUserClaimsAsync(TenantUser tenantUser, MasterUser? masterUser)
+    private async Task<(List<Claim> Claims, List<string> RoleNames, List<string> Permissions)> BuildTenantUserClaimsAsync(TenantUser tenantUser, MasterUser? masterUser)
     {
         // For invited users without MasterUser, use tenantUser.Id as the identifier
         var userId = masterUser?.Id ?? tenantUser.Id;
@@ -189,6 +190,7 @@ public class TokenGenerationService : ITokenGenerationService
         // Collect role IDs from navigation property
         var userRoleIds = tenantUser.UserRoles.Select(ur => ur.RoleId).ToList();
         var roleNames = new List<string>();
+        var allPermissions = new List<string>();
 
         // Add role claims - use role names instead of IDs
         try
@@ -227,7 +229,7 @@ public class TokenGenerationService : ITokenGenerationService
                 .ToListAsync();
 
             // Combine and deduplicate permissions
-            var allPermissions = userPermissions
+            allPermissions = userPermissions
                 .Union(rolePermissions)
                 .Distinct()
                 .ToList();
@@ -256,7 +258,7 @@ public class TokenGenerationService : ITokenGenerationService
             }
         }
 
-        return (claims, roleNames);
+        return (claims, roleNames, allPermissions);
     }
 
     private List<string> GetRolesForUserType(Domain.Master.Enums.UserType userType)

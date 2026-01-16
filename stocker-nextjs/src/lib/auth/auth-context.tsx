@@ -11,8 +11,13 @@ export interface User {
   firstName: string;
   lastName: string;
   role: string;
+  roles: string[];
   tenantId: string;
   tenantCode?: string;
+  /**
+   * User permissions in format "Resource:PermissionType" (e.g., "CRM:View", "Users:Edit")
+   */
+  permissions: string[];
 }
 
 export interface LoginCredentials {
@@ -37,6 +42,22 @@ interface AuthContextType {
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  /**
+   * Check if user has a specific permission
+   * @param resource The resource name (e.g., "CRM", "Users")
+   * @param permissionType The permission type (e.g., "View", "Edit", "Create", "Delete")
+   */
+  hasPermission: (resource: string, permissionType: string) => boolean;
+  /**
+   * Check if user has any of the specified permissions
+   * @param permissions Array of permission strings in format "Resource:PermissionType"
+   */
+  hasAnyPermission: (permissions: string[]) => boolean;
+  /**
+   * Check if user can access a module (has at least View permission)
+   * @param moduleName The module name (e.g., "CRM", "HR", "Inventory")
+   */
+  canAccessModule: (moduleName: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -52,8 +73,10 @@ const DEV_MOCK_USER: User = {
   firstName: 'Dev',
   lastName: 'User',
   role: 'Admin',
+  roles: ['Admin'],
   tenantId: 'dev-tenant-id',
   tenantCode: 'dev',
+  permissions: [], // Dev user has no permission restrictions in bypass mode
 };
 
 export function AuthProvider({ children }: AuthProviderProps) {
@@ -268,14 +291,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
           // 404 = Endpoint not available - try fallback to JWT only in development
           if (response.status === 404 && process.env.NODE_ENV === 'development' && jwtPayload) {
+            // Extract permissions from JWT if available
+            const jwtPermissions = Array.isArray(jwtPayload?.Permission)
+              ? jwtPayload.Permission as string[]
+              : jwtPayload?.Permission
+                ? [jwtPayload.Permission as string]
+                : [];
+            const jwtRoles = Array.isArray(jwtPayload?.role)
+              ? jwtPayload.role as string[]
+              : jwtPayload?.role
+                ? [jwtPayload.role as string]
+                : [];
             const userData: User = {
               id: (jwtPayload?.nameid as string) || 'temp-user-id',
               email: (jwtPayload?.email as string) || '',
               firstName: ((jwtPayload?.unique_name as string)?.split('-')[0]) || 'User',
               lastName: '',
-              role: (jwtPayload?.role as string) || 'User',
+              role: jwtRoles[0] || 'User',
+              roles: jwtRoles,
               tenantId: (jwtPayload?.TenantId as string) || '',
               tenantCode: (jwtPayload?.TenantName as string) || tenantCode,
+              permissions: jwtPermissions,
             };
             logger.debug('Using fallback user from JWT (dev mode, 404)', { component: 'AuthContext' });
             setUser(userData);
@@ -295,11 +331,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
             firstName: result.data.fullName?.split(' ')[0] || '',
             lastName: result.data.fullName?.split(' ').slice(1).join(' ') || '',
             role: result.data.roles?.[0] || result.data.role || (jwtPayload?.role as string) || 'User',
+            roles: result.data.roles || [],
             tenantId: result.data.tenantId || '',
             tenantCode: result.data.tenantCode || tenantCode,
+            permissions: result.data.permissions || [],
           };
 
-          logger.info('User authenticated', { component: 'AuthContext', userId: userData.id });
+          logger.info('User authenticated', { component: 'AuthContext', userId: userData.id, permissions: userData.permissions?.length });
           setUser(userData);
         } else {
           logger.error('Invalid user data response', new Error('Invalid response format'), { component: 'AuthContext' });
@@ -307,15 +345,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       } catch (fetchError) {
         logger.warn('/auth/me fetch failed, using fallback from JWT', { component: 'AuthContext' });
+        // Extract permissions from JWT if available
+        const jwtPermissions = Array.isArray(jwtPayload?.Permission)
+          ? jwtPayload.Permission as string[]
+          : jwtPayload?.Permission
+            ? [jwtPayload.Permission as string]
+            : [];
+        const jwtRoles = Array.isArray(jwtPayload?.role)
+          ? jwtPayload.role as string[]
+          : jwtPayload?.role
+            ? [jwtPayload.role as string]
+            : [];
         // Fallback to user data from JWT on network error
         const userData: User = {
           id: (jwtPayload?.nameid as string) || 'temp-user-id',
           email: (jwtPayload?.email as string) || '',
           firstName: ((jwtPayload?.unique_name as string)?.split('-')[0]) || 'User',
           lastName: '',
-          role: (jwtPayload?.role as string) || 'User',
+          role: jwtRoles[0] || 'User',
+          roles: jwtRoles,
           tenantId: (jwtPayload?.TenantId as string) || '',
           tenantCode: (jwtPayload?.TenantName as string) || tenantCode,
+          permissions: jwtPermissions,
         };
         setUser(userData);
       }
@@ -326,6 +377,46 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  // Permission helper functions
+  const hasPermission = (resource: string, permissionType: string): boolean => {
+    // Auth bypass mode - allow everything
+    if (isAuthBypassed) return true;
+
+    // Check if user is a system admin (FirmaYoneticisi or SistemYoneticisi has all permissions)
+    if (user?.roles?.includes('FirmaYoneticisi') || user?.roles?.includes('SistemYoneticisi')) {
+      return true;
+    }
+
+    const permissionString = `${resource}:${permissionType}`;
+    return user?.permissions?.includes(permissionString) ?? false;
+  };
+
+  const hasAnyPermission = (permissions: string[]): boolean => {
+    // Auth bypass mode - allow everything
+    if (isAuthBypassed) return true;
+
+    // Check if user is a system admin
+    if (user?.roles?.includes('FirmaYoneticisi') || user?.roles?.includes('SistemYoneticisi')) {
+      return true;
+    }
+
+    return permissions.some(p => user?.permissions?.includes(p) ?? false);
+  };
+
+  const canAccessModule = (moduleName: string): boolean => {
+    // Auth bypass mode - allow everything
+    if (isAuthBypassed) return true;
+
+    // Check if user is a system admin
+    if (user?.roles?.includes('FirmaYoneticisi') || user?.roles?.includes('SistemYoneticisi')) {
+      return true;
+    }
+
+    // Check if user has at least View permission for the module
+    const viewPermission = `${moduleName}:View`;
+    return user?.permissions?.includes(viewPermission) ?? false;
+  };
+
   const value: AuthContextType = {
     user,
     isAuthenticated,
@@ -334,6 +425,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     register,
     logout,
     refreshUser,
+    hasPermission,
+    hasAnyPermission,
+    canAccessModule,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

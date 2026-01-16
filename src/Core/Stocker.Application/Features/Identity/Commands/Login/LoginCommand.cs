@@ -35,4 +35,9 @@ public class UserInfo
     public Guid? TenantId { get; set; }
     public string? TenantName { get; set; }
     public string? TenantCode { get; set; }
+
+    /// <summary>
+    /// User permissions in format "Resource:PermissionType" (e.g., "CRM:View", "Users:Edit")
+    /// </summary>
+    public List<string> Permissions { get; set; } = new();
 }

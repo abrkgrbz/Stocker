@@ -13,6 +13,7 @@ interface AdminUser {
   name: string;
   role: 'super_admin' | 'admin' | 'user';
   roles?: string[];  // Keep original roles array from API
+  permissions?: string[];  // User permissions in format "Resource:PermissionType"
   tenantId?: string;
   tenantName?: string;
 }
@@ -34,6 +35,11 @@ interface AuthState {
   checkAuth: () => void;
   setLoading: (loading: boolean) => void;
   clearTempToken: () => void;
+
+  // Permission helpers
+  hasPermission: (resource: string, permissionType: string) => boolean;
+  hasAnyPermission: (permissions: string[]) => boolean;
+  canAccessModule: (moduleName: string) => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -88,6 +94,7 @@ export const useAuthStore = create<AuthState>()(
             role: response.user.roles.includes('SistemYoneticisi') || response.user.roles.includes('SystemAdmin') ? 'super_admin' :
                   response.user.roles.includes('Admin') ? 'admin' : 'user',
             roles: response.user.roles,  // Keep original roles array
+            permissions: response.user.permissions || [],  // User permissions
             tenantId: response.user.tenantId,
             tenantName: response.user.tenantName,
           };
@@ -168,6 +175,7 @@ export const useAuthStore = create<AuthState>()(
               role: response.data.user.roles.includes('SistemYoneticisi') || response.data.user.roles.includes('SystemAdmin') ? 'super_admin' :
                     response.data.user.roles.includes('Admin') ? 'admin' : 'user',
               roles: response.data.user.roles,
+              permissions: response.data.user.permissions || [],
               tenantId: response.data.user.tenantId,
               tenantName: response.data.user.tenantName,
             };
@@ -227,6 +235,7 @@ export const useAuthStore = create<AuthState>()(
               role: response.data.user.roles.includes('SistemYoneticisi') || response.data.user.roles.includes('SystemAdmin') ? 'super_admin' :
                     response.data.user.roles.includes('Admin') ? 'admin' : 'user',
               roles: response.data.user.roles,
+              permissions: response.data.user.permissions || [],
               tenantId: response.data.user.tenantId,
               tenantName: response.data.user.tenantName,
             };
@@ -257,6 +266,42 @@ export const useAuthStore = create<AuthState>()(
           console.error('Backup code verification failed:', error);
           return false;
         }
+      },
+
+      // Permission helper functions
+      hasPermission: (resource: string, permissionType: string) => {
+        const state = get();
+        const user = state.user;
+
+        // Super admin has all permissions
+        if (user?.role === 'super_admin') return true;
+
+        // Check specific permission
+        const permissionString = `${resource}:${permissionType}`;
+        return user?.permissions?.includes(permissionString) ?? false;
+      },
+
+      hasAnyPermission: (permissions: string[]) => {
+        const state = get();
+        const user = state.user;
+
+        // Super admin has all permissions
+        if (user?.role === 'super_admin') return true;
+
+        // Check if user has any of the specified permissions
+        return permissions.some(p => user?.permissions?.includes(p) ?? false);
+      },
+
+      canAccessModule: (moduleName: string) => {
+        const state = get();
+        const user = state.user;
+
+        // Super admin can access all modules
+        if (user?.role === 'super_admin') return true;
+
+        // Check if user has any permission for this module (View is minimum)
+        const viewPermission = `${moduleName}:View`;
+        return user?.permissions?.includes(viewPermission) ?? false;
       },
 
       logout: async () => {

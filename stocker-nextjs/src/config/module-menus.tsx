@@ -99,6 +99,12 @@ export interface MenuItem {
   label: string;
   children?: MenuItem[];
   danger?: boolean;
+  /**
+   * Required permission to see this menu item
+   * Format: "Resource:PermissionType" (e.g., "CRM:View", "Users:Edit")
+   * If not specified, the item is always visible
+   */
+  permission?: string;
 }
 
 export interface ModuleConfig {
@@ -118,57 +124,62 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
     moduleCode: 'crm',
     description: 'Müşteri ilişkileri yönetimi',
     items: [
-      { key: '/crm', icon: <ChartBarSquareIcon className="w-4 h-4" />, label: 'Dashboard' },
+      { key: '/crm', icon: <ChartBarSquareIcon className="w-4 h-4" />, label: 'Dashboard', permission: 'CRM:View' },
       {
         key: 'crm-customers',
         icon: <UserIcon className="w-4 h-4" />,
         label: 'Müşteri Yönetimi',
+        permission: 'CRM.Customers:View',
         children: [
-          { key: '/crm/customers', icon: <UserIcon className="w-4 h-4" />, label: 'Müşteriler' },
-          { key: '/crm/leads', icon: <UserPlusIcon className="w-4 h-4" />, label: 'Potansiyeller' },
-          { key: '/crm/segments', icon: <UsersIcon className="w-4 h-4" />, label: 'Segmentler' },
-          { key: '/crm/referrals', icon: <ShareIcon className="w-4 h-4" />, label: 'Referanslar' },
+          { key: '/crm/customers', icon: <UserIcon className="w-4 h-4" />, label: 'Müşteriler', permission: 'CRM.Customers:View' },
+          { key: '/crm/leads', icon: <UserPlusIcon className="w-4 h-4" />, label: 'Potansiyeller', permission: 'CRM.Leads:View' },
+          { key: '/crm/segments', icon: <UsersIcon className="w-4 h-4" />, label: 'Segmentler', permission: 'CRM.Segments:View' },
+          { key: '/crm/referrals', icon: <ShareIcon className="w-4 h-4" />, label: 'Referanslar', permission: 'CRM.Referrals:View' },
         ],
       },
       {
         key: 'crm-sales',
         icon: <ArrowTrendingUpIcon className="w-4 h-4" />,
         label: 'Satış Yönetimi',
+        permission: 'CRM.Sales:View',
         children: [
-          { key: '/crm/opportunities', icon: <ArrowTrendingUpIcon className="w-4 h-4" />, label: 'Fırsatlar' },
-          { key: '/crm/deals', icon: <CurrencyDollarIcon className="w-4 h-4" />, label: 'Anlaşmalar' },
-          { key: '/crm/pipelines', icon: <FunnelIcon className="w-4 h-4" />, label: 'Pipeline' },
-          { key: '/crm/sales-teams', icon: <UserGroupIcon className="w-4 h-4" />, label: 'Satış Ekipleri' },
-          { key: '/crm/territories', icon: <GlobeAltIcon className="w-4 h-4" />, label: 'Bölgeler' },
-          { key: '/crm/competitors', icon: <FlagIcon className="w-4 h-4" />, label: 'Rakipler' },
+          { key: '/crm/opportunities', icon: <ArrowTrendingUpIcon className="w-4 h-4" />, label: 'Fırsatlar', permission: 'CRM.Opportunities:View' },
+          { key: '/crm/deals', icon: <CurrencyDollarIcon className="w-4 h-4" />, label: 'Anlaşmalar', permission: 'CRM.Deals:View' },
+          { key: '/crm/pipelines', icon: <FunnelIcon className="w-4 h-4" />, label: 'Pipeline', permission: 'CRM.Pipelines:View' },
+          { key: '/crm/sales-teams', icon: <UserGroupIcon className="w-4 h-4" />, label: 'Satış Ekipleri', permission: 'CRM.SalesTeams:View' },
+          { key: '/crm/territories', icon: <GlobeAltIcon className="w-4 h-4" />, label: 'Bölgeler', permission: 'CRM.Territories:View' },
+          { key: '/crm/competitors', icon: <FlagIcon className="w-4 h-4" />, label: 'Rakipler', permission: 'CRM.Competitors:View' },
         ],
       },
       {
         key: 'crm-activities',
         icon: <CalendarIcon className="w-4 h-4" />,
         label: 'Aktiviteler',
+        permission: 'CRM.Activities:View',
         children: [
-          { key: '/crm/activities', icon: <CalendarIcon className="w-4 h-4" />, label: 'Aktiviteler' },
-          { key: '/crm/meetings', icon: <CalendarIcon className="w-4 h-4" />, label: 'Toplantılar' },
-          { key: '/crm/call-logs', icon: <PhoneIcon className="w-4 h-4" />, label: 'Arama Kayıtları' },
-          { key: '/crm/campaigns', icon: <BellIcon className="w-4 h-4" />, label: 'Kampanyalar' },
+          { key: '/crm/activities', icon: <CalendarIcon className="w-4 h-4" />, label: 'Aktiviteler', permission: 'CRM.Activities:View' },
+          { key: '/crm/meetings', icon: <CalendarIcon className="w-4 h-4" />, label: 'Toplantılar', permission: 'CRM.Meetings:View' },
+          { key: '/crm/call-logs', icon: <PhoneIcon className="w-4 h-4" />, label: 'Arama Kayıtları', permission: 'CRM.CallLogs:View' },
+          { key: '/crm/campaigns', icon: <BellIcon className="w-4 h-4" />, label: 'Kampanyalar', permission: 'CRM.Campaigns:View' },
         ],
       },
       {
         key: 'crm-loyalty',
         icon: <GiftIcon className="w-4 h-4" />,
         label: 'Sadakat',
+        permission: 'CRM.Loyalty:View',
         children: [
-          { key: '/crm/loyalty-programs', icon: <GiftIcon className="w-4 h-4" />, label: 'Sadakat Programları' },
+          { key: '/crm/loyalty-programs', icon: <GiftIcon className="w-4 h-4" />, label: 'Sadakat Programları', permission: 'CRM.LoyaltyPrograms:View' },
         ],
       },
       {
         key: 'crm-tools',
         icon: <Cog6ToothIcon className="w-4 h-4" />,
         label: 'Araçlar',
+        permission: 'CRM.Tools:View',
         children: [
-          { key: '/crm/documents', icon: <DocumentIcon className="w-4 h-4" />, label: 'Dökümanlar' },
-          { key: '/crm/workflows', icon: <BoltIcon className="w-4 h-4" />, label: 'Workflows' },
+          { key: '/crm/documents', icon: <DocumentIcon className="w-4 h-4" />, label: 'Dökümanlar', permission: 'CRM.Documents:View' },
+          { key: '/crm/workflows', icon: <BoltIcon className="w-4 h-4" />, label: 'Workflows', permission: 'CRM.Workflows:View' },
         ],
       },
     ],

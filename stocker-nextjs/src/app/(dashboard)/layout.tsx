@@ -30,8 +30,40 @@ import { useOnboarding, type OnboardingFormData } from '@/lib/hooks/use-onboardi
 import { useActiveModules } from '@/lib/api/hooks/useUserModules';
 import { message } from 'antd';
 import GlobalSearch from '@/components/common/GlobalSearch';
-import { MODULE_MENUS, getCurrentModule, type ModuleKey } from '@/config/module-menus';
+import { MODULE_MENUS, getCurrentModule, type ModuleKey, type MenuItem } from '@/config/module-menus';
 import logger from '@/lib/utils/logger';
+
+/**
+ * Filter menu items based on user permissions
+ * @param items Menu items to filter
+ * @param hasPermissionFn Function to check if user has a specific permission
+ * @returns Filtered menu items
+ */
+function filterMenuItemsByPermission(
+  items: MenuItem[],
+  hasPermissionFn: (permission: string) => boolean
+): MenuItem[] {
+  return items
+    .filter(item => {
+      // If no permission specified, always show
+      if (!item.permission) return true;
+      // Check if user has the required permission
+      return hasPermissionFn(item.permission);
+    })
+    .map(item => {
+      // If item has children, recursively filter them
+      if (item.children && item.children.length > 0) {
+        const filteredChildren = filterMenuItemsByPermission(item.children, hasPermissionFn);
+        // Only include parent if it has visible children
+        if (filteredChildren.length > 0) {
+          return { ...item, children: filteredChildren };
+        }
+        return null;
+      }
+      return item;
+    })
+    .filter((item): item is MenuItem => item !== null);
+}
 
 const { Header, Sider, Content } = Layout;
 
@@ -39,7 +71,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   // Check for auth bypass in development
   const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
 
-  const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading, logout, hasAnyPermission } = useAuth();
   const { tenant, isLoading: tenantLoading } = useTenant();
   const router = useRouter();
   const pathname = usePathname();
@@ -127,6 +159,18 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   // Get current module based on pathname
   const currentModule = useMemo(() => getCurrentModule(pathname), [pathname]);
   const moduleConfig = currentModule ? MODULE_MENUS[currentModule] : null;
+
+  // Filter menu items based on user permissions
+  const filteredMenuItems = useMemo(() => {
+    if (!moduleConfig) return [];
+
+    // Create a permission checker function that handles permission string format
+    const checkPermission = (permission: string) => {
+      return hasAnyPermission([permission]);
+    };
+
+    return filterMenuItemsByPermission(moduleConfig.items, checkPermission);
+  }, [moduleConfig, hasAnyPermission]);
 
   // Hide sidebar for modules page (it's a hub page, doesn't need sidebar)
   const hideSidebar = currentModule === 'modules' || pathname === '/app';
@@ -445,11 +489,11 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           minHeight: 0,
         }}
       >
-        {moduleConfig && (
+        {moduleConfig && filteredMenuItems.length > 0 && (
           <Menu
             mode="inline"
             selectedKeys={getSelectedKeys}
-            items={moduleConfig.items as any}
+            items={filteredMenuItems as any}
             onClick={({ key }) => {
               handleMenuClick(key);
               setMobileMenuOpen(false);

@@ -22,4 +22,9 @@ public class UserInfo
     public string? TenantCode { get; set; }
     public List<string> Roles { get; set; } = new();
     public bool IsMasterUser { get; set; }
+
+    /// <summary>
+    /// User permissions in format "Resource:PermissionType" (e.g., "CRM:View", "Users:Edit")
+    /// </summary>
+    public List<string> Permissions { get; set; } = new();
 }
