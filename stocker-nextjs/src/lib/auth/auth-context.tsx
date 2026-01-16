@@ -337,7 +337,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             permissions: result.data.permissions || [],
           };
 
-          logger.info('User authenticated', { component: 'AuthContext', userId: userData.id, permissions: userData.permissions?.length });
+          logger.info('User authenticated', { component: 'AuthContext', userId: userData.id, metadata: { permissionsCount: userData.permissions?.length } });
           setUser(userData);
         } else {
           logger.error('Invalid user data response', new Error('Invalid response format'), { component: 'AuthContext' });
