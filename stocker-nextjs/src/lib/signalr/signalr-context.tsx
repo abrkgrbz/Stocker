@@ -1,8 +1,10 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { HubConnectionState } from '@microsoft/signalr';
 import { notificationHub, chatHub, SignalRClient } from './signalr-client';
+import { toast } from 'sonner';
+import logger from '../utils/logger';
 
 interface SignalRContextValue {
   // Notification Hub
@@ -24,13 +26,31 @@ interface SignalRContextValue {
   // Methods
   connectAll: () => Promise<void>;
   disconnectAll: () => Promise<void>;
+
+  // Global message notification control
+  setMessageNotificationsEnabled: (enabled: boolean) => void;
+  isMessageNotificationsEnabled: boolean;
 }
 
 const SignalRContext = createContext<SignalRContextValue | undefined>(undefined);
 
+// Interface for incoming chat messages
+interface IncomingChatMessage {
+  id: string;
+  userId: string;
+  userName: string;
+  message: string;
+  room?: string;
+  isPrivate?: boolean;
+  targetUserId?: string;
+  timestamp: string;
+}
+
 export function SignalRProvider({ children }: { children: React.ReactNode }) {
   const [isNotificationConnected, setIsNotificationConnected] = useState(false);
   const [isChatConnected, setIsChatConnected] = useState(false);
+  const [isMessageNotificationsEnabled, setMessageNotificationsEnabled] = useState(true);
+  const globalHandlersRegisteredRef = useRef(false);
 
   const connectAll = useCallback(async () => {
     // Note: No token needed - authentication via HttpOnly cookies
@@ -85,6 +105,67 @@ export function SignalRProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, []);
 
+  // Register global message handlers for toast notifications
+  useEffect(() => {
+    if (!isChatConnected || globalHandlersRegisteredRef.current) return;
+
+    // Handler for private messages - show toast globally
+    const handleReceivePrivateMessage = (message: IncomingChatMessage) => {
+      logger.info('Global: Private message received', { metadata: { from: message.userName } });
+
+      // Show toast notification if enabled
+      if (isMessageNotificationsEnabled) {
+        const truncatedMessage = message.message.length > 60
+          ? message.message.substring(0, 60) + '...'
+          : message.message;
+
+        toast.info(`💬 ${message.userName}`, {
+          description: truncatedMessage,
+          action: {
+            label: 'Görüntüle',
+            onClick: () => {
+              // Navigate to messaging page - will be handled by the app
+              window.location.href = '/app/messaging';
+            },
+          },
+          duration: 5000,
+        });
+      }
+    };
+
+    // Handler for room messages - show toast globally
+    const handleReceiveMessage = (message: IncomingChatMessage) => {
+      logger.info('Global: Room message received', { metadata: { from: message.userName, room: message.room } });
+
+      // Show toast notification if enabled (only for room messages when not on chat page)
+      if (isMessageNotificationsEnabled && message.room) {
+        const truncatedMessage = message.message.length > 60
+          ? message.message.substring(0, 60) + '...'
+          : message.message;
+
+        toast.info(`💬 ${message.userName} (${message.room})`, {
+          description: truncatedMessage,
+          duration: 4000,
+        });
+      }
+    };
+
+    // Register handlers
+    chatHub.on('ReceivePrivateMessage', handleReceivePrivateMessage);
+    chatHub.on('ReceiveMessage', handleReceiveMessage);
+    globalHandlersRegisteredRef.current = true;
+
+    logger.info('Global chat message handlers registered');
+
+    return () => {
+      // Cleanup handlers on unmount
+      chatHub.off('ReceivePrivateMessage', handleReceivePrivateMessage);
+      chatHub.off('ReceiveMessage', handleReceiveMessage);
+      globalHandlersRegisteredRef.current = false;
+      logger.info('Global chat message handlers unregistered');
+    };
+  }, [isChatConnected, isMessageNotificationsEnabled]);
+
   const value: SignalRContextValue = {
     notificationHub,
     isNotificationConnected,
@@ -92,6 +173,8 @@ export function SignalRProvider({ children }: { children: React.ReactNode }) {
     isChatConnected,
     connectAll,
     disconnectAll,
+    setMessageNotificationsEnabled,
+    isMessageNotificationsEnabled,
   };
 
   return (
