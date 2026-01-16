@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSignalRHub } from './use-signalr';
 import { toast } from 'sonner';
 import logger from '../utils/logger';
@@ -68,6 +68,9 @@ export function useChatHub(options: UseChatHubOptions = {}) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [currentRoom, setCurrentRoom] = useState<string | null>(null);
 
+  // Ref to track which user's private messages we're loading
+  const pendingPrivateMessageUserIdRef = useRef<string | null>(null);
+
   const events = useMemo(() => ({
     // Receive room message
     ReceiveMessage: (message: ChatMessage) => {
@@ -119,12 +122,21 @@ export function useChatHub(options: UseChatHubOptions = {}) {
 
     // Private message history
     PrivateMessageHistory: (history: ChatMessage[]) => {
-      if (history.length > 0) {
-        const otherUserId = history[0].userId;
+      // Use the pending userId ref which was set when loadPrivateMessages was called
+      const otherUserId = pendingPrivateMessageUserIdRef.current;
+      logger.info(`Private message history received: ${history.length} messages for user ${otherUserId}`);
+
+      if (otherUserId) {
         setPrivateMessages((prev) => ({
           ...prev,
           [otherUserId]: history,
         }));
+        // Clear the pending ref after use
+        pendingPrivateMessageUserIdRef.current = null;
+      } else if (history.length > 0) {
+        // Fallback: try to determine from message content
+        // For private messages, one of userId or targetUserId is the other person
+        logger.warn('No pending userId ref, attempting to determine from message content');
       }
     },
 
@@ -274,8 +286,12 @@ export function useChatHub(options: UseChatHubOptions = {}) {
     async (otherUserId: string, take = 20, skip = 0) => {
       if (!isConnected) return;
       try {
+        // Store the userId so PrivateMessageHistory handler knows which user's messages these are
+        pendingPrivateMessageUserIdRef.current = otherUserId;
+        logger.info(`Loading private messages for user: ${otherUserId}`);
         await invoke('LoadPrivateMessages', otherUserId, take, skip);
       } catch (error) {
+        pendingPrivateMessageUserIdRef.current = null;
         logger.error('Failed to load private messages', error instanceof Error ? error : new Error(String(error)));
       }
     },
