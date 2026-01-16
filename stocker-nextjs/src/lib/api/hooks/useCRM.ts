@@ -67,6 +67,26 @@ import type {
   GetRemindersResponse,
   // Email
   SendTestEmailCommand,
+  // Loyalty Memberships
+  LoyaltyMembershipDto,
+  LoyaltyMembershipFilters,
+  CreateLoyaltyMembershipCommand,
+  UpdateLoyaltyMembershipCommand,
+  // Product Interests
+  ProductInterestDto,
+  ProductInterestFilters,
+  CreateProductInterestCommand,
+  UpdateProductInterestCommand,
+  // Social Media Profiles
+  SocialMediaProfileDto,
+  SocialMediaProfileFilters,
+  CreateSocialMediaProfileCommand,
+  UpdateSocialMediaProfileCommand,
+  // Survey Responses
+  SurveyResponseDto,
+  SurveyResponseFilters,
+  CreateSurveyResponseCommand,
+  UpdateSurveyResponseCommand,
 } from '../services/crm.types';
 
 import logger from '../../utils/logger';
@@ -175,6 +195,24 @@ export const crmKeys = {
 
   // Reminders
   reminders: ['crm', 'reminders'] as const,
+
+  // Loyalty Memberships
+  loyaltyMemberships: ['crm', 'loyalty-memberships'] as const,
+  loyaltyMembership: (id: Guid) => ['crm', 'loyalty-memberships', id] as const,
+  loyaltyMembershipsByCustomer: (customerId: Guid) => ['crm', 'loyalty-memberships', 'customer', customerId] as const,
+
+  // Product Interests
+  productInterests: ['crm', 'product-interests'] as const,
+  productInterest: (id: Guid) => ['crm', 'product-interests', id] as const,
+
+  // Social Media Profiles
+  socialProfiles: ['crm', 'social-profiles'] as const,
+  socialProfile: (id: Guid) => ['crm', 'social-profiles', id] as const,
+  socialProfilesByCustomer: (customerId: Guid) => ['crm', 'social-profiles', 'customer', customerId] as const,
+
+  // Survey Responses
+  surveys: ['crm', 'surveys'] as const,
+  survey: (id: Guid) => ['crm', 'surveys', id] as const,
 };
 
 // =====================================
@@ -2639,6 +2677,286 @@ export function useDeactivateContact() {
     },
     onError: (error) => {
       showApiError(error, 'Kişi pasifleştirilemedi');
+    },
+  });
+}
+
+// =====================================
+// LOYALTY MEMBERSHIPS HOOKS
+// =====================================
+
+export function useLoyaltyMemberships(filters?: LoyaltyMembershipFilters) {
+  return useQuery({
+    queryKey: [...crmKeys.loyaltyMemberships, filters],
+    queryFn: () => CRMService.getLoyaltyMemberships(filters),
+  });
+}
+
+export function useLoyaltyMembership(id: Guid) {
+  return useQuery({
+    queryKey: crmKeys.loyaltyMembership(id),
+    queryFn: () => CRMService.getLoyaltyMembership(id),
+    enabled: !!id,
+  });
+}
+
+export function useLoyaltyMembershipsByCustomer(customerId: Guid) {
+  return useQuery({
+    queryKey: crmKeys.loyaltyMembershipsByCustomer(customerId),
+    queryFn: () => CRMService.getLoyaltyMembershipsByCustomer(customerId),
+    enabled: !!customerId,
+  });
+}
+
+export function useCreateLoyaltyMembership() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateLoyaltyMembershipCommand) => CRMService.createLoyaltyMembership(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.loyaltyMemberships });
+      showSuccess('Sadakat üyeliği oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sadakat üyeliği oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateLoyaltyMembership() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: Guid; data: UpdateLoyaltyMembershipCommand }) =>
+      CRMService.updateLoyaltyMembership(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.loyaltyMembership(variables.id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.loyaltyMemberships });
+      showSuccess('Sadakat üyeliği güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sadakat üyeliği güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteLoyaltyMembership() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: Guid) => CRMService.deleteLoyaltyMembership(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.loyaltyMemberships });
+      showSuccess('Sadakat üyeliği silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sadakat üyeliği silinemedi');
+    },
+  });
+}
+
+// =====================================
+// PRODUCT INTERESTS HOOKS
+// =====================================
+
+export function useProductInterests(filters?: ProductInterestFilters) {
+  return useQuery({
+    queryKey: [...crmKeys.productInterests, filters],
+    queryFn: () => CRMService.getProductInterests(filters),
+  });
+}
+
+export function useProductInterest(id: Guid) {
+  return useQuery({
+    queryKey: crmKeys.productInterest(id),
+    queryFn: () => CRMService.getProductInterest(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreateProductInterest() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateProductInterestCommand) => CRMService.createProductInterest(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.productInterests });
+      showSuccess('Ürün ilgisi oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ürün ilgisi oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateProductInterest() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: Guid; data: UpdateProductInterestCommand }) =>
+      CRMService.updateProductInterest(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.productInterest(variables.id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.productInterests });
+      showSuccess('Ürün ilgisi güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ürün ilgisi güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteProductInterest() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: Guid) => CRMService.deleteProductInterest(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.productInterests });
+      showSuccess('Ürün ilgisi silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ürün ilgisi silinemedi');
+    },
+  });
+}
+
+// =====================================
+// SOCIAL MEDIA PROFILES HOOKS
+// =====================================
+
+export function useSocialMediaProfiles(filters?: SocialMediaProfileFilters) {
+  return useQuery({
+    queryKey: [...crmKeys.socialProfiles, filters],
+    queryFn: () => CRMService.getSocialMediaProfiles(filters),
+  });
+}
+
+export function useSocialMediaProfile(id: Guid) {
+  return useQuery({
+    queryKey: crmKeys.socialProfile(id),
+    queryFn: () => CRMService.getSocialMediaProfile(id),
+    enabled: !!id,
+  });
+}
+
+export function useSocialMediaProfilesByCustomer(customerId: Guid) {
+  return useQuery({
+    queryKey: crmKeys.socialProfilesByCustomer(customerId),
+    queryFn: () => CRMService.getSocialMediaProfilesByCustomer(customerId),
+    enabled: !!customerId,
+  });
+}
+
+export function useCreateSocialMediaProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateSocialMediaProfileCommand) => CRMService.createSocialMediaProfile(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.socialProfiles });
+      showSuccess('Sosyal medya profili oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sosyal medya profili oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateSocialMediaProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: Guid; data: UpdateSocialMediaProfileCommand }) =>
+      CRMService.updateSocialMediaProfile(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.socialProfile(variables.id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.socialProfiles });
+      showSuccess('Sosyal medya profili güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sosyal medya profili güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteSocialMediaProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: Guid) => CRMService.deleteSocialMediaProfile(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.socialProfiles });
+      showSuccess('Sosyal medya profili silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sosyal medya profili silinemedi');
+    },
+  });
+}
+
+// =====================================
+// SURVEY RESPONSES HOOKS
+// =====================================
+
+export function useSurveyResponses(filters?: SurveyResponseFilters) {
+  return useQuery({
+    queryKey: [...crmKeys.surveys, filters],
+    queryFn: () => CRMService.getSurveyResponses(filters),
+  });
+}
+
+export function useSurveyResponse(id: Guid) {
+  return useQuery({
+    queryKey: crmKeys.survey(id),
+    queryFn: () => CRMService.getSurveyResponse(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreateSurveyResponse() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateSurveyResponseCommand) => CRMService.createSurveyResponse(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.surveys });
+      showSuccess('Anket yanıtı oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Anket yanıtı oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateSurveyResponse() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: Guid; data: UpdateSurveyResponseCommand }) =>
+      CRMService.updateSurveyResponse(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.survey(variables.id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.surveys });
+      showSuccess('Anket yanıtı güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Anket yanıtı güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteSurveyResponse() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: Guid) => CRMService.deleteSurveyResponse(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.surveys });
+      showSuccess('Anket yanıtı silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Anket yanıtı silinemedi');
     },
   });
 }

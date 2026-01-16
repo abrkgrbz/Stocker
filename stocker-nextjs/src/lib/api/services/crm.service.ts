@@ -124,6 +124,32 @@ import type {
   GetRemindersResponse,
   // Email
   SendTestEmailCommand,
+  // Loyalty Memberships
+  LoyaltyMembershipDto,
+  LoyaltyMembershipFilters,
+  CreateLoyaltyMembershipCommand,
+  UpdateLoyaltyMembershipCommand,
+  // Product Interests
+  ProductInterestDto,
+  ProductInterestFilters,
+  CreateProductInterestCommand,
+  UpdateProductInterestCommand,
+  InterestStatus,
+  InterestLevel,
+  InterestSource,
+  // Social Media Profiles
+  SocialMediaProfileDto,
+  SocialMediaProfileFilters,
+  CreateSocialMediaProfileCommand,
+  UpdateSocialMediaProfileCommand,
+  SocialMediaPlatform,
+  // Survey Responses
+  SurveyResponseDto,
+  SurveyResponseFilters,
+  CreateSurveyResponseCommand,
+  UpdateSurveyResponseCommand,
+  SurveyType,
+  SurveyResponseStatus,
   Guid,
   DateTime,
 } from './crm.types';
@@ -2309,6 +2335,208 @@ export class CRMService {
    */
   static async deactivateContact(id: string): Promise<Contact> {
     return ApiService.post<Contact>(this.getPath(`contacts/${id}/deactivate`), {});
+  }
+
+  // =====================================
+  // LOYALTY MEMBERSHIPS
+  // =====================================
+
+  /**
+   * Get all loyalty memberships with optional filters
+   */
+  static async getLoyaltyMemberships(filters?: LoyaltyMembershipFilters): Promise<PaginatedResponse<LoyaltyMembershipDto>> {
+    const params = new URLSearchParams();
+    if (filters?.programId) params.append('programId', filters.programId);
+    if (filters?.customerId) params.append('customerId', filters.customerId);
+    if (filters?.currentTierId) params.append('currentTierId', filters.currentTierId);
+    if (filters?.isActive !== undefined) params.append('isActive', String(filters.isActive));
+    if (filters?.skip) params.append('skip', String(filters.skip));
+    if (filters?.take) params.append('take', String(filters.take));
+    const query = params.toString();
+    return ApiService.get<PaginatedResponse<LoyaltyMembershipDto>>(this.getPath(`loyalty-memberships${query ? `?${query}` : ''}`));
+  }
+
+  /**
+   * Get a single loyalty membership by ID
+   */
+  static async getLoyaltyMembership(id: string): Promise<LoyaltyMembershipDto> {
+    return ApiService.get<LoyaltyMembershipDto>(this.getPath(`loyalty-memberships/${id}`));
+  }
+
+  /**
+   * Get loyalty memberships by customer ID
+   */
+  static async getLoyaltyMembershipsByCustomer(customerId: string): Promise<LoyaltyMembershipDto[]> {
+    return ApiService.get<LoyaltyMembershipDto[]>(this.getPath(`loyalty-memberships/by-customer/${customerId}`));
+  }
+
+  /**
+   * Create a new loyalty membership
+   */
+  static async createLoyaltyMembership(data: CreateLoyaltyMembershipCommand): Promise<LoyaltyMembershipDto> {
+    return ApiService.post<LoyaltyMembershipDto>(this.getPath('loyalty-memberships'), data);
+  }
+
+  /**
+   * Update a loyalty membership
+   */
+  static async updateLoyaltyMembership(id: string, data: UpdateLoyaltyMembershipCommand): Promise<LoyaltyMembershipDto> {
+    return ApiService.put<LoyaltyMembershipDto>(this.getPath(`loyalty-memberships/${id}`), data);
+  }
+
+  /**
+   * Delete a loyalty membership
+   */
+  static async deleteLoyaltyMembership(id: string): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`loyalty-memberships/${id}`));
+  }
+
+  // =====================================
+  // PRODUCT INTERESTS
+  // =====================================
+
+  /**
+   * Get all product interests with optional filters
+   */
+  static async getProductInterests(filters?: ProductInterestFilters): Promise<PaginatedResponse<ProductInterestDto>> {
+    const params = new URLSearchParams();
+    if (filters?.customerId) params.append('customerId', filters.customerId);
+    if (filters?.leadId) params.append('leadId', filters.leadId);
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.level) params.append('level', filters.level);
+    if (filters?.page) params.append('page', String(filters.page));
+    if (filters?.pageSize) params.append('pageSize', String(filters.pageSize));
+    const query = params.toString();
+    return ApiService.get<PaginatedResponse<ProductInterestDto>>(this.getPath(`product-interests${query ? `?${query}` : ''}`));
+  }
+
+  /**
+   * Get a single product interest by ID
+   */
+  static async getProductInterest(id: string): Promise<ProductInterestDto> {
+    return ApiService.get<ProductInterestDto>(this.getPath(`product-interests/${id}`));
+  }
+
+  /**
+   * Create a new product interest
+   */
+  static async createProductInterest(data: CreateProductInterestCommand): Promise<ProductInterestDto> {
+    return ApiService.post<ProductInterestDto>(this.getPath('product-interests'), data);
+  }
+
+  /**
+   * Update a product interest
+   */
+  static async updateProductInterest(id: string, data: UpdateProductInterestCommand): Promise<ProductInterestDto> {
+    return ApiService.put<ProductInterestDto>(this.getPath(`product-interests/${id}`), data);
+  }
+
+  /**
+   * Delete a product interest
+   */
+  static async deleteProductInterest(id: string): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`product-interests/${id}`));
+  }
+
+  // =====================================
+  // SOCIAL MEDIA PROFILES
+  // =====================================
+
+  /**
+   * Get all social media profiles with optional filters
+   */
+  static async getSocialMediaProfiles(filters?: SocialMediaProfileFilters): Promise<PaginatedResponse<SocialMediaProfileDto>> {
+    const params = new URLSearchParams();
+    if (filters?.customerId) params.append('customerId', filters.customerId);
+    if (filters?.platform) params.append('platform', filters.platform);
+    if (filters?.isActive !== undefined) params.append('isActive', String(filters.isActive));
+    if (filters?.skip) params.append('skip', String(filters.skip));
+    if (filters?.take) params.append('take', String(filters.take));
+    const query = params.toString();
+    return ApiService.get<PaginatedResponse<SocialMediaProfileDto>>(this.getPath(`social-profiles${query ? `?${query}` : ''}`));
+  }
+
+  /**
+   * Get a single social media profile by ID
+   */
+  static async getSocialMediaProfile(id: string): Promise<SocialMediaProfileDto> {
+    return ApiService.get<SocialMediaProfileDto>(this.getPath(`social-profiles/${id}`));
+  }
+
+  /**
+   * Get social media profiles by customer ID
+   */
+  static async getSocialMediaProfilesByCustomer(customerId: string): Promise<SocialMediaProfileDto[]> {
+    return ApiService.get<SocialMediaProfileDto[]>(this.getPath(`social-profiles/by-customer/${customerId}`));
+  }
+
+  /**
+   * Create a new social media profile
+   */
+  static async createSocialMediaProfile(data: CreateSocialMediaProfileCommand): Promise<SocialMediaProfileDto> {
+    return ApiService.post<SocialMediaProfileDto>(this.getPath('social-profiles'), data);
+  }
+
+  /**
+   * Update a social media profile
+   */
+  static async updateSocialMediaProfile(id: string, data: UpdateSocialMediaProfileCommand): Promise<SocialMediaProfileDto> {
+    return ApiService.put<SocialMediaProfileDto>(this.getPath(`social-profiles/${id}`), data);
+  }
+
+  /**
+   * Delete a social media profile
+   */
+  static async deleteSocialMediaProfile(id: string): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`social-profiles/${id}`));
+  }
+
+  // =====================================
+  // SURVEY RESPONSES
+  // =====================================
+
+  /**
+   * Get all survey responses with optional filters
+   */
+  static async getSurveyResponses(filters?: SurveyResponseFilters): Promise<PaginatedResponse<SurveyResponseDto>> {
+    const params = new URLSearchParams();
+    if (filters?.type) params.append('type', filters.type);
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.customerId) params.append('customerId', filters.customerId);
+    if (filters?.fromDate) params.append('fromDate', filters.fromDate);
+    if (filters?.toDate) params.append('toDate', filters.toDate);
+    if (filters?.skip) params.append('skip', String(filters.skip));
+    if (filters?.take) params.append('take', String(filters.take));
+    const query = params.toString();
+    return ApiService.get<PaginatedResponse<SurveyResponseDto>>(this.getPath(`surveys${query ? `?${query}` : ''}`));
+  }
+
+  /**
+   * Get a single survey response by ID
+   */
+  static async getSurveyResponse(id: string): Promise<SurveyResponseDto> {
+    return ApiService.get<SurveyResponseDto>(this.getPath(`surveys/${id}`));
+  }
+
+  /**
+   * Create a new survey response
+   */
+  static async createSurveyResponse(data: CreateSurveyResponseCommand): Promise<SurveyResponseDto> {
+    return ApiService.post<SurveyResponseDto>(this.getPath('surveys'), data);
+  }
+
+  /**
+   * Update a survey response
+   */
+  static async updateSurveyResponse(id: string, data: UpdateSurveyResponseCommand): Promise<SurveyResponseDto> {
+    return ApiService.put<SurveyResponseDto>(this.getPath(`surveys/${id}`), data);
+  }
+
+  /**
+   * Delete a survey response
+   */
+  static async deleteSurveyResponse(id: string): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`surveys/${id}`));
   }
 }
 

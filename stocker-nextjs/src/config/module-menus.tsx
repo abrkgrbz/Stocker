@@ -171,6 +171,18 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
         permission: 'CRM.Loyalty:View',
         children: [
           { key: '/crm/loyalty-programs', icon: <GiftIcon className="w-4 h-4" />, label: 'Sadakat Programları', permission: 'CRM.LoyaltyPrograms:View' },
+          { key: '/crm/loyalty-memberships', icon: <UserGroupIcon className="w-4 h-4" />, label: 'Sadakat Üyelikleri', permission: 'CRM.LoyaltyMemberships:View' },
+        ],
+      },
+      {
+        key: 'crm-engagement',
+        icon: <HeartIcon className="w-4 h-4" />,
+        label: 'Etkileşim',
+        permission: 'CRM.Engagement:View',
+        children: [
+          { key: '/crm/product-interests', icon: <ShoppingCartIcon className="w-4 h-4" />, label: 'Ürün İlgileri', permission: 'CRM.ProductInterests:View' },
+          { key: '/crm/social-profiles', icon: <GlobeAltIcon className="w-4 h-4" />, label: 'Sosyal Medya Profilleri', permission: 'CRM.SocialMediaProfiles:View' },
+          { key: '/crm/survey-responses', icon: <ClipboardDocumentListIcon className="w-4 h-4" />, label: 'Anket Yanıtları', permission: 'CRM.SurveyResponses:View' },
         ],
       },
       {

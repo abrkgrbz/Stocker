@@ -2347,3 +2347,279 @@ export interface SendTestEmailCommand {
   to: string;
   subject?: string;
 }
+
+// =====================================
+// LOYALTY MEMBERSHIPS
+// =====================================
+
+export interface LoyaltyMembershipFilters {
+  programId?: Guid;
+  customerId?: Guid;
+  currentTierId?: Guid;
+  isActive?: boolean;
+  skip?: number;
+  take?: number;
+}
+
+export interface CreateLoyaltyMembershipCommand {
+  programId: Guid;
+  customerId: Guid;
+  membershipNumber: string;
+}
+
+export interface UpdateLoyaltyMembershipCommand {
+  currentPoints?: number;
+  lifetimePoints?: number;
+  currentTierId?: Guid;
+  isActive?: boolean;
+  notes?: string;
+}
+
+// =====================================
+// PRODUCT INTERESTS
+// =====================================
+
+export enum InterestStatus {
+  New = 'New',
+  Active = 'Active',
+  Followed = 'Followed',
+  Purchased = 'Purchased',
+  Lost = 'Lost'
+}
+
+export enum InterestLevel {
+  Low = 'Low',
+  Medium = 'Medium',
+  High = 'High',
+  VeryHigh = 'VeryHigh'
+}
+
+export enum InterestSource {
+  Website = 'Website',
+  Store = 'Store',
+  Campaign = 'Campaign',
+  Referral = 'Referral',
+  SocialMedia = 'SocialMedia',
+  Email = 'Email',
+  Phone = 'Phone',
+  Other = 'Other'
+}
+
+export interface ProductInterestDto {
+  id: Guid;
+  tenantId: Guid;
+  productId: number;
+  productName: string;
+  interestLevel: InterestLevel;
+  status: InterestStatus;
+  customerId?: Guid;
+  customerName?: string;
+  leadId?: Guid;
+  leadName?: string;
+  quantity?: number;
+  unit?: string;
+  budget?: number;
+  source?: InterestSource;
+  notes?: string;
+  lastInteractionDate?: DateTime;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+}
+
+export interface ProductInterestFilters {
+  customerId?: Guid;
+  leadId?: Guid;
+  status?: InterestStatus;
+  level?: InterestLevel;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface CreateProductInterestCommand {
+  productId: number;
+  productName: string;
+  interestLevel?: InterestLevel;
+  customerId?: Guid;
+  leadId?: Guid;
+  quantity?: number;
+  unit?: string;
+  budget?: number;
+  source?: InterestSource;
+}
+
+export interface UpdateProductInterestCommand {
+  productId?: number;
+  productName?: string;
+  interestLevel?: InterestLevel;
+  customerId?: Guid;
+  leadId?: Guid;
+  quantity?: number;
+  unit?: string;
+  budget?: number;
+  source?: InterestSource;
+}
+
+// =====================================
+// SOCIAL MEDIA PROFILES
+// =====================================
+
+export enum SocialMediaPlatform {
+  Facebook = 'Facebook',
+  Twitter = 'Twitter',
+  LinkedIn = 'LinkedIn',
+  Instagram = 'Instagram',
+  YouTube = 'YouTube',
+  TikTok = 'TikTok',
+  Pinterest = 'Pinterest',
+  Snapchat = 'Snapchat',
+  WhatsApp = 'WhatsApp',
+  Telegram = 'Telegram',
+  Discord = 'Discord',
+  Reddit = 'Reddit',
+  Other = 'Other'
+}
+
+export interface SocialMediaProfileDto {
+  id: Guid;
+  tenantId: Guid;
+  platform: SocialMediaPlatform;
+  profileUrl: string;
+  customerId?: Guid;
+  customerName?: string;
+  contactId?: Guid;
+  contactName?: string;
+  username?: string;
+  displayName?: string;
+  bio?: string;
+  profileImageUrl?: string;
+  website?: string;
+  location?: string;
+  followersCount?: number;
+  followingCount?: number;
+  postsCount?: number;
+  likesCount?: number;
+  engagementRate?: number;
+  isVerified: boolean;
+  isActive: boolean;
+  lastSyncDate?: DateTime;
+  notes?: string;
+  tags?: string;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+}
+
+export interface SocialMediaProfileFilters {
+  customerId?: Guid;
+  platform?: SocialMediaPlatform;
+  isActive?: boolean;
+  skip?: number;
+  take?: number;
+}
+
+export interface CreateSocialMediaProfileCommand {
+  platform: SocialMediaPlatform;
+  profileUrl: string;
+  customerId?: Guid;
+  contactId?: Guid;
+  username?: string;
+  displayName?: string;
+  bio?: string;
+}
+
+export interface UpdateSocialMediaProfileCommand {
+  username?: string;
+  displayName?: string;
+  bio?: string;
+  profileImageUrl?: string;
+  website?: string;
+  location?: string;
+  followersCount?: number;
+  followingCount?: number;
+  postsCount?: number;
+  likesCount?: number;
+  engagementRate?: number;
+  isActive?: boolean;
+  notes?: string;
+  tags?: string;
+}
+
+// =====================================
+// SURVEY RESPONSES
+// =====================================
+
+export enum SurveyType {
+  NPS = 'NPS',
+  CSAT = 'CSAT',
+  CES = 'CES',
+  ProductFeedback = 'ProductFeedback',
+  ServiceFeedback = 'ServiceFeedback',
+  General = 'General',
+  Custom = 'Custom'
+}
+
+export enum SurveyResponseStatus {
+  Pending = 'Pending',
+  Completed = 'Completed',
+  Partial = 'Partial',
+  Expired = 'Expired'
+}
+
+export interface SurveyResponseDto {
+  id: Guid;
+  tenantId: Guid;
+  surveyName: string;
+  surveyType: SurveyType;
+  status: SurveyResponseStatus;
+  customerId?: Guid;
+  customerName?: string;
+  contactId?: Guid;
+  contactName?: string;
+  respondentName?: string;
+  respondentEmail?: string;
+  respondentPhone?: string;
+  isAnonymous: boolean;
+  npsScore?: number;
+  csatScore?: number;
+  cesScore?: number;
+  overallScore?: number;
+  comments?: string;
+  answers?: string; // JSON string of survey answers
+  submittedAt?: DateTime;
+  sentAt?: DateTime;
+  openedAt?: DateTime;
+  reminderSentAt?: DateTime;
+  expiresAt?: DateTime;
+  ipAddress?: string;
+  userAgent?: string;
+  completionTimeSeconds?: number;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+}
+
+export interface SurveyResponseFilters {
+  type?: SurveyType;
+  status?: SurveyResponseStatus;
+  customerId?: Guid;
+  fromDate?: DateTime;
+  toDate?: DateTime;
+  skip?: number;
+  take?: number;
+}
+
+export interface CreateSurveyResponseCommand {
+  surveyName: string;
+  surveyType: SurveyType;
+  customerId?: Guid;
+  contactId?: Guid;
+  respondentName?: string;
+  respondentEmail?: string;
+  respondentPhone?: string;
+  isAnonymous?: boolean;
+}
+
+export interface UpdateSurveyResponseCommand {
+  status?: SurveyResponseStatus;
+  npsScore?: number;
+  csatScore?: number;
+  comments?: string;
+}
