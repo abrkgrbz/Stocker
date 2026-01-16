@@ -336,12 +336,17 @@ public class ChatHub : Hub
 
     public async Task GetOnlineUsers()
     {
-        var onlineUsers = _users.Values.Select(u => new
-        {
-            u.UserId,
-            u.UserName,
-            u.ConnectedAt
-        }).ToList();
+        // Get unique users (same user may have multiple connections/tabs)
+        var onlineUsers = _users.Values
+            .GroupBy(u => u.UserId)
+            .Select(g => g.OrderBy(u => u.ConnectedAt).First())
+            .Select(u => new
+            {
+                u.UserId,
+                u.UserName,
+                u.ConnectedAt
+            })
+            .ToList();
 
         await Clients.Caller.SendAsync(SignalREvents.OnlineUsersList, onlineUsers);
     }
