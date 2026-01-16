@@ -15,6 +15,8 @@ export interface ChatMessage {
   isPrivate?: boolean;
   targetUserId?: string;
   timestamp: string;
+  isRead?: boolean;
+  readAt?: string;
 }
 
 export interface ChatUser {

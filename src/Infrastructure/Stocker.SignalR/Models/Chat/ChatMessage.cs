@@ -44,4 +44,14 @@ public class ChatMessage
     /// When the message was sent
     /// </summary>
     public DateTime Timestamp { get; set; }
+
+    /// <summary>
+    /// Whether the message has been read
+    /// </summary>
+    public bool IsRead { get; set; }
+
+    /// <summary>
+    /// When the message was read
+    /// </summary>
+    public DateTime? ReadAt { get; set; }
 }

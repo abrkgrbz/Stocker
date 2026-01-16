@@ -397,7 +397,9 @@ public class ChatHub : Hub
                 Message = m.Content,
                 IsPrivate = true,
                 TargetUserId = m.RecipientId?.ToString(),
-                Timestamp = m.SentAt
+                Timestamp = m.SentAt,
+                IsRead = m.IsRead,
+                ReadAt = m.ReadAt
             })
             .ToList();
 

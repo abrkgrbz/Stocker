@@ -50,7 +50,9 @@ export default function MessagingPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const chatMenuRef = useRef<HTMLDivElement>(null);
 
-  const { conversations, fetchConversations, isLoading: storeLoading } = useChat();
+  const { conversations, fetchConversations, isLoading: storeLoading, markMessagesAsRead: storeMarkAsRead } = useChat();
+  // Local state for conversation unread counts (updated when messages are read)
+  const [localConversations, setLocalConversations] = useState<ChatConversation[]>([]);
 
   const {
     isConnected,
@@ -65,6 +67,7 @@ export default function MessagingPage() {
     joinRoom,
     leaveRoom,
     loadPrivateMessages,
+    markAsRead,
     startTyping,
     stopTyping,
     getOnlineUsers,
@@ -77,6 +80,11 @@ export default function MessagingPage() {
   useEffect(() => {
     fetchConversations();
   }, [fetchConversations]);
+
+  // Sync conversations to local state
+  useEffect(() => {
+    setLocalConversations(conversations);
+  }, [conversations]);
 
   useEffect(() => {
     if (isConnected) {
@@ -93,6 +101,21 @@ export default function MessagingPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, privateMessages, scrollToBottom]);
+
+  // Mark messages as read when viewing a conversation
+  useEffect(() => {
+    if (!selectedConversation?.isPrivate || !selectedConversation.userId || !isConnected) return;
+
+    const conversationMessages = privateMessages[selectedConversation.userId] || [];
+    // Find unread messages that were sent TO me (not FROM me)
+    const unreadMessageIds = conversationMessages
+      .filter((msg) => msg.targetUserId === user?.id && !msg.isRead)
+      .map((msg) => msg.id);
+
+    if (unreadMessageIds.length > 0) {
+      markAsRead(unreadMessageIds);
+    }
+  }, [selectedConversation, privateMessages, user?.id, isConnected, markAsRead]);
 
   const handleSendMessage = async () => {
     if (!messageInput.trim()) return;
@@ -137,7 +160,6 @@ export default function MessagingPage() {
   };
 
   const handleSelectConversation = async (conversation: ChatConversation) => {
-    console.log('handleSelectConversation called:', conversation);
     setSelectedConversation(conversation);
     setIsMobileListVisible(false);
 
@@ -147,10 +169,17 @@ export default function MessagingPage() {
 
     if (conversation.isPrivate && conversation.userId) {
       // Load private message history for this user
-      console.log('Loading private messages for userId:', conversation.userId, 'isConnected:', isConnected);
       if (isConnected) {
         await loadPrivateMessages(conversation.userId);
-        console.log('loadPrivateMessages called');
+      }
+
+      // Mark conversation as read locally (reset unread count to 0)
+      if (conversation.unreadCount && conversation.unreadCount > 0) {
+        setLocalConversations((prev) =>
+          prev.map((conv) =>
+            conv.userId === conversation.userId ? { ...conv, unreadCount: 0 } : conv
+          )
+        );
       }
     } else if (conversation.roomName) {
       await joinRoom(conversation.roomName);
@@ -224,7 +253,7 @@ export default function MessagingPage() {
       chatUser.userId.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredConversations = conversations.filter(
+  const filteredConversations = localConversations.filter(
     (conv) =>
       (conv.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         conv.roomName?.toLowerCase().includes(searchTerm.toLowerCase())) ?? true
@@ -234,14 +263,6 @@ export default function MessagingPage() {
   const currentMessages = selectedConversation?.isPrivate && selectedConversation.userId
     ? privateMessages[selectedConversation.userId] || []
     : messages;
-
-  // Debug logging
-  console.log('=== Message Debug ===');
-  console.log('selectedConversation:', selectedConversation);
-  console.log('privateMessages keys:', Object.keys(privateMessages));
-  console.log('privateMessages:', privateMessages);
-  console.log('currentMessages:', currentMessages);
-  console.log('messages (room):', messages);
 
   // Get initials from name
   const getInitials = (name: string) => {
