@@ -147,7 +147,7 @@ export class SignalRClient {
   }
 }
 
-// Singleton instance for notification hub
-// Note: Only notification hub is currently available on backend
-// Future hubs (inventory, orders) can be added when backend endpoints are implemented
+// Singleton instances for hubs
+// Note: Authentication via HttpOnly cookies on all hubs
 export const notificationHub = new SignalRClient('/hubs/notification');
+export const chatHub = new SignalRClient('/hubs/chat');

@@ -80,6 +80,7 @@ import {
   CommandLineIcon,
   ListBulletIcon,
   DocumentDuplicateIcon,
+  ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline';
 import { colors } from '@/theme/colors';
 
@@ -449,6 +450,7 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
     description: 'Bildirim ve hatırlatıcılar',
     items: [
       { key: '/notifications', icon: <BellIcon className="w-4 h-4" />, label: 'Bildirimler' },
+      { key: '/chat', icon: <ChatBubbleLeftRightIcon className="w-4 h-4" />, label: 'Mesajlar' },
       { key: '/reminders', icon: <ClockIcon className="w-4 h-4" />, label: 'Hatırlatıcılar' },
     ],
   },
@@ -951,7 +953,7 @@ export function getCurrentModule(pathname: string): ModuleKey | null {
   if (pathname.startsWith('/finance')) return 'finance';
   if (pathname.startsWith('/manufacturing')) return 'manufacturing';
   if (pathname.startsWith('/settings')) return 'settings';
-  if (pathname.startsWith('/notifications') || pathname.startsWith('/reminders')) return 'communication';
+  if (pathname.startsWith('/notifications') || pathname.startsWith('/reminders') || pathname.startsWith('/chat')) return 'communication';
   if (pathname.startsWith('/modules')) return 'modules';
   return null;
 }

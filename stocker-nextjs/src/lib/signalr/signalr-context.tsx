@@ -2,12 +2,16 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { HubConnectionState } from '@microsoft/signalr';
-import { notificationHub, SignalRClient } from './signalr-client';
+import { notificationHub, chatHub, SignalRClient } from './signalr-client';
 
 interface SignalRContextValue {
   // Notification Hub
   notificationHub: SignalRClient;
   isNotificationConnected: boolean;
+
+  // Chat Hub
+  chatHub: SignalRClient;
+  isChatConnected: boolean;
 
   // Inventory Hub (placeholder - not implemented yet)
   inventoryHub?: SignalRClient;
@@ -26,27 +30,38 @@ const SignalRContext = createContext<SignalRContextValue | undefined>(undefined)
 
 export function SignalRProvider({ children }: { children: React.ReactNode }) {
   const [isNotificationConnected, setIsNotificationConnected] = useState(false);
+  const [isChatConnected, setIsChatConnected] = useState(false);
 
   const connectAll = useCallback(async () => {
     // Note: No token needed - authentication via HttpOnly cookies
     try {
       // Connect to notification hub
       if (!notificationHub.isConnected) {
-        await notificationHub.start(); // No token parameter needed
+        await notificationHub.start();
         setIsNotificationConnected(notificationHub.isConnected);
+      }
+
+      // Connect to chat hub
+      if (!chatHub.isConnected) {
+        await chatHub.start();
+        setIsChatConnected(chatHub.isConnected);
       }
     } catch (error) {
       // Error already logged in signalr-client.ts
       setIsNotificationConnected(false);
+      setIsChatConnected(false);
     }
-  }, []); // Removed getAccessToken dependency
+  }, []);
 
   const disconnectAll = useCallback(async () => {
     try {
       await notificationHub.stop();
       setIsNotificationConnected(false);
+
+      await chatHub.stop();
+      setIsChatConnected(false);
     } catch (error) {
-      console.error('Failed to disconnect from SignalR hub:', error);
+      console.error('Failed to disconnect from SignalR hubs:', error);
     }
   }, []);
 
@@ -63,9 +78,9 @@ export function SignalRProvider({ children }: { children: React.ReactNode }) {
   // Monitor connection state - reduced frequency to avoid performance impact
   useEffect(() => {
     const interval = setInterval(() => {
-      const isConnected = notificationHub.state === HubConnectionState.Connected;
-      setIsNotificationConnected(isConnected);
-    }, 5000); // Check every 5 seconds instead of every second
+      setIsNotificationConnected(notificationHub.state === HubConnectionState.Connected);
+      setIsChatConnected(chatHub.state === HubConnectionState.Connected);
+    }, 5000); // Check every 5 seconds
 
     return () => clearInterval(interval);
   }, []);
@@ -73,6 +88,8 @@ export function SignalRProvider({ children }: { children: React.ReactNode }) {
   const value: SignalRContextValue = {
     notificationHub,
     isNotificationConnected,
+    chatHub,
+    isChatConnected,
     connectAll,
     disconnectAll,
   };

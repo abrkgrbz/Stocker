@@ -4,6 +4,9 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using Stocker.SignalR.Constants;
 using Stocker.SignalR.Models.Chat;
+using Stocker.Application.Interfaces.Repositories;
+using Stocker.SharedKernel.Interfaces;
+using ChatMessageEntity = Stocker.Domain.Tenant.Entities.ChatMessage;
 
 namespace Stocker.SignalR.Hubs;
 
@@ -11,45 +14,77 @@ namespace Stocker.SignalR.Hubs;
 public class ChatHub : Hub
 {
     private readonly ILogger<ChatHub> _logger;
+    private readonly IChatMessageRepository _chatMessageRepository;
+    private readonly ITenantService _tenantService;
+
+    // In-memory tracking for online users and rooms (not persisted)
     private static readonly ConcurrentDictionary<string, ChatUser> _users = new();
     private static readonly ConcurrentDictionary<string, ChatRoom> _rooms = new();
-    private static readonly ConcurrentDictionary<string, List<ChatMessage>> _messageHistory = new();
 
-    public ChatHub(ILogger<ChatHub> logger)
+    public ChatHub(
+        ILogger<ChatHub> logger,
+        IChatMessageRepository chatMessageRepository,
+        ITenantService tenantService)
     {
         _logger = logger;
+        _chatMessageRepository = chatMessageRepository;
+        _tenantService = tenantService;
+    }
+
+    private Guid GetCurrentTenantId()
+    {
+        return _tenantService.GetCurrentTenantId() ?? Guid.Empty;
+    }
+
+    private Guid GetCurrentUserId()
+    {
+        var userIdClaim = Context.User?.FindFirst("UserId")?.Value
+            ?? Context.User?.FindFirst("sub")?.Value
+            ?? Context.UserIdentifier;
+
+        if (Guid.TryParse(userIdClaim, out var userId))
+            return userId;
+
+        return Guid.Empty;
+    }
+
+    private string GetCurrentUserName()
+    {
+        return Context.User?.Identity?.Name
+            ?? Context.User?.FindFirst("name")?.Value
+            ?? "Unknown";
     }
 
     public override async Task OnConnectedAsync()
     {
-        var userId = Context.UserIdentifier ?? Context.User?.FindFirst("UserId")?.Value;
-        var userName = Context.User?.Identity?.Name ?? "Unknown";
-        var tenantId = Context.User?.FindFirst("TenantId")?.Value;
+        var userId = GetCurrentUserId();
+        var userName = GetCurrentUserName();
+        var tenantId = GetCurrentTenantId();
 
-        if (!string.IsNullOrEmpty(userId))
+        if (userId != Guid.Empty)
         {
             var user = new ChatUser
             {
                 ConnectionId = Context.ConnectionId,
-                UserId = userId,
+                UserId = userId.ToString(),
                 UserName = userName,
-                TenantId = tenantId,
+                TenantId = tenantId.ToString(),
                 ConnectedAt = DateTime.UtcNow
             };
 
             _users.TryAdd(Context.ConnectionId, user);
 
             // Join tenant's default chat room
-            if (!string.IsNullOrEmpty(tenantId))
+            if (tenantId != Guid.Empty)
             {
-                var roomName = SignalRGroups.ForTenant(tenantId);
+                var roomName = SignalRGroups.ForTenant(tenantId.ToString());
                 await JoinRoom(roomName);
             }
 
             // Notify others that user is online
             await Clients.Others.SendAsync(SignalREvents.UserOnline, new
             {
-                userId,
+                userId = userId.ToString(),
                 userName,
                 connectedAt = DateTime.UtcNow
             });
@@ -93,30 +128,37 @@ public class ChatHub : Hub
             return;
         }
 
+        var tenantId = GetCurrentTenantId();
+        var userId = GetCurrentUserId();
+
+        if (tenantId == Guid.Empty || userId == Guid.Empty)
+        {
+            await Clients.Caller.SendAsync(SignalREvents.Error, "Authentication required");
+            return;
+        }
+
+        // Create and save message to database
+        var chatMessageEntity = ChatMessageEntity.CreateRoomMessage(
+            tenantId,
+            userId,
+            sender.UserName,
+            message,
+            roomName ?? "global"
+        );
+
+        await _chatMessageRepository.AddAsync(chatMessageEntity);
+        await _chatMessageRepository.SaveChangesAsync();
+
+        // Create SignalR message model for broadcasting
         var chatMessage = new ChatMessage
         {
-            Id = Guid.NewGuid(),
+            Id = chatMessageEntity.Id,
             UserId = sender.UserId,
             UserName = sender.UserName,
             Message = message,
             Room = roomName,
-            Timestamp = DateTime.UtcNow
+            Timestamp = chatMessageEntity.SentAt
         };
-
-        // Store message in history using thread-safe pattern
-        var historyKey = roomName ?? "global";
-        var messages = _messageHistory.GetOrAdd(historyKey, _ => new List<ChatMessage>());
-
-        lock (messages)
-        {
-            messages.Add(chatMessage);
-
-            // Keep only last 100 messages per room
-            while (messages.Count > 100)
-            {
-                messages.RemoveAt(0);
-            }
-        }
 
         // Send message to appropriate recipients
         if (!string.IsNullOrEmpty(roomName))
@@ -128,7 +170,7 @@ public class ChatHub : Hub
             await Clients.All.SendAsync(SignalREvents.ReceiveMessage, chatMessage);
         }
 
-        _logger.LogInformation("Message sent by {UserName} to {Room}", sender.UserName, roomName ?? "all");
+        _logger.LogInformation("Message sent by {UserName} to {Room} and persisted to database", sender.UserName, roomName ?? "all");
     }
 
     public async Task SendPrivateMessage(string targetUserId, string message)
@@ -139,31 +181,59 @@ public class ChatHub : Hub
             return;
         }
 
-        var targetConnection = _users.Values.FirstOrDefault(u => u.UserId == targetUserId);
-        if (targetConnection == null)
+        var tenantId = GetCurrentTenantId();
+        var userId = GetCurrentUserId();
+
+        if (tenantId == Guid.Empty || userId == Guid.Empty)
         {
-            await Clients.Caller.SendAsync(SignalREvents.Error, "Target user not online");
+            await Clients.Caller.SendAsync(SignalREvents.Error, "Authentication required");
             return;
         }
 
+        if (!Guid.TryParse(targetUserId, out var recipientId))
+        {
+            await Clients.Caller.SendAsync(SignalREvents.Error, "Invalid target user ID");
+            return;
+        }
+
+        // Get recipient name (from online users or default)
+        var targetConnection = _users.Values.FirstOrDefault(u => u.UserId == targetUserId);
+        var recipientName = targetConnection?.UserName ?? "Unknown";
+
+        // Create and save private message to database
+        var chatMessageEntity = ChatMessageEntity.CreatePrivateMessage(
+            tenantId,
+            userId,
+            sender.UserName,
+            recipientId,
+            recipientName,
+            message
+        );
+
+        await _chatMessageRepository.AddAsync(chatMessageEntity);
+        await _chatMessageRepository.SaveChangesAsync();
+
         var privateMessage = new ChatMessage
         {
-            Id = Guid.NewGuid(),
+            Id = chatMessageEntity.Id,
             UserId = sender.UserId,
             UserName = sender.UserName,
             Message = message,
             IsPrivate = true,
             TargetUserId = targetUserId,
-            Timestamp = DateTime.UtcNow
+            Timestamp = chatMessageEntity.SentAt
         };
 
-        // Send to target user
-        await Clients.Client(targetConnection.ConnectionId).SendAsync(SignalREvents.ReceivePrivateMessage, privateMessage);
+        // Send to target user if online
+        if (targetConnection != null)
+        {
+            await Clients.Client(targetConnection.ConnectionId).SendAsync(SignalREvents.ReceivePrivateMessage, privateMessage);
+        }
 
         // Send confirmation to sender
         await Clients.Caller.SendAsync(SignalREvents.PrivateMessageSent, privateMessage);
 
-        _logger.LogInformation("Private message sent from {SenderName} to {TargetUserId}", sender.UserName, targetUserId);
+        _logger.LogInformation("Private message sent from {SenderName} to {TargetUserId} and persisted to database", sender.UserName, targetUserId);
     }
 
     public async Task JoinRoom(string roomName)
@@ -191,15 +261,28 @@ public class ChatHub : Hub
             }
         }
 
-        // Send recent message history to the user
-        if (_messageHistory.TryGetValue(roomName, out var history))
+        // Load message history from database
+        var tenantId = GetCurrentTenantId();
+        if (tenantId != Guid.Empty)
         {
-            List<ChatMessage> recentMessages;
-            lock (history)
+            var messages = await _chatMessageRepository.GetRoomMessagesAsync(tenantId, roomName, 20, 0);
+            var recentMessages = messages
+                .OrderBy(m => m.SentAt)
+                .Select(m => new ChatMessage
+                {
+                    Id = m.Id,
+                    UserId = m.SenderId.ToString(),
+                    UserName = m.SenderName,
+                    Message = m.Content,
+                    Room = m.RoomName,
+                    Timestamp = m.SentAt
+                })
+                .ToList();
+
+            if (recentMessages.Any())
             {
-                recentMessages = history.TakeLast(20).ToList();
+                await Clients.Caller.SendAsync(SignalREvents.MessageHistory, recentMessages);
             }
-            await Clients.Caller.SendAsync(SignalREvents.MessageHistory, recentMessages);
         }
 
         await Clients.Group(roomName).SendAsync(SignalREvents.UserJoinedRoom, new
@@ -233,11 +316,10 @@ public class ChatHub : Hub
                 shouldRemoveRoom = room.Users.Count == 0;
             }
 
-            // Remove room if empty and also clean up message history
+            // Remove room from in-memory tracking if empty
             if (shouldRemoveRoom)
             {
                 _rooms.TryRemove(roomName, out _);
-                _messageHistory.TryRemove(roomName, out _);
             }
         }
 
@@ -274,6 +356,72 @@ public class ChatHub : Hub
         }).ToList();
 
         await Clients.Caller.SendAsync(SignalREvents.RoomsList, rooms);
+    }
+
+    public async Task LoadPrivateMessages(string otherUserId, int take = 20, int skip = 0)
+    {
+        var tenantId = GetCurrentTenantId();
+        var userId = GetCurrentUserId();
+
+        if (tenantId == Guid.Empty || userId == Guid.Empty)
+        {
+            await Clients.Caller.SendAsync(SignalREvents.Error, "Authentication required");
+            return;
+        }
+
+        if (!Guid.TryParse(otherUserId, out var otherUserGuid))
+        {
+            await Clients.Caller.SendAsync(SignalREvents.Error, "Invalid user ID");
+            return;
+        }
+
+        var messages = await _chatMessageRepository.GetPrivateMessagesAsync(tenantId, userId, otherUserGuid, take, skip);
+        var messageList = messages
+            .OrderBy(m => m.SentAt)
+            .Select(m => new ChatMessage
+            {
+                Id = m.Id,
+                UserId = m.SenderId.ToString(),
+                UserName = m.SenderName,
+                Message = m.Content,
+                IsPrivate = true,
+                TargetUserId = m.RecipientId?.ToString(),
+                Timestamp = m.SentAt
+            })
+            .ToList();
+
+        await Clients.Caller.SendAsync(SignalREvents.PrivateMessageHistory, messageList);
+    }
+
+    public async Task MarkMessagesAsRead(IEnumerable<Guid> messageIds)
+    {
+        var tenantId = GetCurrentTenantId();
+        var userId = GetCurrentUserId();
+
+        if (tenantId == Guid.Empty || userId == Guid.Empty)
+        {
+            await Clients.Caller.SendAsync(SignalREvents.Error, "Authentication required");
+            return;
+        }
+
+        await _chatMessageRepository.MarkAsReadAsync(tenantId, userId, messageIds.ToList());
+
+        await Clients.Caller.SendAsync(SignalREvents.MessagesMarkedAsRead, messageIds);
+    }
+
+    public async Task GetUnreadCount()
+    {
+        var tenantId = GetCurrentTenantId();
+        var userId = GetCurrentUserId();
+
+        if (tenantId == Guid.Empty || userId == Guid.Empty)
+        {
+            await Clients.Caller.SendAsync(SignalREvents.Error, "Authentication required");
+            return;
+        }
+
+        var count = await _chatMessageRepository.GetUnreadCountAsync(tenantId, userId);
+        await Clients.Caller.SendAsync(SignalREvents.UnreadCount, count);
     }
 
     public async Task StartTyping(string? roomName = null)

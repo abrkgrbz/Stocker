@@ -82,6 +82,9 @@ public class TenantDbContext : BaseDbContext, ITenantDbContext
     // Activity & Notifications (Moved from Master to Tenant for better isolation)
     public DbSet<TenantActivityLog> TenantActivityLogs => Set<TenantActivityLog>();
     public DbSet<TenantNotification> TenantNotifications => Set<TenantNotification>();
+
+    // Chat & Messaging
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     
     // Onboarding & Initial Setup (Moved from Master to Tenant for better isolation)
     public DbSet<TenantSetupChecklist> TenantSetupChecklists => Set<TenantSetupChecklist>();

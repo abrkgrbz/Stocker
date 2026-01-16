@@ -145,6 +145,21 @@ public static class SignalREvents
     /// </summary>
     public const string UserStoppedTyping = "UserStoppedTyping";
 
+    /// <summary>
+    /// Private message history loaded
+    /// </summary>
+    public const string PrivateMessageHistory = "PrivateMessageHistory";
+
+    /// <summary>
+    /// Messages marked as read confirmation
+    /// </summary>
+    public const string MessagesMarkedAsRead = "MessagesMarkedAsRead";
+
+    /// <summary>
+    /// Unread message count
+    /// </summary>
+    public const string UnreadCount = "UnreadCount";
+
     #endregion
 
     #region Monitoring Events

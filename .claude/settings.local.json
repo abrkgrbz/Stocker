@@ -124,7 +124,8 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nfix\\(nextjs\\): Enable refetchOnMount for list queries to show fresh data\n\n- Set refetchOnMount: ''always'' for list category queries\n- Reduce staleTime from 2 minutes to 30 seconds for lists\n- Fix issue where newly created items weren''t visible without page refresh\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "mcp__serena__activate_project",
       "Bash(pip install:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "mcp__serena__find_symbol"
     ],
     "deny": [],
     "ask": []

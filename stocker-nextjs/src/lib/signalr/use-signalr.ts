@@ -8,7 +8,7 @@ import { SignalRClient } from './signalr-client';
 export { useSignalR } from './signalr-context';
 
 interface UseSignalRHubOptions {
-  hub: 'notification' | 'inventory' | 'order';
+  hub: 'notification' | 'chat' | 'inventory' | 'order';
   events: {
     [eventName: string]: (...args: any[]) => void;
   };
@@ -21,6 +21,8 @@ export function useSignalRHub({ hub, events, enabled = true }: UseSignalRHubOpti
   const hubInstance: SignalRClient | undefined =
     hub === 'notification'
       ? context.notificationHub
+      : hub === 'chat'
+      ? context.chatHub
       : hub === 'inventory'
       ? context.inventoryHub
       : context.orderHub;
@@ -28,6 +30,8 @@ export function useSignalRHub({ hub, events, enabled = true }: UseSignalRHubOpti
   const isConnected =
     hub === 'notification'
       ? context.isNotificationConnected
+      : hub === 'chat'
+      ? context.isChatConnected
       : hub === 'inventory'
       ? context.isInventoryConnected ?? false
       : context.isOrderConnected ?? false;

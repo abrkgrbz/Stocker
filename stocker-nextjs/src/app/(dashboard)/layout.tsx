@@ -24,6 +24,7 @@ import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
 import { SignalRProvider } from '@/lib/signalr/signalr-context';
 import { NotificationCenter } from '@/features/notifications/components';
+import { ChatBadge } from '@/features/chat';
 import { useNotificationHub } from '@/lib/signalr/notification-hub';
 import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
 import { useOnboarding, type OnboardingFormData } from '@/lib/hooks/use-onboarding';
@@ -367,7 +368,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   };
 
   // Paths that are always allowed (no module required)
-  const alwaysAllowedPaths = ['/dashboard', '/settings', '/modules', '/profile', '/notifications', '/reminders', '/app'];
+  const alwaysAllowedPaths = ['/dashboard', '/settings', '/modules', '/profile', '/notifications', '/reminders', '/chat', '/app'];
   const isAlwaysAllowed = alwaysAllowedPaths.some(path => pathname.startsWith(path));
 
   if (!isAlwaysAllowed) {
@@ -840,6 +841,9 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
               {/* Notifications */}
               <NotificationCenter />
+
+              {/* Chat Messages */}
+              <ChatBadge />
 
               {/* Divider - Hidden on mobile */}
               <div className="hidden sm:block w-px h-5 bg-slate-200 mx-1 sm:mx-2" />
