@@ -180,7 +180,7 @@ export default function MessagingPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-64px)] flex bg-slate-50">
+    <div className="h-screen flex bg-slate-50">
       {/* Left Sidebar - Conversations & Online Users */}
       <aside
         className={`
