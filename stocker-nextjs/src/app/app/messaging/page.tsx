@@ -137,6 +137,7 @@ export default function MessagingPage() {
   };
 
   const handleSelectConversation = async (conversation: ChatConversation) => {
+    console.log('handleSelectConversation called:', conversation);
     setSelectedConversation(conversation);
     setIsMobileListVisible(false);
 
@@ -146,8 +147,10 @@ export default function MessagingPage() {
 
     if (conversation.isPrivate && conversation.userId) {
       // Load private message history for this user
+      console.log('Loading private messages for userId:', conversation.userId, 'isConnected:', isConnected);
       if (isConnected) {
         await loadPrivateMessages(conversation.userId);
+        console.log('loadPrivateMessages called');
       }
     } else if (conversation.roomName) {
       await joinRoom(conversation.roomName);
@@ -231,6 +234,14 @@ export default function MessagingPage() {
   const currentMessages = selectedConversation?.isPrivate && selectedConversation.userId
     ? privateMessages[selectedConversation.userId] || []
     : messages;
+
+  // Debug logging
+  console.log('=== Message Debug ===');
+  console.log('selectedConversation:', selectedConversation);
+  console.log('privateMessages keys:', Object.keys(privateMessages));
+  console.log('privateMessages:', privateMessages);
+  console.log('currentMessages:', currentMessages);
+  console.log('messages (room):', messages);
 
   // Get initials from name
   const getInitials = (name: string) => {

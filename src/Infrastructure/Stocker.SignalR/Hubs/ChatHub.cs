@@ -380,7 +380,13 @@ public class ChatHub : Hub
             return;
         }
 
-        var messages = await _chatMessageRepository.GetPrivateMessagesAsync(tenantId, userId, otherUserGuid, take, skip);
+        _logger.LogInformation("LoadPrivateMessages called: tenantId={TenantId}, userId={UserId}, otherUserId={OtherUserId}",
+            tenantId, userId, otherUserGuid);
+
+        var messages = await _chatMessageRepository.GetPrivateMessagesAsync(tenantId, userId, otherUserGuid, skip, take);
+
+        _logger.LogInformation("GetPrivateMessagesAsync returned {Count} messages", messages.Count());
+
         var messageList = messages
             .OrderBy(m => m.SentAt)
             .Select(m => new ChatMessage
@@ -395,6 +401,7 @@ public class ChatHub : Hub
             })
             .ToList();
 
+        _logger.LogInformation("Sending PrivateMessageHistory with {Count} messages to client", messageList.Count);
         await Clients.Caller.SendAsync(SignalREvents.PrivateMessageHistory, messageList);
     }
 
