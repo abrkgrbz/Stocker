@@ -9,7 +9,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { CrmFormPageLayout } from '@/components/crm/shared';
 import { LeadForm } from '@/components/crm/leads';
-import { useLead, useUpdateLead } from '@/lib/api/hooks/useCRM';
+import { useLead, useUpdateLead, useUpdateLeadScore } from '@/lib/api/hooks/useCRM';
 
 // Status labels
 const statusLabels: Record<string, string> = {
@@ -30,10 +30,21 @@ export default function EditLeadPage() {
 
   const { data: lead, isLoading, error } = useLead(leadId);
   const updateLead = useUpdateLead();
+  const updateLeadScore = useUpdateLeadScore();
 
   const handleSubmit = async (values: any) => {
     try {
-      await updateLead.mutateAsync({ id: leadId, data: values });
+      // Extract score for separate update (backend has separate endpoint for score)
+      const { score, ...leadData } = values;
+
+      // Update lead data
+      await updateLead.mutateAsync({ id: leadId, data: leadData });
+
+      // Update score separately if it changed
+      if (score !== undefined && score !== null && lead && score !== lead.score) {
+        await updateLeadScore.mutateAsync({ id: leadId, score: Number(score) });
+      }
+
       router.push('/crm/leads');
     } catch (error) {
       // Error handled by hook

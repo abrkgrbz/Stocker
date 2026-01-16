@@ -325,6 +325,11 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
       }
     }
 
+    // KVKK Consent validation - Data processing consent is required
+    if (!formData.kvkkDataProcessingConsent) {
+      newErrors.kvkkDataProcessingConsent = 'KVKK veri işleme onayı zorunludur';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [formData]);
@@ -694,24 +699,29 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
             <FormField span={12}>
               <div className="space-y-4">
                 {/* Veri İşleme İzni */}
-                <label className="flex items-start gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={formData.kvkkDataProcessingConsent}
-                    onChange={(e) => handleChange('kvkkDataProcessingConsent', e.target.checked)}
-                    disabled={loading}
-                    className="mt-0.5 h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
-                  />
-                  <div className="flex-1">
-                    <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">
-                      Kişisel Veri İşleme İzni
-                    </span>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Müşteri, kişisel verilerinin toplanması, işlenmesi ve saklanmasına izin vermektedir.
-                    </p>
-                  </div>
-                  <span className="text-xs font-medium text-red-500">Zorunlu</span>
-                </label>
+                <div>
+                  <label className={`flex items-start gap-3 cursor-pointer group ${errors.kvkkDataProcessingConsent ? 'ring-2 ring-red-500 ring-offset-2 rounded-lg p-2 -m-2' : ''}`}>
+                    <input
+                      type="checkbox"
+                      checked={formData.kvkkDataProcessingConsent}
+                      onChange={(e) => handleChange('kvkkDataProcessingConsent', e.target.checked)}
+                      disabled={loading}
+                      className={`mt-0.5 h-5 w-5 rounded text-blue-600 focus:ring-blue-500 focus:ring-offset-0 ${errors.kvkkDataProcessingConsent ? 'border-red-500' : 'border-slate-300'}`}
+                    />
+                    <div className="flex-1">
+                      <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">
+                        Kişisel Veri İşleme İzni
+                      </span>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Müşteri, kişisel verilerinin toplanması, işlenmesi ve saklanmasına izin vermektedir.
+                      </p>
+                    </div>
+                    <span className="text-xs font-medium text-red-500">Zorunlu</span>
+                  </label>
+                  {errors.kvkkDataProcessingConsent && (
+                    <p className="text-xs text-red-500 mt-2 ml-8">{errors.kvkkDataProcessingConsent}</p>
+                  )}
+                </div>
 
                 {/* Pazarlama İzni */}
                 <label className="flex items-start gap-3 cursor-pointer group">

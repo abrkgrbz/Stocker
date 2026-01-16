@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Form, Input, InputNumber, Select } from 'antd';
+import { Form, Input, InputNumber, Select, Checkbox } from 'antd';
 import { UserIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import type { Lead } from '@/lib/api/services/crm.service';
 import { TurkishBusinessEntityType, TurkishBusinessEntityTypeLabels } from '@/lib/api/services/crm.types';
@@ -87,9 +87,10 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
   }, [form]);
 
   const handleFormFinish = (values: any) => {
-    // Ensure location text values are included
+    // Ensure location text values and rating are included
     const submitData = {
       ...values,
+      rating: rating, // Explicitly include rating from state (buttons update state, not form directly)
       country: selectedLocation.countryName || values.country || '',
       city: selectedLocation.cityName || values.city || '',
       state: selectedLocation.districtName || selectedLocation.region || values.state || '',
@@ -424,60 +425,64 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
             </p>
             <div className="space-y-4">
               {/* Veri İşleme İzni */}
-              <Form.Item name="kvkkDataProcessingConsent" valuePropName="checked" className="mb-0">
-                <label className="flex items-start gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    className="mt-0.5 h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
-                  />
-                  <div className="flex-1">
-                    <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">
-                      Kişisel Veri İşleme İzni
-                    </span>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Lead, kişisel verilerinin toplanması, işlenmesi ve saklanmasına izin vermektedir.
-                    </p>
+              <Form.Item
+                name="kvkkDataProcessingConsent"
+                valuePropName="checked"
+                rules={[
+                  {
+                    validator: (_, value) =>
+                      value ? Promise.resolve() : Promise.reject(new Error('KVKK veri işleme onayı zorunludur')),
+                  },
+                ]}
+                className="mb-0"
+              >
+                <Checkbox>
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1">
+                      <span className="text-sm font-medium text-slate-700">
+                        Kişisel Veri İşleme İzni
+                      </span>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Lead, kişisel verilerinin toplanması, işlenmesi ve saklanmasına izin vermektedir.
+                      </p>
+                    </div>
+                    <span className="text-xs font-medium text-red-500">Zorunlu</span>
                   </div>
-                  <span className="text-xs font-medium text-red-500">Zorunlu</span>
-                </label>
+                </Checkbox>
               </Form.Item>
 
               {/* Pazarlama İzni */}
               <Form.Item name="kvkkMarketingConsent" valuePropName="checked" className="mb-0">
-                <label className="flex items-start gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    className="mt-0.5 h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
-                  />
-                  <div className="flex-1">
-                    <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">
-                      Pazarlama İletişimi İzni
-                    </span>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Lead, tanıtım ve pazarlama amaçlı iletişim almayı kabul etmektedir.
-                    </p>
+                <Checkbox>
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1">
+                      <span className="text-sm font-medium text-slate-700">
+                        Pazarlama İletişimi İzni
+                      </span>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Lead, tanıtım ve pazarlama amaçlı iletişim almayı kabul etmektedir.
+                      </p>
+                    </div>
+                    <span className="text-xs font-medium text-slate-400">İsteğe Bağlı</span>
                   </div>
-                  <span className="text-xs font-medium text-slate-400">İsteğe Bağlı</span>
-                </label>
+                </Checkbox>
               </Form.Item>
 
               {/* İletişim İzni */}
               <Form.Item name="kvkkCommunicationConsent" valuePropName="checked" className="mb-0">
-                <label className="flex items-start gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    className="mt-0.5 h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
-                  />
-                  <div className="flex-1">
-                    <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">
-                      Elektronik İletişim İzni
-                    </span>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Lead, e-posta, SMS ve telefon ile iletişim kurulmasını kabul etmektedir.
-                    </p>
+                <Checkbox>
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1">
+                      <span className="text-sm font-medium text-slate-700">
+                        Elektronik İletişim İzni
+                      </span>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Lead, e-posta, SMS ve telefon ile iletişim kurulmasını kabul etmektedir.
+                      </p>
+                    </div>
+                    <span className="text-xs font-medium text-slate-400">İsteğe Bağlı</span>
                   </div>
-                  <span className="text-xs font-medium text-slate-400">İsteğe Bağlı</span>
-                </label>
+                </Checkbox>
               </Form.Item>
 
               {/* KVKK Bilgilendirme Notu */}
