@@ -46,6 +46,7 @@ export default function MessagingPage() {
   const {
     isConnected,
     messages,
+    privateMessages,
     onlineUsers,
     typingUsers,
     unreadCount,
@@ -54,6 +55,7 @@ export default function MessagingPage() {
     sendPrivateMessage,
     joinRoom,
     leaveRoom,
+    loadPrivateMessages,
     startTyping,
     stopTyping,
     getOnlineUsers,
@@ -81,7 +83,7 @@ export default function MessagingPage() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, scrollToBottom]);
+  }, [messages, privateMessages, scrollToBottom]);
 
   const handleSendMessage = async () => {
     if (!messageInput.trim()) return;
@@ -147,6 +149,11 @@ export default function MessagingPage() {
     };
     setSelectedConversation(conv);
     setIsMobileListVisible(false);
+
+    // Load private message history for this user
+    if (isConnected) {
+      await loadPrivateMessages(chatUser.userId);
+    }
   };
 
   const handleBackToList = () => {
@@ -164,6 +171,11 @@ export default function MessagingPage() {
       (conv.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         conv.roomName?.toLowerCase().includes(searchTerm.toLowerCase())) ?? true
   );
+
+  // Get current messages based on conversation type
+  const currentMessages = selectedConversation?.isPrivate && selectedConversation.userId
+    ? privateMessages[selectedConversation.userId] || []
+    : messages;
 
   // Get initials from name
   const getInitials = (name: string) => {
@@ -461,7 +473,7 @@ export default function MessagingPage() {
 
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4 bg-slate-50">
-              {messages.length === 0 ? (
+              {currentMessages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full">
                   <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
                     <ChatBubbleLeftRightIcon className="w-10 h-10 text-indigo-500" />
@@ -472,7 +484,7 @@ export default function MessagingPage() {
                   </p>
                 </div>
               ) : (
-                messages.map((msg) => {
+                currentMessages.map((msg) => {
                   const isOwn = msg.userId === user?.id;
 
                   return (
