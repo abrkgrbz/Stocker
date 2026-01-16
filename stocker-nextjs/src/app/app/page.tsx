@@ -156,8 +156,8 @@ const MODULE_CONFIGS = [
     icon: MessageSquare,
     iconBg: 'bg-pink-50',
     iconColor: 'text-pink-600',
-    path: '/messaging',
-    comingSoon: true,
+    path: '/app/messaging',
+    alwaysEnabled: true,
   },
   {
     id: 'calendar',
