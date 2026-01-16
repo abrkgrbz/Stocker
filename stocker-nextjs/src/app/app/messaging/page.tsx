@@ -22,7 +22,7 @@ import {
   HomeIcon,
 } from '@heroicons/react/24/outline';
 import { ChatBubbleLeftRightIcon as ChatBubbleLeftRightIconSolid } from '@heroicons/react/24/solid';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useChatHub, ChatMessage as SignalRMessage, ChatUser } from '@/lib/signalr/chat-hub';
 import { useChat } from '@/features/chat/hooks/useChat';
 import { ChatConversation } from '@/features/chat/types/chat.types';
@@ -39,6 +39,7 @@ type TabType = 'conversations' | 'online';
 
 export default function MessagingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const [messageInput, setMessageInput] = useState('');
   const [selectedConversation, setSelectedConversation] = useState<ChatConversation | null>(null);
@@ -91,6 +92,30 @@ export default function MessagingPage() {
       getOnlineUsers();
     }
   }, [isConnected, getOnlineUsers]);
+
+  // Handle URL parameters for direct navigation to a conversation
+  useEffect(() => {
+    const userId = searchParams.get('userId');
+    const userName = searchParams.get('userName');
+
+    if (userId && isConnected && !selectedConversation) {
+      // Create a conversation object for the user from URL params
+      const conv: ChatConversation = {
+        userId: userId,
+        userName: userName || 'Kullanıcı',
+        isPrivate: true,
+        unreadCount: 0,
+      };
+
+      // Select the conversation and load messages
+      setSelectedConversation(conv);
+      setIsMobileListVisible(false);
+      loadPrivateMessages(userId);
+
+      // Clear URL params after handling (optional - keeps URL clean)
+      router.replace('/app/messaging', { scroll: false });
+    }
+  }, [searchParams, isConnected, selectedConversation, loadPrivateMessages, router]);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {

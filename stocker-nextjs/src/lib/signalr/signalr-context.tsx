@@ -124,8 +124,12 @@ export function SignalRProvider({ children }: { children: React.ReactNode }) {
           action: {
             label: 'Görüntüle',
             onClick: () => {
-              // Navigate to messaging page - will be handled by the app
-              window.location.href = '/app/messaging';
+              // Navigate to messaging page with user context
+              const params = new URLSearchParams({
+                userId: message.userId,
+                userName: message.userName,
+              });
+              window.location.href = `/app/messaging?${params.toString()}`;
             },
           },
           duration: 5000,
