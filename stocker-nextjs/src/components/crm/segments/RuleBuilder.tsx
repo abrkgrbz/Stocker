@@ -30,27 +30,27 @@ const FIELD_OPTIONS = [
 
 const OPERATOR_OPTIONS = {
   number: [
-    { value: '$gte', label: 'Büyük veya Eşit (≥)' },
-    { value: '$lte', label: 'Küçük veya Eşit (≤)' },
-    { value: '$gt', label: 'Büyüktür (>)' },
-    { value: '$lt', label: 'Küçüktür (<)' },
-    { value: '$eq', label: 'Eşittir (=)' },
-    { value: '$ne', label: 'Eşit Değil (≠)' },
+    { value: '>=', label: 'Büyük veya Eşit (≥)' },
+    { value: '<=', label: 'Küçük veya Eşit (≤)' },
+    { value: '>', label: 'Büyüktür (>)' },
+    { value: '<', label: 'Küçüktür (<)' },
+    { value: '=', label: 'Eşittir (=)' },
+    { value: '!=', label: 'Eşit Değil (≠)' },
   ],
   date: [
-    { value: '$gte', label: 'Sonra veya Eşit' },
-    { value: '$lte', label: 'Önce veya Eşit' },
-    { value: '$gt', label: 'Sonra' },
-    { value: '$lt', label: 'Önce' },
+    { value: '>=', label: 'Sonra veya Eşit' },
+    { value: '<=', label: 'Önce veya Eşit' },
+    { value: '>', label: 'Sonra' },
+    { value: '<', label: 'Önce' },
   ],
   text: [
-    { value: '$eq', label: 'Eşittir' },
-    { value: '$ne', label: 'Eşit Değil' },
-    { value: '$contains', label: 'İçerir' },
+    { value: '=', label: 'Eşittir' },
+    { value: '!=', label: 'Eşit Değil' },
+    { value: 'CONTAINS', label: 'İçerir' },
   ],
   select: [
-    { value: '$eq', label: 'Eşittir' },
-    { value: '$ne', label: 'Eşit Değil' },
+    { value: '=', label: 'Eşittir' },
+    { value: '!=', label: 'Eşit Değil' },
   ],
 };
 
@@ -58,24 +58,24 @@ const TEMPLATES = [
   {
     name: 'VIP Müşteriler',
     description: 'Toplam harcaması 10.000₺ üzeri',
-    rules: [{ field: 'totalSpent', operator: '$gte', value: 10000 }],
+    rules: [{ field: 'totalSpent', operator: '>=', value: 10000 }],
   },
   {
     name: 'Aktif Müşteriler',
     description: 'Son 30 günde sipariş verenler',
-    rules: [{ field: 'lastOrderDate', operator: '$gte', value: '2024-01-01' }],
+    rules: [{ field: 'lastOrderDate', operator: '>=', value: '2024-01-01' }],
   },
   {
     name: 'Yeni Müşteriler',
     description: 'Son 3 ayda kayıt olanlar',
-    rules: [{ field: 'createdAt', operator: '$gte', value: '2024-10-01' }],
+    rules: [{ field: 'createdAt', operator: '>=', value: '2024-10-01' }],
   },
   {
     name: 'Sadık Müşteriler',
     description: '10+ sipariş ve 5000₺+ harcama',
     rules: [
-      { field: 'totalOrders', operator: '$gte', value: 10, logicalOperator: 'AND' },
-      { field: 'totalSpent', operator: '$gte', value: 5000 },
+      { field: 'totalOrders', operator: '>=', value: 10, logicalOperator: 'AND' },
+      { field: 'totalSpent', operator: '>=', value: 5000 },
     ],
   },
 ];
@@ -85,18 +85,35 @@ export function RuleBuilder({ value, onChange }: RuleBuilderProps) {
     if (value && value !== '{}') {
       try {
         const parsed = JSON.parse(value);
-        // Convert JSON to rules format
+        // Check if it's the new SegmentCriteria format
+        if (parsed.Conditions && Array.isArray(parsed.Conditions)) {
+          return parsed.Conditions.map((condition: any, index: number) => ({
+            id: Math.random().toString(),
+            field: condition.Field,
+            operator: condition.Operator,
+            value: condition.Value,
+            logicalOperator: index > 0 ? (parsed.Operator || 'AND') : undefined,
+          }));
+        }
+        // Fallback for old MongoDB-style format (for backwards compatibility)
         const convertedRules: Rule[] = [];
         Object.keys(parsed).forEach((field) => {
           const operators = parsed[field];
-          Object.keys(operators).forEach((operator) => {
-            convertedRules.push({
-              id: Math.random().toString(),
-              field,
-              operator,
-              value: operators[operator],
+          if (typeof operators === 'object') {
+            Object.keys(operators).forEach((operator) => {
+              // Convert MongoDB operators to standard operators
+              const standardOp = operator.replace('$gte', '>=').replace('$lte', '<=')
+                .replace('$gt', '>').replace('$lt', '<')
+                .replace('$eq', '=').replace('$ne', '!=')
+                .replace('$contains', 'CONTAINS');
+              convertedRules.push({
+                id: Math.random().toString(),
+                field,
+                operator: standardOp,
+                value: operators[operator],
+              });
             });
-          });
+          }
         });
         return convertedRules;
       } catch {
@@ -107,13 +124,18 @@ export function RuleBuilder({ value, onChange }: RuleBuilderProps) {
   });
 
   const updateJSON = (updatedRules: Rule[]) => {
-    const criteria: any = {};
-    updatedRules.forEach((rule) => {
-      if (!criteria[rule.field]) {
-        criteria[rule.field] = {};
-      }
-      criteria[rule.field][rule.operator] = rule.value;
-    });
+    // Convert rules to backend SegmentCriteria format
+    const hasOrCondition = updatedRules.some(r => r.logicalOperator === 'OR');
+    const criteria = {
+      Operator: hasOrCondition ? 'OR' : 'AND',
+      Conditions: updatedRules
+        .filter(r => r.field && r.operator)
+        .map(r => ({
+          Field: r.field,
+          Operator: r.operator,
+          Value: r.value
+        }))
+    };
     onChange?.(JSON.stringify(criteria));
   };
 
@@ -307,15 +329,17 @@ export function RuleBuilder({ value, onChange }: RuleBuilderProps) {
           <div className="text-xs text-gray-500 mb-1">Oluşturulan JSON (Önizleme):</div>
           <code className="text-xs bg-white p-2 rounded block overflow-x-auto">
             {(() => {
-              const criteria: any = {};
-              rules.forEach((rule) => {
-                if (rule.field && rule.operator) {
-                  if (!criteria[rule.field]) {
-                    criteria[rule.field] = {};
-                  }
-                  criteria[rule.field][rule.operator] = rule.value;
-                }
-              });
+              const hasOrCondition = rules.some(r => r.logicalOperator === 'OR');
+              const criteria = {
+                Operator: hasOrCondition ? 'OR' : 'AND',
+                Conditions: rules
+                  .filter(r => r.field && r.operator)
+                  .map(r => ({
+                    Field: r.field,
+                    Operator: r.operator,
+                    Value: r.value
+                  }))
+              };
               return JSON.stringify(criteria, null, 2);
             })()}
           </code>

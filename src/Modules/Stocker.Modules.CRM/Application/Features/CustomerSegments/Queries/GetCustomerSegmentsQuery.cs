@@ -56,7 +56,9 @@ public class GetCustomerSegmentsQueryHandler : IRequestHandler<GetCustomerSegmen
                 IsActive = s.IsActive,
                 MemberCount = s.MemberCount,
                 CreatedBy = s.CreatedBy,
-                LastModifiedBy = s.LastModifiedBy
+                LastModifiedBy = s.LastModifiedBy,
+                CreatedAt = s.CreatedAt,
+                UpdatedAt = s.UpdatedAt
             })
             .ToListAsync(cancellationToken);
 

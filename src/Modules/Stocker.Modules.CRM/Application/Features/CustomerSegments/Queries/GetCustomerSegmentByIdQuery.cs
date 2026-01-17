@@ -51,7 +51,9 @@ public class GetCustomerSegmentByIdQueryHandler : IRequestHandler<GetCustomerSeg
                 IsActive = s.IsActive,
                 MemberCount = s.MemberCount,
                 CreatedBy = s.CreatedBy,
-                LastModifiedBy = s.LastModifiedBy
+                LastModifiedBy = s.LastModifiedBy,
+                CreatedAt = s.CreatedAt,
+                UpdatedAt = s.UpdatedAt
             })
             .FirstOrDefaultAsync(cancellationToken);
 

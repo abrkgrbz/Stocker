@@ -46,6 +46,11 @@ public class CustomerSegmentConfiguration : IEntityTypeConfiguration<CustomerSeg
 
         builder.Property(cs => cs.LastModifiedBy);
 
+        builder.Property(cs => cs.CreatedAt)
+            .IsRequired();
+
+        builder.Property(cs => cs.UpdatedAt);
+
         // Relationships
         builder.HasMany(cs => cs.Members)
             .WithOne(m => m.Segment)

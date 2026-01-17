@@ -85,7 +85,9 @@ public class CreateCustomerSegmentCommandHandler : IRequestHandler<CreateCustome
             IsActive = segment.IsActive,
             MemberCount = segment.MemberCount,
             CreatedBy = segment.CreatedBy,
-            LastModifiedBy = segment.LastModifiedBy
+            LastModifiedBy = segment.LastModifiedBy,
+            CreatedAt = segment.CreatedAt,
+            UpdatedAt = segment.UpdatedAt
         };
 
         return Result<CustomerSegmentDto>.Success(dto);

@@ -17,6 +17,8 @@ public class CustomerSegment : TenantAggregateRoot
     public int MemberCount { get; private set; }
     public Guid CreatedBy { get; private set; }
     public Guid? LastModifiedBy { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+    public DateTime? UpdatedAt { get; private set; }
 
     public virtual IReadOnlyList<CustomerSegmentMember> Members => _members.AsReadOnly();
 
@@ -45,6 +47,7 @@ public class CustomerSegment : TenantAggregateRoot
         IsActive = true;
         MemberCount = 0;
         CreatedBy = createdBy;
+        CreatedAt = DateTime.UtcNow;
     }
 
     public Result UpdateDetails(string name, string? description, string color, Guid modifiedBy)
@@ -56,6 +59,7 @@ public class CustomerSegment : TenantAggregateRoot
         Description = description;
         Color = color;
         LastModifiedBy = modifiedBy;
+        UpdatedAt = DateTime.UtcNow;
 
         return Result.Success();
     }
@@ -70,6 +74,7 @@ public class CustomerSegment : TenantAggregateRoot
 
         Criteria = criteria;
         LastModifiedBy = modifiedBy;
+        UpdatedAt = DateTime.UtcNow;
 
         return Result.Success();
     }
