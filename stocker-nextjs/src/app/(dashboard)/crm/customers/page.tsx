@@ -164,8 +164,10 @@ function CustomersPageContent() {
       dataIndex: 'customerType',
       key: 'customerType',
       width: 140,
-      render: (type: string) => {
-        const config = customerTypeConfig[type] || { color: '#64748b', bgColor: '#f1f5f9', label: type };
+      render: (type: string | number | null | undefined) => {
+        // Handle null/undefined and convert to lookup key
+        const key = type ?? 0;
+        const config = customerTypeConfig[key] || customerTypeConfig[String(key)] || { color: '#64748b', bgColor: '#f1f5f9', label: 'Belirtilmemis' };
         return (
           <span
             className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium"
@@ -207,8 +209,10 @@ function CustomersPageContent() {
       dataIndex: 'status',
       key: 'status',
       width: 120,
-      render: (status: string) => {
-        const config = customerStatusConfig[status] || { color: '#64748b', bgColor: '#f1f5f9', label: status };
+      render: (status: string | number | null | undefined) => {
+        // Handle null/undefined and convert to lookup key
+        const key = status ?? 0;
+        const config = customerStatusConfig[key] || customerStatusConfig[String(key)] || { color: '#64748b', bgColor: '#f1f5f9', label: 'Belirtilmemis' };
         return (
           <span
             className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium"
