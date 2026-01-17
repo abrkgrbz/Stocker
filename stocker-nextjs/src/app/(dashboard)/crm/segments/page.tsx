@@ -226,58 +226,57 @@ function CustomerSegmentsPageContent() {
       key: 'actions',
       width: 80,
       fixed: 'right' as const,
-      render: (_, record) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'view',
-                label: 'Goruntule',
-                icon: <EyeIcon className="w-4 h-4" />,
-                onClick: () => router.push(`/crm/segments/${record.id}`),
-              },
-              {
-                key: 'edit',
-                label: 'Duzenle',
-                icon: <PencilIcon className="w-4 h-4" />,
-                onClick: () => handleEdit(record),
-              },
-              {
-                key: 'clone',
-                label: 'Kopyala',
-                icon: <DocumentDuplicateIcon className="w-4 h-4" />,
-                onClick: () => handleClone(record),
-                disabled: createSegment.isPending,
-              },
-              { type: 'divider' as const },
-              {
-                key: 'export',
-                label: 'Uyeleri Disa Aktar (.csv)',
-                icon: <ArrowDownTrayIcon className="w-4 h-4" />,
-                onClick: () => handleExport(record),
-              },
-              {
-                key: 'campaign',
-                label: 'Bu Segmente Kampanya Gonder',
-                icon: <EnvelopeIcon className="w-4 h-4" />,
-                onClick: () => handleSendCampaign(record),
-              },
-              { type: 'divider' as const },
-              {
-                key: 'delete',
-                label: 'Sil',
-                icon: <TrashIcon className="w-4 h-4" />,
-                danger: true,
-                onClick: () => handleDelete(record.id),
-                disabled: deleteSegment.isPending,
-              },
-            ],
-          }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<EllipsisVerticalIcon className="w-4 h-4" />} />
-        </Dropdown>
-      ),
+      render: (_, record) => {
+        const menuItems = [
+          {
+            key: 'view',
+            icon: <EyeIcon className="w-4 h-4" />,
+            label: 'Goruntule',
+            onClick: () => router.push(`/crm/segments/${record.id}`),
+          },
+          {
+            key: 'edit',
+            icon: <PencilIcon className="w-4 h-4" />,
+            label: 'Duzenle',
+            onClick: () => handleEdit(record),
+          },
+          {
+            key: 'clone',
+            icon: <DocumentDuplicateIcon className="w-4 h-4" />,
+            label: 'Kopyala',
+            onClick: () => handleClone(record),
+            disabled: createSegment.isPending,
+          },
+          { type: 'divider' as const },
+          {
+            key: 'export',
+            icon: <ArrowDownTrayIcon className="w-4 h-4" />,
+            label: 'Uyeleri Disa Aktar (.csv)',
+            onClick: () => handleExport(record),
+          },
+          {
+            key: 'campaign',
+            icon: <EnvelopeIcon className="w-4 h-4" />,
+            label: 'Bu Segmente Kampanya Gonder',
+            onClick: () => handleSendCampaign(record),
+          },
+          { type: 'divider' as const },
+          {
+            key: 'delete',
+            icon: <TrashIcon className="w-4 h-4" />,
+            label: 'Sil',
+            danger: true,
+            onClick: () => handleDelete(record.id),
+            disabled: deleteSegment.isPending,
+          },
+        ];
+
+        return (
+          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+            <Button type="text" icon={<EllipsisVerticalIcon className="w-4 h-4" />} className="text-slate-600 hover:text-slate-900" />
+          </Dropdown>
+        );
+      },
     },
   ];
 
