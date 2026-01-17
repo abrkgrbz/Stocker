@@ -93,7 +93,7 @@ export default function LeadsPage() {
 
   // API Hooks
   const { data, isLoading, refetch } = useLeads({
-    pageNumber: currentPage,
+    page: currentPage,
     pageSize,
     search: debouncedSearch || undefined,
   });
