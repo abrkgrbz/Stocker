@@ -405,16 +405,14 @@ export default function CustomerDetailPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-semibold text-slate-900 m-0">{customer.companyName}</h1>
-                  <Tag
-                    icon={customer.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
-                    className={`border-0 ${
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
                       customer.isActive
                         ? 'bg-emerald-50 text-emerald-700'
                         : 'bg-slate-100 text-slate-500'
-                    }`}
-                  >
+                    }`}>
+                    {customer.isActive ? <CheckCircleIcon className="w-3.5 h-3.5" /> : <XCircleIcon className="w-3.5 h-3.5" />}
                     {customer.isActive ? 'Aktif' : 'Pasif'}
-                  </Tag>
+                  </span>
                 </div>
                 <p className="text-sm text-slate-500 m-0">{customer.email}</p>
               </div>
@@ -466,14 +464,12 @@ export default function CustomerDetailPage() {
                 </div>
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Müşteri Tipi</p>
-                  <Tag
-                    icon={customer.customerType === 'Corporate' ? <BuildingOfficeIcon className="w-4 h-4" /> : <UserIcon className="w-4 h-4" />}
-                    className="border-0 bg-indigo-50 text-indigo-700 m-0"
-                  >
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium bg-indigo-50 text-indigo-700">
+                    {customer.customerType === 'Corporate' ? <BuildingOfficeIcon className="w-3.5 h-3.5" /> : <UserIcon className="w-3.5 h-3.5" />}
                     {customer.customerType === 'Corporate' ? 'Kurumsal' :
                      customer.customerType === 'Individual' ? 'Bireysel' :
                      customer.customerType === 'Government' ? 'Kamu' : 'Sivil Toplum'}
-                  </Tag>
+                  </span>
                 </div>
                 <div>
                   <p className="text-xs text-slate-400 mb-1">İrtibat Kişisi</p>
@@ -497,21 +493,19 @@ export default function CustomerDetailPage() {
                 </div>
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Durum</p>
-                  <Tag
-                    icon={customer.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
-                    className={`border-0 ${
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium ${
                       customer.isActive
                         ? 'bg-emerald-50 text-emerald-700'
                         : 'bg-slate-100 text-slate-500'
-                    }`}
-                  >
+                    }`}>
+                    {customer.isActive ? <CheckCircleIcon className="w-3.5 h-3.5" /> : <XCircleIcon className="w-3.5 h-3.5" />}
                     {customer.isActive ? 'Aktif' : 'Pasif'}
-                  </Tag>
+                  </span>
                 </div>
                 {customer.industry && (
                   <div>
                     <p className="text-xs text-slate-400 mb-1">Sektör</p>
-                    <Tag color="blue" className="m-0">{customer.industry}</Tag>
+                    <span className="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-blue-50 text-blue-700">{customer.industry}</span>
                   </div>
                 )}
                 {customer.businessEntityType && (
@@ -677,16 +671,14 @@ export default function CustomerDetailPage() {
                   </div>
                   <div>
                     <p className="text-xs text-slate-400 mb-1">e-Fatura Mükellefi</p>
-                    <Tag
-                      icon={customer.eInvoiceRegistered ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
-                      className={`border-0 m-0 ${
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium ${
                         customer.eInvoiceRegistered
                           ? 'bg-emerald-50 text-emerald-700'
                           : 'bg-slate-100 text-slate-500'
-                      }`}
-                    >
+                      }`}>
+                      {customer.eInvoiceRegistered ? <CheckCircleIcon className="w-3.5 h-3.5" /> : <XCircleIcon className="w-3.5 h-3.5" />}
                       {customer.eInvoiceRegistered ? 'Evet' : 'Hayır'}
-                    </Tag>
+                    </span>
                   </div>
                   {customer.eInvoiceStartDate && (
                     <div>
@@ -714,51 +706,57 @@ export default function CustomerDetailPage() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <div className="flex items-center gap-3">
-                      {customer.kvkkDataProcessingConsent ? (
-                        <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
-                      ) : (
-                        <XCircleIcon className="w-5 h-5 text-slate-400" />
-                      )}
-                      <div>
-                        <p className="text-sm font-medium text-slate-900 m-0">Kişisel Veri İşleme İzni</p>
-                        <p className="text-xs text-slate-500 m-0">Veri toplama, işleme ve saklama</p>
+                      <div className="flex-shrink-0">
+                        {customer.kvkkDataProcessingConsent ? (
+                          <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
+                        ) : (
+                          <XCircleIcon className="w-5 h-5 text-slate-400" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-slate-900 m-0 leading-tight">Kişisel Veri İşleme İzni</p>
+                        <p className="text-xs text-slate-500 m-0 leading-tight mt-0.5">Veri toplama, işleme ve saklama</p>
                       </div>
                     </div>
-                    <Tag className={`border-0 m-0 ${customer.kvkkDataProcessingConsent ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-medium flex-shrink-0 ml-3 ${customer.kvkkDataProcessingConsent ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
                       {customer.kvkkDataProcessingConsent ? 'Onaylı' : 'Onaysız'}
-                    </Tag>
+                    </span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <div className="flex items-center gap-3">
-                      {customer.kvkkMarketingConsent ? (
-                        <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
-                      ) : (
-                        <XCircleIcon className="w-5 h-5 text-slate-400" />
-                      )}
-                      <div>
-                        <p className="text-sm font-medium text-slate-900 m-0">Pazarlama İletişimi İzni</p>
-                        <p className="text-xs text-slate-500 m-0">Tanıtım ve pazarlama amaçlı iletişim</p>
+                      <div className="flex-shrink-0">
+                        {customer.kvkkMarketingConsent ? (
+                          <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
+                        ) : (
+                          <XCircleIcon className="w-5 h-5 text-slate-400" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-slate-900 m-0 leading-tight">Pazarlama İletişimi İzni</p>
+                        <p className="text-xs text-slate-500 m-0 leading-tight mt-0.5">Tanıtım ve pazarlama amaçlı iletişim</p>
                       </div>
                     </div>
-                    <Tag className={`border-0 m-0 ${customer.kvkkMarketingConsent ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-medium flex-shrink-0 ml-3 ${customer.kvkkMarketingConsent ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
                       {customer.kvkkMarketingConsent ? 'Onaylı' : 'Onaysız'}
-                    </Tag>
+                    </span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <div className="flex items-center gap-3">
-                      {customer.kvkkCommunicationConsent ? (
-                        <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
-                      ) : (
-                        <XCircleIcon className="w-5 h-5 text-slate-400" />
-                      )}
-                      <div>
-                        <p className="text-sm font-medium text-slate-900 m-0">Elektronik İletişim İzni</p>
-                        <p className="text-xs text-slate-500 m-0">E-posta, SMS ve telefon ile iletişim</p>
+                      <div className="flex-shrink-0">
+                        {customer.kvkkCommunicationConsent ? (
+                          <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
+                        ) : (
+                          <XCircleIcon className="w-5 h-5 text-slate-400" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-slate-900 m-0 leading-tight">Elektronik İletişim İzni</p>
+                        <p className="text-xs text-slate-500 m-0 leading-tight mt-0.5">E-posta, SMS ve telefon ile iletişim</p>
                       </div>
                     </div>
-                    <Tag className={`border-0 m-0 ${customer.kvkkCommunicationConsent ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-medium flex-shrink-0 ml-3 ${customer.kvkkCommunicationConsent ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
                       {customer.kvkkCommunicationConsent ? 'Onaylı' : 'Onaysız'}
-                    </Tag>
+                    </span>
                   </div>
                   {customer.kvkkConsentDate && (
                     <p className="text-xs text-slate-500 mt-2">
