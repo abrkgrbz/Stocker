@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Drawer, Form, Input, Select, DatePicker, Row, Col, Card, Space, Alert, Steps, Button, Spin, Tag } from 'antd';
+import { Modal, Form, Input, Select, DatePicker, Row, Col, Card, Space, Alert, Steps, Button, Spin, Tag } from 'antd';
 import { showError, showApiError } from '@/lib/utils/notifications';
 import {
   PhoneIcon,
@@ -260,22 +260,41 @@ export function ActivityModal({
   };
 
   return (
-    <Drawer
+    <Modal
       title={
         <div className="flex items-center gap-3">
-          <div className="text-lg font-semibold text-gray-800">
+          <div className="text-lg font-semibold text-slate-900">
             {isEditMode ? 'Aktiviteyi Düzenle' : 'Yeni Aktivite Oluştur'}
           </div>
         </div>
       }
       open={open}
-      onClose={handleCancel}
-      width={800}
+      onCancel={handleCancel}
+      width={900}
       destroyOnClose
+      centered
       styles={{
         mask: {
-          backdropFilter: 'blur(8px)',
-          backgroundColor: 'rgba(0, 0, 0, 0.45)',
+          backdropFilter: 'blur(4px)',
+          backgroundColor: 'rgba(15, 23, 42, 0.4)',
+        },
+        content: {
+          borderRadius: '12px',
+          overflow: 'hidden',
+        },
+        header: {
+          borderBottom: '1px solid #e2e8f0',
+          padding: '20px 24px',
+          marginBottom: 0,
+        },
+        body: {
+          padding: '24px',
+          maxHeight: 'calc(100vh - 280px)',
+          overflowY: 'auto',
+        },
+        footer: {
+          borderTop: '1px solid #e2e8f0',
+          padding: '16px 24px',
         },
       }}
       footer={
@@ -289,7 +308,7 @@ export function ActivityModal({
             Geri
           </Button>
 
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-slate-500">
             Adım {currentStep + 1} / {steps.length}
           </div>
 
@@ -677,7 +696,7 @@ export function ActivityModal({
           </div>
         )}
       </Form>
-    </Drawer>
+    </Modal>
   );
 }
 
