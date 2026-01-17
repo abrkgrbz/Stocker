@@ -36,7 +36,7 @@ public class DeleteCustomerSegmentCommandHandler : IRequestHandler<DeleteCustome
     {
         var tenantId = _unitOfWork.TenantId;
 
-        var segment = await _unitOfWork.ReadRepository<Domain.Entities.CustomerSegment>().AsQueryable()
+        var segment = await _unitOfWork.Repository<Domain.Entities.CustomerSegment>().AsQueryable()
             .Include(s => s.Members)
             .FirstOrDefaultAsync(s => s.Id == request.Id && s.TenantId == tenantId, cancellationToken);
 
