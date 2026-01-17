@@ -57,6 +57,22 @@ public class TenantResolver : ITenantResolver
         return await ResolveAsync(headerValue);
     }
 
+
+    public async Task<IReadOnlyList<TenantInfo>> GetAllActiveTenantsAsync()
+    {
+        var tenants = await _masterDbContext.Tenants
+            .Include(t => t.Domains)
+            .Where(t => t.IsActive)
+            .ToListAsync();
+
+        return tenants
+            .Select(MapToTenantInfo)
+            .Where(t => t != null)
+            .Cast<TenantInfo>()
+            .ToList()
+            .AsReadOnly();
+    }
+
     private TenantInfo? MapToTenantInfo(Tenant? tenant)
     {
         if (tenant == null || !tenant.IsActive)

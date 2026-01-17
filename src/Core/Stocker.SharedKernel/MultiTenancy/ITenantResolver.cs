@@ -6,6 +6,11 @@ public interface ITenantResolver
     Task<TenantInfo?> ResolveByIdAsync(Guid tenantId);
     Task<TenantInfo?> ResolveByDomainAsync(string domain);
     Task<TenantInfo?> ResolveByHeaderAsync(string headerValue);
+    
+    /// <summary>
+    /// Gets all active tenants for background job processing
+    /// </summary>
+    Task<IReadOnlyList<TenantInfo>> GetAllActiveTenantsAsync();
 }
 
 public class TenantInfo

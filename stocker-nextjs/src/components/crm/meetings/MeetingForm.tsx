@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Form, Input, Select, DatePicker } from 'antd';
-import { CalendarIcon, VideoCameraIcon } from '@heroicons/react/24/outline';
+import { Form, Input, Select, DatePicker, Checkbox, InputNumber, Button, Tag } from 'antd';
+import { CalendarIcon, VideoCameraIcon, BellIcon, UserPlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import type { MeetingDto } from '@/lib/api/services/crm.types';
 import { MeetingType, MeetingPriority, MeetingLocationType, MeetingStatus } from '@/lib/api/services/crm.types';
-import { useCustomers } from '@/lib/api/hooks/useCRM';
+import { useCustomers, useOpportunities } from '@/lib/api/hooks/useCRM';
 
 const { TextArea } = Input;
 
@@ -65,6 +65,17 @@ const onlinePlatformOptions = [
   { value: 'Other', label: 'Diğer' },
 ];
 
+// Reminder options (minutes before)
+const reminderOptions = [
+  { value: 5, label: '5 dakika önce' },
+  { value: 10, label: '10 dakika önce' },
+  { value: 15, label: '15 dakika önce' },
+  { value: 30, label: '30 dakika önce' },
+  { value: 60, label: '1 saat önce' },
+  { value: 120, label: '2 saat önce' },
+  { value: 1440, label: '1 gün önce' },
+];
+
 interface MeetingFormProps {
   form: ReturnType<typeof Form.useForm>[0];
   initialValues?: Partial<MeetingDto> & Record<string, any>;
@@ -75,8 +86,15 @@ interface MeetingFormProps {
 export default function MeetingForm({ form, initialValues, onFinish, loading }: MeetingFormProps) {
   const [priority, setPriority] = useState<MeetingPriority>(MeetingPriority.Normal);
   const [locationType, setLocationType] = useState<MeetingLocationType>(MeetingLocationType.InPerson);
+  const [hasReminder, setHasReminder] = useState(false);
+  const [attendeeEmail, setAttendeeEmail] = useState('');
+  const [attendees, setAttendees] = useState<string[]>([]);
+
   const { data: customersData } = useCustomers({ pageSize: 100 });
   const customers = customersData?.items || [];
+
+  const { data: opportunitiesData } = useOpportunities({ pageSize: 100 });
+  const opportunities = opportunitiesData?.items || [];
 
   useEffect(() => {
     if (initialValues) {
@@ -85,6 +103,11 @@ export default function MeetingForm({ form, initialValues, onFinish, loading }: 
       });
       setPriority(initialValues.priority || MeetingPriority.Normal);
       setLocationType(initialValues.locationType || MeetingLocationType.InPerson);
+      setHasReminder(initialValues.hasReminder || false);
+      // Load attendees from initialValues if editing
+      if (initialValues.attendees && Array.isArray(initialValues.attendees)) {
+        setAttendees(initialValues.attendees.map((a: any) => a.email));
+      }
     } else {
       form.setFieldsValue({
         priority: MeetingPriority.Normal,
@@ -93,6 +116,26 @@ export default function MeetingForm({ form, initialValues, onFinish, loading }: 
       });
     }
   }, [form, initialValues]);
+
+  // Email validation regex
+  const isValidEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const addAttendee = () => {
+    if (attendeeEmail && isValidEmail(attendeeEmail) && !attendees.includes(attendeeEmail)) {
+      const newAttendees = [...attendees, attendeeEmail];
+      setAttendees(newAttendees);
+      form.setFieldValue('attendeeEmails', newAttendees);
+      setAttendeeEmail('');
+    }
+  };
+
+  const removeAttendee = (email: string) => {
+    const newAttendees = attendees.filter(a => a !== email);
+    setAttendees(newAttendees);
+    form.setFieldValue('attendeeEmails', newAttendees);
+  };
 
   const showOnlineFields = locationType === MeetingLocationType.Online || locationType === MeetingLocationType.Hybrid;
   const showPhysicalFields = locationType === MeetingLocationType.InPerson || locationType === MeetingLocationType.Hybrid;
@@ -237,7 +280,7 @@ export default function MeetingForm({ form, initialValues, onFinish, loading }: 
                   />
                 </Form.Item>
               </div>
-              <div className="col-span-12">
+              <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Müşteri</label>
                 <Form.Item name="customerId" className="mb-0">
                   <Select
@@ -246,6 +289,19 @@ export default function MeetingForm({ form, initialValues, onFinish, loading }: 
                     showSearch
                     optionFilterProp="label"
                     options={customers.map(c => ({ value: c.id, label: c.companyName }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Fırsat</label>
+                <Form.Item name="opportunityId" className="mb-0">
+                  <Select
+                    placeholder="Fırsat seçin (opsiyonel)"
+                    allowClear
+                    showSearch
+                    optionFilterProp="label"
+                    options={opportunities.map(o => ({ value: o.id, label: `${o.name} - ${o.customerName || 'Müşteri Yok'}` }))}
                     className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
@@ -352,6 +408,97 @@ export default function MeetingForm({ form, initialValues, onFinish, loading }: 
               </div>
             </div>
           )}
+
+          {/* ─────────────── KATILIMCILAR ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Katılımcılar
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <div className="flex gap-2 mb-3">
+                  <Input
+                    placeholder="E-posta adresi girin"
+                    value={attendeeEmail}
+                    onChange={(e) => setAttendeeEmail(e.target.value)}
+                    onPressEnter={(e) => {
+                      e.preventDefault();
+                      addAttendee();
+                    }}
+                    prefix={<UserPlusIcon className="w-4 h-4 text-slate-400" />}
+                    className="flex-1 !bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                  <Button
+                    type="default"
+                    onClick={addAttendee}
+                    disabled={!attendeeEmail || !isValidEmail(attendeeEmail)}
+                    className="!bg-slate-100 !border-slate-300 hover:!bg-slate-200 hover:!border-slate-400"
+                  >
+                    Ekle
+                  </Button>
+                </div>
+                {attendees.length > 0 && (
+                  <div className="flex flex-wrap gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    {attendees.map((email) => (
+                      <Tag
+                        key={email}
+                        closable
+                        onClose={() => removeAttendee(email)}
+                        className="!bg-white !border-slate-300 !text-slate-700 !text-sm !px-3 !py-1 !rounded-full flex items-center gap-1"
+                        closeIcon={<XMarkIcon className="w-3 h-3 text-slate-400 hover:text-slate-600" />}
+                      >
+                        {email}
+                      </Tag>
+                    ))}
+                  </div>
+                )}
+                {attendees.length === 0 && (
+                  <p className="text-sm text-slate-500 italic">Henüz katılımcı eklenmedi</p>
+                )}
+                {/* Hidden field for form submission */}
+                <Form.Item name="attendeeEmails" hidden>
+                  <Input />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── HATIRLATMA ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Hatırlatma
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <div className="flex items-center gap-4">
+                  <Checkbox
+                    checked={hasReminder}
+                    onChange={(e) => {
+                      setHasReminder(e.target.checked);
+                      if (!e.target.checked) {
+                        form.setFieldValue('reminderMinutesBefore', undefined);
+                      }
+                    }}
+                    className="[&_.ant-checkbox-inner]:!bg-slate-50 [&_.ant-checkbox-inner]:!border-slate-300 [&_.ant-checkbox-checked_.ant-checkbox-inner]:!bg-slate-900 [&_.ant-checkbox-checked_.ant-checkbox-inner]:!border-slate-900"
+                  >
+                    <span className="text-sm text-slate-700 flex items-center gap-2">
+                      <BellIcon className="w-4 h-4 text-slate-500" />
+                      Hatırlatma Gönder
+                    </span>
+                  </Checkbox>
+                  {hasReminder && (
+                    <Form.Item name="reminderMinutesBefore" className="mb-0 flex-1" initialValue={30}>
+                      <Select
+                        options={reminderOptions}
+                        placeholder="Ne kadar önce?"
+                        className="w-full max-w-xs [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                      />
+                    </Form.Item>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* ─────────────── GÜNDEM ─────────────── */}
           <div>

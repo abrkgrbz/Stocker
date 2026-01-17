@@ -14,7 +14,7 @@ export function useNotificationHub() {
     hub: 'notification',
     events: {
       // Receive new notification
-      ReceiveNotification: (notification: Notification) => {
+      ReceiveNotification: (notification: Notification & { metadata?: Record<string, any>; actionUrl?: string; priority?: string }) => {
         logger.info('Received notification:', notification);
         addNotification(notification);
 
@@ -22,6 +22,66 @@ export function useNotificationHub() {
         if (notification.type === 'error' || notification.type === 'warning') {
           toast[notification.type](notification.title, {
             description: notification.message,
+          });
+        }
+
+        // Show toast for CRM notifications (meetings, reminders, etc.)
+        const alertType = notification.metadata?.alertType;
+        if (alertType === 'meeting_reminder') {
+          toast.info('🔔 ' + notification.title, {
+            description: notification.message,
+            duration: 10000, // 10 seconds for meeting reminders
+            action: notification.actionUrl ? {
+              label: 'Toplantıya Git',
+              onClick: () => {
+                window.location.href = notification.actionUrl!;
+              },
+            } : undefined,
+          });
+        } else if (alertType === 'meeting_cancelled') {
+          toast.warning('❌ ' + notification.title, {
+            description: notification.message,
+            duration: 8000,
+            action: notification.actionUrl ? {
+              label: 'Detaylar',
+              onClick: () => {
+                window.location.href = notification.actionUrl!;
+              },
+            } : undefined,
+          });
+        } else if (alertType === 'task_reminder' || alertType === 'task_due') {
+          toast.info('📋 ' + notification.title, {
+            description: notification.message,
+            duration: 8000,
+            action: notification.actionUrl ? {
+              label: 'Görevi Aç',
+              onClick: () => {
+                window.location.href = notification.actionUrl!;
+              },
+            } : undefined,
+          });
+        } else if (alertType === 'activity_reminder') {
+          toast.info('📌 ' + notification.title, {
+            description: notification.message,
+            duration: 8000,
+            action: notification.actionUrl ? {
+              label: 'Detaylar',
+              onClick: () => {
+                window.location.href = notification.actionUrl!;
+              },
+            } : undefined,
+          });
+        } else if (notification.priority === 'High' || notification.priority === 'Urgent' || notification.priority === 'Critical') {
+          // Show toast for high priority CRM notifications
+          toast.info(notification.title, {
+            description: notification.message,
+            duration: 6000,
+            action: notification.actionUrl ? {
+              label: 'Görüntüle',
+              onClick: () => {
+                window.location.href = notification.actionUrl!;
+              },
+            } : undefined,
           });
         }
       },
