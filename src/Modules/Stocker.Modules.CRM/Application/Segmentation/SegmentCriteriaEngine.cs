@@ -85,34 +85,116 @@ public class SegmentCriteriaEngine
         var field = condition.Field.ToLowerInvariant();
         var op = condition.Operator.ToUpperInvariant();
 
+        // Direct LINQ expressions for EF Core compatibility
         switch (field)
         {
             case "annualrevenue":
-                return ApplyDecimalCondition(query, c => c.AnnualRevenue, op, condition.Value);
+                if (condition.Value == null) return query;
+                var decimalValue = Convert.ToDecimal(condition.Value);
+                return op switch
+                {
+                    ">" => query.Where(c => c.AnnualRevenue != null && c.AnnualRevenue > decimalValue),
+                    ">=" => query.Where(c => c.AnnualRevenue != null && c.AnnualRevenue >= decimalValue),
+                    "<" => query.Where(c => c.AnnualRevenue != null && c.AnnualRevenue < decimalValue),
+                    "<=" => query.Where(c => c.AnnualRevenue != null && c.AnnualRevenue <= decimalValue),
+                    "=" => query.Where(c => c.AnnualRevenue != null && c.AnnualRevenue == decimalValue),
+                    "!=" => query.Where(c => c.AnnualRevenue == null || c.AnnualRevenue != decimalValue),
+                    _ => query
+                };
 
             case "numberofemployees":
-                return ApplyIntCondition(query, c => c.NumberOfEmployees, op, condition.Value);
+                if (condition.Value == null) return query;
+                var intValue = Convert.ToInt32(condition.Value);
+                return op switch
+                {
+                    ">" => query.Where(c => c.NumberOfEmployees != null && c.NumberOfEmployees > intValue),
+                    ">=" => query.Where(c => c.NumberOfEmployees != null && c.NumberOfEmployees >= intValue),
+                    "<" => query.Where(c => c.NumberOfEmployees != null && c.NumberOfEmployees < intValue),
+                    "<=" => query.Where(c => c.NumberOfEmployees != null && c.NumberOfEmployees <= intValue),
+                    "=" => query.Where(c => c.NumberOfEmployees != null && c.NumberOfEmployees == intValue),
+                    "!=" => query.Where(c => c.NumberOfEmployees == null || c.NumberOfEmployees != intValue),
+                    _ => query
+                };
 
             case "industry":
-                return ApplyStringCondition(query, c => c.Industry, op, condition.Value);
+                if (condition.Value == null) return query;
+                var industryValue = condition.Value.ToString()!;
+                return op switch
+                {
+                    "=" => query.Where(c => c.Industry != null && c.Industry == industryValue),
+                    "!=" => query.Where(c => c.Industry == null || c.Industry != industryValue),
+                    "CONTAINS" => query.Where(c => c.Industry != null && c.Industry.Contains(industryValue)),
+                    _ => query
+                };
 
             case "city":
-                return ApplyStringCondition(query, c => c.City, op, condition.Value);
+                if (condition.Value == null) return query;
+                var cityValue = condition.Value.ToString()!;
+                return op switch
+                {
+                    "=" => query.Where(c => c.City != null && c.City == cityValue),
+                    "!=" => query.Where(c => c.City == null || c.City != cityValue),
+                    "CONTAINS" => query.Where(c => c.City != null && c.City.Contains(cityValue)),
+                    _ => query
+                };
 
             case "state":
-                return ApplyStringCondition(query, c => c.State, op, condition.Value);
+                if (condition.Value == null) return query;
+                var stateValue = condition.Value.ToString()!;
+                return op switch
+                {
+                    "=" => query.Where(c => c.State != null && c.State == stateValue),
+                    "!=" => query.Where(c => c.State == null || c.State != stateValue),
+                    "CONTAINS" => query.Where(c => c.State != null && c.State.Contains(stateValue)),
+                    _ => query
+                };
 
             case "country":
-                return ApplyStringCondition(query, c => c.Country, op, condition.Value);
+                if (condition.Value == null) return query;
+                var countryValue = condition.Value.ToString()!;
+                return op switch
+                {
+                    "=" => query.Where(c => c.Country != null && c.Country == countryValue),
+                    "!=" => query.Where(c => c.Country == null || c.Country != countryValue),
+                    "CONTAINS" => query.Where(c => c.Country != null && c.Country.Contains(countryValue)),
+                    _ => query
+                };
 
             case "companyname":
-                return ApplyStringCondition(query, c => c.CompanyName, op, condition.Value);
+                if (condition.Value == null) return query;
+                var companyValue = condition.Value.ToString()!;
+                return op switch
+                {
+                    "=" => query.Where(c => c.CompanyName != null && c.CompanyName == companyValue),
+                    "!=" => query.Where(c => c.CompanyName == null || c.CompanyName != companyValue),
+                    "CONTAINS" => query.Where(c => c.CompanyName != null && c.CompanyName.Contains(companyValue)),
+                    _ => query
+                };
 
             case "email":
-                return ApplyStringCondition(query, c => c.Email, op, condition.Value);
+                if (condition.Value == null) return query;
+                var emailValue = condition.Value.ToString()!;
+                return op switch
+                {
+                    "=" => query.Where(c => c.Email != null && c.Email == emailValue),
+                    "!=" => query.Where(c => c.Email == null || c.Email != emailValue),
+                    "CONTAINS" => query.Where(c => c.Email != null && c.Email.Contains(emailValue)),
+                    _ => query
+                };
 
             case "createdat":
-                return ApplyDateCondition(query, c => c.CreatedAt, op, condition.Value);
+                if (condition.Value == null) return query;
+                var dateValue = Convert.ToDateTime(condition.Value);
+                return op switch
+                {
+                    ">" => query.Where(c => c.CreatedAt > dateValue),
+                    ">=" => query.Where(c => c.CreatedAt >= dateValue),
+                    "<" => query.Where(c => c.CreatedAt < dateValue),
+                    "<=" => query.Where(c => c.CreatedAt <= dateValue),
+                    "=" => query.Where(c => c.CreatedAt.Date == dateValue.Date),
+                    "!=" => query.Where(c => c.CreatedAt.Date != dateValue.Date),
+                    _ => query
+                };
 
             default:
                 return query;
@@ -161,30 +243,8 @@ public class SegmentCriteriaEngine
         }
     }
 
-    // Decimal field conditions
-    private IQueryable<Customer> ApplyDecimalCondition(
-        IQueryable<Customer> query,
-        Func<Customer, decimal?> selector,
-        string op,
-        object? value)
-    {
-        if (value == null) return query;
-
-        var decimalValue = Convert.ToDecimal(value);
-
-        return op switch
-        {
-            ">" => query.Where(c => selector(c) != null && selector(c)!.Value > decimalValue),
-            ">=" => query.Where(c => selector(c) != null && selector(c)!.Value >= decimalValue),
-            "<" => query.Where(c => selector(c) != null && selector(c)!.Value < decimalValue),
-            "<=" => query.Where(c => selector(c) != null && selector(c)!.Value <= decimalValue),
-            "=" => query.Where(c => selector(c) != null && selector(c)!.Value == decimalValue),
-            "!=" => query.Where(c => selector(c) == null || selector(c)!.Value != decimalValue),
-            _ => query
-        };
-    }
-
-    private bool EvaluateDecimal(decimal? fieldValue, string op, object? conditionValue)
+    // Evaluation helpers for OR logic (in-memory)
+    private static bool EvaluateDecimal(decimal? fieldValue, string op, object? conditionValue)
     {
         if (conditionValue == null) return false;
         var decimalValue = Convert.ToDecimal(conditionValue);
@@ -201,30 +261,7 @@ public class SegmentCriteriaEngine
         };
     }
 
-    // Integer field conditions
-    private IQueryable<Customer> ApplyIntCondition(
-        IQueryable<Customer> query,
-        Func<Customer, int?> selector,
-        string op,
-        object? value)
-    {
-        if (value == null) return query;
-
-        var intValue = Convert.ToInt32(value);
-
-        return op switch
-        {
-            ">" => query.Where(c => selector(c) != null && selector(c)!.Value > intValue),
-            ">=" => query.Where(c => selector(c) != null && selector(c)!.Value >= intValue),
-            "<" => query.Where(c => selector(c) != null && selector(c)!.Value < intValue),
-            "<=" => query.Where(c => selector(c) != null && selector(c)!.Value <= intValue),
-            "=" => query.Where(c => selector(c) != null && selector(c)!.Value == intValue),
-            "!=" => query.Where(c => selector(c) == null || selector(c)!.Value != intValue),
-            _ => query
-        };
-    }
-
-    private bool EvaluateInt(int? fieldValue, string op, object? conditionValue)
+    private static bool EvaluateInt(int? fieldValue, string op, object? conditionValue)
     {
         if (conditionValue == null) return false;
         var intValue = Convert.ToInt32(conditionValue);
@@ -241,31 +278,7 @@ public class SegmentCriteriaEngine
         };
     }
 
-    // String field conditions
-    private IQueryable<Customer> ApplyStringCondition(
-        IQueryable<Customer> query,
-        Func<Customer, string?> selector,
-        string op,
-        object? value)
-    {
-        if (value == null) return query;
-
-        var stringValue = value.ToString()!;
-
-        return op switch
-        {
-            "=" => query.Where(c => selector(c) != null && selector(c) == stringValue),
-            "!=" => query.Where(c => selector(c) == null || selector(c) != stringValue),
-            "CONTAINS" => query.Where(c => selector(c) != null && selector(c)!.Contains(stringValue)),
-            "STARTS_WITH" => query.Where(c => selector(c) != null && selector(c)!.StartsWith(stringValue)),
-            "ENDS_WITH" => query.Where(c => selector(c) != null && selector(c)!.EndsWith(stringValue)),
-            "IN" => query.Where(c => selector(c) != null && ParseArray(value).Contains(selector(c)!)),
-            "NOT_IN" => query.Where(c => selector(c) == null || !ParseArray(value).Contains(selector(c)!)),
-            _ => query
-        };
-    }
-
-    private bool EvaluateString(string? fieldValue, string op, object? conditionValue)
+    private static bool EvaluateString(string? fieldValue, string op, object? conditionValue)
     {
         if (conditionValue == null) return false;
         var stringValue = conditionValue.ToString()!;
@@ -283,30 +296,7 @@ public class SegmentCriteriaEngine
         };
     }
 
-    // Date field conditions
-    private IQueryable<Customer> ApplyDateCondition(
-        IQueryable<Customer> query,
-        Func<Customer, DateTime> selector,
-        string op,
-        object? value)
-    {
-        if (value == null) return query;
-
-        var dateValue = Convert.ToDateTime(value);
-
-        return op switch
-        {
-            ">" => query.Where(c => selector(c) > dateValue),
-            ">=" => query.Where(c => selector(c) >= dateValue),
-            "<" => query.Where(c => selector(c) < dateValue),
-            "<=" => query.Where(c => selector(c) <= dateValue),
-            "=" => query.Where(c => selector(c).Date == dateValue.Date),
-            "!=" => query.Where(c => selector(c).Date != dateValue.Date),
-            _ => query
-        };
-    }
-
-    private bool EvaluateDate(DateTime fieldValue, string op, object? conditionValue)
+    private static bool EvaluateDate(DateTime fieldValue, string op, object? conditionValue)
     {
         if (conditionValue == null) return false;
         var dateValue = Convert.ToDateTime(conditionValue);
@@ -324,7 +314,7 @@ public class SegmentCriteriaEngine
     }
 
     // Helper to parse array values for IN/NOT_IN operators
-    private List<string> ParseArray(object value)
+    private static List<string> ParseArray(object value)
     {
         if (value is JsonElement jsonElement && jsonElement.ValueKind == JsonValueKind.Array)
         {
