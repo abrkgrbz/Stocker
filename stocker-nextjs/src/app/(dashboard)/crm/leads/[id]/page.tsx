@@ -540,39 +540,124 @@ export default function LeadDetailPage() {
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          CONVERT MODAL
+          CONVERT MODAL - Custom styled modal
       ═══════════════════════════════════════════════════════════════ */}
       <Modal
-        title="Müşteriye Dönüştür"
         open={convertModalOpen}
         onCancel={() => setConvertModalOpen(false)}
-        onOk={handleConvertToCustomer}
-        okText="Dönüştür"
-        cancelText="İptal"
-        confirmLoading={convertToCustomer.isPending}
+        footer={null}
+        closable={false}
+        centered
+        width={480}
+        className="convert-lead-modal"
+        styles={{
+          content: {
+            padding: 0,
+            borderRadius: '16px',
+            overflow: 'hidden',
+          },
+          mask: {
+            backdropFilter: 'blur(4px)',
+            background: 'rgba(15, 23, 42, 0.4)',
+          },
+        }}
       >
-        <div className="py-4">
-          <p className="text-slate-600 mb-4">
-            <strong>{fullName}</strong> adlı lead'i müşteriye dönüştürmek istediğinize emin misiniz?
-          </p>
-          <div className="bg-slate-50 rounded-lg p-4 space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-slate-500">E-posta:</span>
-              <span className="font-medium">{lead.email}</span>
+        {/* Modal Header */}
+        <div className="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-emerald-50 to-teal-50">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
+              <UserPlusIcon className="w-6 h-6 text-emerald-600" />
             </div>
-            {lead.companyName && (
-              <div className="flex justify-between">
-                <span className="text-slate-500">Firma:</span>
-                <span className="font-medium">{lead.companyName}</span>
-              </div>
-            )}
-            {lead.phone && (
-              <div className="flex justify-between">
-                <span className="text-slate-500">Telefon:</span>
-                <span className="font-medium">{lead.phone}</span>
-              </div>
-            )}
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900 m-0">
+                Müşteriye Dönüştür
+              </h3>
+              <p className="text-sm text-slate-500 m-0 mt-0.5">
+                Lead bilgileri yeni müşteri kaydına aktarılacak
+              </p>
+            </div>
           </div>
+        </div>
+
+        {/* Modal Body */}
+        <div className="px-6 py-5">
+          {/* Lead Preview Card */}
+          <div className="bg-slate-50 rounded-xl p-4 mb-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+                {lead.firstName?.charAt(0)}{lead.lastName?.charAt(0)}
+              </div>
+              <div>
+                <p className="font-semibold text-slate-900 m-0">{fullName}</p>
+                {lead.companyName && (
+                  <p className="text-sm text-slate-500 m-0">{lead.companyName}</p>
+                )}
+              </div>
+            </div>
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-3 text-sm">
+                <EnvelopeIcon className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                <span className="text-slate-600">{lead.email}</span>
+              </div>
+              {lead.phone && (
+                <div className="flex items-center gap-3 text-sm">
+                  <PhoneIcon className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                  <span className="text-slate-600">{lead.phone}</span>
+                </div>
+              )}
+              {lead.industry && (
+                <div className="flex items-center gap-3 text-sm">
+                  <BuildingOffice2Icon className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                  <span className="text-slate-600">{industryLabels[lead.industry] || lead.industry}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Info Notice */}
+          <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100">
+            <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <CheckCircleIcon className="w-3.5 h-3.5 text-blue-600" />
+            </div>
+            <div className="text-sm text-blue-700">
+              <p className="font-medium m-0">Dönüştürme sonrası:</p>
+              <ul className="mt-1.5 space-y-1 list-disc list-inside text-blue-600">
+                <li>Yeni müşteri kaydı oluşturulacak</li>
+                <li>Lead bilgileri müşteriye aktarılacak</li>
+                <li>Lead durumu "Dönüştürüldü" olarak güncellenecek</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Modal Footer */}
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
+          <button
+            onClick={() => setConvertModalOpen(false)}
+            className="px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            İptal
+          </button>
+          <button
+            onClick={handleConvertToCustomer}
+            disabled={convertToCustomer.isPending}
+            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {convertToCustomer.isPending ? (
+              <>
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Dönüştürülüyor...
+              </>
+            ) : (
+              <>
+                <UserPlusIcon className="w-4 h-4" />
+                Müşteriye Dönüştür
+              </>
+            )}
+          </button>
         </div>
       </Modal>
     </div>

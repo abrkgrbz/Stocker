@@ -470,59 +470,61 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
             </FormField>
           </FormSection>
 
-          {/* ─────────────── İŞLETME BİLGİLERİ ─────────────── */}
-          <FormSection title="İşletme Bilgileri">
-            {/* Şirket Türü - Sadece Kurumsal için */}
-            {formData.customerType === 'Corporate' && (
-              <FormField label="Şirket Türü" span={4}>
+          {/* ─────────────── İŞLETME BİLGİLERİ (Sadece Kurumsal için) ─────────────── */}
+          {formData.customerType !== 'Individual' && (
+            <FormSection title="İşletme Bilgileri">
+              {/* Şirket Türü - Sadece Kurumsal için */}
+              {formData.customerType === 'Corporate' && (
+                <FormField label="Şirket Türü" span={4}>
+                  <Select
+                    value={formData.businessEntityType || null}
+                    onChange={(value) => handleChange('businessEntityType', value || '')}
+                    options={businessEntityTypeOptions}
+                    placeholder="Seçin"
+                    disabled={loading}
+                  />
+                </FormField>
+              )}
+
+              <FormField label="Sektör" span={formData.customerType === 'Corporate' ? 4 : 6}>
                 <Select
-                  value={formData.businessEntityType || null}
-                  onChange={(value) => handleChange('businessEntityType', value || '')}
-                  options={businessEntityTypeOptions}
+                  value={formData.industry || null}
+                  onChange={(value) => handleChange('industry', value || '')}
+                  options={industryOptions}
                   placeholder="Seçin"
                   disabled={loading}
                 />
               </FormField>
-            )}
 
-            <FormField label="Sektör" span={formData.customerType === 'Corporate' ? 4 : 6}>
-              <Select
-                value={formData.industry || null}
-                onChange={(value) => handleChange('industry', value || '')}
-                options={industryOptions}
-                placeholder="Seçin"
-                disabled={loading}
-              />
-            </FormField>
+              <FormField label="Yıllık Gelir" span={formData.customerType === 'Corporate' ? 4 : 6}>
+                <CurrencyInput
+                  value={formData.annualRevenue ?? undefined}
+                  onChange={(value) => handleChange('annualRevenue', value ?? null)}
+                  disabled={loading}
+                />
+              </FormField>
 
-            <FormField label="Yıllık Gelir" span={formData.customerType === 'Corporate' ? 4 : 6}>
-              <CurrencyInput
-                value={formData.annualRevenue ?? undefined}
-                onChange={(value) => handleChange('annualRevenue', value ?? null)}
-                disabled={loading}
-              />
-            </FormField>
+              <FormField label="Çalışan Sayısı" span={4}>
+                <NumberInput
+                  value={formData.numberOfEmployees ?? undefined}
+                  onChange={(value) => handleChange('numberOfEmployees', value ?? null)}
+                  placeholder="0"
+                  min={0}
+                  disabled={loading}
+                />
+              </FormField>
 
-            <FormField label="Çalışan Sayısı" span={4}>
-              <NumberInput
-                value={formData.numberOfEmployees ?? undefined}
-                onChange={(value) => handleChange('numberOfEmployees', value ?? null)}
-                placeholder="0"
-                min={0}
-                disabled={loading}
-              />
-            </FormField>
-
-            <FormField label="Açıklama" span={12}>
-              <Textarea
-                value={formData.description}
-                onChange={(e) => handleChange('description', e.target.value)}
-                placeholder="Müşteri/Şirket hakkında genel bilgi..."
-                rows={2}
-                disabled={loading}
-              />
-            </FormField>
-          </FormSection>
+              <FormField label="Açıklama" span={12}>
+                <Textarea
+                  value={formData.description}
+                  onChange={(e) => handleChange('description', e.target.value)}
+                  placeholder="Müşteri/Şirket hakkında genel bilgi..."
+                  rows={2}
+                  disabled={loading}
+                />
+              </FormField>
+            </FormSection>
+          )}
 
           {/* ─────────────── ADRES BİLGİLERİ ─────────────── */}
           <FormSection title="Adres Bilgileri">

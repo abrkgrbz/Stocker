@@ -62,7 +62,12 @@ public class GetLeadByIdQueryHandler : IRequestHandler<GetLeadByIdQuery, LeadDto
             IsConverted = lead.IsConverted,
             Score = lead.Score,
             CreatedAt = lead.CreatedAt,
-            UpdatedAt = lead.UpdatedAt
+            UpdatedAt = lead.UpdatedAt,
+            // KVKK Consent
+            KvkkDataProcessingConsent = lead.KvkkDataProcessingConsent,
+            KvkkMarketingConsent = lead.KvkkMarketingConsent,
+            KvkkCommunicationConsent = lead.KvkkCommunicationConsent,
+            KvkkConsentDate = lead.KvkkConsentDate
         };
     }
 }

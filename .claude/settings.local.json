@@ -125,7 +125,8 @@
       "mcp__serena__activate_project",
       "Bash(pip install:*)",
       "Bash(python:*)",
-      "mcp__serena__find_symbol"
+      "mcp__serena__find_symbol",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []

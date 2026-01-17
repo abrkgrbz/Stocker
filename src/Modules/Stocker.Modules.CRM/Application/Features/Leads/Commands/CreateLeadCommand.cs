@@ -156,6 +156,23 @@ public class CreateLeadCommandHandler : IRequestHandler<CreateLeadCommand, Resul
             lead.AssignTo(request.LeadData.AssignedToUserId.Value);
         }
 
+        // Set the lead score
+        if (request.LeadData.Score > 0)
+        {
+            lead.SetScore(request.LeadData.Score);
+        }
+
+        // Set KVKK consent
+        if (request.LeadData.KvkkDataProcessingConsent ||
+            request.LeadData.KvkkMarketingConsent ||
+            request.LeadData.KvkkCommunicationConsent)
+        {
+            lead.UpdateKvkkConsent(
+                request.LeadData.KvkkDataProcessingConsent,
+                request.LeadData.KvkkMarketingConsent,
+                request.LeadData.KvkkCommunicationConsent);
+        }
+
         // Save to repository - using the same UnitOfWork ensures same DbContext
         await _unitOfWork.Leads.AddAsync(lead, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -198,7 +215,12 @@ public class CreateLeadCommandHandler : IRequestHandler<CreateLeadCommand, Resul
             IsConverted = lead.IsConverted,
             Score = lead.Score,
             CreatedAt = lead.CreatedAt,
-            UpdatedAt = lead.UpdatedAt
+            UpdatedAt = lead.UpdatedAt,
+            // KVKK Consent
+            KvkkDataProcessingConsent = lead.KvkkDataProcessingConsent,
+            KvkkMarketingConsent = lead.KvkkMarketingConsent,
+            KvkkCommunicationConsent = lead.KvkkCommunicationConsent,
+            KvkkConsentDate = lead.KvkkConsentDate
         };
     }
 }

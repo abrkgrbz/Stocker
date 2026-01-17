@@ -39,6 +39,11 @@ public class LeadDto
     public DateTime? UpdatedAt { get; set; }
     public List<ActivityDto>? Activities { get; set; }
     public List<NoteDto>? Notes { get; set; }
+    // KVKK Consent Fields
+    public bool KvkkDataProcessingConsent { get; set; }
+    public bool KvkkMarketingConsent { get; set; }
+    public bool KvkkCommunicationConsent { get; set; }
+    public DateTime? KvkkConsentDate { get; set; }
 }
 
 /// <summary>
@@ -67,6 +72,11 @@ public class CreateLeadDto
     public int? NumberOfEmployees { get; set; }
     public string? Description { get; set; }
     public Guid? AssignedToUserId { get; set; }
+    public int Score { get; set; } = 50;
+    // KVKK Consent Fields
+    public bool KvkkDataProcessingConsent { get; set; }
+    public bool KvkkMarketingConsent { get; set; }
+    public bool KvkkCommunicationConsent { get; set; }
 }
 
 /// <summary>
@@ -95,4 +105,9 @@ public class UpdateLeadDto
     public int? NumberOfEmployees { get; set; }
     public string? Description { get; set; }
     public Guid? AssignedToUserId { get; set; }
+    public int Score { get; set; }
+    // KVKK Consent Fields
+    public bool KvkkDataProcessingConsent { get; set; }
+    public bool KvkkMarketingConsent { get; set; }
+    public bool KvkkCommunicationConsent { get; set; }
 }

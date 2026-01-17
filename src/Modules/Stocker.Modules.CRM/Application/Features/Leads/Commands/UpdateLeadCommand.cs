@@ -32,6 +32,10 @@ public class UpdateLeadCommand : IRequest<Result<LeadDto>>
     public string? State { get; set; }
     public string? Country { get; set; }
     public string? PostalCode { get; set; }
+    // KVKK Consent Fields
+    public bool KvkkDataProcessingConsent { get; set; }
+    public bool KvkkMarketingConsent { get; set; }
+    public bool KvkkCommunicationConsent { get; set; }
 }
 
 public class UpdateLeadCommandValidator : AbstractValidator<UpdateLeadCommand>
@@ -120,8 +124,19 @@ public class UpdateLeadCommandHandler : IRequestHandler<UpdateLeadCommand, Resul
         if (ratingResult.IsFailure)
             return Result<LeadDto>.Failure(ratingResult.Error);
 
+        // Update score
+        var scoreResult = lead.SetScore(request.Score);
+        if (scoreResult.IsFailure)
+            return Result<LeadDto>.Failure(scoreResult.Error);
+
         // Update description
         lead.UpdateDescription(request.Description);
+
+        // Update KVKK consent
+        lead.UpdateKvkkConsent(
+            request.KvkkDataProcessingConsent,
+            request.KvkkMarketingConsent,
+            request.KvkkCommunicationConsent);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -155,7 +170,12 @@ public class UpdateLeadCommandHandler : IRequestHandler<UpdateLeadCommand, Resul
             IsConverted = lead.IsConverted,
             Score = lead.Score,
             CreatedAt = lead.CreatedAt,
-            UpdatedAt = lead.UpdatedAt
+            UpdatedAt = lead.UpdatedAt,
+            // KVKK Consent
+            KvkkDataProcessingConsent = lead.KvkkDataProcessingConsent,
+            KvkkMarketingConsent = lead.KvkkMarketingConsent,
+            KvkkCommunicationConsent = lead.KvkkCommunicationConsent,
+            KvkkConsentDate = lead.KvkkConsentDate
         };
 
         return Result<LeadDto>.Success(dto);

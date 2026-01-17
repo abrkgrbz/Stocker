@@ -139,6 +139,30 @@ public class Lead : TenantAggregateRoot
     /// </summary>
     public int Score { get; private set; }
 
+    // ═══════════════════════════════════════════════════════════════
+    // KVKK (Turkish GDPR) Consent Fields
+    // ═══════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// KVKK data processing consent
+    /// </summary>
+    public bool KvkkDataProcessingConsent { get; private set; }
+
+    /// <summary>
+    /// KVKK marketing consent
+    /// </summary>
+    public bool KvkkMarketingConsent { get; private set; }
+
+    /// <summary>
+    /// KVKK communication consent
+    /// </summary>
+    public bool KvkkCommunicationConsent { get; private set; }
+
+    /// <summary>
+    /// Date when KVKK consent was given
+    /// </summary>
+    public DateTime? KvkkConsentDate { get; private set; }
+
     /// <summary>
     /// Gets the date when the lead was created
     /// </summary>
@@ -405,7 +429,7 @@ public class Lead : TenantAggregateRoot
     }
 
     /// <summary>
-    /// Updates the lead score
+    /// Updates the lead score by adding points
     /// </summary>
     public Result UpdateScore(int points)
     {
@@ -413,6 +437,20 @@ public class Lead : TenantAggregateRoot
             return Result.Failure(Error.Conflict("Lead.Converted", "Cannot update score of a converted lead"));
 
         Score = Math.Max(0, Math.Min(100, Score + points));
+        UpdatedAt = DateTime.UtcNow;
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Sets the lead score to a specific value
+    /// </summary>
+    public Result SetScore(int score)
+    {
+        if (IsConverted)
+            return Result.Failure(Error.Conflict("Lead.Converted", "Cannot update score of a converted lead"));
+
+        Score = Math.Max(0, Math.Min(100, score));
         UpdatedAt = DateTime.UtcNow;
 
         return Result.Success();
@@ -427,6 +465,32 @@ public class Lead : TenantAggregateRoot
             return Result.Failure(Error.Conflict("Lead.Converted", "Cannot update a converted lead"));
 
         Description = description;
+        UpdatedAt = DateTime.UtcNow;
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Updates KVKK consent information
+    /// </summary>
+    public Result UpdateKvkkConsent(
+        bool dataProcessingConsent,
+        bool marketingConsent,
+        bool communicationConsent)
+    {
+        if (IsConverted)
+            return Result.Failure(Error.Conflict("Lead.Converted", "Cannot update a converted lead"));
+
+        KvkkDataProcessingConsent = dataProcessingConsent;
+        KvkkMarketingConsent = marketingConsent;
+        KvkkCommunicationConsent = communicationConsent;
+
+        // Set consent date if any consent is given
+        if (dataProcessingConsent || marketingConsent || communicationConsent)
+        {
+            KvkkConsentDate = DateTime.UtcNow;
+        }
+
         UpdatedAt = DateTime.UtcNow;
 
         return Result.Success();

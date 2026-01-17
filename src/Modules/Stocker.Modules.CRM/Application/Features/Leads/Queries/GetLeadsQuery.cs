@@ -102,7 +102,12 @@ public class GetLeadsQueryHandler : IRequestHandler<GetLeadsQuery, PagedResult<L
             IsConverted = l.IsConverted,
             Score = l.Score,
             CreatedAt = l.CreatedAt,
-            UpdatedAt = l.UpdatedAt
+            UpdatedAt = l.UpdatedAt,
+            // KVKK Consent
+            KvkkDataProcessingConsent = l.KvkkDataProcessingConsent,
+            KvkkMarketingConsent = l.KvkkMarketingConsent,
+            KvkkCommunicationConsent = l.KvkkCommunicationConsent,
+            KvkkConsentDate = l.KvkkConsentDate
         }).ToList();
 
         return new PagedResult<LeadDto>(items, request.Page, request.PageSize, totalCount);
