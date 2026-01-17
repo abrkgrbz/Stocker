@@ -17,8 +17,16 @@ interface RuleBuilderProps {
   onChange?: (value: string) => void;
 }
 
+// Field option type definition
+interface FieldOption {
+  value: string;
+  label: string;
+  type: 'date' | 'number' | 'text' | 'select';
+  options?: string[]; // For select type fields
+}
+
 // Field options matching backend SegmentCriteriaEngine supported fields
-const FIELD_OPTIONS = [
+const FIELD_OPTIONS: FieldOption[] = [
   { value: 'createdAt', label: 'Kayıt Tarihi', type: 'date' },
   { value: 'annualRevenue', label: 'Yıllık Gelir (₺)', type: 'number' },
   { value: 'numberOfEmployees', label: 'Çalışan Sayısı', type: 'number' },
