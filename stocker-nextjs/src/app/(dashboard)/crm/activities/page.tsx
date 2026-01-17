@@ -7,9 +7,6 @@ import {
   Button,
   Space,
   Modal,
-  Drawer,
-  Descriptions,
-  Tag,
   Divider,
   Form,
   Input,
@@ -134,8 +131,8 @@ function ActivitiesPageContent() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [quickActionType, setQuickActionType] = useState<number | undefined>(undefined);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerActivity, setDrawerActivity] = useState<Activity | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [detailActivity, setDetailActivity] = useState<Activity | null>(null);
   const [rescheduleModalOpen, setRescheduleModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [ownerFilter, setOwnerFilter] = useState<'my' | 'team' | 'all'>('my');
@@ -185,13 +182,13 @@ function ActivitiesPageContent() {
   };
 
   const handleEventClick = (activity: Activity) => {
-    setDrawerActivity(activity);
-    setDrawerOpen(true);
+    setDetailActivity(activity);
+    setDetailModalOpen(true);
   };
 
   const handleEdit = (activity: Activity) => {
     setSelectedActivity(activity);
-    setDrawerOpen(false);
+    setDetailModalOpen(false);
     setModalOpen(true);
   };
 
@@ -206,7 +203,7 @@ function ActivitiesPageContent() {
         try {
           await deleteActivity.mutateAsync(id);
           showSuccess('Aktivite basariyla silindi');
-          setDrawerOpen(false);
+          setDetailModalOpen(false);
         } catch (error: any) {
           showApiError(error, 'Silme islemi basarisiz');
         }
@@ -218,7 +215,7 @@ function ActivitiesPageContent() {
     try {
       await completeActivity.mutateAsync({ id });
       showSuccess('Aktivite tamamlandi olarak isaretlendi');
-      setDrawerOpen(false);
+      setDetailModalOpen(false);
     } catch (error: any) {
       showApiError(error, 'Islem basarisiz');
     }
@@ -229,16 +226,16 @@ function ActivitiesPageContent() {
   };
 
   const handleCancelSubmit = async (values: { reason?: string }) => {
-    if (!drawerActivity) return;
+    if (!detailActivity) return;
 
     try {
       await cancelActivity.mutateAsync({
-        id: drawerActivity.id.toString(),
+        id: detailActivity.id.toString(),
         reason: values.reason,
       });
       showSuccess('Aktivite iptal edildi');
       setCancelModalOpen(false);
-      setDrawerOpen(false);
+      setDetailModalOpen(false);
     } catch (error: any) {
       showApiError(error, 'Iptal islemi basarisiz');
     }
@@ -253,18 +250,18 @@ function ActivitiesPageContent() {
     endTime?: Dayjs;
     reason?: string;
   }) => {
-    if (!drawerActivity) return;
+    if (!detailActivity) return;
 
     try {
       await rescheduleActivity.mutateAsync({
-        id: drawerActivity.id.toString(),
+        id: detailActivity.id.toString(),
         newStartDate: values.startTime.toISOString(),
         newEndDate: values.endTime?.toISOString(),
         reason: values.reason,
       });
       showSuccess('Aktivite yeniden planlandi');
       setRescheduleModalOpen(false);
-      setDrawerOpen(false);
+      setDetailModalOpen(false);
     } catch (error: any) {
       showApiError(error, 'Yeniden planlama basarisiz');
     }
@@ -470,208 +467,158 @@ function ActivitiesPageContent() {
         )}
       </div>
 
-      {/* Activity Details Drawer */}
-      <Drawer
-        title={
-          <div className="flex items-center gap-3">
-            {drawerActivity &&
-              (() => {
-                const typeConfig =
-                  activityTypeConfig[drawerActivity.type] || activityTypeConfig.Note;
-                const statusConfig = activityStatusConfig[drawerActivity.status];
-                return (
-                  <>
-                    <div
-                      className={`w-10 h-10 rounded-lg flex items-center justify-center ${typeConfig.bgColor} ${typeConfig.textColor}`}
-                    >
-                      {typeConfig.icon}
-                    </div>
-                    <div>
-                      <div className="font-semibold text-base text-slate-900">
-                        {drawerActivity.title}
-                      </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${typeConfig.bgColor} ${typeConfig.textColor}`}
-                        >
-                          {typeConfig.label}
-                        </span>
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${statusConfig.bgColor} ${statusConfig.textColor}`}
-                        >
-                          {statusConfig.label}
-                        </span>
-                      </div>
-                    </div>
-                  </>
-                );
-              })()}
-          </div>
-        }
-        placement="right"
-        width={480}
-        onClose={() => setDrawerOpen(false)}
-        open={drawerOpen}
+      {/* Activity Details Modal */}
+      <Modal
+        open={detailModalOpen}
+        onCancel={() => setDetailModalOpen(false)}
+        footer={null}
+        width={560}
+        centered
         styles={{
           mask: {
             backdropFilter: 'blur(8px)',
             backgroundColor: 'rgba(0, 0, 0, 0.45)',
           },
         }}
-        extra={
-          drawerActivity && (
-            <Space wrap>
-              {drawerActivity.status === 'Scheduled' && (
-                <>
-                  <Button
-                    icon={<ClockIcon className="w-4 h-4" />}
-                    onClick={handleReschedule}
-                    className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
-                  >
-                    Yeniden Planla
-                  </Button>
-                  <Button
-                    icon={<XCircleIcon className="w-4 h-4" />}
-                    onClick={handleCancel}
-                    className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
-                  >
-                    Iptal Et
-                  </Button>
-                  <Button
-                    type="primary"
-                    icon={<CheckCircleIcon className="w-4 h-4" />}
-                    onClick={() => handleComplete(drawerActivity.id)}
-                    className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
-                  >
-                    Tamamla
-                  </Button>
-                </>
-              )}
-              <Button
-                icon={<PencilIcon className="w-4 h-4" />}
-                onClick={() => handleEdit(drawerActivity)}
-                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
-              >
-                Duzenle
-              </Button>
-              <Button
-                danger
-                icon={<TrashIcon className="w-4 h-4" />}
-                onClick={() => handleDelete(drawerActivity.id)}
-              >
-                Sil
-              </Button>
-            </Space>
-          )
-        }
       >
-        {drawerActivity && (
-          <div className="space-y-6">
-            {/* Time Information */}
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 text-slate-600 mb-2">
-                <ClockIcon className="w-4 h-4" />
-                <span className="font-semibold">Zaman</span>
+        {detailActivity && (() => {
+          const typeConfig = activityTypeConfig[detailActivity.type] || activityTypeConfig.Note;
+          const statusConfig = activityStatusConfig[detailActivity.status];
+
+          return (
+            <div className="bg-white">
+              {/* Header Section */}
+              <div className="pb-6 border-b border-slate-100">
+                <div className="flex items-start gap-4">
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${typeConfig.bgColor} ${typeConfig.textColor}`}>
+                    {typeConfig.icon}
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-xl font-bold text-slate-900 m-0">
+                      {detailActivity.title}
+                    </h2>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${typeConfig.bgColor} ${typeConfig.textColor}`}>
+                        {typeConfig.label}
+                      </span>
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${statusConfig.bgColor} ${statusConfig.textColor}`}>
+                        {statusConfig.label}
+                      </span>
+                      {dayjs(detailActivity.startTime).isBefore(dayjs()) && detailActivity.status === 'Scheduled' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-900 text-white">
+                          <FireIcon className="w-3 h-3" />
+                          Gecikmis
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="text-base text-slate-900">
-                {dayjs(drawerActivity.startTime).format('DD MMMM YYYY, HH:mm')}
-                {drawerActivity.endTime && (
-                  <span> - {dayjs(drawerActivity.endTime).format('HH:mm')}</span>
+
+              {/* Content Section */}
+              <div className="py-6 space-y-4">
+                {/* Time Information */}
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                  <div className="flex items-center gap-2 text-slate-600 mb-2">
+                    <ClockIcon className="w-4 h-4" />
+                    <span className="text-sm font-medium">Zaman</span>
+                  </div>
+                  <div className="text-base font-medium text-slate-900">
+                    {dayjs(detailActivity.startTime).format('DD MMMM YYYY, HH:mm')}
+                    {detailActivity.endTime && (
+                      <span> - {dayjs(detailActivity.endTime).format('HH:mm')}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Description */}
+                {detailActivity.description && (
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                    <div className="flex items-center gap-2 text-slate-600 mb-2">
+                      <DocumentTextIcon className="w-4 h-4" />
+                      <span className="text-sm font-medium">Aciklama</span>
+                    </div>
+                    <p className="text-slate-800 m-0">{detailActivity.description}</p>
+                  </div>
+                )}
+
+                {/* Customer Information */}
+                {detailActivity.customerId && (
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                    <div className="flex items-center gap-2 text-slate-600 mb-2">
+                      <UserIcon className="w-4 h-4" />
+                      <span className="text-sm font-medium">Musteri</span>
+                    </div>
+                    <p className="text-slate-800 m-0">Musteri ID: {detailActivity.customerId}</p>
+                  </div>
                 )}
               </div>
-              {dayjs(drawerActivity.startTime).isBefore(dayjs()) &&
-                drawerActivity.status === 'Scheduled' && (
-                  <span className="inline-flex items-center gap-1 mt-2 px-2 py-1 rounded text-xs font-medium bg-slate-900 text-white">
-                    <FireIcon className="w-3 h-3" />
-                    Gecikmis
-                  </span>
-                )}
+
+              {/* Action Buttons */}
+              <div className="pt-4 border-t border-slate-100">
+                <div className="grid grid-cols-12 gap-3">
+                  {detailActivity.status === 'Scheduled' && (
+                    <>
+                      <div className="col-span-12">
+                        <Button
+                          block
+                          size="large"
+                          type="primary"
+                          icon={<CheckCircleIcon className="w-4 h-4" />}
+                          onClick={() => handleComplete(detailActivity.id)}
+                          style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
+                        >
+                          Tamamlandi Olarak Isaretle
+                        </Button>
+                      </div>
+                      <div className="col-span-6">
+                        <Button
+                          block
+                          icon={<ClockIcon className="w-4 h-4" />}
+                          onClick={handleReschedule}
+                          className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+                        >
+                          Yeniden Planla
+                        </Button>
+                      </div>
+                      <div className="col-span-6">
+                        <Button
+                          block
+                          icon={<XCircleIcon className="w-4 h-4" />}
+                          onClick={handleCancel}
+                          className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+                        >
+                          Iptal Et
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                  <div className="col-span-6">
+                    <Button
+                      block
+                      icon={<PencilIcon className="w-4 h-4" />}
+                      onClick={() => handleEdit(detailActivity)}
+                      className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+                    >
+                      Duzenle
+                    </Button>
+                  </div>
+                  <div className="col-span-6">
+                    <Button
+                      block
+                      danger
+                      icon={<TrashIcon className="w-4 h-4" />}
+                      onClick={() => handleDelete(detailActivity.id)}
+                    >
+                      Sil
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
-
-            {/* Description */}
-            {drawerActivity.description && (
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 text-slate-600 mb-2">
-                  <DocumentTextIcon className="w-4 h-4" />
-                  <span className="font-semibold">Aciklama</span>
-                </div>
-                <p className="text-slate-900">{drawerActivity.description}</p>
-              </div>
-            )}
-
-            {/* Customer Information */}
-            {drawerActivity.customerId && (
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 text-slate-600 mb-2">
-                  <UserIcon className="w-4 h-4" />
-                  <span className="font-semibold">Musteri</span>
-                </div>
-                <Descriptions column={1} size="small">
-                  <Descriptions.Item label="Musteri ID">
-                    {drawerActivity.customerId}
-                  </Descriptions.Item>
-                </Descriptions>
-              </div>
-            )}
-
-            <Divider />
-
-            {/* Action Buttons */}
-            <Space direction="vertical" style={{ width: '100%' }} size="middle">
-              {drawerActivity.status === 'Scheduled' && (
-                <>
-                  <Button
-                    block
-                    size="large"
-                    type="primary"
-                    icon={<CheckCircleIcon className="w-4 h-4" />}
-                    onClick={() => handleComplete(drawerActivity.id)}
-                    className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
-                  >
-                    Tamamlandi Olarak Isaretle
-                  </Button>
-                  <Button
-                    block
-                    size="large"
-                    icon={<ClockIcon className="w-4 h-4" />}
-                    onClick={handleReschedule}
-                    className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
-                  >
-                    Aktiviteyi Yeniden Planla
-                  </Button>
-                  <Button
-                    block
-                    size="large"
-                    icon={<XCircleIcon className="w-4 h-4" />}
-                    onClick={handleCancel}
-                    className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
-                  >
-                    Aktiviteyi Iptal Et
-                  </Button>
-                </>
-              )}
-              <Button
-                block
-                size="large"
-                icon={<PencilIcon className="w-4 h-4" />}
-                onClick={() => handleEdit(drawerActivity)}
-                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
-              >
-                Aktiviteyi Duzenle
-              </Button>
-              <Button
-                block
-                size="large"
-                danger
-                icon={<TrashIcon className="w-4 h-4" />}
-                onClick={() => handleDelete(drawerActivity.id)}
-              >
-                Aktiviteyi Sil
-              </Button>
-            </Space>
-          </div>
-        )}
-      </Drawer>
+          );
+        })()}
+      </Modal>
 
       {/* Create/Edit Modal */}
       <ActivityModal
@@ -703,8 +650,8 @@ function ActivitiesPageContent() {
           layout="vertical"
           onFinish={handleRescheduleSubmit}
           initialValues={{
-            startTime: drawerActivity ? dayjs(drawerActivity.startTime) : undefined,
-            endTime: drawerActivity?.endTime ? dayjs(drawerActivity.endTime) : undefined,
+            startTime: detailActivity ? dayjs(detailActivity.startTime) : undefined,
+            endTime: detailActivity?.endTime ? dayjs(detailActivity.endTime) : undefined,
           }}
         >
           <Form.Item
