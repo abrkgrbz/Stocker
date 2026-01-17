@@ -631,7 +631,7 @@ export function useConvertLead() {
 
   return useMutation({
     mutationFn: ({ leadId, customerData }: { leadId: string; customerData: any }) =>
-      CRMService.convertLeadToCustomer(Number(leadId), customerData),
+      CRMService.convertLeadToCustomer(leadId, customerData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
       showSuccess('Lead müşteriye dönüştürüldü');

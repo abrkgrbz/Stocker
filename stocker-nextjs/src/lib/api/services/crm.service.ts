@@ -805,7 +805,7 @@ export class CRMService {
   /**
    * Convert lead to customer
    */
-  static async convertLeadToCustomer(leadId: number, customerData: CreateCustomerDto): Promise<Customer> {
+  static async convertLeadToCustomer(leadId: string, customerData: CreateCustomerDto): Promise<Customer> {
     return ApiService.post<Customer>(this.getPath(`leads/${leadId}/convert`), customerData);
   }
 
