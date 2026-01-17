@@ -25,6 +25,17 @@ public class CampaignDto
     public decimal ROI => ActualCost > 0 ? (ActualRevenue - ActualCost) / ActualCost * 100 : 0;
     public int MemberCount { get; set; }
     public List<CampaignMemberDto> TopMembers { get; set; } = new();
+
+    // Email campaign performance metrics
+    public int? TotalRecipients { get; set; }
+    public int? DeliveredCount { get; set; }
+    public int? OpenedCount { get; set; }
+    public int? ClickedCount { get; set; }
+    public int? SentCount { get; set; }
+    public int? ResponseCount { get; set; }
+    public int? ConvertedCount { get; set; }
+    public string? TargetSegmentName { get; set; }
+    public string? CustomerName { get; set; }
 }
 
 public class CampaignMemberDto

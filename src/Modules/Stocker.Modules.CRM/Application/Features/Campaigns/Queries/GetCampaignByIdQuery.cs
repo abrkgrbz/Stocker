@@ -56,6 +56,14 @@ public class GetCampaignByIdQueryHandler : IRequestHandler<GetCampaignByIdQuery,
             ConvertedLeads = campaign.Members.Count(m => m.HasConverted),
             OwnerId = campaign.OwnerId.ToString(),
             MemberCount = campaign.Members.Count,
+            // Email campaign performance metrics
+            TotalRecipients = campaign.Members.Count,
+            SentCount = campaign.NumberSent,
+            DeliveredCount = campaign.NumberDelivered,
+            OpenedCount = campaign.NumberOpened,
+            ClickedCount = campaign.NumberClicked,
+            ResponseCount = campaign.ActualResponse,
+            ConvertedCount = campaign.Members.Count(m => m.HasConverted),
             TopMembers = campaign.Members.Take(10).Select(m => new CampaignMemberDto
             {
                 Id = m.Id,

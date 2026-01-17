@@ -78,8 +78,17 @@ public class GetCampaignsQueryHandler : IRequestHandler<GetCampaignsQuery, IEnum
             TargetAudience = c.TargetAudience,
             TargetLeads = c.ExpectedResponse,
             ActualLeads = c.ActualResponse,
+            ConvertedLeads = c.Members.Count(m => m.HasConverted),
             OwnerId = c.OwnerId.ToString(),
-            MemberCount = c.Members.Count
+            MemberCount = c.Members.Count,
+            // Email campaign performance metrics
+            TotalRecipients = c.Members.Count,
+            SentCount = c.NumberSent,
+            DeliveredCount = c.NumberDelivered,
+            OpenedCount = c.NumberOpened,
+            ClickedCount = c.NumberClicked,
+            ResponseCount = c.ActualResponse,
+            ConvertedCount = c.Members.Count(m => m.HasConverted)
         });
     }
 }
