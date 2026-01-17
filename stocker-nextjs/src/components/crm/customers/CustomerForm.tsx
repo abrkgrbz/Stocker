@@ -233,9 +233,9 @@ const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function Cus
         kepAddress: initialValues.kepAddress || '',
         eInvoiceRegistered: initialValues.eInvoiceRegistered || false,
         tcKimlikNo: initialValues.tcKimlikNo || '',
-        kvkkDataProcessingConsent: initialValues.kvkkConsent?.dataProcessingConsent || false,
-        kvkkMarketingConsent: initialValues.kvkkConsent?.marketingConsent || false,
-        kvkkCommunicationConsent: initialValues.kvkkConsent?.communicationConsent || false,
+        kvkkDataProcessingConsent: initialValues.kvkkDataProcessingConsent || false,
+        kvkkMarketingConsent: initialValues.kvkkMarketingConsent || false,
+        kvkkCommunicationConsent: initialValues.kvkkCommunicationConsent || false,
       });
     }
   }, [initialValues]);
