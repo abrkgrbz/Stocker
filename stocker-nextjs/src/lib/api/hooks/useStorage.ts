@@ -52,7 +52,8 @@ export function useBucketName(options?: { enabled?: boolean }) {
   return useQuery<BucketNameResponse, Error>({
     queryKey: storageKeys.bucketName(),
     queryFn: () => StorageService.getBucketName(),
-    ...queryOptions.static({ staleTime: Infinity, enabled: options?.enabled ?? true }),
+    // Bucket name rarely changes, 1 hour staleTime is sufficient (not Infinity to allow memory cleanup)
+    ...queryOptions.static({ staleTime: 60 * 60 * 1000, enabled: options?.enabled ?? true }),
   });
 }
 

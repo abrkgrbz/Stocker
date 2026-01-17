@@ -2428,7 +2428,8 @@ export function useBarcodeFormats() {
   return useQuery<BarcodeFormatInfo[]>({
     queryKey: inventoryKeys.barcodeFormats,
     queryFn: () => InventoryService.getBarcodeFormats(),
-    ...queryOptions.static({ staleTime: Infinity }),
+    // Static reference data, 1 hour staleTime (not Infinity to allow memory cleanup)
+    ...queryOptions.static({ staleTime: 60 * 60 * 1000 }),
   });
 }
 
@@ -2439,7 +2440,8 @@ export function useLabelSizes() {
   return useQuery<LabelSizeInfo[]>({
     queryKey: inventoryKeys.labelSizes,
     queryFn: () => InventoryService.getLabelSizes(),
-    ...queryOptions.static({ staleTime: Infinity }),
+    // Static reference data, 1 hour staleTime (not Infinity to allow memory cleanup)
+    ...queryOptions.static({ staleTime: 60 * 60 * 1000 }),
   });
 }
 
@@ -3261,7 +3263,8 @@ export function useCostingMethods() {
   return useQuery<CostingMethodsResponse>({
     queryKey: inventoryKeys.costingMethods,
     queryFn: () => InventoryService.getCostingMethods(),
-    ...queryOptions.static({ staleTime: Infinity }),
+    // Static reference data, 1 hour staleTime (not Infinity to allow memory cleanup)
+    ...queryOptions.static({ staleTime: 60 * 60 * 1000 }),
   });
 }
 
