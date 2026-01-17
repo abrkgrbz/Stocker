@@ -97,11 +97,11 @@ function CustomersPageContent() {
     });
   }, [customers, selectedType, selectedStatus]);
 
-  // Calculate stats - use numeric comparison since backend sends numbers
+  // Calculate stats - convert to string for comparison since backend may send numbers or strings
   const stats = useMemo(() => {
     const total = customers.length;
-    const active = customers.filter((c) => c.status === 2 || c.status === 'Active').length;
-    const corporate = customers.filter((c) => c.customerType === 2 || c.customerType === 'Corporate').length;
+    const active = customers.filter((c) => String(c.status) === '2' || String(c.status) === 'Active').length;
+    const corporate = customers.filter((c) => String(c.customerType) === '2' || String(c.customerType) === 'Corporate').length;
     const totalRevenue = customers.reduce((sum, c) => sum + (c.totalPurchases || 0), 0);
     return { total, active, corporate, totalRevenue };
   }, [customers]);
