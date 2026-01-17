@@ -17,15 +17,17 @@ interface RuleBuilderProps {
   onChange?: (value: string) => void;
 }
 
+// Field options matching backend SegmentCriteriaEngine supported fields
 const FIELD_OPTIONS = [
-  { value: 'totalOrders', label: 'Toplam Sipariş Sayısı', type: 'number' },
-  { value: 'totalSpent', label: 'Toplam Harcama', type: 'number' },
-  { value: 'lastOrderDate', label: 'Son Sipariş Tarihi', type: 'date' },
   { value: 'createdAt', label: 'Kayıt Tarihi', type: 'date' },
-  { value: 'lastLoginDate', label: 'Son Giriş Tarihi', type: 'date' },
+  { value: 'annualRevenue', label: 'Yıllık Gelir (₺)', type: 'number' },
+  { value: 'numberOfEmployees', label: 'Çalışan Sayısı', type: 'number' },
+  { value: 'companyName', label: 'Şirket Adı', type: 'text' },
+  { value: 'email', label: 'E-posta', type: 'text' },
+  { value: 'industry', label: 'Sektör', type: 'text' },
   { value: 'city', label: 'Şehir', type: 'text' },
-  { value: 'customerType', label: 'Müşteri Tipi', type: 'select', options: ['VIP', 'Premium', 'Standard'] },
-  { value: 'status', label: 'Durum', type: 'select', options: ['Active', 'Inactive', 'Pending'] },
+  { value: 'state', label: 'Bölge/İl', type: 'text' },
+  { value: 'country', label: 'Ülke', type: 'text' },
 ];
 
 const OPERATOR_OPTIONS = {
@@ -56,14 +58,9 @@ const OPERATOR_OPTIONS = {
 
 const TEMPLATES = [
   {
-    name: 'VIP Müşteriler',
-    description: 'Toplam harcaması 10.000₺ üzeri',
-    rules: [{ field: 'totalSpent', operator: '>=', value: 10000 }],
-  },
-  {
-    name: 'Aktif Müşteriler',
-    description: 'Son 30 günde sipariş verenler',
-    rules: [{ field: 'lastOrderDate', operator: '>=', value: '2024-01-01' }],
+    name: 'Yüksek Gelirli Müşteriler',
+    description: 'Yıllık geliri 1.000.000₺ üzeri',
+    rules: [{ field: 'annualRevenue', operator: '>=', value: 1000000 }],
   },
   {
     name: 'Yeni Müşteriler',
@@ -71,12 +68,14 @@ const TEMPLATES = [
     rules: [{ field: 'createdAt', operator: '>=', value: '2024-10-01' }],
   },
   {
-    name: 'Sadık Müşteriler',
-    description: '10+ sipariş ve 5000₺+ harcama',
-    rules: [
-      { field: 'totalOrders', operator: '>=', value: 10, logicalOperator: 'AND' },
-      { field: 'totalSpent', operator: '>=', value: 5000 },
-    ],
+    name: 'Büyük Şirketler',
+    description: '50+ çalışanı olan şirketler',
+    rules: [{ field: 'numberOfEmployees', operator: '>=', value: 50 }],
+  },
+  {
+    name: 'İstanbul Müşterileri',
+    description: 'İstanbul\'daki müşteriler',
+    rules: [{ field: 'city', operator: '=', value: 'İstanbul' }],
   },
 ];
 
