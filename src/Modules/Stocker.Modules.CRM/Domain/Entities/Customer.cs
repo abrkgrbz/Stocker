@@ -141,6 +141,30 @@ public class Customer : TenantAggregateRoot
     /// </summary>
     public bool IsActive { get; private set; }
 
+    // ═══════════════════════════════════════════════════════════════
+    // KVKK (Turkish GDPR) Consent Fields
+    // ═══════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// KVKK data processing consent
+    /// </summary>
+    public bool KvkkDataProcessingConsent { get; private set; }
+
+    /// <summary>
+    /// KVKK marketing consent
+    /// </summary>
+    public bool KvkkMarketingConsent { get; private set; }
+
+    /// <summary>
+    /// KVKK communication consent
+    /// </summary>
+    public bool KvkkCommunicationConsent { get; private set; }
+
+    /// <summary>
+    /// Date when KVKK consent was given
+    /// </summary>
+    public DateTime? KvkkConsentDate { get; private set; }
+
     /// <summary>
     /// Gets the date when the customer was created
     /// </summary>
@@ -395,6 +419,33 @@ public class Customer : TenantAggregateRoot
             return Result.Failure(Error.Conflict("Customer.Status", "Customer is already inactive"));
 
         IsActive = false;
+        UpdatedAt = DateTime.UtcNow;
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Updates KVKK (Turkish GDPR) consent information
+    /// </summary>
+    public Result UpdateKvkkConsent(
+        bool dataProcessingConsent,
+        bool marketingConsent,
+        bool communicationConsent)
+    {
+        KvkkDataProcessingConsent = dataProcessingConsent;
+        KvkkMarketingConsent = marketingConsent;
+        KvkkCommunicationConsent = communicationConsent;
+
+        // Set consent date if any consent is given
+        if (dataProcessingConsent || marketingConsent || communicationConsent)
+        {
+            KvkkConsentDate = DateTime.UtcNow;
+        }
+        else
+        {
+            KvkkConsentDate = null;
+        }
+
         UpdatedAt = DateTime.UtcNow;
 
         return Result.Success();

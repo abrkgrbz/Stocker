@@ -207,16 +207,11 @@ export interface Customer {
   eInvoiceStartDate?: string | null;     // e-Fatura başlangıç tarihi
   // Individual (Bireysel)
   tcKimlikNo?: string | null;            // TC Kimlik No (11 hane)
-  // KVKK Consent (Kişisel Verilerin Korunması)
-  kvkkConsent?: {
-    dataProcessingConsent: boolean;
-    marketingConsent: boolean;
-    communicationConsent: boolean;
-    thirdPartyShareConsent?: boolean;
-    profilingConsent?: boolean;
-    consentDate?: string;
-    consentVersion?: string;
-  } | null;
+  // KVKK Consent (Kişisel Verilerin Korunması) - Backend flat fields
+  kvkkDataProcessingConsent?: boolean;
+  kvkkMarketingConsent?: boolean;
+  kvkkCommunicationConsent?: boolean;
+  kvkkConsentDate?: string | null;
 }
 
 export interface Lead {
@@ -642,12 +637,10 @@ export class CRMService {
       kepAddress: data.kepAddress || null,
       eInvoiceRegistered: data.eInvoiceRegistered || false,
       tcKimlikNo: data.tcKimlikNo || null,
-      // KVKK Consent
-      kvkkConsent: {
-        dataProcessingConsent: data.kvkkDataProcessingConsent || false,
-        marketingConsent: data.kvkkMarketingConsent || false,
-        communicationConsent: data.kvkkCommunicationConsent || false,
-      },
+      // KVKK Consent - flat fields matching backend DTO
+      kvkkDataProcessingConsent: data.kvkkDataProcessingConsent || false,
+      kvkkMarketingConsent: data.kvkkMarketingConsent || false,
+      kvkkCommunicationConsent: data.kvkkCommunicationConsent || false,
     };
 
     logger.info('📤 Sending CreateCustomerDto to CRM module', { metadata: { dto } });
@@ -695,12 +688,10 @@ export class CRMService {
       kepAddress: data.kepAddress,
       eInvoiceRegistered: data.eInvoiceRegistered,
       tcKimlikNo: data.tcKimlikNo,
-      // KVKK Consent
-      kvkkConsent: {
-        dataProcessingConsent: data.kvkkDataProcessingConsent || false,
-        marketingConsent: data.kvkkMarketingConsent || false,
-        communicationConsent: data.kvkkCommunicationConsent || false,
-      },
+      // KVKK Consent - flat fields matching backend DTO
+      kvkkDataProcessingConsent: data.kvkkDataProcessingConsent || false,
+      kvkkMarketingConsent: data.kvkkMarketingConsent || false,
+      kvkkCommunicationConsent: data.kvkkCommunicationConsent || false,
     };
 
     logger.info('📤 Sending UpdateCustomerDto to CRM module', { metadata: { dto } });

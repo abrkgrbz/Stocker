@@ -155,6 +155,12 @@ public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerComman
                 request.CustomerData.Description);
         }
 
+        // Update KVKK consent - always update to allow clearing consent
+        customer.UpdateKvkkConsent(
+            request.CustomerData.KvkkDataProcessingConsent,
+            request.CustomerData.KvkkMarketingConsent,
+            request.CustomerData.KvkkCommunicationConsent);
+
         // Save changes - using ICRMUnitOfWork ensures repository and SaveChanges use same DbContext
         await _unitOfWork.Customers.UpdateAsync(customer, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -204,7 +210,17 @@ public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerComman
             AnnualRevenue = customer.AnnualRevenue,
             NumberOfEmployees = customer.NumberOfEmployees,
             Description = customer.Description,
+            CustomerType = customer.CustomerType,
+            Status = customer.Status,
+            CreditLimit = customer.CreditLimit,
+            TaxId = customer.TaxId,
+            PaymentTerms = customer.PaymentTerms,
+            ContactPerson = customer.ContactPerson,
             IsActive = customer.IsActive,
+            KvkkDataProcessingConsent = customer.KvkkDataProcessingConsent,
+            KvkkMarketingConsent = customer.KvkkMarketingConsent,
+            KvkkCommunicationConsent = customer.KvkkCommunicationConsent,
+            KvkkConsentDate = customer.KvkkConsentDate,
             CreatedAt = customer.CreatedAt,
             UpdatedAt = customer.UpdatedAt,
             Contacts = customer.Contacts.Select(c => new ContactDto

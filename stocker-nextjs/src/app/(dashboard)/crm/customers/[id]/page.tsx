@@ -710,11 +710,11 @@ export default function CustomerDetailPage() {
                   KVKK Rıza Durumu
                 </p>
               </div>
-              {customer.kvkkConsent ? (
+              {(customer.kvkkDataProcessingConsent || customer.kvkkMarketingConsent || customer.kvkkCommunicationConsent) ? (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <div className="flex items-center gap-3">
-                      {customer.kvkkConsent.dataProcessingConsent ? (
+                      {customer.kvkkDataProcessingConsent ? (
                         <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
                       ) : (
                         <XCircleIcon className="w-5 h-5 text-slate-400" />
@@ -724,13 +724,13 @@ export default function CustomerDetailPage() {
                         <p className="text-xs text-slate-500 m-0">Veri toplama, işleme ve saklama</p>
                       </div>
                     </div>
-                    <Tag className={`border-0 m-0 ${customer.kvkkConsent.dataProcessingConsent ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
-                      {customer.kvkkConsent.dataProcessingConsent ? 'Onaylı' : 'Onaysız'}
+                    <Tag className={`border-0 m-0 ${customer.kvkkDataProcessingConsent ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+                      {customer.kvkkDataProcessingConsent ? 'Onaylı' : 'Onaysız'}
                     </Tag>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <div className="flex items-center gap-3">
-                      {customer.kvkkConsent.marketingConsent ? (
+                      {customer.kvkkMarketingConsent ? (
                         <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
                       ) : (
                         <XCircleIcon className="w-5 h-5 text-slate-400" />
@@ -740,13 +740,13 @@ export default function CustomerDetailPage() {
                         <p className="text-xs text-slate-500 m-0">Tanıtım ve pazarlama amaçlı iletişim</p>
                       </div>
                     </div>
-                    <Tag className={`border-0 m-0 ${customer.kvkkConsent.marketingConsent ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-                      {customer.kvkkConsent.marketingConsent ? 'Onaylı' : 'Onaysız'}
+                    <Tag className={`border-0 m-0 ${customer.kvkkMarketingConsent ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                      {customer.kvkkMarketingConsent ? 'Onaylı' : 'Onaysız'}
                     </Tag>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <div className="flex items-center gap-3">
-                      {customer.kvkkConsent.communicationConsent ? (
+                      {customer.kvkkCommunicationConsent ? (
                         <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
                       ) : (
                         <XCircleIcon className="w-5 h-5 text-slate-400" />
@@ -756,13 +756,13 @@ export default function CustomerDetailPage() {
                         <p className="text-xs text-slate-500 m-0">E-posta, SMS ve telefon ile iletişim</p>
                       </div>
                     </div>
-                    <Tag className={`border-0 m-0 ${customer.kvkkConsent.communicationConsent ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-                      {customer.kvkkConsent.communicationConsent ? 'Onaylı' : 'Onaysız'}
+                    <Tag className={`border-0 m-0 ${customer.kvkkCommunicationConsent ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                      {customer.kvkkCommunicationConsent ? 'Onaylı' : 'Onaysız'}
                     </Tag>
                   </div>
-                  {customer.kvkkConsent.consentDate && (
+                  {customer.kvkkConsentDate && (
                     <p className="text-xs text-slate-500 mt-2">
-                      Onay Tarihi: {dayjs(customer.kvkkConsent.consentDate).format('DD/MM/YYYY HH:mm')}
+                      Onay Tarihi: {dayjs(customer.kvkkConsentDate).format('DD/MM/YYYY HH:mm')}
                     </p>
                   )}
                 </div>

@@ -36,6 +36,13 @@ public class CustomerDto
     public string? PaymentTerms { get; set; }
     public string? ContactPerson { get; set; }
     public bool IsActive { get; set; }
+
+    // KVKK (Turkish GDPR) Consent Fields
+    public bool KvkkDataProcessingConsent { get; set; }
+    public bool KvkkMarketingConsent { get; set; }
+    public bool KvkkCommunicationConsent { get; set; }
+    public DateTime? KvkkConsentDate { get; set; }
+
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public List<ContactDto> Contacts { get; set; } = new();
@@ -73,6 +80,11 @@ public class CreateCustomerDto
     public string? TaxId { get; set; }
     public string? PaymentTerms { get; set; }
     public string? ContactPerson { get; set; }
+
+    // KVKK (Turkish GDPR) Consent Fields
+    public bool KvkkDataProcessingConsent { get; set; }
+    public bool KvkkMarketingConsent { get; set; }
+    public bool KvkkCommunicationConsent { get; set; }
 }
 
 /// <summary>
@@ -107,4 +119,9 @@ public class UpdateCustomerDto
     public string? TaxId { get; set; }
     public string? PaymentTerms { get; set; }
     public string? ContactPerson { get; set; }
+
+    // KVKK (Turkish GDPR) Consent Fields
+    public bool KvkkDataProcessingConsent { get; set; }
+    public bool KvkkMarketingConsent { get; set; }
+    public bool KvkkCommunicationConsent { get; set; }
 }

@@ -151,6 +151,17 @@ public class CreateCustomerCommandHandler : IRequestHandler<CreateCustomerComman
                 request.CustomerData.ContactPerson);
         }
 
+        // Update KVKK consent
+        if (request.CustomerData.KvkkDataProcessingConsent ||
+            request.CustomerData.KvkkMarketingConsent ||
+            request.CustomerData.KvkkCommunicationConsent)
+        {
+            customer.UpdateKvkkConsent(
+                request.CustomerData.KvkkDataProcessingConsent,
+                request.CustomerData.KvkkMarketingConsent,
+                request.CustomerData.KvkkCommunicationConsent);
+        }
+
         // Save to repository
         await _unitOfWork.Customers.AddAsync(customer, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -207,6 +218,10 @@ public class CreateCustomerCommandHandler : IRequestHandler<CreateCustomerComman
             PaymentTerms = customer.PaymentTerms,
             ContactPerson = customer.ContactPerson,
             IsActive = customer.IsActive,
+            KvkkDataProcessingConsent = customer.KvkkDataProcessingConsent,
+            KvkkMarketingConsent = customer.KvkkMarketingConsent,
+            KvkkCommunicationConsent = customer.KvkkCommunicationConsent,
+            KvkkConsentDate = customer.KvkkConsentDate,
             CreatedAt = customer.CreatedAt,
             UpdatedAt = customer.UpdatedAt,
             Contacts = customer.Contacts.Select(c => new ContactDto
