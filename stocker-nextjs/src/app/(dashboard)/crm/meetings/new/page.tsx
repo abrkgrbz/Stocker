@@ -17,8 +17,9 @@ export default function NewMeetingPage() {
     try {
       const payload = {
         ...values,
-        startTime: values.startTime ? dayjs(values.startTime).toISOString() : undefined,
-        endTime: values.endTime ? dayjs(values.endTime).toISOString() : undefined,
+        // Format as local time without timezone conversion
+        startTime: values.startTime ? dayjs(values.startTime).format('YYYY-MM-DDTHH:mm:ss') : undefined,
+        endTime: values.endTime ? dayjs(values.endTime).format('YYYY-MM-DDTHH:mm:ss') : undefined,
         organizerId: 1, // TODO: Get from auth context
       };
       await createMeeting.mutateAsync(payload);

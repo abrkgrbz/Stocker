@@ -23,8 +23,9 @@ export default function EditMeetingPage() {
       const payload = {
         id: meetingId,
         ...values,
-        startTime: values.startTime ? dayjs(values.startTime).toISOString() : undefined,
-        endTime: values.endTime ? dayjs(values.endTime).toISOString() : undefined,
+        // Format as local time without timezone conversion
+        startTime: values.startTime ? dayjs(values.startTime).format('YYYY-MM-DDTHH:mm:ss') : undefined,
+        endTime: values.endTime ? dayjs(values.endTime).format('YYYY-MM-DDTHH:mm:ss') : undefined,
       };
       await updateMeeting.mutateAsync({ id: meetingId, data: payload });
       router.push(`/crm/meetings/${meetingId}`);

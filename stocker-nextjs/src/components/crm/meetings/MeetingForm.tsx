@@ -6,6 +6,7 @@ import { CalendarIcon, VideoCameraIcon, BellIcon, UserPlusIcon, XMarkIcon } from
 import type { MeetingDto } from '@/lib/api/services/crm.types';
 import { MeetingType, MeetingPriority, MeetingLocationType, MeetingStatus } from '@/lib/api/services/crm.types';
 import { useCustomers, useOpportunities } from '@/lib/api/hooks/useCRM';
+import dayjs from 'dayjs';
 
 const { TextArea } = Input;
 
@@ -334,7 +335,22 @@ export default function MeetingForm({ form, initialValues, onFinish, loading }: 
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Bitiş <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="endTime"
-                  rules={[{ required: true, message: 'Bitiş tarihi zorunludur' }]}
+                  dependencies={['startTime']}
+                  rules={[
+                    { required: true, message: 'Bitiş tarihi zorunludur' },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        const startTime = getFieldValue('startTime');
+                        if (!value || !startTime) {
+                          return Promise.resolve();
+                        }
+                        if (dayjs(value).isAfter(dayjs(startTime))) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(new Error('Bitiş zamanı başlangıçtan sonra olmalıdır'));
+                      },
+                    }),
+                  ]}
                   className="mb-0"
                 >
                   <DatePicker
