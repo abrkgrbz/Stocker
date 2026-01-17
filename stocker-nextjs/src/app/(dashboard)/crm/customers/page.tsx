@@ -28,24 +28,33 @@ import type { Customer } from '@/lib/api/services/crm.service';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import { confirmDelete } from '@/lib/utils/sweetalert';
 import type { ColumnsType } from 'antd/es/table';
+import { ProtectedRoute } from '@/components/auth';
 
-// Monochrome customer type configuration
-const customerTypeConfig: Record<string, { color: string; bgColor: string; label: string }> = {
+// Monochrome customer type configuration - matches backend enum values
+const customerTypeConfig: Record<string | number, { color: string; bgColor: string; label: string }> = {
+  // String keys for string enum values
   Individual: { color: '#1e293b', bgColor: '#e2e8f0', label: 'Bireysel' },
   Corporate: { color: '#334155', bgColor: '#f1f5f9', label: 'Kurumsal' },
-  Government: { color: '#475569', bgColor: '#e2e8f0', label: 'Kamu' },
-  NonProfit: { color: '#64748b', bgColor: '#f1f5f9', label: 'Kar Amaci Gütmeyen' },
+  // Numeric keys for numeric enum values (backend sends numbers)
+  0: { color: '#64748b', bgColor: '#f1f5f9', label: 'Belirtilmemis' },  // Default/unset
+  1: { color: '#1e293b', bgColor: '#e2e8f0', label: 'Bireysel' },       // Individual = 1
+  2: { color: '#334155', bgColor: '#f1f5f9', label: 'Kurumsal' },       // Corporate = 2
 };
 
-// Monochrome customer status configuration
-const customerStatusConfig: Record<string, { color: string; bgColor: string; label: string }> = {
+// Monochrome customer status configuration - matches backend enum values
+const customerStatusConfig: Record<string | number, { color: string; bgColor: string; label: string }> = {
+  // String keys for string enum values
+  Potential: { color: '#334155', bgColor: '#e2e8f0', label: 'Potansiyel' },
   Active: { color: '#1e293b', bgColor: '#e2e8f0', label: 'Aktif' },
   Inactive: { color: '#64748b', bgColor: '#f1f5f9', label: 'Pasif' },
-  Prospect: { color: '#334155', bgColor: '#e2e8f0', label: 'Aday' },
-  Suspended: { color: '#475569', bgColor: '#cbd5e1', label: 'Askiya Alinmis' },
+  // Numeric keys for numeric enum values (backend sends numbers)
+  0: { color: '#64748b', bgColor: '#f1f5f9', label: 'Belirtilmemis' },  // Default/unset
+  1: { color: '#334155', bgColor: '#e2e8f0', label: 'Potansiyel' },     // Potential = 1
+  2: { color: '#1e293b', bgColor: '#e2e8f0', label: 'Aktif' },          // Active = 2
+  3: { color: '#64748b', bgColor: '#f1f5f9', label: 'Pasif' },          // Inactive = 3
 };
 
-export default function CustomersPage() {
+function CustomersPageContent() {
   const router = useRouter();
 
   // Filter state
@@ -81,17 +90,18 @@ export default function CustomersPage() {
   // Filter customers
   const filteredCustomers = useMemo(() => {
     return customers.filter((customer) => {
-      const matchesType = !selectedType || customer.customerType === selectedType;
-      const matchesStatus = !selectedStatus || customer.status === selectedStatus;
+      // Compare as strings since filter values are strings but backend may send numbers
+      const matchesType = !selectedType || String(customer.customerType) === selectedType;
+      const matchesStatus = !selectedStatus || String(customer.status) === selectedStatus;
       return matchesType && matchesStatus;
     });
   }, [customers, selectedType, selectedStatus]);
 
-  // Calculate stats
+  // Calculate stats - use numeric comparison since backend sends numbers
   const stats = useMemo(() => {
     const total = customers.length;
-    const active = customers.filter((c) => c.status === 'Active').length;
-    const corporate = customers.filter((c) => c.customerType === 'Corporate').length;
+    const active = customers.filter((c) => c.status === 2 || c.status === 'Active').length;
+    const corporate = customers.filter((c) => c.customerType === 2 || c.customerType === 'Corporate').length;
     const totalRevenue = customers.reduce((sum, c) => sum + (c.totalPurchases || 0), 0);
     return { total, active, corporate, totalRevenue };
   }, [customers]);
@@ -347,10 +357,10 @@ export default function CustomersPage() {
             style={{ width: 160 }}
             value={selectedType}
             onChange={setSelectedType}
-            options={Object.entries(customerTypeConfig).map(([value, config]) => ({
-              value,
-              label: config.label,
-            }))}
+            options={[
+              { value: '1', label: 'Bireysel' },
+              { value: '2', label: 'Kurumsal' },
+            ]}
             className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           />
           <Select
@@ -359,10 +369,11 @@ export default function CustomersPage() {
             style={{ width: 160 }}
             value={selectedStatus}
             onChange={setSelectedStatus}
-            options={Object.entries(customerStatusConfig).map(([value, config]) => ({
-              value,
-              label: config.label,
-            }))}
+            options={[
+              { value: '1', label: 'Potansiyel' },
+              { value: '2', label: 'Aktif' },
+              { value: '3', label: 'Pasif' },
+            ]}
             className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           />
           <Button onClick={clearFilters} className="!border-slate-300 !text-slate-600">
@@ -399,5 +410,13 @@ export default function CustomersPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function CustomersPage() {
+  return (
+    <ProtectedRoute permission="CRM.Customers:View">
+      <CustomersPageContent />
+    </ProtectedRoute>
   );
 }

@@ -815,9 +815,11 @@ export function useMoveDealStage() {
       }
       showApiError(error, 'Taşıma başarısız');
     },
-    onSettled: () => {
+    onSettled: (_data, _error, { id }) => {
       // Always refetch after error or success to ensure sync with server
       queryClient.invalidateQueries({ queryKey: crmKeys.deals });
+      // Also invalidate individual deal cache for detail page
+      queryClient.invalidateQueries({ queryKey: crmKeys.deal(id) });
     },
   });
 }
@@ -826,14 +828,15 @@ export function useCloseDealWon() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, actualAmount, closedDate, notes }: {
+    mutationFn: ({ id, finalAmount, actualCloseDate, wonDetails }: {
       id: Guid;
-      actualAmount?: number;
-      closedDate?: DateTime;
-      notes?: string;
-    }) => CRMService.closeDealWon(id, actualAmount, closedDate, notes),
-    onSuccess: () => {
+      finalAmount?: number;
+      actualCloseDate?: DateTime;
+      wonDetails?: string;
+    }) => CRMService.closeDealWon(id, finalAmount, actualCloseDate, wonDetails),
+    onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.deals });
+      queryClient.invalidateQueries({ queryKey: crmKeys.deal(id) });
       showSuccess('🎉 Deal kazanıldı!');
     },
     onError: (error) => {
@@ -846,15 +849,15 @@ export function useCloseDealLost() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, lostReason, competitorName, closedDate, notes }: {
+    mutationFn: ({ id, lostReason, competitorName, actualCloseDate }: {
       id: Guid;
       lostReason: string;
       competitorName?: string;
-      closedDate?: DateTime;
-      notes?: string;
-    }) => CRMService.closeDealLost(id, lostReason, competitorName, closedDate, notes),
-    onSuccess: () => {
+      actualCloseDate?: DateTime;
+    }) => CRMService.closeDealLost(id, lostReason, competitorName, actualCloseDate),
+    onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.deals });
+      queryClient.invalidateQueries({ queryKey: crmKeys.deal(id) });
       showInfo('Deal kaybedildi olarak işaretlendi');
     },
     onError: (error) => {

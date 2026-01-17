@@ -1082,17 +1082,16 @@ export interface MoveDealStageCommand {
 
 export interface CloseDealWonCommand {
   id: Guid;
-  actualAmount?: number;
-  closedDate: DateTime;
-  notes?: string;
+  actualCloseDate?: DateTime;
+  wonDetails?: string;
+  finalAmount?: number;
 }
 
 export interface CloseDealLostCommand {
   id: Guid;
+  actualCloseDate?: DateTime;
   lostReason: string;
   competitorName?: string;
-  closedDate: DateTime;
-  notes?: string;
 }
 
 // =====================================

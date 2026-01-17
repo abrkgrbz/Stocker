@@ -60,6 +60,7 @@ import {
 } from '@/lib/api/hooks/useCRM';
 import dayjs from 'dayjs';
 import type { ColumnsType } from 'antd/es/table';
+import { ProtectedRoute } from '@/components/auth';
 
 // Monochrome deal status configuration
 const dealStatusConfig: Record<string, { color: string; bgColor: string; label: string }> = {
@@ -216,7 +217,7 @@ function DroppableColumn({ id, children, isOver }: DroppableColumnProps) {
   );
 }
 
-export default function DealsPage() {
+function DealsPageContent() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
@@ -274,7 +275,7 @@ export default function DealsPage() {
     if (confirmed) {
       setBulkActionLoading(true);
       try {
-        await Promise.allSettled(selectedDealsData.map((deal) => closeDealWon.mutateAsync({ id: deal.id.toString(), actualAmount: deal.amount, closedDate: new Date().toISOString() })));
+        await Promise.allSettled(selectedDealsData.map((deal) => closeDealWon.mutateAsync({ id: deal.id.toString(), finalAmount: deal.amount, actualCloseDate: new Date().toISOString() })));
         showUpdateSuccess('firsatlar', 'kazanildi olarak isaretlendi');
         clearSelection();
         await refetch();
@@ -289,7 +290,7 @@ export default function DealsPage() {
     if (confirmed) {
       setBulkActionLoading(true);
       try {
-        await Promise.allSettled(selectedDealsData.map((deal) => closeDealLost.mutateAsync({ id: deal.id.toString(), lostReason: 'Toplu islem ile kapatildi', closedDate: new Date().toISOString() })));
+        await Promise.allSettled(selectedDealsData.map((deal) => closeDealLost.mutateAsync({ id: deal.id.toString(), lostReason: 'Toplu islem ile kapatildi', actualCloseDate: new Date().toISOString() })));
         showInfo('Firsatlar Isaretlendi', 'Firsatlar kaybedildi olarak isaretlendi');
         clearSelection();
         await refetch();
@@ -305,7 +306,7 @@ export default function DealsPage() {
     const confirmed = await confirmAction('Firsati Kazanildi Olarak Isaretle', `"${deal.title}" firsatini kazanildi olarak isaretlemek istediginizden emin misiniz?`, 'Kazanildi Isaretle');
     if (confirmed) {
       try {
-        await closeDealWon.mutateAsync({ id: deal.id.toString(), actualAmount: deal.amount, closedDate: new Date().toISOString() });
+        await closeDealWon.mutateAsync({ id: deal.id.toString(), finalAmount: deal.amount, actualCloseDate: new Date().toISOString() });
         showUpdateSuccess('firsat', 'kazanildi olarak isaretlendi!');
         await refetch();
       } catch (error: any) {
@@ -319,7 +320,7 @@ export default function DealsPage() {
     const confirmed = await confirmAction('Firsati Kaybedildi Olarak Isaretle', `"${deal.title}" firsatini kaybedildi olarak isaretlemek istediginizden emin misiniz?`, 'Kaybedildi Isaretle');
     if (confirmed) {
       try {
-        await closeDealLost.mutateAsync({ id: deal.id.toString(), lostReason: 'Kullanici tarafindan kapatildi', closedDate: new Date().toISOString() });
+        await closeDealLost.mutateAsync({ id: deal.id.toString(), lostReason: 'Kullanici tarafindan kapatildi', actualCloseDate: new Date().toISOString() });
         showInfo('Firsat Isaretlendi', 'Firsat kaybedildi olarak isaretlendi');
         await refetch();
       } catch (error: any) {
@@ -347,11 +348,54 @@ export default function DealsPage() {
     const newStage = stages.find((s) => s.id === newStageId);
     if (!newStage) return;
 
+    // Check if dropping to Won or Lost stage
+    const isWonStage = newStage.name.toLowerCase().includes('kazanildi') || newStage.name.toLowerCase().includes('won');
+    const isLostStage = newStage.name.toLowerCase().includes('kaybedildi') || newStage.name.toLowerCase().includes('lost');
+
+    if (isWonStage) {
+      // Show confirmation for Won
+      const confirmed = await confirmAction(
+        'Firsati Kazanildi Olarak Isaretle',
+        `"${deal.title}" firsatini "${newStage.name}" asamasina tasiyarak kazanildi olarak isaretlemek istediginizden emin misiniz?`,
+        'Kazanildi Isaretle'
+      );
+      if (confirmed) {
+        try {
+          await closeDealWon.mutateAsync({ id: dealId, finalAmount: deal.amount, actualCloseDate: new Date().toISOString() });
+          showUpdateSuccess('firsat', 'kazanildi olarak isaretlendi!');
+          await refetch();
+        } catch (error: any) {
+          showError(error.response?.data?.detail || error.message || 'Islem basarisiz');
+        }
+      }
+      return;
+    }
+
+    if (isLostStage) {
+      // Show confirmation for Lost
+      const confirmed = await confirmAction(
+        'Firsati Kaybedildi Olarak Isaretle',
+        `"${deal.title}" firsatini "${newStage.name}" asamasina tasiyarak kaybedildi olarak isaretlemek istediginizden emin misiniz?`,
+        'Kaybedildi Isaretle'
+      );
+      if (confirmed) {
+        try {
+          await closeDealLost.mutateAsync({ id: dealId, lostReason: 'Kanban uzerinden kapatildi', actualCloseDate: new Date().toISOString() });
+          showInfo('Firsat Isaretlendi', 'Firsat kaybedildi olarak isaretlendi');
+          await refetch();
+        } catch (error: any) {
+          showError(error.response?.data?.detail || error.message || 'Islem basarisiz');
+        }
+      }
+      return;
+    }
+
+    // Normal stage move
     try {
       await moveDealStage.mutateAsync({ id: dealId, newStageId });
       showUpdateSuccess('firsat', `"${newStage.name}" asamasina tasindi`);
     } catch { /* Error handled in hook */ }
-  }, [deals, stages, moveDealStage]);
+  }, [deals, stages, moveDealStage, closeDealWon, closeDealLost, refetch]);
 
   // Filter deals
   const filteredDeals = deals.filter((deal) => {
@@ -681,5 +725,13 @@ export default function DealsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function DealsPage() {
+  return (
+    <ProtectedRoute permission="CRM.Deals:View">
+      <DealsPageContent />
+    </ProtectedRoute>
   );
 }

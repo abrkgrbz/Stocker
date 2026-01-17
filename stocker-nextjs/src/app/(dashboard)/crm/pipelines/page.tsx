@@ -1,5 +1,7 @@
 'use client';
 
+import { ProtectedRoute } from '@/components/auth';
+
 /**
  * Pipelines List Page
  * Monochrome design system following DESIGN_SYSTEM.md
@@ -35,7 +37,7 @@ const pipelineTypeLabels: Record<string, string> = {
   Custom: 'Ozel',
 };
 
-export default function PipelinesPage() {
+function PipelinesPageContent() {
   const router = useRouter();
   const [stagesModalOpen, setStagesModalOpen] = useState(false);
   const [viewingPipeline, setViewingPipeline] = useState<Pipeline | null>(null);
@@ -521,5 +523,14 @@ export default function PipelinesPage() {
         )}
       </Modal>
     </div>
+  );
+}
+
+
+export default function PipelinesPage() {
+  return (
+    <ProtectedRoute permission="CRM.Pipelines:View">
+      <PipelinesPageContent />
+    </ProtectedRoute>
   );
 }

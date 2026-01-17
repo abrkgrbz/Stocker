@@ -1,5 +1,7 @@
 'use client';
 
+import { ProtectedRoute } from '@/components/auth';
+
 /**
  * Meetings List Page
  * Monochrome design system following DESIGN_SYSTEM.md
@@ -102,7 +104,7 @@ const getPriorityStyle = (priority: MeetingPriority): string => {
   }
 };
 
-export default function MeetingsPage() {
+function MeetingsPageContent() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -497,5 +499,14 @@ export default function MeetingsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+
+export default function MeetingsPage() {
+  return (
+    <ProtectedRoute permission="CRM.Meetings:View">
+      <MeetingsPageContent />
+    </ProtectedRoute>
   );
 }

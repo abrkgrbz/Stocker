@@ -42,6 +42,7 @@ import {
   showInfo,
 } from '@/lib/utils/sweetalert';
 import type { ColumnsType } from 'antd/es/table';
+import { ProtectedRoute } from '@/components/auth';
 
 // Monochrome lead status configuration
 const leadStatusConfig: Record<string, { color: string; bgColor: string; label: string }> = {
@@ -62,7 +63,7 @@ const leadRatingConfig: Record<string, { color: string; bgColor: string; label: 
   Hot: { color: '#1e293b', bgColor: '#cbd5e1', label: 'Sicak' },
 };
 
-export default function LeadsPage() {
+function LeadsPageContent() {
   const router = useRouter();
 
   // Filter state
@@ -544,5 +545,13 @@ export default function LeadsPage() {
         onSubmit={handleConvertSubmit}
       />
     </div>
+  );
+}
+
+export default function LeadsPage() {
+  return (
+    <ProtectedRoute permission="CRM.Leads:View">
+      <LeadsPageContent />
+    </ProtectedRoute>
   );
 }

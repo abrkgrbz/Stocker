@@ -42,6 +42,7 @@ import {
 } from '@/lib/utils/sweetalert';
 import dayjs from 'dayjs';
 import type { ColumnsType } from 'antd/es/table';
+import { ProtectedRoute } from '@/components/auth';
 
 // Monochrome opportunity status configuration
 const opportunityStatusConfig: Record<string, { color: string; bgColor: string; label: string }> = {
@@ -58,7 +59,7 @@ const priorityConfig: Record<string, { color: string; bgColor: string; label: st
   High: { color: '#1e293b', bgColor: '#e2e8f0', label: 'Yuksek' },
 };
 
-export default function OpportunitiesPage() {
+function OpportunitiesPageContent() {
   const router = useRouter();
 
   // Filter state
@@ -468,5 +469,13 @@ export default function OpportunitiesPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function OpportunitiesPage() {
+  return (
+    <ProtectedRoute permission="CRM.Opportunities:View">
+      <OpportunitiesPageContent />
+    </ProtectedRoute>
   );
 }

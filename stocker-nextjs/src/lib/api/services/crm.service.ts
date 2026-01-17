@@ -1263,15 +1263,15 @@ export class CRMService {
    */
   static async closeDealWon(
     id: Guid,
-    actualAmount?: number,
-    closedDate?: DateTime,
-    notes?: string
+    finalAmount?: number,
+    actualCloseDate?: DateTime,
+    wonDetails?: string
   ): Promise<Deal> {
     const command: CloseDealWonCommand = {
       id,
-      actualAmount,
-      closedDate: closedDate || new Date().toISOString(),
-      notes,
+      finalAmount,
+      actualCloseDate: actualCloseDate || new Date().toISOString(),
+      wonDetails,
     };
     return ApiService.post<Deal>(this.getPath(`deals/${id}/close-won`), command);
   }
@@ -1283,15 +1283,13 @@ export class CRMService {
     id: Guid,
     lostReason: string,
     competitorName?: string,
-    closedDate?: DateTime,
-    notes?: string
+    actualCloseDate?: DateTime
   ): Promise<Deal> {
     const command: CloseDealLostCommand = {
       id,
       lostReason,
       competitorName,
-      closedDate: closedDate || new Date().toISOString(),
-      notes,
+      actualCloseDate: actualCloseDate || new Date().toISOString(),
     };
     return ApiService.post<Deal>(this.getPath(`deals/${id}/close-lost`), command);
   }

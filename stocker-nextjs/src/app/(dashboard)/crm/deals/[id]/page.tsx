@@ -84,8 +84,8 @@ export default function DealDetailPage() {
         try {
           await closeDealWon.mutateAsync({
             id: dealId,
-            actualAmount: deal?.amount || 0,
-            closedDate: new Date().toISOString(),
+            finalAmount: deal?.amount || 0,
+            actualCloseDate: new Date().toISOString(),
           });
           showSuccess('Fırsat başarıyla kazanıldı olarak işaretlendi!');
         } catch (error) {
@@ -108,7 +108,7 @@ export default function DealDetailPage() {
           await closeDealLost.mutateAsync({
             id: dealId,
             lostReason: 'Kullanıcı tarafından kapatıldı',
-            closedDate: new Date().toISOString(),
+            actualCloseDate: new Date().toISOString(),
           });
           showSuccess('Fırsat kaybedildi olarak işaretlendi');
         } catch (error) {

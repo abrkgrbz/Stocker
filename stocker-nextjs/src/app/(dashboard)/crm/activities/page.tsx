@@ -1,5 +1,7 @@
 'use client';
 
+import { ProtectedRoute } from '@/components/auth';
+
 import React, { useState, useMemo } from 'react';
 import {
   Button,
@@ -128,7 +130,7 @@ const activityStatusConfig: Record<
   },
 };
 
-export default function ActivitiesPage() {
+function ActivitiesPageContent() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [quickActionType, setQuickActionType] = useState<number | undefined>(undefined);
@@ -789,5 +791,14 @@ export default function ActivitiesPage() {
         </Form>
       </Modal>
     </div>
+  );
+}
+
+
+export default function ActivitiesPage() {
+  return (
+    <ProtectedRoute permission="CRM.Activities:View">
+      <ActivitiesPageContent />
+    </ProtectedRoute>
   );
 }

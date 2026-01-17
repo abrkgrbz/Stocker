@@ -1,5 +1,7 @@
 'use client';
 
+import { ProtectedRoute } from '@/components/auth';
+
 /**
  * Campaigns List Page
  * Monochrome design system following inventory/HR patterns
@@ -66,7 +68,7 @@ const campaignStatusConfig: Record<string, { color: string; bgColor: string; lab
   OnHold: { color: '#475569', bgColor: '#e2e8f0', label: 'Beklemede' },
 };
 
-export default function CampaignsPage() {
+function CampaignsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -554,5 +556,14 @@ export default function CampaignsPage() {
         />
       </div>
     </div>
+  );
+}
+
+
+export default function CampaignsPage() {
+  return (
+    <ProtectedRoute permission="CRM.Campaigns:View">
+      <CampaignsPageContent />
+    </ProtectedRoute>
   );
 }

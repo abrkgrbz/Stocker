@@ -1,5 +1,7 @@
 'use client';
 
+import { ProtectedRoute } from '@/components/auth';
+
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Table, Tag, Modal, message, Avatar, Dropdown, Empty, Input, Spin } from 'antd';
@@ -29,7 +31,7 @@ const segmentTypeLabels: Record<string, string> = {
   Dynamic: 'Dinamik',
 };
 
-export default function CustomerSegmentsPage() {
+function CustomerSegmentsPageContent() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
 
@@ -457,5 +459,14 @@ export default function CustomerSegmentsPage() {
         </div>
       </Spin>
     </div>
+  );
+}
+
+
+export default function CustomerSegmentsPage() {
+  return (
+    <ProtectedRoute permission="CRM.Segments:View">
+      <CustomerSegmentsPageContent />
+    </ProtectedRoute>
   );
 }

@@ -1,5 +1,7 @@
 'use client';
 
+import { ProtectedRoute } from '@/components/auth';
+
 /**
  * Call Logs List Page
  * Monochrome design system following DESIGN_SYSTEM.md
@@ -82,7 +84,7 @@ const getOutcomeStyle = (outcome: CallOutcome): string => {
   }
 };
 
-export default function CallLogsPage() {
+function CallLogsPageContent() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -403,5 +405,14 @@ export default function CallLogsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+
+export default function CallLogsPage() {
+  return (
+    <ProtectedRoute permission="CRM.CallLogs:View">
+      <CallLogsPageContent />
+    </ProtectedRoute>
   );
 }
