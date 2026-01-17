@@ -56,6 +56,8 @@ public class GetSalesTeamByIdQueryHandler : IRequestHandler<GetSalesTeamByIdQuer
             CommunicationChannel = entity.CommunicationChannel,
             ActiveMemberCount = entity.Members.Count(m => m.IsActive),
             TotalMemberCount = entity.Members.Count,
+            CreatedAt = entity.CreatedAt,
+            UpdatedAt = entity.UpdatedAt,
             Members = entity.Members.Select(m => new SalesTeamMemberDto
             {
                 Id = m.Id,

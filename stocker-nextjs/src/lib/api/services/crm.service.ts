@@ -88,6 +88,8 @@ import type {
   SalesTeamDto,
   SalesTeamMemberDto,
   CreateSalesTeamCommand,
+  UpdateSalesTeamCommand,
+  AddSalesTeamMemberCommand,
   SalesTeamFilters,
   SalesTeamRole,
   // Competitors
@@ -2079,10 +2081,31 @@ export class CRMService {
   }
 
   /**
+   * Update sales team
+   */
+  static async updateSalesTeam(data: UpdateSalesTeamCommand): Promise<void> {
+    return ApiService.put<void>(this.getPath(`sales-teams/${data.id}`), data);
+  }
+
+  /**
    * Delete sales team
    */
   static async deleteSalesTeam(id: Guid): Promise<void> {
     return ApiService.delete<void>(this.getPath(`sales-teams/${id}`));
+  }
+
+  /**
+   * Add member to sales team
+   */
+  static async addSalesTeamMember(data: AddSalesTeamMemberCommand): Promise<Guid> {
+    return ApiService.post<Guid>(this.getPath(`sales-teams/${data.salesTeamId}/members`), data);
+  }
+
+  /**
+   * Remove member from sales team
+   */
+  static async removeSalesTeamMember(salesTeamId: Guid, userId: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`sales-teams/${salesTeamId}/members/${userId}`));
   }
 
   // =====================================

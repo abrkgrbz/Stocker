@@ -84,7 +84,9 @@ public class GetSalesTeamsQueryHandler : IRequestHandler<GetSalesTeamsQuery, Pag
                 TeamEmail = s.TeamEmail,
                 CommunicationChannel = s.CommunicationChannel,
                 ActiveMemberCount = s.Members.Count(m => m.IsActive),
-                TotalMemberCount = s.Members.Count
+                TotalMemberCount = s.Members.Count,
+                CreatedAt = s.CreatedAt,
+                UpdatedAt = s.UpdatedAt
             })
             .ToListAsync(cancellationToken);
 

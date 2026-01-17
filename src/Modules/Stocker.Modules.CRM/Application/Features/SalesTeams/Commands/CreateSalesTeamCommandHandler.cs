@@ -24,8 +24,11 @@ public class CreateSalesTeamCommandHandler : IRequestHandler<CreateSalesTeamComm
         if (!string.IsNullOrEmpty(request.Description))
             salesTeam.SetDescription(request.Description);
 
+        // Set team leader - either with ID or just name
         if (request.TeamLeaderId.HasValue)
             salesTeam.SetTeamLeader(request.TeamLeaderId.Value, request.TeamLeaderName);
+        else if (!string.IsNullOrEmpty(request.TeamLeaderName))
+            salesTeam.SetTeamLeaderName(request.TeamLeaderName);
 
         if (request.ParentTeamId.HasValue)
             salesTeam.SetParentTeam(request.ParentTeamId.Value);
@@ -36,8 +39,17 @@ public class CreateSalesTeamCommandHandler : IRequestHandler<CreateSalesTeamComm
         if (!string.IsNullOrEmpty(request.Currency))
             salesTeam.SetCurrency(request.Currency);
 
+        // Set territory - get territory name if not provided
         if (request.TerritoryId.HasValue)
-            salesTeam.SetTerritory(request.TerritoryId.Value, request.TerritoryNames);
+        {
+            var territoryNames = request.TerritoryNames;
+            if (string.IsNullOrEmpty(territoryNames))
+            {
+                var territory = await _unitOfWork.ReadRepository<Territory>().GetByIdAsync(request.TerritoryId.Value, cancellationToken);
+                territoryNames = territory?.Name;
+            }
+            salesTeam.SetTerritory(request.TerritoryId.Value, territoryNames);
+        }
 
         if (!string.IsNullOrEmpty(request.TeamEmail))
             salesTeam.SetTeamEmail(request.TeamEmail);

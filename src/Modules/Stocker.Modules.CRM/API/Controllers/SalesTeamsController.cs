@@ -88,9 +88,76 @@ public class SalesTeamsController : ControllerBase
             : BadRequest(result.Error);
     }
 
-    // TODO: Add commands for the following specialized operations:
-    // - AddMember, RemoveMember
-    // - Activate, Deactivate
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateSalesTeam(
+        Guid id,
+        [FromBody] UpdateSalesTeamRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = GetTenantId();
+        var command = new UpdateSalesTeamCommand(
+            Id: id,
+            TenantId: tenantId,
+            Name: request.Name,
+            Code: request.Code,
+            Description: request.Description,
+            TeamLeaderId: request.TeamLeaderId,
+            TeamLeaderName: request.TeamLeaderName,
+            ParentTeamId: request.ParentTeamId,
+            SalesTarget: request.SalesTarget,
+            TargetPeriod: request.TargetPeriod,
+            Currency: request.Currency,
+            TerritoryId: request.TerritoryId,
+            TerritoryNames: request.TerritoryNames,
+            TeamEmail: request.TeamEmail,
+            CommunicationChannel: request.CommunicationChannel);
+
+        var result = await _mediator.Send(command, cancellationToken);
+
+        return result.IsSuccess
+            ? NoContent()
+            : BadRequest(result.Error);
+    }
+
+    [HttpPost("{id}/members")]
+    public async Task<IActionResult> AddMember(
+        Guid id,
+        [FromBody] AddMemberRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = GetTenantId();
+        var command = new AddSalesTeamMemberCommand(
+            SalesTeamId: id,
+            TenantId: tenantId,
+            UserId: request.UserId,
+            UserName: request.UserName,
+            Role: request.Role);
+
+        var result = await _mediator.Send(command, cancellationToken);
+
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : BadRequest(result.Error);
+    }
+
+    [HttpDelete("{id}/members/{userId}")]
+    public async Task<IActionResult> RemoveMember(
+        Guid id,
+        int userId,
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = GetTenantId();
+        var command = new RemoveSalesTeamMemberCommand(
+            SalesTeamId: id,
+            TenantId: tenantId,
+            UserId: userId);
+
+        var result = await _mediator.Send(command, cancellationToken);
+
+        return result.IsSuccess
+            ? NoContent()
+            : BadRequest(result.Error);
+    }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteSalesTeam(Guid id, CancellationToken cancellationToken = default)
@@ -110,6 +177,21 @@ public record CreateSalesTeamRequest(
     string Code,
     string? Description = null,
     bool? IsActive = null,
+    int? TeamLeaderId = null,
+    string? TeamLeaderName = null,
+    Guid? ParentTeamId = null,
+    decimal? SalesTarget = null,
+    string? TargetPeriod = null,
+    string? Currency = null,
+    Guid? TerritoryId = null,
+    string? TerritoryNames = null,
+    string? TeamEmail = null,
+    string? CommunicationChannel = null);
+
+public record UpdateSalesTeamRequest(
+    string Name,
+    string Code,
+    string? Description = null,
     int? TeamLeaderId = null,
     string? TeamLeaderName = null,
     Guid? ParentTeamId = null,

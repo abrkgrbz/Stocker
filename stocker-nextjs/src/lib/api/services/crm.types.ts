@@ -1708,14 +1708,20 @@ export interface CreateSalesTeamCommand {
 
 export interface UpdateSalesTeamCommand {
   id: Guid;
-  name?: string;
-  code?: string;
+  name: string;
+  code: string;
   description?: string;
   teamLeaderId?: number;
   teamLeaderName?: string;
+  parentTeamId?: Guid;
   salesTarget?: number;
   targetPeriod?: string;
+  currency?: string;
+  territoryId?: Guid;
+  territoryNames?: string;
   teamEmail?: string;
+  communicationChannel?: string;
+  isActive?: boolean;
 }
 
 export interface AddSalesTeamMemberCommand {

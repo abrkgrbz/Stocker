@@ -100,6 +100,20 @@ public class SalesTeam : TenantEntity
 
     #endregion
 
+    #region Zaman Damgaları (Timestamps)
+
+    /// <summary>
+    /// Oluşturulma tarihi / Created date
+    /// </summary>
+    public DateTime CreatedAt { get; private set; }
+
+    /// <summary>
+    /// Güncellenme tarihi / Updated date
+    /// </summary>
+    public DateTime? UpdatedAt { get; private set; }
+
+    #endregion
+
     // Navigation
     public virtual SalesTeam? ParentTeam { get; private set; }
     public virtual Territory? Territory { get; private set; }
@@ -116,6 +130,7 @@ public class SalesTeam : TenantEntity
         Code = code;
         IsActive = true;
         Currency = "TRY";
+        CreatedAt = DateTime.UtcNow;
     }
 
     public SalesTeamMember AddMember(int userId, string? userName = null, SalesTeamRole role = SalesTeamRole.Member)
@@ -152,6 +167,15 @@ public class SalesTeam : TenantEntity
         }
     }
 
+    /// <summary>
+    /// Set only team leader name (without user ID)
+    /// Used when no user system integration is needed
+    /// </summary>
+    public void SetTeamLeaderName(string name)
+    {
+        TeamLeaderName = name;
+    }
+
     public void SetSalesTarget(decimal target, string period)
     {
         SalesTarget = target;
@@ -178,6 +202,7 @@ public class SalesTeam : TenantEntity
         Name = name;
         Code = code;
         Description = description;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public int GetActiveMemberCount() => _members.Count(m => m.IsActive);

@@ -48,6 +48,8 @@ import type {
   SalesTeamDto,
   SalesTeamFilters,
   CreateSalesTeamCommand,
+  UpdateSalesTeamCommand,
+  AddSalesTeamMemberCommand,
   CompetitorDto,
   CompetitorFilters,
   CreateCompetitorCommand,
@@ -2204,6 +2206,22 @@ export function useCreateSalesTeam() {
   });
 }
 
+export function useUpdateSalesTeam() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: UpdateSalesTeamCommand) => CRMService.updateSalesTeam(data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.salesTeams });
+      queryClient.invalidateQueries({ queryKey: crmKeys.salesTeam(variables.id) });
+      showSuccess('Satış ekibi güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Satış ekibi güncellenemedi');
+    },
+  });
+}
+
 export function useDeleteSalesTeam() {
   const queryClient = useQueryClient();
 
@@ -2215,6 +2233,39 @@ export function useDeleteSalesTeam() {
     },
     onError: (error) => {
       showApiError(error, 'Satış ekibi silinemedi');
+    },
+  });
+}
+
+export function useAddSalesTeamMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: AddSalesTeamMemberCommand) => CRMService.addSalesTeamMember(data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.salesTeams });
+      queryClient.invalidateQueries({ queryKey: crmKeys.salesTeam(variables.salesTeamId) });
+      showSuccess('Üye eklendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Üye eklenemedi');
+    },
+  });
+}
+
+export function useRemoveSalesTeamMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ salesTeamId, userId }: { salesTeamId: Guid; userId: number }) =>
+      CRMService.removeSalesTeamMember(salesTeamId, userId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.salesTeams });
+      queryClient.invalidateQueries({ queryKey: crmKeys.salesTeam(variables.salesTeamId) });
+      showSuccess('Üye çıkarıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Üye çıkarılamadı');
     },
   });
 }

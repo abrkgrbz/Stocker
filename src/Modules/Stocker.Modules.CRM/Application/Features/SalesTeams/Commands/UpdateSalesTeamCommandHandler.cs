@@ -29,8 +29,11 @@ public class UpdateSalesTeamCommandHandler : IRequestHandler<UpdateSalesTeamComm
 
         salesTeam.UpdateDetails(request.Name, request.Code, request.Description);
 
+        // Set team leader - either with ID or just name
         if (request.TeamLeaderId.HasValue)
             salesTeam.SetTeamLeader(request.TeamLeaderId.Value, request.TeamLeaderName);
+        else if (!string.IsNullOrEmpty(request.TeamLeaderName))
+            salesTeam.SetTeamLeaderName(request.TeamLeaderName);
 
         if (request.ParentTeamId.HasValue)
             salesTeam.SetParentTeam(request.ParentTeamId.Value);
