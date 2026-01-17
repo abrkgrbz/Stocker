@@ -232,19 +232,16 @@ function CustomerSegmentsPageContent() {
             key: 'view',
             icon: <EyeIcon className="w-4 h-4" />,
             label: 'Goruntule',
-            onClick: () => router.push(`/crm/segments/${record.id}`),
           },
           {
             key: 'edit',
             icon: <PencilIcon className="w-4 h-4" />,
             label: 'Duzenle',
-            onClick: () => handleEdit(record),
           },
           {
             key: 'clone',
             icon: <DocumentDuplicateIcon className="w-4 h-4" />,
             label: 'Kopyala',
-            onClick: () => handleClone(record),
             disabled: createSegment.isPending,
           },
           { type: 'divider' as const },
@@ -252,13 +249,11 @@ function CustomerSegmentsPageContent() {
             key: 'export',
             icon: <ArrowDownTrayIcon className="w-4 h-4" />,
             label: 'Uyeleri Disa Aktar (.csv)',
-            onClick: () => handleExport(record),
           },
           {
             key: 'campaign',
             icon: <EnvelopeIcon className="w-4 h-4" />,
             label: 'Bu Segmente Kampanya Gonder',
-            onClick: () => handleSendCampaign(record),
           },
           { type: 'divider' as const },
           {
@@ -266,13 +261,35 @@ function CustomerSegmentsPageContent() {
             icon: <TrashIcon className="w-4 h-4" />,
             label: 'Sil',
             danger: true,
-            onClick: () => handleDelete(record.id),
             disabled: deleteSegment.isPending,
           },
         ];
 
+        const handleMenuClick = (info: { key: string }) => {
+          switch (info.key) {
+            case 'view':
+              router.push(`/crm/segments/${record.id}`);
+              break;
+            case 'edit':
+              handleEdit(record);
+              break;
+            case 'clone':
+              handleClone(record);
+              break;
+            case 'export':
+              handleExport(record);
+              break;
+            case 'campaign':
+              handleSendCampaign(record);
+              break;
+            case 'delete':
+              handleDelete(record.id);
+              break;
+          }
+        };
+
         return (
-          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+          <Dropdown menu={{ items: menuItems, onClick: handleMenuClick }} trigger={['click']}>
             <Button type="text" icon={<EllipsisVerticalIcon className="w-4 h-4" />} className="text-slate-600 hover:text-slate-900" />
           </Dropdown>
         );
