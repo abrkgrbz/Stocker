@@ -6,6 +6,7 @@ import { PhoneIcon } from '@heroicons/react/24/outline';
 import type { CallLogDto } from '@/lib/api/services/crm.types';
 import { CallDirection, CallType, CallStatus, CallOutcome } from '@/lib/api/services/crm.types';
 import { useCustomers } from '@/lib/api/hooks/useCRM';
+import { FormPhoneInput } from '@/components/ui/InternationalPhoneInput';
 
 const { TextArea } = Input;
 
@@ -106,10 +107,9 @@ export default function CallLogForm({ form, initialValues, onFinish, loading }: 
                 rules={[{ required: true, message: 'Arayan numara zorunludur' }]}
                 className="mb-0"
               >
-                <Input
+                <FormPhoneInput
+                  defaultCountry="TR"
                   placeholder="Arayan Numara Girin..."
-                  variant="borderless"
-                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
                 />
               </Form.Item>
             </div>
@@ -183,10 +183,7 @@ export default function CallLogForm({ form, initialValues, onFinish, loading }: 
                   rules={[{ required: true, message: 'Aranan numara zorunludur' }]}
                   className="mb-0"
                 >
-                  <Input
-                    placeholder="05XX XXX XX XX"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
+                  <FormPhoneInput defaultCountry="TR" />
                 </Form.Item>
               </div>
               <div className="col-span-6">
