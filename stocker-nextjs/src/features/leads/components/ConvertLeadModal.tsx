@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Drawer, Form, Input, Card, Steps, Button } from 'antd';
+import { Modal, Form, Input, Steps } from 'antd';
 import {
   BuildingLibraryIcon,
   UserIcon,
@@ -9,9 +9,8 @@ import {
   PhoneIcon,
   MapPinIcon,
   ArrowsRightLeftIcon,
-  ArrowLeftIcon,
-  ArrowRightIcon,
-  CheckIcon,
+  UserPlusIcon,
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 
 const { TextArea } = Input;
@@ -46,7 +45,7 @@ export function ConvertLeadModal({
 
   const steps = [
     {
-      title: 'Firma Bilgileri',
+      title: 'Firma',
       icon: <BuildingLibraryIcon className="w-4 h-4" />,
     },
     {
@@ -54,7 +53,7 @@ export function ConvertLeadModal({
       icon: <EnvelopeIcon className="w-4 h-4" />,
     },
     {
-      title: 'Adres & Tamamla',
+      title: 'Adres',
       icon: <MapPinIcon className="w-4 h-4" />,
     },
   ];
@@ -100,173 +99,217 @@ export function ConvertLeadModal({
   };
 
   return (
-    <Drawer
-      title={
-        <div className="flex items-center gap-3 pb-4">
-          <div className="p-2 bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-md">
-            <ArrowsRightLeftIcon className="w-5 h-5 text-white" />
-          </div>
-          <div className="text-lg font-semibold text-gray-800">Müşteriye Dönüştür</div>
-        </div>
-      }
+    <Modal
       open={open}
-      onClose={handleCancel}
-      width={720}
+      onCancel={handleCancel}
+      footer={null}
+      closable={false}
+      centered
+      width={560}
       destroyOnClose
-      placement="right"
       styles={{
-        mask: {
-          backdropFilter: 'blur(8px)',
-          backgroundColor: 'rgba(0, 0, 0, 0.45)',
+        content: {
+          padding: 0,
+          borderRadius: '16px',
+          overflow: 'hidden',
         },
-        body: { paddingTop: 24 },
+        mask: {
+          backdropFilter: 'blur(4px)',
+          background: 'rgba(15, 23, 42, 0.4)',
+        },
       }}
-      footer={
-        <div className="flex justify-between items-center">
-          <Button onClick={handlePrev} disabled={currentStep === 0} icon={<ArrowLeftIcon className="w-4 h-4" />} size="large">
-            Geri
-          </Button>
-          <div className="text-sm text-gray-500">Adım {currentStep + 1} / {steps.length}</div>
-          {currentStep < steps.length - 1 ? (
-            <Button type="primary" onClick={handleNext} icon={<ArrowRightIcon className="w-4 h-4" />} iconPosition="end" size="large">
-              İleri
-            </Button>
-          ) : (
-            <Button type="primary" onClick={handleSubmit} loading={loading} icon={<CheckIcon className="w-4 h-4" />} size="large">
-              Müşteriye Dönüştür
-            </Button>
-          )}
-        </div>
-      }
     >
-      {/* Steps */}
-      <div className="mb-6">
-        <Steps current={currentStep} items={steps} className="px-4" />
+      {/* Modal Header */}
+      <div className="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-emerald-50 to-teal-50">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
+            <UserPlusIcon className="w-6 h-6 text-emerald-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900 m-0">
+              Müşteriye Dönüştür
+            </h3>
+            <p className="text-sm text-slate-500 m-0 mt-0.5">
+              Lead bilgilerini düzenleyip müşteri oluşturun
+            </p>
+          </div>
+        </div>
       </div>
 
-      <Form form={form} layout="vertical">
-        {/* Step 0: Firma Bilgileri */}
-        {currentStep === 0 && (
-          <div className="min-h-[280px]">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 bg-blue-50 rounded-lg">
-                <BuildingLibraryIcon className="w-5 h-5 text-blue-600" />
+      {/* Steps */}
+      <div className="px-6 pt-5 pb-2">
+        <Steps
+          current={currentStep}
+          items={steps}
+          size="small"
+          className="convert-steps"
+        />
+      </div>
+
+      {/* Modal Body */}
+      <div className="px-6 py-4">
+        <Form form={form} layout="vertical" className="space-y-4">
+          {/* Step 0: Firma Bilgileri */}
+          {currentStep === 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-1.5 bg-blue-50 rounded-lg">
+                  <BuildingLibraryIcon className="w-4 h-4 text-blue-600" />
+                </div>
+                <span className="text-sm font-medium text-slate-700">Firma Bilgileri</span>
               </div>
-              <h3 className="text-base font-semibold text-gray-800 m-0">Firma Bilgileri</h3>
-            </div>
-            <Card className="shadow-sm border-gray-200">
+
               <Form.Item
-                label={<span className="text-gray-700 font-medium">Firma Adı</span>}
                 name="companyName"
                 rules={[{ required: true, message: 'Firma adı gerekli' }]}
+                className="mb-3"
               >
                 <Input
-                  prefix={<BuildingLibraryIcon className="w-4 h-4 text-gray-400" />}
+                  prefix={<BuildingLibraryIcon className="w-4 h-4 text-slate-400" />}
                   placeholder="Firma adı"
-                  className="rounded-lg"
-                  size="large"
+                  className="h-10 rounded-lg"
                 />
               </Form.Item>
 
-              <Form.Item
-                label={<span className="text-gray-700 font-medium">İletişim Kişisi</span>}
-                name="contactPerson"
-              >
+              <Form.Item name="contactPerson" className="mb-0">
                 <Input
-                  prefix={<UserIcon className="w-4 h-4 text-gray-400" />}
-                  placeholder="Ad Soyad"
-                  className="rounded-lg"
-                  size="large"
+                  prefix={<UserIcon className="w-4 h-4 text-slate-400" />}
+                  placeholder="İletişim kişisi"
+                  className="h-10 rounded-lg"
                 />
               </Form.Item>
 
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-4">
-                <div className="text-sm text-green-700">
-                  💡 Bu bilgiler lead kaydından otomatik doldurulmuştur. Gerekirse düzenleyebilirsiniz.
-                </div>
+              <div className="flex items-start gap-2 p-3 bg-emerald-50 rounded-lg border border-emerald-100 mt-4">
+                <CheckCircleIcon className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-emerald-700 m-0">
+                  Bu bilgiler lead kaydından otomatik dolduruldu
+                </p>
               </div>
-            </Card>
-          </div>
-        )}
-
-        {/* Step 1: İletişim */}
-        {currentStep === 1 && (
-          <div className="min-h-[280px]">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 bg-green-50 rounded-lg">
-                <EnvelopeIcon className="w-5 h-5 text-green-600" />
-              </div>
-              <h3 className="text-base font-semibold text-gray-800 m-0">İletişim Bilgileri</h3>
             </div>
-            <Card className="shadow-sm border-gray-200">
+          )}
+
+          {/* Step 1: İletişim */}
+          {currentStep === 1 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-1.5 bg-green-50 rounded-lg">
+                  <EnvelopeIcon className="w-4 h-4 text-green-600" />
+                </div>
+                <span className="text-sm font-medium text-slate-700">İletişim Bilgileri</span>
+              </div>
+
               <Form.Item
-                label={<span className="text-gray-700 font-medium">E-posta</span>}
                 name="email"
                 rules={[
                   { required: true, message: 'E-posta gerekli' },
                   { type: 'email', message: 'Geçerli bir e-posta girin' },
                 ]}
+                className="mb-3"
               >
                 <Input
-                  prefix={<EnvelopeIcon className="w-4 h-4 text-gray-400" />}
+                  prefix={<EnvelopeIcon className="w-4 h-4 text-slate-400" />}
                   placeholder="ornek@firma.com"
-                  className="rounded-lg"
-                  size="large"
+                  className="h-10 rounded-lg"
                 />
               </Form.Item>
 
-              <Form.Item
-                label={<span className="text-gray-700 font-medium">Telefon</span>}
-                name="phone"
-              >
+              <Form.Item name="phone" className="mb-0">
                 <Input
-                  prefix={<PhoneIcon className="w-4 h-4 text-gray-400" />}
+                  prefix={<PhoneIcon className="w-4 h-4 text-slate-400" />}
                   placeholder="+90 (555) 123-4567"
-                  className="rounded-lg"
-                  size="large"
+                  className="h-10 rounded-lg"
                 />
               </Form.Item>
-            </Card>
-          </div>
-        )}
-
-        {/* Step 2: Adres & Tamamla */}
-        {currentStep === 2 && (
-          <div className="min-h-[280px]">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 bg-purple-50 rounded-lg">
-                <MapPinIcon className="w-5 h-5 text-purple-600" />
-              </div>
-              <h3 className="text-base font-semibold text-gray-800 m-0">Adres</h3>
             </div>
-            <Card className="shadow-sm border-gray-200">
-              <Form.Item
-                label={<span className="text-gray-700 font-medium">Adres</span>}
-                name="address"
-              >
+          )}
+
+          {/* Step 2: Adres & Tamamla */}
+          {currentStep === 2 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-1.5 bg-purple-50 rounded-lg">
+                  <MapPinIcon className="w-4 h-4 text-purple-600" />
+                </div>
+                <span className="text-sm font-medium text-slate-700">Adres Bilgileri</span>
+              </div>
+
+              <Form.Item name="address" className="mb-0">
                 <TextArea
-                  rows={5}
+                  rows={3}
                   placeholder="Şirket adresi..."
                   className="rounded-lg"
-                  size="large"
                 />
               </Form.Item>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-                <div className="flex items-start gap-3">
-                  <ArrowsRightLeftIcon className="w-5 h-5 text-blue-600 mt-1" />
-                  <div>
-                    <div className="font-semibold text-blue-900 mb-1">Dönüştürmeye Hazır</div>
-                    <div className="text-sm text-blue-700">
-                      Lead başarıyla müşteri olarak sisteme eklenecek. Bilgileri kontrol edin ve "Dönüştür" butonuna tıklayın.
-                    </div>
-                  </div>
+              <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100 mt-4">
+                <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <ArrowsRightLeftIcon className="w-3 h-3 text-blue-600" />
+                </div>
+                <div className="text-sm text-blue-700">
+                  <p className="font-medium m-0">Dönüştürmeye Hazır</p>
+                  <p className="text-blue-600 m-0 mt-1">
+                    Lead başarıyla müşteri olarak sisteme eklenecek
+                  </p>
                 </div>
               </div>
-            </Card>
-          </div>
-        )}
-      </Form>
-    </Drawer>
+            </div>
+          )}
+        </Form>
+      </div>
+
+      {/* Modal Footer */}
+      <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+        <div className="text-xs text-slate-400">
+          Adım {currentStep + 1} / {steps.length}
+        </div>
+        <div className="flex items-center gap-3">
+          {currentStep > 0 && (
+            <button
+              onClick={handlePrev}
+              className="px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              Geri
+            </button>
+          )}
+          {currentStep === 0 && (
+            <button
+              onClick={handleCancel}
+              className="px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              İptal
+            </button>
+          )}
+          {currentStep < steps.length - 1 ? (
+            <button
+              onClick={handleNext}
+              className="px-5 py-2.5 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+            >
+              İleri
+            </button>
+          ) : (
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Dönüştürülüyor...
+                </>
+              ) : (
+                <>
+                  <UserPlusIcon className="w-4 h-4" />
+                  Müşteriye Dönüştür
+                </>
+              )}
+            </button>
+          )}
+        </div>
+      </div>
+    </Modal>
   );
 }
