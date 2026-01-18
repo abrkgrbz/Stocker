@@ -868,7 +868,7 @@ export class CRMService {
   /**
    * Get single activity by ID
    */
-  static async getActivity(id: number): Promise<Activity> {
+  static async getActivity(id: Guid): Promise<Activity> {
     return ApiService.get<Activity>(this.getPath(`activities/${id}`));
   }
 
@@ -882,21 +882,21 @@ export class CRMService {
   /**
    * Update existing activity
    */
-  static async updateActivity(id: number, data: Partial<Activity>): Promise<Activity> {
+  static async updateActivity(id: Guid, data: Partial<Activity>): Promise<Activity> {
     return ApiService.put<Activity>(this.getPath(`activities/${id}`), { id, ...data });
   }
 
   /**
    * Delete activity
    */
-  static async deleteActivity(id: number): Promise<void> {
+  static async deleteActivity(id: Guid): Promise<void> {
     return ApiService.delete<void>(this.getPath(`activities/${id}`));
   }
 
   /**
    * Mark activity as completed
    */
-  static async completeActivity(id: number): Promise<Activity> {
+  static async completeActivity(id: Guid): Promise<Activity> {
     return ApiService.patch<Activity>(this.getPath(`activities/${id}/complete`), {});
   }
 

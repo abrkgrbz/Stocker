@@ -302,7 +302,7 @@ export function useActivities(filters?: ActivityFilters) {
 export function useActivity(id: Guid) {
   return useQuery<Activity>({
     queryKey: crmKeys.activity(id),
-    queryFn: () => CRMService.getActivity(Number(id)),
+    queryFn: () => CRMService.getActivity(id),
     ...queryOptions.detail({ enabled: !!id }),
   });
 }
@@ -359,7 +359,7 @@ export function useUpdateActivity() {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Activity> }) =>
-      CRMService.updateActivity(Number(id), data),
+      CRMService.updateActivity(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.activity(variables.id) });
       queryClient.invalidateQueries({ queryKey: crmKeys.activities });
@@ -376,7 +376,7 @@ export function useCompleteActivity() {
 
   return useMutation({
     mutationFn: ({ id, notes }: { id: Guid; notes?: string }) =>
-      CRMService.completeActivity(Number(id)),
+      CRMService.completeActivity(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.activities });
       showSuccess('Aktivite tamamlandı');
@@ -427,7 +427,7 @@ export function useDeleteActivity() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => CRMService.deleteActivity(Number(id)),
+    mutationFn: (id: string) => CRMService.deleteActivity(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.activities });
       showSuccess('Aktivite silindi');
