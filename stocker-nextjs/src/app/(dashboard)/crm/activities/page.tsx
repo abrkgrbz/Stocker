@@ -187,7 +187,7 @@ function ActivitiesPageContent() {
   const handleSubmit = async (values: any) => {
     try {
       if (selectedActivity) {
-        await updateActivity.mutateAsync({ id: selectedActivity.id, data: values });
+        await updateActivity.mutateAsync({ id: String(selectedActivity.id), data: values });
         showSuccess('Aktivite basariyla guncellendi');
       } else {
         await createActivity.mutateAsync(values);

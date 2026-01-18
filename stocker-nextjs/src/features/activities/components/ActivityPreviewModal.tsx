@@ -201,7 +201,7 @@ export function ActivityPreviewModal({
         <div className="grid grid-cols-2 gap-3">
           {isScheduled && onComplete && (
             <button
-              onClick={() => onComplete(activity.id)}
+              onClick={() => onComplete(String(activity.id))}
               disabled={completeLoading}
               className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
             >
