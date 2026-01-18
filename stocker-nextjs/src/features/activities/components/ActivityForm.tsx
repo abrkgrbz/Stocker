@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { Form, Input, Select, DatePicker, Row, Col, Spin } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Form, Input, Select, DatePicker, Row, Col, Spin, Button } from 'antd';
 import type { FormInstance } from 'antd';
 import {
   PhoneIcon,
@@ -106,6 +106,10 @@ export function ActivityForm({
   onFinish,
   loading = false,
 }: ActivityFormProps) {
+  // State for time toggle (Google Calendar style)
+  const [showStartTime, setShowStartTime] = useState(false);
+  const [showEndTime, setShowEndTime] = useState(false);
+
   // Fetch data for dropdowns
   const { data: customersData, isLoading: customersLoading } = useCustomers();
   const { data: leadsData, isLoading: leadsLoading } = useLeads();
@@ -118,7 +122,21 @@ export function ActivityForm({
 
   const isDataLoading = customersLoading || leadsLoading || dealsLoading;
 
-  React.useEffect(() => {
+  // Check if initial values have time component
+  useEffect(() => {
+    if (initialValues?.startTime) {
+      const startDate = initialValues.startTime;
+      const hasTime = startDate.hour() !== 0 || startDate.minute() !== 0;
+      setShowStartTime(hasTime);
+    }
+    if (initialValues?.endTime) {
+      const endDate = initialValues.endTime;
+      const hasTime = endDate.hour() !== 0 || endDate.minute() !== 0;
+      setShowEndTime(hasTime);
+    }
+  }, [initialValues]);
+
+  useEffect(() => {
     if (initialValues) {
       form.setFieldsValue(initialValues);
     }
@@ -242,37 +260,59 @@ export function ActivityForm({
             Tarih ve Konum
           </h3>
           <div className="grid grid-cols-12 gap-4">
-            <div className="col-span-4">
-              <label className="block text-sm font-medium text-slate-600 mb-1.5">Başlangıç</label>
-              <Form.Item
-                name="startTime"
-                className="mb-0"
-                rules={[{ required: true, message: 'Başlangıç zamanı gerekli' }]}
-              >
-                <DatePicker
-                  showTime
-                  format="DD/MM/YYYY HH:mm"
-                  style={{ width: '100%' }}
-                  placeholder="Tarih ve saat"
-                  className="!bg-slate-50 !border-slate-300"
-                />
-              </Form.Item>
+            <div className="col-span-6">
+              <label className="block text-sm font-medium text-slate-600 mb-1.5">Başlangıç Tarihi</label>
+              <div className="flex items-center gap-2">
+                <Form.Item
+                  name="startTime"
+                  className="mb-0 flex-1"
+                  rules={[{ required: true, message: 'Başlangıç tarihi gerekli' }]}
+                >
+                  <DatePicker
+                    showTime={showStartTime ? { format: 'HH:mm' } : false}
+                    format={showStartTime ? 'DD/MM/YYYY HH:mm' : 'DD/MM/YYYY'}
+                    style={{ width: '100%' }}
+                    placeholder={showStartTime ? 'Tarih ve saat seçin' : 'Tarih seçin'}
+                    className="!bg-slate-50 !border-slate-300"
+                  />
+                </Form.Item>
+                <Button
+                  type={showStartTime ? 'primary' : 'default'}
+                  size="small"
+                  onClick={() => setShowStartTime(!showStartTime)}
+                  className={showStartTime ? '!bg-slate-900 !border-slate-900' : ''}
+                >
+                  <ClockIcon className="w-4 h-4 mr-1" />
+                  {showStartTime ? 'Saati Kaldır' : 'Saat Ekle'}
+                </Button>
+              </div>
             </div>
 
-            <div className="col-span-4">
-              <label className="block text-sm font-medium text-slate-600 mb-1.5">Bitiş (Opsiyonel)</label>
-              <Form.Item name="endTime" className="mb-0">
-                <DatePicker
-                  showTime
-                  format="DD/MM/YYYY HH:mm"
-                  style={{ width: '100%' }}
-                  placeholder="Tarih ve saat"
-                  className="!bg-slate-50 !border-slate-300"
-                />
-              </Form.Item>
+            <div className="col-span-6">
+              <label className="block text-sm font-medium text-slate-600 mb-1.5">Bitiş Tarihi (Opsiyonel)</label>
+              <div className="flex items-center gap-2">
+                <Form.Item name="endTime" className="mb-0 flex-1">
+                  <DatePicker
+                    showTime={showEndTime ? { format: 'HH:mm' } : false}
+                    format={showEndTime ? 'DD/MM/YYYY HH:mm' : 'DD/MM/YYYY'}
+                    style={{ width: '100%' }}
+                    placeholder={showEndTime ? 'Tarih ve saat seçin' : 'Tarih seçin'}
+                    className="!bg-slate-50 !border-slate-300"
+                  />
+                </Form.Item>
+                <Button
+                  type={showEndTime ? 'primary' : 'default'}
+                  size="small"
+                  onClick={() => setShowEndTime(!showEndTime)}
+                  className={showEndTime ? '!bg-slate-900 !border-slate-900' : ''}
+                >
+                  <ClockIcon className="w-4 h-4 mr-1" />
+                  {showEndTime ? 'Saati Kaldır' : 'Saat Ekle'}
+                </Button>
+              </div>
             </div>
 
-            <div className="col-span-4">
+            <div className="col-span-12">
               <label className="block text-sm font-medium text-slate-600 mb-1.5">Konum (Opsiyonel)</label>
               <Form.Item name="location" className="mb-0">
                 <Input
@@ -289,7 +329,7 @@ export function ActivityForm({
         <div className="mb-8">
           <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
             İlgili Kayıtlar
-            <span className="ml-2 text-xs font-normal text-slate-400">(En az bir kayıt seçilmeli)</span>
+            <span className="ml-2 text-xs font-normal text-slate-400">(Opsiyonel)</span>
           </h3>
           <div className="grid grid-cols-12 gap-4">
             <div className="col-span-4">

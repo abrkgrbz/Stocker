@@ -126,7 +126,9 @@
       "Bash(pip install:*)",
       "Bash(python:*)",
       "mcp__serena__find_symbol",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(docker container:*)",
+      "Bash(docker info:*)"
     ],
     "deny": [],
     "ask": []
