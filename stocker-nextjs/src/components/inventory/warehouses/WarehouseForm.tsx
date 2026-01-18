@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Form, Input, InputNumber, Switch } from 'antd';
-import { HomeIcon, PhoneIcon, UserIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, UserIcon } from '@heroicons/react/24/outline';
 import type { WarehouseDto } from '@/lib/api/services/inventory.types';
+import { CascadeLocationSelect } from '@/components/ui/CascadeLocationSelect';
+import type { SelectedLocation } from '@/lib/api/services/location.types';
+import { PhoneInput } from '@/components/primitives/inputs/turkey/PhoneInput';
 
 const { TextArea } = Input;
 
@@ -18,11 +21,27 @@ export default function WarehouseForm({ form, initialValues, onFinish, loading }
   const [isActive, setIsActive] = useState(true);
   const [isDefault, setIsDefault] = useState(false);
 
+  // Location state for CascadeLocationSelect
+  const [locationValue, setLocationValue] = useState<SelectedLocation>({});
+
+  // Phone state for PhoneInput
+  const [phoneValue, setPhoneValue] = useState('');
+
   useEffect(() => {
     if (initialValues) {
       form.setFieldsValue(initialValues);
       setIsActive(initialValues.isActive ?? true);
       setIsDefault(initialValues.isDefault ?? false);
+      setPhoneValue(initialValues.phone || '');
+      // Initialize location state from initialValues
+      setLocationValue({
+        countryId: initialValues.countryId || undefined,
+        countryName: initialValues.country || undefined,
+        cityId: initialValues.cityId || undefined,
+        cityName: initialValues.city || undefined,
+        districtId: initialValues.districtId || undefined,
+        districtName: initialValues.state || undefined,
+      });
     } else {
       form.setFieldsValue({
         totalArea: 0,
@@ -30,6 +49,26 @@ export default function WarehouseForm({ form, initialValues, onFinish, loading }
       });
     }
   }, [form, initialValues]);
+
+  // Handle location change from CascadeLocationSelect
+  const handleLocationChange = useCallback((location: SelectedLocation) => {
+    setLocationValue(location);
+    // Update form values with location IDs and names
+    form.setFieldsValue({
+      countryId: location.countryId || null,
+      cityId: location.cityId || null,
+      districtId: location.districtId || null,
+      country: location.countryName || '',
+      city: location.cityName || '',
+      state: location.districtName || '',
+    });
+  }, [form]);
+
+  // Handle phone change from PhoneInput
+  const handlePhoneChange = useCallback((value: string) => {
+    setPhoneValue(value);
+    form.setFieldValue('phone', value);
+  }, [form]);
 
   return (
     <Form
@@ -183,38 +222,33 @@ export default function WarehouseForm({ form, initialValues, onFinish, loading }
                   />
                 </Form.Item>
               </div>
-              <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Şehir</label>
-                <Form.Item name="city" className="mb-0">
-                  <Input
-                    placeholder="İstanbul"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+
+              {/* GeoLocation Cascade Select: Ülke → Şehir → İlçe */}
+              <div className="col-span-12">
+                <CascadeLocationSelect
+                  value={locationValue}
+                  onChange={handleLocationChange}
+                  showDistrict={true}
+                  disabled={loading}
+                  layout="grid"
+                  countryLabel="Ülke"
+                  cityLabel="Şehir (İl)"
+                  districtLabel="İlçe"
+                />
+                {/* Hidden form fields to store location IDs */}
+                <Form.Item name="countryId" hidden><Input /></Form.Item>
+                <Form.Item name="cityId" hidden><Input /></Form.Item>
+                <Form.Item name="districtId" hidden><Input /></Form.Item>
+                <Form.Item name="country" hidden><Input /></Form.Item>
+                <Form.Item name="city" hidden><Input /></Form.Item>
+                <Form.Item name="state" hidden><Input /></Form.Item>
               </div>
-              <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">İlçe / Eyalet</label>
-                <Form.Item name="state" className="mb-0">
-                  <Input
-                    placeholder="Kadıköy"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
-              </div>
+
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Posta Kodu</label>
                 <Form.Item name="postalCode" className="mb-0">
                   <Input
                     placeholder="34000"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
-              </div>
-              <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ülke</label>
-                <Form.Item name="country" className="mb-0">
-                  <Input
-                    placeholder="Türkiye"
                     className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
@@ -230,13 +264,13 @@ export default function WarehouseForm({ form, initialValues, onFinish, loading }
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Telefon</label>
-                <Form.Item name="phone" className="mb-0">
-                  <Input
-                    placeholder="+90 212 000 00 00"
-                    prefix={<PhoneIcon className="w-4 h-4 text-slate-400" />}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <PhoneInput
+                  value={phoneValue}
+                  onChange={handlePhoneChange}
+                  disabled={loading}
+                  showCountryCode={true}
+                />
+                <Form.Item name="phone" hidden><Input /></Form.Item>
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Depo Sorumlusu</label>

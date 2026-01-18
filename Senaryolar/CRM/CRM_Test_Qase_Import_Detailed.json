@@ -1,0 +1,2096 @@
+{
+  "suites": [
+    {
+      "title": "Musteri Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni kurumsal musteri olusturma",
+          "description": "Kurumsal musteri kaydinin tum alanlar doldurularak basariyla olusturulmasi",
+          "preconditions": "CRM erisim yetkisi olmali, Musteriler sayfasi acik olmali",
+          "steps": [
+            {"action": "Sol menuден 'Musteriler' tikla", "expected_result": "Musteri listesi sayfasi acilir"},
+            {"action": "'+ Yeni Musteri' butonuna tikla", "expected_result": "Musteri olusturma formu acilir"},
+            {"action": "Sag ustteki tip seciciden 'Kurumsal' sec", "expected_result": "Kurumsal musteri formu gorunur"},
+            {"action": "Firma Adi: 'Test Teknoloji A.S.' gir", "expected_result": "Firma adi alani dolar"},
+            {"action": "Iletisim Bilgileri bolumune git", "expected_result": "Iletisim alanlari gorunur"},
+            {"action": "Irtibat Kisisi: 'Ahmet Yilmaz' gir", "expected_result": "Alan dolar"},
+            {"action": "E-posta: 'ahmet@testteknoloji.com' gir", "expected_result": "Alan dolar"},
+            {"action": "Telefon: '+90 212 555 1234' gir", "expected_result": "Telefon formatta gosterilir"},
+            {"action": "Web Sitesi: 'https://testteknoloji.com' gir", "expected_result": "Alan dolar"},
+            {"action": "Isletme Bilgileri bolumune git", "expected_result": "Isletme alanlari gorunur"},
+            {"action": "Sirket Turu: 'Anonim Sirket (A.S.)' sec", "expected_result": "Sirket turu secilir"},
+            {"action": "Sektor: 'Teknoloji' sec", "expected_result": "Sektor secilir"},
+            {"action": "Yillik Gelir: '5000000' gir", "expected_result": "5.000.000 TL formatinda gosterilir"},
+            {"action": "Calisan Sayisi: '50' gir", "expected_result": "Alan dolar"},
+            {"action": "Adres Bilgileri bolumune git", "expected_result": "Adres alanlari gorunur"},
+            {"action": "Adres: 'Levent Mah. Teknoloji Sk. No:15' gir", "expected_result": "Alan dolar"},
+            {"action": "Ulke: 'Turkiye' sec", "expected_result": "Sehir listesi yuklenir"},
+            {"action": "Sehir: 'Istanbul' sec", "expected_result": "Ilce listesi yuklenir"},
+            {"action": "Ilce: 'Besiktas' sec", "expected_result": "Ilce secilir"},
+            {"action": "Posta Kodu: '34340' gir", "expected_result": "Alan dolar"},
+            {"action": "Mali Bilgiler bolumune git", "expected_result": "Mali alanlar gorunur"},
+            {"action": "Vergi Numarasi: '1234567890' gir", "expected_result": "Alan dolar"},
+            {"action": "Vergi Dairesi: 'Besiktas' gir", "expected_result": "Alan dolar"},
+            {"action": "Kredi Limiti: '100000' gir", "expected_result": "100.000 TL formatinda gosterilir"},
+            {"action": "Odeme Vadesi: '30 Gun' sec", "expected_result": "Vade secilir"},
+            {"action": "Durum: 'Aktif' sec", "expected_result": "Durum secilir"},
+            {"action": "Resmi Kayit bolumune git", "expected_result": "MERSIS ve KEP alanlari gorunur"},
+            {"action": "MERSIS No: '1234567890123456' gir", "expected_result": "16 haneli numara kabul edilir"},
+            {"action": "Ticaret Sicil No: 'TSN-12345' gir", "expected_result": "Alan dolar"},
+            {"action": "KEP Adresi: 'testteknoloji@hs01.kep.tr' gir", "expected_result": "Alan dolar"},
+            {"action": "e-Fatura Mukellefi: 'Evet' yap (toggle)", "expected_result": "Toggle aktif olur"},
+            {"action": "KVKK Riza Yonetimi bolumune git", "expected_result": "KVKK checkboxlari gorunur"},
+            {"action": "Kisisel Veri Isleme Izni checkbox'ini isaretleyin", "expected_result": "Checkbox isaretlenir (ZORUNLU)"},
+            {"action": "Pazarlama Iletisimi Izni checkbox'ini isaretleyin", "expected_result": "Checkbox isaretlenir"},
+            {"action": "Elektronik Iletisim Izni checkbox'ini isaretleyin", "expected_result": "Checkbox isaretlenir"},
+            {"action": "Sag ustteki 'Kaydet' butonuna tikla", "expected_result": "Musteri basariyla olusturulur, liste sayfasina yonlendirilir"},
+            {"action": "Listede 'Test Teknoloji A.S.' ara", "expected_result": "Yeni musteri listede gorunur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "firma_adi": "Test Teknoloji A.S.",
+            "irtibat_kisisi": "Ahmet Yilmaz",
+            "email": "ahmet@testteknoloji.com",
+            "telefon": "+90 212 555 1234",
+            "website": "https://testteknoloji.com",
+            "sirket_turu": "Anonim Sirket (A.S.)",
+            "sektor": "Teknoloji",
+            "yillik_gelir": "5000000",
+            "calisan_sayisi": "50",
+            "adres": "Levent Mah. Teknoloji Sk. No:15",
+            "ulke": "Turkiye",
+            "sehir": "Istanbul",
+            "ilce": "Besiktas",
+            "posta_kodu": "34340",
+            "vergi_no": "1234567890",
+            "vergi_dairesi": "Besiktas",
+            "kredi_limiti": "100000",
+            "odeme_vadesi": "30 Gun",
+            "durum": "Aktif",
+            "mersis_no": "1234567890123456",
+            "ticaret_sicil_no": "TSN-12345",
+            "kep_adresi": "testteknoloji@hs01.kep.tr",
+            "e_fatura_mukellef": true,
+            "kvkk_veri_isleme": true,
+            "kvkk_pazarlama": true,
+            "kvkk_iletisim": true
+          }
+        },
+        {
+          "title": "Yeni bireysel musteri olusturma",
+          "description": "Bireysel musteri kaydinin tum alanlar doldurularak olusturulmasi",
+          "preconditions": "CRM erisim yetkisi olmali",
+          "steps": [
+            {"action": "'+ Yeni Musteri' butonuna tikla", "expected_result": "Form acilir"},
+            {"action": "Sag ustteki tip seciciden 'Bireysel' sec", "expected_result": "Bireysel musteri formu gorunur"},
+            {"action": "Ad Soyad: 'Mehmet Demir' gir", "expected_result": "Alan dolar"},
+            {"action": "E-posta: 'mehmet.demir@gmail.com' gir", "expected_result": "Alan dolar"},
+            {"action": "Telefon: '+90 532 123 4567' gir", "expected_result": "Telefon formatta gosterilir"},
+            {"action": "Mali Bilgiler bolumunde TC Kimlik No: '12345678901' gir", "expected_result": "11 haneli TC kabul edilir"},
+            {"action": "KVKK Kisisel Veri Isleme Izni checkbox'ini isaretleyin", "expected_result": "Checkbox isaretlenir"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Bireysel musteri olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "ad_soyad": "Mehmet Demir",
+            "email": "mehmet.demir@gmail.com",
+            "telefon": "+90 532 123 4567",
+            "tc_kimlik_no": "12345678901"
+          }
+        },
+        {
+          "title": "Bos form validasyonu",
+          "description": "Form bos gonderildiginde zorunlu alan validasyon kontrolu",
+          "preconditions": "Musteri formu acik olmali",
+          "steps": [
+            {"action": "'+ Yeni Musteri' butonuna tikla", "expected_result": "Bos form acilir"},
+            {"action": "Hicbir alan doldurmadan 'Kaydet' tikla", "expected_result": "Validasyon hatalari gorunur"},
+            {"action": "Firma/Ad alani altini kontrol et", "expected_result": "'Musteri adi zorunludur' hatasi gorunur"},
+            {"action": "E-posta alani altini kontrol et", "expected_result": "'E-posta zorunludur' hatasi gorunur"},
+            {"action": "KVKK bolumunu kontrol et", "expected_result": "'KVKK veri isleme onayi zorunludur' hatasi gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "E-posta format validasyonu",
+          "description": "Gecersiz e-posta formatinin kontrolu",
+          "preconditions": "Musteri formu acik olmali",
+          "steps": [
+            {"action": "E-posta alanina 'test@' gir", "expected_result": "Metin yazilir"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Validasyon calisiyor"},
+            {"action": "E-posta alani altini kontrol et", "expected_result": "'Gecerli bir e-posta adresi girin' hatasi gorunur"},
+            {"action": "E-posta alanina 'test@firma.com' gir", "expected_result": "Gecerli format kabul edilir"},
+            {"action": "Hata mesajini kontrol et", "expected_result": "Hata mesaji kaybolur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional",
+          "test_data": {
+            "gecersiz_email": "test@",
+            "gecerli_email": "test@firma.com"
+          }
+        },
+        {
+          "title": "Vergi numarasi validasyonu",
+          "description": "Vergi numarasi format kontrolu (10-11 hane)",
+          "preconditions": "Kurumsal musteri formu acik olmali",
+          "steps": [
+            {"action": "Vergi Numarasi alanina '12345' gir (5 hane)", "expected_result": "Metin yazilir"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Validasyon calisiyor"},
+            {"action": "Vergi No alani altini kontrol et", "expected_result": "'Gecerli bir vergi numarasi girin (10-11 hane)' hatasi gorunur"},
+            {"action": "Vergi No alanina '1234567890' gir (10 hane)", "expected_result": "Gecerli format kabul edilir"},
+            {"action": "Hata mesajini kontrol et", "expected_result": "Hata mesaji kaybolur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional",
+          "test_data": {
+            "gecersiz_vergi_no": "12345",
+            "gecerli_vergi_no": "1234567890"
+          }
+        },
+        {
+          "title": "MERSIS numarasi validasyonu",
+          "description": "MERSIS numarasi format kontrolu (16 hane)",
+          "preconditions": "Kurumsal musteri formu acik olmali",
+          "steps": [
+            {"action": "MERSIS No alanina '1234567890' gir (10 hane)", "expected_result": "Metin yazilir"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Validasyon calisiyor"},
+            {"action": "MERSIS No alani altini kontrol et", "expected_result": "'MERSIS No 16 haneli olmalidir' hatasi gorunur"},
+            {"action": "MERSIS No alanina '1234567890123456' gir (16 hane)", "expected_result": "Gecerli format kabul edilir"},
+            {"action": "Hata mesajini kontrol et", "expected_result": "Hata mesaji kaybolur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional",
+          "test_data": {
+            "gecersiz_mersis": "1234567890",
+            "gecerli_mersis": "1234567890123456"
+          }
+        },
+        {
+          "title": "TC Kimlik validasyonu - BUG-001",
+          "description": "TC Kimlik format kontrolu - VALIDASYON CALISMADI",
+          "preconditions": "Bireysel musteri formu acik olmali",
+          "steps": [
+            {"action": "Tip seciciden 'Bireysel' sec", "expected_result": "Bireysel form gorunur"},
+            {"action": "TC Kimlik No alanina '123456' gir (6 hane)", "expected_result": "Metin yazilir"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Validasyon calismali"},
+            {"action": "TC Kimlik No alani altini kontrol et", "expected_result": "'TC Kimlik No 11 haneli olmalidir' hatasi gorunmeli - CALISMADI"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional",
+          "test_data": {
+            "gecersiz_tc": "123456",
+            "gecerli_tc": "12345678901"
+          }
+        },
+        {
+          "title": "KVKK checkbox kaydi - BUG-002",
+          "description": "KVKK onaylarinin saklanmasi - CHECKBOX STATE KAYBOLDU",
+          "preconditions": "Musteri formu acik olmali",
+          "steps": [
+            {"action": "Zorunlu alanlari doldur (Firma Adi, E-posta)", "expected_result": "Alanlar dolar"},
+            {"action": "KVKK Kisisel Veri Isleme Izni checkbox'ini isaretleyin", "expected_result": "Checkbox isaretlenir"},
+            {"action": "KVKK Pazarlama Iletisimi Izni checkbox'ini isaretleyin", "expected_result": "Checkbox isaretlenir"},
+            {"action": "KVKK Elektronik Iletisim Izni checkbox'ini isaretleyin", "expected_result": "Checkbox isaretlenir"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Musteri kaydedilir"},
+            {"action": "Kaydedilen musteriyi listeden bul ve tikla", "expected_result": "Musteri detay sayfasi acilir"},
+            {"action": "'Duzenle' butonuna tikla", "expected_result": "Form tekrar acilir"},
+            {"action": "KVKK checkboxlarini kontrol et", "expected_result": "Tum checkboxlar isaretli kalmali - KAYBOLDU"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Musteri bilgilerini guncelleme",
+          "description": "Mevcut musteri bilgilerinin basariyla guncellenmesi",
+          "preconditions": "En az bir musteri kaydi mevcut olmali",
+          "steps": [
+            {"action": "Musteriler listesinden bir musteri sec", "expected_result": "Musteri detay sayfasi acilir"},
+            {"action": "'Duzenle' butonuna tikla", "expected_result": "Duzenleme formu acilir, mevcut bilgiler yuklu"},
+            {"action": "Telefon numarasini '+90 216 999 8877' olarak degistir", "expected_result": "Alan guncellenir"},
+            {"action": "Kredi Limitini '200000' olarak degistir", "expected_result": "200.000 TL formatinda gosterilir"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Degisiklikler kaydedilir"},
+            {"action": "Musteri detay sayfasini kontrol et", "expected_result": "Yeni telefon ve kredi limiti gorunur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "yeni_telefon": "+90 216 999 8877",
+            "yeni_kredi_limiti": "200000"
+          }
+        },
+        {
+          "title": "Musteri detay sayfasi",
+          "description": "Musteri detay bilgilerinin tam olarak goruntulenmesi",
+          "preconditions": "En az bir musteri kaydi mevcut olmali",
+          "steps": [
+            {"action": "Musteriler listesinden bir musteriye tikla", "expected_result": "Detay sayfasi acilir"},
+            {"action": "Temel bilgiler bolumunu kontrol et", "expected_result": "Firma adi, tip, durum gorunur"},
+            {"action": "Iletisim bilgilerini kontrol et", "expected_result": "E-posta, telefon, irtibat kisisi gorunur"},
+            {"action": "Adres bilgilerini kontrol et", "expected_result": "Adres, sehir, ulke gorunur"},
+            {"action": "Mali bilgileri kontrol et", "expected_result": "Vergi no, kredi limiti gorunur"},
+            {"action": "KVKK onayla kontrol et", "expected_result": "Mevcut onaylar gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Musteri silme islemi",
+          "description": "Musteri kaydinin silinmesi",
+          "preconditions": "En az bir silinebilir musteri kaydi mevcut olmali",
+          "steps": [
+            {"action": "Musteriler listesinden test musterisini bul", "expected_result": "Musteri listelenir"},
+            {"action": "Musteri satirinda 'Sil' butonuna tikla", "expected_result": "Onay dialogu acilir: 'Bu musteriyi silmek istediginize emin misiniz?'"},
+            {"action": "'Evet, Sil' butonuna tikla", "expected_result": "Musteri silinir"},
+            {"action": "Listede musteriyi ara", "expected_result": "Musteri artik listede gorunmuyor"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Lead Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni lead olusturma - BUG-003",
+          "description": "Lead kaydinin tum alanlar doldurularak olusturulmasi - PUAN 0 GORUNUYOR",
+          "preconditions": "CRM erisim yetkisi olmali",
+          "steps": [
+            {"action": "Sol menuден 'Leadler' tikla", "expected_result": "Lead listesi sayfasi acilir"},
+            {"action": "'+ Yeni Lead' butonuna tikla", "expected_result": "Lead olusturma formu acilir"},
+            {"action": "Ad: 'Ali' gir", "expected_result": "Alan dolar"},
+            {"action": "Soyad: 'Kaya' gir", "expected_result": "Alan dolar"},
+            {"action": "Rating butonlarindan 'Sicak' sec", "expected_result": "Sicak butonu aktif olur"},
+            {"action": "Aciklama: 'Yuksek potansiyelli musteri adayi' gir", "expected_result": "Alan dolar"},
+            {"action": "E-posta: 'ali.kaya@firma.com' gir", "expected_result": "Alan dolar"},
+            {"action": "Telefon: '+90 533 111 2233' gir", "expected_result": "Telefon formatta gosterilir"},
+            {"action": "Cep Telefonu: '+90 544 222 3344' gir", "expected_result": "Telefon formatta gosterilir"},
+            {"action": "Web Sitesi: 'https://alikaya.com' gir", "expected_result": "Alan dolar"},
+            {"action": "Firma Adi: 'Kaya Holding' gir", "expected_result": "Alan dolar"},
+            {"action": "Sirket Turu: 'Anonim Sirket (A.S.)' sec", "expected_result": "Tur secilir"},
+            {"action": "Pozisyon: 'CEO' gir", "expected_result": "Alan dolar"},
+            {"action": "Sektor: 'Finans' sec", "expected_result": "Sektor secilir"},
+            {"action": "Yillik Gelir: '10000000' gir", "expected_result": "10.000.000 formatinda gorunur"},
+            {"action": "Calisan Sayisi: '200' gir", "expected_result": "Alan dolar"},
+            {"action": "Ulke: 'Turkiye' sec", "expected_result": "Sehir listesi yuklenir"},
+            {"action": "Sehir: 'Ankara' sec", "expected_result": "Ilce listesi yuklenir"},
+            {"action": "Ilce: 'Cankaya' sec", "expected_result": "Ilce secilir"},
+            {"action": "Adres Detayi: 'Ataturk Bulvari No:100' gir", "expected_result": "Alan dolar"},
+            {"action": "Posta Kodu: '06690' gir", "expected_result": "Alan dolar"},
+            {"action": "Kaynak: 'Referans' sec", "expected_result": "Kaynak secilir"},
+            {"action": "Durum: 'Yeni' sec", "expected_result": "Durum secilir"},
+            {"action": "Lead Puani: '75' gir", "expected_result": "Puan girilir"},
+            {"action": "KVKK Kisisel Veri Isleme Izni checkbox'ini isaretleyin", "expected_result": "Checkbox isaretlenir"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Lead olusturulur"},
+            {"action": "Lead detayinda puani kontrol et", "expected_result": "75 gorunmeli - 0 GORUNUYOR"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "ad": "Ali",
+            "soyad": "Kaya",
+            "rating": "Sicak",
+            "email": "ali.kaya@firma.com",
+            "telefon": "+90 533 111 2233",
+            "cep_telefon": "+90 544 222 3344",
+            "website": "https://alikaya.com",
+            "firma_adi": "Kaya Holding",
+            "sirket_turu": "Anonim Sirket (A.S.)",
+            "pozisyon": "CEO",
+            "sektor": "Finans",
+            "yillik_gelir": "10000000",
+            "calisan_sayisi": "200",
+            "ulke": "Turkiye",
+            "sehir": "Ankara",
+            "ilce": "Cankaya",
+            "adres": "Ataturk Bulvari No:100",
+            "posta_kodu": "06690",
+            "kaynak": "Referral",
+            "durum": "New",
+            "puan": "75"
+          }
+        },
+        {
+          "title": "Lead zorunlu alan validasyonu",
+          "description": "Lead formunda zorunlu alanlarin kontrolu",
+          "preconditions": "Lead formu acik olmali",
+          "steps": [
+            {"action": "Sadece Ad alanina 'Test' gir", "expected_result": "Ad alani dolar"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Validasyon hatalari gorunur"},
+            {"action": "Soyad alani altini kontrol et", "expected_result": "'Soyad zorunludur' hatasi gorunur"},
+            {"action": "E-posta alani altini kontrol et", "expected_result": "'E-posta zorunludur' hatasi gorunur"},
+            {"action": "Kaynak alani altini kontrol et", "expected_result": "'Kaynak secimi zorunludur' hatasi gorunur"},
+            {"action": "KVKK bolumunu kontrol et", "expected_result": "'KVKK veri isleme onayi zorunludur' hatasi gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Lead rating butonlari - BUG-004",
+          "description": "Soguk/Ilik/Sicak secimi - BUTONLAR CALISMIYOR",
+          "preconditions": "Lead formu acik olmali",
+          "steps": [
+            {"action": "Header'daki rating butonlarina bak", "expected_result": "Soguk, Ilik, Sicak butonlari gorunur"},
+            {"action": "'Soguk' butonuna tikla", "expected_result": "Soguk butonu aktif olmali, diger butonlar pasif"},
+            {"action": "'Ilik' butonuna tikla", "expected_result": "Ilik butonu aktif olmali, diger butonlar pasif"},
+            {"action": "'Sicak' butonuna tikla", "expected_result": "Sicak butonu aktif olmali - CALISMIYOR"},
+            {"action": "Formu kaydet ve tekrar ac", "expected_result": "Secilen rating korunmali"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Lead puan araligi validasyonu",
+          "description": "Lead puaninin 0-100 arasi olmasi kontrolu",
+          "preconditions": "Lead formu acik olmali",
+          "steps": [
+            {"action": "Lead Puani alanina '-10' gir", "expected_result": "Deger 0 veya hata olmali"},
+            {"action": "Lead Puani alanina '50' gir", "expected_result": "50 kabul edilir"},
+            {"action": "Lead Puani alanina '150' gir", "expected_result": "Deger 100 veya hata olmali"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional",
+          "test_data": {
+            "negatif_puan": "-10",
+            "gecerli_puan": "50",
+            "asiri_puan": "150"
+          }
+        },
+        {
+          "title": "Lead lokasyon secimi",
+          "description": "Kademeli lokasyon secimi (Ulke > Sehir > Ilce)",
+          "preconditions": "Lead formu acik olmali",
+          "steps": [
+            {"action": "Adres Bilgileri bolumune git", "expected_result": "Lokasyon dropdown'lari gorunur"},
+            {"action": "Ulke dropdown'indan 'Turkiye' sec", "expected_result": "Sehir dropdown'i aktif olur ve liste yuklenir"},
+            {"action": "Sehir dropdown'indan 'Istanbul' sec", "expected_result": "Ilce dropdown'i aktif olur ve liste yuklenir"},
+            {"action": "Ilce dropdown'indan 'Kadikoy' sec", "expected_result": "Ilce secilir, lokasyon tamamlanir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Lead detay sayfasi",
+          "description": "Lead detay bilgilerinin tam olarak goruntulenmesi",
+          "preconditions": "En az bir lead kaydi mevcut olmali",
+          "steps": [
+            {"action": "Lead listesinden bir leade tikla", "expected_result": "Detay sayfasi acilir"},
+            {"action": "Header bolumunu kontrol et", "expected_result": "Ad soyad, rating, puan gorunur"},
+            {"action": "Iletisim bilgilerini kontrol et", "expected_result": "E-posta, telefon, web sitesi gorunur"},
+            {"action": "Firma bilgilerini kontrol et", "expected_result": "Firma adi, sektor, pozisyon gorunur"},
+            {"action": "Lokasyon bilgilerini kontrol et", "expected_result": "Adres, sehir, ulke gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Lead musteriye donusturme",
+          "description": "Leadin musteriye donusturulmesi",
+          "preconditions": "En az bir nitelikli lead mevcut olmali",
+          "steps": [
+            {"action": "Lead listesinden donusturulecek leadi sec", "expected_result": "Lead detay sayfasi acilir"},
+            {"action": "'Musteriye Donustur' butonuna tikla", "expected_result": "Donusturme formu/dialogu acilir"},
+            {"action": "Musteri tipini sec (Kurumsal/Bireysel)", "expected_result": "Tip secilir"},
+            {"action": "Eksik alanlari doldur", "expected_result": "Alanlar dolar"},
+            {"action": "'Donustur' butonuna tikla", "expected_result": "Musteri olusturulur, lead durumu 'Donusturuldu' olur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Firsat Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni firsat olusturma - BUG-005",
+          "description": "Firsat kaydinin tum alanlar doldurularak olusturulmasi - LEAD GORUNMUYOR",
+          "preconditions": "En az bir musteri ve pipeline mevcut olmali",
+          "steps": [
+            {"action": "Sol menuden 'Firsatlar' tikla", "expected_result": "Firsat listesi sayfasi acilir"},
+            {"action": "'+ Yeni Firsat' butonuna tikla", "expected_result": "Firsat olusturma formu acilir"},
+            {"action": "Firsat Adi: 'ERP Yazilim Projesi' gir", "expected_result": "Baslik alani dolar"},
+            {"action": "Aciklama: 'Buyuk olcekli ERP implementasyonu' gir", "expected_result": "Aciklama alani dolar"},
+            {"action": "Durum dropdown'indan 'Acik' sec", "expected_result": "Durum secilir"},
+            {"action": "Finansal Bilgiler bolumune git", "expected_result": "Finansal alanlar gorunur"},
+            {"action": "Tutar: '500000' gir", "expected_result": "500.000 formatinda gorunur"},
+            {"action": "Para Birimi: 'TRY' sec", "expected_result": "Para birimi secilir"},
+            {"action": "Olasilik slider'ini %70'e cek", "expected_result": "Olasilik %70 olur, beklenen deger hesaplanir"},
+            {"action": "Beklenen Deger alanini kontrol et", "expected_result": "350.000 TL gorunur (500.000 x 0.70)"},
+            {"action": "Musteri ve Tarih bolumune git", "expected_result": "Musteri secimi gorunur"},
+            {"action": "Musteri dropdown'indan bir musteri sec", "expected_result": "Musteri secilir"},
+            {"action": "Tahmini Kapatis Tarihi: gelecekte bir tarih sec", "expected_result": "Tarih secilir"},
+            {"action": "Satis Sureci bolumune git (opsiyonel)", "expected_result": "Pipeline ve asama alanlari gorunur"},
+            {"action": "Pipeline: 'Varsayilan Satis Pipeline' sec", "expected_result": "Asama listesi yuklenir"},
+            {"action": "Asama: 'Teklif Hazirlama' sec", "expected_result": "Asama secilir"},
+            {"action": "Ek Bilgiler bolumune git", "expected_result": "Kaynak ve rakip alanlari gorunur"},
+            {"action": "Kaynak: 'Referans' sec", "expected_result": "Kaynak secilir"},
+            {"action": "Rakip Firma: 'ABC Yazilim' gir", "expected_result": "Alan dolar"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Firsat olusturulur"},
+            {"action": "Firsat detayinda iliskili Lead'i kontrol et", "expected_result": "Lead gorunmeli - GORUNMUYOR"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "firsat_adi": "ERP Yazilim Projesi",
+            "aciklama": "Buyuk olcekli ERP implementasyonu",
+            "durum": "Open",
+            "tutar": "500000",
+            "para_birimi": "TRY",
+            "olasilik": "70",
+            "tahmini_kapatis": "2025-03-15",
+            "kaynak": "Referral",
+            "rakip_firma": "ABC Yazilim"
+          }
+        },
+        {
+          "title": "Firsat musteri zorunlulugu",
+          "description": "Musteri secimi zorunlulugu kontrolu",
+          "preconditions": "Firsat formu acik olmali",
+          "steps": [
+            {"action": "Firsat Adi: 'Test Firsat' gir", "expected_result": "Alan dolar"},
+            {"action": "Tutar: '100000' gir", "expected_result": "Alan dolar"},
+            {"action": "Tahmini Kapatis Tarihi: gelecekte bir tarih sec", "expected_result": "Tarih secilir"},
+            {"action": "Musteri secmeden 'Kaydet' tikla", "expected_result": "Validasyon hatasi gorunur"},
+            {"action": "Musteri alani altini kontrol et", "expected_result": "'Musteri secimi zorunludur' hatasi gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Firsat tarih validasyonu",
+          "description": "Beklenen kapatis tarihi kontrolu (gecmis tarih engellenmeli)",
+          "preconditions": "Firsat formu acik olmali",
+          "steps": [
+            {"action": "Tahmini Kapatis Tarihi date picker'ini ac", "expected_result": "Takvim acilir"},
+            {"action": "Gecmis bir tarihi secmeye calis", "expected_result": "Gecmis tarihler devre disi (disabled) olmali"},
+            {"action": "Bugunun tarihini sec", "expected_result": "Bugun secilir"},
+            {"action": "Gelecekte bir tarihi sec", "expected_result": "Tarih secilir"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Firsat pipeline-asama iliskisi",
+          "description": "Pipeline ve asama bagimlilik kontrolu",
+          "preconditions": "Firsat formu acik olmali, en az bir pipeline mevcut",
+          "steps": [
+            {"action": "Satis Sureci bolumune git", "expected_result": "Pipeline ve Asama dropdown'lari gorunur"},
+            {"action": "Pipeline secmeden Asama dropdown'ina tikla", "expected_result": "'Once pipeline secin' mesaji gorunur veya dropdown devre disi"},
+            {"action": "Pipeline dropdown'indan bir pipeline sec", "expected_result": "Asama dropdown'i aktif olur"},
+            {"action": "Asama dropdown'ina tikla", "expected_result": "Secilen pipeline'a ait asamalar listelenir"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Firsat kayip durumu",
+          "description": "Kayip durumunda neden alani zorunlulugu",
+          "preconditions": "Firsat formu acik olmali",
+          "steps": [
+            {"action": "Durum dropdown'indan 'Kaybedildi' sec", "expected_result": "Kayip Bilgileri bolumu gorunur"},
+            {"action": "Kayip Nedeni alanini kontrol et", "expected_result": "'Fırsatın neden kaybedildigini aciklayin...' placeholder gorunur"},
+            {"action": "Kayip Nedeni: 'Fiyat yuksek bulundu' gir", "expected_result": "Alan dolar"},
+            {"action": "'Kaydet' tikla", "expected_result": "Kayip nedeni ile birlikte kaydedilir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional",
+          "test_data": {
+            "kayip_nedeni": "Fiyat yuksek bulundu"
+          }
+        },
+        {
+          "title": "Firsat tutar formatlama",
+          "description": "Tutar alaninin binlik ayracli formatlanmasi",
+          "preconditions": "Firsat formu acik olmali",
+          "steps": [
+            {"action": "Tutar alanina '1000000' gir", "expected_result": "'1,000,000' veya '1.000.000' formatinda gosterilir"},
+            {"action": "Tutar alanina '50000.50' gir", "expected_result": "Ondalik deger formatta gosterilir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional",
+          "test_data": {
+            "buyuk_tutar": "1000000",
+            "ondalik_tutar": "50000.50"
+          }
+        },
+        {
+          "title": "Firsat olasilik araligi",
+          "description": "Olasilik degerinin 0-100 arasi olmasi kontrolu",
+          "preconditions": "Firsat formu acik olmali",
+          "steps": [
+            {"action": "Olasilik slider'ini en sola cek", "expected_result": "%0 gorunur"},
+            {"action": "Olasilik slider'ini ortaya cek", "expected_result": "%50 gorunur"},
+            {"action": "Olasilik slider'ini en saga cek", "expected_result": "%100 gorunur"},
+            {"action": "Beklenen Deger'in dogru hesaplandigini kontrol et", "expected_result": "Tutar x Olasilik hesabi dogru"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Kampanya Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni kampanya olusturma - BUG-006",
+          "description": "Kampanya kaydinin tum alanlar doldurularak olusturulmasi - LISTE YENILENMEDI",
+          "preconditions": "CRM erisim yetkisi olmali",
+          "steps": [
+            {"action": "Sol menuden 'Kampanyalar' tikla", "expected_result": "Kampanya listesi sayfasi acilir"},
+            {"action": "'+ Yeni Kampanya' butonuna tikla", "expected_result": "Kampanya olusturma formu acilir"},
+            {"action": "Kampanya Adi: 'Yaz Indirimi 2025' gir", "expected_result": "Baslik alani dolar"},
+            {"action": "Aciklama: 'Yaz sezonuna ozel %30 indirim kampanyasi' gir", "expected_result": "Aciklama alani dolar"},
+            {"action": "Tip dropdown'indan 'E-posta' sec", "expected_result": "Tip secilir"},
+            {"action": "Butce Bilgileri bolumune git", "expected_result": "Butce alanlari gorunur"},
+            {"action": "Planlanan Butce: '100000' gir", "expected_result": "100.000 TL formatinda gorunur"},
+            {"action": "Beklenen Gelir: '500000' gir", "expected_result": "500.000 TL formatinda gorunur"},
+            {"action": "Beklenen Kar alanini kontrol et", "expected_result": "400.000 TL gorunur (500.000 - 100.000)"},
+            {"action": "ROI degerini kontrol et", "expected_result": "%400 gorunur"},
+            {"action": "Hedef Bilgileri bolumune git", "expected_result": "Hedef alanlari gorunur"},
+            {"action": "Hedef Lead Sayisi: '1000' gir", "expected_result": "Alan dolar"},
+            {"action": "Lead Basina Maliyet alanini kontrol et", "expected_result": "100 TL gorunur (100.000 / 1000)"},
+            {"action": "Hedef Kitle: '25-45 yas profesyoneller' gir", "expected_result": "Alan dolar"},
+            {"action": "Zamanlama bolumune git", "expected_result": "Tarih alanlari gorunur"},
+            {"action": "Kampanya Tarihleri: '01.06.2025 - 31.08.2025' sec", "expected_result": "Tarih araligi secilir"},
+            {"action": "Durum: 'Planlandi' sec", "expected_result": "Durum secilir"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Kampanya olusturulur"},
+            {"action": "Kampanya listesini kontrol et", "expected_result": "Yeni kampanya listelenmeli - LISTE YENILENMEDI"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "kampanya_adi": "Yaz Indirimi 2025",
+            "aciklama": "Yaz sezonuna ozel %30 indirim kampanyasi",
+            "tip": "Email",
+            "planlanan_butce": "100000",
+            "beklenen_gelir": "500000",
+            "hedef_lead": "1000",
+            "hedef_kitle": "25-45 yas profesyoneller",
+            "baslangic_tarihi": "2025-06-01",
+            "bitis_tarihi": "2025-08-31",
+            "durum": "Planned"
+          }
+        },
+        {
+          "title": "Kampanya zarar hesaplama",
+          "description": "Negatif kar (zarar) durumunun dogru hesaplanmasi",
+          "preconditions": "Kampanya formu acik olmali",
+          "steps": [
+            {"action": "Planlanan Butce: '100000' gir", "expected_result": "Butce alani dolar"},
+            {"action": "Beklenen Gelir: '50000' gir", "expected_result": "Gelir alani dolar"},
+            {"action": "Beklenen Kar alanini kontrol et", "expected_result": "'-50.000 TL' gorunur (kirmizi renkte)"},
+            {"action": "ROI degerini kontrol et", "expected_result": "'%-50' gorunur (negatif ROI)"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional",
+          "test_data": {
+            "butce": "100000",
+            "gelir": "50000",
+            "beklenen_kar": "-50000"
+          }
+        },
+        {
+          "title": "Kampanya gerceklesen degerler - BUG-007",
+          "description": "Gerceklesen degerlerin guncellenmesi - LEAD GUNCELLENMEDI",
+          "preconditions": "Mevcut bir kampanya olmali",
+          "steps": [
+            {"action": "Mevcut bir kampanyayi duzenle", "expected_result": "Duzenleme formu acilir"},
+            {"action": "Durum: 'Devam Ediyor' sec", "expected_result": "Gerceklesen Degerler bolumu gorunur"},
+            {"action": "Gerceklesen Maliyet: '80000' gir", "expected_result": "Alan dolar"},
+            {"action": "Gerceklesen Gelir: '300000' gir", "expected_result": "Alan dolar"},
+            {"action": "Gerceklesen Kar alanini kontrol et", "expected_result": "220.000 TL gorunur"},
+            {"action": "Gerceklesen Lead Sayisi: '800' gir", "expected_result": "Alan dolar"},
+            {"action": "Donusen Lead Sayisi: '120' gir", "expected_result": "Alan dolar"},
+            {"action": "Donusum Orani alanini kontrol et", "expected_result": "%15 gorunur (120/800)"},
+            {"action": "'Kaydet' tikla ve tekrar ac", "expected_result": "Gerceklesen lead degeri korunmali - GUNCELLENMEDI"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional",
+          "test_data": {
+            "gerceklesen_maliyet": "80000",
+            "gerceklesen_gelir": "300000",
+            "gerceklesen_lead": "800",
+            "donusen_lead": "120"
+          }
+        },
+        {
+          "title": "Kampanya tarih validasyonu",
+          "description": "Bitis tarihinin baslangic tarihinden sonra olmasi kontrolu",
+          "preconditions": "Kampanya formu acik olmali",
+          "steps": [
+            {"action": "Kampanya Tarihleri date range picker'ini ac", "expected_result": "Takvim acilir"},
+            {"action": "Baslangic tarihi: '01.06.2025' sec", "expected_result": "Baslangic tarihi secilir"},
+            {"action": "Bitis tarihi: '15.05.2025' secmeye calis", "expected_result": "Baslangictan onceki tarihler disabled olmali veya hata gosterilmeli"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Deal Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni deal olusturma",
+          "description": "Deal kaydinin tum alanlar doldurularak basariyla olusturulmasi",
+          "preconditions": "En az bir musteri ve pipeline mevcut olmali",
+          "steps": [
+            {"action": "Sol menuden 'Deals' tikla", "expected_result": "Deal listesi sayfasi acilir"},
+            {"action": "'+ Yeni Deal' butonuna tikla", "expected_result": "Deal olusturma formu acilir"},
+            {"action": "Firsat Basligi: 'Kurumsal Lisans Satisi' gir", "expected_result": "Baslik alani dolar"},
+            {"action": "Aciklama: '100 kullanici lisansi' gir", "expected_result": "Aciklama alani dolar"},
+            {"action": "Durum: 'Acik' sec", "expected_result": "Durum secilir"},
+            {"action": "Musteri Bilgileri bolumune git", "expected_result": "Musteri secimi gorunur"},
+            {"action": "Musteri dropdown'indan bir musteri sec", "expected_result": "Musteri secilir"},
+            {"action": "Oncelik: 'Yuksek' sec", "expected_result": "Oncelik secilir"},
+            {"action": "Finansal Bilgiler bolumune git", "expected_result": "Finansal alanlar gorunur"},
+            {"action": "Tutar: '250000' gir", "expected_result": "250.000 formatinda gorunur"},
+            {"action": "Para Birimi: 'TRY' sec", "expected_result": "Para birimi secilir"},
+            {"action": "Olasilik: '75' gir", "expected_result": "%75 gorunur"},
+            {"action": "Kaynak: 'Web Sitesi' sec", "expected_result": "Kaynak secilir"},
+            {"action": "Satis Sureci bolumune git", "expected_result": "Pipeline ve asama alanlari gorunur"},
+            {"action": "Pipeline dropdown'indan bir pipeline sec", "expected_result": "Asama listesi yuklenir"},
+            {"action": "Asama dropdown'indan bir asama sec", "expected_result": "Asama secilir"},
+            {"action": "Tarih Bilgileri bolumune git", "expected_result": "Tarih alani gorunur"},
+            {"action": "Tahmini Kapatis Tarihi: gelecekte bir tarih sec", "expected_result": "Tarih secilir"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Deal basariyla olusturulur ve listede gorunur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "baslik": "Kurumsal Lisans Satisi",
+            "aciklama": "100 kullanici lisansi",
+            "durum": "Open",
+            "oncelik": "High",
+            "tutar": "250000",
+            "para_birimi": "TRY",
+            "olasilik": "75",
+            "kaynak": "Website"
+          }
+        },
+        {
+          "title": "Deal zorunlu alan validasyonu",
+          "description": "Deal formunda zorunlu alanlarin kontrolu",
+          "preconditions": "Deal formu acik olmali",
+          "steps": [
+            {"action": "Hicbir alan doldurmadan 'Kaydet' tikla", "expected_result": "Validasyon hatalari gorunur"},
+            {"action": "Baslik alani altini kontrol et", "expected_result": "'Firsat adi zorunludur' hatasi gorunur"},
+            {"action": "Musteri alani altini kontrol et", "expected_result": "'Musteri secimi zorunludur' hatasi gorunur"},
+            {"action": "Tutar alani altini kontrol et", "expected_result": "'Tutar zorunludur' hatasi gorunur"},
+            {"action": "Pipeline alani altini kontrol et", "expected_result": "'Pipeline secimi zorunludur' hatasi gorunur"},
+            {"action": "Tarih alani altini kontrol et", "expected_result": "'Tahmini kapatis tarihi zorunludur' hatasi gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Deal asama degisimi",
+          "description": "Deal asamasinin pipeline icinde degistirilmesi",
+          "preconditions": "Mevcut bir deal olmali",
+          "steps": [
+            {"action": "Deal listesinden bir deal sec", "expected_result": "Deal detay sayfasi acilir"},
+            {"action": "'Duzenle' butonuna tikla", "expected_result": "Duzenleme formu acilir"},
+            {"action": "Asama dropdown'indan farkli bir asama sec", "expected_result": "Yeni asama secilir"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Asama guncellenir"},
+            {"action": "Deal detay sayfasini kontrol et", "expected_result": "Yeni asama gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Deal detay sayfasi",
+          "description": "Deal detay bilgilerinin tam olarak goruntulenmesi",
+          "preconditions": "En az bir deal kaydi mevcut olmali",
+          "steps": [
+            {"action": "Deal listesinden bir deale tikla", "expected_result": "Detay sayfasi acilir"},
+            {"action": "Header bolumunu kontrol et", "expected_result": "Baslik, durum, tutar gorunur"},
+            {"action": "Musteri bilgisini kontrol et", "expected_result": "Iliskili musteri adi gorunur"},
+            {"action": "Pipeline/Asama bilgisini kontrol et", "expected_result": "Mevcut asama ve pipeline gorunur"},
+            {"action": "Finansal bilgileri kontrol et", "expected_result": "Tutar, olasilik, para birimi gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Deal kazanma-kaybetme",
+          "description": "Deal sonucunun belirlenmesi (Kazanildi/Kaybedildi)",
+          "preconditions": "Mevcut bir acik deal olmali",
+          "steps": [
+            {"action": "Acik bir deali duzenle", "expected_result": "Duzenleme formu acilir"},
+            {"action": "Durum: 'Kazanildi' sec", "expected_result": "Kazanma Bilgileri bolumu gorunur"},
+            {"action": "Kazanma Detaylari: 'Basarili muzakere sonucu' gir", "expected_result": "Alan dolar"},
+            {"action": "'Kaydet' tikla", "expected_result": "Deal kazanildi olarak isaretlenir"},
+            {"action": "Farkli bir deali duzenle ve 'Kaybedildi' sec", "expected_result": "Kayip Bilgileri bolumu gorunur"},
+            {"action": "Kayip Nedeni: 'Rakip daha uygun teklif verdi' gir", "expected_result": "Alan dolar"},
+            {"action": "'Kaydet' tikla", "expected_result": "Deal kaybedildi olarak isaretlenir"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional",
+          "test_data": {
+            "kazanma_detay": "Basarili muzakere sonucu",
+            "kayip_nedeni": "Rakip daha uygun teklif verdi"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Pipeline Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni pipeline olusturma",
+          "description": "Pipeline kaydinin asamalari ile birlikte olusturulmasi",
+          "preconditions": "CRM erisim yetkisi olmali",
+          "steps": [
+            {"action": "Sol menuden 'Pipeline' tikla", "expected_result": "Pipeline listesi sayfasi acilir"},
+            {"action": "'+ Yeni Pipeline' butonuna tikla", "expected_result": "Pipeline olusturma formu acilir"},
+            {"action": "Pipeline Adi: 'B2B Satis Sureci' gir", "expected_result": "Baslik alani dolar"},
+            {"action": "Aciklama: 'Kurumsal satis pipeline' gir", "expected_result": "Aciklama alani dolar"},
+            {"action": "Tip: 'Satis' sec", "expected_result": "Tip secilir"},
+            {"action": "Pipeline Ayarlari bolumune git", "expected_result": "Ayarlar gorunur"},
+            {"action": "Siralama: '1' gir", "expected_result": "Alan dolar"},
+            {"action": "Para Birimi: 'TRY' sec", "expected_result": "Para birimi secilir"},
+            {"action": "Durum toggle'ini 'Aktif' yap", "expected_result": "Toggle aktif"},
+            {"action": "Varsayilan toggle'ini 'Evet' yap", "expected_result": "Toggle aktif"},
+            {"action": "Pipeline Asamalari bolumune git", "expected_result": "Asama listesi gorunur"},
+            {"action": "'Varsayilan Asamalari Kullan' tikla", "expected_result": "4 varsayilan asama yuklenir"},
+            {"action": "Ilk asamanin adini 'Ilk Temas' olarak degistir", "expected_result": "Asama adi guncellenir"},
+            {"action": "Ilk asamanin olasiligini '%10' yap", "expected_result": "Olasilik guncellenir"},
+            {"action": "'Yeni Asama Ekle' butonuna tikla", "expected_result": "Yeni bos asama eklenir"},
+            {"action": "Yeni asama adi: 'Demo' gir, olasilik: '%40'", "expected_result": "Asama eklenir"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Pipeline basariyla olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "pipeline_adi": "B2B Satis Sureci",
+            "aciklama": "Kurumsal satis pipeline",
+            "tip": "Sales",
+            "siralama": "1",
+            "para_birimi": "TRY",
+            "durum": true,
+            "varsayilan": true,
+            "asamalar": [
+              {"ad": "Ilk Temas", "olasilik": 10},
+              {"ad": "Demo", "olasilik": 40},
+              {"ad": "Teklif", "olasilik": 60},
+              {"ad": "Muzakere", "olasilik": 80},
+              {"ad": "Kazanildi", "olasilik": 100, "isWon": true}
+            ]
+          }
+        },
+        {
+          "title": "Pipeline zorunlu alan validasyonu",
+          "description": "Pipeline formunda zorunlu alanlarin kontrolu",
+          "preconditions": "Pipeline formu acik olmali",
+          "steps": [
+            {"action": "Hicbir alan doldurmadan 'Kaydet' tikla", "expected_result": "Validasyon hatalari gorunur"},
+            {"action": "Pipeline Adi alani altini kontrol et", "expected_result": "'Pipeline adi zorunludur' hatasi gorunur"},
+            {"action": "Asamalar bolumunu kontrol et", "expected_result": "'En az 1 asama eklemelisiniz' hatasi gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Pipeline asama siralama",
+          "description": "Asamalarin sira numarasina gore duzenlenmesi",
+          "preconditions": "En az 3 asamali bir pipeline mevcut olmali",
+          "steps": [
+            {"action": "Mevcut bir pipeline'i duzenle", "expected_result": "Duzenleme formu acilir"},
+            {"action": "Asamalarin sira numaralarini kontrol et", "expected_result": "#1, #2, #3... seklinde gorunur"},
+            {"action": "Ucuncu asamayi sil (cop kutusu ikonu)", "expected_result": "Asama silinir, numaralar guncellenir"},
+            {"action": "'Yeni Asama Ekle' tikla", "expected_result": "Yeni asama listenin sonuna eklenir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Yeni siralama kaydedilir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Pipeline detay sayfasi",
+          "description": "Pipeline detay bilgilerinin goruntulenmesi",
+          "preconditions": "En az bir pipeline mevcut olmali",
+          "steps": [
+            {"action": "Pipeline listesinden bir pipeline'a tikla", "expected_result": "Detay sayfasi acilir"},
+            {"action": "Temel bilgileri kontrol et", "expected_result": "Ad, tip, durum gorunur"},
+            {"action": "Asamalari kontrol et", "expected_result": "Tum asamalar renkli olarak gorunur"},
+            {"action": "Her asama icin olasilik degerini kontrol et", "expected_result": "Olasilik yuzdeleri gorunur"},
+            {"action": "Kazanildi/Kaybedildi isaretlerini kontrol et", "expected_result": "Son asama isaretleri gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Hata Senaryolari",
+      "cases": [
+        {
+          "title": "Duplikasyon hatasi - BUG-008",
+          "description": "Ayni verinin tekrar girilmesi - INGILIZCE MESAJ GOSTERILIYOR",
+          "preconditions": "Ayni e-posta ile bir musteri kaydi mevcut olmali",
+          "steps": [
+            {"action": "Yeni musteri olustur", "expected_result": "Form acilir"},
+            {"action": "Mevcut bir musterinin e-postasini gir", "expected_result": "E-posta alani dolar"},
+            {"action": "Diger zorunlu alanlari doldur", "expected_result": "Alanlar dolar"},
+            {"action": "'Kaydet' tikla", "expected_result": "Sistem duplikasyon kontrolu yapar"},
+            {"action": "Hata mesajini kontrol et", "expected_result": "Turkce 'Bu e-posta ile kayitli musteri var' mesaji gorunmeli - INGILIZCE GOSTERILIYOR"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Yetkilendirme bypass - BUG-009",
+          "description": "URL ile yetkisiz erisim - URL KORUMASI YOK",
+          "preconditions": "Sinirli yetkili kullanici ile giris yapilmis olmali",
+          "steps": [
+            {"action": "Yetkisiz bir sayfanin URL'sini tarayiciya yaz (ornegin /crm/settings)", "expected_result": "401 Unauthorized veya login sayfasina yonlendirilmeli - SAYFA ACILIYOR"},
+            {"action": "Sayfadaki islemleri kontrol et", "expected_result": "Hicbir islem yapilamamali"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "security"
+        },
+        {
+          "title": "Kaydedilmemis degisiklik - BUG-010",
+          "description": "Kaydedilmemis veri kaybetme uyarisi - UYARI YOK",
+          "preconditions": "Herhangi bir form acik olmali",
+          "steps": [
+            {"action": "Formda bazi alanlari degistir", "expected_result": "Degisiklikler yapilir"},
+            {"action": "Kaydetmeden sayfadan cikmaya calis (geri butonu veya menu tikla)", "expected_result": "'Kaydedilmemis degisiklikler var. Cikmak istediginize emin misiniz?' uyarisi gorunmeli - UYARI YOK"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "UX Testleri",
+      "cases": [
+        {
+          "title": "Mobil responsive - BUG-011",
+          "description": "Mobil gorunumun kontrolu (375px genislik) - LAYOUT BOZUK",
+          "preconditions": "Uygulama acik olmali",
+          "steps": [
+            {"action": "Tarayici penceresini 375px genislige kucult", "expected_result": "Mobil layout aktif olmali"},
+            {"action": "Menu gorunumunu kontrol et", "expected_result": "Hamburger menu gorunmeli"},
+            {"action": "Form gorunumunu kontrol et", "expected_result": "Tek kolonlu layout olmali - LAYOUT BOZUK"},
+            {"action": "Butonlari kontrol et", "expected_result": "Butonlar tam genislikte olmali"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "usability"
+        },
+        {
+          "title": "Tablet responsive - BUG-012",
+          "description": "Tablet gorunumun kontrolu (768px genislik) - LAYOUT BOZUK",
+          "preconditions": "Uygulama acik olmali",
+          "steps": [
+            {"action": "Tarayici penceresini 768px genislige ayarla", "expected_result": "Tablet layout aktif olmali"},
+            {"action": "Sidebar gorunumunu kontrol et", "expected_result": "Sidebar daraltilmis olmali"},
+            {"action": "Form gorunumunu kontrol et", "expected_result": "2 kolonlu layout olmali - LAYOUT BOZUK"},
+            {"action": "Tablo gorunumunu kontrol et", "expected_result": "Yatay scroll olmali"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "usability"
+        }
+      ]
+    },
+    {
+      "title": "Liste Sayfasi Ortak",
+      "cases": [
+        {
+          "title": "Liste sayfasi sayfalama",
+          "description": "Tum liste sayfalarinda sayfalama kontrolu",
+          "preconditions": "Listede 20den fazla kayit olmali",
+          "steps": [
+            {"action": "Herhangi bir liste sayfasini ac (ornegin Musteriler)", "expected_result": "Liste gorunur"},
+            {"action": "Sayfa altindaki sayfalama kontrollerini bul", "expected_result": "Sayfa numaralari ve ok butonlari gorunur"},
+            {"action": "Ikinci sayfaya tikla", "expected_result": "Ikinci sayfa kayitlari yuklenir"},
+            {"action": "Son sayfaya git", "expected_result": "Son sayfa kayitlari yuklenir"},
+            {"action": "Ilk sayfaya don", "expected_result": "Ilk sayfa kayitlari yuklenir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Liste sayfasi siralama",
+          "description": "Tum liste sayfalarinda kolon basligina gore siralama",
+          "preconditions": "Listede birden fazla kayit olmali",
+          "steps": [
+            {"action": "Herhangi bir liste sayfasini ac", "expected_result": "Liste gorunur"},
+            {"action": "'Ad' kolon basligina tikla", "expected_result": "A-Z sirasi (ASC) uygulanir"},
+            {"action": "'Ad' kolon basligina tekrar tikla", "expected_result": "Z-A sirasi (DESC) uygulanir"},
+            {"action": "'Tarih' kolon basligina tikla", "expected_result": "Tarihe gore siralama uygulanir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Liste sayfasi arama",
+          "description": "Tum liste sayfalarinda arama kutusu kontrolu",
+          "preconditions": "Listede kayitlar mevcut olmali",
+          "steps": [
+            {"action": "Herhangi bir liste sayfasini ac", "expected_result": "Liste gorunur"},
+            {"action": "Arama kutusunu bul (ustте veya filtre alani)", "expected_result": "Arama kutusu gorunur"},
+            {"action": "Mevcut bir kaydin adini yaz", "expected_result": "Anlık filtreleme yapilir"},
+            {"action": "Eslesen kayitlari kontrol et", "expected_result": "Sadece eslesen kayitlar gorunur"},
+            {"action": "Arama kutusunu temizle", "expected_result": "Tum kayitlar tekrar gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Liste sayfasi filtre",
+          "description": "Tum liste sayfalarinda filtreleme kontrolu",
+          "preconditions": "Listede kayitlar mevcut olmali",
+          "steps": [
+            {"action": "Herhangi bir liste sayfasini ac", "expected_result": "Liste gorunur"},
+            {"action": "Filtre butonunu veya dropdown'ini bul", "expected_result": "Filtre secenekleri gorunur"},
+            {"action": "Bir filtre kriteri sec (ornegin Durum: Aktif)", "expected_result": "Filtre uygulanir"},
+            {"action": "Filtrelenmis kayitlari kontrol et", "expected_result": "Sadece kritere uyan kayitlar gorunur"},
+            {"action": "'Filtreleri Temizle' tikla", "expected_result": "Tum kayitlar tekrar gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Segment Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni segment olusturma - Basit kural",
+          "description": "Tek kosullu basit segment olusturulmasi",
+          "preconditions": "CRM erisim yetkisi olmali, en az bir musteri kaydi mevcut olmali",
+          "steps": [
+            {"action": "Sol menuden 'Segmentler' tikla", "expected_result": "Segment listesi sayfasi acilir"},
+            {"action": "'+ Yeni Segment' butonuna tikla", "expected_result": "Segment olusturma formu acilir"},
+            {"action": "Segment Adi: 'Aktif Musteriler' gir", "expected_result": "Baslik alani dolar"},
+            {"action": "Aciklama: 'Aktif durumdaki tum musteriler' gir", "expected_result": "Aciklama alani dolar"},
+            {"action": "Durum toggle'ini 'Aktif' yap", "expected_result": "Toggle aktif"},
+            {"action": "Kural Olusturucu bolumune git", "expected_result": "Kural builder gorunur"},
+            {"action": "'Kural Ekle' butonuna tikla", "expected_result": "Yeni kural satiri eklenir"},
+            {"action": "Alan: 'Durum' sec", "expected_result": "Alan secilir"},
+            {"action": "Operator: 'Esittir' sec", "expected_result": "Operator secilir"},
+            {"action": "Deger: 'Aktif' sec", "expected_result": "Deger secilir"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Segment basariyla olusturulur"},
+            {"action": "Segment detayinda kural gorunumunu kontrol et", "expected_result": "Kural dogru sekilde gorunur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "segment_adi": "Aktif Musteriler",
+            "aciklama": "Aktif durumdaki tum musteriler",
+            "kural_alan": "Status",
+            "kural_operator": "Equals",
+            "kural_deger": "Active"
+          }
+        },
+        {
+          "title": "Segment olusturma - Coklu kural (AND)",
+          "description": "Birden fazla kosullu segment (AND mantigi)",
+          "preconditions": "Segment formu acik olmali",
+          "steps": [
+            {"action": "'+ Yeni Segment' butonuna tikla", "expected_result": "Segment formu acilir"},
+            {"action": "Segment Adi: 'VIP Kurumsal Musteriler' gir", "expected_result": "Baslik alani dolar"},
+            {"action": "'Kural Ekle' tikla", "expected_result": "Ilk kural satiri eklenir"},
+            {"action": "Alan: 'Musteri Tipi' sec, Operator: 'Esittir', Deger: 'Kurumsal'", "expected_result": "Ilk kural tamamlanir"},
+            {"action": "'Kural Ekle' tekrar tikla", "expected_result": "Ikinci kural satiri eklenir"},
+            {"action": "Mantik operatoru: 'VE' (AND) sec", "expected_result": "AND mantigi secilir"},
+            {"action": "Alan: 'Yillik Gelir' sec, Operator: 'Buyuk Esit', Deger: '1000000'", "expected_result": "Ikinci kural tamamlanir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Segment kaydedilir"},
+            {"action": "Detayda kurallari kontrol et", "expected_result": "Her iki kural AND ile birlesik gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional",
+          "test_data": {
+            "segment_adi": "VIP Kurumsal Musteriler",
+            "kurallar": [
+              {"alan": "CustomerType", "operator": "Equals", "deger": "Corporate"},
+              {"mantik": "AND", "alan": "AnnualRevenue", "operator": "GreaterThanOrEqual", "deger": "1000000"}
+            ]
+          }
+        },
+        {
+          "title": "Segment olusturma - Coklu kural (OR)",
+          "description": "Birden fazla kosullu segment (OR mantigi)",
+          "preconditions": "Segment formu acik olmali",
+          "steps": [
+            {"action": "'+ Yeni Segment' butonuna tikla", "expected_result": "Segment formu acilir"},
+            {"action": "Segment Adi: 'Istanbul veya Ankara Musterileri' gir", "expected_result": "Baslik alani dolar"},
+            {"action": "Ilk kural: Alan: 'Sehir', Operator: 'Esittir', Deger: 'Istanbul'", "expected_result": "Ilk kural tamamlanir"},
+            {"action": "'Kural Ekle' tikla ve mantik operatoru: 'VEYA' (OR) sec", "expected_result": "OR mantigi secilir"},
+            {"action": "Ikinci kural: Alan: 'Sehir', Operator: 'Esittir', Deger: 'Ankara'", "expected_result": "Ikinci kural tamamlanir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Segment kaydedilir"},
+            {"action": "Detayda kurallari kontrol et", "expected_result": "Her iki kural OR ile birlesik gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Segment zorunlu alan validasyonu",
+          "description": "Segment formunda zorunlu alanlarin kontrolu",
+          "preconditions": "Segment formu acik olmali",
+          "steps": [
+            {"action": "Hicbir alan doldurmadan 'Kaydet' tikla", "expected_result": "Validasyon hatalari gorunur"},
+            {"action": "Segment Adi alani altini kontrol et", "expected_result": "'Segment adi zorunludur' hatasi gorunur"},
+            {"action": "Kural bolumunu kontrol et", "expected_result": "'En az bir kural eklemelisiniz' hatasi gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Segment silme islemi",
+          "description": "Segment kaydinin silinmesi",
+          "preconditions": "En az bir segment kaydi mevcut olmali",
+          "steps": [
+            {"action": "Segment listesinden silinecek segmenti bul", "expected_result": "Segment listelenir"},
+            {"action": "Segment satirindaki 'Sil' butonuna tikla", "expected_result": "Onay dialogu acilir"},
+            {"action": "'Evet, Sil' butonuna tikla", "expected_result": "Segment silinir"},
+            {"action": "Listede segmenti ara", "expected_result": "Segment artik listede gorunmuyor"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Segment detay sayfasi",
+          "description": "Segment detay bilgilerinin goruntulenmesi",
+          "preconditions": "En az bir segment mevcut olmali",
+          "steps": [
+            {"action": "Segment listesinden bir segmente tikla", "expected_result": "Detay sayfasi acilir"},
+            {"action": "Temel bilgileri kontrol et", "expected_result": "Segment adi, aciklama, durum gorunur"},
+            {"action": "Kural gorunumunu kontrol et", "expected_result": "Tum kurallar okunabilir sekilde gorunur"},
+            {"action": "Olusturulma tarihini kontrol et", "expected_result": "Tarih dogru formatla gorunur (01/01/0001 degil)"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Satis Ekibi Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni satis ekibi olusturma",
+          "description": "Satis ekibi kaydinin tum alanlar doldurularak olusturulmasi",
+          "preconditions": "CRM erisim yetkisi olmali",
+          "steps": [
+            {"action": "Sol menuden 'Satis Ekipleri' tikla", "expected_result": "Satis ekibi listesi sayfasi acilir"},
+            {"action": "'+ Yeni Ekip' butonuna tikla", "expected_result": "Ekip olusturma formu acilir"},
+            {"action": "Ekip Adi: 'Kurumsal Satis Takimi' gir", "expected_result": "Baslik alani dolar"},
+            {"action": "Ekip Kodu: 'KST-001' gir", "expected_result": "Kod alani dolar"},
+            {"action": "Aciklama: 'Buyuk firma musteri satislari' gir", "expected_result": "Aciklama alani dolar"},
+            {"action": "Ekip Lideri: 'Ahmet Yilmaz' gir", "expected_result": "Lider adi alani dolar"},
+            {"action": "Hedef Bilgileri bolumune git", "expected_result": "Hedef alanlari gorunur"},
+            {"action": "Satis Hedefi: '5000000' gir", "expected_result": "5.000.000 formatinda gorunur"},
+            {"action": "Hedef Periyodu: 'Aylik' sec", "expected_result": "Periyot secilir"},
+            {"action": "Para Birimi: 'TRY' sec", "expected_result": "Para birimi secilir"},
+            {"action": "Bolge Bilgileri bolumune git (opsiyonel)", "expected_result": "Bolge alanlari gorunur"},
+            {"action": "Bolge dropdown'indan bir bolge sec", "expected_result": "Bolge secilir ve adi otomatik dolar"},
+            {"action": "Iletisim Bilgileri bolumune git", "expected_result": "Iletisim alanlari gorunur"},
+            {"action": "Ekip E-postasi: 'kurumsal-satis@firma.com' gir", "expected_result": "E-posta alani dolar"},
+            {"action": "Iletisim Kanali: 'teams-kurumsal' gir", "expected_result": "Kanal alani dolar"},
+            {"action": "Durum toggle'ini 'Aktif' yap", "expected_result": "Toggle aktif"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Ekip basariyla olusturulur"},
+            {"action": "Detay sayfasinda lider adini kontrol et", "expected_result": "Lider adi gorunur"},
+            {"action": "Detay sayfasinda bolge adini kontrol et", "expected_result": "Bolge adi gorunur"},
+            {"action": "Detay sayfasinda olusturulma tarihini kontrol et", "expected_result": "Tarih dogru formatla gorunur (01/01/0001 degil)"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "ekip_adi": "Kurumsal Satis Takimi",
+            "ekip_kodu": "KST-001",
+            "aciklama": "Buyuk firma musteri satislari",
+            "lider_adi": "Ahmet Yilmaz",
+            "satis_hedefi": "5000000",
+            "hedef_periyodu": "Monthly",
+            "para_birimi": "TRY",
+            "ekip_email": "kurumsal-satis@firma.com",
+            "iletisim_kanali": "teams-kurumsal"
+          }
+        },
+        {
+          "title": "Satis ekibi zorunlu alan validasyonu",
+          "description": "Ekip formunda zorunlu alanlarin kontrolu",
+          "preconditions": "Ekip formu acik olmali",
+          "steps": [
+            {"action": "Hicbir alan doldurmadan 'Kaydet' tikla", "expected_result": "Validasyon hatalari gorunur"},
+            {"action": "Ekip Adi alani altini kontrol et", "expected_result": "'Ekip adi zorunludur' hatasi gorunur"},
+            {"action": "Ekip Kodu alani altini kontrol et", "expected_result": "'Ekip kodu zorunludur' hatasi gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Satis ekibi uye ekleme",
+          "description": "Ekibe yeni uye eklenmesi",
+          "preconditions": "Mevcut bir satis ekibi olmali",
+          "steps": [
+            {"action": "Satis ekibi detay sayfasini ac", "expected_result": "Detay sayfasi acilir"},
+            {"action": "Uyeler bolumunu bul", "expected_result": "Uye listesi gorunur"},
+            {"action": "'Uye Ekle' butonuna tikla", "expected_result": "Uye ekleme formu/dialogu acilir"},
+            {"action": "Kullanici/Uye adi gir veya sec", "expected_result": "Uye secilir"},
+            {"action": "Rol: 'Senior' sec", "expected_result": "Rol secilir"},
+            {"action": "'Ekle' butonuna tikla", "expected_result": "Uye ekibe eklenir"},
+            {"action": "Uye listesini kontrol et", "expected_result": "Yeni uye listede gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Satis ekibi detay sayfasi",
+          "description": "Ekip detay bilgilerinin goruntulenmesi",
+          "preconditions": "En az bir satis ekibi mevcut olmali",
+          "steps": [
+            {"action": "Ekip listesinden bir ekibe tikla", "expected_result": "Detay sayfasi acilir"},
+            {"action": "Temel bilgileri kontrol et", "expected_result": "Ekip adi, kodu, aciklama gorunur"},
+            {"action": "Lider bilgisini kontrol et", "expected_result": "Lider adi gorunur"},
+            {"action": "Hedef bilgilerini kontrol et", "expected_result": "Satis hedefi, periyot gorunur"},
+            {"action": "Bolge bilgisini kontrol et", "expected_result": "Bolge adi gorunur"},
+            {"action": "Uye listesini kontrol et", "expected_result": "Ekip uyeleri listelenir"},
+            {"action": "Olusturulma tarihini kontrol et", "expected_result": "Tarih dogru gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Bolge Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni bolge olusturma",
+          "description": "Bolge kaydinin tum alanlar doldurularak olusturulmasi",
+          "preconditions": "CRM erisim yetkisi olmali",
+          "steps": [
+            {"action": "Sol menuden 'Bolgeler' tikla", "expected_result": "Bolge listesi sayfasi acilir"},
+            {"action": "'+ Yeni Bolge' butonuna tikla", "expected_result": "Bolge olusturma formu acilir"},
+            {"action": "Bolge Adi: 'Marmara Bolgesi' gir", "expected_result": "Baslik alani dolar"},
+            {"action": "Bolge Kodu: 'MAR-001' gir", "expected_result": "Kod alani dolar"},
+            {"action": "Aciklama: 'Marmara bolgesi satis alani' gir", "expected_result": "Aciklama alani dolar"},
+            {"action": "Bolge Tipi: 'Satis Bolgesi' sec", "expected_result": "Tip secilir"},
+            {"action": "Kapsam dropdown'indan iller sec: Istanbul, Kocaeli, Bursa", "expected_result": "Iller secilir"},
+            {"action": "Ust Bolge dropdown'indan varsa ust bolge sec", "expected_result": "Ust bolge secilir (opsiyonel)"},
+            {"action": "Durum toggle'ini 'Aktif' yap", "expected_result": "Toggle aktif"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Bolge basariyla olusturulur"},
+            {"action": "Listede bolgeyi kontrol et", "expected_result": "Yeni bolge listede gorunur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "bolge_adi": "Marmara Bolgesi",
+            "bolge_kodu": "MAR-001",
+            "aciklama": "Marmara bolgesi satis alani",
+            "bolge_tipi": "Sales",
+            "kapsam": ["Istanbul", "Kocaeli", "Bursa"]
+          }
+        },
+        {
+          "title": "Bolge zorunlu alan validasyonu",
+          "description": "Bolge formunda zorunlu alanlarin kontrolu",
+          "preconditions": "Bolge formu acik olmali",
+          "steps": [
+            {"action": "Hicbir alan doldurmadan 'Kaydet' tikla", "expected_result": "Validasyon hatalari gorunur"},
+            {"action": "Bolge Adi alani altini kontrol et", "expected_result": "'Bolge adi zorunludur' hatasi gorunur"},
+            {"action": "Bolge Kodu alani altini kontrol et", "expected_result": "'Bolge kodu zorunludur' hatasi gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Bolge hiyerarsisi",
+          "description": "Ust-alt bolge iliskisinin kontrolu",
+          "preconditions": "En az iki bolge mevcut olmali",
+          "steps": [
+            {"action": "Mevcut bir bolgeyi duzenle", "expected_result": "Duzenleme formu acilir"},
+            {"action": "Ust Bolge dropdown'ini ac", "expected_result": "Mevcut ust bolgeler listelenir"},
+            {"action": "Bir ust bolge sec", "expected_result": "Ust bolge secilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Hiyerarsi kaydedilir"},
+            {"action": "Ust bolge detayinda alt bolgeleri kontrol et", "expected_result": "Alt bolge listede gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Bolge detay sayfasi",
+          "description": "Bolge detay bilgilerinin goruntulenmesi",
+          "preconditions": "En az bir bolge mevcut olmali",
+          "steps": [
+            {"action": "Bolge listesinden bir bolgeye tikla", "expected_result": "Detay sayfasi acilir"},
+            {"action": "Temel bilgileri kontrol et", "expected_result": "Bolge adi, kodu, aciklama gorunur"},
+            {"action": "Bolge tipini kontrol et", "expected_result": "Tip gorunur"},
+            {"action": "Kapsami kontrol et", "expected_result": "Dahil edilen iller/ilceler gorunur"},
+            {"action": "Hiyerarsiyi kontrol et", "expected_result": "Ust/alt bolge iliskisi gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Toplanti Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni toplanti olusturma",
+          "description": "Toplanti kaydinin tum alanlar doldurularak olusturulmasi",
+          "preconditions": "CRM erisim yetkisi olmali",
+          "steps": [
+            {"action": "Sol menuden 'Toplantilar' tikla", "expected_result": "Toplanti listesi sayfasi acilir"},
+            {"action": "'+ Yeni Toplanti' butonuna tikla", "expected_result": "Toplanti olusturma formu acilir"},
+            {"action": "Toplanti Basligi: 'Satis Stratejisi Toplantisi' gir", "expected_result": "Baslik alani dolar"},
+            {"action": "Aciklama: 'Q2 satis hedefleri degerlendirmesi' gir", "expected_result": "Aciklama alani dolar"},
+            {"action": "Toplanti Tipi: 'Dahili' sec", "expected_result": "Tip secilir"},
+            {"action": "Baslangic Tarihi ve Saati sec", "expected_result": "Tarih/saat secilir"},
+            {"action": "Bitis Tarihi ve Saati sec", "expected_result": "Tarih/saat secilir"},
+            {"action": "Konum: 'Toplanti Odasi A' gir", "expected_result": "Konum alani dolar"},
+            {"action": "Ilgili Musteri dropdown'indan sec (opsiyonel)", "expected_result": "Musteri secilir"},
+            {"action": "Ilgili Firsat dropdown'indan sec (opsiyonel)", "expected_result": "Firsat secilir"},
+            {"action": "Katilimcilar: birden fazla kisi ekle", "expected_result": "Katilimcilar eklenir"},
+            {"action": "Hatirlatma: '30 dakika once' sec", "expected_result": "Hatirlatma ayarlanir"},
+            {"action": "Durum: 'Planlandi' sec", "expected_result": "Durum secilir"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Toplanti basariyla olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "baslik": "Satis Stratejisi Toplantisi",
+            "aciklama": "Q2 satis hedefleri degerlendirmesi",
+            "tip": "Internal",
+            "konum": "Toplanti Odasi A",
+            "hatirlatma": "30min"
+          }
+        },
+        {
+          "title": "Toplanti tarih/saat validasyonu",
+          "description": "Bitis zamaninin baslangictan sonra olmasi kontrolu",
+          "preconditions": "Toplanti formu acik olmali",
+          "steps": [
+            {"action": "Baslangic: '15:00' sec", "expected_result": "Baslangic saati secilir"},
+            {"action": "Bitis: '14:00' secmeye calis", "expected_result": "Hata gorunur veya secim engellenir"},
+            {"action": "Bitis: '16:00' sec", "expected_result": "Gecerli bitis saati kabul edilir"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Toplanti durum guncelleme",
+          "description": "Toplanti durumunun degistirilmesi",
+          "preconditions": "Mevcut bir toplanti olmali",
+          "steps": [
+            {"action": "Mevcut bir toplantiyi duzenle", "expected_result": "Duzenleme formu acilir"},
+            {"action": "Durum: 'Tamamlandi' sec", "expected_result": "Durum secilir"},
+            {"action": "Notlar: 'Toplanti basarili gecti' gir", "expected_result": "Notlar alani dolar"},
+            {"action": "'Kaydet' tikla", "expected_result": "Durum guncellenir"},
+            {"action": "Listede durumu kontrol et", "expected_result": "'Tamamlandi' gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Toplanti detay sayfasi",
+          "description": "Toplanti detay bilgilerinin goruntulenmesi",
+          "preconditions": "En az bir toplanti mevcut olmali",
+          "steps": [
+            {"action": "Toplanti listesinden bir toplantiya tikla", "expected_result": "Detay sayfasi acilir"},
+            {"action": "Temel bilgileri kontrol et", "expected_result": "Baslik, aciklama, durum gorunur"},
+            {"action": "Tarih/saat bilgisini kontrol et", "expected_result": "Baslangic ve bitis gorunur"},
+            {"action": "Konum bilgisini kontrol et", "expected_result": "Konum gorunur"},
+            {"action": "Katilimcilari kontrol et", "expected_result": "Tum katilimcilar listelenir"},
+            {"action": "Iliskili kayitlari kontrol et", "expected_result": "Musteri/firsat baglantilari gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Cagri Kayitlari",
+      "cases": [
+        {
+          "title": "Yeni cagri kaydi olusturma",
+          "description": "Cagri kaydinin tum alanlar doldurularak olusturulmasi",
+          "preconditions": "CRM erisim yetkisi olmali",
+          "steps": [
+            {"action": "Sol menuden 'Cagri Kayitlari' tikla", "expected_result": "Cagri listesi sayfasi acilir"},
+            {"action": "'+ Yeni Cagri' butonuna tikla", "expected_result": "Cagri olusturma formu acilir"},
+            {"action": "Konu: 'Teklif Takibi' gir", "expected_result": "Konu alani dolar"},
+            {"action": "Aciklama: 'ERP projesi teklifinin gorusmesi' gir", "expected_result": "Aciklama alani dolar"},
+            {"action": "Cagri Tipi: 'Giden' sec", "expected_result": "Tip secilir"},
+            {"action": "Ilgili Musteri dropdown'indan sec", "expected_result": "Musteri secilir"},
+            {"action": "Ilgili Kisi: 'Ali Veli' gir", "expected_result": "Kisi adi alani dolar"},
+            {"action": "Telefon Numarasi: '+90 532 111 2233' gir", "expected_result": "Numara alani dolar"},
+            {"action": "Cagri Tarihi ve Saati sec", "expected_result": "Tarih/saat secilir"},
+            {"action": "Sure (dakika): '15' gir", "expected_result": "Sure alani dolar"},
+            {"action": "Sonuc: 'Basarili' sec", "expected_result": "Sonuc secilir"},
+            {"action": "Notlar: 'Musteri teklife olumlu bakiyor' gir", "expected_result": "Notlar alani dolar"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Cagri kaydi basariyla olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "konu": "Teklif Takibi",
+            "aciklama": "ERP projesi teklifinin gorusmesi",
+            "tip": "Outbound",
+            "ilgili_kisi": "Ali Veli",
+            "telefon": "+90 532 111 2233",
+            "sure": "15",
+            "sonuc": "Successful"
+          }
+        },
+        {
+          "title": "Cagri kaydi zorunlu alan validasyonu",
+          "description": "Cagri formunda zorunlu alanlarin kontrolu",
+          "preconditions": "Cagri formu acik olmali",
+          "steps": [
+            {"action": "Hicbir alan doldurmadan 'Kaydet' tikla", "expected_result": "Validasyon hatalari gorunur"},
+            {"action": "Konu alani altini kontrol et", "expected_result": "'Konu zorunludur' hatasi gorunur"},
+            {"action": "Cagri Tarihi alani altini kontrol et", "expected_result": "'Cagri tarihi zorunludur' hatasi gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Cagri detay sayfasi",
+          "description": "Cagri detay bilgilerinin goruntulenmesi",
+          "preconditions": "En az bir cagri kaydi mevcut olmali",
+          "steps": [
+            {"action": "Cagri listesinden bir cagriya tikla", "expected_result": "Detay sayfasi acilir"},
+            {"action": "Temel bilgileri kontrol et", "expected_result": "Konu, aciklama, tip gorunur"},
+            {"action": "Tarih/saat ve sure bilgisini kontrol et", "expected_result": "Tarih ve sure gorunur"},
+            {"action": "Iliskili musteri bilgisini kontrol et", "expected_result": "Musteri adi gorunur"},
+            {"action": "Sonuc ve notlari kontrol et", "expected_result": "Sonuc ve notlar gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Rakip Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni rakip olusturma",
+          "description": "Rakip kaydinin tum alanlar doldurularak olusturulmasi",
+          "preconditions": "CRM erisim yetkisi olmali",
+          "steps": [
+            {"action": "Sol menuden 'Rakipler' tikla", "expected_result": "Rakip listesi sayfasi acilir"},
+            {"action": "'+ Yeni Rakip' butonuna tikla", "expected_result": "Rakip olusturma formu acilir"},
+            {"action": "Rakip Adi: 'ABC Yazilim A.S.' gir", "expected_result": "Baslik alani dolar"},
+            {"action": "Web Sitesi: 'https://abcyazilim.com' gir", "expected_result": "Website alani dolar"},
+            {"action": "Sektor: 'Teknoloji' sec", "expected_result": "Sektor secilir"},
+            {"action": "Tehdit Seviyesi: 'Yuksek' sec", "expected_result": "Tehdit seviyesi secilir"},
+            {"action": "Guclu Yonleri: 'Dusuk fiyat, hizli teslimat' gir", "expected_result": "Alan dolar"},
+            {"action": "Zayif Yonleri: 'Sinirli destek, az ozellik' gir", "expected_result": "Alan dolar"},
+            {"action": "Urunler/Hizmetler: 'CRM, ERP, Muhasebe' gir", "expected_result": "Alan dolar"},
+            {"action": "Notlar: 'Fiyat odakli stratejileri var' gir", "expected_result": "Notlar alani dolar"},
+            {"action": "Durum: 'Aktif' sec", "expected_result": "Durum secilir"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Rakip basariyla olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "rakip_adi": "ABC Yazilim A.S.",
+            "website": "https://abcyazilim.com",
+            "sektor": "Teknoloji",
+            "tehdit_seviyesi": "High",
+            "guclu_yonler": "Dusuk fiyat, hizli teslimat",
+            "zayif_yonler": "Sinirli destek, az ozellik",
+            "urunler": "CRM, ERP, Muhasebe"
+          }
+        },
+        {
+          "title": "Rakip zorunlu alan validasyonu",
+          "description": "Rakip formunda zorunlu alanlarin kontrolu",
+          "preconditions": "Rakip formu acik olmali",
+          "steps": [
+            {"action": "Hicbir alan doldurmadan 'Kaydet' tikla", "expected_result": "Validasyon hatalari gorunur"},
+            {"action": "Rakip Adi alani altini kontrol et", "expected_result": "'Rakip adi zorunludur' hatasi gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Rakip detay sayfasi",
+          "description": "Rakip detay bilgilerinin goruntulenmesi",
+          "preconditions": "En az bir rakip mevcut olmali",
+          "steps": [
+            {"action": "Rakip listesinden bir rakibe tikla", "expected_result": "Detay sayfasi acilir"},
+            {"action": "Temel bilgileri kontrol et", "expected_result": "Rakip adi, website, sektor gorunur"},
+            {"action": "Tehdit analizini kontrol et", "expected_result": "Tehdit seviyesi gorunur"},
+            {"action": "SWOT bilgilerini kontrol et", "expected_result": "Guclu/zayif yonler gorunur"},
+            {"action": "Urun/hizmet bilgisini kontrol et", "expected_result": "Urunler listelenir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Referans Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni referans olusturma",
+          "description": "Referans kaydinin tum alanlar doldurularak olusturulmasi",
+          "preconditions": "CRM erisim yetkisi olmali, en az bir musteri mevcut olmali",
+          "steps": [
+            {"action": "Sol menuden 'Referanslar' tikla", "expected_result": "Referans listesi sayfasi acilir"},
+            {"action": "'+ Yeni Referans' butonuna tikla", "expected_result": "Referans olusturma formu acilir"},
+            {"action": "Referans Veren dropdown'indan bir musteri sec", "expected_result": "Referans veren musteri secilir"},
+            {"action": "Referans Alinan Kisi Adi: 'Mehmet Kaya' gir", "expected_result": "Kisi adi alani dolar"},
+            {"action": "Firma Adi: 'XYZ Holding' gir", "expected_result": "Firma alani dolar"},
+            {"action": "E-posta: 'mehmet.kaya@xyzholding.com' gir", "expected_result": "E-posta alani dolar"},
+            {"action": "Telefon: '+90 532 333 4455' gir", "expected_result": "Telefon alani dolar"},
+            {"action": "Referans Tipi: 'Is Ortagi' sec", "expected_result": "Tip secilir"},
+            {"action": "Ilgi Alani: 'ERP Cozumleri' gir", "expected_result": "Ilgi alani dolar"},
+            {"action": "Notlar: 'Mevcut musterimiz tarafindan onerildi' gir", "expected_result": "Notlar alani dolar"},
+            {"action": "Durum: 'Yeni' sec", "expected_result": "Durum secilir"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Referans basariyla olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "referans_alinan": "Mehmet Kaya",
+            "firma": "XYZ Holding",
+            "email": "mehmet.kaya@xyzholding.com",
+            "telefon": "+90 532 333 4455",
+            "tip": "Business Partner",
+            "ilgi_alani": "ERP Cozumleri"
+          }
+        },
+        {
+          "title": "Referans zorunlu alan validasyonu",
+          "description": "Referans formunda zorunlu alanlarin kontrolu",
+          "preconditions": "Referans formu acik olmali",
+          "steps": [
+            {"action": "Hicbir alan doldurmadan 'Kaydet' tikla", "expected_result": "Validasyon hatalari gorunur"},
+            {"action": "Referans Veren alani altini kontrol et", "expected_result": "'Referans veren zorunludur' hatasi gorunur"},
+            {"action": "Referans Alinan Kisi alani altini kontrol et", "expected_result": "'Kisi adi zorunludur' hatasi gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Referans durum takibi",
+          "description": "Referansin durumunun guncellenmesi",
+          "preconditions": "Mevcut bir referans olmali",
+          "steps": [
+            {"action": "Mevcut bir referansi duzenle", "expected_result": "Duzenleme formu acilir"},
+            {"action": "Durum: 'Iletisime Gecildi' sec", "expected_result": "Durum secilir"},
+            {"action": "Iletisim Tarihi sec", "expected_result": "Tarih secilir"},
+            {"action": "Iletisim Notlari gir", "expected_result": "Notlar alani dolar"},
+            {"action": "'Kaydet' tikla", "expected_result": "Durum guncellenir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Referans detay sayfasi",
+          "description": "Referans detay bilgilerinin goruntulenmesi",
+          "preconditions": "En az bir referans mevcut olmali",
+          "steps": [
+            {"action": "Referans listesinden bir referansa tikla", "expected_result": "Detay sayfasi acilir"},
+            {"action": "Referans veren bilgisini kontrol et", "expected_result": "Musteri adi ve baglanti gorunur"},
+            {"action": "Referans alinan kisi bilgisini kontrol et", "expected_result": "Kisi ve firma bilgileri gorunur"},
+            {"action": "Iletisim bilgilerini kontrol et", "expected_result": "E-posta ve telefon gorunur"},
+            {"action": "Durum gecmisini kontrol et", "expected_result": "Durum degisiklikleri gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Aktivite Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni aktivite olusturma",
+          "description": "Aktivite kaydinin tum alanlar doldurularak olusturulmasi",
+          "preconditions": "CRM erisim yetkisi olmali",
+          "steps": [
+            {"action": "Sol menuden 'Aktiviteler' tikla", "expected_result": "Aktivite listesi sayfasi acilir"},
+            {"action": "'+ Yeni Aktivite' butonuna tikla", "expected_result": "Aktivite olusturma formu acilir"},
+            {"action": "Aktivite Tipi: 'Gorev' sec", "expected_result": "Tip secilir"},
+            {"action": "Konu: 'Teklif Hazirla' gir", "expected_result": "Konu alani dolar"},
+            {"action": "Aciklama: 'ERP projesi icin detayli teklif hazirlanacak' gir", "expected_result": "Aciklama alani dolar"},
+            {"action": "Oncelik: 'Yuksek' sec", "expected_result": "Oncelik secilir"},
+            {"action": "Bitis Tarihi sec", "expected_result": "Tarih secilir"},
+            {"action": "Ilgili Kayit Tipi: 'Firsat' sec", "expected_result": "Kayit tipi secilir"},
+            {"action": "Ilgili Kayit dropdown'indan bir firsat sec", "expected_result": "Firsat secilir"},
+            {"action": "Atanan Kisi sec veya gir", "expected_result": "Kisi atanir"},
+            {"action": "Durum: 'Yapilacak' sec", "expected_result": "Durum secilir"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Aktivite basariyla olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "tip": "Task",
+            "konu": "Teklif Hazirla",
+            "aciklama": "ERP projesi icin detayli teklif hazirlanacak",
+            "oncelik": "High",
+            "ilgili_tip": "Opportunity"
+          }
+        },
+        {
+          "title": "Aktivite zorunlu alan validasyonu",
+          "description": "Aktivite formunda zorunlu alanlarin kontrolu",
+          "preconditions": "Aktivite formu acik olmali",
+          "steps": [
+            {"action": "Hicbir alan doldurmadan 'Kaydet' tikla", "expected_result": "Validasyon hatalari gorunur"},
+            {"action": "Aktivite Tipi alani altini kontrol et", "expected_result": "'Aktivite tipi zorunludur' hatasi gorunur"},
+            {"action": "Konu alani altini kontrol et", "expected_result": "'Konu zorunludur' hatasi gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Aktivite tamamlama",
+          "description": "Aktivitenin tamamlandi olarak isaretlenmesi",
+          "preconditions": "Mevcut bir aktivite olmali",
+          "steps": [
+            {"action": "Aktivite listesinden bir aktivite sec", "expected_result": "Detay sayfasi acilir"},
+            {"action": "'Tamamla' butonuna tikla veya duzenle'den durum degistir", "expected_result": "Durum secenekleri gorunur"},
+            {"action": "Durum: 'Tamamlandi' sec", "expected_result": "Durum guncellenir"},
+            {"action": "Tamamlanma notlari gir (opsiyonel)", "expected_result": "Notlar kaydedilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Aktivite tamamlandi olarak isaretlenir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Aktivite detay sayfasi",
+          "description": "Aktivite detay bilgilerinin goruntulenmesi",
+          "preconditions": "En az bir aktivite mevcut olmali",
+          "steps": [
+            {"action": "Aktivite listesinden bir aktiviteye tikla", "expected_result": "Detay sayfasi acilir"},
+            {"action": "Temel bilgileri kontrol et", "expected_result": "Konu, aciklama, tip gorunur"},
+            {"action": "Tarih ve oncelik bilgisini kontrol et", "expected_result": "Bitis tarihi ve oncelik gorunur"},
+            {"action": "Iliskili kaydi kontrol et", "expected_result": "Bagli firsat/musteri gorunur"},
+            {"action": "Atama bilgisini kontrol et", "expected_result": "Atanan kisi gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Workflow Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni workflow olusturma",
+          "description": "Workflow kaydinin tum alanlar doldurularak olusturulmasi",
+          "preconditions": "CRM erisim yetkisi olmali",
+          "steps": [
+            {"action": "Sol menuden 'Workflowlar' tikla", "expected_result": "Workflow listesi sayfasi acilir"},
+            {"action": "'+ Yeni Workflow' butonuna tikla", "expected_result": "Workflow olusturma formu acilir"},
+            {"action": "Workflow Adi: 'Yeni Lead Bildirimi' gir", "expected_result": "Baslik alani dolar"},
+            {"action": "Aciklama: 'Yeni lead olusturulunca e-posta gonder' gir", "expected_result": "Aciklama alani dolar"},
+            {"action": "Tetikleyici Nesne: 'Lead' sec", "expected_result": "Nesne secilir"},
+            {"action": "Tetikleyici Olay: 'Olusturuldu' sec", "expected_result": "Olay secilir"},
+            {"action": "Kosul bolumune git (opsiyonel)", "expected_result": "Kosul alanlari gorunur"},
+            {"action": "Kosul: 'Rating = Sicak' ekle", "expected_result": "Kosul eklenir"},
+            {"action": "Eylem bolumune git", "expected_result": "Eylem alanlari gorunur"},
+            {"action": "Eylem Tipi: 'E-posta Gonder' sec", "expected_result": "E-posta ayarlari gorunur"},
+            {"action": "Alici: 'satis@firma.com' gir", "expected_result": "Alici alani dolar"},
+            {"action": "Konu: 'Yeni Sicak Lead: {LeadName}' gir", "expected_result": "Konu alani dolar"},
+            {"action": "Icerik: E-posta sablonunu doldur", "expected_result": "Icerik alani dolar"},
+            {"action": "Durum: 'Aktif' yap", "expected_result": "Toggle aktif"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Workflow basariyla olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "workflow_adi": "Yeni Lead Bildirimi",
+            "aciklama": "Yeni lead olusturulunca e-posta gonder",
+            "tetikleyici_nesne": "Lead",
+            "tetikleyici_olay": "Created",
+            "eylem_tipi": "SendEmail"
+          }
+        },
+        {
+          "title": "Workflow zorunlu alan validasyonu",
+          "description": "Workflow formunda zorunlu alanlarin kontrolu",
+          "preconditions": "Workflow formu acik olmali",
+          "steps": [
+            {"action": "Hicbir alan doldurmadan 'Kaydet' tikla", "expected_result": "Validasyon hatalari gorunur"},
+            {"action": "Workflow Adi alani altini kontrol et", "expected_result": "'Workflow adi zorunludur' hatasi gorunur"},
+            {"action": "Tetikleyici alani altini kontrol et", "expected_result": "'Tetikleyici zorunludur' hatasi gorunur"},
+            {"action": "Eylem alani altini kontrol et", "expected_result": "'En az bir eylem zorunludur' hatasi gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Workflow detay sayfasi",
+          "description": "Workflow detay bilgilerinin goruntulenmesi",
+          "preconditions": "En az bir workflow mevcut olmali",
+          "steps": [
+            {"action": "Workflow listesinden bir workflow'a tikla", "expected_result": "Detay sayfasi acilir"},
+            {"action": "Temel bilgileri kontrol et", "expected_result": "Workflow adi, aciklama, durum gorunur"},
+            {"action": "Tetikleyici bilgisini kontrol et", "expected_result": "Nesne ve olay gorunur"},
+            {"action": "Kosullari kontrol et", "expected_result": "Tanimli kosullar gorunur"},
+            {"action": "Eylemleri kontrol et", "expected_result": "Tanimli eylemler gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Dokuman Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni dokuman yukleme",
+          "description": "Dokumanin tum alanlar doldurularak yuklenmesi",
+          "preconditions": "CRM erisim yetkisi olmali",
+          "steps": [
+            {"action": "Sol menuden 'Dokumanlar' tikla", "expected_result": "Dokuman listesi sayfasi acilir"},
+            {"action": "'+ Yeni Dokuman' butonuna tikla", "expected_result": "Dokuman yukleme formu acilir"},
+            {"action": "Dokuman Adi: 'ERP Teklif Dosyasi' gir", "expected_result": "Baslik alani dolar"},
+            {"action": "Aciklama: 'Kurumsal ERP projesi teklifi' gir", "expected_result": "Aciklama alani dolar"},
+            {"action": "Kategori: 'Teklif' sec", "expected_result": "Kategori secilir"},
+            {"action": "Dosya Sec butonuna tikla ve PDF dosyasi sec", "expected_result": "Dosya secilir"},
+            {"action": "Ilgili Kayit Tipi: 'Firsat' sec", "expected_result": "Kayit tipi secilir"},
+            {"action": "Ilgili Kayit dropdown'indan bir firsat sec", "expected_result": "Firsat secilir"},
+            {"action": "Erisim: 'Ekip' sec", "expected_result": "Erisim seviyesi secilir"},
+            {"action": "'Yukle' butonuna tikla", "expected_result": "Dokuman basariyla yuklenir"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "dokuman_adi": "ERP Teklif Dosyasi",
+            "aciklama": "Kurumsal ERP projesi teklifi",
+            "kategori": "Proposal",
+            "dosya_tipi": "PDF",
+            "ilgili_tip": "Opportunity"
+          }
+        },
+        {
+          "title": "Dokuman dosya tipi validasyonu",
+          "description": "Izin verilen dosya tiplerinin kontrolu",
+          "preconditions": "Dokuman formu acik olmali",
+          "steps": [
+            {"action": "Izin verilmeyen bir dosya tipi sec (ornegin .exe)", "expected_result": "Hata mesaji gorunur"},
+            {"action": "Izin verilen bir dosya tipi sec (PDF, DOCX, XLSX)", "expected_result": "Dosya kabul edilir"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "security"
+        },
+        {
+          "title": "Dokuman boyut limiti",
+          "description": "Maksimum dosya boyutu kontrolu",
+          "preconditions": "Dokuman formu acik olmali",
+          "steps": [
+            {"action": "Maksimum boyutu asan bir dosya sec (ornegin 50MB)", "expected_result": "'Dosya boyutu cok buyuk' hatasi gorunur"},
+            {"action": "Uygun boyutta bir dosya sec", "expected_result": "Dosya kabul edilir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Dokuman indirme ve onizleme",
+          "description": "Dokumanin indirilmesi ve onizlemesi",
+          "preconditions": "En az bir dokuman mevcut olmali",
+          "steps": [
+            {"action": "Dokuman listesinden bir dokumana tikla", "expected_result": "Detay sayfasi acilir"},
+            {"action": "'Indir' butonuna tikla", "expected_result": "Dosya indirilir"},
+            {"action": "'Onizle' butonuna tikla (desteklenen tipler icin)", "expected_result": "Dosya onizlemesi acilir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Sadakat Programi Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni sadakat programi olusturma",
+          "description": "Sadakat programi kaydinin tum alanlar doldurularak olusturulmasi",
+          "preconditions": "CRM erisim yetkisi olmali",
+          "steps": [
+            {"action": "Sol menuden 'Sadakat Programlari' tikla", "expected_result": "Sadakat programi listesi acilir"},
+            {"action": "'+ Yeni Program' butonuna tikla", "expected_result": "Program olusturma formu acilir"},
+            {"action": "Program Adi: 'VIP Musteriler' gir", "expected_result": "Baslik alani dolar"},
+            {"action": "Aciklama: 'Yuksek hacimli musteriler icin ozel avantajlar' gir", "expected_result": "Aciklama alani dolar"},
+            {"action": "Program Tipi: 'Puan Bazli' sec", "expected_result": "Tip secilir"},
+            {"action": "Puan Kazanim Orani: '1 TL = 1 Puan' gir", "expected_result": "Oran alani dolar"},
+            {"action": "Minimum Harcama: '10000' gir", "expected_result": "Minimum harcama alani dolar"},
+            {"action": "Gecerlilik Suresi: '12 ay' sec", "expected_result": "Sure secilir"},
+            {"action": "Avantajlar bolumune git", "expected_result": "Avantaj alanlari gorunur"},
+            {"action": "Avantaj ekle: '%10 indirim' gir", "expected_result": "Avantaj eklenir"},
+            {"action": "Durum: 'Aktif' yap", "expected_result": "Toggle aktif"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Program basariyla olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "program_adi": "VIP Musteriler",
+            "aciklama": "Yuksek hacimli musteriler icin ozel avantajlar",
+            "tip": "PointsBased",
+            "puan_orani": "1:1",
+            "min_harcama": "10000",
+            "gecerlilik": "12"
+          }
+        },
+        {
+          "title": "Sadakat programi zorunlu alan validasyonu",
+          "description": "Program formunda zorunlu alanlarin kontrolu",
+          "preconditions": "Program formu acik olmali",
+          "steps": [
+            {"action": "Hicbir alan doldurmadan 'Kaydet' tikla", "expected_result": "Validasyon hatalari gorunur"},
+            {"action": "Program Adi alani altini kontrol et", "expected_result": "'Program adi zorunludur' hatasi gorunur"},
+            {"action": "Program Tipi alani altini kontrol et", "expected_result": "'Program tipi zorunludur' hatasi gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Sadakat programi detay sayfasi",
+          "description": "Program detay bilgilerinin goruntulenmesi",
+          "preconditions": "En az bir program mevcut olmali",
+          "steps": [
+            {"action": "Program listesinden bir programa tikla", "expected_result": "Detay sayfasi acilir"},
+            {"action": "Temel bilgileri kontrol et", "expected_result": "Program adi, aciklama, tip gorunur"},
+            {"action": "Puan kurallarini kontrol et", "expected_result": "Kazanim oranlari gorunur"},
+            {"action": "Avantajlari kontrol et", "expected_result": "Tanimli avantajlar listelenir"},
+            {"action": "Uyelik istatistiklerini kontrol et", "expected_result": "Uye sayisi gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Sadakat Uyeligi Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni sadakat uyeligi olusturma",
+          "description": "Sadakat uyeligi kaydinin tum alanlar doldurularak olusturulmasi",
+          "preconditions": "En az bir sadakat programi ve musteri mevcut olmali",
+          "steps": [
+            {"action": "Sol menuden 'Sadakat Uyelikleri' tikla", "expected_result": "Uyelik listesi acilir"},
+            {"action": "'+ Yeni Uyelik' butonuna tikla", "expected_result": "Uyelik olusturma formu acilir"},
+            {"action": "Musteri dropdown'indan bir musteri sec", "expected_result": "Musteri secilir"},
+            {"action": "Program dropdown'indan bir program sec", "expected_result": "Program secilir"},
+            {"action": "Uyelik Tarihi otomatik dolar veya sec", "expected_result": "Tarih belirlenir"},
+            {"action": "Baslangic Puani: '0' gir (veya bos birak)", "expected_result": "Puan alani dolar"},
+            {"action": "Uyelik Seviyesi: 'Bronze' sec", "expected_result": "Seviye secilir"},
+            {"action": "Durum: 'Aktif' yap", "expected_result": "Toggle aktif"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Uyelik basariyla olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "baslangic_puani": "0",
+            "seviye": "Bronze",
+            "durum": "Active"
+          }
+        },
+        {
+          "title": "Uyelik puan islemi",
+          "description": "Uyelik puaninin eklenmesi/dusulmesi",
+          "preconditions": "Mevcut bir sadakat uyeligi olmali",
+          "steps": [
+            {"action": "Uyelik detay sayfasini ac", "expected_result": "Detay sayfasi acilir"},
+            {"action": "'Puan Ekle' butonuna tikla", "expected_result": "Puan ekleme formu acilir"},
+            {"action": "Puan Miktari: '500' gir", "expected_result": "Miktar alani dolar"},
+            {"action": "Aciklama: 'Alis verisi sonrasi' gir", "expected_result": "Aciklama alani dolar"},
+            {"action": "'Ekle' tikla", "expected_result": "Puan eklenir, toplam guncellenir"},
+            {"action": "Puan gecmisini kontrol et", "expected_result": "Islem gecmiste gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Uyelik seviye yukseltme",
+          "description": "Uyelik seviyesinin guncellenmesi",
+          "preconditions": "Mevcut bir sadakat uyeligi olmali",
+          "steps": [
+            {"action": "Uyelik detay sayfasini ac", "expected_result": "Detay sayfasi acilir"},
+            {"action": "'Duzenle' butonuna tikla", "expected_result": "Duzenleme formu acilir"},
+            {"action": "Seviye: 'Gold' sec", "expected_result": "Yeni seviye secilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Seviye guncellenir"},
+            {"action": "Detay sayfasinda seviyeyi kontrol et", "expected_result": "Gold seviyesi gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Urun Ilgisi Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni urun ilgisi olusturma",
+          "description": "Urun ilgisi kaydinin tum alanlar doldurularak olusturulmasi",
+          "preconditions": "CRM erisim yetkisi olmali, en az bir musteri/lead mevcut olmali",
+          "steps": [
+            {"action": "Sol menuden 'Urun Ilgileri' tikla", "expected_result": "Urun ilgisi listesi acilir"},
+            {"action": "'+ Yeni Ilgi' butonuna tikla", "expected_result": "Ilgi olusturma formu acilir"},
+            {"action": "Ilgili Kayit Tipi: 'Musteri' veya 'Lead' sec", "expected_result": "Tip secilir"},
+            {"action": "Ilgili Kayit dropdown'indan sec", "expected_result": "Musteri/Lead secilir"},
+            {"action": "Urun Kategorisi: 'Yazilim' sec", "expected_result": "Kategori secilir"},
+            {"action": "Urun Adi: 'ERP Modulu' gir", "expected_result": "Urun adi alani dolar"},
+            {"action": "Ilgi Seviyesi: 'Yuksek' sec", "expected_result": "Seviye secilir"},
+            {"action": "Tahmini Butce: '100000' gir", "expected_result": "Butce alani dolar"},
+            {"action": "Tahmini Satin Alma Tarihi sec", "expected_result": "Tarih secilir"},
+            {"action": "Notlar: 'Oncelikli urun' gir", "expected_result": "Notlar alani dolar"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Urun ilgisi basariyla olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "ilgili_tip": "Customer",
+            "urun_kategorisi": "Software",
+            "urun_adi": "ERP Modulu",
+            "ilgi_seviyesi": "High",
+            "tahmini_butce": "100000"
+          }
+        },
+        {
+          "title": "Urun ilgisi zorunlu alan validasyonu",
+          "description": "Urun ilgisi formunda zorunlu alanlarin kontrolu",
+          "preconditions": "Urun ilgisi formu acik olmali",
+          "steps": [
+            {"action": "Hicbir alan doldurmadan 'Kaydet' tikla", "expected_result": "Validasyon hatalari gorunur"},
+            {"action": "Ilgili Kayit alani altini kontrol et", "expected_result": "'Ilgili kayit zorunludur' hatasi gorunur"},
+            {"action": "Urun Adi alani altini kontrol et", "expected_result": "'Urun adi zorunludur' hatasi gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Urun ilgisi detay sayfasi",
+          "description": "Urun ilgisi detay bilgilerinin goruntulenmesi",
+          "preconditions": "En az bir urun ilgisi mevcut olmali",
+          "steps": [
+            {"action": "Urun ilgisi listesinden bir kayda tikla", "expected_result": "Detay sayfasi acilir"},
+            {"action": "Ilgili musteri/lead bilgisini kontrol et", "expected_result": "Musteri/Lead adi gorunur"},
+            {"action": "Urun bilgisini kontrol et", "expected_result": "Urun adi ve kategorisi gorunur"},
+            {"action": "Ilgi seviyesini kontrol et", "expected_result": "Seviye gorunur"},
+            {"action": "Finansal bilgileri kontrol et", "expected_result": "Tahmini butce gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Sosyal Profil Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni sosyal profil olusturma",
+          "description": "Sosyal profil kaydinin tum alanlar doldurularak olusturulmasi",
+          "preconditions": "CRM erisim yetkisi olmali, en az bir musteri/lead mevcut olmali",
+          "steps": [
+            {"action": "Sol menuden 'Sosyal Profiller' tikla", "expected_result": "Sosyal profil listesi acilir"},
+            {"action": "'+ Yeni Profil' butonuna tikla", "expected_result": "Profil olusturma formu acilir"},
+            {"action": "Ilgili Kayit Tipi: 'Musteri' sec", "expected_result": "Tip secilir"},
+            {"action": "Ilgili Kayit dropdown'indan bir musteri sec", "expected_result": "Musteri secilir"},
+            {"action": "Platform: 'LinkedIn' sec", "expected_result": "Platform secilir"},
+            {"action": "Profil URL: 'https://linkedin.com/company/test-firma' gir", "expected_result": "URL alani dolar"},
+            {"action": "Kullanici Adi: '@testfirma' gir", "expected_result": "Kullanici adi alani dolar"},
+            {"action": "Takipci Sayisi: '5000' gir (opsiyonel)", "expected_result": "Alan dolar"},
+            {"action": "Durum: 'Aktif' yap", "expected_result": "Toggle aktif"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Sosyal profil basariyla olusturulur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional",
+          "test_data": {
+            "ilgili_tip": "Customer",
+            "platform": "LinkedIn",
+            "profil_url": "https://linkedin.com/company/test-firma",
+            "kullanici_adi": "@testfirma",
+            "takipci_sayisi": "5000"
+          }
+        },
+        {
+          "title": "Sosyal profil URL validasyonu",
+          "description": "Profil URL formatinin kontrolu",
+          "preconditions": "Sosyal profil formu acik olmali",
+          "steps": [
+            {"action": "Profil URL alanina gecersiz URL gir (ornegin 'test')", "expected_result": "Hata gorunur veya gecersiz format uyarisi"},
+            {"action": "Profil URL alanina gecerli URL gir", "expected_result": "URL kabul edilir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Sosyal profil detay sayfasi",
+          "description": "Sosyal profil detay bilgilerinin goruntulenmesi",
+          "preconditions": "En az bir sosyal profil mevcut olmali",
+          "steps": [
+            {"action": "Sosyal profil listesinden bir profile tikla", "expected_result": "Detay sayfasi acilir"},
+            {"action": "Ilgili musteri bilgisini kontrol et", "expected_result": "Musteri adi gorunur"},
+            {"action": "Platform bilgisini kontrol et", "expected_result": "Platform adi ve ikonu gorunur"},
+            {"action": "Profil linkini kontrol et", "expected_result": "Tiklanabilir link gorunur"},
+            {"action": "Istatistikleri kontrol et", "expected_result": "Takipci sayisi gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Anket Yaniti Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni anket yaniti kaydi olusturma",
+          "description": "Anket yaniti kaydinin tum alanlar doldurularak olusturulmasi",
+          "preconditions": "CRM erisim yetkisi olmali, en az bir musteri mevcut olmali",
+          "steps": [
+            {"action": "Sol menuden 'Anket Yanitlari' tikla", "expected_result": "Anket yaniti listesi acilir"},
+            {"action": "'+ Yeni Yanit' butonuna tikla", "expected_result": "Yanit olusturma formu acilir"},
+            {"action": "Anket Adi: 'Musteri Memnuniyeti 2025' gir", "expected_result": "Baslik alani dolar"},
+            {"action": "Ilgili Musteri dropdown'indan sec", "expected_result": "Musteri secilir"},
+            {"action": "Yanit Tarihi sec", "expected_result": "Tarih secilir"},
+            {"action": "Genel Puan: '8' gir (1-10)", "expected_result": "Puan alani dolar"},
+            {"action": "NPS Puani: '9' gir (-10 ile 10 arasi)", "expected_result": "NPS alani dolar"},
+            {"action": "Yorumlar: 'Hizmetten cok memnunuz' gir", "expected_result": "Yorumlar alani dolar"},
+            {"action": "Kategori: 'Memnuniyet' sec", "expected_result": "Kategori secilir"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Anket yaniti basariyla olusturulur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional",
+          "test_data": {
+            "anket_adi": "Musteri Memnuniyeti 2025",
+            "genel_puan": "8",
+            "nps_puani": "9",
+            "yorumlar": "Hizmetten cok memnunuz",
+            "kategori": "Satisfaction"
+          }
+        },
+        {
+          "title": "Anket yaniti puan validasyonu",
+          "description": "Puan alanlarinin aralik kontrolu",
+          "preconditions": "Anket yaniti formu acik olmali",
+          "steps": [
+            {"action": "Genel Puan alanina '15' gir", "expected_result": "Hata: 'Puan 1-10 arasi olmali'"},
+            {"action": "Genel Puan alanina '5' gir", "expected_result": "Gecerli puan kabul edilir"},
+            {"action": "NPS Puani alanina '15' gir", "expected_result": "Hata veya deger 10'a indirgenir"},
+            {"action": "NPS Puani alanina '-5' gir", "expected_result": "Gecerli NPS puani kabul edilir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Anket yaniti detay sayfasi",
+          "description": "Anket yaniti detay bilgilerinin goruntulenmesi",
+          "preconditions": "En az bir anket yaniti mevcut olmali",
+          "steps": [
+            {"action": "Anket yaniti listesinden bir yanita tikla", "expected_result": "Detay sayfasi acilir"},
+            {"action": "Anket bilgisini kontrol et", "expected_result": "Anket adi gorunur"},
+            {"action": "Musteri bilgisini kontrol et", "expected_result": "Musteri adi gorunur"},
+            {"action": "Puan bilgilerini kontrol et", "expected_result": "Genel puan ve NPS gorunur"},
+            {"action": "Yorumlari kontrol et", "expected_result": "Musteri yorumlari gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    }
+  ]
+}

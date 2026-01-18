@@ -1,0 +1,1685 @@
+{
+  "suites": [
+    {
+      "title": "Urun Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni urun olusturma",
+          "description": "Tum zorunlu ve opsiyonel alanlar doldurularak yeni urun olusturulmasi",
+          "preconditions": "Envanter modulu erisim yetkisi olmali, Urunler sayfasi acik olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Urunler' tikla", "expected_result": "Urun listesi sayfasi acilir"},
+            {"action": "'+ Yeni Urun' butonuna tikla", "expected_result": "Urun olusturma formu acilir"},
+            {"action": "Urun Kodu: 'PRD-001' gir", "expected_result": "Alan dolar"},
+            {"action": "Urun Adi: 'Test Urun A' gir", "expected_result": "Alan dolar"},
+            {"action": "Barkod: '8690000000001' gir", "expected_result": "Alan dolar"},
+            {"action": "Kategori dropdown'undan 'Elektronik' sec", "expected_result": "Kategori secilir"},
+            {"action": "Marka dropdown'undan 'Samsung' sec", "expected_result": "Marka secilir"},
+            {"action": "Birim dropdown'undan 'Adet' sec", "expected_result": "Birim secilir"},
+            {"action": "Satis Fiyati: '1500.00' gir", "expected_result": "1.500,00 TL formatinda gosterilir"},
+            {"action": "Alis Fiyati: '1200.00' gir", "expected_result": "1.200,00 TL formatinda gosterilir"},
+            {"action": "KDV Orani: '%18' sec", "expected_result": "KDV secilir"},
+            {"action": "Minimum Stok: '10' gir", "expected_result": "Alan dolar"},
+            {"action": "Maksimum Stok: '100' gir", "expected_result": "Alan dolar"},
+            {"action": "Yeniden Siparis Noktasi: '20' gir", "expected_result": "Alan dolar"},
+            {"action": "Aciklama: 'Test urun aciklamasi' gir", "expected_result": "Alan dolar"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Urun basariyla olusturulur, listede gorunur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "urun_kodu": "PRD-001",
+            "urun_adi": "Test Urun A",
+            "barkod": "8690000000001",
+            "kategori": "Elektronik",
+            "marka": "Samsung",
+            "birim": "Adet",
+            "satis_fiyati": "1500.00",
+            "alis_fiyati": "1200.00",
+            "kdv_orani": "18",
+            "min_stok": "10",
+            "max_stok": "100",
+            "reorder_point": "20",
+            "aciklama": "Test urun aciklamasi"
+          }
+        },
+        {
+          "title": "Urun guncelleme",
+          "description": "Mevcut urunun bilgilerinin guncellenmesi",
+          "preconditions": "Sistemde en az bir urun olmali",
+          "steps": [
+            {"action": "Urun listesinden 'PRD-001' urn satirina tikla", "expected_result": "Urun detay sayfasi acilir"},
+            {"action": "'Duzenle' butonuna tikla", "expected_result": "Duzenleme formu acilir"},
+            {"action": "Urun Adi: 'Test Urun A - Guncel' olarak degistir", "expected_result": "Alan guncellenir"},
+            {"action": "Satis Fiyati: '1750.00' olarak degistir", "expected_result": "Fiyat guncellenir"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Degisiklikler kaydedilir"},
+            {"action": "Listede guncellenmis urunu kontrol et", "expected_result": "Yeni ad ve fiyat gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional",
+          "test_data": {
+            "urun_kodu": "PRD-001",
+            "yeni_urun_adi": "Test Urun A - Guncel",
+            "yeni_satis_fiyati": "1750.00"
+          }
+        },
+        {
+          "title": "Urun silme",
+          "description": "Urun kaydinin silinmesi (stoku olmayan urun)",
+          "preconditions": "Stoku olmayan urun olmali",
+          "steps": [
+            {"action": "Stoku olmayan urunu bul veya olustur", "expected_result": "Urun mevcut"},
+            {"action": "Urun satirindaki 'Sil' ikonuna tikla", "expected_result": "Silme onay dialog'u acilir"},
+            {"action": "'Evet, Sil' butonuna tikla", "expected_result": "Urun silinir"},
+            {"action": "Listede urunu ara", "expected_result": "Urun artik listede gorunmez"}
+          ],
+          "priority": "medium",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Urun aktif/pasif yapma",
+          "description": "Urun durumunun degistirilmesi",
+          "preconditions": "Aktif urun olmali",
+          "steps": [
+            {"action": "Aktif urunu sec", "expected_result": "Urun secilir"},
+            {"action": "'Pasif Yap' butonuna tikla", "expected_result": "Onay dialog'u acilir"},
+            {"action": "Onay ver", "expected_result": "Urun pasif duruma gecer"},
+            {"action": "Pasif urunleri filtrele", "expected_result": "Urun pasif listesinde gorunur"},
+            {"action": "'Aktif Yap' butonuna tikla", "expected_result": "Urun tekrar aktif olur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Urun resmi yukleme",
+          "description": "Urune resim ekleme islemi",
+          "preconditions": "Urun detay sayfasi acik olmali",
+          "steps": [
+            {"action": "Urun detay sayfasinda 'Resimler' sekmesine git", "expected_result": "Resim yukle alani gorunur"},
+            {"action": "'Resim Yukle' butonuna tikla", "expected_result": "Dosya secici acilir"},
+            {"action": "Bir JPG resmi sec (max 5MB)", "expected_result": "Resim yuklenir"},
+            {"action": "Yuklenen resmi 'Ana Resim' olarak ayarla", "expected_result": "Resim ana resim olarak isaretlenir"},
+            {"action": "Sayfayi yenile ve kontrol et", "expected_result": "Resim gorunur durumda kalir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional",
+          "test_data": {
+            "resim_formati": "JPG",
+            "max_boyut": "5MB"
+          }
+        },
+        {
+          "title": "Dusuk stoklu urunleri listeleme",
+          "description": "Minimum stok seviyesinin altindaki urunlerin listelenmesi",
+          "preconditions": "Stok seviyesi minimum altinda urun olmali",
+          "steps": [
+            {"action": "Urun listesinde 'Dusuk Stok' filtresini tikla", "expected_result": "Filtre uygulanir"},
+            {"action": "Sonuclari kontrol et", "expected_result": "Sadece stoku minimum altinda urunler listelenir"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Urun arama ve filtreleme",
+          "description": "Urunlerin kod, ad ve barkod ile aranmasi",
+          "preconditions": "Birden fazla urun olmali",
+          "steps": [
+            {"action": "Arama kutusuna 'PRD-001' yaz", "expected_result": "Urun kodu ile filtrelenir"},
+            {"action": "Arama kutusunu temizle", "expected_result": "Tum urunler gorunur"},
+            {"action": "Arama kutusuna 'Test Urun' yaz", "expected_result": "Isme gore filtrelenir"},
+            {"action": "Kategori filtresinden 'Elektronik' sec", "expected_result": "Kategori ile filtrelenir"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Kategori Yonetimi",
+      "cases": [
+        {
+          "title": "Ana kategori olusturma",
+          "description": "Yeni ana kategori eklenmesi",
+          "preconditions": "Envanter modulu erisim yetkisi olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Kategoriler' tikla", "expected_result": "Kategori listesi acilir"},
+            {"action": "'+ Yeni Kategori' butonuna tikla", "expected_result": "Kategori formu acilir"},
+            {"action": "Kategori Adi: 'Elektronik' gir", "expected_result": "Alan dolar"},
+            {"action": "Kategori Kodu: 'ELK' gir", "expected_result": "Alan dolar"},
+            {"action": "Aciklama: 'Elektronik urunler' gir", "expected_result": "Alan dolar"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Kategori olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "kategori_adi": "Elektronik",
+            "kategori_kodu": "ELK",
+            "aciklama": "Elektronik urunler"
+          }
+        },
+        {
+          "title": "Alt kategori olusturma",
+          "description": "Mevcut kategoriye alt kategori eklenmesi",
+          "preconditions": "Ana kategori olmali",
+          "steps": [
+            {"action": "'+ Yeni Kategori' butonuna tikla", "expected_result": "Form acilir"},
+            {"action": "Kategori Adi: 'Telefonlar' gir", "expected_result": "Alan dolar"},
+            {"action": "Ust Kategori dropdown'undan 'Elektronik' sec", "expected_result": "Ust kategori secilir"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Alt kategori olusturulur"},
+            {"action": "Kategori agacini kontrol et", "expected_result": "Elektronik > Telefonlar hiyerarsi gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional",
+          "test_data": {
+            "kategori_adi": "Telefonlar",
+            "ust_kategori": "Elektronik"
+          }
+        },
+        {
+          "title": "Kategori agaci gorunumu",
+          "description": "Kategorilerin agac yapisi olarak goruntulenmesi",
+          "preconditions": "Hiyerarsik kategoriler olmali",
+          "steps": [
+            {"action": "Kategoriler sayfasinda 'Agac Gorunumu' sekmesine tikla", "expected_result": "Agac yapisi gorunur"},
+            {"action": "Ana kategoriyi genis (expand) yap", "expected_result": "Alt kategoriler gorunur"},
+            {"action": "Alt kategoriden birine tikla", "expected_result": "Kategori detayi acilir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Kategori aktif/pasif yapma",
+          "description": "Kategori durumunun degistirilmesi",
+          "preconditions": "Kategori olmali",
+          "steps": [
+            {"action": "Kategori satirinda 'Pasif Yap' tikla", "expected_result": "Kategori pasif olur"},
+            {"action": "Urun formunda kategori dropdown'u kontrol et", "expected_result": "Pasif kategori gorunmez"},
+            {"action": "'Aktif Yap' tikla", "expected_result": "Kategori tekrar aktif olur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Depo Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni depo olusturma",
+          "description": "Yeni depo kaydinin tum alanlar doldurularak olusturulmasi",
+          "preconditions": "Envanter modulu erisim yetkisi olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Depolar' tikla", "expected_result": "Depo listesi acilir"},
+            {"action": "'+ Yeni Depo' butonuna tikla", "expected_result": "Depo formu acilir"},
+            {"action": "Depo Kodu: 'WH-001' gir", "expected_result": "Alan dolar"},
+            {"action": "Depo Adi: 'Ana Depo' gir", "expected_result": "Alan dolar"},
+            {"action": "Adres: 'Organize Sanayi Bolgesi No:15' gir", "expected_result": "Alan dolar"},
+            {"action": "Sehir: 'Istanbul' sec", "expected_result": "Sehir secilir"},
+            {"action": "Kapasite (m2): '5000' gir", "expected_result": "Alan dolar"},
+            {"action": "Sorumlu Kisi: 'Ali Veli' gir", "expected_result": "Alan dolar"},
+            {"action": "Telefon: '+90 212 555 0000' gir", "expected_result": "Alan dolar"},
+            {"action": "'Kaydet' butonuna tikla", "expected_result": "Depo basariyla olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "depo_kodu": "WH-001",
+            "depo_adi": "Ana Depo",
+            "adres": "Organize Sanayi Bolgesi No:15",
+            "sehir": "Istanbul",
+            "kapasite": "5000",
+            "sorumlu": "Ali Veli",
+            "telefon": "+90 212 555 0000"
+          }
+        },
+        {
+          "title": "Varsayilan depo ayarlama",
+          "description": "Bir deponun varsayilan olarak isaretlenmesi",
+          "preconditions": "Birden fazla depo olmali",
+          "steps": [
+            {"action": "Ikinci depo satirindaki 'Varsayilan Yap' butonuna tikla", "expected_result": "Onay dialog'u acilir"},
+            {"action": "Onay ver", "expected_result": "Depo varsayilan olarak isaretlenir"},
+            {"action": "Diger depolari kontrol et", "expected_result": "Sadece bir depo varsayilan olabilir"}
+          ],
+          "priority": "medium",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Depo konumlari olusturma",
+          "description": "Depoya konum (raf, koridor) ekleme - Frontend UI eklenmesi gerekir",
+          "preconditions": "Depo olmali",
+          "steps": [
+            {"action": "Depo detayinda 'Konumlar' sekmesine git", "expected_result": "Konum listesi gorunur"},
+            {"action": "'+ Yeni Konum' butonuna tikla", "expected_result": "Konum formu acilir"},
+            {"action": "Konum Kodu: 'A-01-001' gir", "expected_result": "Alan dolar"},
+            {"action": "Konum Adi: 'A Koridor Raf 1' gir", "expected_result": "Alan dolar"},
+            {"action": "Konum Tipi: 'Raf' sec", "expected_result": "Tip secilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Konum eklenir"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional",
+          "test_data": {
+            "konum_kodu": "A-01-001",
+            "konum_adi": "A Koridor Raf 1",
+            "konum_tipi": "Raf"
+          },
+          "missing_feature": "Frontend UI eklenmesi gerekir - Depoya konum ekleme ekrani mevcut degil"
+        },
+        {
+          "title": "Depo stok ozeti goruntuleme",
+          "description": "Depodaki toplam stok ozetinin goruntulenmesi",
+          "preconditions": "Depoda stok olmali",
+          "steps": [
+            {"action": "Depo detayinda 'Stok Ozeti' sekmesine git", "expected_result": "Stok ozet tablosu gorunur"},
+            {"action": "Toplam urun sayisini kontrol et", "expected_result": "Dogru sayi gorunur"},
+            {"action": "Toplam stok degerini kontrol et", "expected_result": "Deger hesaplanmis gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Depo bolgeleri (zone) yonetimi - Frontend UI eklenmesi gerekir",
+          "description": "Depo icerisinde bolge tanimlama",
+          "preconditions": "Depo olmali",
+          "steps": [
+            {"action": "Depo detayinda 'Bolgeler' sekmesine git", "expected_result": "Bolge listesi gorunur"},
+            {"action": "'+ Yeni Bolge' butonuna tikla", "expected_result": "Bolge formu acilir"},
+            {"action": "Bolge Adi: 'Soguk Depo' gir", "expected_result": "Alan dolar"},
+            {"action": "Bolge Tipi: 'Sogutmali' sec", "expected_result": "Tip secilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Bolge eklenir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional",
+          "test_data": {
+            "bolge_adi": "Soguk Depo",
+            "bolge_tipi": "Sogutmali"
+          },
+          "missing_feature": "Frontend UI eklenmesi gerekir - Depo bolge yonetimi ekrani mevcut degil"
+        }
+      ]
+    },
+    {
+      "title": "Stok Yonetimi",
+      "cases": [
+        {
+          "title": "Stok seviyesi goruntuleme",
+          "description": "Urun stok seviyelerinin depo bazli goruntulenmesi",
+          "preconditions": "Stok kaydi olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Stok' tikla", "expected_result": "Stok listesi acilir"},
+            {"action": "Urun ve depo bazli stok miktarlarini kontrol et", "expected_result": "Stok bilgileri gorunur"},
+            {"action": "Depo filtresinden 'Ana Depo' sec", "expected_result": "Sadece o deponun stoklari gorunur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional"
+        },
+        {
+          "title": "Stok duzeltme (artirma)",
+          "description": "Stok miktarinin manuel olarak artirilmasi",
+          "preconditions": "Urun ve depo olmali",
+          "steps": [
+            {"action": "'Stok Duzelt' butonuna tikla", "expected_result": "Duzeltme formu acilir"},
+            {"action": "Urun: 'PRD-001' sec", "expected_result": "Urun secilir"},
+            {"action": "Depo: 'Ana Depo' sec", "expected_result": "Depo secilir"},
+            {"action": "Islem Tipi: 'Artir' sec", "expected_result": "Artirma secilir"},
+            {"action": "Miktar: '50' gir", "expected_result": "Miktar girilir"},
+            {"action": "Sebep: 'Sayim farki' sec", "expected_result": "Sebep secilir"},
+            {"action": "Aciklama: 'Sayim sonrasi duzeltme' gir", "expected_result": "Alan dolar"},
+            {"action": "'Kaydet' tikla", "expected_result": "Stok artirilir, hareket kaydi olusur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "urun": "PRD-001",
+            "depo": "Ana Depo",
+            "islem_tipi": "Artir",
+            "miktar": "50",
+            "sebep": "Sayim farki",
+            "aciklama": "Sayim sonrasi duzeltme"
+          }
+        },
+        {
+          "title": "Stok duzeltme (azaltma)",
+          "description": "Stok miktarinin manuel olarak azaltilmasi",
+          "preconditions": "Yeterli stok olmali",
+          "steps": [
+            {"action": "'Stok Duzelt' butonuna tikla", "expected_result": "Duzeltme formu acilir"},
+            {"action": "Urun: 'PRD-001' sec", "expected_result": "Urun secilir"},
+            {"action": "Depo: 'Ana Depo' sec", "expected_result": "Depo secilir"},
+            {"action": "Islem Tipi: 'Azalt' sec", "expected_result": "Azaltma secilir"},
+            {"action": "Miktar: '10' gir", "expected_result": "Miktar girilir"},
+            {"action": "Sebep: 'Fire/Kayip' sec", "expected_result": "Sebep secilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Stok azaltilir"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "islem_tipi": "Azalt",
+            "miktar": "10",
+            "sebep": "Fire/Kayip"
+          }
+        },
+        {
+          "title": "Depolar arasi stok tasima",
+          "description": "Stokun bir depodan digerine tasinmasi",
+          "preconditions": "En az 2 depo ve kaynak depoda stok olmali",
+          "steps": [
+            {"action": "'Stok Tasi' butonuna tikla", "expected_result": "Tasima formu acilir"},
+            {"action": "Urun: 'PRD-001' sec", "expected_result": "Urun secilir"},
+            {"action": "Kaynak Depo: 'Ana Depo' sec", "expected_result": "Kaynak secilir"},
+            {"action": "Hedef Depo: 'Sube Deposu' sec", "expected_result": "Hedef secilir"},
+            {"action": "Miktar: '20' gir", "expected_result": "Miktar girilir"},
+            {"action": "'Tasi' butonuna tikla", "expected_result": "Stok tasinir, hareket kaydi olusur"},
+            {"action": "Her iki deponun stoklarini kontrol et", "expected_result": "Kaynak azalmis, hedef artmis gorunur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "urun": "PRD-001",
+            "kaynak_depo": "Ana Depo",
+            "hedef_depo": "Sube Deposu",
+            "miktar": "20"
+          }
+        },
+        {
+          "title": "Son kullanma tarihi yaklasan stoklari goruntuleme",
+          "description": "Belirli gun icerisinde son kullanma tarihi dolacak stoklarin listelenmesi",
+          "preconditions": "SKT'li urunler olmali",
+          "steps": [
+            {"action": "Stok sayfasinda 'SKT Yaklasan' filtresine tikla", "expected_result": "Filtre acilir"},
+            {"action": "Gun sayisi: '30' sec", "expected_result": "30 gun filtresi uygulanir"},
+            {"action": "Sonuclari kontrol et", "expected_result": "SKT'si 30 gun icerisinde dolacak urunler listelenir"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Stok Hareketleri",
+      "cases": [
+        {
+          "title": "Stok hareketi listeleme",
+          "description": "Tum stok hareketlerinin listelenmesi ve filtrelenmesi",
+          "preconditions": "Stok hareketi kaydi olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Stok Hareketleri' tikla", "expected_result": "Hareket listesi acilir"},
+            {"action": "Tarih filtresinden 'Bu Hafta' sec", "expected_result": "Bu haftaki hareketler listelenir"},
+            {"action": "Hareket Tipi filtresinden 'Giris' sec", "expected_result": "Sadece giris hareketleri gorunur"},
+            {"action": "Depo filtresinden 'Ana Depo' sec", "expected_result": "Sadece o deponun hareketleri gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Stok hareketi detayi",
+          "description": "Tek bir stok hareketinin detaylarinin goruntulenmesi",
+          "preconditions": "Stok hareketi olmali",
+          "steps": [
+            {"action": "Hareket listesinden bir satira tikla", "expected_result": "Hareket detayi acilir"},
+            {"action": "Tarih, miktar, urun bilgilerini kontrol et", "expected_result": "Tum bilgiler dogru gorunur"},
+            {"action": "Iliskili belge varsa kontrol et", "expected_result": "Belge linki gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Stok hareketi ozeti",
+          "description": "Donem bazli stok hareket ozetinin goruntulenmesi",
+          "preconditions": "Stok hareketleri olmali",
+          "steps": [
+            {"action": "'Ozet' sekmesine tikla", "expected_result": "Ozet raporu gorunur"},
+            {"action": "Donem: 'Bu Ay' sec", "expected_result": "Aylik ozet hesaplanir"},
+            {"action": "Toplam giris/cikis miktarlarini kontrol et", "expected_result": "Dogru toplamlar gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Stok hareketi tersine cevirme",
+          "description": "Hatali stok hareketinin tersine cevrilmesi",
+          "preconditions": "Tersine cevrilebilir hareket olmali",
+          "steps": [
+            {"action": "Hareket detayinda 'Tersine Cevir' butonuna tikla", "expected_result": "Onay dialog'u acilir"},
+            {"action": "Aciklama: 'Hatali kayit duzeltmesi' gir", "expected_result": "Alan dolar"},
+            {"action": "'Onayla' tikla", "expected_result": "Ters hareket olusturulur"},
+            {"action": "Stok miktarini kontrol et", "expected_result": "Stok eski haline doner"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Stok Transferi",
+      "cases": [
+        {
+          "title": "Yeni stok transferi olusturma",
+          "description": "Depolar arasi planlı stok transferi olusturma",
+          "preconditions": "En az 2 depo olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Stok Transferleri' tikla", "expected_result": "Transfer listesi acilir"},
+            {"action": "'+ Yeni Transfer' butonuna tikla", "expected_result": "Transfer formu acilir"},
+            {"action": "Kaynak Depo: 'Ana Depo' sec", "expected_result": "Kaynak secilir"},
+            {"action": "Hedef Depo: 'Sube Deposu' sec", "expected_result": "Hedef secilir"},
+            {"action": "Planlanan Tarih: 'yarin' sec", "expected_result": "Tarih secilir"},
+            {"action": "'Urun Ekle' tikla", "expected_result": "Urun ekleme dialog'u acilir"},
+            {"action": "Urun: 'PRD-001' sec, Miktar: '30' gir", "expected_result": "Urun listeye eklenir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Transfer taslak olarak olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "kaynak_depo": "Ana Depo",
+            "hedef_depo": "Sube Deposu",
+            "urun": "PRD-001",
+            "miktar": "30"
+          }
+        },
+        {
+          "title": "Transfer onaya gonderme",
+          "description": "Taslak transferin onaya gonderilmesi",
+          "preconditions": "Taslak durumunda transfer olmali",
+          "steps": [
+            {"action": "Taslak transferi ac", "expected_result": "Transfer detayi acilir"},
+            {"action": "'Onaya Gonder' butonuna tikla", "expected_result": "Transfer durumu 'Onay Bekliyor' olur"},
+            {"action": "Durumu kontrol et", "expected_result": "'Onay Bekliyor' gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Transfer onaylama",
+          "description": "Bekleyen transferin onaylanmasi",
+          "preconditions": "Onay bekleyen transfer olmali, onay yetkisi olmali",
+          "steps": [
+            {"action": "Onay bekleyen transferi ac", "expected_result": "Transfer detayi acilir"},
+            {"action": "'Onayla' butonuna tikla", "expected_result": "Onay dialog'u acilir"},
+            {"action": "'Evet' tikla", "expected_result": "Transfer onaylanir, durum 'Onaylandi' olur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional"
+        },
+        {
+          "title": "Transfer sevk etme",
+          "description": "Onaylanan transferin sevk edilmesi",
+          "preconditions": "Onaylanmis transfer olmali",
+          "steps": [
+            {"action": "Onaylanmis transferi ac", "expected_result": "Transfer detayi acilir"},
+            {"action": "'Sevk Et' butonuna tikla", "expected_result": "Sevk dialog'u acilir"},
+            {"action": "'Onayla' tikla", "expected_result": "Transfer sevk edilir, kaynak depodan duser"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional"
+        },
+        {
+          "title": "Transfer teslim alma",
+          "description": "Sevk edilen transferin hedef depoda teslim alinmasi",
+          "preconditions": "Sevk edilmis transfer olmali",
+          "steps": [
+            {"action": "Sevk edilmis transferi ac", "expected_result": "Transfer detayi acilir"},
+            {"action": "'Teslim Al' butonuna tikla", "expected_result": "Teslim dialog'u acilir"},
+            {"action": "'Onayla' tikla", "expected_result": "Transfer tamamlanir, hedef depoya eklenir"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional"
+        },
+        {
+          "title": "Transfer iptal etme",
+          "description": "Bekleyen transferin iptal edilmesi",
+          "preconditions": "Taslak veya onay bekleyen transfer olmali",
+          "steps": [
+            {"action": "Transferi ac", "expected_result": "Transfer detayi acilir"},
+            {"action": "'Iptal Et' butonuna tikla", "expected_result": "Iptal dialog'u acilir"},
+            {"action": "Iptal Sebebi: 'Planlama degisikligi' gir", "expected_result": "Sebep girilir"},
+            {"action": "'Iptal Et' tikla", "expected_result": "Transfer iptal edilir"}
+          ],
+          "priority": "medium",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Transfer reddetme",
+          "description": "Onay bekleyen transferin reddedilmesi",
+          "preconditions": "Onay bekleyen transfer olmali",
+          "steps": [
+            {"action": "Onay bekleyen transferi ac", "expected_result": "Transfer detayi acilir"},
+            {"action": "'Reddet' butonuna tikla", "expected_result": "Red dialog'u acilir"},
+            {"action": "Red Sebebi: 'Stok yetersiz' gir", "expected_result": "Sebep girilir"},
+            {"action": "'Reddet' tikla", "expected_result": "Transfer reddedilir"}
+          ],
+          "priority": "medium",
+          "severity": "major",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Tedarikci Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni tedarikci olusturma",
+          "description": "Tedarikci kaydinin tum alanlar doldurularak olusturulmasi",
+          "preconditions": "Envanter modulu erisim yetkisi olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Tedarikciler' tikla", "expected_result": "Tedarikci listesi acilir"},
+            {"action": "'+ Yeni Tedarikci' butonuna tikla", "expected_result": "Tedarikci formu acilir"},
+            {"action": "Tedarikci Kodu: 'SUP-001' gir", "expected_result": "Alan dolar"},
+            {"action": "Tedarikci Adi: 'ABC Ticaret Ltd.' gir", "expected_result": "Alan dolar"},
+            {"action": "Vergi No: '1234567890' gir", "expected_result": "Alan dolar"},
+            {"action": "Yetkili Kisi: 'Mehmet Oz' gir", "expected_result": "Alan dolar"},
+            {"action": "E-posta: 'info@abcticaret.com' gir", "expected_result": "Alan dolar"},
+            {"action": "Telefon: '+90 212 444 5555' gir", "expected_result": "Alan dolar"},
+            {"action": "Adres bilgilerini gir", "expected_result": "Alanlar dolar"},
+            {"action": "Odeme Vadesi: '45 Gun' sec", "expected_result": "Vade secilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Tedarikci olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "tedarikci_kodu": "SUP-001",
+            "tedarikci_adi": "ABC Ticaret Ltd.",
+            "vergi_no": "1234567890",
+            "yetkili": "Mehmet Oz",
+            "email": "info@abcticaret.com",
+            "telefon": "+90 212 444 5555",
+            "odeme_vadesi": "45 Gun"
+          }
+        },
+        {
+          "title": "Tedarikciye urun ekleme",
+          "description": "Tedarikci ile urun iliskilendirmesi",
+          "preconditions": "Tedarikci ve urun olmali",
+          "steps": [
+            {"action": "Tedarikci detay sayfasini ac", "expected_result": "Detay gorunur"},
+            {"action": "'Urunler' sekmesine git", "expected_result": "Urun listesi gorunur"},
+            {"action": "'Urun Ekle' butonuna tikla", "expected_result": "Urun ekleme dialog'u acilir"},
+            {"action": "Urun: 'PRD-001' sec", "expected_result": "Urun secilir"},
+            {"action": "Tedarikci Urun Kodu: 'ABC-001' gir", "expected_result": "Alan dolar"},
+            {"action": "Birim Fiyat: '1100.00' gir", "expected_result": "Fiyat girilir"},
+            {"action": "Min Siparis: '10' gir", "expected_result": "Miktar girilir"},
+            {"action": "Teslim Suresi (gun): '5' gir", "expected_result": "Sure girilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Urun tedarikciye eklenir"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional",
+          "test_data": {
+            "urun": "PRD-001",
+            "tedarikci_urun_kodu": "ABC-001",
+            "birim_fiyat": "1100.00",
+            "min_siparis": "10",
+            "teslim_suresi": "5"
+          }
+        },
+        {
+          "title": "Tedarikci aktif/pasif yapma",
+          "description": "Tedarikci durumunun degistirilmesi",
+          "preconditions": "Tedarikci olmali",
+          "steps": [
+            {"action": "Tedarikci satirinda 'Pasif Yap' tikla", "expected_result": "Tedarikci pasif olur"},
+            {"action": "Satin alma formunda tedarikci dropdown'u kontrol et", "expected_result": "Pasif tedarikci gorunmez"},
+            {"action": "'Aktif Yap' tikla", "expected_result": "Tedarikci tekrar aktif olur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Marka Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni marka olusturma",
+          "description": "Yeni marka kaydinin olusturulmasi",
+          "preconditions": "Envanter modulu erisim yetkisi olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Markalar' tikla", "expected_result": "Marka listesi acilir"},
+            {"action": "'+ Yeni Marka' butonuna tikla", "expected_result": "Marka formu acilir"},
+            {"action": "Marka Adi: 'Samsung' gir", "expected_result": "Alan dolar"},
+            {"action": "Aciklama: 'Elektronik uretici' gir", "expected_result": "Alan dolar"},
+            {"action": "Logo yukle (opsiyonel)", "expected_result": "Logo yuklenir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Marka olusturulur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional",
+          "test_data": {
+            "marka_adi": "Samsung",
+            "aciklama": "Elektronik uretici"
+          }
+        },
+        {
+          "title": "Marka guncelleme",
+          "description": "Mevcut marka bilgilerinin guncellenmesi",
+          "preconditions": "Marka olmali",
+          "steps": [
+            {"action": "Marka satirinda 'Duzenle' tikla", "expected_result": "Duzenleme formu acilir"},
+            {"action": "Aciklama'yi degistir", "expected_result": "Alan guncellenir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Degisiklik kaydedilir"}
+          ],
+          "priority": "low",
+          "severity": "minor",
+          "type": "functional"
+        },
+        {
+          "title": "Marka aktif/pasif yapma",
+          "description": "Marka durumunun degistirilmesi",
+          "preconditions": "Marka olmali",
+          "steps": [
+            {"action": "Marka satirinda 'Pasif Yap' tikla", "expected_result": "Marka pasif olur"},
+            {"action": "Urun formunda marka dropdown'u kontrol et", "expected_result": "Pasif marka gorunmez"}
+          ],
+          "priority": "low",
+          "severity": "minor",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Birim Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni birim olusturma",
+          "description": "Yeni olcu birimi tanimlanmasi",
+          "preconditions": "Envanter modulu erisim yetkisi olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Birimler' tikla", "expected_result": "Birim listesi acilir"},
+            {"action": "'+ Yeni Birim' butonuna tikla", "expected_result": "Birim formu acilir"},
+            {"action": "Birim Adi: 'Adet' gir", "expected_result": "Alan dolar"},
+            {"action": "Kisaltma: 'Ad' gir", "expected_result": "Alan dolar"},
+            {"action": "Temel Birim: 'Evet' sec (toggle)", "expected_result": "Toggle aktif olur"},
+            {"action": "'Kaydet' tikla", "expected_result": "Birim olusturulur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional",
+          "test_data": {
+            "birim_adi": "Adet",
+            "kisaltma": "Ad",
+            "temel_birim": true
+          }
+        },
+        {
+          "title": "Alt birim olusturma (donusum oranli)",
+          "description": "Temel birime bagli alt birim tanimlanmasi",
+          "preconditions": "Temel birim olmali",
+          "steps": [
+            {"action": "'+ Yeni Birim' tikla", "expected_result": "Form acilir"},
+            {"action": "Birim Adi: 'Koli' gir", "expected_result": "Alan dolar"},
+            {"action": "Kisaltma: 'Kl' gir", "expected_result": "Alan dolar"},
+            {"action": "Temel Birim: 'Hayir' sec", "expected_result": "Donusum alanlari gorunur"},
+            {"action": "Referans Birim: 'Adet' sec", "expected_result": "Referans secilir"},
+            {"action": "Donusum Orani: '12' gir (1 Koli = 12 Adet)", "expected_result": "Oran girilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Alt birim olusturulur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional",
+          "test_data": {
+            "birim_adi": "Koli",
+            "kisaltma": "Kl",
+            "referans_birim": "Adet",
+            "donusum_orani": "12"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Konum Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni konum olusturma",
+          "description": "Depo icinde yeni konum tanimlanmasi",
+          "preconditions": "Depo olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Konumlar' tikla", "expected_result": "Konum listesi acilir"},
+            {"action": "'+ Yeni Konum' butonuna tikla", "expected_result": "Konum formu acilir"},
+            {"action": "Konum Kodu: 'A-01-01' gir", "expected_result": "Alan dolar"},
+            {"action": "Konum Adi: 'A Koridor 1. Raf' gir", "expected_result": "Alan dolar"},
+            {"action": "Depo: 'Ana Depo' sec", "expected_result": "Depo secilir"},
+            {"action": "Konum Tipi: 'Raf' sec", "expected_result": "Tip secilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Konum olusturulur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional",
+          "test_data": {
+            "konum_kodu": "A-01-01",
+            "konum_adi": "A Koridor 1. Raf",
+            "depo": "Ana Depo",
+            "konum_tipi": "Raf"
+          }
+        },
+        {
+          "title": "Konum aktif/pasif yapma",
+          "description": "Konum durumunun degistirilmesi",
+          "preconditions": "Konum olmali",
+          "steps": [
+            {"action": "Konum satirinda 'Pasif Yap' tikla", "expected_result": "Konum pasif olur"},
+            {"action": "Stok islemlerinde konum dropdown'u kontrol et", "expected_result": "Pasif konum gorunmez"}
+          ],
+          "priority": "low",
+          "severity": "minor",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Envanter Duzeltmeleri",
+      "cases": [
+        {
+          "title": "Yeni envanter duzeltme olusturma",
+          "description": "Sayim sonrasi envanter duzeltme kaydi olusturma",
+          "preconditions": "Stok olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Envanter Duzeltmeleri' tikla", "expected_result": "Duzeltme listesi acilir"},
+            {"action": "'+ Yeni Duzeltme' butonuna tikla", "expected_result": "Duzeltme formu acilir"},
+            {"action": "Depo: 'Ana Depo' sec", "expected_result": "Depo secilir"},
+            {"action": "Duzeltme Tipi: 'Sayim Farki' sec", "expected_result": "Tip secilir"},
+            {"action": "Sebep: 'Periyodik sayim' sec", "expected_result": "Sebep secilir"},
+            {"action": "'Urun Ekle' tikla", "expected_result": "Urun dialog'u acilir"},
+            {"action": "Urun sec, Sistem Miktar: 100, Gercek Miktar: 95 gir", "expected_result": "Fark -5 hesaplanir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Duzeltme taslak olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "depo": "Ana Depo",
+            "duzeltme_tipi": "Sayim Farki",
+            "sebep": "Periyodik sayim",
+            "sistem_miktar": "100",
+            "gercek_miktar": "95"
+          }
+        },
+        {
+          "title": "Envanter duzeltme onaya gonderme",
+          "description": "Taslak duzeltmenin onaya gonderilmesi",
+          "preconditions": "Taslak duzeltme olmali",
+          "steps": [
+            {"action": "Taslak duzeltmeyi ac", "expected_result": "Duzeltme detayi acilir"},
+            {"action": "'Onaya Gonder' tikla", "expected_result": "Durum 'Onay Bekliyor' olur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Envanter duzeltme onaylama",
+          "description": "Bekleyen duzeltmenin onaylanarak stoka yansitilmasi",
+          "preconditions": "Onay bekleyen duzeltme olmali",
+          "steps": [
+            {"action": "Onay bekleyen duzeltmeyi ac", "expected_result": "Duzeltme detayi acilir"},
+            {"action": "'Onayla' tikla", "expected_result": "Onay dialog'u acilir"},
+            {"action": "'Onayla' tikla", "expected_result": "Duzeltme onaylanir, stok guncellenir"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Seri Numarasi Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni seri numarasi olusturma",
+          "description": "Urune seri numarasi tanimlama",
+          "preconditions": "Seri numarasi takibi aktif urun olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Seri Numaralari' tikla", "expected_result": "Seri numarasi listesi acilir"},
+            {"action": "'+ Yeni Seri No' butonuna tikla", "expected_result": "Seri no formu acilir"},
+            {"action": "Urun: 'PRD-001' sec", "expected_result": "Urun secilir"},
+            {"action": "Seri Numarasi: 'SN-2024-001' gir", "expected_result": "Alan dolar"},
+            {"action": "Depo: 'Ana Depo' sec", "expected_result": "Depo secilir"},
+            {"action": "Garanti Suresi (ay): '24' gir", "expected_result": "Sure girilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Seri numarasi olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional",
+          "test_data": {
+            "urun": "PRD-001",
+            "seri_no": "SN-2024-001",
+            "depo": "Ana Depo",
+            "garanti_suresi": "24"
+          }
+        },
+        {
+          "title": "Seri numarasi teslim alma",
+          "description": "Seri numarasinin envantere alinmasi",
+          "preconditions": "Bekleyen seri numarasi olmali",
+          "steps": [
+            {"action": "Bekleyen seri numarasini sec", "expected_result": "Seri no detayi acilir"},
+            {"action": "'Teslim Al' butonuna tikla", "expected_result": "Teslim dialog'u acilir"},
+            {"action": "'Onayla' tikla", "expected_result": "Seri no 'Stokta' durumuna gecer"}
+          ],
+          "priority": "medium",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Seri numarasi rezerve etme",
+          "description": "Seri numarasinin bir siparis icin rezerve edilmesi",
+          "preconditions": "Stokta seri numarasi olmali",
+          "steps": [
+            {"action": "Stokta olan seri numarasini sec", "expected_result": "Seri no detayi acilir"},
+            {"action": "'Rezerve Et' butonuna tikla", "expected_result": "Rezervasyon dialog'u acilir"},
+            {"action": "Siparis No gir", "expected_result": "Siparis iliskilendirilir"},
+            {"action": "'Onayla' tikla", "expected_result": "Seri no 'Rezerve' durumuna gecer"}
+          ],
+          "priority": "medium",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Seri numarasi satisi",
+          "description": "Seri numarasinin musteriye satisi",
+          "preconditions": "Stokta veya rezerve seri numarasi olmali",
+          "steps": [
+            {"action": "Seri numarasini sec", "expected_result": "Seri no detayi acilir"},
+            {"action": "'Sat' butonuna tikla", "expected_result": "Satis dialog'u acilir"},
+            {"action": "Musteri ve Siparis bilgilerini gir", "expected_result": "Bilgiler girilir"},
+            {"action": "'Onayla' tikla", "expected_result": "Seri no 'Satildi' durumuna gecer, garanti baslangici kayit edilir"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Seri numarasi arizali olarak isaretleme",
+          "description": "Seri numarasinin arizali olarak isaretlenmesi",
+          "preconditions": "Seri numarasi olmali",
+          "steps": [
+            {"action": "Seri numarasini sec", "expected_result": "Seri no detayi acilir"},
+            {"action": "'Arizali' butonuna tikla", "expected_result": "Ariza dialog'u acilir"},
+            {"action": "Ariza Sebebi: 'Fiziksel hasar' gir", "expected_result": "Sebep girilir"},
+            {"action": "'Onayla' tikla", "expected_result": "Seri no 'Arizali' durumuna gecer"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Parti/Lot Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni lot/parti olusturma",
+          "description": "Urune lot/parti tanimlama (SKT takibi)",
+          "preconditions": "Lot takibi aktif urun olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Lot/Partiler' tikla", "expected_result": "Lot listesi acilir"},
+            {"action": "'+ Yeni Lot' butonuna tikla", "expected_result": "Lot formu acilir"},
+            {"action": "Urun: 'PRD-002' sec", "expected_result": "Urun secilir"},
+            {"action": "Lot Numarasi: 'LOT-2024-001' gir", "expected_result": "Alan dolar"},
+            {"action": "Uretim Tarihi: 'bugun' sec", "expected_result": "Tarih secilir"},
+            {"action": "Son Kullanma Tarihi: '6 ay sonra' sec", "expected_result": "SKT secilir"},
+            {"action": "Miktar: '500' gir", "expected_result": "Miktar girilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Lot olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional",
+          "test_data": {
+            "urun": "PRD-002",
+            "lot_no": "LOT-2024-001",
+            "uretim_tarihi": "today",
+            "skt": "+6months",
+            "miktar": "500"
+          }
+        },
+        {
+          "title": "Lot onaylama",
+          "description": "Bekleyen lotun kalite kontrolden gecirilerek onaylanmasi",
+          "preconditions": "Bekleyen lot olmali",
+          "steps": [
+            {"action": "Bekleyen lotu sec", "expected_result": "Lot detayi acilir"},
+            {"action": "'Onayla' butonuna tikla", "expected_result": "Lot 'Aktif' durumuna gecer"}
+          ],
+          "priority": "medium",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Lot karantinaya alma",
+          "description": "Sorunlu lotun karantinaya alinmasi",
+          "preconditions": "Aktif lot olmali",
+          "steps": [
+            {"action": "Aktif lotu sec", "expected_result": "Lot detayi acilir"},
+            {"action": "'Karantinaya Al' butonuna tikla", "expected_result": "Karantina dialog'u acilir"},
+            {"action": "Karantina Sebebi: 'Kalite suphe' gir", "expected_result": "Sebep girilir"},
+            {"action": "'Onayla' tikla", "expected_result": "Lot 'Karantina' durumuna gecer"}
+          ],
+          "priority": "medium",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Son kullanma tarihi yaklasan lotlari listeleme",
+          "description": "Belirli gun icinde SKT dolacak lotlarin goruntulenmesi",
+          "preconditions": "SKT yaklasan lot olmali",
+          "steps": [
+            {"action": "'SKT Yaklasan' filtresini tikla", "expected_result": "Filtre acilir"},
+            {"action": "Gun: '30' sec", "expected_result": "30 gun filtresi uygulanir"},
+            {"action": "Sonuclari kontrol et", "expected_result": "SKT'si yaklasan lotlar listelenir"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Fiyat Listesi Yonetimi",
+      "cases": [
+        {
+          "title": "Yeni fiyat listesi olusturma",
+          "description": "Yeni fiyat listesi tanimlanmasi",
+          "preconditions": "Urunler olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Fiyat Listeleri' tikla", "expected_result": "Fiyat listesi acilir"},
+            {"action": "'+ Yeni Fiyat Listesi' tikla", "expected_result": "Form acilir"},
+            {"action": "Liste Adi: 'Perakende Fiyat Listesi' gir", "expected_result": "Alan dolar"},
+            {"action": "Para Birimi: 'TRY' sec", "expected_result": "Para birimi secilir"},
+            {"action": "Gecerlilik Baslangic: 'bugun' sec", "expected_result": "Tarih secilir"},
+            {"action": "Gecerlilik Bitis: '1 yil sonra' sec", "expected_result": "Tarih secilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Fiyat listesi olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional",
+          "test_data": {
+            "liste_adi": "Perakende Fiyat Listesi",
+            "para_birimi": "TRY",
+            "baslangic": "today",
+            "bitis": "+1year"
+          }
+        },
+        {
+          "title": "Fiyat listesine urun ekleme",
+          "description": "Fiyat listesine urun ve fiyat tanimlama",
+          "preconditions": "Fiyat listesi olmali",
+          "steps": [
+            {"action": "Fiyat listesini ac", "expected_result": "Liste detayi acilir"},
+            {"action": "'Urun Ekle' butonuna tikla", "expected_result": "Urun ekleme dialog'u acilir"},
+            {"action": "Urun: 'PRD-001' sec", "expected_result": "Urun secilir"},
+            {"action": "Fiyat: '1500.00' gir", "expected_result": "Fiyat girilir"},
+            {"action": "Min Miktar: '1' gir (miktar indirimli satislar icin)", "expected_result": "Miktar girilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Urun listeye eklenir"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Varsayilan fiyat listesi ayarlama",
+          "description": "Bir fiyat listesinin varsayilan olarak isaretlenmesi",
+          "preconditions": "Birden fazla fiyat listesi olmali",
+          "steps": [
+            {"action": "Fiyat listesi satirinda 'Varsayilan Yap' tikla", "expected_result": "Onay dialog'u acilir"},
+            {"action": "'Evet' tikla", "expected_result": "Liste varsayilan olarak isaretlenir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Urun fiyati sorgulama",
+          "description": "Belirli urunun fiyat listesinden fiyatinin sorgulanmasi",
+          "preconditions": "Fiyat listesi ve urun tanimli olmali",
+          "steps": [
+            {"action": "'Fiyat Sorgula' butonuna tikla", "expected_result": "Sorgulama formu acilir"},
+            {"action": "Urun: 'PRD-001' sec", "expected_result": "Urun secilir"},
+            {"action": "Fiyat Listesi: 'Perakende' sec (opsiyonel)", "expected_result": "Liste secilir veya varsayilan kullanilir"},
+            {"action": "Miktar: '10' gir (miktar indirimi icin)", "expected_result": "Miktar girilir"},
+            {"action": "'Sorgula' tikla", "expected_result": "Fiyat bilgisi gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Urun Varyantlari",
+      "cases": [
+        {
+          "title": "Urun varyanti olusturma",
+          "description": "Ana urune renk/beden gibi varyant ekleme",
+          "preconditions": "Ana urun olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Urun Varyantlari' tikla", "expected_result": "Varyant listesi acilir"},
+            {"action": "'+ Yeni Varyant' butonuna tikla", "expected_result": "Varyant formu acilir"},
+            {"action": "Ana Urun: 'PRD-001' sec", "expected_result": "Urun secilir"},
+            {"action": "Varyant Kodu: 'PRD-001-RED-L' gir", "expected_result": "Kod girilir"},
+            {"action": "Ozellik 1 (Renk): 'Kirmizi' sec", "expected_result": "Renk secilir"},
+            {"action": "Ozellik 2 (Beden): 'L' sec", "expected_result": "Beden secilir"},
+            {"action": "SKU: 'SKU-001-RED-L' gir", "expected_result": "SKU girilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Varyant olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional",
+          "test_data": {
+            "ana_urun": "PRD-001",
+            "varyant_kodu": "PRD-001-RED-L",
+            "renk": "Kirmizi",
+            "beden": "L",
+            "sku": "SKU-001-RED-L"
+          }
+        },
+        {
+          "title": "Urune gore varyant listeleme",
+          "description": "Bir urune ait tum varyantlarin listelenmesi",
+          "preconditions": "Varyantli urun olmali",
+          "steps": [
+            {"action": "Urun filtresinden 'PRD-001' sec", "expected_result": "Sadece o urunun varyantlari listelenir"},
+            {"action": "Varyantlari kontrol et", "expected_result": "Tum renk/beden kombinasyonlari gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Urun Paketleri (Bundle)",
+      "cases": [
+        {
+          "title": "Urun paketi olusturma",
+          "description": "Birden fazla urunun paket olarak tanimlanmasi",
+          "preconditions": "Urunler olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Urun Paketleri' tikla", "expected_result": "Paket listesi acilir"},
+            {"action": "'+ Yeni Paket' butonuna tikla", "expected_result": "Paket formu acilir"},
+            {"action": "Paket Adi: 'Baslangic Seti' gir", "expected_result": "Alan dolar"},
+            {"action": "Paket Kodu: 'BND-001' gir", "expected_result": "Kod girilir"},
+            {"action": "'Urun Ekle' tikla", "expected_result": "Urun ekleme dialog'u acilir"},
+            {"action": "Urun: 'PRD-001' sec, Miktar: '1' gir", "expected_result": "Urun eklenir"},
+            {"action": "'Urun Ekle' tikla, Urun: 'PRD-002' sec, Miktar: '2' gir", "expected_result": "Ikinci urun eklenir"},
+            {"action": "Paket Fiyati: '2500.00' gir (indirimli)", "expected_result": "Fiyat girilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Paket olusturulur"}
+          ],
+          "priority": "medium",
+          "severity": "major",
+          "type": "functional",
+          "test_data": {
+            "paket_adi": "Baslangic Seti",
+            "paket_kodu": "BND-001",
+            "urunler": [{"urun": "PRD-001", "miktar": 1}, {"urun": "PRD-002", "miktar": 2}],
+            "paket_fiyati": "2500.00"
+          }
+        },
+        {
+          "title": "Paketten urun cikarma",
+          "description": "Paket iceriginden urun kaldirilmasi",
+          "preconditions": "Icerigi olan paket olmali",
+          "steps": [
+            {"action": "Paketi ac", "expected_result": "Paket detayi acilir"},
+            {"action": "Icerikteki urun satirinda 'Kaldir' tikla", "expected_result": "Onay dialog'u acilir"},
+            {"action": "'Evet' tikla", "expected_result": "Urun paketten cikarilir"}
+          ],
+          "priority": "low",
+          "severity": "minor",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Urun Ozellikleri",
+      "cases": [
+        {
+          "title": "Yeni urun ozelligi tanimlama",
+          "description": "Filtrelenebilir urun ozelligi olusturma",
+          "preconditions": "Envanter modulu erisim yetkisi olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Urun Ozellikleri' tikla", "expected_result": "Ozellik listesi acilir"},
+            {"action": "'+ Yeni Ozellik' butonuna tikla", "expected_result": "Ozellik formu acilir"},
+            {"action": "Ozellik Adi: 'Renk' gir", "expected_result": "Alan dolar"},
+            {"action": "Ozellik Tipi: 'Liste' sec", "expected_result": "Tip secilir"},
+            {"action": "Filtrelenebilir: 'Evet' sec", "expected_result": "Toggle aktif olur"},
+            {"action": "'Kaydet' tikla", "expected_result": "Ozellik olusturulur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional",
+          "test_data": {
+            "ozellik_adi": "Renk",
+            "ozellik_tipi": "Liste",
+            "filtrelenebilir": true
+          }
+        },
+        {
+          "title": "Ozellige secenek ekleme",
+          "description": "Liste tipindeki ozelliklere secenek ekleme",
+          "preconditions": "Liste tipinde ozellik olmali",
+          "steps": [
+            {"action": "Ozelligi ac", "expected_result": "Ozellik detayi acilir"},
+            {"action": "'Secenekler' sekmesine git", "expected_result": "Secenek listesi gorunur"},
+            {"action": "'+ Secenek Ekle' tikla", "expected_result": "Secenek formu acilir"},
+            {"action": "Secenek Adi: 'Kirmizi' gir", "expected_result": "Alan dolar"},
+            {"action": "Renk Kodu: '#FF0000' gir (opsiyonel)", "expected_result": "Kod girilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Secenek eklenir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional",
+          "test_data": {
+            "secenek_adi": "Kirmizi",
+            "renk_kodu": "#FF0000"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Stok Rezervasyonlari",
+      "cases": [
+        {
+          "title": "Stok rezervasyonu olusturma",
+          "description": "Siparis icin stok rezerve etme",
+          "preconditions": "Yeterli stok olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Stok Rezervasyonlari' tikla", "expected_result": "Rezervasyon listesi acilir"},
+            {"action": "'+ Yeni Rezervasyon' butonuna tikla", "expected_result": "Rezervasyon formu acilir"},
+            {"action": "Urun: 'PRD-001' sec", "expected_result": "Urun secilir"},
+            {"action": "Depo: 'Ana Depo' sec", "expected_result": "Depo secilir"},
+            {"action": "Miktar: '25' gir", "expected_result": "Miktar girilir"},
+            {"action": "Siparis Referansi: 'SO-2024-001' gir", "expected_result": "Referans girilir"},
+            {"action": "Son Gecerlilik: '+7 gun' sec", "expected_result": "Tarih secilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Rezervasyon olusturulur, stok 'Rezerve' olarak isaretlenir"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "urun": "PRD-001",
+            "depo": "Ana Depo",
+            "miktar": "25",
+            "siparis_ref": "SO-2024-001",
+            "gecerlilik": "+7days"
+          }
+        },
+        {
+          "title": "Rezervasyon tamamlama",
+          "description": "Rezerve stogun satilarak tamamlanmasi",
+          "preconditions": "Aktif rezervasyon olmali",
+          "steps": [
+            {"action": "Rezervasyonu sec", "expected_result": "Rezervasyon detayi acilir"},
+            {"action": "'Tamamla' butonuna tikla", "expected_result": "Tamamlama dialog'u acilir"},
+            {"action": "Miktar: '25' (tam miktar) gir", "expected_result": "Miktar girilir"},
+            {"action": "'Onayla' tikla", "expected_result": "Rezervasyon tamamlanir, stoktan duser"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional"
+        },
+        {
+          "title": "Rezervasyon iptali",
+          "description": "Rezervasyonun iptal edilmesi",
+          "preconditions": "Aktif rezervasyon olmali",
+          "steps": [
+            {"action": "Rezervasyonu sec", "expected_result": "Rezervasyon detayi acilir"},
+            {"action": "'Iptal Et' butonuna tikla", "expected_result": "Iptal dialog'u acilir"},
+            {"action": "Iptal Sebebi: 'Musteri vazgecti' gir", "expected_result": "Sebep girilir"},
+            {"action": "'Iptal Et' tikla", "expected_result": "Rezervasyon iptal edilir, stok serbest kalir"}
+          ],
+          "priority": "medium",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Rezervasyon sure uzatma",
+          "description": "Rezervasyon gecerlilik suresinin uzatilmasi",
+          "preconditions": "Aktif rezervasyon olmali",
+          "steps": [
+            {"action": "Rezervasyonu sec", "expected_result": "Rezervasyon detayi acilir"},
+            {"action": "'Sure Uzat' butonuna tikla", "expected_result": "Sure uzatma dialog'u acilir"},
+            {"action": "Yeni Son Tarih: '+14 gun' sec", "expected_result": "Tarih secilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Gecerlilik suresi uzatilir"}
+          ],
+          "priority": "low",
+          "severity": "minor",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Stok Sayimi",
+      "cases": [
+        {
+          "title": "Yeni stok sayimi olusturma",
+          "description": "Depoda stok sayimi baslatma",
+          "preconditions": "Depo ve stok olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Stok Sayimlari' tikla", "expected_result": "Sayim listesi acilir"},
+            {"action": "'+ Yeni Sayim' butonuna tikla", "expected_result": "Sayim formu acilir"},
+            {"action": "Sayim Adi: 'Aralik 2024 Sayimi' gir", "expected_result": "Alan dolar"},
+            {"action": "Depo: 'Ana Depo' sec", "expected_result": "Depo secilir"},
+            {"action": "Sayim Tipi: 'Tam Sayim' sec", "expected_result": "Tip secilir"},
+            {"action": "Planlanan Tarih: 'yarin' sec", "expected_result": "Tarih secilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Sayim taslak olarak olusturulur"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional",
+          "test_data": {
+            "sayim_adi": "Aralik 2024 Sayimi",
+            "depo": "Ana Depo",
+            "sayim_tipi": "Tam Sayim"
+          }
+        },
+        {
+          "title": "Stok sayimi baslatma",
+          "description": "Olusturulan sayimin baslatilmasi",
+          "preconditions": "Taslak sayim olmali",
+          "steps": [
+            {"action": "Taslak sayimi ac", "expected_result": "Sayim detayi acilir"},
+            {"action": "'Baslat' butonuna tikla", "expected_result": "Baslat dialog'u acilir"},
+            {"action": "Sayan Kisi: 'Ali Veli' sec", "expected_result": "Kisi secilir"},
+            {"action": "'Baslat' tikla", "expected_result": "Sayim 'Devam Ediyor' durumuna gecer"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional"
+        },
+        {
+          "title": "Sayim kaydi girme",
+          "description": "Uruner icin sayilan miktarlarin girilmesi",
+          "preconditions": "Baslatilamis sayim olmali",
+          "steps": [
+            {"action": "Devam eden sayimi ac", "expected_result": "Urun listesi gorunur"},
+            {"action": "Urun satirinda 'Sayilan Miktar' alanina '98' gir", "expected_result": "Miktar kaydedilir"},
+            {"action": "Fark otomatik hesaplanir mi kontrol et", "expected_result": "Sistem:100, Sayilan:98, Fark:-2 gorunur"},
+            {"action": "Notlar: 'Hasarli urunler ayrildi' gir (opsiyonel)", "expected_result": "Not kaydedilir"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional"
+        },
+        {
+          "title": "Stok sayimi tamamlama",
+          "description": "Sayimin tamamlanarak onaya gonderilmesi",
+          "preconditions": "Tum urunler sayilmis olmali",
+          "steps": [
+            {"action": "Sayim detayinda 'Tamamla' tikla", "expected_result": "Tamamla dialog'u acilir"},
+            {"action": "'Onayla' tikla", "expected_result": "Sayim 'Tamamlandi' durumuna gecer"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional"
+        },
+        {
+          "title": "Stok sayimi onaylama",
+          "description": "Sayim sonuclarinin onaylanarak stoga yansitilmasi",
+          "preconditions": "Tamamlanmis sayim olmali",
+          "steps": [
+            {"action": "Tamamlanmis sayimi ac", "expected_result": "Sayim detayi acilir"},
+            {"action": "'Onayla' butonuna tikla", "expected_result": "Onay dialog'u acilir"},
+            {"action": "'Evet, Stoklari Guncelle' tikla", "expected_result": "Sayim onaylanir, stoklar guncellenir"}
+          ],
+          "priority": "high",
+          "severity": "critical",
+          "type": "functional"
+        },
+        {
+          "title": "Sayim ozeti raporu",
+          "description": "Sayim sonuc ozetinin goruntulenmesi",
+          "preconditions": "Tamamlanmis sayim olmali",
+          "steps": [
+            {"action": "Sayim detayinda 'Ozet' sekmesine tikla", "expected_result": "Ozet raporu gorunur"},
+            {"action": "Toplam sayilan urun, fark sayisi kontrolu", "expected_result": "Dogru toplamlar gorunur"},
+            {"action": "'Rapor Indir' tikla", "expected_result": "PDF/Excel rapor indirilir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Donesel Sayim (Cycle Count)",
+      "cases": [
+        {
+          "title": "Yeni donesel sayim olusturma",
+          "description": "Belirli urunler veya bolge icin donesel sayim tanimlama",
+          "preconditions": "Depo ve urunler olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Donesel Sayimlar' tikla", "expected_result": "Donesel sayim listesi acilir"},
+            {"action": "'+ Yeni Sayim' butonuna tikla", "expected_result": "Sayim formu acilir"},
+            {"action": "Depo: 'Ana Depo' sec", "expected_result": "Depo secilir"},
+            {"action": "Bolge: 'A Koridor' sec (opsiyonel)", "expected_result": "Bolge secilir"},
+            {"action": "Sayim Tipi: 'ABC Analizi' sec", "expected_result": "Tip secilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Donesel sayim olusturulur"}
+          ],
+          "priority": "medium",
+          "severity": "major",
+          "type": "functional",
+          "test_data": {
+            "depo": "Ana Depo",
+            "bolge": "A Koridor",
+            "sayim_tipi": "ABC Analizi"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Kalite Kontrol",
+      "cases": [
+        {
+          "title": "Yeni kalite kontrol kaydi olusturma",
+          "description": "Urun/lot icin kalite kontrol kaydi olusturma",
+          "preconditions": "Urun/lot olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Kalite Kontrol' tikla", "expected_result": "KK listesi acilir"},
+            {"action": "'+ Yeni KK' butonuna tikla", "expected_result": "KK formu acilir"},
+            {"action": "Urun: 'PRD-001' sec", "expected_result": "Urun secilir"},
+            {"action": "Lot (opsiyonel): 'LOT-001' sec", "expected_result": "Lot secilir"},
+            {"action": "Tedarikci: 'SUP-001' sec", "expected_result": "Tedarikci secilir"},
+            {"action": "KK Tipi: 'Giris Kontrolu' sec", "expected_result": "Tip secilir"},
+            {"action": "Kontrol Miktari: '100' gir", "expected_result": "Miktar girilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "KK kaydi olusturulur"}
+          ],
+          "priority": "medium",
+          "severity": "major",
+          "type": "functional",
+          "test_data": {
+            "urun": "PRD-001",
+            "lot": "LOT-001",
+            "tedarikci": "SUP-001",
+            "kk_tipi": "Giris Kontrolu",
+            "kontrol_miktari": "100"
+          }
+        },
+        {
+          "title": "Kalite kontrol tamamlama",
+          "description": "KK sonuclarinin girilmesi",
+          "preconditions": "Bekleyen KK kaydi olmali",
+          "steps": [
+            {"action": "Bekleyen KK'yi ac", "expected_result": "KK detayi acilir"},
+            {"action": "'Tamamla' butonuna tikla", "expected_result": "Sonuc formu acilir"},
+            {"action": "Sonuc: 'Kabul' sec", "expected_result": "Sonuc secilir"},
+            {"action": "Kabul Edilen: '95' gir", "expected_result": "Miktar girilir"},
+            {"action": "Reddedilen: '5' gir", "expected_result": "Miktar girilir"},
+            {"action": "Kalite Skoru: '95' gir", "expected_result": "Skor girilir"},
+            {"action": "Red Sebebi: 'Fiziksel hasar' gir (reddedilenler icin)", "expected_result": "Sebep girilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "KK tamamlanir"}
+          ],
+          "priority": "medium",
+          "severity": "major",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Ambalaj Tipleri",
+      "cases": [
+        {
+          "title": "Yeni ambalaj tipi olusturma",
+          "description": "Urunler icin ambalaj tipi tanimlama",
+          "preconditions": "Envanter modulu erisim yetkisi olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Ambalaj Tipleri' tikla", "expected_result": "Ambalaj listesi acilir"},
+            {"action": "'+ Yeni Ambalaj Tipi' butonuna tikla", "expected_result": "Ambalaj formu acilir"},
+            {"action": "Ambalaj Adi: 'Karton Kutu' gir", "expected_result": "Alan dolar"},
+            {"action": "Ambalaj Kodu: 'PKG-001' gir", "expected_result": "Kod girilir"},
+            {"action": "Kategori: 'Kutu' sec", "expected_result": "Kategori secilir"},
+            {"action": "Boyutlar (cm): 30x20x15 gir", "expected_result": "Boyutlar girilir"},
+            {"action": "Agirlik (kg): '0.5' gir", "expected_result": "Agirlik girilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Ambalaj tipi olusturulur"}
+          ],
+          "priority": "low",
+          "severity": "minor",
+          "type": "functional",
+          "test_data": {
+            "ambalaj_adi": "Karton Kutu",
+            "ambalaj_kodu": "PKG-001",
+            "kategori": "Kutu",
+            "boyutlar": "30x20x15",
+            "agirlik": "0.5"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Barkod Tanimlari",
+      "cases": [
+        {
+          "title": "Urune barkod ekleme",
+          "description": "Urune ek barkod tanimlama",
+          "preconditions": "Urun olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Barkod Tanimlari' tikla", "expected_result": "Barkod listesi acilir"},
+            {"action": "'+ Yeni Barkod' butonuna tikla", "expected_result": "Barkod formu acilir"},
+            {"action": "Urun: 'PRD-001' sec", "expected_result": "Urun secilir"},
+            {"action": "Barkod: '8690000000002' gir", "expected_result": "Barkod girilir"},
+            {"action": "Barkod Tipi: 'EAN-13' sec", "expected_result": "Tip secilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Barkod urune eklenir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional",
+          "test_data": {
+            "urun": "PRD-001",
+            "barkod": "8690000000002",
+            "barkod_tipi": "EAN-13"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Raf Omru Yonetimi",
+      "cases": [
+        {
+          "title": "Raf omru yapilandirmasi olusturma",
+          "description": "Urun icin raf omru kurallarinin tanimlanmasi",
+          "preconditions": "SKT takipli urun olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Raf Omru' tikla", "expected_result": "Raf omru listesi acilir"},
+            {"action": "'+ Yeni Yapilandirma' butonuna tikla", "expected_result": "Yapilandirma formu acilir"},
+            {"action": "Urun: 'PRD-002' sec", "expected_result": "Urun secilir"},
+            {"action": "Raf Omru (gun): '180' gir", "expected_result": "Sure girilir"},
+            {"action": "Uyari Suresi (gun): '30' gir", "expected_result": "Uyari suresi girilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Yapilandirma olusturulur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional",
+          "test_data": {
+            "urun": "PRD-002",
+            "raf_omru_gun": "180",
+            "uyari_suresi_gun": "30"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Konsinye Stok",
+      "cases": [
+        {
+          "title": "Konsinye stok olusturma",
+          "description": "Tedarikci kaynakli konsinye stok tanimlama",
+          "preconditions": "Tedarikci ve urun olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Konsinye Stok' tikla", "expected_result": "Konsinye stok listesi acilir"},
+            {"action": "'+ Yeni Konsinye Stok' butonuna tikla", "expected_result": "Konsinye formu acilir"},
+            {"action": "Tedarikci: 'SUP-001' sec", "expected_result": "Tedarikci secilir"},
+            {"action": "Urun: 'PRD-001' sec", "expected_result": "Urun secilir"},
+            {"action": "Depo: 'Ana Depo' sec", "expected_result": "Depo secilir"},
+            {"action": "Miktar: '100' gir", "expected_result": "Miktar girilir"},
+            {"action": "Sozlesme Tarihi: 'bugun' sec", "expected_result": "Tarih secilir"},
+            {"action": "'Kaydet' tikla", "expected_result": "Konsinye stok olusturulur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional",
+          "test_data": {
+            "tedarikci": "SUP-001",
+            "urun": "PRD-001",
+            "depo": "Ana Depo",
+            "miktar": "100"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Analitik ve Raporlama",
+      "cases": [
+        {
+          "title": "Envanter dashboard goruntuleme",
+          "description": "Ana envanter dashboard'un goruntulenmesi",
+          "preconditions": "Stok verileri olmali",
+          "steps": [
+            {"action": "Sol menuden 'Envanter > Dashboard' tikla", "expected_result": "Dashboard sayfasi acilir"},
+            {"action": "Toplam urun sayisini kontrol et", "expected_result": "Dogru sayi gorunur"},
+            {"action": "Toplam stok degerini kontrol et", "expected_result": "Deger gorunur"},
+            {"action": "Dusuk stoklu urun uyarisini kontrol et", "expected_result": "Uyari gorunur"},
+            {"action": "SKT yaklasan urun uyarisini kontrol et", "expected_result": "Uyari gorunur"}
+          ],
+          "priority": "high",
+          "severity": "major",
+          "type": "functional"
+        },
+        {
+          "title": "Stok degerleme raporu",
+          "description": "Stok degerinin depo/kategori bazli raporlanmasi",
+          "preconditions": "Stok verileri olmali",
+          "steps": [
+            {"action": "'Raporlar > Stok Degerleme' tikla", "expected_result": "Rapor sayfasi acilir"},
+            {"action": "Depo filtresinden 'Ana Depo' sec", "expected_result": "Filtre uygulanir"},
+            {"action": "Kategori filtresinden 'Elektronik' sec", "expected_result": "Filtre uygulanir"},
+            {"action": "Tarih: 'Bugun' sec", "expected_result": "Tarih secilir"},
+            {"action": "'Rapor Olustur' tikla", "expected_result": "Degerleme raporu gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Envanter KPI raporu",
+          "description": "Envanter performans gostergelerinin goruntulenmesi",
+          "preconditions": "Stok hareketleri olmali",
+          "steps": [
+            {"action": "'Raporlar > KPI' tikla", "expected_result": "KPI sayfasi acilir"},
+            {"action": "Donem: 'Bu Ay' sec", "expected_result": "Donem secilir"},
+            {"action": "Stok devir hizini kontrol et", "expected_result": "Deger gorunur"},
+            {"action": "Ortalama stok seviyesini kontrol et", "expected_result": "Deger gorunur"},
+            {"action": "Stok tutma maliyetini kontrol et", "expected_result": "Deger gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        }
+      ]
+    },
+    {
+      "title": "Excel Import/Export",
+      "cases": [
+        {
+          "title": "Urunleri Excel'e aktarma",
+          "description": "Urun listesinin Excel dosyasina aktarilmasi",
+          "preconditions": "Urunler olmali",
+          "steps": [
+            {"action": "Urun listesinde 'Excel'e Aktar' butonuna tikla", "expected_result": "Export dialog'u acilir"},
+            {"action": "Aktarilacak urunleri sec (hepsi veya secili)", "expected_result": "Secim yapilir"},
+            {"action": "'Indir' tikla", "expected_result": "Excel dosyasi indirilir"},
+            {"action": "Dosyayi ac ve verileri kontrol et", "expected_result": "Tum urun bilgileri dogru gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Stoklari Excel'e aktarma",
+          "description": "Stok bilgilerinin Excel dosyasina aktarilmasi",
+          "preconditions": "Stok verileri olmali",
+          "steps": [
+            {"action": "Stok listesinde 'Excel'e Aktar' butonuna tikla", "expected_result": "Export dialog'u acilir"},
+            {"action": "Depo filtresi sec (opsiyonel)", "expected_result": "Filtre uygulanir"},
+            {"action": "Sifir stoklu urunleri dahil et secenegi", "expected_result": "Secenek secilir"},
+            {"action": "'Indir' tikla", "expected_result": "Excel dosyasi indirilir"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Excel'den urun yukleme",
+          "description": "Excel dosyasindan toplu urun import etme",
+          "preconditions": "Gecerli formatta Excel dosyasi olmali",
+          "steps": [
+            {"action": "'Excel'den Yukle' butonuna tikla", "expected_result": "Import dialog'u acilir"},
+            {"action": "Excel dosyasini sec", "expected_result": "Dosya yuklenir"},
+            {"action": "Onizleme ekranini kontrol et", "expected_result": "Import edilecek veriler gorunur"},
+            {"action": "Mevcut urunleri guncelle secenegi (opsiyonel)", "expected_result": "Secenek secilir"},
+            {"action": "'Import Et' tikla", "expected_result": "Urunler sisteme eklenir"},
+            {"action": "Sonuc raporunu kontrol et", "expected_result": "Basarili/hatali kayit sayisi gorunur"}
+          ],
+          "priority": "medium",
+          "severity": "normal",
+          "type": "functional"
+        },
+        {
+          "title": "Import sablonu indirme",
+          "description": "Urun import sablonunun indirilmesi",
+          "preconditions": "Envanter modulu erisim yetkisi olmali",
+          "steps": [
+            {"action": "'Sablon Indir' butonuna tikla", "expected_result": "Sablon Excel dosyasi indirilir"},
+            {"action": "Dosyayi ac ve sutunlari kontrol et", "expected_result": "Tum gerekli sutunlar ve ornekler gorunur"}
+          ],
+          "priority": "low",
+          "severity": "minor",
+          "type": "functional"
+        },
+        {
+          "title": "Import dosyasi dogrulama",
+          "description": "Import oncesi dosya formatinin dogrulanmasi",
+          "preconditions": "Excel dosyasi olmali",
+          "steps": [
+            {"action": "'Dosya Dogrula' butonuna tikla", "expected_result": "Dogrulama dialog'u acilir"},
+            {"action": "Excel dosyasini sec", "expected_result": "Dosya yuklenir"},
+            {"action": "'Dogrula' tikla", "expected_result": "Dogrulama sonucu gorunur"},
+            {"action": "Hatalari kontrol et (varsa)", "expected_result": "Hata detaylari gorunur"}
+          ],
+          "priority": "low",
+          "severity": "minor",
+          "type": "functional"
+        }
+      ]
+    }
+  ]
+}

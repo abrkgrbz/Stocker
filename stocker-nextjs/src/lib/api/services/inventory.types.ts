@@ -429,8 +429,13 @@ export interface WarehouseDto {
   description?: string;
   branchId?: number;
   street?: string;
+  // GeoLocation IDs (FK to Master DB)
+  countryId?: string;
+  cityId?: string;
+  districtId?: string;
+  // Denormalized location names
   city?: string;
-  state?: string;
+  state?: string;  // district name mapped to state
   country?: string;
   postalCode?: string;
   phone?: string;
@@ -452,6 +457,11 @@ export interface CreateWarehouseDto {
   description?: string;
   branchId?: number;
   street?: string;
+  // GeoLocation IDs
+  countryId?: string;
+  cityId?: string;
+  districtId?: string;
+  // Denormalized location names
   city?: string;
   state?: string;
   country?: string;
@@ -467,6 +477,11 @@ export interface UpdateWarehouseDto {
   description?: string;
   branchId?: number;
   street?: string;
+  // GeoLocation IDs
+  countryId?: string;
+  cityId?: string;
+  districtId?: string;
+  // Denormalized location names
   city?: string;
   state?: string;
   country?: string;
