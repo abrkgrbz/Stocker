@@ -857,7 +857,7 @@ export class CRMService {
    * Get all activities with pagination
    */
   static async getActivities(
-    filters?: CustomerFilters
+    filters?: ActivityFilters
   ): Promise<PaginatedResponse<Activity>> {
     return ApiService.get<PaginatedResponse<Activity>>(
       this.getPath('activities'),

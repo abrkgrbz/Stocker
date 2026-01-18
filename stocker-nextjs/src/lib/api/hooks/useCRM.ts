@@ -90,6 +90,8 @@ import type {
   SurveyResponseFilters,
   CreateSurveyResponseCommand,
   UpdateSurveyResponseCommand,
+  // Activities
+  ActivityFilters,
 } from '../services/crm.types';
 
 import logger from '../../utils/logger';
@@ -289,7 +291,7 @@ export function useDeleteCustomer() {
 // ACTIVITIES HOOKS
 // =====================================
 
-export function useActivities(filters?: any) {
+export function useActivities(filters?: ActivityFilters) {
   return useQuery<PaginatedResponse<Activity>>({
     queryKey: [...crmKeys.activities, filters],
     queryFn: () => CRMService.getActivities(filters),
