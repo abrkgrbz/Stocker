@@ -33,7 +33,7 @@ import {
   UserIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
-import { useCustomer, useUpdateCustomer, useActivities, useCreateActivity, useContactsByCustomer, useCreateContact, useUpdateContact, useDeleteContact, useSetContactAsPrimary } from '@/lib/api/hooks/useCRM';
+import { useCustomer, useUpdateCustomer, useActivities, useCreateActivity, useCallLogsByCustomer, useContactsByCustomer, useCreateContact, useUpdateContact, useDeleteContact, useSetContactAsPrimary } from '@/lib/api/hooks/useCRM';
 import type { Contact, CreateContactCommand, UpdateContactCommand } from '@/lib/api/services/crm.service';
 import { useSalesOrdersByCustomer, useCreateSalesOrder } from '@/lib/api/hooks/useSales';
 import { useProducts } from '@/lib/api/hooks/useInventory';
@@ -95,6 +95,11 @@ export default function CustomerDetailPage() {
   // Fetch customer activities (only if ID is valid GUID)
   const { data: activitiesData, isLoading: activitiesLoading } = useActivities(
     isValidId ? { customerId: customerId } : {}
+  );
+
+  // Fetch customer call logs (only if ID is valid GUID)
+  const { data: callLogsData, isLoading: callLogsLoading } = useCallLogsByCustomer(
+    isValidId ? customerId : ''
   );
 
   // Fetch customer orders (only if Sales module is available and ID is valid GUID)
@@ -381,14 +386,39 @@ export default function CustomerDetailPage() {
     return colorMap[type] || 'blue';
   };
 
-  const timelineData = activitiesData?.items?.map((activity: any) => ({
+  // Combine activities and call logs into unified timeline
+  const activityItems = activitiesData?.items?.map((activity: any) => ({
+    id: `activity-${activity.id}`,
+    type: 'activity' as const,
+    entityType: activity.type,
     color: getActivityColor(activity.type, activity.status),
     icon: getActivityIcon(activity.type),
     title: activity.subject || activity.title,
     description: activity.description || `${activity.type} aktivitesi`,
-    time: dayjs(activity.createdAt).fromNow(),
+    date: new Date(activity.startTime || activity.createdAt),
+    time: dayjs(activity.startTime || activity.createdAt).fromNow(),
     status: activity.status,
   })) || [];
+
+  const callLogItems = (Array.isArray(callLogsData) ? callLogsData : []).map((callLog: any) => ({
+    id: `calllog-${callLog.id}`,
+    type: 'calllog' as const,
+    entityType: 'Call',
+    color: callLog.status === 'Completed' ? 'green' : callLog.status === 'Missed' ? 'red' : 'blue',
+    icon: <PhoneIcon className="w-4 h-4" />,
+    title: callLog.subject || 'Arama Kaydı',
+    description: callLog.notes || `${callLog.direction === 'Outbound' ? 'Giden' : 'Gelen'} arama - ${callLog.duration ? `${callLog.duration} dk` : 'Süre belirtilmedi'}`,
+    date: new Date(callLog.callDate || callLog.createdAt),
+    time: dayjs(callLog.callDate || callLog.createdAt).fromNow(),
+    status: callLog.status || callLog.outcome,
+  }));
+
+  // Merge and sort by date (newest first)
+  const timelineData = [...activityItems, ...callLogItems].sort(
+    (a, b) => b.date.getTime() - a.date.getTime()
+  );
+
+  const isTimelineLoading = activitiesLoading || callLogsLoading;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -922,7 +952,7 @@ export default function CustomerDetailPage() {
                     label: (
                       <span className="flex items-center gap-2 py-1">
                         <ClockIcon className="w-4 h-4" />
-                        Aktiviteler
+                        Etkinlikler
                         {timelineData.length > 0 && (
                           <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full ml-1">
                             {timelineData.length}
@@ -940,14 +970,14 @@ export default function CustomerDetailPage() {
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <h3 className="text-sm font-medium text-slate-900 m-0">Aktiviteler</h3>
+                                <h3 className="text-sm font-medium text-slate-900 m-0">Etkinlikler</h3>
                                 {timelineData.length > 0 && (
                                   <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
                                     {timelineData.length}
                                   </span>
                                 )}
                               </div>
-                              <p className="text-xs text-slate-500 m-0">Müşteri ile ilgili tüm aktiviteler</p>
+                              <p className="text-xs text-slate-500 m-0">Aktiviteler, aramalar ve tüm etkileşimler</p>
                             </div>
                           </div>
                           <button
@@ -959,8 +989,8 @@ export default function CustomerDetailPage() {
                           </button>
                         </div>
 
-                        {/* Activities List */}
-                        {activitiesLoading ? (
+                        {/* Timeline List */}
+                        {isTimelineLoading ? (
                           <div className="space-y-3">
                             {[1, 2, 3].map((i) => (
                               <div key={i} className="bg-slate-50 rounded-lg p-4 animate-pulse">
