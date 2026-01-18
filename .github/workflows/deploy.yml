@@ -1,0 +1,67 @@
+name: Selective Deploy to Coolify
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.changes.outputs.backend }}
+      frontend: ${{ steps.changes.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed paths
+        id: changes
+        run: |
+          # Get changed files
+          CHANGED=$(git diff --name-only HEAD~1 HEAD)
+          echo "Changed files: $CHANGED"
+
+          # Check backend changes
+          if echo "$CHANGED" | grep -qE "^src/"; then
+            echo "backend=true" >> $GITHUB_OUTPUT
+          else
+            echo "backend=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Check frontend changes
+          if echo "$CHANGED" | grep -qE "^stocker-nextjs/"; then
+            echo "frontend=true" >> $GITHUB_OUTPUT
+          else
+            echo "frontend=false" >> $GITHUB_OUTPUT
+          fi
+
+  deploy-backend:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Coolify Backend Deploy
+        run: |
+          curl -X POST "${{ secrets.COOLIFY_WEBHOOK_BACKEND }}" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
+          echo "Backend deploy triggered"
+
+  deploy-frontend:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Coolify Frontend Deploy
+        run: |
+          curl -X POST "${{ secrets.COOLIFY_WEBHOOK_FRONTEND }}" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
+          echo "Frontend deploy triggered"
+
+  skip-deploy:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'false' && needs.detect-changes.outputs.frontend == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - name: No deployment needed
+        run: echo "No relevant changes detected, skipping deployment"
