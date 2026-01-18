@@ -27,13 +27,15 @@ import {
   PlusIcon,
   ShieldCheckIcon,
   ShoppingBagIcon,
+  SparklesIcon,
   TagIcon,
   TrashIcon,
+  TrophyIcon,
   UserGroupIcon,
   UserIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
-import { useCustomer, useUpdateCustomer, useActivities, useCreateActivity, useCallLogsByCustomer, useContactsByCustomer, useCreateContact, useUpdateContact, useDeleteContact, useSetContactAsPrimary } from '@/lib/api/hooks/useCRM';
+import { useCustomer, useUpdateCustomer, useActivities, useCreateActivity, useCallLogsByCustomer, useMeetings, useOpportunities, useContactsByCustomer, useCreateContact, useUpdateContact, useDeleteContact, useSetContactAsPrimary } from '@/lib/api/hooks/useCRM';
 import type { Contact, CreateContactCommand, UpdateContactCommand } from '@/lib/api/services/crm.service';
 import { useSalesOrdersByCustomer, useCreateSalesOrder } from '@/lib/api/hooks/useSales';
 import { useProducts } from '@/lib/api/hooks/useInventory';
@@ -100,6 +102,16 @@ export default function CustomerDetailPage() {
   // Fetch customer call logs (only if ID is valid GUID)
   const { data: callLogsData, isLoading: callLogsLoading } = useCallLogsByCustomer(
     isValidId ? customerId : ''
+  );
+
+  // Fetch customer meetings (only if ID is valid GUID)
+  const { data: meetingsData, isLoading: meetingsLoading } = useMeetings(
+    isValidId ? { customerId: customerId } : {}
+  );
+
+  // Fetch customer opportunities (only if ID is valid GUID)
+  const { data: opportunitiesData, isLoading: opportunitiesLoading } = useOpportunities(
+    isValidId ? { customerId: customerId } : {}
   );
 
   // Fetch customer orders (only if Sales module is available and ID is valid GUID)
@@ -386,7 +398,7 @@ export default function CustomerDetailPage() {
     return colorMap[type] || 'blue';
   };
 
-  // Combine activities and call logs into unified timeline
+  // Combine all customer-related entities into unified timeline
   const activityItems = activitiesData?.items?.map((activity: any) => ({
     id: `activity-${activity.id}`,
     type: 'activity' as const,
@@ -413,12 +425,38 @@ export default function CustomerDetailPage() {
     status: callLog.status || callLog.outcome,
   }));
 
+  const meetingItems = (meetingsData?.items || []).map((meeting: any) => ({
+    id: `meeting-${meeting.id}`,
+    type: 'meeting' as const,
+    entityType: 'Meeting',
+    color: meeting.status === 'Completed' ? 'green' : meeting.status === 'Cancelled' ? 'red' : 'purple',
+    icon: <UserGroupIcon className="w-4 h-4" />,
+    title: meeting.title || meeting.subject || 'Toplantı',
+    description: meeting.description || `${meeting.meetingType || 'Toplantı'} - ${meeting.location || 'Konum belirtilmedi'}`,
+    date: new Date(meeting.startTime || meeting.scheduledDate || meeting.createdAt),
+    time: dayjs(meeting.startTime || meeting.scheduledDate || meeting.createdAt).fromNow(),
+    status: meeting.status,
+  }));
+
+  const opportunityItems = (opportunitiesData?.items || []).map((opp: any) => ({
+    id: `opportunity-${opp.id}`,
+    type: 'opportunity' as const,
+    entityType: 'Opportunity',
+    color: opp.status === 'Won' ? 'green' : opp.status === 'Lost' ? 'red' : 'orange',
+    icon: <TrophyIcon className="w-4 h-4" />,
+    title: opp.name || opp.title || 'Fırsat',
+    description: `${opp.amount ? `₺${opp.amount.toLocaleString('tr-TR')}` : ''} ${opp.stageName ? `- ${opp.stageName}` : ''}`.trim() || 'Fırsat kaydı',
+    date: new Date(opp.expectedCloseDate || opp.createdAt),
+    time: dayjs(opp.expectedCloseDate || opp.createdAt).fromNow(),
+    status: opp.status,
+  }));
+
   // Merge and sort by date (newest first)
-  const timelineData = [...activityItems, ...callLogItems].sort(
+  const timelineData = [...activityItems, ...callLogItems, ...meetingItems, ...opportunityItems].sort(
     (a, b) => b.date.getTime() - a.date.getTime()
   );
 
-  const isTimelineLoading = activitiesLoading || callLogsLoading;
+  const isTimelineLoading = activitiesLoading || callLogsLoading || meetingsLoading || opportunitiesLoading;
 
   return (
     <div className="min-h-screen bg-slate-50">
