@@ -87,7 +87,7 @@ export default function EditActivityPage() {
   return (
     <CrmFormPageLayout
       title="Aktivite Düzenle"
-      subtitle={activity.subject || activity.title}
+      subtitle={activity.subject || activity.title || 'Aktivite'}
       cancelPath={`/crm/activities/${activityId}`}
       loading={updateActivity.isPending}
       onSave={() => form.submit()}
