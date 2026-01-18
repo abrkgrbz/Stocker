@@ -1000,27 +1000,11 @@ export default function CustomerDetailPage() {
                     ),
                     children: (
                       <div className="p-6">
-                        {/* Header */}
-                        <div className="flex items-center justify-between mb-6">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-purple-50">
-                              <ClockIcon className="w-5 h-5 text-purple-600" />
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h3 className="text-sm font-medium text-slate-900 m-0">Etkinlikler</h3>
-                                {timelineData.length > 0 && (
-                                  <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
-                                    {timelineData.length}
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-xs text-slate-500 m-0">Aktiviteler, aramalar ve tüm etkileşimler</p>
-                            </div>
-                          </div>
+                        {/* Action Button */}
+                        <div className="flex justify-end mb-4">
                           <button
                             onClick={() => setIsActivityModalOpen(true)}
-                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
+                            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
                           >
                             <PlusIcon className="w-4 h-4" />
                             Yeni Aktivite
