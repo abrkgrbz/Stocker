@@ -106,6 +106,7 @@ interface ActivityModalProps {
   initialCustomerId?: string;
   initialLeadId?: string;
   initialDealId?: string;
+  initialStartDate?: Date;
 }
 
 export function ActivityModal({
@@ -118,8 +119,10 @@ export function ActivityModal({
   initialCustomerId,
   initialLeadId,
   initialDealId,
+  initialStartDate,
 }: ActivityModalProps) {
   const [form] = Form.useForm();
+  const [showTime, setShowTime] = React.useState(false);
   const isEditMode = !!activity;
 
   // Fetch data for dropdowns
@@ -136,6 +139,9 @@ export function ActivityModal({
 
   React.useEffect(() => {
     if (open && activity) {
+      // Edit mode - show time if activity has time set
+      const hasTime = activity.startTime && dayjs(activity.startTime).hour() !== 0;
+      setShowTime(hasTime);
       form.setFieldsValue({
         ...activity,
         startTime: dayjs(activity.startTime),
@@ -143,6 +149,9 @@ export function ActivityModal({
       });
     } else if (open) {
       form.resetFields();
+      // Reset showTime based on whether initialStartDate has time info
+      const hasInitialTime = initialStartDate && (initialStartDate.getHours() !== 0 || initialStartDate.getMinutes() !== 0);
+      setShowTime(!!hasInitialTime);
       form.setFieldsValue({
         type: initialType,
         status: 7, // Planlandı
@@ -150,24 +159,25 @@ export function ActivityModal({
         customerId: initialCustomerId,
         leadId: initialLeadId,
         dealId: initialDealId,
+        startTime: initialStartDate ? dayjs(initialStartDate) : null,
       });
     }
-  }, [open, activity, form, initialType, initialCustomerId, initialLeadId, initialDealId]);
+  }, [open, activity, form, initialType, initialCustomerId, initialLeadId, initialDealId, initialStartDate]);
 
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
 
-      // Validate that at least one relationship exists
-      if (!values.leadId && !values.customerId && !values.dealId) {
-        showError('En az bir ilişki (Müşteri, Lead veya Deal) seçmelisiniz');
+      // Validate startTime
+      if (!values.startTime) {
+        showError('Başlangıç tarihi gerekli');
         return;
       }
 
-      // Validate startTime
-      if (!values.startTime) {
-        showError('Başlangıç zamanı gerekli');
-        return;
+      // If showTime is false, set time to start of day
+      if (!showTime) {
+        values.startTime = values.startTime.startOf('day');
+        values.endTime = null;
       }
 
       // Map frontend fields to backend CreateActivityCommand
@@ -356,37 +366,91 @@ export function ActivityModal({
             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
               Tarih ve Konum
             </h3>
-            <Row gutter={16}>
-              <Col span={8}>
+            <div className="space-y-4">
+              {/* Date Row with Add Time button */}
+              <div className="flex items-start gap-4">
                 <Form.Item
                   name="startTime"
-                  label={<span className="text-sm text-slate-700">Başlangıç</span>}
-                  rules={[{ required: true, message: 'Başlangıç zamanı gerekli' }]}
+                  label={<span className="text-sm text-slate-700">Tarih</span>}
+                  rules={[{ required: true, message: 'Tarih gerekli' }]}
+                  className="flex-1 mb-0"
                 >
-                  <DatePicker
-                    showTime
-                    format="DD/MM/YYYY HH:mm"
-                    style={{ width: '100%' }}
-                    placeholder="Tarih ve saat"
-                    className="!rounded-lg !border-slate-300 !bg-slate-50"
-                  />
+                  {showTime ? (
+                    <DatePicker
+                      showTime={{ format: 'HH:mm' }}
+                      format="DD/MM/YYYY HH:mm"
+                      style={{ width: '100%' }}
+                      placeholder="Tarih ve saat seçin"
+                      className="!rounded-lg !border-slate-300 !bg-slate-50"
+                    />
+                  ) : (
+                    <DatePicker
+                      format="DD/MM/YYYY"
+                      style={{ width: '100%' }}
+                      placeholder="Tarih seçin"
+                      className="!rounded-lg !border-slate-300 !bg-slate-50"
+                    />
+                  )}
                 </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item
-                  name="endTime"
-                  label={<span className="text-sm text-slate-700">Bitiş (Opsiyonel)</span>}
-                >
-                  <DatePicker
-                    showTime
-                    format="DD/MM/YYYY HH:mm"
-                    style={{ width: '100%' }}
-                    placeholder="Tarih ve saat"
-                    className="!rounded-lg !border-slate-300 !bg-slate-50"
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
+
+                {!showTime ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowTime(true)}
+                    className="mt-7 px-3 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap"
+                  >
+                    <ClockIcon className="w-4 h-4" />
+                    Saat Ekle
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowTime(false);
+                      form.setFieldValue('endTime', null);
+                    }}
+                    className="mt-7 px-3 py-2 text-sm font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap"
+                  >
+                    <XCircleIcon className="w-4 h-4" />
+                    Saati Kaldır
+                  </button>
+                )}
+              </div>
+
+              {/* End Time - only shown when time is enabled */}
+              {showTime && (
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item
+                      name="endTime"
+                      label={<span className="text-sm text-slate-700">Bitiş Zamanı (Opsiyonel)</span>}
+                    >
+                      <DatePicker
+                        showTime={{ format: 'HH:mm' }}
+                        format="DD/MM/YYYY HH:mm"
+                        style={{ width: '100%' }}
+                        placeholder="Bitiş tarihi ve saati"
+                        className="!rounded-lg !border-slate-300 !bg-slate-50"
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      name="location"
+                      label={<span className="text-sm text-slate-700">Konum (Opsiyonel)</span>}
+                    >
+                      <Input
+                        placeholder="Örn: Merkez Ofis"
+                        maxLength={500}
+                        className="!rounded-lg !border-slate-300 !bg-slate-50"
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              )}
+
+              {/* Location - shown when time is not enabled */}
+              {!showTime && (
                 <Form.Item
                   name="location"
                   label={<span className="text-sm text-slate-700">Konum (Opsiyonel)</span>}
@@ -397,15 +461,15 @@ export function ActivityModal({
                     className="!rounded-lg !border-slate-300 !bg-slate-50"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              )}
+            </div>
           </div>
 
           {/* İlgili Kayıtlar */}
           <div>
             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
               İlgili Kayıtlar
-              <span className="ml-2 text-xs font-normal text-slate-400">(En az bir kayıt seçilmeli)</span>
+              <span className="ml-2 text-xs font-normal text-slate-400">(Opsiyonel)</span>
             </h3>
             <Row gutter={16}>
               <Col span={8}>

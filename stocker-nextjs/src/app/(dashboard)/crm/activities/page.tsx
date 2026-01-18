@@ -45,6 +45,7 @@ function ActivitiesPageContent() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [quickActionType, setQuickActionType] = useState<number | undefined>(undefined);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [previewActivity, setPreviewActivity] = useState<Activity | null>(null);
   const [rescheduleModalOpen, setRescheduleModalOpen] = useState(false);
@@ -80,6 +81,7 @@ function ActivitiesPageContent() {
   const handleCreate = () => {
     setSelectedActivity(null);
     setQuickActionType(undefined);
+    setSelectedDate(undefined);
     setModalOpen(true);
   };
 
@@ -92,6 +94,7 @@ function ActivitiesPageContent() {
 
     setSelectedActivity(null);
     setQuickActionType(typeMap[activityTypeName]);
+    setSelectedDate(undefined);
     setModalOpen(true);
   };
 
@@ -196,8 +199,10 @@ function ActivitiesPageContent() {
     }
   };
 
-  const handleDateSelect = () => {
+  const handleDateSelect = (start: Date, _end: Date) => {
     setSelectedActivity(null);
+    setQuickActionType(undefined);
+    setSelectedDate(start);
     setModalOpen(true);
   };
 
@@ -399,9 +404,11 @@ function ActivitiesPageContent() {
         onCancel={() => {
           setModalOpen(false);
           setQuickActionType(undefined);
+          setSelectedDate(undefined);
         }}
         onSubmit={handleSubmit}
         initialType={quickActionType}
+        initialStartDate={selectedDate}
       />
 
       {/* Reschedule Modal */}
