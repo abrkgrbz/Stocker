@@ -61,6 +61,7 @@ import type {
   ReferralDto,
   ReferralFilters,
   CreateReferralCommand,
+  UpdateReferralCommand,
   // Reminders
   ReminderDto,
   ReminderFilterParams,
@@ -2432,6 +2433,23 @@ export function useCreateReferral() {
     },
     onError: (error) => {
       showApiError(error, 'Referans oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateReferral() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: Guid; data: UpdateReferralCommand }) =>
+      CRMService.updateReferral(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.referrals });
+      queryClient.invalidateQueries({ queryKey: crmKeys.referral(id) });
+      showSuccess('Referans güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Referans güncellenemedi');
     },
   });
 }

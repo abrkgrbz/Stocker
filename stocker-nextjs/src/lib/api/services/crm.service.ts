@@ -114,6 +114,7 @@ import type {
   // Referrals
   ReferralDto,
   CreateReferralCommand,
+  UpdateReferralCommand,
   ReferralFilters,
   ReferralStatus,
   ReferralType,
@@ -2209,6 +2210,13 @@ export class CRMService {
    */
   static async createReferral(data: CreateReferralCommand): Promise<Guid> {
     return ApiService.post<Guid>(this.getPath('referrals'), data);
+  }
+
+  /**
+   * Update referral
+   */
+  static async updateReferral(id: Guid, data: UpdateReferralCommand): Promise<void> {
+    return ApiService.put<void>(this.getPath(`referrals/${id}`), data);
   }
 
   /**
