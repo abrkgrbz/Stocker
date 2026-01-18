@@ -260,6 +260,111 @@ export default function CompetitorForm({ form, initialValues, onFinish, loading 
             </div>
           </div>
 
+          {/* ─────────────── SWOT ANALİZİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              SWOT Analizi
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Güçlü Yönleri</label>
+                <Form.Item name="strengthsText" className="mb-0">
+                  <TextArea
+                    placeholder="Düşük fiyat, hızlı teslimat, geniş ürün yelpazesi..."
+                    rows={3}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Zayıf Yönleri</label>
+                <Form.Item name="weaknessesText" className="mb-0">
+                  <TextArea
+                    placeholder="Sınırlı destek, az özellik, yavaş güncelleme..."
+                    rows={3}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-12">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">SWOT Özeti</label>
+                <Form.Item name="swotSummary" className="mb-0">
+                  <TextArea
+                    placeholder="Rakibin genel SWOT analizi özeti..."
+                    rows={2}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── ÜRÜN VE STRATEJİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Ürün ve Strateji
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ürünler/Hizmetler</label>
+                <Form.Item name="productsText" className="mb-0">
+                  <TextArea
+                    placeholder="CRM, ERP, Muhasebe..."
+                    rows={2}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Hedef Pazarlar</label>
+                <Form.Item name="targetMarkets" className="mb-0">
+                  <Input
+                    placeholder="KOBİ, Kurumsal, Perakende..."
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sektörler</label>
+                <Form.Item name="industries" className="mb-0">
+                  <Input
+                    placeholder="Teknoloji, Üretim, Hizmet..."
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Fiyatlandırma Stratejisi</label>
+                <Form.Item name="pricingStrategy" className="mb-0">
+                  <Input
+                    placeholder="Düşük fiyat, premium, freemium..."
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-12">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Rekabet Stratejisi</label>
+                <Form.Item name="competitiveStrategy" className="mb-0">
+                  <TextArea
+                    placeholder="Rakibe karşı uygulanan strateji..."
+                    rows={2}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-12">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Kazanma Stratejisi</label>
+                <Form.Item name="winStrategy" className="mb-0">
+                  <TextArea
+                    placeholder="Bu rakibe karşı nasıl kazanılır..."
+                    rows={2}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
           {/* ─────────────── NOTLAR ─────────────── */}
           <div>
             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
