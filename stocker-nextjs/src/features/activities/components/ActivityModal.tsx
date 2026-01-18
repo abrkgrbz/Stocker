@@ -103,6 +103,9 @@ interface ActivityModalProps {
   onCancel: () => void;
   onSubmit: (values: any) => void;
   initialType?: number;
+  initialCustomerId?: string;
+  initialLeadId?: string;
+  initialDealId?: string;
 }
 
 export function ActivityModal({
@@ -112,6 +115,9 @@ export function ActivityModal({
   onCancel,
   onSubmit,
   initialType,
+  initialCustomerId,
+  initialLeadId,
+  initialDealId,
 }: ActivityModalProps) {
   const [form] = Form.useForm();
   const isEditMode = !!activity;
@@ -141,9 +147,12 @@ export function ActivityModal({
         type: initialType,
         status: 7, // Planlandı
         priority: 2, // Normal
+        customerId: initialCustomerId,
+        leadId: initialLeadId,
+        dealId: initialDealId,
       });
     }
-  }, [open, activity, form, initialType]);
+  }, [open, activity, form, initialType, initialCustomerId, initialLeadId, initialDealId]);
 
   const handleSubmit = async () => {
     try {

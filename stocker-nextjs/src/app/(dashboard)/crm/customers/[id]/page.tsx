@@ -33,13 +33,14 @@ import {
   UserIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
-import { useCustomer, useUpdateCustomer, useActivities, useContactsByCustomer, useCreateContact, useUpdateContact, useDeleteContact, useSetContactAsPrimary } from '@/lib/api/hooks/useCRM';
+import { useCustomer, useUpdateCustomer, useActivities, useCreateActivity, useContactsByCustomer, useCreateContact, useUpdateContact, useDeleteContact, useSetContactAsPrimary } from '@/lib/api/hooks/useCRM';
 import type { Contact, CreateContactCommand, UpdateContactCommand } from '@/lib/api/services/crm.service';
 import { useSalesOrdersByCustomer, useCreateSalesOrder } from '@/lib/api/hooks/useSales';
 import { useProducts } from '@/lib/api/hooks/useInventory';
 import { useModuleCodes } from '@/lib/api/hooks/useUserModules';
 import { DocumentUpload } from '@/components/crm/shared';
 import { CustomerTags } from '@/components/crm/customers';
+import { ActivityModal } from '@/features/activities/components';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -65,6 +66,7 @@ export default function CustomerDetailPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [activeTab, setActiveTab] = useState('activities');
   const [orderItems, setOrderItems] = useState<Array<{
@@ -113,6 +115,18 @@ export default function CustomerDetailPage() {
   const updateContact = useUpdateContact();
   const deleteContact = useDeleteContact();
   const setContactAsPrimary = useSetContactAsPrimary();
+  const createActivity = useCreateActivity();
+
+  // Handle create activity
+  const handleCreateActivity = async (values: any) => {
+    try {
+      await createActivity.mutateAsync(values);
+      showSuccess('Aktivite başarıyla oluşturuldu');
+      setIsActivityModalOpen(false);
+    } catch (error) {
+      showApiError(error, 'Aktivite oluşturulurken bir hata oluştu');
+    }
+  };
 
   // Handle edit customer
   const handleEdit = async (values: any) => {
@@ -937,6 +951,7 @@ export default function CustomerDetailPage() {
                             </div>
                           </div>
                           <button
+                            onClick={() => setIsActivityModalOpen(true)}
                             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
                           >
                             <PlusIcon className="w-4 h-4" />
@@ -964,6 +979,7 @@ export default function CustomerDetailPage() {
                               Bu müşteri için henüz aktivite kaydı oluşturulmamış.
                             </p>
                             <button
+                              onClick={() => setIsActivityModalOpen(true)}
                               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
                             >
                               <PlusIcon className="w-4 h-4" />
@@ -1917,6 +1933,16 @@ export default function CustomerDetailPage() {
           </div>
         </Form>
       </Modal>
+
+      {/* Activity Modal */}
+      <ActivityModal
+        open={isActivityModalOpen}
+        activity={null}
+        loading={createActivity.isPending}
+        onCancel={() => setIsActivityModalOpen(false)}
+        onSubmit={handleCreateActivity}
+        initialCustomerId={customerId}
+      />
     </div>
   );
 }
