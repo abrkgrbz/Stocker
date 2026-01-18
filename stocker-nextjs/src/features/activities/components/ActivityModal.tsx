@@ -140,7 +140,7 @@ export function ActivityModal({
   React.useEffect(() => {
     if (open && activity) {
       // Edit mode - show time if activity has time set
-      const hasTime = activity.startTime && dayjs(activity.startTime).hour() !== 0;
+      const hasTime = !!(activity.startTime && dayjs(activity.startTime).hour() !== 0);
       setShowTime(hasTime);
       form.setFieldsValue({
         ...activity,
