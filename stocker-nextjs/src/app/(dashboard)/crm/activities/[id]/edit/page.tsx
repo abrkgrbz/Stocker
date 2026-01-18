@@ -31,7 +31,7 @@ export default function EditActivityPage() {
         priority: values.priority || 2,
         dueDate: values.startTime?.toISOString(),
         duration: values.endTime
-          ? Math.round((values.endTime.valueOf() - values.startTime.valueOf()) / 60000)
+          ? String(Math.round((values.endTime.valueOf() - values.startTime.valueOf()) / 60000))
           : null,
         location: values.location || null,
         leadId: values.leadId ? String(values.leadId) : null,
