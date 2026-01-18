@@ -19,13 +19,9 @@ import {
   CalendarIcon,
   CheckCircleIcon,
   ClockIcon,
-  DocumentTextIcon,
   EnvelopeIcon,
-  FireIcon,
-  PencilIcon,
   PhoneIcon,
   PlusIcon,
-  TrashIcon,
   UserIcon,
   UsersIcon,
   XCircleIcon,
@@ -41,97 +37,16 @@ import {
   useRescheduleActivity,
 } from '@/lib/api/hooks/useCRM';
 import { ActivityCalendar } from '@/components/crm/activities/ActivityCalendar';
-import { ActivityModal } from '@/features/activities/components';
+import { ActivityModal, ActivityPreviewModal } from '@/features/activities/components';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-
-// Activity type configuration with monochrome slate palette
-const activityTypeConfig: Record<
-  Activity['type'],
-  { icon: React.ReactNode; bgColor: string; textColor: string; label: string }
-> = {
-  Call: {
-    icon: <PhoneIcon className="w-4 h-4" />,
-    bgColor: 'bg-slate-100',
-    textColor: 'text-slate-700',
-    label: 'Arama',
-  },
-  Email: {
-    icon: <EnvelopeIcon className="w-4 h-4" />,
-    bgColor: 'bg-slate-200',
-    textColor: 'text-slate-800',
-    label: 'E-posta',
-  },
-  Meeting: {
-    icon: <UsersIcon className="w-4 h-4" />,
-    bgColor: 'bg-slate-300',
-    textColor: 'text-slate-800',
-    label: 'Toplanti',
-  },
-  Task: {
-    icon: <DocumentTextIcon className="w-4 h-4" />,
-    bgColor: 'bg-slate-400',
-    textColor: 'text-white',
-    label: 'Gorev',
-  },
-  Note: {
-    icon: <DocumentTextIcon className="w-4 h-4" />,
-    bgColor: 'bg-slate-500',
-    textColor: 'text-white',
-    label: 'Not',
-  },
-  Demo: {
-    icon: <DocumentTextIcon className="w-4 h-4" />,
-    bgColor: 'bg-slate-600',
-    textColor: 'text-white',
-    label: 'Demo',
-  },
-  'Follow-up': {
-    icon: <PhoneIcon className="w-4 h-4" />,
-    bgColor: 'bg-slate-700',
-    textColor: 'text-white',
-    label: 'Takip',
-  },
-};
-
-// Status configuration with monochrome slate palette
-const activityStatusConfig: Record<
-  Activity['status'],
-  { bgColor: string; textColor: string; label: string }
-> = {
-  Pending: {
-    bgColor: 'bg-slate-100',
-    textColor: 'text-slate-600',
-    label: 'Bekliyor',
-  },
-  Scheduled: {
-    bgColor: 'bg-slate-200',
-    textColor: 'text-slate-700',
-    label: 'Planli',
-  },
-  InProgress: {
-    bgColor: 'bg-slate-400',
-    textColor: 'text-white',
-    label: 'Devam Ediyor',
-  },
-  Completed: {
-    bgColor: 'bg-slate-700',
-    textColor: 'text-white',
-    label: 'Tamamlandi',
-  },
-  Cancelled: {
-    bgColor: 'bg-slate-900',
-    textColor: 'text-white',
-    label: 'Iptal Edildi',
-  },
-};
 
 function ActivitiesPageContent() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [quickActionType, setQuickActionType] = useState<number | undefined>(undefined);
-  const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [detailActivity, setDetailActivity] = useState<Activity | null>(null);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [previewActivity, setPreviewActivity] = useState<Activity | null>(null);
   const [rescheduleModalOpen, setRescheduleModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [ownerFilter, setOwnerFilter] = useState<'my' | 'team' | 'all'>('my');
@@ -181,13 +96,13 @@ function ActivitiesPageContent() {
   };
 
   const handleEventClick = (activity: Activity) => {
-    setDetailActivity(activity);
-    setDetailModalOpen(true);
+    setPreviewActivity(activity);
+    setPreviewModalOpen(true);
   };
 
   const handleEdit = (activity: Activity) => {
     setSelectedActivity(activity);
-    setDetailModalOpen(false);
+    setPreviewModalOpen(false);
     setModalOpen(true);
   };
 
@@ -202,7 +117,7 @@ function ActivitiesPageContent() {
         try {
           await deleteActivity.mutateAsync(id);
           showSuccess('Aktivite basariyla silindi');
-          setDetailModalOpen(false);
+          setPreviewModalOpen(false);
         } catch (error: any) {
           showApiError(error, 'Silme islemi basarisiz');
         }
@@ -214,7 +129,7 @@ function ActivitiesPageContent() {
     try {
       await completeActivity.mutateAsync({ id });
       showSuccess('Aktivite tamamlandi olarak isaretlendi');
-      setDetailModalOpen(false);
+      setPreviewModalOpen(false);
     } catch (error: any) {
       showApiError(error, 'Islem basarisiz');
     }
@@ -225,16 +140,16 @@ function ActivitiesPageContent() {
   };
 
   const handleCancelSubmit = async (values: { reason?: string }) => {
-    if (!detailActivity) return;
+    if (!previewActivity) return;
 
     try {
       await cancelActivity.mutateAsync({
-        id: detailActivity.id.toString(),
+        id: previewActivity.id.toString(),
         reason: values.reason,
       });
       showSuccess('Aktivite iptal edildi');
       setCancelModalOpen(false);
-      setDetailModalOpen(false);
+      setPreviewModalOpen(false);
     } catch (error: any) {
       showApiError(error, 'Iptal islemi basarisiz');
     }
@@ -249,18 +164,18 @@ function ActivitiesPageContent() {
     endTime?: Dayjs;
     reason?: string;
   }) => {
-    if (!detailActivity) return;
+    if (!previewActivity) return;
 
     try {
       await rescheduleActivity.mutateAsync({
-        id: detailActivity.id.toString(),
+        id: previewActivity.id.toString(),
         newStartDate: values.startTime.toISOString(),
         newEndDate: values.endTime?.toISOString(),
         reason: values.reason,
       });
       showSuccess('Aktivite yeniden planlandi');
       setRescheduleModalOpen(false);
-      setDetailModalOpen(false);
+      setPreviewModalOpen(false);
     } catch (error: any) {
       showApiError(error, 'Yeniden planlama basarisiz');
     }
@@ -466,158 +381,15 @@ function ActivitiesPageContent() {
         )}
       </div>
 
-      {/* Activity Details Modal */}
-      <Modal
-        open={detailModalOpen}
-        onCancel={() => setDetailModalOpen(false)}
-        footer={null}
-        width={560}
-        centered
-        styles={{
-          mask: {
-            backdropFilter: 'blur(8px)',
-            backgroundColor: 'rgba(0, 0, 0, 0.45)',
-          },
-        }}
-      >
-        {detailActivity && (() => {
-          const typeConfig = activityTypeConfig[detailActivity.type] || activityTypeConfig.Note;
-          const statusConfig = activityStatusConfig[detailActivity.status];
-
-          return (
-            <div className="bg-white">
-              {/* Header Section */}
-              <div className="pb-6 border-b border-slate-100">
-                <div className="flex items-start gap-4">
-                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${typeConfig.bgColor} ${typeConfig.textColor}`}>
-                    {typeConfig.icon}
-                  </div>
-                  <div className="flex-1">
-                    <h2 className="text-xl font-bold text-slate-900 m-0">
-                      {detailActivity.title}
-                    </h2>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${typeConfig.bgColor} ${typeConfig.textColor}`}>
-                        {typeConfig.label}
-                      </span>
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${statusConfig.bgColor} ${statusConfig.textColor}`}>
-                        {statusConfig.label}
-                      </span>
-                      {dayjs(detailActivity.startTime).isBefore(dayjs()) && detailActivity.status === 'Scheduled' && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-900 text-white">
-                          <FireIcon className="w-3 h-3" />
-                          Gecikmis
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Content Section */}
-              <div className="py-6 space-y-4">
-                {/* Time Information */}
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                  <div className="flex items-center gap-2 text-slate-600 mb-2">
-                    <ClockIcon className="w-4 h-4" />
-                    <span className="text-sm font-medium">Zaman</span>
-                  </div>
-                  <div className="text-base font-medium text-slate-900">
-                    {dayjs(detailActivity.startTime).format('DD MMMM YYYY, HH:mm')}
-                    {detailActivity.endTime && (
-                      <span> - {dayjs(detailActivity.endTime).format('HH:mm')}</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Description */}
-                {detailActivity.description && (
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                    <div className="flex items-center gap-2 text-slate-600 mb-2">
-                      <DocumentTextIcon className="w-4 h-4" />
-                      <span className="text-sm font-medium">Aciklama</span>
-                    </div>
-                    <p className="text-slate-800 m-0">{detailActivity.description}</p>
-                  </div>
-                )}
-
-                {/* Customer Information */}
-                {detailActivity.customerId && (
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                    <div className="flex items-center gap-2 text-slate-600 mb-2">
-                      <UserIcon className="w-4 h-4" />
-                      <span className="text-sm font-medium">Musteri</span>
-                    </div>
-                    <p className="text-slate-800 m-0">Musteri ID: {detailActivity.customerId}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="pt-4 border-t border-slate-100">
-                <div className="grid grid-cols-12 gap-3">
-                  {detailActivity.status === 'Scheduled' && (
-                    <>
-                      <div className="col-span-12">
-                        <Button
-                          block
-                          size="large"
-                          type="primary"
-                          icon={<CheckCircleIcon className="w-4 h-4" />}
-                          onClick={() => handleComplete(detailActivity.id)}
-                          style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
-                        >
-                          Tamamlandi Olarak Isaretle
-                        </Button>
-                      </div>
-                      <div className="col-span-6">
-                        <Button
-                          block
-                          icon={<ClockIcon className="w-4 h-4" />}
-                          onClick={handleReschedule}
-                          className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
-                        >
-                          Yeniden Planla
-                        </Button>
-                      </div>
-                      <div className="col-span-6">
-                        <Button
-                          block
-                          icon={<XCircleIcon className="w-4 h-4" />}
-                          onClick={handleCancel}
-                          className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
-                        >
-                          Iptal Et
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                  <div className="col-span-6">
-                    <Button
-                      block
-                      icon={<PencilIcon className="w-4 h-4" />}
-                      onClick={() => handleEdit(detailActivity)}
-                      className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
-                    >
-                      Duzenle
-                    </Button>
-                  </div>
-                  <div className="col-span-6">
-                    <Button
-                      block
-                      danger
-                      icon={<TrashIcon className="w-4 h-4" />}
-                      onClick={() => handleDelete(detailActivity.id)}
-                    >
-                      Sil
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })()}
-      </Modal>
+      {/* Activity Preview Modal */}
+      <ActivityPreviewModal
+        open={previewModalOpen}
+        activity={previewActivity}
+        onClose={() => setPreviewModalOpen(false)}
+        onComplete={handleComplete}
+        onEdit={handleEdit}
+        completeLoading={completeActivity.isPending}
+      />
 
       {/* Create/Edit Modal */}
       <ActivityModal
@@ -649,8 +421,8 @@ function ActivitiesPageContent() {
           layout="vertical"
           onFinish={handleRescheduleSubmit}
           initialValues={{
-            startTime: detailActivity ? dayjs(detailActivity.startTime) : undefined,
-            endTime: detailActivity?.endTime ? dayjs(detailActivity.endTime) : undefined,
+            startTime: previewActivity ? dayjs(previewActivity.startTime) : undefined,
+            endTime: previewActivity?.endTime ? dayjs(previewActivity.endTime) : undefined,
           }}
         >
           <Form.Item
