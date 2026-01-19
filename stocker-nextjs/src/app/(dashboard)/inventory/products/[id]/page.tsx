@@ -169,6 +169,15 @@ export default function ProductDetailPage() {
     );
   }
 
+  // Debug: Log stock level values from API
+  console.log('Product detail - stock levels from API:', {
+    minStockLevel: product.minStockLevel,
+    maxStockLevel: product.maxStockLevel,
+    reorderLevel: product.reorderLevel,
+    reorderQuantity: product.reorderQuantity,
+    productId: product.id,
+  });
+
   const typeConfig = productTypeConfig[product.productType] || { color: '#64748b', label: product.productType, bgColor: '#f1f5f9' };
   const isLowStock = product.totalStockQuantity < product.minStockLevel;
   const stockPercentage = product.maxStockLevel > 0

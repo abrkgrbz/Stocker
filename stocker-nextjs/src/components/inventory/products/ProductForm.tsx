@@ -229,6 +229,17 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
 
   // Wrap onFinish to include stock entries and images
   const handleFinish = (values: any) => {
+    // Debug: Log raw form values
+    const allFormFields = form.getFieldsValue(true);
+    console.log('ProductForm - RAW form.getFieldsValue():', allFormFields);
+    console.log('ProductForm - values from onFinish callback:', values);
+    console.log('ProductForm - Stock level fields from form:', {
+      minStockLevel: allFormFields.minStockLevel,
+      maxStockLevel: allFormFields.maxStockLevel,
+      reorderLevel: allFormFields.reorderLevel,
+      reorderQuantity: allFormFields.reorderQuantity,
+    });
+
     const validStockEntries = stockEntries
       .filter(e => e.warehouseId > 0 && e.quantity > 0)
       .map(({ key, ...entry }) => entry);
@@ -241,11 +252,22 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
         isPrimary: img.isPrimary,
       }));
 
-    onFinish({
+    const finalValues = {
       ...values,
       initialStock: validStockEntries.length > 0 ? validStockEntries : undefined,
       imageFiles: newImageFiles.length > 0 ? newImageFiles : undefined,
+    };
+
+    // Debug: Log the final values being sent to API
+    console.log('ProductForm - FINAL values being sent:', {
+      minStockLevel: finalValues.minStockLevel,
+      maxStockLevel: finalValues.maxStockLevel,
+      reorderLevel: finalValues.reorderLevel,
+      reorderQuantity: finalValues.reorderQuantity,
+      allValues: finalValues,
     });
+
+    onFinish(finalValues);
   };
 
   // Convert category tree to TreeSelect format

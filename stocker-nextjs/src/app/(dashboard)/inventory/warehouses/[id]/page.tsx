@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Space, Tag, Spin, Empty, Progress, Table, Tabs } from 'antd';
+import { Button, Space, Tag, Spin, Empty, Table, Tabs } from 'antd';
 import {
   ArrowLeftIcon,
   ArrowsPointingOutIcon,
@@ -92,13 +92,14 @@ export default function WarehouseDetailPage() {
         if (!record.capacity) return <span className="text-slate-400">-</span>;
         const usedPercent = Math.round((record.usedCapacity / record.capacity) * 100);
         return (
-          <div style={{ width: 120 }}>
-            <Progress
-              percent={usedPercent}
-              size="small"
-              status={usedPercent > 90 ? 'exception' : usedPercent > 70 ? 'normal' : 'success'}
-              format={() => `${record.usedCapacity}/${record.capacity}`}
-            />
+          <div className="flex items-center gap-2">
+            <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden" style={{ width: 80 }}>
+              <div
+                className="h-full bg-slate-900 rounded-full transition-all"
+                style={{ width: `${usedPercent}%` }}
+              />
+            </div>
+            <span className="text-xs text-slate-600">{record.usedCapacity}/{record.capacity}</span>
           </div>
         );
       },
@@ -272,18 +273,6 @@ export default function WarehouseDetailPage() {
   const usedCapacitySum = locations.reduce((sum, l) => sum + (l.usedCapacity || 0), 0);
   const capacityPercent = totalCapacity > 0 ? Math.round((usedCapacitySum / totalCapacity) * 100) : 0;
 
-  const getCapacityColor = (percent: number) => {
-    if (percent > 90) return 'text-red-600';
-    if (percent > 70) return 'text-amber-600';
-    return 'text-emerald-600';
-  };
-
-  const getProgressStatus = (percent: number) => {
-    if (percent > 90) return 'exception';
-    if (percent > 70) return 'normal';
-    return 'success';
-  };
-
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Glass Effect Sticky Header */}
@@ -360,8 +349,8 @@ export default function WarehouseDetailPage() {
           <div className="col-span-12 md:col-span-3">
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <MapPinIcon className="w-5 h-5 text-blue-600" />
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <MapPinIcon className="w-5 h-5 text-slate-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Lokasyonlar
@@ -377,8 +366,8 @@ export default function WarehouseDetailPage() {
           <div className="col-span-12 md:col-span-3">
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <Squares2X2Icon className="w-5 h-5 text-purple-600" />
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <Squares2X2Icon className="w-5 h-5 text-slate-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Ürün Çeşidi
@@ -394,8 +383,8 @@ export default function WarehouseDetailPage() {
           <div className="col-span-12 md:col-span-3">
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <CurrencyDollarIcon className="w-5 h-5 text-emerald-600" />
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <CurrencyDollarIcon className="w-5 h-5 text-slate-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Stok Değeri
@@ -415,24 +404,23 @@ export default function WarehouseDetailPage() {
           <div className="col-span-12 md:col-span-3">
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <ArrowsPointingOutIcon className="w-5 h-5 text-amber-600" />
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <ArrowsPointingOutIcon className="w-5 h-5 text-slate-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Kapasite
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <span className={`text-3xl font-bold ${getCapacityColor(capacityPercent)}`}>
+                <span className="text-3xl font-bold text-slate-900">
                   %{capacityPercent}
                 </span>
-                <Progress
-                  percent={capacityPercent}
-                  showInfo={false}
-                  size="small"
-                  status={getProgressStatus(capacityPercent)}
-                  className="flex-1"
-                />
+                <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-slate-900 rounded-full transition-all"
+                    style={{ width: `${capacityPercent}%` }}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -640,8 +628,8 @@ export default function WarehouseDetailPage() {
                   <div className="col-span-12 md:col-span-3">
                     <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                          <CubeIcon className="w-5 h-5 text-blue-600" />
+                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                          <CubeIcon className="w-5 h-5 text-slate-600" />
                         </div>
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                           Toplam Miktar
@@ -659,8 +647,8 @@ export default function WarehouseDetailPage() {
                   <div className="col-span-12 md:col-span-3">
                     <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                          <ChartBarIcon className="w-5 h-5 text-amber-600" />
+                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                          <ChartBarIcon className="w-5 h-5 text-slate-600" />
                         </div>
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                           Rezerve
@@ -678,15 +666,15 @@ export default function WarehouseDetailPage() {
                   <div className="col-span-12 md:col-span-3">
                     <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-                          <XCircleIcon className="w-5 h-5 text-orange-600" />
+                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                          <XCircleIcon className="w-5 h-5 text-slate-600" />
                         </div>
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                           Düşük Stok
                         </p>
                       </div>
                       <div className="flex items-end justify-between">
-                        <span className="text-3xl font-bold text-orange-600">
+                        <span className="text-3xl font-bold text-slate-900">
                           {stockSummaryLoading ? '...' : (stockSummary?.lowStockItems || 0)}
                         </span>
                         <span className="text-sm text-slate-400">ürün</span>
@@ -697,15 +685,15 @@ export default function WarehouseDetailPage() {
                   <div className="col-span-12 md:col-span-3">
                     <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
-                          <XCircleIcon className="w-5 h-5 text-red-600" />
+                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                          <XCircleIcon className="w-5 h-5 text-slate-600" />
                         </div>
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                           Stokta Yok
                         </p>
                       </div>
                       <div className="flex items-end justify-between">
-                        <span className="text-3xl font-bold text-red-600">
+                        <span className="text-3xl font-bold text-slate-900">
                           {stockSummaryLoading ? '...' : (stockSummary?.outOfStockItems || 0)}
                         </span>
                         <span className="text-sm text-slate-400">ürün</span>
@@ -729,8 +717,8 @@ export default function WarehouseDetailPage() {
                           </span>
                           <span className="text-2xl font-medium text-slate-400 ml-2">₺</span>
                         </div>
-                        <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
-                          <CurrencyDollarIcon className="w-8 h-8 text-emerald-600" />
+                        <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                          <CurrencyDollarIcon className="w-8 h-8 text-slate-600" />
                         </div>
                       </div>
                     </div>
@@ -791,8 +779,8 @@ export default function WarehouseDetailPage() {
                   <div className="col-span-12 md:col-span-3">
                     <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                          <ViewColumnsIcon className="w-5 h-5 text-indigo-600" />
+                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                          <ViewColumnsIcon className="w-5 h-5 text-slate-600" />
                         </div>
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                           Toplam Bölge
@@ -810,15 +798,15 @@ export default function WarehouseDetailPage() {
                   <div className="col-span-12 md:col-span-3">
                     <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                          <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
+                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                          <CheckCircleIcon className="w-5 h-5 text-slate-600" />
                         </div>
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                           Aktif Bölge
                         </p>
                       </div>
                       <div className="flex items-end justify-between">
-                        <span className="text-3xl font-bold text-emerald-600">
+                        <span className="text-3xl font-bold text-slate-900">
                           {zonesLoading ? '...' : zones.filter(z => z.isActive).length}
                         </span>
                         <span className="text-sm text-slate-400">adet</span>
@@ -829,15 +817,15 @@ export default function WarehouseDetailPage() {
                   <div className="col-span-12 md:col-span-3">
                     <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center">
-                          <FireIcon className="w-5 h-5 text-cyan-600" />
+                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                          <FireIcon className="w-5 h-5 text-slate-600" />
                         </div>
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                           Sıcaklık Kontrollü
                         </p>
                       </div>
                       <div className="flex items-end justify-between">
-                        <span className="text-3xl font-bold text-cyan-600">
+                        <span className="text-3xl font-bold text-slate-900">
                           {zonesLoading ? '...' : zones.filter(z => z.isTemperatureControlled).length}
                         </span>
                         <span className="text-sm text-slate-400">bölge</span>
@@ -848,15 +836,15 @@ export default function WarehouseDetailPage() {
                   <div className="col-span-12 md:col-span-3">
                     <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
-                          <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
+                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                          <ExclamationTriangleIcon className="w-5 h-5 text-slate-600" />
                         </div>
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                           Tehlikeli Madde
                         </p>
                       </div>
                       <div className="flex items-end justify-between">
-                        <span className="text-3xl font-bold text-red-600">
+                        <span className="text-3xl font-bold text-slate-900">
                           {zonesLoading ? '...' : zones.filter(z => z.isHazardous).length}
                         </span>
                         <span className="text-sm text-slate-400">bölge</span>

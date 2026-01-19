@@ -13,27 +13,42 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Detect changed paths
         id: changes
         run: |
-          # Get changed files
-          CHANGED=$(git diff --name-only HEAD~1 HEAD)
-          echo "Changed files: $CHANGED"
-
-          # Check backend changes
-          if echo "$CHANGED" | grep -qE "^src/"; then
-            echo "backend=true" >> $GITHUB_OUTPUT
+          # Get the base commit to compare against
+          if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            # First push or force push - compare with empty tree
+            BASE_SHA=$(git rev-list --max-parents=0 HEAD | tail -1)
           else
-            echo "backend=false" >> $GITHUB_OUTPUT
+            BASE_SHA="${{ github.event.before }}"
           fi
 
-          # Check frontend changes
-          if echo "$CHANGED" | grep -qE "^stocker-nextjs/"; then
+          echo "Comparing $BASE_SHA to ${{ github.sha }}"
+
+          # Get changed files
+          CHANGED=$(git diff --name-only "$BASE_SHA" "${{ github.sha }}" 2>/dev/null || git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          # Check backend changes (src/ directory - .NET backend)
+          if echo "$CHANGED" | grep -qE "^src/" 2>/dev/null; then
+            echo "backend=true" >> $GITHUB_OUTPUT
+            echo "Backend changes detected"
+          else
+            echo "backend=false" >> $GITHUB_OUTPUT
+            echo "No backend changes"
+          fi
+
+          # Check frontend changes (stocker-nextjs/ directory)
+          if echo "$CHANGED" | grep -qE "^stocker-nextjs/" 2>/dev/null; then
             echo "frontend=true" >> $GITHUB_OUTPUT
+            echo "Frontend changes detected"
           else
             echo "frontend=false" >> $GITHUB_OUTPUT
+            echo "No frontend changes"
           fi
 
   deploy-backend:
@@ -42,10 +57,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Coolify Backend Deploy
+        env:
+          WEBHOOK_URL: ${{ secrets.COOLIFY_WEBHOOK_BACKEND }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
         run: |
-          curl -X POST "${{ secrets.COOLIFY_WEBHOOK_BACKEND }}" \
-            -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
-          echo "Backend deploy triggered"
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "❌ Error: COOLIFY_WEBHOOK_BACKEND secret is not set"
+            exit 1
+          fi
+
+          response=$(curl -s -w "\n%{http_code}" -X POST "$WEBHOOK_URL" \
+            -H "Authorization: Bearer $COOLIFY_TOKEN")
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | head -n -1)
+          echo "Response: $body"
+          echo "HTTP Code: $http_code"
+          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+            echo "✅ Backend deploy triggered successfully"
+          else
+            echo "❌ Backend deploy failed"
+            exit 1
+          fi
 
   deploy-frontend:
     needs: detect-changes
@@ -53,10 +85,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Coolify Frontend Deploy
+        env:
+          WEBHOOK_URL: ${{ secrets.COOLIFY_WEBHOOK_FRONTEND }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
         run: |
-          curl -X POST "${{ secrets.COOLIFY_WEBHOOK_FRONTEND }}" \
-            -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
-          echo "Frontend deploy triggered"
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "❌ Error: COOLIFY_WEBHOOK_FRONTEND secret is not set"
+            exit 1
+          fi
+
+          response=$(curl -s -w "\n%{http_code}" -X POST "$WEBHOOK_URL" \
+            -H "Authorization: Bearer $COOLIFY_TOKEN")
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | head -n -1)
+          echo "Response: $body"
+          echo "HTTP Code: $http_code"
+          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+            echo "✅ Frontend deploy triggered successfully"
+          else
+            echo "❌ Frontend deploy failed"
+            exit 1
+          fi
 
   skip-deploy:
     needs: detect-changes
@@ -64,4 +113,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: No deployment needed
-        run: echo "No relevant changes detected, skipping deployment"
+        run: echo "ℹ️ No relevant changes detected, skipping deployment"

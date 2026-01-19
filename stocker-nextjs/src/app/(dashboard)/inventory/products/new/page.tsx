@@ -23,6 +23,16 @@ export default function NewProductPage() {
     // Extract image files from values
     const { imageFiles, ...productData } = values;
 
+    // Debug: Log what's being sent to API
+    console.log('NewProductPage - values from form:', values);
+    console.log('NewProductPage - productData being sent to API:', productData);
+    console.log('NewProductPage - Stock level fields:', {
+      minStockLevel: productData.minStockLevel,
+      maxStockLevel: productData.maxStockLevel,
+      reorderLevel: productData.reorderLevel,
+      reorderQuantity: productData.reorderQuantity,
+    });
+
     try {
       // First create the product
       const createdProduct = await createProduct.mutateAsync(productData);
