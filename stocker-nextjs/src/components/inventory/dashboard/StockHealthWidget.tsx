@@ -102,7 +102,7 @@ export function StockHealthWidget({ products, loading = false, delay = 0 }: Stoc
                     ))}
                   </Pie>
                   <RechartsTooltip
-                    formatter={(value: number, name: string) => [`${value} ürün`, name]}
+                    formatter={(value) => [`${value} ürün`]}
                   />
                 </PieChart>
               </ResponsiveContainer>
