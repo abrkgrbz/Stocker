@@ -8,6 +8,7 @@ import {
   CheckIcon,
 } from '@heroicons/react/24/outline';
 import { WarehouseForm } from '@/components/inventory/warehouses';
+import { FormLoadingOverlay } from '@/components/forms';
 import { useCreateWarehouse } from '@/lib/api/hooks/useInventory';
 import type { CreateWarehouseDto } from '@/lib/api/services/inventory.types';
 
@@ -74,11 +75,13 @@ export default function NewWarehousePage() {
 
       {/* Page Content */}
       <div className="px-8 py-8 max-w-7xl mx-auto">
-        <WarehouseForm
-          form={form}
-          onFinish={handleSubmit}
-          loading={createWarehouse.isPending}
-        />
+        <FormLoadingOverlay loading={createWarehouse.isPending} message="Depo oluşturuluyor...">
+          <WarehouseForm
+            form={form}
+            onFinish={handleSubmit}
+            loading={createWarehouse.isPending}
+          />
+        </FormLoadingOverlay>
       </div>
     </div>
   );

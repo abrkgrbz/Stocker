@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Space, Form, Spin, Alert, Tag } from 'antd';
+import { Button, Space, Form, Alert, Tag } from 'antd';
 import {
   ArrowLeftIcon,
   CheckCircleIcon,
@@ -10,6 +10,7 @@ import {
   ClockIcon,
 } from '@heroicons/react/24/outline';
 import { WarehouseForm } from '@/components/inventory/warehouses';
+import { FormSkeleton, FormLoadingOverlay } from '@/components/forms';
 import { useWarehouse, useUpdateWarehouse } from '@/lib/api/hooks/useInventory';
 import type { UpdateWarehouseDto } from '@/lib/api/services/inventory.types';
 
@@ -33,8 +34,10 @@ export default function EditWarehousePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white flex justify-center items-center">
-        <Spin size="large" />
+      <div className="min-h-screen bg-white">
+        <div className="px-8 py-8 max-w-7xl mx-auto">
+          <FormSkeleton sections={4} fieldsPerSection={3} showHeader showStats={false} />
+        </div>
       </div>
     );
   }
@@ -120,12 +123,14 @@ export default function EditWarehousePage() {
 
       {/* Page Content */}
       <div className="px-8 py-8 max-w-7xl mx-auto">
-        <WarehouseForm
-          form={form}
-          initialValues={warehouse}
-          onFinish={handleSubmit}
-          loading={updateWarehouse.isPending}
-        />
+        <FormLoadingOverlay loading={updateWarehouse.isPending} message="Depo kaydediliyor...">
+          <WarehouseForm
+            form={form}
+            initialValues={warehouse}
+            onFinish={handleSubmit}
+            loading={updateWarehouse.isPending}
+          />
+        </FormLoadingOverlay>
       </div>
     </div>
   );
