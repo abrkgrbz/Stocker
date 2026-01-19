@@ -155,8 +155,8 @@ export default function NewStockAdjustmentPage() {
 
       // Create adjustment DTO
       const data: CreateInventoryAdjustmentDto = {
-        warehouseId: String(values.warehouseId),
-        locationId: values.locationId ? String(values.locationId) : undefined,
+        warehouseId: Number(values.warehouseId),
+        locationId: values.locationId ? Number(values.locationId) : undefined,
         adjustmentType: adjustmentTypeString,
         reason: reasonString,
         description: values.notes,

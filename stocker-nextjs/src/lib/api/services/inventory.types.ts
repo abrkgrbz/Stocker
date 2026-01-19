@@ -3693,11 +3693,11 @@ export interface CreateInventoryAdjustmentDto {
   adjustmentNumber?: string;
   adjustmentDate?: DateTime;
   adjustmentType: string; // Backend expects string like "Increase", "Decrease"
-  reason: AdjustmentReason | string; // Backend may expect string
+  reason: string; // Backend expects string like "StockCountVariance", "Damage"
   description?: string;
-  warehouseId: string; // GUID string
-  locationId?: string; // GUID string
-  stockCountId?: string; // GUID string
+  warehouseId: number;
+  locationId?: number;
+  stockCountId?: number;
   referenceNumber?: string;
   referenceType?: string;
   internalNotes?: string;
