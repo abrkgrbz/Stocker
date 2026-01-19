@@ -135,12 +135,25 @@ export default function NewStockAdjustmentPage() {
       }
 
       // Determine adjustment type based on difference (backend expects string like "Increase", "Decrease")
-      const adjustmentTypeEnum = difference > 0 ? AdjustmentType.Increase : AdjustmentType.Decrease;
-      const adjustmentTypeString = AdjustmentType[adjustmentTypeEnum] as string;
+      const adjustmentTypeString = difference > 0 ? 'Increase' : 'Decrease';
 
-      // Convert reason enum to string if backend expects string
+      // Convert reason enum to string (backend expects string like "StockCountVariance", "Damage")
+      const reasonEnumMap: Record<number, string> = {
+        [AdjustmentReason.StockCountVariance]: 'StockCountVariance',
+        [AdjustmentReason.Damage]: 'Damage',
+        [AdjustmentReason.Loss]: 'Loss',
+        [AdjustmentReason.Theft]: 'Theft',
+        [AdjustmentReason.ProductionScrap]: 'ProductionScrap',
+        [AdjustmentReason.Expired]: 'Expired',
+        [AdjustmentReason.QualityRejection]: 'QualityRejection',
+        [AdjustmentReason.CustomerReturn]: 'CustomerReturn',
+        [AdjustmentReason.SupplierReturn]: 'SupplierReturn',
+        [AdjustmentReason.SystemCorrection]: 'SystemCorrection',
+        [AdjustmentReason.OpeningStock]: 'OpeningStock',
+        [AdjustmentReason.Other]: 'Other',
+      };
       const reasonString = typeof values.reason === 'number'
-        ? AdjustmentReason[values.reason]
+        ? reasonEnumMap[values.reason] || 'Other'
         : values.reason;
 
       // Create adjustment item
@@ -162,6 +175,9 @@ export default function NewStockAdjustmentPage() {
         description: values.notes,
         items: [item],
       };
+
+      // Debug: Log the data being sent
+      console.log('📤 Creating adjustment with data:', JSON.stringify(data, null, 2));
 
       // Create the adjustment (starts as Draft)
       const created = await createAdjustment.mutateAsync(data);
