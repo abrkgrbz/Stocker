@@ -70,6 +70,18 @@ public class CreateInventoryAdjustmentCommandHandler : IRequestHandler<CreateInv
         entity.SetInternalNotes(data.InternalNotes);
         entity.SetAccountingNotes(data.AccountingNotes);
 
+        // Add items to adjustment
+        foreach (var itemDto in data.Items)
+        {
+            entity.AddItem(
+                itemDto.ProductId,
+                itemDto.SystemQuantity,
+                itemDto.ActualQuantity,
+                itemDto.UnitCost,
+                itemDto.LotNumber,
+                itemDto.SerialNumber);
+        }
+
         entity.SetTenantId(request.TenantId);
         await _unitOfWork.InventoryAdjustments.AddAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -92,6 +104,21 @@ public class CreateInventoryAdjustmentCommandHandler : IRequestHandler<CreateInv
             Status = entity.Status.ToString(),
             InternalNotes = entity.InternalNotes,
             AccountingNotes = entity.AccountingNotes,
+            Items = entity.Items.Select(i => new InventoryAdjustmentItemDto
+            {
+                Id = i.Id,
+                ProductId = i.ProductId,
+                SystemQuantity = i.SystemQuantity,
+                ActualQuantity = i.ActualQuantity,
+                VarianceQuantity = i.VarianceQuantity,
+                UnitCost = i.UnitCost,
+                CostImpact = i.CostImpact,
+                LotNumber = i.LotNumber,
+                SerialNumber = i.SerialNumber,
+                ExpiryDate = i.ExpiryDate,
+                ReasonCode = i.ReasonCode,
+                Notes = i.Notes
+            }).ToList(),
             CreatedAt = entity.CreatedDate
         };
 
