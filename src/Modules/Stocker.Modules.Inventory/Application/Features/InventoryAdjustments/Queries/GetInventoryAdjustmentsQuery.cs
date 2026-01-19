@@ -76,6 +76,22 @@ public class GetInventoryAdjustmentsQueryHandler : IRequestHandler<GetInventoryA
             RejectionReason = e.RejectionReason,
             InternalNotes = e.InternalNotes,
             AccountingNotes = e.AccountingNotes,
+            Items = e.Items.Select(i => new InventoryAdjustmentItemDto
+            {
+                Id = i.Id,
+                ProductId = i.ProductId,
+                ProductName = i.Product?.Name,
+                SystemQuantity = i.SystemQuantity,
+                ActualQuantity = i.ActualQuantity,
+                VarianceQuantity = i.VarianceQuantity,
+                UnitCost = i.UnitCost,
+                CostImpact = i.CostImpact,
+                LotNumber = i.LotNumber,
+                SerialNumber = i.SerialNumber,
+                ExpiryDate = i.ExpiryDate,
+                ReasonCode = i.ReasonCode,
+                Notes = i.Notes
+            }).ToList(),
             CreatedAt = e.CreatedDate,
             UpdatedAt = e.UpdatedDate
         }).ToList();

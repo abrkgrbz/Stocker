@@ -14,6 +14,20 @@ public class InventoryAdjustmentRepository : BaseRepository<InventoryAdjustment>
     {
     }
 
+    /// <summary>
+    /// Override to include Warehouse and Items for list display
+    /// </summary>
+    public override async Task<IReadOnlyList<InventoryAdjustment>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Include(a => a.Warehouse)
+            .Include(a => a.Location)
+            .Include(a => a.Items)
+            .Where(a => !a.IsDeleted)
+            .OrderByDescending(a => a.AdjustmentDate)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<InventoryAdjustment?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await DbSet
