@@ -6,21 +6,15 @@ import Link from 'next/link';
 import {
   Form,
   Input,
-  Button,
   InputNumber,
   Table,
   Switch,
   ColorPicker,
-  Collapse,
 } from 'antd';
 import {
   ArrowLeftIcon,
   ArrowsPointingOutIcon,
-  CheckCircleIcon,
   CheckIcon,
-  Cog6ToothIcon,
-  EyeIcon,
-  FunnelIcon,
   HashtagIcon,
   LanguageIcon,
   ListBulletIcon,
@@ -36,6 +30,7 @@ import {
   Bars3BottomLeftIcon,
   ClockIcon,
   Squares2X2Icon,
+  ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 import { PageContainer } from '@/components/patterns';
 import { useCreateProductAttribute } from '@/lib/api/hooks/useInventory';
@@ -58,109 +53,27 @@ interface AttributeOption {
   displayOrder?: number;
 }
 
-// Tüm özellik tipleri - iconlu ve açıklamalı
+// Tüm özellik tipleri
 const attributeTypeOptions = [
-  {
-    value: AttributeType.Text,
-    label: 'Metin',
-    icon: DocumentTextIcon,
-    description: 'Kısa metin girişi',
-    category: 'basic',
-  },
-  {
-    value: AttributeType.TextArea,
-    label: 'Uzun Metin',
-    icon: Bars3BottomLeftIcon,
-    description: 'Çok satırlı metin',
-    category: 'basic',
-  },
-  {
-    value: AttributeType.Integer,
-    label: 'Tam Sayı',
-    icon: HashtagIcon,
-    description: 'Sayı değeri (1, 2, 3...)',
-    category: 'basic',
-  },
-  {
-    value: AttributeType.Decimal,
-    label: 'Ondalık',
-    icon: CalculatorIcon,
-    description: 'Kesirli sayı (1.5, 2.75...)',
-    category: 'basic',
-  },
-  {
-    value: AttributeType.Boolean,
-    label: 'Evet/Hayır',
-    icon: CheckBadgeIcon,
-    description: 'Açık/Kapalı seçeneği',
-    category: 'basic',
-  },
-  {
-    value: AttributeType.Date,
-    label: 'Tarih',
-    icon: CalendarIcon,
-    description: 'Tarih seçimi',
-    category: 'basic',
-  },
-  {
-    value: AttributeType.DateTime,
-    label: 'Tarih/Saat',
-    icon: ClockIcon,
-    description: 'Tarih ve saat seçimi',
-    category: 'basic',
-  },
-  {
-    value: AttributeType.Select,
-    label: 'Tekli Seçim',
-    icon: ListBulletIcon,
-    description: 'Listeden tek seçenek',
-    category: 'selection',
-  },
-  {
-    value: AttributeType.MultiSelect,
-    label: 'Çoklu Seçim',
-    icon: Squares2X2Icon,
-    description: 'Listeden birden fazla seçenek',
-    category: 'selection',
-  },
-  {
-    value: AttributeType.Color,
-    label: 'Renk',
-    icon: SwatchIcon,
-    description: 'Renk paleti ile seçim',
-    category: 'selection',
-  },
-  {
-    value: AttributeType.Size,
-    label: 'Beden',
-    icon: ArrowsPointingOutIcon,
-    description: 'S, M, L, XL gibi bedenler',
-    category: 'selection',
-  },
-  {
-    value: AttributeType.Url,
-    label: 'URL',
-    icon: LinkIcon,
-    description: 'Web adresi',
-    category: 'other',
-  },
-  {
-    value: AttributeType.File,
-    label: 'Dosya',
-    icon: DocumentIcon,
-    description: 'Dosya yükleme',
-    category: 'other',
-  },
+  { value: AttributeType.Text, label: 'Metin', icon: DocumentTextIcon, description: 'Kısa metin girişi' },
+  { value: AttributeType.TextArea, label: 'Uzun Metin', icon: Bars3BottomLeftIcon, description: 'Çok satırlı metin' },
+  { value: AttributeType.Integer, label: 'Tam Sayı', icon: HashtagIcon, description: 'Sayı değeri' },
+  { value: AttributeType.Decimal, label: 'Ondalık', icon: CalculatorIcon, description: 'Kesirli sayı' },
+  { value: AttributeType.Boolean, label: 'Evet/Hayır', icon: CheckBadgeIcon, description: 'Açık/Kapalı' },
+  { value: AttributeType.Date, label: 'Tarih', icon: CalendarIcon, description: 'Tarih seçimi' },
+  { value: AttributeType.DateTime, label: 'Tarih/Saat', icon: ClockIcon, description: 'Tarih ve saat' },
+  { value: AttributeType.Select, label: 'Tekli Seçim', icon: ListBulletIcon, description: 'Listeden tek seçenek' },
+  { value: AttributeType.MultiSelect, label: 'Çoklu Seçim', icon: Squares2X2Icon, description: 'Birden fazla seçenek' },
+  { value: AttributeType.Color, label: 'Renk', icon: SwatchIcon, description: 'Renk paleti' },
+  { value: AttributeType.Size, label: 'Beden', icon: ArrowsPointingOutIcon, description: 'S, M, L, XL...' },
+  { value: AttributeType.Url, label: 'URL', icon: LinkIcon, description: 'Web adresi' },
+  { value: AttributeType.File, label: 'Dosya', icon: DocumentIcon, description: 'Dosya yükleme' },
 ];
 
-const hasOptionsTypes = [
-  AttributeType.Select,
-  AttributeType.MultiSelect,
-  AttributeType.Color,
-  AttributeType.Size,
-];
+const hasOptionsTypes = [AttributeType.Select, AttributeType.MultiSelect, AttributeType.Color, AttributeType.Size];
+const numericTypes = [AttributeType.Integer, AttributeType.Decimal];
 
-// Preset options for quick add
+// Presets
 const sizePresets = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL'];
 const colorPresets = [
   { value: 'Siyah', colorCode: '#000000' },
@@ -183,10 +96,17 @@ export default function NewProductAttributePage() {
   const [isRequired, setIsRequired] = useState(false);
   const [isFilterable, setIsFilterable] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
 
   const createAttribute = useCreateProductAttribute();
 
   const hasOptions = hasOptionsTypes.includes(attributeType);
+  const isNumeric = numericTypes.includes(attributeType);
+  const isText = attributeType === AttributeType.Text;
+  const isColor = attributeType === AttributeType.Color;
+  const isSize = attributeType === AttributeType.Size;
+
+  const selectedTypeInfo = attributeTypeOptions.find((t) => t.value === attributeType);
 
   const handleAddOption = () => {
     const newOption: AttributeOption = {
@@ -232,6 +152,7 @@ export default function NewProductAttributePage() {
 
   const handleTypeChange = (type: AttributeType) => {
     setAttributeType(type);
+    setIsTypeDropdownOpen(false);
     if (!hasOptionsTypes.includes(type)) {
       setOptions([]);
     }
@@ -290,7 +211,7 @@ export default function NewProductAttributePage() {
       title: '#',
       key: 'order',
       width: 50,
-      render: (_, __, index) => <span className="text-slate-400">{index + 1}</span>,
+      render: (_, __, index) => <span className="text-slate-400 text-sm">{index + 1}</span>,
     },
     {
       title: 'Değer',
@@ -305,49 +226,44 @@ export default function NewProductAttributePage() {
         />
       ),
     },
-    {
-      title: 'Renk',
-      dataIndex: 'colorCode',
-      key: 'colorCode',
-      width: 100,
-      render: (_, record) =>
-        attributeType === AttributeType.Color ? (
-          <ColorPicker
-            value={record.colorCode || '#000000'}
-            onChange={(color: Color) =>
-              handleOptionChange(record.key, 'colorCode', color.toHexString())
-            }
-            showText
-            size="small"
-          />
-        ) : (
-          <span className="text-slate-400">-</span>
-        ),
-    },
+    ...(isColor
+      ? [
+          {
+            title: 'Renk',
+            dataIndex: 'colorCode',
+            key: 'colorCode',
+            width: 120,
+            render: (_: unknown, record: AttributeOption) => (
+              <ColorPicker
+                value={record.colorCode || '#000000'}
+                onChange={(color: Color) =>
+                  handleOptionChange(record.key, 'colorCode', color.toHexString())
+                }
+                showText
+                size="small"
+              />
+            ),
+          },
+        ]
+      : []),
     {
       title: '',
       key: 'actions',
       width: 50,
       render: (_, record) => (
-        <Button
-          type="text"
-          danger
-          icon={<TrashIcon className="w-4 h-4" />}
+        <button
+          type="button"
           onClick={() => handleRemoveOption(record.key)}
-        />
+          className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+        >
+          <TrashIcon className="w-4 h-4" />
+        </button>
       ),
     },
   ];
 
-  // Grupla kategorilere göre
-  const basicTypes = attributeTypeOptions.filter((t) => t.category === 'basic');
-  const selectionTypes = attributeTypeOptions.filter((t) => t.category === 'selection');
-  const otherTypes = attributeTypeOptions.filter((t) => t.category === 'other');
-
-  const selectedTypeInfo = attributeTypeOptions.find((t) => t.value === attributeType);
-
   return (
-    <PageContainer maxWidth="7xl">
+    <PageContainer maxWidth="3xl">
       {/* Header */}
       <div className="mb-8">
         <Link
@@ -387,456 +303,342 @@ export default function NewProductAttributePage() {
         </div>
       </div>
 
-      {/* Page Content */}
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={{
-          displayOrder: 0,
-        }}
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Panel - Type Selection (5 cols) */}
-          <div className="lg:col-span-5 space-y-6">
-            {/* Özellik Tipi Selection - Visual Cards */}
-            <div className="bg-white border border-slate-200 rounded-xl">
-              <div className="px-6 py-4 border-b border-slate-100">
-                <h2 className="text-sm font-medium text-slate-900">Özellik Tipi Seçin</h2>
-              </div>
+      {/* Single Column Form */}
+      <Form form={form} layout="vertical" initialValues={{ displayOrder: 0 }}>
+        <div className="bg-white border border-slate-200 rounded-xl">
+          {/* STEP 1: Temel Tanım */}
+          <div className="p-6 space-y-6">
+            {/* Özellik Adı - Hero Input */}
+            <div>
+              <Form.Item
+                name="name"
+                rules={[{ required: true, message: 'Özellik adı zorunludur' }]}
+                className="mb-0"
+              >
+                <Input
+                  placeholder="Özellik adı girin (örn: Renk, Beden, Materyal)"
+                  className="!text-lg !py-3 rounded-lg"
+                  size="large"
+                />
+              </Form.Item>
+            </div>
 
-              <div className="p-6 space-y-6">
-                {/* Temel Tipler */}
-                <div>
-                  <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3">
-                    Temel Veri Tipleri
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {basicTypes.map((type) => {
-                      const Icon = type.icon;
-                      const isSelected = attributeType === type.value;
-                      return (
-                        <button
-                          key={type.value}
-                          type="button"
-                          onClick={() => handleTypeChange(type.value)}
-                          className={`p-3 rounded-lg text-left transition-all border ${
-                            isSelected
-                              ? 'bg-slate-900 text-white border-slate-900'
-                              : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:shadow-sm'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <Icon className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
-                            <span className="text-sm font-medium">{type.label}</span>
-                          </div>
-                          <div className={`text-xs ${isSelected ? 'text-slate-300' : 'text-slate-400'}`}>
-                            {type.description}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Seçim Tipleri */}
-                <div>
-                  <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3">
-                    Seçim Tipleri
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {selectionTypes.map((type) => {
-                      const Icon = type.icon;
-                      const isSelected = attributeType === type.value;
-                      return (
-                        <button
-                          key={type.value}
-                          type="button"
-                          onClick={() => handleTypeChange(type.value)}
-                          className={`p-3 rounded-lg text-left transition-all border ${
-                            isSelected
-                              ? 'bg-slate-900 text-white border-slate-900'
-                              : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:shadow-sm'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <Icon className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
-                            <span className="text-sm font-medium">{type.label}</span>
-                          </div>
-                          <div className={`text-xs ${isSelected ? 'text-slate-300' : 'text-slate-400'}`}>
-                            {type.description}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Diğer Tipler */}
-                <div>
-                  <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3">
-                    Diğer
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {otherTypes.map((type) => {
-                      const Icon = type.icon;
-                      const isSelected = attributeType === type.value;
-                      return (
-                        <button
-                          key={type.value}
-                          type="button"
-                          onClick={() => handleTypeChange(type.value)}
-                          className={`p-3 rounded-lg text-left transition-all border ${
-                            isSelected
-                              ? 'bg-slate-900 text-white border-slate-900'
-                              : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:shadow-sm'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <Icon className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
-                            <span className="text-sm font-medium">{type.label}</span>
-                          </div>
-                          <div className={`text-xs ${isSelected ? 'text-slate-300' : 'text-slate-400'}`}>
-                            {type.description}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              {/* Seçili Tip Özeti */}
-              {selectedTypeInfo && (
-                <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-xl">
+            {/* Özellik Tipi - Custom Dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Özellik Tipi
+              </label>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-white border border-slate-300 rounded-lg hover:border-slate-400 transition-colors text-left"
+                >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
-                      <selectedTypeInfo.icon className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-slate-900">
-                        {selectedTypeInfo.label}
+                    {selectedTypeInfo && (
+                      <>
+                        <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                          <selectedTypeInfo.icon className="w-4 h-4 text-slate-600" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-slate-900">
+                            {selectedTypeInfo.label}
+                          </div>
+                          <div className="text-xs text-slate-500">{selectedTypeInfo.description}</div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  <ChevronDownIcon
+                    className={`w-5 h-5 text-slate-400 transition-transform ${
+                      isTypeDropdownOpen ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+
+                {/* Dropdown Menu */}
+                {isTypeDropdownOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setIsTypeDropdownOpen(false)}
+                    />
+                    <div className="absolute z-20 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-lg max-h-80 overflow-y-auto">
+                      <div className="p-2">
+                        {attributeTypeOptions.map((type) => {
+                          const Icon = type.icon;
+                          const isSelected = attributeType === type.value;
+                          return (
+                            <button
+                              key={type.value}
+                              type="button"
+                              onClick={() => handleTypeChange(type.value)}
+                              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
+                                isSelected
+                                  ? 'bg-slate-900 text-white'
+                                  : 'hover:bg-slate-50 text-slate-700'
+                              }`}
+                            >
+                              <div
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                  isSelected ? 'bg-slate-700' : 'bg-slate-100'
+                                }`}
+                              >
+                                <Icon
+                                  className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-slate-500'}`}
+                                />
+                              </div>
+                              <div>
+                                <div className={`text-sm font-medium ${isSelected ? 'text-white' : ''}`}>
+                                  {type.label}
+                                </div>
+                                <div
+                                  className={`text-xs ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}
+                                >
+                                  {type.description}
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
                       </div>
-                      <div className="text-xs text-slate-500">{selectedTypeInfo.description}</div>
                     </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Settings Toggles */}
-            <div className="bg-white border border-slate-200 rounded-xl">
-              <div className="px-6 py-4 border-b border-slate-100">
-                <h2 className="text-sm font-medium text-slate-900 flex items-center gap-2">
-                  <Cog6ToothIcon className="w-4 h-4 text-slate-400" />
-                  Davranış Ayarları
-                </h2>
-              </div>
-
-              <div className="p-6 space-y-3">
-                <div className="flex items-center justify-between py-3 hover:bg-slate-50 -mx-4 px-4 rounded-lg transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
-                      <CheckCircleIcon className="w-4 h-4 text-red-500" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-slate-900">Zorunlu Alan</div>
-                      <div className="text-xs text-slate-500">Bu alan doldurulmak zorunda</div>
-                    </div>
-                  </div>
-                  <Switch size="small" checked={isRequired} onChange={setIsRequired} />
-                </div>
-
-                <div className="flex items-center justify-between py-3 hover:bg-slate-50 -mx-4 px-4 rounded-lg transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                      <FunnelIcon className="w-4 h-4 text-blue-500" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-slate-900">Filtrelenebilir</div>
-                      <div className="text-xs text-slate-500">Ürün listesinde filtre olarak kullan</div>
-                    </div>
-                  </div>
-                  <Switch size="small" checked={isFilterable} onChange={setIsFilterable} />
-                </div>
-
-                <div className="flex items-center justify-between py-3 hover:bg-slate-50 -mx-4 px-4 rounded-lg transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-                      <EyeIcon className="w-4 h-4 text-emerald-500" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-slate-900">Görünür</div>
-                      <div className="text-xs text-slate-500">Müşterilere gösterilir</div>
-                    </div>
-                  </div>
-                  <Switch size="small" checked={isVisible} onChange={setIsVisible} />
-                </div>
+                  </>
+                )}
               </div>
             </div>
-
-            {/* Quick Add Presets */}
-            {attributeType === AttributeType.Size && (
-              <div className="bg-white border border-slate-200 rounded-xl p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                    <ArrowsPointingOutIcon className="w-4 h-4 text-slate-500" />
-                  </div>
-                  <span className="text-sm font-medium text-slate-900">Hızlı Ekle - Bedenler</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {sizePresets.map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => handleAddPresetOptions([{ value: size }])}
-                      disabled={options.some((o) => o.value.toLowerCase() === size.toLowerCase())}
-                      className="px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 hover:border-slate-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {size}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => handleAddPresetOptions(sizePresets.map((s) => ({ value: s })))}
-                    className="px-3 py-1.5 text-xs font-medium text-slate-600 border border-dashed border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
-                  >
-                    Tümü
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {attributeType === AttributeType.Color && (
-              <div className="bg-white border border-slate-200 rounded-xl p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                    <SwatchIcon className="w-4 h-4 text-slate-500" />
-                  </div>
-                  <span className="text-sm font-medium text-slate-900">Hızlı Ekle - Renkler</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {colorPresets.map((color) => (
-                    <button
-                      key={color.value}
-                      type="button"
-                      onClick={() => handleAddPresetOptions([color])}
-                      disabled={options.some((o) => o.value.toLowerCase() === color.value.toLowerCase())}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 hover:border-slate-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <div
-                        className="w-3 h-3 rounded-full border border-slate-300"
-                        style={{ backgroundColor: color.colorCode }}
-                      />
-                      {color.value}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Right Panel - Form Content (7 cols) */}
-          <div className="lg:col-span-7 space-y-6">
-            {/* Main Form Card */}
-            <div className="bg-white border border-slate-200 rounded-xl">
-              <div className="px-6 py-4 border-b border-slate-100">
-                <h2 className="text-sm font-medium text-slate-900">Temel Bilgiler</h2>
+          {/* Divider */}
+          <div className="border-t border-slate-100" />
+
+          {/* STEP 2: Tipe Göre Değişen Konfigürasyon */}
+          {(hasOptions || isNumeric || isText) && (
+            <>
+              <div className="p-6 space-y-6">
+                {/* Sayısal Tipler: Min/Max */}
+                {isNumeric && (
+                  <div>
+                    <h3 className="text-sm font-medium text-slate-900 mb-4">Sayı Ayarları</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Form.Item
+                        name="minValue"
+                        label={<span className="text-sm text-slate-600">Minimum Değer</span>}
+                        className="mb-0"
+                      >
+                        <InputNumber
+                          placeholder="Boş bırakılabilir"
+                          className="w-full rounded-md"
+                          style={{ width: '100%' }}
+                        />
+                      </Form.Item>
+                      <Form.Item
+                        name="maxValue"
+                        label={<span className="text-sm text-slate-600">Maximum Değer</span>}
+                        className="mb-0"
+                      >
+                        <InputNumber
+                          placeholder="Boş bırakılabilir"
+                          className="w-full rounded-md"
+                          style={{ width: '100%' }}
+                        />
+                      </Form.Item>
+                    </div>
+                  </div>
+                )}
+
+                {/* Metin Tipi: Regex */}
+                {isText && (
+                  <div>
+                    <h3 className="text-sm font-medium text-slate-900 mb-4">Metin Ayarları</h3>
+                    <Form.Item
+                      name="validationPattern"
+                      label={<span className="text-sm text-slate-600">Doğrulama Deseni (Regex)</span>}
+                      extra={<span className="text-xs text-slate-400">Örn: ^[A-Za-z0-9]+$ (alfanumerik)</span>}
+                      className="mb-0"
+                    >
+                      <Input placeholder="İsteğe bağlı regex deseni" className="rounded-md" />
+                    </Form.Item>
+                  </div>
+                )}
+
+                {/* Seçim Tipleri: Seçenek Listesi */}
+                {hasOptions && (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-medium text-slate-900">
+                        Seçenekler
+                        {options.length > 0 && (
+                          <span className="ml-2 text-slate-400 font-normal">({options.length})</span>
+                        )}
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={handleAddOption}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+                      >
+                        <PlusIcon className="w-4 h-4" />
+                        Seçenek Ekle
+                      </button>
+                    </div>
+
+                    {/* Quick Add Presets - Only show for Color/Size */}
+                    {(isColor || isSize) && (
+                      <div className="mb-4 p-4 bg-slate-50 rounded-lg">
+                        <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3">
+                          Hızlı Ekle
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {isSize &&
+                            sizePresets.map((size) => (
+                              <button
+                                key={size}
+                                type="button"
+                                onClick={() => handleAddPresetOptions([{ value: size }])}
+                                disabled={options.some((o) => o.value.toLowerCase() === size.toLowerCase())}
+                                className="px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-100 hover:border-slate-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                {size}
+                              </button>
+                            ))}
+                          {isSize && (
+                            <button
+                              type="button"
+                              onClick={() => handleAddPresetOptions(sizePresets.map((s) => ({ value: s })))}
+                              className="px-3 py-1.5 text-xs font-medium text-slate-600 border border-dashed border-slate-300 rounded-md hover:bg-slate-100 transition-colors"
+                            >
+                              Tümünü Ekle
+                            </button>
+                          )}
+                          {isColor &&
+                            colorPresets.map((color) => (
+                              <button
+                                key={color.value}
+                                type="button"
+                                onClick={() => handleAddPresetOptions([color])}
+                                disabled={options.some(
+                                  (o) => o.value.toLowerCase() === color.value.toLowerCase()
+                                )}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-100 hover:border-slate-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                <div
+                                  className="w-3 h-3 rounded-full border border-slate-300"
+                                  style={{ backgroundColor: color.colorCode }}
+                                />
+                                {color.value}
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Options Table or Empty State */}
+                    {options.length === 0 ? (
+                      <div
+                        className="border-2 border-dashed border-slate-200 rounded-lg p-8 text-center cursor-pointer hover:border-slate-300 hover:bg-slate-50 transition-all"
+                        onClick={handleAddOption}
+                      >
+                        <ListBulletIcon className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                        <div className="text-sm text-slate-500">Henüz seçenek eklenmedi</div>
+                        <div className="text-xs text-slate-400 mt-1">Eklemek için tıklayın</div>
+                      </div>
+                    ) : (
+                      <Table
+                        columns={optionColumns}
+                        dataSource={options}
+                        rowKey="key"
+                        pagination={false}
+                        size="small"
+                        className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
+                      />
+                    )}
+                  </div>
+                )}
               </div>
+              <div className="border-t border-slate-100" />
+            </>
+          )}
 
-              <div className="p-6">
-                {/* Name & Description */}
-                <div className="mb-6">
-                  <Form.Item
-                    name="name"
-                    label={<span className="text-sm text-slate-700">Özellik Adı</span>}
-                    rules={[{ required: true, message: 'Özellik adı zorunludur' }]}
-                  >
-                    <Input
-                      placeholder="Örn: Renk, Beden, Materyal"
-                      className="rounded-md"
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    name="description"
-                    label={<span className="text-sm text-slate-700">Açıklama</span>}
-                  >
-                    <TextArea
-                      placeholder="Özellik hakkında açıklama..."
-                      rows={3}
-                      className="rounded-md"
-                    />
-                  </Form.Item>
-                </div>
-
-                {/* Tanımlayıcılar Section */}
-                <div className="mb-6">
-                  <h3 className="text-sm font-medium text-slate-900 mb-4 pb-2 border-b border-slate-100">
-                    Tanımlayıcılar
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Form.Item
-                      name="code"
-                      label={<span className="text-sm text-slate-700">Kod</span>}
-                      rules={[{ required: true, message: 'Kod gerekli' }]}
-                    >
-                      <Input placeholder="color" className="rounded-md" />
-                    </Form.Item>
-                    <Form.Item
-                      name="groupName"
-                      label={<span className="text-sm text-slate-700">Grup</span>}
-                    >
-                      <Input placeholder="Fiziksel Özellikler" className="rounded-md" />
-                    </Form.Item>
-                    <Form.Item
-                      name="displayOrder"
-                      label={<span className="text-sm text-slate-700">Sıra</span>}
-                    >
-                      <InputNumber style={{ width: '100%' }} min={0} className="rounded-md" />
-                    </Form.Item>
-                  </div>
-                </div>
-
-                {/* Validation Section - Conditional */}
-                {(attributeType === AttributeType.Integer ||
-                  attributeType === AttributeType.Decimal) && (
-                  <div className="mb-6">
-                    <Collapse
-                      ghost
-                      expandIconPosition="end"
-                      className="!bg-transparent [&_.ant-collapse-header]:!px-0 [&_.ant-collapse-content-box]:!px-0"
-                      items={[
-                        {
-                          key: 'validation',
-                          label: (
-                            <h3 className="text-sm font-medium text-slate-900 flex items-center gap-2">
-                              <HashtagIcon className="w-4 h-4 text-slate-400" />
-                              Sayı Doğrulama
-                            </h3>
-                          ),
-                          children: (
-                            <div className="pt-4 grid grid-cols-2 gap-4">
-                              <Form.Item
-                                name="minValue"
-                                label={<span className="text-sm text-slate-700">Minimum</span>}
-                              >
-                                <InputNumber style={{ width: '100%' }} className="rounded-md" />
-                              </Form.Item>
-                              <Form.Item
-                                name="maxValue"
-                                label={<span className="text-sm text-slate-700">Maximum</span>}
-                              >
-                                <InputNumber style={{ width: '100%' }} className="rounded-md" />
-                              </Form.Item>
-                            </div>
-                          ),
-                        },
-                      ]}
-                    />
-                  </div>
-                )}
-
-                {attributeType === AttributeType.Text && (
-                  <div className="mb-6">
-                    <Collapse
-                      ghost
-                      expandIconPosition="end"
-                      className="!bg-transparent [&_.ant-collapse-header]:!px-0 [&_.ant-collapse-content-box]:!px-0"
-                      items={[
-                        {
-                          key: 'validation',
-                          label: (
-                            <h3 className="text-sm font-medium text-slate-900 flex items-center gap-2">
-                              <LanguageIcon className="w-4 h-4 text-slate-400" />
-                              Metin Doğrulama
-                            </h3>
-                          ),
-                          children: (
-                            <div className="pt-4">
-                              <Form.Item
-                                name="validationPattern"
-                                label={<span className="text-sm text-slate-700">Regex Deseni</span>}
-                                extra="Örn: ^[A-Za-z0-9]+$ (alfanumerik)"
-                              >
-                                <Input placeholder="Regex deseni" className="rounded-md" />
-                              </Form.Item>
-                            </div>
-                          ),
-                        },
-                      ]}
-                    />
-                  </div>
-                )}
-
-                {/* Varsayılan Değer */}
-                <div>
-                  <h3 className="text-sm font-medium text-slate-900 mb-4 pb-2 border-b border-slate-100">
-                    Varsayılan Değer
-                  </h3>
-                  <Form.Item name="defaultValue">
-                    <Input
-                      placeholder="Yeni ürünlerde otomatik doldurulacak değer"
-                      className="rounded-md"
-                    />
-                  </Form.Item>
-                </div>
+          {/* STEP 3: Detaylar ve Ayarlar */}
+          <div className="p-6 space-y-6">
+            {/* Tanımlayıcılar */}
+            <div>
+              <h3 className="text-sm font-medium text-slate-900 mb-4">Tanımlayıcılar</h3>
+              <div className="grid grid-cols-3 gap-4">
+                <Form.Item
+                  name="code"
+                  label={<span className="text-sm text-slate-600">Kod</span>}
+                  rules={[{ required: true, message: 'Kod gerekli' }]}
+                  className="mb-0"
+                >
+                  <Input placeholder="color" className="rounded-md" />
+                </Form.Item>
+                <Form.Item
+                  name="groupName"
+                  label={<span className="text-sm text-slate-600">Grup</span>}
+                  className="mb-0"
+                >
+                  <Input placeholder="Fiziksel Özellikler" className="rounded-md" />
+                </Form.Item>
+                <Form.Item
+                  name="displayOrder"
+                  label={<span className="text-sm text-slate-600">Sıra</span>}
+                  className="mb-0"
+                >
+                  <InputNumber style={{ width: '100%' }} min={0} className="rounded-md" />
+                </Form.Item>
               </div>
             </div>
 
-            {/* Options Section */}
-            {hasOptions && (
-              <div className="bg-white border border-slate-200 rounded-xl">
-                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                  <h2 className="text-sm font-medium text-slate-900 flex items-center gap-2">
-                    <ListBulletIcon className="w-4 h-4 text-slate-400" />
-                    Seçenekler
-                    {options.length > 0 && (
-                      <span className="text-xs text-slate-500 font-normal">({options.length})</span>
-                    )}
-                  </h2>
-                  <button
-                    type="button"
-                    onClick={handleAddOption}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 border border-dashed border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
-                  >
-                    <PlusIcon className="w-3.5 h-3.5" />
-                    Seçenek Ekle
-                  </button>
-                </div>
+            {/* Açıklama */}
+            <div>
+              <Form.Item
+                name="description"
+                label={<span className="text-sm text-slate-600">Açıklama</span>}
+                className="mb-0"
+              >
+                <TextArea
+                  placeholder="Özellik hakkında kısa açıklama (isteğe bağlı)"
+                  rows={2}
+                  className="rounded-md"
+                />
+              </Form.Item>
+            </div>
 
-                <div className="p-6">
-                  {options.length === 0 ? (
-                    <div
-                      className="border-2 border-dashed border-slate-200 rounded-lg p-8 text-center cursor-pointer hover:border-slate-300 hover:bg-slate-50 transition-all"
-                      onClick={handleAddOption}
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center mx-auto mb-3">
-                        <ListBulletIcon className="w-5 h-5 text-slate-300" />
-                      </div>
-                      <div className="text-sm font-medium text-slate-600 mb-1">
-                        Henüz seçenek eklenmedi
-                      </div>
-                      <div className="text-xs text-slate-400">Eklemek için tıklayın</div>
-                    </div>
-                  ) : (
-                    <Table
-                      columns={optionColumns}
-                      dataSource={options}
-                      rowKey="key"
-                      pagination={false}
-                      size="small"
-                      className="enterprise-table"
-                    />
-                  )}
-                </div>
+            {/* Varsayılan Değer */}
+            <div>
+              <Form.Item
+                name="defaultValue"
+                label={<span className="text-sm text-slate-600">Varsayılan Değer</span>}
+                className="mb-0"
+              >
+                <Input
+                  placeholder="Yeni ürünlerde otomatik doldurulacak değer"
+                  className="rounded-md"
+                />
+              </Form.Item>
+            </div>
+
+            {/* Ayar Switchleri - Yan Yana */}
+            <div>
+              <h3 className="text-sm font-medium text-slate-900 mb-4">Ayarlar</h3>
+              <div className="flex items-center gap-8">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <Switch size="small" checked={isRequired} onChange={setIsRequired} />
+                  <span className="text-sm text-slate-700">Zorunlu</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <Switch size="small" checked={isFilterable} onChange={setIsFilterable} />
+                  <span className="text-sm text-slate-700">Filtrelenebilir</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <Switch size="small" checked={isVisible} onChange={setIsVisible} />
+                  <span className="text-sm text-slate-700">Müşteriye Görünür</span>
+                </label>
               </div>
-            )}
+            </div>
           </div>
         </div>
-
-        {/* Hidden submit button */}
-        <Form.Item hidden>
-          <Button htmlType="submit" />
-        </Form.Item>
       </Form>
     </PageContainer>
   );
