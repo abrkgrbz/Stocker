@@ -23,12 +23,12 @@ public class CreateShelfLifeCommandValidator : AbstractValidator<CreateShelfLife
 {
     public CreateShelfLifeCommandValidator()
     {
-        RuleFor(x => x.TenantId).NotEmpty();
-        RuleFor(x => x.Data).NotNull();
-        RuleFor(x => x.Data.ProductId).GreaterThan(0);
-        RuleFor(x => x.Data.TotalShelfLifeDays).GreaterThan(0);
-        RuleFor(x => x.Data.ShelfLifeType).NotEmpty();
-        RuleFor(x => x.Data.StorageConditions).MaximumLength(500);
+        RuleFor(x => x.TenantId).NotEmpty().WithMessage("Kiracı kimliği gereklidir");
+        RuleFor(x => x.Data).NotNull().WithMessage("Raf ömrü verileri gereklidir");
+        RuleFor(x => x.Data.ProductId).GreaterThan(0).WithMessage("Geçerli bir ürün seçilmelidir");
+        RuleFor(x => x.Data.TotalShelfLifeDays).GreaterThan(0).WithMessage("Toplam raf ömrü 0'dan büyük olmalıdır");
+        RuleFor(x => x.Data.ShelfLifeType).NotEmpty().WithMessage("Raf ömrü türü seçilmelidir");
+        RuleFor(x => x.Data.StorageConditions).MaximumLength(500).WithMessage("Depolama koşulları en fazla 500 karakter olabilir");
     }
 }
 
@@ -52,7 +52,7 @@ public class CreateShelfLifeCommandHandler : IRequestHandler<CreateShelfLifeComm
         var existingConfig = await _unitOfWork.ShelfLives.GetByProductAsync(data.ProductId, cancellationToken);
         if (existingConfig != null)
         {
-            return Result<ShelfLifeDto>.Failure(new Error("ShelfLife.DuplicateProduct", $"Shelf life configuration for product {data.ProductId} already exists", ErrorType.Conflict));
+            return Result<ShelfLifeDto>.Failure(new Error("ShelfLife.DuplicateProduct", $"Bu ürün için raf ömrü yapılandırması zaten mevcut (Ürün ID: {data.ProductId})", ErrorType.Conflict));
         }
 
         var shelfLifeType = Enum.Parse<ShelfLifeType>(data.ShelfLifeType);

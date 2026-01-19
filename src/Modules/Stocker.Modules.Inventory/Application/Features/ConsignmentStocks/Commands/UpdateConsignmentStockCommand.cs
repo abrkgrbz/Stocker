@@ -23,9 +23,9 @@ public class UpdateConsignmentStockCommandValidator : AbstractValidator<UpdateCo
 {
     public UpdateConsignmentStockCommandValidator()
     {
-        RuleFor(x => x.TenantId).NotEmpty();
-        RuleFor(x => x.Id).GreaterThan(0);
-        RuleFor(x => x.Data).NotNull();
+        RuleFor(x => x.TenantId).NotEmpty().WithMessage("Kiracı kimliği gereklidir");
+        RuleFor(x => x.Id).GreaterThan(0).WithMessage("Geçerli bir konsinye stok ID'si gereklidir");
+        RuleFor(x => x.Data).NotNull().WithMessage("Konsinye stok verileri gereklidir");
     }
 }
 
@@ -46,7 +46,7 @@ public class UpdateConsignmentStockCommandHandler : IRequestHandler<UpdateConsig
         var entity = await _unitOfWork.ConsignmentStocks.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
-            return Result<ConsignmentStockDto>.Failure(new Error("ConsignmentStock.NotFound", $"Consignment stock with ID {request.Id} not found", ErrorType.NotFound));
+            return Result<ConsignmentStockDto>.Failure(new Error("ConsignmentStock.NotFound", $"Konsinye stok kaydı bulunamadı (ID: {request.Id})", ErrorType.NotFound));
         }
 
         var data = request.Data;

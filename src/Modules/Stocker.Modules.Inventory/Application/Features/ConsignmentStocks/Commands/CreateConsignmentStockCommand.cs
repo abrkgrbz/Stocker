@@ -23,16 +23,16 @@ public class CreateConsignmentStockCommandValidator : AbstractValidator<CreateCo
 {
     public CreateConsignmentStockCommandValidator()
     {
-        RuleFor(x => x.TenantId).NotEmpty();
-        RuleFor(x => x.Data).NotNull();
-        RuleFor(x => x.Data.SupplierId).GreaterThan(0);
-        RuleFor(x => x.Data.ProductId).GreaterThan(0);
-        RuleFor(x => x.Data.WarehouseId).GreaterThan(0);
-        RuleFor(x => x.Data.InitialQuantity).GreaterThan(0);
-        RuleFor(x => x.Data.Unit).NotEmpty().MaximumLength(20);
-        RuleFor(x => x.Data.UnitCost).GreaterThan(0);
-        RuleFor(x => x.Data.Currency).NotEmpty().MaximumLength(3);
-        RuleFor(x => x.Data.LotNumber).MaximumLength(50);
+        RuleFor(x => x.TenantId).NotEmpty().WithMessage("Kiracı kimliği gereklidir");
+        RuleFor(x => x.Data).NotNull().WithMessage("Konsinye stok verileri gereklidir");
+        RuleFor(x => x.Data.SupplierId).GreaterThan(0).WithMessage("Geçerli bir tedarikçi seçilmelidir");
+        RuleFor(x => x.Data.ProductId).GreaterThan(0).WithMessage("Geçerli bir ürün seçilmelidir");
+        RuleFor(x => x.Data.WarehouseId).GreaterThan(0).WithMessage("Geçerli bir depo seçilmelidir");
+        RuleFor(x => x.Data.InitialQuantity).GreaterThan(0).WithMessage("Başlangıç miktarı 0'dan büyük olmalıdır");
+        RuleFor(x => x.Data.Unit).NotEmpty().WithMessage("Birim gereklidir").MaximumLength(20).WithMessage("Birim en fazla 20 karakter olabilir");
+        RuleFor(x => x.Data.UnitCost).GreaterThan(0).WithMessage("Birim maliyet 0'dan büyük olmalıdır");
+        RuleFor(x => x.Data.Currency).NotEmpty().WithMessage("Para birimi gereklidir").MaximumLength(3).WithMessage("Para birimi en fazla 3 karakter olabilir");
+        RuleFor(x => x.Data.LotNumber).MaximumLength(50).WithMessage("Lot numarası en fazla 50 karakter olabilir");
     }
 }
 
@@ -59,7 +59,7 @@ public class CreateConsignmentStockCommandHandler : IRequestHandler<CreateConsig
         var existingConsignment = await _unitOfWork.ConsignmentStocks.GetByNumberAsync(consignmentNumber, cancellationToken);
         if (existingConsignment != null)
         {
-            return Result<ConsignmentStockDto>.Failure(new Error("ConsignmentStock.DuplicateNumber", $"Consignment with number '{consignmentNumber}' already exists", ErrorType.Conflict));
+            return Result<ConsignmentStockDto>.Failure(new Error("ConsignmentStock.DuplicateNumber", $"'{consignmentNumber}' numaralı konsinye kaydı zaten mevcut", ErrorType.Conflict));
         }
 
         var entity = new ConsignmentStock(

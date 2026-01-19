@@ -23,8 +23,8 @@ public class DeleteConsignmentStockCommandValidator : AbstractValidator<DeleteCo
 {
     public DeleteConsignmentStockCommandValidator()
     {
-        RuleFor(x => x.TenantId).NotEmpty();
-        RuleFor(x => x.Id).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty().WithMessage("Kiracı kimliği gereklidir");
+        RuleFor(x => x.Id).GreaterThan(0).WithMessage("Geçerli bir konsinye stok ID'si gereklidir");
     }
 }
 
@@ -45,23 +45,23 @@ public class DeleteConsignmentStockCommandHandler : IRequestHandler<DeleteConsig
         var entity = await _unitOfWork.ConsignmentStocks.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
-            return Result<bool>.Failure(new Error("ConsignmentStock.NotFound", $"Consignment stock with ID {request.Id} not found", ErrorType.NotFound));
+            return Result<bool>.Failure(new Error("ConsignmentStock.NotFound", $"Konsinye stok kaydı bulunamadı (ID: {request.Id})", ErrorType.NotFound));
         }
 
         // Cannot delete if there's outstanding quantity or amount
         if (entity.CurrentQuantity > 0)
         {
-            return Result<bool>.Failure(new Error("ConsignmentStock.HasStock", "Cannot delete consignment with remaining stock. Return to supplier first.", ErrorType.Validation));
+            return Result<bool>.Failure(new Error("ConsignmentStock.HasStock", "Stoku olan konsinye kaydı silinemez. Önce tedarikçiye iade yapın.", ErrorType.Validation));
         }
 
         if (entity.OutstandingAmount > 0)
         {
-            return Result<bool>.Failure(new Error("ConsignmentStock.HasOutstanding", "Cannot delete consignment with outstanding payment.", ErrorType.Validation));
+            return Result<bool>.Failure(new Error("ConsignmentStock.HasOutstanding", "Ödenmemiş tutarı olan konsinye kaydı silinemez.", ErrorType.Validation));
         }
 
         try
         {
-            entity.Close(request.Reason ?? "Deleted by user");
+            entity.Close(request.Reason ?? "Kullanıcı tarafından silindi");
         }
         catch (InvalidOperationException ex)
         {

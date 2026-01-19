@@ -32,7 +32,7 @@ public class GetConsignmentStockByIdQueryHandler : IRequestHandler<GetConsignmen
 
         if (entity == null)
         {
-            return Result<ConsignmentStockDto>.Failure(new Error("ConsignmentStock.NotFound", $"Consignment stock with ID {request.Id} not found", ErrorType.NotFound));
+            return Result<ConsignmentStockDto>.Failure(new Error("ConsignmentStock.NotFound", $"Konsinye stok kaydı bulunamadı (ID: {request.Id})", ErrorType.NotFound));
         }
 
         var dto = new ConsignmentStockDto

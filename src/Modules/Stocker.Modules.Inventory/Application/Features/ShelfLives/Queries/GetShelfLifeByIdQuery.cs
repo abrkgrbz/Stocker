@@ -32,7 +32,7 @@ public class GetShelfLifeByIdQueryHandler : IRequestHandler<GetShelfLifeByIdQuer
 
         if (entity == null)
         {
-            return Result<ShelfLifeDto>.Failure(new Error("ShelfLife.NotFound", $"Shelf life configuration with ID {request.Id} not found", ErrorType.NotFound));
+            return Result<ShelfLifeDto>.Failure(new Error("ShelfLife.NotFound", $"Raf ömrü yapılandırması bulunamadı (ID: {request.Id})", ErrorType.NotFound));
         }
 
         var dto = new ShelfLifeDto

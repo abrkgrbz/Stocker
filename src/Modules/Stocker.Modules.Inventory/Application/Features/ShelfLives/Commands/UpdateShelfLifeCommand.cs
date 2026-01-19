@@ -24,11 +24,11 @@ public class UpdateShelfLifeCommandValidator : AbstractValidator<UpdateShelfLife
 {
     public UpdateShelfLifeCommandValidator()
     {
-        RuleFor(x => x.TenantId).NotEmpty();
-        RuleFor(x => x.Id).GreaterThan(0);
-        RuleFor(x => x.Data).NotNull();
-        RuleFor(x => x.Data.TotalShelfLifeDays).GreaterThan(0);
-        RuleFor(x => x.Data.StorageConditions).MaximumLength(500);
+        RuleFor(x => x.TenantId).NotEmpty().WithMessage("Kiracı kimliği gereklidir");
+        RuleFor(x => x.Id).GreaterThan(0).WithMessage("Geçerli bir raf ömrü ID'si gereklidir");
+        RuleFor(x => x.Data).NotNull().WithMessage("Raf ömrü verileri gereklidir");
+        RuleFor(x => x.Data.TotalShelfLifeDays).GreaterThan(0).WithMessage("Toplam raf ömrü 0'dan büyük olmalıdır");
+        RuleFor(x => x.Data.StorageConditions).MaximumLength(500).WithMessage("Depolama koşulları en fazla 500 karakter olabilir");
     }
 }
 
@@ -49,7 +49,7 @@ public class UpdateShelfLifeCommandHandler : IRequestHandler<UpdateShelfLifeComm
         var entity = await _unitOfWork.ShelfLives.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
-            return Result<ShelfLifeDto>.Failure(new Error("ShelfLife.NotFound", $"Shelf life configuration with ID {request.Id} not found", ErrorType.NotFound));
+            return Result<ShelfLifeDto>.Failure(new Error("ShelfLife.NotFound", $"Raf ömrü yapılandırması bulunamadı (ID: {request.Id})", ErrorType.NotFound));
         }
 
         var data = request.Data;

@@ -21,8 +21,8 @@ public class DeleteShelfLifeCommandValidator : AbstractValidator<DeleteShelfLife
 {
     public DeleteShelfLifeCommandValidator()
     {
-        RuleFor(x => x.TenantId).NotEmpty();
-        RuleFor(x => x.Id).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty().WithMessage("Kiracı kimliği gereklidir");
+        RuleFor(x => x.Id).GreaterThan(0).WithMessage("Geçerli bir raf ömrü ID'si gereklidir");
     }
 }
 
@@ -43,7 +43,7 @@ public class DeleteShelfLifeCommandHandler : IRequestHandler<DeleteShelfLifeComm
         var entity = await _unitOfWork.ShelfLives.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
-            return Result<bool>.Failure(new Error("ShelfLife.NotFound", $"Shelf life configuration with ID {request.Id} not found", ErrorType.NotFound));
+            return Result<bool>.Failure(new Error("ShelfLife.NotFound", $"Raf ömrü yapılandırması bulunamadı (ID: {request.Id})", ErrorType.NotFound));
         }
 
         entity.Delete("system");

@@ -192,6 +192,19 @@ import type {
   ApproveInventoryAdjustmentDto,
   RejectInventoryAdjustmentDto,
   InventoryAdjustmentFilterDto,
+  // Consignment Stocks
+  ConsignmentStockDto,
+  CreateConsignmentStockDto,
+  UpdateConsignmentStockDto,
+  RecordConsignmentSaleDto,
+  RecordConsignmentReturnDto,
+  RecordConsignmentDamageDto,
+  RecordConsignmentPaymentDto,
+  ConsignmentStockFilterDto,
+  // Shelf Life Rules
+  ShelfLifeDto,
+  CreateShelfLifeDto,
+  UpdateShelfLifeDto,
   // Additional types for hooks
   LowStockProductDto,
   WarehouseStockSummaryDto,
@@ -432,6 +445,15 @@ export const inventoryKeys = {
   // Inventory Adjustments
   inventoryAdjustments: () => ['inventory', 'adjustments'] as const,
   inventoryAdjustment: (id: number) => ['inventory', 'adjustments', id] as const,
+
+  // Consignment Stocks
+  consignmentStocks: (filter?: ConsignmentStockFilterDto) => ['inventory', 'consignment-stocks', filter] as const,
+  consignmentStock: (id: number) => ['inventory', 'consignment-stocks', id] as const,
+
+  // Shelf Life Rules
+  shelfLifeRules: ['inventory', 'shelf-life'] as const,
+  shelfLifeRule: (id: number) => ['inventory', 'shelf-life', id] as const,
+  shelfLifeByProduct: (productId: number) => ['inventory', 'shelf-life', 'product', productId] as const,
 };
 
 // =====================================
@@ -4058,6 +4080,336 @@ export function useRejectInventoryAdjustment() {
     },
     onError: (error) => {
       showApiError(error, 'Stok düzeltme reddedilirken hata oluştu');
+    },
+  });
+}
+
+// =====================================
+// CONSIGNMENT STOCK HOOKS
+// =====================================
+
+/**
+ * Get consignment stocks with optional filters
+ */
+export function useConsignmentStocks(filter?: ConsignmentStockFilterDto) {
+  return useQuery<ConsignmentStockDto[]>({
+    queryKey: inventoryKeys.consignmentStocks(filter),
+    queryFn: () => InventoryService.getConsignmentStocks(filter),
+    ...queryOptions.list(),
+  });
+}
+
+/**
+ * Get a consignment stock by ID
+ */
+export function useConsignmentStock(id: number) {
+  return useQuery<ConsignmentStockDto>({
+    queryKey: inventoryKeys.consignmentStock(id),
+    queryFn: () => InventoryService.getConsignmentStock(id),
+    enabled: !!id && id > 0,
+    ...queryOptions.detail(),
+  });
+}
+
+/**
+ * Create a new consignment stock
+ */
+export function useCreateConsignmentStock() {
+  const queryClient = useQueryClient();
+  return useMutation<ConsignmentStockDto, Error, CreateConsignmentStockDto>({
+    mutationFn: (data) => InventoryService.createConsignmentStock(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.consignmentStocks() });
+      showSuccess('Konsinye stok oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Konsinye stok oluşturulurken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Update a consignment stock
+ */
+export function useUpdateConsignmentStock() {
+  const queryClient = useQueryClient();
+  return useMutation<ConsignmentStockDto, Error, { id: number; data: UpdateConsignmentStockDto }>({
+    mutationFn: ({ id, data }) => InventoryService.updateConsignmentStock(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.consignmentStock(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.consignmentStocks() });
+      showSuccess('Konsinye stok güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Konsinye stok güncellenirken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Delete a consignment stock
+ */
+export function useDeleteConsignmentStock() {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, number>({
+    mutationFn: (id) => InventoryService.deleteConsignmentStock(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.consignmentStocks() });
+      showSuccess('Konsinye stok silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Konsinye stok silinirken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Record a sale from consignment stock
+ */
+export function useRecordConsignmentSale() {
+  const queryClient = useQueryClient();
+  return useMutation<ConsignmentStockDto, Error, { id: number; data: RecordConsignmentSaleDto }>({
+    mutationFn: ({ id, data }) => InventoryService.recordConsignmentSale(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.consignmentStock(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.consignmentStocks() });
+      showSuccess('Konsinye satış kaydedildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Konsinye satış kaydedilirken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Record a return from consignment stock
+ */
+export function useRecordConsignmentReturn() {
+  const queryClient = useQueryClient();
+  return useMutation<ConsignmentStockDto, Error, { id: number; data: RecordConsignmentReturnDto }>({
+    mutationFn: ({ id, data }) => InventoryService.recordConsignmentReturn(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.consignmentStock(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.consignmentStocks() });
+      showSuccess('Konsinye iade kaydedildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Konsinye iade kaydedilirken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Record damage in consignment stock
+ */
+export function useRecordConsignmentDamage() {
+  const queryClient = useQueryClient();
+  return useMutation<ConsignmentStockDto, Error, { id: number; data: RecordConsignmentDamageDto }>({
+    mutationFn: ({ id, data }) => InventoryService.recordConsignmentDamage(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.consignmentStock(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.consignmentStocks() });
+      showSuccess('Konsinye hasar kaydedildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Konsinye hasar kaydedilirken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Record payment for consignment stock
+ */
+export function useRecordConsignmentPayment() {
+  const queryClient = useQueryClient();
+  return useMutation<ConsignmentStockDto, Error, { id: number; data: RecordConsignmentPaymentDto }>({
+    mutationFn: ({ id, data }) => InventoryService.recordConsignmentPayment(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.consignmentStock(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.consignmentStocks() });
+      showSuccess('Konsinye ödeme kaydedildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Konsinye ödeme kaydedilirken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Close a consignment stock agreement
+ */
+export function useCloseConsignmentStock() {
+  const queryClient = useQueryClient();
+  return useMutation<ConsignmentStockDto, Error, number>({
+    mutationFn: (id) => InventoryService.closeConsignmentStock(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.consignmentStock(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.consignmentStocks() });
+      showSuccess('Konsinye anlaşması kapatıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Konsinye anlaşması kapatılırken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Suspend a consignment stock agreement
+ */
+export function useSuspendConsignmentStock() {
+  const queryClient = useQueryClient();
+  return useMutation<ConsignmentStockDto, Error, number>({
+    mutationFn: (id) => InventoryService.suspendConsignmentStock(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.consignmentStock(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.consignmentStocks() });
+      showSuccess('Konsinye anlaşması askıya alındı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Konsinye anlaşması askıya alınırken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Reactivate a consignment stock agreement
+ */
+export function useReactivateConsignmentStock() {
+  const queryClient = useQueryClient();
+  return useMutation<ConsignmentStockDto, Error, number>({
+    mutationFn: (id) => InventoryService.reactivateConsignmentStock(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.consignmentStock(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.consignmentStocks() });
+      showSuccess('Konsinye anlaşması yeniden aktif edildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Konsinye anlaşması aktif edilirken hata oluştu');
+    },
+  });
+}
+
+// =====================================
+// SHELF LIFE RULES HOOKS
+// =====================================
+
+/**
+ * Get all shelf life rules
+ */
+export function useShelfLifeRules() {
+  return useQuery<ShelfLifeDto[]>({
+    queryKey: inventoryKeys.shelfLifeRules,
+    queryFn: () => InventoryService.getShelfLifeRules(),
+    ...queryOptions.list(),
+  });
+}
+
+/**
+ * Get a single shelf life rule by ID
+ */
+export function useShelfLifeRule(id: number) {
+  return useQuery<ShelfLifeDto>({
+    queryKey: inventoryKeys.shelfLifeRule(id),
+    queryFn: () => InventoryService.getShelfLifeRule(id),
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
+  });
+}
+
+/**
+ * Get shelf life rule by product ID
+ */
+export function useShelfLifeByProduct(productId: number) {
+  return useQuery<ShelfLifeDto | null>({
+    queryKey: inventoryKeys.shelfLifeByProduct(productId),
+    queryFn: () => InventoryService.getShelfLifeByProduct(productId),
+    ...queryOptions.detail({ enabled: !!productId && productId > 0 }),
+  });
+}
+
+/**
+ * Create a new shelf life rule
+ */
+export function useCreateShelfLife() {
+  const queryClient = useQueryClient();
+  return useMutation<ShelfLifeDto, Error, CreateShelfLifeDto>({
+    mutationFn: (data) => InventoryService.createShelfLife(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.shelfLifeRules });
+      showSuccess('Raf ömrü kuralı oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Raf ömrü kuralı oluşturulurken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Update a shelf life rule
+ */
+export function useUpdateShelfLife() {
+  const queryClient = useQueryClient();
+  return useMutation<ShelfLifeDto, Error, { id: number; data: UpdateShelfLifeDto }>({
+    mutationFn: ({ id, data }) => InventoryService.updateShelfLife(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.shelfLifeRule(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.shelfLifeRules });
+      showSuccess('Raf ömrü kuralı güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Raf ömrü kuralı güncellenirken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Delete a shelf life rule
+ */
+export function useDeleteShelfLife() {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, number>({
+    mutationFn: (id) => InventoryService.deleteShelfLife(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.shelfLifeRules });
+      showSuccess('Raf ömrü kuralı silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Raf ömrü kuralı silinirken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Activate a shelf life rule
+ */
+export function useActivateShelfLife() {
+  const queryClient = useQueryClient();
+  return useMutation<ShelfLifeDto, Error, number>({
+    mutationFn: (id) => InventoryService.activateShelfLife(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.shelfLifeRule(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.shelfLifeRules });
+      showSuccess('Raf ömrü kuralı aktif edildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Raf ömrü kuralı aktif edilirken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Deactivate a shelf life rule
+ */
+export function useDeactivateShelfLife() {
+  const queryClient = useQueryClient();
+  return useMutation<ShelfLifeDto, Error, number>({
+    mutationFn: (id) => InventoryService.deactivateShelfLife(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.shelfLifeRule(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.shelfLifeRules });
+      showSuccess('Raf ömrü kuralı pasif edildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Raf ömrü kuralı pasif edilirken hata oluştu');
     },
   });
 }

@@ -218,6 +218,19 @@ import type {
   ApproveInventoryAdjustmentDto,
   RejectInventoryAdjustmentDto,
   InventoryAdjustmentFilterDto,
+  // Consignment Stocks
+  ConsignmentStockDto,
+  CreateConsignmentStockDto,
+  UpdateConsignmentStockDto,
+  RecordConsignmentSaleDto,
+  RecordConsignmentReturnDto,
+  RecordConsignmentDamageDto,
+  RecordConsignmentPaymentDto,
+  ConsignmentStockFilterDto,
+  // Shelf Life
+  ShelfLifeDto,
+  CreateShelfLifeDto,
+  UpdateShelfLifeDto,
 } from './inventory.types';
 
 // Import enums as values (not types) for use as default parameters
@@ -2440,6 +2453,160 @@ export class InventoryService {
    */
   static async rejectInventoryAdjustment(id: number, dto: RejectInventoryAdjustmentDto): Promise<InventoryAdjustmentDto> {
     return ApiService.post<InventoryAdjustmentDto>(this.getPath(`adjustments/${id}/reject`), dto);
+  }
+
+  // =====================================
+  // CONSIGNMENT STOCKS
+  // =====================================
+
+  /**
+   * Get all consignment stocks with optional filters
+   */
+  static async getConsignmentStocks(filter?: ConsignmentStockFilterDto): Promise<ConsignmentStockDto[]> {
+    return ApiService.get<ConsignmentStockDto[]>(this.getPath('consignment-stocks'), {
+      params: filter,
+    });
+  }
+
+  /**
+   * Get a consignment stock by ID
+   */
+  static async getConsignmentStock(id: number): Promise<ConsignmentStockDto> {
+    return ApiService.get<ConsignmentStockDto>(this.getPath(`consignment-stocks/${id}`));
+  }
+
+  /**
+   * Create a new consignment stock
+   */
+  static async createConsignmentStock(dto: CreateConsignmentStockDto): Promise<ConsignmentStockDto> {
+    return ApiService.post<ConsignmentStockDto>(this.getPath('consignment-stocks'), dto);
+  }
+
+  /**
+   * Update a consignment stock
+   */
+  static async updateConsignmentStock(id: number, dto: UpdateConsignmentStockDto): Promise<ConsignmentStockDto> {
+    return ApiService.put<ConsignmentStockDto>(this.getPath(`consignment-stocks/${id}`), dto);
+  }
+
+  /**
+   * Delete a consignment stock
+   */
+  static async deleteConsignmentStock(id: number): Promise<void> {
+    return ApiService.delete(this.getPath(`consignment-stocks/${id}`));
+  }
+
+  /**
+   * Record a sale from consignment stock
+   */
+  static async recordConsignmentSale(id: number, dto: RecordConsignmentSaleDto): Promise<ConsignmentStockDto> {
+    return ApiService.post<ConsignmentStockDto>(this.getPath(`consignment-stocks/${id}/sale`), dto);
+  }
+
+  /**
+   * Record a return from consignment stock
+   */
+  static async recordConsignmentReturn(id: number, dto: RecordConsignmentReturnDto): Promise<ConsignmentStockDto> {
+    return ApiService.post<ConsignmentStockDto>(this.getPath(`consignment-stocks/${id}/return`), dto);
+  }
+
+  /**
+   * Record damage in consignment stock
+   */
+  static async recordConsignmentDamage(id: number, dto: RecordConsignmentDamageDto): Promise<ConsignmentStockDto> {
+    return ApiService.post<ConsignmentStockDto>(this.getPath(`consignment-stocks/${id}/damage`), dto);
+  }
+
+  /**
+   * Record payment for consignment stock
+   */
+  static async recordConsignmentPayment(id: number, dto: RecordConsignmentPaymentDto): Promise<ConsignmentStockDto> {
+    return ApiService.post<ConsignmentStockDto>(this.getPath(`consignment-stocks/${id}/payment`), dto);
+  }
+
+  /**
+   * Close a consignment stock agreement
+   */
+  static async closeConsignmentStock(id: number): Promise<ConsignmentStockDto> {
+    return ApiService.post<ConsignmentStockDto>(this.getPath(`consignment-stocks/${id}/close`), {});
+  }
+
+  /**
+   * Suspend a consignment stock agreement
+   */
+  static async suspendConsignmentStock(id: number): Promise<ConsignmentStockDto> {
+    return ApiService.post<ConsignmentStockDto>(this.getPath(`consignment-stocks/${id}/suspend`), {});
+  }
+
+  /**
+   * Reactivate a consignment stock agreement
+   */
+  static async reactivateConsignmentStock(id: number): Promise<ConsignmentStockDto> {
+    return ApiService.post<ConsignmentStockDto>(this.getPath(`consignment-stocks/${id}/reactivate`), {});
+  }
+
+  // =====================================
+  // SHELF LIFE
+  // =====================================
+
+  /**
+   * Get all shelf life rules
+   */
+  static async getShelfLifeRules(): Promise<ShelfLifeDto[]> {
+    return ApiService.get<ShelfLifeDto[]>(this.getPath('shelf-life'));
+  }
+
+  /**
+   * Get shelf life rule by ID
+   */
+  static async getShelfLifeRule(id: number): Promise<ShelfLifeDto> {
+    return ApiService.get<ShelfLifeDto>(this.getPath(`shelf-life/${id}`));
+  }
+
+  /**
+   * Get shelf life rule by product ID
+   */
+  static async getShelfLifeByProduct(productId: number): Promise<ShelfLifeDto | null> {
+    try {
+      return await ApiService.get<ShelfLifeDto>(this.getPath(`shelf-life/product/${productId}`));
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Create a new shelf life rule
+   */
+  static async createShelfLife(dto: CreateShelfLifeDto): Promise<ShelfLifeDto> {
+    return ApiService.post<ShelfLifeDto>(this.getPath('shelf-life'), dto);
+  }
+
+  /**
+   * Update an existing shelf life rule
+   */
+  static async updateShelfLife(id: number, dto: UpdateShelfLifeDto): Promise<ShelfLifeDto> {
+    return ApiService.put<ShelfLifeDto>(this.getPath(`shelf-life/${id}`), dto);
+  }
+
+  /**
+   * Delete a shelf life rule
+   */
+  static async deleteShelfLife(id: number): Promise<void> {
+    return ApiService.delete(this.getPath(`shelf-life/${id}`));
+  }
+
+  /**
+   * Activate a shelf life rule
+   */
+  static async activateShelfLife(id: number): Promise<ShelfLifeDto> {
+    return ApiService.post<ShelfLifeDto>(this.getPath(`shelf-life/${id}/activate`), {});
+  }
+
+  /**
+   * Deactivate a shelf life rule
+   */
+  static async deactivateShelfLife(id: number): Promise<ShelfLifeDto> {
+    return ApiService.post<ShelfLifeDto>(this.getPath(`shelf-life/${id}/deactivate`), {});
   }
 }
 

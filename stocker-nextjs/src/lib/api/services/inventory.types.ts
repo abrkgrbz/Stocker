@@ -4134,17 +4134,17 @@ export interface ShelfLifeDto {
   productId: number;
   productName?: string;
   productCode?: string;
-  shelfLifeType: ShelfLifeType;
+  shelfLifeType: string; // Backend returns string (e.g., "ExpiryDate", "BestBefore")
   totalShelfLifeDays: number;
   isActive: boolean;
   // Receiving Rules
   minReceivingShelfLifeDays: number;
   minReceivingShelfLifePercent?: number;
-  receivingRuleType: ShelfLifeRuleType;
+  receivingRuleType: string; // Backend returns string (e.g., "Days", "Percentage", "Both")
   // Sales Rules
   minSalesShelfLifeDays: number;
   minSalesShelfLifePercent?: number;
-  salesRuleType: ShelfLifeRuleType;
+  salesRuleType: string; // Backend returns string
   // Alert Rules
   alertThresholdDays: number;
   alertThresholdPercent?: number;
@@ -4154,65 +4154,66 @@ export interface ShelfLifeDto {
   hasCustomerSpecificRules: boolean;
   defaultCustomerMinShelfLifeDays?: number;
   // Action Rules
-  expiryAction: ExpiryAction;
+  expiryAction: string; // Backend returns string (e.g., "Quarantine", "Scrap")
   autoQuarantineOnExpiry: boolean;
   autoScrapOnExpiry: boolean;
   daysBeforeQuarantineAlert?: number;
   // Storage
   requiresSpecialStorage: boolean;
   storageConditions?: string;
-  requiredZoneType?: ZoneType;
+  requiredZoneType?: string; // Backend returns string
   createdAt: DateTime;
   updatedAt?: DateTime;
 }
 
 export interface CreateShelfLifeDto {
   productId: number;
-  shelfLifeType: ShelfLifeType;
+  shelfLifeType: string; // e.g., "ExpiryDate", "BestBefore"
   totalShelfLifeDays: number;
   minReceivingShelfLifeDays?: number;
   minReceivingShelfLifePercent?: number;
-  receivingRuleType?: ShelfLifeRuleType;
+  receivingRuleType?: string; // e.g., "Days", "Percentage", "Both"
   minSalesShelfLifeDays?: number;
   minSalesShelfLifePercent?: number;
-  salesRuleType?: ShelfLifeRuleType;
+  salesRuleType?: string;
   alertThresholdDays?: number;
   alertThresholdPercent?: number;
   criticalThresholdDays?: number;
   criticalThresholdPercent?: number;
   hasCustomerSpecificRules?: boolean;
   defaultCustomerMinShelfLifeDays?: number;
-  expiryAction?: ExpiryAction;
+  expiryAction?: string; // e.g., "Quarantine", "Scrap"
   autoQuarantineOnExpiry?: boolean;
   autoScrapOnExpiry?: boolean;
   daysBeforeQuarantineAlert?: number;
   requiresSpecialStorage?: boolean;
   storageConditions?: string;
-  requiredZoneType?: ZoneType;
+  requiredZoneType?: string;
 }
 
 export interface UpdateShelfLifeDto {
-  shelfLifeType: ShelfLifeType;
+  shelfLifeType: string; // e.g., "ExpiryDate", "BestBefore"
   totalShelfLifeDays: number;
   minReceivingShelfLifeDays?: number;
   minReceivingShelfLifePercent?: number;
-  receivingRuleType?: ShelfLifeRuleType;
+  receivingRuleType?: string; // e.g., "Days", "Percentage", "Both"
   minSalesShelfLifeDays?: number;
   minSalesShelfLifePercent?: number;
-  salesRuleType?: ShelfLifeRuleType;
+  salesRuleType?: string;
   alertThresholdDays?: number;
   alertThresholdPercent?: number;
   criticalThresholdDays?: number;
   criticalThresholdPercent?: number;
   hasCustomerSpecificRules?: boolean;
   defaultCustomerMinShelfLifeDays?: number;
-  expiryAction?: ExpiryAction;
+  expiryAction?: string; // e.g., "Quarantine", "Scrap"
   autoQuarantineOnExpiry?: boolean;
   autoScrapOnExpiry?: boolean;
   daysBeforeQuarantineAlert?: number;
   requiresSpecialStorage?: boolean;
   storageConditions?: string;
-  requiredZoneType?: ZoneType;
+  requiredZoneType?: string;
+  isActive?: boolean;
 }
 
 // =====================================
@@ -4397,4 +4398,136 @@ export interface PagedList<T> {
   totalPages: number;
   hasPreviousPage: boolean;
   hasNextPage: boolean;
+}
+
+// =====================================
+// CONSIGNMENT STOCK
+// =====================================
+
+export enum ConsignmentStatus {
+  Active = 'Active',
+  Suspended = 'Suspended',
+  Depleted = 'Depleted',
+  Returned = 'Returned',
+  Closed = 'Closed',
+}
+
+export enum ConsignmentMovementType {
+  Receipt = 'Receipt',
+  Sale = 'Sale',
+  Return = 'Return',
+  SupplierReturn = 'SupplierReturn',
+  Damage = 'Damage',
+  Adjustment = 'Adjustment',
+  Payment = 'Payment',
+}
+
+export interface ConsignmentStockMovementDto {
+  id: number;
+  movementType: string;
+  quantity: number;
+  unitPrice: number;
+  totalAmount: number;
+  movementDate: DateTime;
+  referenceNumber?: string;
+  notes?: string;
+}
+
+export interface ConsignmentStockDto {
+  id: number;
+  consignmentNumber: string;
+  supplierId: number;
+  supplierName?: string;
+  agreementDate: DateTime;
+  agreementEndDate?: DateTime;
+  status: string;
+  productId: number;
+  productName?: string;
+  warehouseId: number;
+  warehouseName?: string;
+  locationId?: number;
+  locationName?: string;
+  lotNumber?: string;
+  initialQuantity: number;
+  currentQuantity: number;
+  soldQuantity: number;
+  returnedQuantity: number;
+  damagedQuantity: number;
+  unit: string;
+  unitCost: number;
+  sellingPrice?: number;
+  currency: string;
+  commissionRate?: number;
+  lastReconciliationDate?: DateTime;
+  reconciliationPeriodDays: number;
+  nextReconciliationDate?: DateTime;
+  totalSalesAmount: number;
+  paidAmount: number;
+  outstandingAmount: number;
+  maxConsignmentDays?: number;
+  expiryDate?: DateTime;
+  receivedDate: DateTime;
+  agreementNotes?: string;
+  internalNotes?: string;
+  movements: ConsignmentStockMovementDto[];
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+}
+
+export interface CreateConsignmentStockDto {
+  supplierId: number;
+  productId: number;
+  warehouseId: number;
+  locationId?: number;
+  initialQuantity: number;
+  unit: string;
+  unitCost: number;
+  sellingPrice?: number;
+  currency?: string;
+  commissionRate?: number;
+  lotNumber?: string;
+  agreementEndDate?: DateTime;
+  maxConsignmentDays?: number;
+  reconciliationPeriodDays?: number;
+  agreementNotes?: string;
+}
+
+export interface UpdateConsignmentStockDto {
+  locationId?: number;
+  sellingPrice?: number;
+  commissionRate?: number;
+  agreementEndDate?: DateTime;
+  maxConsignmentDays?: number;
+  reconciliationPeriodDays?: number;
+  agreementNotes?: string;
+  internalNotes?: string;
+}
+
+export interface RecordConsignmentSaleDto {
+  quantity: number;
+  sellingPrice: number;
+  referenceNumber?: string;
+}
+
+export interface RecordConsignmentReturnDto {
+  quantity: number;
+  reason: string;
+  referenceNumber?: string;
+}
+
+export interface RecordConsignmentDamageDto {
+  quantity: number;
+  reason: string;
+}
+
+export interface RecordConsignmentPaymentDto {
+  amount: number;
+  referenceNumber?: string;
+}
+
+export interface ConsignmentStockFilterDto {
+  supplierId?: number;
+  productId?: number;
+  warehouseId?: number;
+  status?: string;
 }
