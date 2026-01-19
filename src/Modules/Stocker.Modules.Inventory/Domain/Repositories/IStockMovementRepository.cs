@@ -9,6 +9,11 @@ namespace Stocker.Modules.Inventory.Domain.Repositories;
 public interface IStockMovementRepository : IInventoryRepository<StockMovement>
 {
     /// <summary>
+    /// Gets a stock movement with all details including Product, Warehouse, and Locations
+    /// </summary>
+    Task<StockMovement?> GetWithDetailsAsync(int movementId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets movements by product
     /// </summary>
     Task<IReadOnlyList<StockMovement>> GetByProductAsync(int productId, CancellationToken cancellationToken = default);
