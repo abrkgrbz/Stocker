@@ -15,6 +15,20 @@ public class StockTransferRepository : BaseRepository<StockTransfer>, IStockTran
     {
     }
 
+    /// <summary>
+    /// Override to include Warehouses and Items for list display
+    /// </summary>
+    public override async Task<IReadOnlyList<StockTransfer>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Include(t => t.SourceWarehouse)
+            .Include(t => t.DestinationWarehouse)
+            .Include(t => t.Items.Where(i => !i.IsDeleted))
+            .Where(t => !t.IsDeleted)
+            .OrderByDescending(t => t.TransferDate)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<StockTransfer?> GetWithItemsAsync(int transferId, CancellationToken cancellationToken = default)
     {
         return await DbSet
