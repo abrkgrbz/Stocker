@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Space, Tag, Spin, Empty, Progress } from 'antd';
+import { Button, Space, Tag, Empty, Progress } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
   ArrowLeftIcon,
   CalendarIcon,
@@ -28,7 +29,7 @@ export default function LocationDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }

@@ -1,25 +1,25 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  Switch,
-} from 'antd';
-import {
-  ArrowsRightLeftIcon,
-} from '@heroicons/react/24/outline';
+import { Form } from 'antd';
+import { ArrowsRightLeftIcon } from '@heroicons/react/24/outline';
 import { useProducts, useCategories, useWarehouses, useSuppliers } from '@/lib/api/hooks/useInventory';
-import type { ReorderRuleDto } from '@/lib/api/services/inventory.types';
-
-const { TextArea } = Input;
+import type { ReorderRuleDto, CreateReorderRuleDto, UpdateReorderRuleDto } from '@/lib/api/services/inventory.types';
+import {
+  FormHeader,
+  FormSection,
+  FormInput,
+  FormNumber,
+  FormSelect,
+  FormSwitch,
+  useUnsavedChanges,
+  nameFieldRules,
+} from '@/components/forms';
 
 interface ReorderRuleFormProps {
   form: ReturnType<typeof Form.useForm>[0];
   initialValues?: ReorderRuleDto;
-  onFinish: (values: any) => void;
+  onFinish: (values: CreateReorderRuleDto | UpdateReorderRuleDto) => void;
   loading?: boolean;
 }
 
@@ -32,6 +32,13 @@ export default function ReorderRuleForm({ form, initialValues, onFinish, loading
   const [useDynamic, setUseDynamic] = useState(false);
   const [triggerOnForecast, setTriggerOnForecast] = useState(false);
   const [isScheduled, setIsScheduled] = useState(false);
+
+  // Unsaved changes tracking
+  const { markAsSaved } = useUnsavedChanges({
+    form,
+    enabled: true,
+    initialValues: initialValues || {},
+  });
 
   useEffect(() => {
     if (initialValues) {
@@ -53,6 +60,7 @@ export default function ReorderRuleForm({ form, initialValues, onFinish, loading
   }, [form, initialValues]);
 
   const handleFinish = (values: any) => {
+    markAsSaved();
     const formattedValues = {
       ...values,
       triggerOnForecast: values.triggerOnForecast || false,
@@ -63,6 +71,26 @@ export default function ReorderRuleForm({ form, initialValues, onFinish, loading
     };
     onFinish(formattedValues);
   };
+
+  const productOptions = products.map((p) => ({
+    value: p.id,
+    label: `${p.code} - ${p.name}`,
+  }));
+
+  const categoryOptions = categories.map((c) => ({
+    value: c.id,
+    label: c.name,
+  }));
+
+  const warehouseOptions = warehouses.map((w) => ({
+    value: w.id,
+    label: `${w.code} - ${w.name}`,
+  }));
+
+  const supplierOptions = suppliers.map((s) => ({
+    value: s.id,
+    label: `${s.code} - ${s.name}`,
+  }));
 
   return (
     <Form
@@ -76,7 +104,7 @@ export default function ReorderRuleForm({ form, initialValues, onFinish, loading
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
 
-        {/* Header Section */}
+        {/* Header */}
         <div className="px-8 py-6 border-b border-slate-200">
           <div className="flex items-start gap-6">
             {/* Icon */}
@@ -86,29 +114,21 @@ export default function ReorderRuleForm({ form, initialValues, onFinish, loading
               </div>
             </div>
 
-            {/* Rule Name Input */}
+            {/* Name Input */}
             <div className="flex-1">
-              <Form.Item
+              <FormInput
                 name="name"
-                rules={[
-                  { required: true, message: 'Kural adı zorunludur' },
-                  { max: 100, message: 'Kural adı en fazla 100 karakter olabilir' },
-                ]}
-                className="mb-0"
-              >
-                <Input
-                  placeholder="Kural Adı..."
-                  variant="borderless"
-                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
-                />
-              </Form.Item>
-              <Form.Item name="description" className="mb-0 mt-1">
-                <Input
-                  placeholder="Kural açıklaması..."
-                  variant="borderless"
-                  className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400"
-                />
-              </Form.Item>
+                placeholder="Kural Adı..."
+                variant="borderless"
+                rules={nameFieldRules('Kural adı', 100)}
+                className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
+              />
+              <FormInput
+                name="description"
+                placeholder="Kural açıklaması..."
+                variant="borderless"
+                className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400 mt-1"
+              />
             </div>
           </div>
         </div>
@@ -117,307 +137,219 @@ export default function ReorderRuleForm({ form, initialValues, onFinish, loading
         <div className="px-8 py-6">
 
           {/* Kapsam */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Kapsam (Boş bırakılırsa tümüne uygulanır)
-            </h3>
+          <FormSection title="Kapsam (Boş bırakılırsa tümüne uygulanır)">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ürün</label>
-                <Form.Item name="productId" className="mb-0">
-                  <Select
-                    placeholder="Ürün seçin"
-                    loading={productsLoading}
-                    showSearch
-                    optionFilterProp="label"
-                    allowClear
-                    options={products.map((p) => ({
-                      value: p.id,
-                      label: `${p.code} - ${p.name}`,
-                    }))}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                <FormSelect
+                  name="productId"
+                  label="Ürün"
+                  placeholder="Ürün seçin"
+                  loading={productsLoading}
+                  allowClear
+                  options={productOptions}
+                />
               </div>
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Kategori</label>
-                <Form.Item name="categoryId" className="mb-0">
-                  <Select
-                    placeholder="Kategori seçin"
-                    loading={categoriesLoading}
-                    showSearch
-                    optionFilterProp="label"
-                    allowClear
-                    options={categories.map((c) => ({
-                      value: c.id,
-                      label: c.name,
-                    }))}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                <FormSelect
+                  name="categoryId"
+                  label="Kategori"
+                  placeholder="Kategori seçin"
+                  loading={categoriesLoading}
+                  allowClear
+                  options={categoryOptions}
+                />
               </div>
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Depo</label>
-                <Form.Item name="warehouseId" className="mb-0">
-                  <Select
-                    placeholder="Depo seçin"
-                    loading={warehousesLoading}
-                    showSearch
-                    optionFilterProp="label"
-                    allowClear
-                    options={warehouses.map((w) => ({
-                      value: w.id,
-                      label: `${w.code} - ${w.name}`,
-                    }))}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                <FormSelect
+                  name="warehouseId"
+                  label="Depo"
+                  placeholder="Depo seçin"
+                  loading={warehousesLoading}
+                  allowClear
+                  options={warehouseOptions}
+                />
               </div>
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Tedarikçi</label>
-                <Form.Item name="supplierId" className="mb-0">
-                  <Select
-                    placeholder="Tedarikçi seçin"
-                    loading={suppliersLoading}
-                    showSearch
-                    optionFilterProp="label"
-                    allowClear
-                    options={suppliers.map((s) => ({
-                      value: s.id,
-                      label: `${s.code} - ${s.name}`,
-                    }))}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                <FormSelect
+                  name="supplierId"
+                  label="Tedarikçi"
+                  placeholder="Tedarikçi seçin"
+                  loading={suppliersLoading}
+                  allowClear
+                  options={supplierOptions}
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
           {/* Tetikleyici Koşullar */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Tetikleyici Koşullar
-            </h3>
+          <FormSection title="Tetikleyici Koşullar">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Miktar altına düşünce</label>
-                <Form.Item name="triggerBelowQuantity" className="mb-0">
-                  <InputNumber
-                    style={{ width: '100%' }}
-                    min={0}
-                    placeholder="10"
-                    className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
-                  />
-                </Form.Item>
+                <FormNumber
+                  name="triggerBelowQuantity"
+                  label="Miktar altına düşünce"
+                  placeholder="10"
+                  min={0}
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Gün cinsinden stok altına düşünce</label>
-                <Form.Item name="triggerBelowDaysOfStock" className="mb-0">
-                  <InputNumber
-                    style={{ width: '100%' }}
-                    min={0}
-                    placeholder="7"
-                    className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
-                  />
-                </Form.Item>
+                <FormNumber
+                  name="triggerBelowDaysOfStock"
+                  label="Gün cinsinden stok altına düşünce"
+                  placeholder="7"
+                  min={0}
+                />
               </div>
               <div className="col-span-4">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 h-full">
-                  <div>
-                    <div className="text-sm font-medium text-slate-700">Tahmine Göre Tetikle</div>
-                    <div className="text-xs text-slate-500 mt-0.5">Stok tahminine göre</div>
-                  </div>
-                  <Form.Item name="triggerOnForecast" valuePropName="checked" noStyle>
-                    <Switch
-                      checked={triggerOnForecast}
-                      onChange={(val) => {
-                        setTriggerOnForecast(val);
-                        form.setFieldValue('triggerOnForecast', val);
-                      }}
-                    />
-                  </Form.Item>
-                </div>
+                <FormSwitch
+                  form={form}
+                  name="triggerOnForecast"
+                  title="Tahmine Göre Tetikle"
+                  value={triggerOnForecast}
+                  onChange={setTriggerOnForecast}
+                  descriptionTrue="Stok tahminine göre"
+                  descriptionFalse="Anlık stoka göre"
+                  disabled={loading}
+                />
               </div>
             </div>
             {triggerOnForecast && (
               <div className="grid grid-cols-12 gap-4 mt-4">
                 <div className="col-span-4">
-                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Tahmin Süresi (gün)</label>
-                  <Form.Item name="forecastLeadTimeDays" className="mb-0">
-                    <InputNumber
-                      style={{ width: '100%' }}
-                      min={1}
-                      placeholder="14"
-                      className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
-                    />
-                  </Form.Item>
+                  <FormNumber
+                    name="forecastLeadTimeDays"
+                    label="Tahmin Süresi (gün)"
+                    placeholder="14"
+                    min={1}
+                  />
                 </div>
               </div>
             )}
-          </div>
+          </FormSection>
 
           {/* Sipariş Miktarı */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Sipariş Miktarı
-            </h3>
+          <FormSection title="Sipariş Miktarı">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sabit Sipariş Miktarı</label>
-                <Form.Item name="fixedReorderQuantity" className="mb-0">
-                  <InputNumber
-                    style={{ width: '100%' }}
-                    min={1}
-                    placeholder="100"
-                    disabled={useDynamic}
-                    className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
-                  />
-                </Form.Item>
+                <FormNumber
+                  name="fixedReorderQuantity"
+                  label="Sabit Sipariş Miktarı"
+                  placeholder="100"
+                  min={1}
+                  disabled={useDynamic}
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Hedef Miktar (Stok Seviyesi)</label>
-                <Form.Item name="reorderUpToQuantity" className="mb-0">
-                  <InputNumber
-                    style={{ width: '100%' }}
-                    min={1}
-                    placeholder="500"
-                    className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
-                  />
-                </Form.Item>
+                <FormNumber
+                  name="reorderUpToQuantity"
+                  label="Hedef Miktar (Stok Seviyesi)"
+                  placeholder="500"
+                  min={1}
+                />
               </div>
               <div className="col-span-4">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 h-full">
-                  <div>
-                    <div className="text-sm font-medium text-slate-700">Dinamik Miktar</div>
-                    <div className="text-xs text-slate-500 mt-0.5">Ekonomik sipariş miktarı</div>
-                  </div>
-                  <Form.Item name="useEconomicOrderQuantity" valuePropName="checked" noStyle>
-                    <Switch
-                      checked={useDynamic}
-                      onChange={(val) => {
-                        setUseDynamic(val);
-                        form.setFieldValue('useEconomicOrderQuantity', val);
-                      }}
-                    />
-                  </Form.Item>
-                </div>
+                <FormSwitch
+                  form={form}
+                  name="useEconomicOrderQuantity"
+                  title="Dinamik Miktar"
+                  value={useDynamic}
+                  onChange={setUseDynamic}
+                  descriptionTrue="Ekonomik sipariş miktarı"
+                  descriptionFalse="Sabit miktar"
+                  disabled={loading}
+                />
               </div>
             </div>
             {useDynamic && (
               <div className="grid grid-cols-12 gap-4 mt-4">
                 <div className="col-span-4">
-                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Minimum Miktar</label>
-                  <Form.Item name="minimumOrderQuantity" className="mb-0">
-                    <InputNumber
-                      style={{ width: '100%' }}
-                      min={1}
-                      placeholder="50"
-                      className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
-                    />
-                  </Form.Item>
+                  <FormNumber
+                    name="minimumOrderQuantity"
+                    label="Minimum Miktar"
+                    placeholder="50"
+                    min={1}
+                  />
                 </div>
                 <div className="col-span-4">
-                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Maksimum Miktar</label>
-                  <Form.Item name="maximumOrderQuantity" className="mb-0">
-                    <InputNumber
-                      style={{ width: '100%' }}
-                      min={1}
-                      placeholder="500"
-                      className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
-                    />
-                  </Form.Item>
+                  <FormNumber
+                    name="maximumOrderQuantity"
+                    label="Maksimum Miktar"
+                    placeholder="500"
+                    min={1}
+                  />
                 </div>
               </div>
             )}
-          </div>
+          </FormSection>
 
-          {/* Paket Yuvarlama */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Paket Ayarları
-            </h3>
+          {/* Paket Ayarları */}
+          <FormSection title="Paket Ayarları">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <div>
-                    <div className="text-sm font-medium text-slate-700">Paket Boyutuna Yuvarla</div>
-                    <div className="text-xs text-slate-500 mt-0.5">Sipariş miktarını yuvarla</div>
-                  </div>
-                  <Form.Item name="roundToPackSize" valuePropName="checked" noStyle>
-                    <Switch />
-                  </Form.Item>
-                </div>
+                <FormSwitch
+                  form={form}
+                  name="roundToPackSize"
+                  title="Paket Boyutuna Yuvarla"
+                  descriptionTrue="Sipariş miktarını yuvarla"
+                  descriptionFalse="Yuvarlama yapılmaz"
+                  disabled={loading}
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Paket Boyutu</label>
-                <Form.Item name="packSize" className="mb-0">
-                  <InputNumber
-                    style={{ width: '100%' }}
-                    min={1}
-                    placeholder="10"
-                    className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
-                  />
-                </Form.Item>
+                <FormNumber
+                  name="packSize"
+                  label="Paket Boyutu"
+                  placeholder="10"
+                  min={1}
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
           {/* Zamanlama */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Zamanlama
-            </h3>
+          <FormSection title="Zamanlama">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <div>
-                    <div className="text-sm font-medium text-slate-700">Zamanlanmış</div>
-                    <div className="text-xs text-slate-500 mt-0.5">Otomatik çalıştır</div>
-                  </div>
-                  <Form.Item name="isScheduled" valuePropName="checked" noStyle>
-                    <Switch
-                      checked={isScheduled}
-                      onChange={(val) => {
-                        setIsScheduled(val);
-                        form.setFieldValue('isScheduled', val);
-                      }}
-                    />
-                  </Form.Item>
-                </div>
+                <FormSwitch
+                  form={form}
+                  name="isScheduled"
+                  title="Zamanlanmış"
+                  value={isScheduled}
+                  onChange={setIsScheduled}
+                  descriptionTrue="Otomatik çalıştır"
+                  descriptionFalse="Manuel tetikleme"
+                  disabled={loading}
+                />
               </div>
               {isScheduled && (
                 <div className="col-span-4">
-                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Cron İfadesi</label>
-                  <Form.Item name="cronExpression" className="mb-0">
-                    <Input
-                      placeholder="0 8 * * 1 (Her Pazartesi 08:00)"
-                      className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white font-mono"
-                    />
-                  </Form.Item>
+                  <FormInput
+                    name="cronExpression"
+                    label="Cron İfadesi"
+                    placeholder="0 8 * * 1 (Her Pazartesi 08:00)"
+                    className="font-mono"
+                  />
                 </div>
               )}
             </div>
-          </div>
+          </FormSection>
 
-          {/* Onay */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Onay Ayarları
-            </h3>
+          {/* Onay Ayarları */}
+          <FormSection title="Onay Ayarları">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <div>
-                    <div className="text-sm font-medium text-slate-700">Onay Gerekli</div>
-                    <div className="text-xs text-slate-500 mt-0.5">Sipariş öncesi onay al</div>
-                  </div>
-                  <Form.Item name="requiresApproval" valuePropName="checked" noStyle>
-                    <Switch />
-                  </Form.Item>
-                </div>
+                <FormSwitch
+                  form={form}
+                  name="requiresApproval"
+                  title="Onay Gerekli"
+                  descriptionTrue="Sipariş öncesi onay al"
+                  descriptionFalse="Otomatik sipariş"
+                  disabled={loading}
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
         </div>
       </div>

@@ -5,7 +5,7 @@
  * Monochrome design system following lot-batches design principles
  */
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Table,
@@ -29,6 +29,7 @@ import {
   PlusIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
+import { TableEmptyState } from '@/components/primitives';
 import { useSuppliers, useDeleteSupplier } from '@/lib/api/hooks/useInventory';
 import type { SupplierDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
@@ -184,7 +185,10 @@ export default function SuppliersPage() {
 
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+            <button
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+              aria-label="İşlemler menüsü"
+            >
               <EllipsisHorizontalIcon className="w-4 h-4" />
             </button>
           </Dropdown>
@@ -297,15 +301,29 @@ export default function SuppliersPage() {
             rowKey="id"
             loading={isLoading}
             scroll={{ x: 900 }}
+            locale={{
+              emptyText: <TableEmptyState
+                icon={BuildingStorefrontIcon}
+                title="Tedarikci bulunamadi"
+                description="Henuz tedarikci eklenmemis veya filtrelere uygun kayit yok."
+              />
+            }}
             className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-200"
             pagination={{
               showSizeChanger: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} tedarikçi`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
               pageSizeOptions: ['10', '20', '50'],
               defaultPageSize: 20,
             }}
             onRow={(record) => ({
-              onClick: () => router.push(`/inventory/suppliers/${record.id}`),
+              onClick: (e) => {
+                // Action column içindeki tıklamaları engelle
+                const target = e.target as HTMLElement;
+                if (target.closest('.ant-dropdown-trigger') || target.closest('.ant-dropdown')) {
+                  return;
+                }
+                router.push(`/inventory/suppliers/${record.id}`);
+              },
               style: { cursor: 'pointer' },
             })}
           />

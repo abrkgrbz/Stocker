@@ -24,6 +24,7 @@ import {
 import type { CycleCountDto } from '@/lib/api/services/inventory.types';
 import { CycleCountStatus, CycleCountType } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
+import { TableEmptyState } from '@/components/primitives';
 import dayjs from 'dayjs';
 import { confirmAction } from '@/lib/utils/sweetalert';
 
@@ -62,24 +63,24 @@ const statusConfig: Record<CycleCountStatus, StatusConfig> = {
   [CycleCountStatus.Processed]: {
     color: '#ffffff',
     bgColor: '#334155',
-    label: 'Islendi',
+    label: 'İşlendi',
     icon: <CheckCircleIcon className="w-3.5 h-3.5" />,
   },
   [CycleCountStatus.Cancelled]: {
     color: '#475569',
     bgColor: '#f1f5f9',
-    label: 'Iptal Edildi',
+    label: 'İptal Edildi',
     icon: <XCircleIcon className="w-3.5 h-3.5" />,
   },
 };
 
 const countTypeLabels: Record<CycleCountType, string> = {
   [CycleCountType.Standard]: 'Standart',
-  [CycleCountType.AbcBased]: 'ABC Bazli',
-  [CycleCountType.ZoneBased]: 'Bolge Bazli',
-  [CycleCountType.CategoryBased]: 'Kategori Bazli',
+  [CycleCountType.AbcBased]: 'ABC Bazlı',
+  [CycleCountType.ZoneBased]: 'Bölge Bazlı',
+  [CycleCountType.CategoryBased]: 'Kategori Bazlı',
   [CycleCountType.Random]: 'Rastgele',
-  [CycleCountType.MovementBased]: 'Hareket Bazli',
+  [CycleCountType.MovementBased]: 'Hareket Bazlı',
 };
 
 export default function CycleCountsPage() {
@@ -233,13 +234,13 @@ export default function CycleCountsPage() {
           {
             key: 'view',
             icon: <EyeIcon className="w-4 h-4" />,
-            label: 'Goruntule',
+            label: 'Görüntüle',
             onClick: () => router.push(`/inventory/cycle-counts/${record.id}`),
           },
           {
             key: 'edit',
             icon: <PencilIcon className="w-4 h-4" />,
-            label: 'Duzenle',
+            label: 'Düzenle',
             onClick: () => router.push(`/inventory/cycle-counts/${record.id}/edit`),
           },
         ];
@@ -421,16 +422,24 @@ export default function CycleCountsPage() {
             total: cycleCounts.length,
             pageSize: 20,
             showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayit`,
+            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
           }}
           scroll={{ x: 1000 }}
           onRow={(record) => ({
-            onClick: () => router.push(`/inventory/cycle-counts/${record.id}`),
+            onClick: (e) => {
+              const target = e.target as HTMLElement;
+              if (target.closest('.ant-dropdown-trigger') || target.closest('.ant-dropdown')) {
+                return;
+              }
+              router.push(`/inventory/cycle-counts/${record.id}`);
+            },
             className: 'cursor-pointer hover:bg-slate-50',
           })}
-          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
-        />
-      </div>
-    </div>
-  );
-}
+          locale={{
+            emptyText: <TableEmptyState
+              icon={CalculatorIcon}
+              title="Sayim bulunamadi"
+              description="Henuz sayim eklenmemis veya filtrelere uygun kayit yok."
+            />
+          }}
+          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text

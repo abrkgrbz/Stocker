@@ -5,13 +5,13 @@ import { useRouter, useParams } from 'next/navigation';
 import {
   Button,
   Tag,
-  Spin,
   Empty,
   Table,
   Modal,
   message,
   Dropdown,
 } from 'antd';
+import { Spinner } from '@/components/primitives';
 import type { ColumnsType } from 'antd/es/table';
 import {
   ArrowLeftIcon,
@@ -164,8 +164,8 @@ export default function SupplierDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <Spin size="large" />
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
+        <Spinner size="lg" />
       </div>
     );
   }

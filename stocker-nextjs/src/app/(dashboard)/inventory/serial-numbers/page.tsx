@@ -57,6 +57,7 @@ import type {
   CreateSerialNumberDto,
 } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
+import { TableEmptyState } from '@/components/primitives';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
@@ -170,10 +171,10 @@ export default function SerialNumbersPage() {
 
   const handleReceive = async (serial: SerialNumberListDto) => {
     Modal.confirm({
-      title: 'Seri Numarasini Teslim Al',
-      content: `"${serial.serial}" seri numarasini teslim almak istediginizden emin misiniz?`,
+      title: 'Seri Numarasıni Teslim Al',
+      content: `"${serial.serial}" seri numarasını teslim almak istediğinizden emin misiniz?`,
       okText: 'Teslim Al',
-      cancelText: 'Iptal',
+      cancelText: 'İptal',
       okButtonProps: { className: '!bg-slate-900 !border-slate-900' },
       cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: async () => {
@@ -210,10 +211,10 @@ export default function SerialNumbersPage() {
 
   const handleRelease = async (serial: SerialNumberListDto) => {
     Modal.confirm({
-      title: 'Rezervasyonu Kaldir',
-      content: `"${serial.serial}" seri numarasinin rezervasyonunu kaldirmak istediginizden emin misiniz?`,
-      okText: 'Kaldir',
-      cancelText: 'Iptal',
+      title: 'Rezervasyonu Kaldır',
+      content: `"${serial.serial}" seri numarasının rezervasyonunu kaldırmak istediğinizden emin misiniz?`,
+      okText: 'Kaldır',
+      cancelText: 'İptal',
       okButtonProps: { className: '!bg-slate-900 !border-slate-900' },
       cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: async () => {
@@ -276,10 +277,10 @@ export default function SerialNumbersPage() {
 
   const handleScrap = async (serial: SerialNumberListDto) => {
     Modal.confirm({
-      title: 'Hurda Olarak Isaretle',
-      content: `"${serial.serial}" seri numarasini hurda olarak isaretlemek istediginizden emin misiniz? Bu islem geri alinamaz.`,
-      okText: 'Hurda Isaretle',
-      cancelText: 'Iptal',
+      title: 'Hurda Olarak İşaretle',
+      content: `"${serial.serial}" seri numarasını hurda olarak işaretlemek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
+      okText: 'Hurda İşaretle',
+      cancelText: 'İptal',
       okButtonProps: { danger: true },
       cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: async () => {
@@ -316,7 +317,7 @@ export default function SerialNumbersPage() {
   // Table columns
   const columns: ColumnsType<SerialNumberListDto> = [
     {
-      title: 'Seri Numarasi',
+      title: 'Seri Numarası',
       dataIndex: 'serial',
       key: 'serial',
       width: 180,
@@ -332,7 +333,7 @@ export default function SerialNumbersPage() {
             <div className="mt-1">
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-slate-900 text-white">
                 <ShieldCheckIcon className="w-3 h-3" />
-                Garanti: {record.remainingWarrantyDays} gun
+                Garanti: {record.remainingWarrantyDays} gün
               </span>
             </div>
           )}
@@ -340,7 +341,7 @@ export default function SerialNumbersPage() {
       ),
     },
     {
-      title: 'Urun',
+      title: 'Ürün',
       key: 'product',
       width: 200,
       render: (_, record) => (
@@ -416,7 +417,7 @@ export default function SerialNumbersPage() {
           menuItems.push({
             key: 'release',
             icon: <LockOpenIcon className="w-4 h-4" />,
-            label: 'Rezervasyonu Kaldir',
+            label: 'Rezervasyonu Kaldır',
             onClick: () => handleRelease(record),
           });
           menuItems.push({
@@ -547,9 +548,9 @@ export default function SerialNumbersPage() {
             <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
               <QrCodeIcon className="w-5 h-5 text-white" />
             </div>
-            Seri Numarasi Yonetimi
+            Seri Numarası Yönetimi
           </h1>
-          <p className="text-slate-500 mt-1">Urun seri numaralarini takip edin ve yonetin</p>
+          <p className="text-slate-500 mt-1">Ürün seri numaralarını takip edin ve yönetin</p>
         </div>
         <Space>
           <Button
@@ -565,7 +566,7 @@ export default function SerialNumbersPage() {
             onClick={() => setCreateModalOpen(true)}
             className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
           >
-            Yeni Seri Numarasi
+            Yeni Seri Numarası
           </Button>
         </Space>
       </div>
@@ -675,7 +676,7 @@ export default function SerialNumbersPage() {
           />
 
           <Select
-            placeholder="Urun"
+            placeholder="Ürün"
             allowClear
             style={{ width: 220 }}
             className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
@@ -736,16 +737,23 @@ export default function SerialNumbersPage() {
             total: filteredSerialNumbers.length,
             pageSize: 10,
             showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayit`,
+            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
           }}
           scroll={{ x: 900 }}
+          locale={{
+            emptyText: <TableEmptyState
+              icon={QrCodeIcon}
+              title="Seri numarasi bulunamadi"
+              description="Henuz seri numarasi eklenmemis veya filtrelere uygun kayit yok."
+            />
+          }}
           className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
         />
       </div>
 
       {/* Create Modal */}
       <Modal
-        title={<span className="text-slate-900 font-semibold">Yeni Seri Numarasi Ekle</span>}
+        title={<span className="text-slate-900 font-semibold">Yeni Seri Numarası Ekle</span>}
         open={createModalOpen}
         onCancel={() => {
           setCreateModalOpen(false);
@@ -753,7 +761,7 @@ export default function SerialNumbersPage() {
         }}
         onOk={handleCreateSubmit}
         okText="Ekle"
-        cancelText="Iptal"
+        cancelText="İptal"
         confirmLoading={createSerialNumber.isPending}
         width={600}
         okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
@@ -767,18 +775,18 @@ export default function SerialNumbersPage() {
           <div className="grid grid-cols-2 gap-4">
             <Form.Item
               name="serial"
-              label={<span className="text-slate-700 font-medium">Seri Numarasi</span>}
+              label={<span className="text-slate-700 font-medium">Seri Numarası</span>}
               rules={[{ required: true, message: 'Seri numarasi gerekli' }]}
             >
               <Input placeholder="SN-2024-00001" className="!border-slate-300 !rounded-lg" />
             </Form.Item>
             <Form.Item
               name="productId"
-              label={<span className="text-slate-700 font-medium">Urun</span>}
-              rules={[{ required: true, message: 'Urun secimi gerekli' }]}
+              label={<span className="text-slate-700 font-medium">Ürün</span>}
+              rules={[{ required: true, message: 'Ürün seçimi gerekli' }]}
             >
               <Select
-                placeholder="Urun secin"
+                placeholder="Ürün seçin"
                 showSearch
                 optionFilterProp="children"
                 className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
@@ -839,7 +847,7 @@ export default function SerialNumbersPage() {
 
       {/* Detail Modal */}
       <Modal
-        title={<span className="text-slate-900 font-semibold">Seri Numarasi Detayi: {selectedSerial?.serial || ''}</span>}
+        title={<span className="text-slate-900 font-semibold">Seri Numarası Detayi: {selectedSerial?.serial || ''}</span>}
         open={detailModalOpen}
         onCancel={() => {
           setDetailModalOpen(false);
@@ -856,7 +864,7 @@ export default function SerialNumbersPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Seri Numarasi</p>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Seri Numarası</p>
                 <p className="text-lg font-semibold text-slate-900">{selectedSerial.serial}</p>
               </div>
               <div>
@@ -869,7 +877,7 @@ export default function SerialNumbersPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Urun</p>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Ürün</p>
                 <p className="font-semibold text-slate-900">{selectedSerial.productName}</p>
                 <p className="text-sm text-slate-500">{selectedSerial.productCode}</p>
               </div>
@@ -959,7 +967,7 @@ export default function SerialNumbersPage() {
             {(selectedSerial.salesOrderId || selectedSerial.purchaseOrderId) && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Satis Siparisi</p>
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Satış Siparişi</p>
                   <p className="text-slate-900">{selectedSerial.salesOrderId || '-'}</p>
                 </div>
                 <div>
@@ -987,7 +995,7 @@ export default function SerialNumbersPage() {
 
       {/* Sell Modal */}
       <Modal
-        title={<span className="text-slate-900 font-semibold">Seri Numarasini Sat</span>}
+        title={<span className="text-slate-900 font-semibold">Seri Numarasını Sat</span>}
         open={sellModalOpen}
         onCancel={() => {
           setSellModalOpen(false);
@@ -995,7 +1003,7 @@ export default function SerialNumbersPage() {
         }}
         onOk={handleSellConfirm}
         okText="Sat"
-        cancelText="Iptal"
+        cancelText="İptal"
         confirmLoading={sellSerialNumber.isPending}
         okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
         cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
@@ -1003,21 +1011,21 @@ export default function SerialNumbersPage() {
         <Form form={sellForm} layout="vertical" className="mt-4">
           <Form.Item
             name="customerId"
-            label={<span className="text-slate-700 font-medium">Musteri ID</span>}
-            rules={[{ required: true, message: 'Musteri ID gerekli' }]}
+            label={<span className="text-slate-700 font-medium">Müşteri ID</span>}
+            rules={[{ required: true, message: 'Müşteri ID gerekli' }]}
           >
-            <Input placeholder="Musteri ID girin" className="!border-slate-300 !rounded-lg" />
+            <Input placeholder="Müşteri ID girin" className="!border-slate-300 !rounded-lg" />
           </Form.Item>
           <Form.Item
             name="salesOrderId"
-            label={<span className="text-slate-700 font-medium">Satis Siparisi No</span>}
-            rules={[{ required: true, message: 'Satis siparisi numarasi gerekli' }]}
+            label={<span className="text-slate-700 font-medium">Satış Siparişi No</span>}
+            rules={[{ required: true, message: 'Satış siparişi numarası gerekli' }]}
           >
-            <Input placeholder="Satis siparisi numarasi" className="!border-slate-300 !rounded-lg" />
+            <Input placeholder="Satış siparişi numarası" className="!border-slate-300 !rounded-lg" />
           </Form.Item>
           <Form.Item
             name="warrantyMonths"
-            label={<span className="text-slate-700 font-medium">Garanti Suresi (Ay)</span>}
+            label={<span className="text-slate-700 font-medium">Garanti Süresi (Ay)</span>}
           >
             <InputNumber min={0} max={120} className="w-full !border-slate-300 !rounded-lg" placeholder="12" />
           </Form.Item>
@@ -1026,7 +1034,7 @@ export default function SerialNumbersPage() {
 
       {/* Reserve Modal */}
       <Modal
-        title={<span className="text-slate-900 font-semibold">Seri Numarasini Rezerve Et</span>}
+        title={<span className="text-slate-900 font-semibold">Seri Numarasıni Rezerve Et</span>}
         open={reserveModalOpen}
         onCancel={() => {
           setReserveModalOpen(false);
@@ -1034,7 +1042,7 @@ export default function SerialNumbersPage() {
         }}
         onOk={handleReserveConfirm}
         okText="Rezerve Et"
-        cancelText="Iptal"
+        cancelText="İptal"
         confirmLoading={reserveSerialNumber.isPending}
         okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
         cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
@@ -1042,33 +1050,33 @@ export default function SerialNumbersPage() {
         <Form form={reserveForm} layout="vertical" className="mt-4">
           <Form.Item
             name="salesOrderId"
-            label={<span className="text-slate-700 font-medium">Satis Siparisi No</span>}
-            rules={[{ required: true, message: 'Satis siparisi numarasi gerekli' }]}
+            label={<span className="text-slate-700 font-medium">Satış Siparişi No</span>}
+            rules={[{ required: true, message: 'Satış siparişi numarası gerekli' }]}
           >
-            <Input placeholder="Satis siparisi numarasi" className="!border-slate-300 !rounded-lg" />
+            <Input placeholder="Satış siparişi numarası" className="!border-slate-300 !rounded-lg" />
           </Form.Item>
         </Form>
       </Modal>
 
       {/* Defective Modal */}
       <Modal
-        title={<span className="text-slate-900 font-semibold">Arizali Olarak Isaretle</span>}
+        title={<span className="text-slate-900 font-semibold">Arızalı Olarak İşaretle</span>}
         open={defectiveModalOpen}
         onCancel={() => {
           setDefectiveModalOpen(false);
           defectiveForm.resetFields();
         }}
         onOk={handleDefectiveConfirm}
-        okText="Arizali Isaretle"
-        cancelText="Iptal"
+        okText="Arızalı İşaretle"
+        cancelText="İptal"
         confirmLoading={markDefective.isPending}
         okButtonProps={{ danger: true }}
         cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
       >
         <Alert
           type="warning"
-          message="Bu islem seri numarasini arizali olarak isaretleyecektir"
-          description="Arizali seri numaralari satisa kapali olacaktir."
+          message="Bu işlem seri numarasını arızalı olarak işaretleyecektir"
+          description="Arızalı seri numaraları satışa kapalı olacaktır."
           className="mb-4 !bg-slate-50 !border-slate-300 [&_.ant-alert-message]:!text-slate-900 [&_.ant-alert-description]:!text-slate-600"
           showIcon
         />

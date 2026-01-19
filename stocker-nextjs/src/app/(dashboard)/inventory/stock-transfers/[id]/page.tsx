@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Space, Table, Tag, Spin, Empty, Timeline, Progress, Modal } from 'antd';
+import { Button, Space, Table, Tag, Empty, Timeline, Progress, Modal } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
   ArrowLeftIcon,
   ArrowsRightLeftIcon,
@@ -178,7 +179,7 @@ export default function StockTransferDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }

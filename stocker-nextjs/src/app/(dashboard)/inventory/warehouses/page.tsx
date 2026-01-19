@@ -19,6 +19,7 @@ import {
 } from 'antd';
 import {
   ArrowPathIcon,
+  BuildingOffice2Icon,
   BuildingStorefrontIcon,
   CheckCircleIcon,
   EllipsisHorizontalIcon,
@@ -31,6 +32,7 @@ import {
   StarIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
+import { TableEmptyState } from '@/components/primitives';
 import {
   useWarehouses,
   useDeleteWarehouse,
@@ -105,9 +107,7 @@ export default function WarehousesPage() {
   };
 
   const handleSetDefault = async (warehouse: WarehouseDto) => {
-    console.log('handleSetDefault called for warehouse:', warehouse);
     if (warehouse.isDefault) {
-      console.log('Warehouse is already default, skipping');
       return;
     }
 
@@ -119,12 +119,9 @@ export default function WarehousesPage() {
       okButtonProps: { className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' },
       cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: async () => {
-        console.log('Modal confirmed, calling setDefaultWarehouse.mutateAsync for id:', warehouse.id);
         try {
           await setDefaultWarehouse.mutateAsync(warehouse.id);
-          console.log('setDefaultWarehouse successful');
         } catch (error) {
-          console.error('setDefaultWarehouse error:', error);
           // Error handled by hook
         }
       },
@@ -401,10 +398,17 @@ export default function WarehousesPage() {
             rowKey="id"
             loading={isLoading}
             scroll={{ x: 1200 }}
+            locale={{
+              emptyText: <TableEmptyState
+                icon={BuildingOffice2Icon}
+                title="Depo bulunamadi"
+                description="Henuz depo eklenmemis veya filtrelere uygun kayit yok."
+              />
+            }}
             className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-200"
             pagination={{
               showSizeChanger: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} depo`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
               pageSizeOptions: ['10', '20', '50'],
               defaultPageSize: 20,
             }}

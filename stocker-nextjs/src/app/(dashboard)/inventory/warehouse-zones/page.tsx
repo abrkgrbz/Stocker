@@ -26,9 +26,11 @@ import {
   MapPinIcon,
   PencilIcon,
   PlusIcon,
+  RectangleGroupIcon,
   TrashIcon,
   BeakerIcon,
 } from '@heroicons/react/24/outline';
+import { TableEmptyState } from '@/components/primitives';
 import {
   useWarehouseZones,
   useDeleteWarehouseZone,
@@ -74,13 +76,13 @@ export default function WarehouseZonesPage() {
   const deleteZone = useDeleteWarehouseZone();
 
   const handleDelete = async (zone: WarehouseZoneDto) => {
-    const confirmed = await confirmDelete('Depo Bolgesi', zone.name);
+    const confirmed = await confirmDelete('Depo Bölgesi', zone.name);
     if (confirmed) {
       try {
         await deleteZone.mutateAsync(zone.id);
-        showDeleteSuccess('depo bolgesi');
+        showDeleteSuccess('depo bölgesi');
       } catch (error) {
-        showError('Silme islemi basarisiz');
+        showError('Silme işlemi başarısız');
       }
     }
   };
@@ -101,7 +103,7 @@ export default function WarehouseZonesPage() {
 
   const columns: ColumnsType<WarehouseZoneDto> = [
     {
-      title: 'Bolge',
+      title: 'Bölge',
       dataIndex: 'name',
       key: 'name',
       sorter: (a, b) => a.name.localeCompare(b.name),
@@ -132,7 +134,7 @@ export default function WarehouseZonesPage() {
       ),
     },
     {
-      title: 'Bolge Tipi',
+      title: 'Bölge Tipi',
       dataIndex: 'zoneType',
       key: 'zoneType',
       width: 140,
@@ -223,7 +225,7 @@ export default function WarehouseZonesPage() {
           {
             key: 'edit',
             icon: <PencilIcon className="w-4 h-4" />,
-            label: 'Duzenle',
+            label: 'Düzenle',
             onClick: () => router.push(`/inventory/warehouse-zones/${record.id}/edit`),
           },
           { type: 'divider' as const },
@@ -251,8 +253,8 @@ export default function WarehouseZonesPage() {
     <div className="min-h-screen bg-slate-50 p-8">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Depo Bolgeleri</h1>
-          <p className="text-slate-500 mt-1">Depolarinizdaki bolgeleri tanimlayin ve yonetin</p>
+          <h1 className="text-2xl font-bold text-slate-900">Depo Bölgeleri</h1>
+          <p className="text-slate-500 mt-1">Depolarınızdaki bölgeleri tanımlayın ve yönetin</p>
         </div>
         <Space>
           <Button
@@ -269,7 +271,7 @@ export default function WarehouseZonesPage() {
             onClick={() => router.push(`/inventory/warehouse-zones/new${selectedWarehouse ? `?warehouseId=${selectedWarehouse}` : ''}`)}
             className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
           >
-            Yeni Bolge
+            Yeni Bölge
           </Button>
         </Space>
       </div>
@@ -283,7 +285,7 @@ export default function WarehouseZonesPage() {
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{totalZones}</div>
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Bolge</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Bölge</div>
           </div>
         </div>
         <div className="col-span-12 md:col-span-6 lg:col-span-3">
@@ -294,7 +296,7 @@ export default function WarehouseZonesPage() {
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{activeZones}</div>
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Aktif Bolge</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Aktif Bölge</div>
           </div>
         </div>
         <div className="col-span-12 md:col-span-6 lg:col-span-3">
@@ -305,7 +307,7 @@ export default function WarehouseZonesPage() {
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{temperatureControlledZones}</div>
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Sicaklik Kontrollu</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Sıcaklık Kontrollü</div>
           </div>
         </div>
         <div className="col-span-12 md:col-span-6 lg:col-span-3">
@@ -324,7 +326,7 @@ export default function WarehouseZonesPage() {
       <div className="bg-white border border-slate-200 rounded-xl p-6">
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <Select
-            placeholder="Depo secin"
+            placeholder="Depo seçin"
             allowClear
             style={{ width: 200 }}
             value={selectedWarehouse}
@@ -336,7 +338,7 @@ export default function WarehouseZonesPage() {
             className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           />
           <Input
-            placeholder="Bolge ara... (ad, kod, depo)"
+            placeholder="Bölge ara... (ad, kod, depo)"
             prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
@@ -359,10 +361,23 @@ export default function WarehouseZonesPage() {
             scroll={{ x: 1100 }}
             pagination={{
               showSizeChanger: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} bolge`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
+            }}
+            locale={{
+              emptyText: <TableEmptyState
+                icon={RectangleGroupIcon}
+                title="Depo bolgesi bulunamadi"
+                description="Henuz depo bolgesi eklenmemis veya filtrelere uygun kayit yok."
+              />
             }}
             onRow={(record) => ({
-              onClick: () => router.push(`/inventory/warehouse-zones/${record.id}`),
+              onClick: (e) => {
+                const target = e.target as HTMLElement;
+                if (target.closest('.ant-dropdown-trigger') || target.closest('.ant-dropdown')) {
+                  return;
+                }
+                router.push(`/inventory/warehouse-zones/${record.id}`);
+              },
               className: 'cursor-pointer hover:bg-slate-50',
             })}
             className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"

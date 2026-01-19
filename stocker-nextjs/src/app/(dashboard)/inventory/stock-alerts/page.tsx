@@ -30,6 +30,7 @@ import {
   MinusCircleIcon,
   PencilIcon,
 } from '@heroicons/react/24/outline';
+import { TableEmptyState } from '@/components/primitives';
 import {
   useProducts,
   useCategories,
@@ -50,7 +51,7 @@ function getStockStatus(product: ProductDto): { status: string; bgColor: string;
   } else if (product.totalStockQuantity <= product.minStockLevel) {
     return { status: 'Kritik', bgColor: 'bg-slate-700', textColor: 'text-white', icon: <ExclamationCircleIcon className="w-4 h-4" />, percent: Math.min(ratio, 100) };
   } else if (product.totalStockQuantity <= product.reorderLevel) {
-    return { status: 'Dusuk', bgColor: 'bg-slate-400', textColor: 'text-white', icon: <ExclamationTriangleIcon className="w-4 h-4" />, percent: Math.min(ratio, 100) };
+    return { status: 'Düşük', bgColor: 'bg-slate-400', textColor: 'text-white', icon: <ExclamationTriangleIcon className="w-4 h-4" />, percent: Math.min(ratio, 100) };
   } else if (product.totalStockQuantity <= product.maxStockLevel) {
     return { status: 'Normal', bgColor: 'bg-slate-200', textColor: 'text-slate-700', icon: <CheckCircleIcon className="w-4 h-4" />, percent: Math.min(ratio, 100) };
   } else {
@@ -209,7 +210,7 @@ export default function StockAlertsPage() {
   // Table columns
   const columns: ColumnsType<ProductDto> = [
     {
-      title: 'Urun',
+      title: 'Ürün',
       key: 'product',
       width: 250,
       render: (_, record) => (
@@ -298,19 +299,19 @@ export default function StockAlertsPage() {
       ),
     },
     {
-      title: 'Tedarik Suresi',
+      title: 'Tedarik Süresi',
       dataIndex: 'leadTimeDays',
       key: 'leadTimeDays',
       width: 100,
       align: 'right',
       render: (value: number) => (
         <span className={value === 0 ? 'text-slate-400' : 'text-slate-700'}>
-          {value === 0 ? '-' : `${value} gun`}
+          {value === 0 ? '-' : `${value} gün`}
         </span>
       ),
     },
     {
-      title: 'Islemler',
+      title: 'İşlemler',
       key: 'actions',
       width: 80,
       fixed: 'right',
@@ -334,7 +335,7 @@ export default function StockAlertsPage() {
       label: (
         <span className="flex items-center gap-2">
           <BellAlertIcon className="w-4 h-4" />
-          Tum Urunler
+          Tüm Ürünler
           <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
             {stats.total}
           </span>
@@ -358,7 +359,7 @@ export default function StockAlertsPage() {
       label: (
         <span className="flex items-center gap-2">
           <ExclamationTriangleIcon className="w-4 h-4" />
-          Dusuk
+          Düşük
           <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-400 text-white">
             {stats.low}
           </span>
@@ -382,7 +383,7 @@ export default function StockAlertsPage() {
       label: (
         <span className="flex items-center gap-2">
           <InformationCircleIcon className="w-4 h-4" />
-          Yapilandirilmamis
+          Yapılandırılmamış
           <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-100 text-slate-500">
             {stats.unconfigured}
           </span>
@@ -396,8 +397,8 @@ export default function StockAlertsPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Stok Seviye Uyarilari</h1>
-          <p className="text-slate-500 mt-1">Urun stok seviyelerini izleyin ve uyari esiklerini yapilandirin</p>
+          <h1 className="text-2xl font-bold text-slate-900">Stok Seviye Uyarıları</h1>
+          <p className="text-slate-500 mt-1">Ürün stok seviyelerini izleyin ve uyarı eşiklerini yapılandırın</p>
         </div>
         <Space>
           <Button
@@ -430,7 +431,7 @@ export default function StockAlertsPage() {
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Urun</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Ürün</div>
           </div>
         </div>
         <div className="col-span-12 md:col-span-4 lg:col-span-2">
@@ -463,7 +464,7 @@ export default function StockAlertsPage() {
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.low}</div>
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Dusuk Stok</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Düşük Stok</div>
           </div>
         </div>
         <div className="col-span-12 md:col-span-4 lg:col-span-2">
@@ -485,7 +486,7 @@ export default function StockAlertsPage() {
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.unconfigured}</div>
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Yapilandirilmamis</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Yapılandırılmamış</div>
           </div>
         </div>
       </div>
@@ -565,7 +566,14 @@ export default function StockAlertsPage() {
             total: filteredProducts.length,
             pageSize: 15,
             showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayit`,
+            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
+          }}
+          locale={{
+            emptyText: <TableEmptyState
+              icon={BellAlertIcon}
+              title="Uyari bulunamadi"
+              description="Henuz stok uyarisi eklenmemis veya filtrelere uygun kayit yok."
+            />
           }}
           scroll={{ x: 1200 }}
           className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
@@ -583,7 +591,7 @@ export default function StockAlertsPage() {
         }}
         onOk={handleConfigSave}
         okText="Kaydet"
-        cancelText="Iptal"
+        cancelText="İptal"
         confirmLoading={updateProduct.isPending}
         width={600}
         okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
@@ -594,11 +602,11 @@ export default function StockAlertsPage() {
           message="Stok Seviye Aciklamalari"
           description={
             <ul className="mt-2 space-y-1 text-sm text-slate-600">
-              <li><strong className="text-slate-700">Min. Stok:</strong> Bu seviyenin altina dusunce kritik uyari verilir</li>
-              <li><strong className="text-slate-700">Yeniden Siparis:</strong> Bu seviyeye ulasildiginda siparis onerisi yapilir</li>
-              <li><strong className="text-slate-700">Max. Stok:</strong> Stok bu seviyeyi asmamalidir</li>
-              <li><strong className="text-slate-700">Siparis Miktari:</strong> Siparis verildiginde onerilen miktar</li>
-              <li><strong className="text-slate-700">Tedarik Suresi:</strong> Siparis sonrasi beklenen teslim suresi</li>
+              <li><strong className="text-slate-700">Min. Stok:</strong> Bu seviyenin altına düşünce kritik uyarı verilir</li>
+              <li><strong className="text-slate-700">Yeniden Siparis:</strong> Bu seviyeye ulaşıldığında sipariş önerisi yapılır</li>
+              <li><strong className="text-slate-700">Max. Stok:</strong> Stok bu seviyeyi aşmamalıdır</li>
+              <li><strong className="text-slate-700">Sipariş Miktarı:</strong> Sipariş verildiğinde önerilen miktar</li>
+              <li><strong className="text-slate-700">Tedarik Süresi:</strong> Sipariş sonrası beklenen teslim süresi</li>
             </ul>
           }
           className="mb-4 !border-slate-300 !bg-slate-50"
@@ -640,8 +648,8 @@ export default function StockAlertsPage() {
           <div className="grid grid-cols-2 gap-4">
             <Form.Item
               name="reorderLevel"
-              label={<span className="text-slate-700 font-medium">Yeniden Siparis Seviyesi</span>}
-              rules={[{ required: true, message: 'Yeniden siparis seviyesi gerekli' }]}
+              label={<span className="text-slate-700 font-medium">Yeniden Sipariş Seviyesi</span>}
+              rules={[{ required: true, message: 'Yeniden sipariş seviyesi gerekli' }]}
             >
               <InputNumber
                 min={0}
@@ -653,8 +661,8 @@ export default function StockAlertsPage() {
             </Form.Item>
             <Form.Item
               name="reorderQuantity"
-              label={<span className="text-slate-700 font-medium">Siparis Miktari</span>}
-              rules={[{ required: true, message: 'Siparis miktari gerekli' }]}
+              label={<span className="text-slate-700 font-medium">Sipariş Miktarı</span>}
+              rules={[{ required: true, message: 'Sipariş miktarı gerekli' }]}
             >
               <InputNumber
                 min={0}
@@ -668,13 +676,13 @@ export default function StockAlertsPage() {
 
           <Form.Item
             name="leadTimeDays"
-            label={<span className="text-slate-700 font-medium">Tedarik Suresi</span>}
+            label={<span className="text-slate-700 font-medium">Tedarik Süresi</span>}
           >
             <InputNumber
               min={0}
               style={{ width: '100%' }}
               placeholder="0"
-              addonAfter="gun"
+              addonAfter="gün"
               className="!rounded-lg"
             />
           </Form.Item>
@@ -683,7 +691,7 @@ export default function StockAlertsPage() {
 
       {/* Bulk Config Modal */}
       <Modal
-        title={<span className="text-slate-900 font-semibold">Toplu Stok Seviye Ayarlari ({selectedRowKeys.length} urun)</span>}
+        title={<span className="text-slate-900 font-semibold">Toplu Stok Seviye Ayarları ({selectedRowKeys.length} urun)</span>}
         open={bulkConfigModalOpen}
         onCancel={() => {
           setBulkConfigModalOpen(false);
@@ -691,7 +699,7 @@ export default function StockAlertsPage() {
         }}
         onOk={handleBulkConfigSave}
         okText="Uygula"
-        cancelText="Iptal"
+        cancelText="İptal"
         confirmLoading={updateProduct.isPending}
         width={600}
         okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
@@ -699,8 +707,8 @@ export default function StockAlertsPage() {
       >
         <Alert
           type="warning"
-          message="Sadece doldurdugunuz alanlar guncellenecektir"
-          description="Bos biraktiginiz alanlar mevcut degerlerini koruyacaktir."
+          message="Sadece doldurduğunuz alanlar güncellenecektir"
+          description="Boş bıraktığınız alanlar mevcut değerlerini koruyacaktır."
           className="mb-4 !border-slate-300 !bg-slate-50"
           showIcon
         />
@@ -716,7 +724,7 @@ export default function StockAlertsPage() {
               <InputNumber
                 min={0}
                 style={{ width: '100%' }}
-                placeholder="Degistirme"
+                placeholder="Değiştirme"
                 className="!rounded-lg"
               />
             </Form.Item>
@@ -727,7 +735,7 @@ export default function StockAlertsPage() {
               <InputNumber
                 min={0}
                 style={{ width: '100%' }}
-                placeholder="Degistirme"
+                placeholder="Değiştirme"
                 className="!rounded-lg"
               />
             </Form.Item>
@@ -736,23 +744,23 @@ export default function StockAlertsPage() {
           <div className="grid grid-cols-2 gap-4">
             <Form.Item
               name="reorderLevel"
-              label={<span className="text-slate-700 font-medium">Yeniden Siparis Seviyesi</span>}
+              label={<span className="text-slate-700 font-medium">Yeniden Sipariş Seviyesi</span>}
             >
               <InputNumber
                 min={0}
                 style={{ width: '100%' }}
-                placeholder="Degistirme"
+                placeholder="Değiştirme"
                 className="!rounded-lg"
               />
             </Form.Item>
             <Form.Item
               name="reorderQuantity"
-              label={<span className="text-slate-700 font-medium">Siparis Miktari</span>}
+              label={<span className="text-slate-700 font-medium">Sipariş Miktarı</span>}
             >
               <InputNumber
                 min={0}
                 style={{ width: '100%' }}
-                placeholder="Degistirme"
+                placeholder="Değiştirme"
                 className="!rounded-lg"
               />
             </Form.Item>
@@ -760,12 +768,12 @@ export default function StockAlertsPage() {
 
           <Form.Item
             name="leadTimeDays"
-            label={<span className="text-slate-700 font-medium">Tedarik Suresi (gun)</span>}
+            label={<span className="text-slate-700 font-medium">Tedarik Süresi (gun)</span>}
           >
             <InputNumber
               min={0}
               style={{ width: '100%' }}
-              placeholder="Degistirme"
+              placeholder="Değiştirme"
               className="!rounded-lg"
             />
           </Form.Item>

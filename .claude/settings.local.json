@@ -128,7 +128,14 @@
       "mcp__serena__find_symbol",
       "Bash(node:*)",
       "Bash(docker container:*)",
-      "Bash(docker info:*)"
+      "Bash(docker info:*)",
+      "Bash(powershell -Command \"Get-Service *postgres*\")",
+      "Bash(powershell -Command \"docker ps -a --filter name=stocker-postgres --format ''{{.Names}} {{.Status}}''\")",
+      "mcp__serena__get_symbols_overview",
+      "Bash(docker exec:*)",
+      "Bash(timeout:*)",
+      "Bash(dir /s /b \"C:\\\\Users\\\\PC\\\\.claude\\\\commands\")",
+      "Bash(powershell -Command \"Get-ChildItem -Path ''C:\\\\Users\\\\PC\\\\.claude\\\\commands'' -Recurse | Select-Object FullName\")"
     ],
     "deny": [],
     "ask": []

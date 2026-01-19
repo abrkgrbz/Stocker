@@ -1,5 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Stocker.Modules.Inventory.Application.Contracts;
+using Stocker.Modules.Inventory.Application.Services;
 using Stocker.Modules.Inventory.Domain.Events;
 using Stocker.Modules.Inventory.Domain.Services;
 
@@ -113,13 +115,17 @@ public class StockAdjustedEventHandler : INotificationHandler<StockAdjustedDomai
 public class StockBelowMinimumEventHandler : INotificationHandler<StockBelowMinimumDomainEvent>
 {
     private readonly ILogger<StockBelowMinimumEventHandler> _logger;
+    private readonly IInventoryNotificationService _notificationService;
 
-    public StockBelowMinimumEventHandler(ILogger<StockBelowMinimumEventHandler> logger)
+    public StockBelowMinimumEventHandler(
+        ILogger<StockBelowMinimumEventHandler> logger,
+        IInventoryNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(StockBelowMinimumDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(StockBelowMinimumDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogWarning(
             "STOCK ALERT - Below minimum: Product {ProductCode} ({ProductName}) in Warehouse {WarehouseName}, " +
@@ -131,13 +137,17 @@ public class StockBelowMinimumEventHandler : INotificationHandler<StockBelowMini
             notification.MinimumStock,
             notification.ReorderPoint);
 
-        // TODO: Bildirim servisi ile uyarı gönder
-        // await _notificationService.SendStockAlertAsync(notification, cancellationToken);
-
-        // TODO: Yeniden sipariş önerisi oluştur
-        // await _reorderSuggestionService.CreateSuggestionAsync(notification, cancellationToken);
-
-        return Task.CompletedTask;
+        // Bildirim gönder
+        await _notificationService.SendLowStockAlertAsync(
+            notification.TenantId,
+            notification.ProductId,
+            notification.ProductName,
+            notification.ProductCode,
+            notification.WarehouseId,
+            notification.WarehouseName,
+            notification.CurrentQuantity,
+            notification.MinimumStock,
+            cancellationToken);
     }
 }
 
@@ -147,13 +157,17 @@ public class StockBelowMinimumEventHandler : INotificationHandler<StockBelowMini
 public class StockExpiringEventHandler : INotificationHandler<StockExpiringDomainEvent>
 {
     private readonly ILogger<StockExpiringEventHandler> _logger;
+    private readonly IStockAlertNotificationService _stockAlertNotificationService;
 
-    public StockExpiringEventHandler(ILogger<StockExpiringEventHandler> logger)
+    public StockExpiringEventHandler(
+        ILogger<StockExpiringEventHandler> logger,
+        IStockAlertNotificationService stockAlertNotificationService)
     {
         _logger = logger;
+        _stockAlertNotificationService = stockAlertNotificationService;
     }
 
-    public Task Handle(StockExpiringDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(StockExpiringDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogWarning(
             "STOCK ALERT - Expiring soon: Product {ProductCode} ({ProductName}), " +
@@ -165,9 +179,20 @@ public class StockExpiringEventHandler : INotificationHandler<StockExpiringDomai
             notification.ExpiryDate,
             notification.DaysUntilExpiry);
 
-        // TODO: Son kullanma tarihi bildirimi gönder
-        // await _notificationService.SendExpiryAlertAsync(notification, cancellationToken);
-
-        return Task.CompletedTask;
+        // Son kullanma tarihi bildirimi gönder
+        var alert = new ExpiringStockAlertDto
+        {
+            TenantId = notification.TenantId.ToString(),
+            LotBatchId = notification.StockId,
+            LotNumber = notification.LotNumber ?? "N/A",
+            ProductId = notification.ProductId,
+            ProductCode = notification.ProductCode,
+            ProductName = notification.ProductName,
+            Quantity = notification.Quantity,
+            ExpiryDate = notification.ExpiryDate,
+            DaysUntilExpiry = notification.DaysUntilExpiry,
+            Severity = notification.DaysUntilExpiry <= 7 ? StockAlertSeverity.Critical : StockAlertSeverity.Warning
+        };
+        await _stockAlertNotificationService.NotifyExpiringStockAsync(alert, cancellationToken);
     }
 }

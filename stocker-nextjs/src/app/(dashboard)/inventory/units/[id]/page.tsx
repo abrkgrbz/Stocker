@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Space, Tag, Spin, Empty } from 'antd';
+import { Button, Space, Tag, Empty } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
   ArrowLeftIcon,
   ArrowsRightLeftIcon,
@@ -27,7 +28,7 @@ export default function UnitDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }

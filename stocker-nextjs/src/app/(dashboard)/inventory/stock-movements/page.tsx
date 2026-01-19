@@ -30,6 +30,7 @@ import {
   FunnelIcon,
   PlusIcon,
 } from '@heroicons/react/24/outline';
+import { TableEmptyState } from '@/components/primitives';
 import {
   useStockMovements,
   useProducts,
@@ -604,10 +605,17 @@ export default function StockMovementsPage() {
             dataSource={movements}
             rowKey="id"
             loading={isLoading}
+            locale={{
+              emptyText: <TableEmptyState
+                icon={ArrowsRightLeftIcon}
+                title="Stok hareketi bulunamadi"
+                description="Henuz stok hareketi eklenmemis veya filtrelere uygun kayit yok."
+              />
+            }}
             className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-200"
             pagination={{
               showSizeChanger: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} hareket`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
               pageSizeOptions: ['20', '50', '100'],
               defaultPageSize: 50,
             }}

@@ -52,7 +52,7 @@ export default function ShelfLifePage() {
   // Table columns
   const columns: ColumnsType<LotBatchListDto> = [
     {
-      title: 'Lot Numarasi',
+      title: 'Lot Numarası',
       dataIndex: 'lotNumber',
       key: 'lotNumber',
       width: 150,
@@ -62,14 +62,14 @@ export default function ShelfLifePage() {
           {record.isExpired && (
             <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-slate-400 text-white">
               <ExclamationTriangleIcon className="w-3 h-3" />
-              Suresi Doldu
+              Süresi Doldu
             </span>
           )}
         </div>
       ),
     },
     {
-      title: 'Urun',
+      title: 'Ürün',
       key: 'product',
       width: 200,
       render: (_, record) => (
@@ -86,7 +86,7 @@ export default function ShelfLifePage() {
       render: (_, record) => (
         <div>
           <div className="font-semibold text-slate-900">{record.currentQuantity.toLocaleString('tr-TR')}</div>
-          <div className="text-xs text-slate-500">Kullanilabilir: {record.availableQuantity.toLocaleString('tr-TR')}</div>
+          <div className="text-xs text-slate-500">Kullanılabilir: {record.availableQuantity.toLocaleString('tr-TR')}</div>
         </div>
       ),
     },
@@ -106,7 +106,7 @@ export default function ShelfLifePage() {
       },
     },
     {
-      title: 'Kalan Gun',
+      title: 'Kalan Gün',
       key: 'daysLeft',
       width: 120,
       sorter: (a, b) => (a.daysUntilExpiry || 999) - (b.daysUntilExpiry || 999),
@@ -114,7 +114,7 @@ export default function ShelfLifePage() {
         if (record.isExpired) {
           return (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-400 text-white">
-              Suresi Doldu
+              Süresi Doldu
             </span>
           );
         }
@@ -142,13 +142,13 @@ export default function ShelfLifePage() {
             className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium"
             style={{ backgroundColor: bgColor, color: textColor }}
           >
-            {record.daysUntilExpiry} gun
+            {record.daysUntilExpiry} gün
           </span>
         );
       },
     },
     {
-      title: 'Kalan Raf Omru',
+      title: 'Kalan Raf Ömrü',
       key: 'shelfLife',
       width: 180,
       render: (_, record) => {
@@ -184,8 +184,8 @@ export default function ShelfLifePage() {
               <ClockIcon className="w-5 h-5 text-slate-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Raf Omru Takibi</h1>
-              <p className="text-slate-500 mt-1">Urun lotlarinin son kullanma tarihlerini ve kalan raf omurlerini takip edin</p>
+              <h1 className="text-2xl font-bold text-slate-900">Raf Ömrü Takibi</h1>
+              <p className="text-slate-500 mt-1">Ürün lotlarının son kullanma tarihlerini ve kalan raf ömürlerini takip edin</p>
             </div>
           </div>
         </div>
@@ -224,7 +224,7 @@ export default function ShelfLifePage() {
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.expired}</div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
-              Suresi Dolan
+              Süresi Dolan
             </div>
           </div>
         </div>
@@ -237,7 +237,7 @@ export default function ShelfLifePage() {
             </div>
             <div className="text-2xl font-bold text-slate-800">{stats.expiringSoon}</div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
-              7 Gun Icinde
+              7 Gün İçinde
             </div>
           </div>
         </div>
@@ -250,7 +250,7 @@ export default function ShelfLifePage() {
             </div>
             <div className="text-2xl font-bold text-slate-700">{stats.expiringMonth}</div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
-              30 Gun Icinde
+              30 Gün İçinde
             </div>
           </div>
         </div>
@@ -282,7 +282,7 @@ export default function ShelfLifePage() {
         {/* Filters */}
         <div className="flex flex-wrap gap-4 mb-6">
           <Input
-            placeholder="Lot veya urun ara..."
+            placeholder="Lot veya ürün ara..."
             prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
@@ -290,7 +290,7 @@ export default function ShelfLifePage() {
             className="w-64 [&_.ant-input]:!border-slate-300 [&_.ant-input]:!rounded-lg"
           />
           <Select
-            placeholder="Urun secin"
+            placeholder="Ürün seçin"
             allowClear
             style={{ width: 200 }}
             value={selectedProduct}
@@ -332,7 +332,7 @@ export default function ShelfLifePage() {
             total: filteredData.length,
             pageSize: 20,
             showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayit`,
+            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
           }}
           scroll={{ x: 1000 }}
           className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"

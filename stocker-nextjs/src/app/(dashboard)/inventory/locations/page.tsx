@@ -30,6 +30,7 @@ import {
   PlusIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
+import { TableEmptyState } from '@/components/primitives';
 import { useLocations, useDeleteLocation, useWarehouses } from '@/lib/api/hooks/useInventory';
 import type { LocationDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
@@ -163,7 +164,7 @@ export default function LocationsPage() {
       },
     },
     {
-      title: 'Urun Sayisi',
+      title: 'Ürün Sayısı',
       dataIndex: 'productCount',
       key: 'productCount',
       width: 120,
@@ -205,7 +206,7 @@ export default function LocationsPage() {
           {
             key: 'edit',
             icon: <PencilIcon className="w-4 h-4" />,
-            label: 'Duzenle',
+            label: 'Düzenle',
             onClick: () => router.push(`/inventory/locations/${record.id}/edit`),
           },
           { type: 'divider' as const },
@@ -334,7 +335,7 @@ export default function LocationsPage() {
               onChange={(e) => setIncludeInactive(e.target.checked)}
               className="rounded border-slate-300 text-slate-900 focus:ring-slate-500"
             />
-            Pasif lokasyonlari goster
+            Pasif lokasyonları göster
           </label>
         </div>
 
@@ -351,7 +352,14 @@ export default function LocationsPage() {
             scroll={{ x: 1100 }}
             pagination={{
               showSizeChanger: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} lokasyon`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
+            }}
+            locale={{
+              emptyText: <TableEmptyState
+                icon={MapPinIcon}
+                title="Lokasyon bulunamadi"
+                description="Henuz lokasyon eklenmemis veya filtrelere uygun kayit yok."
+              />
             }}
             className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
           />

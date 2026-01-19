@@ -1113,7 +1113,7 @@ export default function ProductsPage() {
             pageSize: pageSize,
             total: filteredProducts.length,
             showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} ürün`,
+            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
             onChange: (page, size) => {
               setCurrentPage(page);
               setPageSize(size);

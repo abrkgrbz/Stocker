@@ -632,7 +632,7 @@ export default function CostingPage() {
                   total: costLayers.totalCount,
                   pageSize: 50,
                   showSizeChanger: true,
-                  showTotal: (total) => `Toplam ${total} katman`,
+                  showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
                 }}
                 scroll={{ x: 1200 }}
                 size="small"

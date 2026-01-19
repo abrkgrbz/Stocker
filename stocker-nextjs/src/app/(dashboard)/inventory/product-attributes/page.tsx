@@ -41,13 +41,13 @@ import { showSuccess, confirmDelete } from '@/lib/utils/sweetalert';
 const attributeTypeConfig: Record<AttributeType, { label: string; icon: React.ReactNode }> = {
   Text: { label: 'Metin', icon: <LanguageIcon className="w-4 h-4" /> },
   TextArea: { label: 'Uzun Metin', icon: <LanguageIcon className="w-4 h-4" /> },
-  Integer: { label: 'Tam Sayi', icon: <HashtagIcon className="w-4 h-4" /> },
-  Decimal: { label: 'Ondalik Sayi', icon: <HashtagIcon className="w-4 h-4" /> },
-  Boolean: { label: 'Evet/Hayir', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Integer: { label: 'Tam Sayı', icon: <HashtagIcon className="w-4 h-4" /> },
+  Decimal: { label: 'Ondalık Sayı', icon: <HashtagIcon className="w-4 h-4" /> },
+  Boolean: { label: 'Evet/Hayır', icon: <CheckCircleIcon className="w-4 h-4" /> },
   Date: { label: 'Tarih', icon: <CalendarIcon className="w-4 h-4" /> },
   DateTime: { label: 'Tarih/Saat', icon: <CalendarIcon className="w-4 h-4" /> },
-  Select: { label: 'Secim', icon: <ListBulletIcon className="w-4 h-4" /> },
-  MultiSelect: { label: 'Coklu Secim', icon: <Squares2X2Icon className="w-4 h-4" /> },
+  Select: { label: 'Seçim', icon: <ListBulletIcon className="w-4 h-4" /> },
+  MultiSelect: { label: 'Çoklu Seçim', icon: <Squares2X2Icon className="w-4 h-4" /> },
   Color: { label: 'Renk', icon: <SwatchIcon className="w-4 h-4" /> },
   Url: { label: 'URL', icon: <LanguageIcon className="w-4 h-4" /> },
   File: { label: 'Dosya', icon: <LanguageIcon className="w-4 h-4" /> },
@@ -78,11 +78,11 @@ export default function ProductAttributesPage() {
   }, [searchText]);
 
   const handleDelete = async (record: ProductAttributeDetailDto) => {
-    const confirmed = await confirmDelete('Ozellik', record.name);
+    const confirmed = await confirmDelete('Özellik', record.name);
     if (confirmed) {
       try {
         await deleteAttribute.mutateAsync(record.id);
-        showSuccess('Basarili', 'Ozellik silindi');
+        showSuccess('Başarılı', 'Özellik silindi');
       } catch {
         // Error handled by hook
       }
@@ -110,7 +110,7 @@ export default function ProductAttributesPage() {
 
   const columns: ColumnsType<ProductAttributeDetailDto> = [
     {
-      title: 'Ozellik',
+      title: 'Özellik',
       key: 'name',
       render: (_, record) => (
         <div className="flex items-center gap-3">
@@ -170,7 +170,7 @@ export default function ProductAttributesPage() {
       ),
     },
     {
-      title: 'Ozellikler',
+      title: 'Özellikler',
       key: 'features',
       width: 220,
       render: (_, record) => (
@@ -236,13 +236,13 @@ export default function ProductAttributesPage() {
           {
             key: 'view',
             icon: <EyeIcon className="w-4 h-4" />,
-            label: 'Goruntule',
+            label: 'Görüntüle',
             onClick: () => router.push(`/inventory/product-attributes/${record.id}`),
           },
           {
             key: 'edit',
             icon: <PencilIcon className="w-4 h-4" />,
-            label: 'Duzenle',
+            label: 'Düzenle',
             onClick: () => router.push(`/inventory/product-attributes/${record.id}/edit`),
           },
           { type: 'divider' as const },
@@ -302,9 +302,9 @@ export default function ProductAttributesPage() {
             <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
               <TagIcon className="w-5 h-5 text-white" />
             </div>
-            Urun Ozellikleri
+            Ürün Özellikleri
           </h1>
-          <p className="text-slate-500 mt-1">Urun ozelliklerini ve varyant seceneklerini yonetin</p>
+          <p className="text-slate-500 mt-1">Ürün özelliklerini ve varyant seçeneklerini yönetin</p>
         </div>
         <Space>
           <Button
@@ -321,7 +321,7 @@ export default function ProductAttributesPage() {
             onClick={() => router.push('/inventory/product-attributes/new')}
             className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
           >
-            Yeni Ozellik
+            Yeni Özellik
           </Button>
         </Space>
       </div>
@@ -337,7 +337,7 @@ export default function ProductAttributesPage() {
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
-              Toplam Ozellik
+              Toplam Özellik
             </div>
           </div>
         </div>
@@ -350,7 +350,7 @@ export default function ProductAttributesPage() {
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.active}</div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
-              Aktif Ozellik
+              Aktif Özellik
             </div>
           </div>
         </div>
@@ -395,7 +395,7 @@ export default function ProductAttributesPage() {
         {/* Filters */}
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center mb-6">
           <Input
-            placeholder="Ozellik adi veya kodu ara..."
+            placeholder="Özellik adı veya kodu ara..."
             prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
@@ -426,7 +426,7 @@ export default function ProductAttributesPage() {
             style={{ width: 180 }}
             className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
             options={[
-              { value: false, label: 'Tum Ozellikler' },
+              { value: false, label: 'Tüm Özellikler' },
               { value: true, label: 'Sadece Filtrelenebilir' },
             ]}
           />
@@ -461,14 +461,20 @@ export default function ProductAttributesPage() {
               pageSize: pageSize,
               total: filteredAttributes.length,
               showSizeChanger: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} ozellik`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
               onChange: (page, size) => {
                 setCurrentPage(page);
                 setPageSize(size);
               },
             }}
             onRow={(record) => ({
-              onClick: () => router.push(`/inventory/product-attributes/${record.id}`),
+              onClick: (e) => {
+                const target = e.target as HTMLElement;
+                if (target.closest('.ant-dropdown-trigger') || target.closest('.ant-dropdown')) {
+                  return;
+                }
+                router.push(`/inventory/product-attributes/${record.id}`);
+              },
               style: { cursor: 'pointer' },
             })}
             className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"

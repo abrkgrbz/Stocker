@@ -1,21 +1,36 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Form, Input, Switch } from 'antd';
+import { Form } from 'antd';
 import { BuildingOfficeIcon, LinkIcon } from '@heroicons/react/24/outline';
-import type { BrandDto } from '@/lib/api/services/inventory.types';
-
-const { TextArea } = Input;
+import type { BrandDto, CreateBrandDto, UpdateBrandDto } from '@/lib/api/services/inventory.types';
+import {
+  FormHeader,
+  FormSection,
+  FormInput,
+  FormStatGrid,
+  useUnsavedChanges,
+  nameFieldRules,
+  codeFieldRules,
+  urlFieldRules,
+} from '@/components/forms';
 
 interface BrandFormProps {
   form: ReturnType<typeof Form.useForm>[0];
   initialValues?: BrandDto;
-  onFinish: (values: any) => void;
+  onFinish: (values: CreateBrandDto | UpdateBrandDto) => void;
   loading?: boolean;
 }
 
 export default function BrandForm({ form, initialValues, onFinish, loading }: BrandFormProps) {
   const [isActive, setIsActive] = useState(true);
+
+  // Unsaved changes tracking
+  const { markAsSaved } = useUnsavedChanges({
+    form,
+    enabled: true,
+    initialValues: initialValues || {},
+  });
 
   useEffect(() => {
     if (initialValues) {
@@ -24,11 +39,16 @@ export default function BrandForm({ form, initialValues, onFinish, loading }: Br
     }
   }, [form, initialValues]);
 
+  const handleFinish = (values: any) => {
+    markAsSaved();
+    onFinish(values);
+  };
+
   return (
     <Form
       form={form}
       layout="vertical"
-      onFinish={onFinish}
+      onFinish={handleFinish}
       disabled={loading}
       className="w-full"
       scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
@@ -36,87 +56,36 @@ export default function BrandForm({ form, initialValues, onFinish, loading }: Br
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
 
-        {/* ═══════════════════════════════════════════════════════════════
-            HEADER: Icon + Name + Status Toggle
-        ═══════════════════════════════════════════════════════════════ */}
-        <div className="px-8 py-6 border-b border-slate-200">
-          <div className="flex items-center gap-6">
-            {/* Brand Icon */}
-            <div className="flex-shrink-0">
-              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
-                <BuildingOfficeIcon className="w-6 h-6 text-slate-500" />
-              </div>
-            </div>
+        {/* Header */}
+        <FormHeader
+          form={form}
+          icon={<BuildingOfficeIcon className="w-6 h-6 text-slate-500" />}
+          titleField="name"
+          titlePlaceholder="Marka Adı Girin..."
+          titleRules={nameFieldRules('Marka adı')}
+          descriptionField="description"
+          descriptionPlaceholder="Marka hakkında kısa açıklama..."
+          showStatusToggle={true}
+          statusValue={isActive}
+          onStatusChange={setIsActive}
+          loading={loading}
+        />
 
-            {/* Brand Name - Title Style */}
-            <div className="flex-1">
-              <Form.Item
-                name="name"
-                rules={[
-                  { required: true, message: 'Marka adı zorunludur' },
-                  { max: 200, message: 'Marka adı en fazla 200 karakter olabilir' },
-                ]}
-                className="mb-0"
-              >
-                <Input
-                  placeholder="Marka Adı Girin..."
-                  variant="borderless"
-                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
-                />
-              </Form.Item>
-              <Form.Item name="description" className="mb-0 mt-1">
-                <Input
-                  placeholder="Marka hakkında kısa açıklama..."
-                  variant="borderless"
-                  className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400"
-                />
-              </Form.Item>
-            </div>
-
-            {/* Status Toggle */}
-            <div className="flex-shrink-0">
-              <div className="flex items-center gap-3 bg-slate-100 px-4 py-2 rounded-lg">
-                <span className="text-sm font-medium text-slate-600">
-                  {isActive ? 'Aktif' : 'Pasif'}
-                </span>
-                <Form.Item name="isActive" valuePropName="checked" noStyle initialValue={true}>
-                  <Switch
-                    checked={isActive}
-                    onChange={(val) => {
-                      setIsActive(val);
-                      form.setFieldValue('isActive', val);
-                    }}
-                  />
-                </Form.Item>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════════════════════════
-            FORM BODY: High-Density Grid Layout
-        ═══════════════════════════════════════════════════════════════ */}
+        {/* Form Body */}
         <div className="px-8 py-6">
 
-          {/* ─────────────── TEMEL BİLGİLER ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Temel Bilgiler
-            </h3>
+          {/* Temel Bilgiler */}
+          <FormSection title="Temel Bilgiler">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Marka Kodu <span className="text-red-500">*</span></label>
-                <Form.Item
+                <FormInput
                   name="code"
-                  rules={[{ required: true, message: 'Marka kodu zorunludur' }]}
-                  className="mb-0"
-                >
-                  <Input
-                    placeholder="BRD-001"
-                    disabled={!!initialValues}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                  label="Marka Kodu"
+                  required
+                  placeholder="BRD-001"
+                  disabled={!!initialValues}
+                  rules={codeFieldRules('Marka kodu')}
+                />
               </div>
               {initialValues && (
                 <div className="col-span-6">
@@ -127,36 +96,31 @@ export default function BrandForm({ form, initialValues, onFinish, loading }: Br
                 </div>
               )}
             </div>
-          </div>
+          </FormSection>
 
-          {/* ─────────────── WEB & MEDYA ─────────────── */}
-          <div>
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Web & Medya
-            </h3>
+          {/* Web & Medya */}
+          <FormSection title="Web & Medya">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Web Sitesi</label>
-                <Form.Item name="website" className="mb-0">
-                  <Input
-                    placeholder="https://www.example.com"
-                    prefix={<LinkIcon className="w-4 h-4 text-slate-400" />}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="website"
+                  label="Web Sitesi"
+                  placeholder="https://www.example.com"
+                  prefix={<LinkIcon className="w-4 h-4 text-slate-400" />}
+                  rules={urlFieldRules()}
+                />
               </div>
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Logo URL</label>
-                <Form.Item name="logoUrl" className="mb-0">
-                  <Input
-                    placeholder="https://www.example.com/logo.png"
-                    prefix={<LinkIcon className="w-4 h-4 text-slate-400" />}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="logoUrl"
+                  label="Logo URL"
+                  placeholder="https://www.example.com/logo.png"
+                  prefix={<LinkIcon className="w-4 h-4 text-slate-400" />}
+                  rules={urlFieldRules()}
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
         </div>
       </div>

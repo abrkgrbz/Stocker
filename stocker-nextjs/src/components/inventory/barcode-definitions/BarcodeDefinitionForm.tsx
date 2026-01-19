@@ -1,28 +1,25 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  Switch,
-  DatePicker,
-} from 'antd';
-import {
-  QrCodeIcon,
-} from '@heroicons/react/24/outline';
+import { Form, DatePicker } from 'antd';
+import { QrCodeIcon } from '@heroicons/react/24/outline';
 import { useProducts, useUnits, usePackagingTypes } from '@/lib/api/hooks/useInventory';
 import { BarcodeType } from '@/lib/api/services/inventory.types';
-import type { BarcodeDefinitionDto } from '@/lib/api/services/inventory.types';
+import type { BarcodeDefinitionDto, CreateBarcodeDefinitionDto, UpdateBarcodeDefinitionDto } from '@/lib/api/services/inventory.types';
 import dayjs from 'dayjs';
-
-const { TextArea } = Input;
+import {
+  FormSection,
+  FormInput,
+  FormNumber,
+  FormSelect,
+  FormSwitch,
+  useUnsavedChanges,
+} from '@/components/forms';
 
 interface BarcodeDefinitionFormProps {
   form: ReturnType<typeof Form.useForm>[0];
   initialValues?: BarcodeDefinitionDto;
-  onFinish: (values: any) => void;
+  onFinish: (values: CreateBarcodeDefinitionDto | UpdateBarcodeDefinitionDto) => void;
   loading?: boolean;
 }
 
@@ -49,6 +46,13 @@ export default function BarcodeDefinitionForm({ form, initialValues, onFinish, l
   const [isPrimary, setIsPrimary] = useState(false);
   const [isManufacturer, setIsManufacturer] = useState(false);
 
+  // Unsaved changes tracking
+  const { markAsSaved } = useUnsavedChanges({
+    form,
+    enabled: true,
+    initialValues: initialValues || {},
+  });
+
   useEffect(() => {
     if (initialValues) {
       form.setFieldsValue({
@@ -69,6 +73,7 @@ export default function BarcodeDefinitionForm({ form, initialValues, onFinish, l
   }, [form, initialValues]);
 
   const handleFinish = (values: any) => {
+    markAsSaved();
     const formattedValues = {
       ...values,
       validFrom: values.validFrom?.toISOString(),
@@ -76,6 +81,21 @@ export default function BarcodeDefinitionForm({ form, initialValues, onFinish, l
     };
     onFinish(formattedValues);
   };
+
+  const productOptions = products.map((p) => ({
+    value: p.id,
+    label: `${p.code} - ${p.name}`,
+  }));
+
+  const unitOptions = units.map((u) => ({
+    value: u.id,
+    label: `${u.name} (${u.symbol || u.code})`,
+  }));
+
+  const packagingTypeOptions = packagingTypes.map((p) => ({
+    value: p.id,
+    label: `${p.code} - ${p.name}`,
+  }));
 
   return (
     <Form
@@ -101,38 +121,33 @@ export default function BarcodeDefinitionForm({ form, initialValues, onFinish, l
 
             {/* Barcode Input */}
             <div className="flex-1">
-              <Form.Item
+              <FormInput
                 name="barcode"
+                placeholder="Barkod Numarası..."
+                variant="borderless"
+                disabled={!!initialValues}
                 rules={[
                   { required: true, message: 'Barkod numarası zorunludur' },
                   { max: 50, message: 'Barkod en fazla 50 karakter olabilir' },
                 ]}
-                className="mb-0"
-              >
-                <Input
-                  placeholder="Barkod Numarası..."
-                  variant="borderless"
-                  disabled={!!initialValues}
-                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium font-mono"
-                />
-              </Form.Item>
-              <Form.Item name="description" className="mb-0 mt-1">
-                <Input
-                  placeholder="Barkod açıklaması..."
-                  variant="borderless"
-                  className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400"
-                />
-              </Form.Item>
+                className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium font-mono"
+              />
+              <FormInput
+                name="description"
+                placeholder="Barkod açıklaması..."
+                variant="borderless"
+                className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400 mt-1"
+              />
             </div>
 
             {/* Barcode Type Selector */}
             <div className="flex-shrink-0 w-40">
-              <Form.Item name="barcodeType" className="mb-0" initialValue={BarcodeType.EAN13}>
-                <Select
-                  options={barcodeTypeOptions}
-                  className="w-full [&_.ant-select-selector]:!bg-slate-100 [&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!rounded-lg"
-                />
-              </Form.Item>
+              <FormSelect
+                name="barcodeType"
+                options={barcodeTypeOptions}
+                formItemProps={{ initialValue: BarcodeType.EAN13 }}
+                className="w-full [&_.ant-select-selector]:!bg-slate-100 [&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!rounded-lg"
+              />
             </div>
           </div>
         </div>
@@ -141,155 +156,106 @@ export default function BarcodeDefinitionForm({ form, initialValues, onFinish, l
         <div className="px-8 py-6">
 
           {/* Ürün Bilgileri */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Ürün Bilgileri
-            </h3>
+          <FormSection title="Ürün Bilgileri">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ürün <span className="text-red-500">*</span></label>
-                <Form.Item
+                <FormSelect
                   name="productId"
-                  rules={[{ required: true, message: 'Ürün seçimi zorunludur' }]}
-                  className="mb-0"
-                >
-                  <Select
-                    placeholder="Ürün seçin"
-                    loading={productsLoading}
-                    showSearch
-                    optionFilterProp="label"
-                    disabled={!!initialValues}
-                    options={products.map((p) => ({
-                      value: p.id,
-                      label: `${p.code} - ${p.name}`,
-                    }))}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                  label="Ürün"
+                  required
+                  placeholder="Ürün seçin"
+                  loading={productsLoading}
+                  disabled={!!initialValues}
+                  options={productOptions}
+                />
               </div>
               <div className="col-span-3">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Birim</label>
-                <Form.Item name="unitId" className="mb-0">
-                  <Select
-                    placeholder="Birim seçin"
-                    loading={unitsLoading}
-                    allowClear
-                    options={units.map((u) => ({
-                      value: u.id,
-                      label: `${u.name} (${u.symbol || u.code})`,
-                    }))}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                <FormSelect
+                  name="unitId"
+                  label="Birim"
+                  placeholder="Birim seçin"
+                  loading={unitsLoading}
+                  allowClear
+                  options={unitOptions}
+                />
               </div>
               <div className="col-span-3">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Birim Başına Miktar</label>
-                <Form.Item name="quantityPerUnit" className="mb-0" initialValue={1}>
-                  <InputNumber
-                    style={{ width: '100%' }}
-                    min={1}
-                    placeholder="1"
-                    className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
-                  />
-                </Form.Item>
+                <FormNumber
+                  name="quantityPerUnit"
+                  label="Birim Başına Miktar"
+                  placeholder="1"
+                  min={1}
+                  formItemProps={{ initialValue: 1 }}
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
-          {/* Ambalaj */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Ambalaj Bilgileri
-            </h3>
+          {/* Ambalaj Bilgileri */}
+          <FormSection title="Ambalaj Bilgileri">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ambalaj Tipi</label>
-                <Form.Item name="packagingTypeId" className="mb-0">
-                  <Select
-                    placeholder="Ambalaj tipi seçin"
-                    loading={packagingTypesLoading}
-                    allowClear
-                    showSearch
-                    optionFilterProp="label"
-                    options={packagingTypes.map((p) => ({
-                      value: p.id,
-                      label: `${p.code} - ${p.name}`,
-                    }))}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                <FormSelect
+                  name="packagingTypeId"
+                  label="Ambalaj Tipi"
+                  placeholder="Ambalaj tipi seçin"
+                  loading={packagingTypesLoading}
+                  allowClear
+                  options={packagingTypeOptions}
+                />
               </div>
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">GTIN</label>
-                <Form.Item name="gtin" className="mb-0">
-                  <Input
-                    placeholder="00012345678905"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white font-mono"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="gtin"
+                  label="GTIN"
+                  placeholder="00012345678905"
+                  className="font-mono"
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
           {/* Üretici Bilgileri */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Üretici Bilgileri
-            </h3>
+          <FormSection title="Üretici Bilgileri">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <div>
-                    <div className="text-sm font-medium text-slate-700">Üretici Barkodu</div>
-                    <div className="text-xs text-slate-500 mt-0.5">Üretici tarafından tanımlı</div>
-                  </div>
-                  <Form.Item name="isManufacturerBarcode" valuePropName="checked" noStyle>
-                    <Switch
-                      checked={isManufacturer}
-                      onChange={(val) => {
-                        setIsManufacturer(val);
-                        form.setFieldValue('isManufacturerBarcode', val);
-                      }}
-                    />
-                  </Form.Item>
-                </div>
+                <FormSwitch
+                  form={form}
+                  name="isManufacturerBarcode"
+                  title="Üretici Barkodu"
+                  value={isManufacturer}
+                  onChange={setIsManufacturer}
+                  descriptionTrue="Üretici tarafından tanımlı"
+                  descriptionFalse="Dahili barkod"
+                  disabled={loading}
+                />
               </div>
               {isManufacturer && (
                 <div className="col-span-4">
-                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Üretici Kodu</label>
-                  <Form.Item name="manufacturerCode" className="mb-0">
-                    <Input
-                      placeholder="MFR-001"
-                      className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                    />
-                  </Form.Item>
+                  <FormInput
+                    name="manufacturerCode"
+                    label="Üretici Kodu"
+                    placeholder="MFR-001"
+                  />
                 </div>
               )}
             </div>
-          </div>
+          </FormSection>
 
-          {/* Durum */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Durum ve Geçerlilik
-            </h3>
+          {/* Durum ve Geçerlilik */}
+          <FormSection title="Durum ve Geçerlilik">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <div>
-                    <div className="text-sm font-medium text-slate-700">Birincil Barkod</div>
-                    <div className="text-xs text-slate-500 mt-0.5">Ana ürün barkodu</div>
-                  </div>
-                  <Form.Item name="isPrimary" valuePropName="checked" noStyle>
-                    <Switch
-                      checked={isPrimary}
-                      onChange={(val) => {
-                        setIsPrimary(val);
-                        form.setFieldValue('isPrimary', val);
-                      }}
-                    />
-                  </Form.Item>
-                </div>
+                <FormSwitch
+                  form={form}
+                  name="isPrimary"
+                  title="Birincil Barkod"
+                  value={isPrimary}
+                  onChange={setIsPrimary}
+                  descriptionTrue="Ana ürün barkodu"
+                  descriptionFalse="İkincil barkod"
+                  disabled={loading}
+                />
               </div>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Geçerlilik Başlangıcı</label>
@@ -314,7 +280,7 @@ export default function BarcodeDefinitionForm({ form, initialValues, onFinish, l
                 </Form.Item>
               </div>
             </div>
-          </div>
+          </FormSection>
 
         </div>
       </div>

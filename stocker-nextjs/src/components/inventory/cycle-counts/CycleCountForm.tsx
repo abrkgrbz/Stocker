@@ -1,18 +1,26 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Form, Input, InputNumber, Select, Switch, DatePicker } from 'antd';
+import { Form, DatePicker } from 'antd';
 import { CalculatorIcon } from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
-
-const { TextArea } = Input;
 import { useWarehouses, useWarehouseZones, useCategories } from '@/lib/api/hooks/useInventory';
-import type { CycleCountDto } from '@/lib/api/services/inventory.types';
+import type { CycleCountDto, CreateCycleCountDto, UpdateCycleCountDto } from '@/lib/api/services/inventory.types';
+import {
+  FormSection,
+  FormInput,
+  FormTextArea,
+  FormNumber,
+  FormSelect,
+  FormSwitch,
+  useUnsavedChanges,
+  nameFieldRules,
+} from '@/components/forms';
 
 interface CycleCountFormProps {
   form: ReturnType<typeof Form.useForm>[0];
   initialValues?: CycleCountDto;
-  onFinish: (values: any) => void;
+  onFinish: (values: CreateCycleCountDto | UpdateCycleCountDto) => void;
   loading?: boolean;
 }
 
@@ -66,6 +74,13 @@ export default function CycleCountForm({ form, initialValues, onFinish, loading 
     label: c.name,
   }));
 
+  // Unsaved changes tracking
+  const { markAsSaved } = useUnsavedChanges({
+    form,
+    enabled: true,
+    initialValues: initialValues || {},
+  });
+
   useEffect(() => {
     if (initialValues) {
       form.setFieldsValue({
@@ -88,6 +103,7 @@ export default function CycleCountForm({ form, initialValues, onFinish, loading 
   }, [form, initialValues]);
 
   const handleFinish = (values: any) => {
+    markAsSaved();
     const data = {
       ...values,
       scheduledStartDate: values.scheduledStartDate?.toISOString(),
@@ -108,9 +124,7 @@ export default function CycleCountForm({ form, initialValues, onFinish, loading 
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
 
-        {/* ═══════════════════════════════════════════════════════════════
-            HEADER: Icon + Title
-        ═══════════════════════════════════════════════════════════════ */}
+        {/* Header */}
         <div className="px-8 py-6 border-b border-slate-200">
           <div className="flex items-center gap-6">
             {/* Icon */}
@@ -120,108 +134,77 @@ export default function CycleCountForm({ form, initialValues, onFinish, loading 
               </div>
             </div>
 
-            {/* Plan Name - Title Style */}
+            {/* Plan Name */}
             <div className="flex-1">
-              <Form.Item
+              <FormInput
                 name="planName"
-                rules={[
-                  { required: true, message: 'Plan adı zorunludur' },
-                  { max: 100, message: 'Plan adı en fazla 100 karakter olabilir' },
-                ]}
-                className="mb-0"
-              >
-                <Input
-                  placeholder="Sayım Planı Adı Girin... (örn: Ocak 2024 A Sınıfı Sayım)"
-                  variant="borderless"
-                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
-                />
-              </Form.Item>
+                placeholder="Sayım Planı Adı Girin... (örn: Ocak 2024 A Sınıfı Sayım)"
+                rules={nameFieldRules('Plan adı', 100)}
+                formItemProps={{ className: 'mb-0' }}
+                className="!text-2xl !font-bold !text-slate-900 !p-0 !bg-transparent !border-0 !shadow-none placeholder:!text-slate-400 placeholder:!font-medium focus:!ring-0"
+              />
             </div>
           </div>
         </div>
 
-        {/* ═══════════════════════════════════════════════════════════════
-            FORM BODY: High-Density Grid Layout
-        ═══════════════════════════════════════════════════════════════ */}
+        {/* Form Body */}
         <div className="px-8 py-6">
 
-          {/* ─────────────── TEMEL BİLGİLER ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Temel Bilgiler
-            </h3>
+          {/* Temel Bilgiler */}
+          <FormSection title="Temel Bilgiler">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Plan Numarası <span className="text-red-500">*</span></label>
-                <Form.Item
+                <FormInput
                   name="planNumber"
-                  rules={[{ required: true, message: 'Plan numarası zorunludur' }]}
-                  className="mb-0"
-                >
-                  <Input
-                    placeholder="CC-2024-001"
-                    disabled={!!initialValues}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                  label="Plan Numarası"
+                  required
+                  placeholder="CC-2024-001"
+                  disabled={!!initialValues}
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Depo <span className="text-red-500">*</span></label>
-                <Form.Item
+                <FormSelect
                   name="warehouseId"
-                  rules={[{ required: true, message: 'Depo seçimi zorunludur' }]}
-                  className="mb-0"
-                >
-                  <Select
-                    placeholder="Depo seçin"
-                    showSearch
-                    optionFilterProp="label"
-                    options={warehouseOptions}
-                    disabled={!!initialValues}
-                    onChange={(value) => {
-                      setSelectedWarehouseId(value);
-                      form.setFieldValue('zoneId', undefined);
-                    }}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                  label="Depo"
+                  required
+                  placeholder="Depo seçin"
+                  disabled={!!initialValues}
+                  options={warehouseOptions}
+                  onChange={(value) => {
+                    setSelectedWarehouseId(value);
+                    form.setFieldValue('zoneId', undefined);
+                  }}
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sayım Tipi <span className="text-red-500">*</span></label>
-                <Form.Item
+                <FormSelect
                   name="countType"
-                  rules={[{ required: true, message: 'Sayım tipi zorunludur' }]}
-                  className="mb-0"
-                >
-                  <Select
-                    placeholder="Tip seçin"
-                    options={countTypeOptions}
-                    disabled={!!initialValues}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                  label="Sayım Tipi"
+                  required
+                  placeholder="Tip seçin"
+                  disabled={!!initialValues}
+                  options={countTypeOptions}
+                  showSearch={false}
+                />
               </div>
               <div className="col-span-12">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Açıklama</label>
-                <Form.Item name="description" className="mb-0">
-                  <TextArea
-                    placeholder="Sayım planı hakkında açıklama..."
-                    rows={2}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
-                  />
-                </Form.Item>
+                <FormTextArea
+                  name="description"
+                  label="Açıklama"
+                  placeholder="Sayım planı hakkında açıklama..."
+                  rows={2}
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
-          {/* ─────────────── ZAMANLAMA ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Zamanlama
-            </h3>
+          {/* Zamanlama */}
+          <FormSection title="Zamanlama">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Başlangıç Tarihi <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">
+                  Başlangıç Tarihi <span className="text-red-500">*</span>
+                </label>
                 <Form.Item
                   name="scheduledStartDate"
                   rules={[{ required: true, message: 'Başlangıç tarihi zorunludur' }]}
@@ -230,12 +213,14 @@ export default function CycleCountForm({ form, initialValues, onFinish, loading 
                   <DatePicker
                     format="DD.MM.YYYY"
                     placeholder="Tarih seçin"
-                    className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
+                    className="!w-full !bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900"
                   />
                 </Form.Item>
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Bitiş Tarihi <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">
+                  Bitiş Tarihi <span className="text-red-500">*</span>
+                </label>
                 <Form.Item
                   name="scheduledEndDate"
                   rules={[{ required: true, message: 'Bitiş tarihi zorunludur' }]}
@@ -244,190 +229,148 @@ export default function CycleCountForm({ form, initialValues, onFinish, loading 
                   <DatePicker
                     format="DD.MM.YYYY"
                     placeholder="Tarih seçin"
-                    className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
+                    className="!w-full !bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900"
                   />
                 </Form.Item>
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Tekrar Sıklığı</label>
-                <Form.Item name="frequency" className="mb-0">
-                  <Select
-                    placeholder="Sıklık seçin"
-                    allowClear
-                    options={frequencyOptions}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                <FormSelect
+                  name="frequency"
+                  label="Tekrar Sıklığı"
+                  placeholder="Sıklık seçin"
+                  allowClear
+                  options={frequencyOptions}
+                  showSearch={false}
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
-          {/* ─────────────── FİLTRELEME SEÇENEKLERİ ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Filtreleme Seçenekleri
-            </h3>
+          {/* Filtreleme Seçenekleri */}
+          <FormSection title="Filtreleme Seçenekleri">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Bölge</label>
-                <Form.Item name="zoneId" className="mb-0">
-                  <Select
-                    placeholder="Bölge seçin"
-                    allowClear
-                    showSearch
-                    optionFilterProp="label"
-                    options={zoneOptions}
-                    disabled={!selectedWarehouseId}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                <FormSelect
+                  name="zoneId"
+                  label="Bölge"
+                  placeholder="Bölge seçin"
+                  allowClear
+                  disabled={!selectedWarehouseId}
+                  options={zoneOptions}
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Kategori</label>
-                <Form.Item name="categoryId" className="mb-0">
-                  <Select
-                    placeholder="Kategori seçin"
-                    allowClear
-                    showSearch
-                    optionFilterProp="label"
-                    options={categoryOptions}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                <FormSelect
+                  name="categoryId"
+                  label="Kategori"
+                  placeholder="Kategori seçin"
+                  allowClear
+                  options={categoryOptions}
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">ABC Sınıfı</label>
-                <Form.Item name="abcClassFilter" className="mb-0">
-                  <Select
-                    placeholder="ABC sınıfı seçin"
-                    allowClear
-                    options={abcClassOptions}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                <FormSelect
+                  name="abcClassFilter"
+                  label="ABC Sınıfı"
+                  placeholder="ABC sınıfı seçin"
+                  allowClear
+                  options={abcClassOptions}
+                  showSearch={false}
+                />
               </div>
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Son Hareketten Bu Yana (Gün)</label>
-                <Form.Item name="daysSinceLastMovement" className="mb-0">
-                  <InputNumber
-                    placeholder="30"
-                    min={0}
-                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
-                  />
-                </Form.Item>
+                <FormNumber
+                  name="daysSinceLastMovement"
+                  label="Son Hareketten Bu Yana (Gün)"
+                  placeholder="30"
+                  min={0}
+                />
               </div>
               <div className="col-span-3">
-                <div className="flex items-center gap-3 bg-slate-50 px-4 py-3 rounded-lg border border-slate-200 h-full">
-                  <span className="text-sm font-medium text-slate-600">Sadece Negatif Stok</span>
-                  <Form.Item name="onlyNegativeStocks" valuePropName="checked" noStyle initialValue={false}>
-                    <Switch
-                      checked={onlyNegativeStocks}
-                      onChange={(val) => {
-                        setOnlyNegativeStocks(val);
-                        form.setFieldValue('onlyNegativeStocks', val);
-                      }}
-                    />
-                  </Form.Item>
-                </div>
+                <FormSwitch
+                  form={form}
+                  name="onlyNegativeStocks"
+                  title="Sadece Negatif Stok"
+                  value={onlyNegativeStocks}
+                  onChange={setOnlyNegativeStocks}
+                  disabled={loading}
+                />
               </div>
               <div className="col-span-3">
-                <div className="flex items-center gap-3 bg-slate-50 px-4 py-3 rounded-lg border border-slate-200 h-full">
-                  <span className="text-sm font-medium text-slate-600">Sadece Sıfır Stok</span>
-                  <Form.Item name="onlyZeroStocks" valuePropName="checked" noStyle initialValue={false}>
-                    <Switch
-                      checked={onlyZeroStocks}
-                      onChange={(val) => {
-                        setOnlyZeroStocks(val);
-                        form.setFieldValue('onlyZeroStocks', val);
-                      }}
-                    />
-                  </Form.Item>
-                </div>
+                <FormSwitch
+                  form={form}
+                  name="onlyZeroStocks"
+                  title="Sadece Sıfır Stok"
+                  value={onlyZeroStocks}
+                  onChange={setOnlyZeroStocks}
+                  disabled={loading}
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
-          {/* ─────────────── TOLERANS AYARLARI ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Tolerans Ayarları
-            </h3>
+          {/* Tolerans Ayarları */}
+          <FormSection title="Tolerans Ayarları">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Miktar Toleransı (%)</label>
-                <Form.Item name="quantityTolerancePercent" className="mb-0" initialValue={1}>
-                  <InputNumber
-                    placeholder="1"
-                    min={0}
-                    max={100}
-                    step={0.1}
-                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
-                  />
-                </Form.Item>
+                <FormNumber
+                  name="quantityTolerancePercent"
+                  label="Miktar Toleransı (%)"
+                  placeholder="1"
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  formItemProps={{ initialValue: 1 }}
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Değer Toleransı</label>
-                <Form.Item name="valueTolerance" className="mb-0">
-                  <InputNumber
-                    placeholder="1000"
-                    min={0}
-                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
-                  />
-                </Form.Item>
+                <FormNumber
+                  name="valueTolerance"
+                  label="Değer Toleransı"
+                  placeholder="1000"
+                  min={0}
+                />
               </div>
               <div className="col-span-4">
-                <div className="flex items-center gap-3 bg-slate-50 px-4 py-3 rounded-lg border border-slate-200 h-full">
-                  <span className="text-sm font-medium text-slate-600">Tolerans Aşımında Onayı Engelle</span>
-                  <Form.Item name="blockAutoApproveOnToleranceExceeded" valuePropName="checked" noStyle initialValue={false}>
-                    <Switch
-                      checked={blockAutoApprove}
-                      onChange={(val) => {
-                        setBlockAutoApprove(val);
-                        form.setFieldValue('blockAutoApproveOnToleranceExceeded', val);
-                      }}
-                    />
-                  </Form.Item>
-                </div>
+                <FormSwitch
+                  form={form}
+                  name="blockAutoApproveOnToleranceExceeded"
+                  title="Tolerans Aşımında Onayı Engelle"
+                  value={blockAutoApprove}
+                  onChange={setBlockAutoApprove}
+                  disabled={loading}
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
-          {/* ─────────────── ATAMA VE NOTLAR ─────────────── */}
-          <div>
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Atama ve Notlar
-            </h3>
+          {/* Atama ve Notlar */}
+          <FormSection title="Atama ve Notlar">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Atanan Kişi</label>
-                <Form.Item name="assignedTo" className="mb-0">
-                  <Input
-                    placeholder="Sayımı yapacak kişi"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="assignedTo"
+                  label="Atanan Kişi"
+                  placeholder="Sayımı yapacak kişi"
+                />
               </div>
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Kullanıcı ID</label>
-                <Form.Item name="assignedUserId" className="mb-0">
-                  <Input
-                    placeholder="Kullanıcı ID (opsiyonel)"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="assignedUserId"
+                  label="Kullanıcı ID"
+                  placeholder="Kullanıcı ID (opsiyonel)"
+                />
               </div>
               <div className="col-span-12">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Planlama Notları</label>
-                <Form.Item name="planningNotes" className="mb-0">
-                  <TextArea
-                    placeholder="Planlama hakkında notlar..."
-                    rows={3}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
-                  />
-                </Form.Item>
+                <FormTextArea
+                  name="planningNotes"
+                  label="Planlama Notları"
+                  placeholder="Planlama hakkında notlar..."
+                  rows={3}
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
         </div>
       </div>

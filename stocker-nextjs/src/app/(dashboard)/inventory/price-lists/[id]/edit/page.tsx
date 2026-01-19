@@ -44,13 +44,13 @@ export default function EditPriceListPage() {
     return (
       <div className="p-8">
         <Alert
-          message="Fiyat Listesi Bulunamadi"
-          description="Istenen fiyat listesi bulunamadi veya bir hata olustu."
+          message="Fiyat Listesi Bulunamadı"
+          description="İstenen fiyat listesi bulunamadı veya bir hata oluştu."
           type="error"
           showIcon
           action={
             <Button onClick={() => router.push('/inventory/price-lists')}>
-              Fiyat Listelerine Don
+              Fiyat Listelerine Dön
             </Button>
           }
         />
@@ -85,7 +85,7 @@ export default function EditPriceListPage() {
                   </h1>
                   {priceList.isDefault && (
                     <Tag icon={<StarIcon className="w-4 h-4" />} color="success" className="ml-1">
-                      Varsayilan
+                      Varsayılan
                     </Tag>
                   )}
                   <Tag
@@ -102,7 +102,7 @@ export default function EditPriceListPage() {
           </div>
           <Space>
             <Button onClick={() => router.push('/inventory/price-lists')}>
-              Vazgec
+              Vazgeç
             </Button>
             <Button
               type="primary"

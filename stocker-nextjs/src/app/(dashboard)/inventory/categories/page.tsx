@@ -30,6 +30,7 @@ import {
   TagIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
+import { TableEmptyState } from '@/components/primitives';
 import { useCategories, useCategoryTree, useDeleteCategory } from '@/lib/api/hooks/useInventory';
 import type { CategoryDto, CategoryTreeDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
@@ -437,7 +438,7 @@ export default function CategoriesPage() {
                   onChange={(e) => setIncludeInactive(e.target.checked)}
                   className="rounded border-slate-300 text-slate-900 focus:ring-slate-500"
                 />
-                Pasif kategorileri goster
+                Pasif kategorileri göster
               </label>
             </div>
             <Segmented
@@ -472,6 +473,13 @@ export default function CategoriesPage() {
                 indentSize: 24,
               }}
               pagination={false}
+              locale={{
+                emptyText: <TableEmptyState
+                  icon={Squares2X2Icon}
+                  title="Kategori bulunamadi"
+                  description="Henuz kategori eklenmemis veya filtrelere uygun kayit yok."
+                />
+              }}
               className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-200"
             />
           ) : (
@@ -480,10 +488,17 @@ export default function CategoriesPage() {
               dataSource={filteredCategories}
               rowKey="id"
               loading={isLoading}
+              locale={{
+                emptyText: <TableEmptyState
+                  icon={Squares2X2Icon}
+                  title="Kategori bulunamadi"
+                  description="Henuz kategori eklenmemis veya filtrelere uygun kayit yok."
+                />
+              }}
               className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-200"
               pagination={{
                 showSizeChanger: true,
-                showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kategori`,
+                showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
                 pageSizeOptions: ['10', '20', '50'],
                 defaultPageSize: 20,
               }}

@@ -53,9 +53,9 @@ export default function PriceListsPage() {
   const handleDelete = async (id: number, name: string) => {
     Modal.confirm({
       title: 'Fiyat Listesini Sil',
-      content: `"${name}" fiyat listesini silmek istediginize emin misiniz?`,
+      content: `"${name}" fiyat listesini silmek istediğinize emin misiniz?`,
       okText: 'Sil',
-      cancelText: 'Iptal',
+      cancelText: 'İptal',
       okButtonProps: { danger: true },
       onOk: async () => {
         try {
@@ -110,13 +110,13 @@ export default function PriceListsPage() {
     {
       key: 'edit',
       icon: <PencilIcon className="w-4 h-4" />,
-      label: 'Duzenle',
+      label: 'Düzenle',
       onClick: () => router.push(`/inventory/price-lists/${record.id}/edit`),
     },
     {
       key: 'default',
       icon: <StarIcon className="w-4 h-4" />,
-      label: record.isDefault ? 'Varsayilan' : 'Varsayilan Yap',
+      label: record.isDefault ? 'Varsayılan' : 'Varsayılan Yap',
       disabled: record.isDefault,
       onClick: () => handleSetDefault(record.id),
     },
@@ -206,12 +206,12 @@ export default function PriceListsPage() {
       ),
     },
     {
-      title: 'Gecerlilik',
+      title: 'Geçerlilik',
       key: 'validity',
       width: 200,
       render: (_, record) => {
         if (!record.validFrom && !record.validTo) {
-          return <span className="text-slate-500">Surekli</span>;
+          return <span className="text-slate-500">Sürekli</span>;
         }
         return (
           <div className="text-xs">
@@ -226,7 +226,7 @@ export default function PriceListsPage() {
       },
     },
     {
-      title: 'Urun Sayisi',
+      title: 'Ürün Sayısı',
       dataIndex: 'itemCount',
       key: 'itemCount',
       align: 'center',
@@ -317,7 +317,7 @@ export default function PriceListsPage() {
             </div>
             Fiyat Listeleri
           </h1>
-          <p className="text-slate-500 mt-1">Urun fiyat listelerini yonetin</p>
+          <p className="text-slate-500 mt-1">Ürün fiyat listelerini yönetin</p>
         </div>
         <Space>
           <Button
@@ -414,7 +414,7 @@ export default function PriceListsPage() {
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.totalItems}</div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
-              Toplam Urun
+              Toplam Ürün
             </div>
           </div>
         </div>
@@ -452,7 +452,7 @@ export default function PriceListsPage() {
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} fiyat listesi`,
+            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
           }}
           scroll={{ x: 1200 }}
           className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"

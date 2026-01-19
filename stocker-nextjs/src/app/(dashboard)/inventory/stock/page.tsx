@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Table,
   Select,
@@ -41,6 +41,7 @@ import {
   Squares2X2Icon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { ColumnsType } from 'antd/es/table';
 import {
   useStock,
@@ -53,7 +54,7 @@ import {
   useImportStockAdjustmentsFromExcel,
   useGetStockAdjustmentTemplate,
 } from '@/lib/api/hooks/useInventory';
-import type { StockDto, ProductDto, WarehouseDto } from '@/lib/api/services/inventory.types';
+import type { StockDto, ProductDto, WarehouseDto, CategoryDto } from '@/lib/api/services/inventory.types';
 
 const { Search } = Input;
 
@@ -130,6 +131,8 @@ interface StockTableRow {
 }
 
 export default function StockListPage() {
+  const router = useRouter();
+
   // State
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<number | undefined>(undefined);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(undefined);
@@ -555,7 +558,7 @@ export default function StockListPage() {
               type="primary"
               icon={<PlusIcon className="w-4 h-4" />}
               className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
-              onClick={() => message.info('Stok girişi sayfasına yönlendiriliyorsunuz')}
+              onClick={() => router.push('/inventory/stock-movements/new?type=In')}
             >
               Stok Girişi
             </Button>
@@ -642,7 +645,7 @@ export default function StockListPage() {
               style={{ width: 180 }}
               value={selectedCategoryId}
               onChange={setSelectedCategoryId}
-              options={categories.map((c: any) => ({
+              options={categories.map((c: CategoryDto) => ({
                 label: c.name,
                 value: c.id,
               }))}

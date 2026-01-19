@@ -13,6 +13,7 @@ public class Stock : BaseEntity
     public decimal AvailableQuantity => Quantity - ReservedQuantity;
     public string? SerialNumber { get; private set; }
     public string? LotNumber { get; private set; }
+    public int? LotBatchId { get; private set; }
     public DateTime? ExpiryDate { get; private set; }
     public DateTime LastMovementDate { get; private set; }
     public DateTime LastCountDate { get; private set; }
@@ -20,6 +21,7 @@ public class Stock : BaseEntity
     public virtual Product Product { get; private set; }
     public virtual Warehouse Warehouse { get; private set; }
     public virtual Location? Location { get; private set; }
+    public virtual LotBatch? LotBatch { get; private set; }
 
     protected Stock() { }
 
@@ -43,10 +45,16 @@ public class Stock : BaseEntity
         SerialNumber = serialNumber;
     }
 
-    public void SetLotNumber(string lotNumber, DateTime? expiryDate = null)
+    public void SetLotNumber(string lotNumber, DateTime? expiryDate = null, int? lotBatchId = null)
     {
         LotNumber = lotNumber;
         ExpiryDate = expiryDate;
+        LotBatchId = lotBatchId;
+    }
+
+    public void SetLotBatch(int? lotBatchId)
+    {
+        LotBatchId = lotBatchId;
     }
 
     public void IncreaseStock(decimal quantity, string? lotNumber = null, string? serialNumber = null)

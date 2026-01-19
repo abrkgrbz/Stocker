@@ -230,6 +230,7 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
           { key: '/inventory/stock-transfers', icon: <ArrowsRightLeftIcon className="w-4 h-4" />, label: 'Transferler', permission: 'Inventory.StockTransfers:View' },
           { key: '/inventory/stock-adjustments', icon: <PencilIcon className="w-4 h-4" />, label: 'Düzeltmeler', permission: 'Inventory.StockAdjustments:View' },
           { key: '/inventory/stock-counts', icon: <CalculatorIcon className="w-4 h-4" />, label: 'Sayımlar', permission: 'Inventory.StockCounts:View' },
+          { key: '/inventory/consignment-stocks', icon: <BuildingStorefrontIcon className="w-4 h-4" />, label: 'Konsinye Stoklar', permission: 'Inventory.ConsignmentStocks:View' },
         ],
       },
       {
@@ -241,6 +242,7 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
           { key: '/inventory/serial-numbers', icon: <QrCodeIcon className="w-4 h-4" />, label: 'Seri Numaraları', permission: 'Inventory.SerialNumbers:View' },
           { key: '/inventory/lot-batches', icon: <InboxIcon className="w-4 h-4" />, label: 'Lot/Parti', permission: 'Inventory.LotBatches:View' },
           { key: '/inventory/shelf-life', icon: <ClockIcon className="w-4 h-4" />, label: 'Raf Ömrü', permission: 'Inventory.ShelfLife:View' },
+          { key: '/inventory/shelf-life/rules', icon: <BoltIcon className="w-4 h-4" />, label: 'Raf Ömrü Kuralları', permission: 'Inventory.ShelfLifeRules:View' },
           { key: '/inventory/stock-reservations', icon: <LockClosedIcon className="w-4 h-4" />, label: 'Rezervasyonlar', permission: 'Inventory.StockReservations:View' },
           { key: '/inventory/stock-alerts', icon: <ExclamationTriangleIcon className="w-4 h-4" />, label: 'Uyarılar', permission: 'Inventory.StockAlerts:View' },
         ],

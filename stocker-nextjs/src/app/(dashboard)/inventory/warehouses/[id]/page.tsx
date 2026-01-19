@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Space, Tag, Spin, Empty, Table, Tabs } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
   ArrowLeftIcon,
   ArrowsPointingOutIcon,
@@ -47,7 +48,7 @@ export default function WarehouseDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -584,7 +585,7 @@ export default function WarehouseDetailPage() {
                           pagination={{
                             pageSize: 10,
                             showSizeChanger: true,
-                            showTotal: (total) => `Toplam ${total} lokasyon`,
+                            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
                           }}
                           size="small"
                           className="[&_.ant-table]:border-slate-200 [&_.ant-table-thead_.ant-table-cell]:bg-slate-50 [&_.ant-table-thead_.ant-table-cell]:text-slate-600 [&_.ant-table-thead_.ant-table-cell]:font-medium"
@@ -881,7 +882,7 @@ export default function WarehouseDetailPage() {
                           pagination={{
                             pageSize: 10,
                             showSizeChanger: true,
-                            showTotal: (total) => `Toplam ${total} bölge`,
+                            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
                           }}
                           size="small"
                           className="[&_.ant-table]:border-slate-200 [&_.ant-table-thead_.ant-table-cell]:bg-slate-50 [&_.ant-table-thead_.ant-table-cell]:text-slate-600 [&_.ant-table-thead_.ant-table-cell]:font-medium"

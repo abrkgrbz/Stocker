@@ -24,7 +24,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { useCategoryTree, useBrands, useUnits, useWarehouses, useLocations } from '@/lib/api/hooks/useInventory';
 import { ProductType } from '@/lib/api/services/inventory.types';
-import type { ProductDto, CategoryTreeDto, InitialStockEntryDto } from '@/lib/api/services/inventory.types';
+import type { ProductDto, CategoryTreeDto, InitialStockEntryDto, CreateProductDto, UpdateProductDto } from '@/lib/api/services/inventory.types';
+import { useUnsavedChanges } from '@/components/forms';
 
 const { TextArea } = Input;
 const { Dragger } = Upload;
@@ -32,7 +33,7 @@ const { Dragger } = Upload;
 interface ProductFormProps {
   form: ReturnType<typeof Form.useForm>[0];
   initialValues?: ProductDto;
-  onFinish: (values: any) => void;
+  onFinish: (values: CreateProductDto | UpdateProductDto) => void;
   loading?: boolean;
   onCancel?: () => void;
 }
@@ -151,6 +152,13 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
   const [productType, setProductType] = useState<ProductType>(ProductType.Finished);
   const [stockEntries, setStockEntries] = useState<(InitialStockEntryDto & { key: string })[]>([]);
 
+  // Unsaved changes tracking
+  const { markAsSaved } = useUnsavedChanges({
+    form,
+    enabled: true,
+    initialValues: initialValues || {},
+  });
+
   // Multi-image upload state
   interface ImageItem {
     id: string;
@@ -229,16 +237,7 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
 
   // Wrap onFinish to include stock entries and images
   const handleFinish = (values: any) => {
-    // Debug: Log raw form values
-    const allFormFields = form.getFieldsValue(true);
-    console.log('ProductForm - RAW form.getFieldsValue():', allFormFields);
-    console.log('ProductForm - values from onFinish callback:', values);
-    console.log('ProductForm - Stock level fields from form:', {
-      minStockLevel: allFormFields.minStockLevel,
-      maxStockLevel: allFormFields.maxStockLevel,
-      reorderLevel: allFormFields.reorderLevel,
-      reorderQuantity: allFormFields.reorderQuantity,
-    });
+    markAsSaved();
 
     const validStockEntries = stockEntries
       .filter(e => e.warehouseId > 0 && e.quantity > 0)
@@ -257,15 +256,6 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
       initialStock: validStockEntries.length > 0 ? validStockEntries : undefined,
       imageFiles: newImageFiles.length > 0 ? newImageFiles : undefined,
     };
-
-    // Debug: Log the final values being sent to API
-    console.log('ProductForm - FINAL values being sent:', {
-      minStockLevel: finalValues.minStockLevel,
-      maxStockLevel: finalValues.maxStockLevel,
-      reorderLevel: finalValues.reorderLevel,
-      reorderQuantity: finalValues.reorderQuantity,
-      allValues: finalValues,
-    });
 
     onFinish(finalValues);
   };

@@ -27,6 +27,7 @@ import {
   ScaleIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
+import { TableEmptyState } from '@/components/primitives';
 import { useUnits, useDeleteUnit } from '@/lib/api/hooks/useInventory';
 import type { UnitDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
@@ -156,10 +157,10 @@ export default function UnitsPage() {
             <PencilIcon className="w-4 h-4" />
           </button>
           <Popconfirm
-            title="Birimi silmek istediginize emin misiniz?"
+            title="Birimi silmek istediğinize emin misiniz?"
             onConfirm={() => handleDelete(record)}
             okText="Evet"
-            cancelText="Hayir"
+            cancelText="Hayır"
             okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
             cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
           >
@@ -177,7 +178,7 @@ export default function UnitsPage() {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Birimler</h1>
-          <p className="text-slate-500 mt-1">Urun olcu birimlerini yonetin</p>
+          <p className="text-slate-500 mt-1">Ürün ölçü birimlerini yönetin</p>
         </div>
         <Space>
           <Button
@@ -266,7 +267,7 @@ export default function UnitsPage() {
                 onChange={(e) => setIncludeInactive(e.target.checked)}
                 className="rounded border-slate-300 text-slate-900 focus:ring-slate-500"
               />
-              Pasif birimleri goster
+              Pasif birimleri göster
             </label>
           </div>
         </div>
@@ -283,7 +284,14 @@ export default function UnitsPage() {
             loading={isLoading}
             pagination={{
               showSizeChanger: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} birim`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
+            }}
+            locale={{
+              emptyText: <TableEmptyState
+                icon={ScaleIcon}
+                title="Birim bulunamadi"
+                description="Henuz birim eklenmemis veya filtrelere uygun kayit yok."
+              />
             }}
             className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
           />

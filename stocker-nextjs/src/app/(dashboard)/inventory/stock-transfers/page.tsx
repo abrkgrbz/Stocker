@@ -5,7 +5,7 @@
  * Monochrome design system following DESIGN_SYSTEM.md
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Table,
@@ -31,8 +31,10 @@ import {
   PaperAirplaneIcon,
   PlusIcon,
   RocketLaunchIcon,
+  TruckIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
+import { TableEmptyState } from '@/components/primitives';
 import {
   useStockTransfers,
   useWarehouses,
@@ -172,56 +174,100 @@ export default function StockTransfersPage() {
   // Bulk action handlers
   const handleBulkApprove = async () => {
     const pendingItems = bulkSelection.selectedItems.filter((t) => t.status === 'Pending');
+    let successCount = 0;
+    let failCount = 0;
+
     for (const transfer of pendingItems) {
       try {
         await approveTransfer.mutateAsync({ id: transfer.id, approvedByUserId: 1 });
+        successCount++;
       } catch (error) {
-        // Continue with next item
+        failCount++;
       }
     }
     bulkSelection.clear();
-    message.success(`${pendingItems.length} transfer onaylandı`);
+
+    if (failCount === 0) {
+      message.success(`${successCount} transfer onaylandı`);
+    } else if (successCount === 0) {
+      message.error(`Transferler onaylanamadı`);
+    } else {
+      message.warning(`${successCount} transfer onaylandı, ${failCount} transfer başarısız`);
+    }
   };
 
   const handleBulkShip = async () => {
     const approvedItems = bulkSelection.selectedItems.filter((t) => t.status === 'Approved');
+    let successCount = 0;
+    let failCount = 0;
+
     for (const transfer of approvedItems) {
       try {
         await shipTransfer.mutateAsync({ id: transfer.id, shippedByUserId: 1 });
+        successCount++;
       } catch (error) {
-        // Continue with next item
+        failCount++;
       }
     }
     bulkSelection.clear();
-    message.success(`${approvedItems.length} transfer sevk edildi`);
+
+    if (failCount === 0) {
+      message.success(`${successCount} transfer sevk edildi`);
+    } else if (successCount === 0) {
+      message.error(`Transferler sevk edilemedi`);
+    } else {
+      message.warning(`${successCount} transfer sevk edildi, ${failCount} transfer başarısız`);
+    }
   };
 
   const handleBulkReject = async () => {
     const pendingItems = bulkSelection.selectedItems.filter((t) => t.status === 'Pending');
+    let successCount = 0;
+    let failCount = 0;
+
     for (const transfer of pendingItems) {
       try {
         await cancelTransfer.mutateAsync({ id: transfer.id, reason: 'Toplu reddetme işlemi' });
+        successCount++;
       } catch (error) {
-        // Continue with next item
+        failCount++;
       }
     }
     bulkSelection.clear();
-    message.success(`${pendingItems.length} transfer reddedildi`);
+
+    if (failCount === 0) {
+      message.success(`${successCount} transfer reddedildi`);
+    } else if (successCount === 0) {
+      message.error(`Transferler reddedilemedi`);
+    } else {
+      message.warning(`${successCount} transfer reddedildi, ${failCount} transfer başarısız`);
+    }
   };
 
   const handleBulkCancel = async () => {
     const cancellableItems = bulkSelection.selectedItems.filter(
       (t) => t.status === 'Draft' || t.status === 'Pending'
     );
+    let successCount = 0;
+    let failCount = 0;
+
     for (const transfer of cancellableItems) {
       try {
         await cancelTransfer.mutateAsync({ id: transfer.id, reason: 'Toplu iptal işlemi' });
+        successCount++;
       } catch (error) {
-        // Continue with next item
+        failCount++;
       }
     }
     bulkSelection.clear();
-    message.success(`${cancellableItems.length} transfer iptal edildi`);
+
+    if (failCount === 0) {
+      message.success(`${successCount} transfer iptal edildi`);
+    } else if (successCount === 0) {
+      message.error(`Transferler iptal edilemedi`);
+    } else {
+      message.warning(`${successCount} transfer iptal edildi, ${failCount} transfer başarısız`);
+    }
   };
 
   // Bulk export selected
@@ -765,7 +811,14 @@ export default function StockTransfersPage() {
             }}
             pagination={{
               showSizeChanger: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} transfer`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
+            }}
+            locale={{
+              emptyText: <TableEmptyState
+                icon={TruckIcon}
+                title="Transfer bulunamadi"
+                description="Henuz transfer eklenmemis veya filtrelere uygun kayit yok."
+              />
             }}
             scroll={{ x: 1200 }}
             className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"

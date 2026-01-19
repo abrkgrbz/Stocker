@@ -141,12 +141,12 @@ const formatLabels: Record<string, string> = {
 };
 
 const sizeLabels: Record<string, string> = {
-  Small: 'Kucuk (30x20mm)',
+  Small: 'Küçük (30x20mm)',
   Medium: 'Orta (50x30mm)',
-  Large: 'Buyuk (70x40mm)',
-  Wide: 'Genis (100x30mm)',
+  Large: 'Büyük (70x40mm)',
+  Wide: 'Geniş (100x30mm)',
   Square: 'Kare (50x50mm)',
-  Custom: 'Ozel',
+  Custom: 'Özel',
 };
 
 export default function BarcodesPage() {
@@ -408,7 +408,7 @@ export default function BarcodesPage() {
 
   const handleGenerateBulkLabels = async () => {
     if (bulkProducts.length === 0) {
-      message.warning('En az bir urun ekleyin');
+      message.warning('En az bir ürün ekleyin');
       return;
     }
 
@@ -459,9 +459,9 @@ export default function BarcodesPage() {
       });
 
       if (result.isValid) {
-        message.success('Barkod formati gecerli');
+        message.success('Barkod formatı geçerli');
       } else {
-        message.error(result.errorMessage || 'Barkod formati gecersiz');
+        message.error(result.errorMessage || 'Barkod formatı geçersiz');
       }
     } catch (error) {
       // Error handled
@@ -479,7 +479,7 @@ export default function BarcodesPage() {
       if (result.isUnique) {
         message.success('Barkod benzersiz');
       } else {
-        message.warning(`Barkod zaten kullaniliyor: ${result.conflictingProductCode}`);
+        message.warning(`Barkod zaten kullanılıyor: ${result.conflictingProductCode}`);
       }
     } catch (error) {
       // Error handled
@@ -488,7 +488,7 @@ export default function BarcodesPage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    message.success('Kopyalandi');
+    message.success('Kopyalandı');
   };
 
   const downloadImage = (base64: string, filename: string) => {
@@ -505,7 +505,7 @@ export default function BarcodesPage() {
       return (
         <div className="flex flex-col items-center justify-center py-12">
           <Spin size="large" />
-          <span className="mt-3 text-sm text-slate-500">Araniyor...</span>
+          <span className="mt-3 text-sm text-slate-500">Aranıyor...</span>
         </div>
       );
     }
@@ -516,8 +516,8 @@ export default function BarcodesPage() {
           <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
             <ViewfinderCircleIcon className="w-6 h-6 text-slate-400" />
           </div>
-          <span className="text-sm font-medium text-slate-900">Barkod Tarayin</span>
-          <span className="text-xs text-slate-500 mt-1">Hardware scanner veya manuel giris</span>
+          <span className="text-sm font-medium text-slate-900">Barkod Tarayın</span>
+          <span className="text-xs text-slate-500 mt-1">Hardware scanner veya manuel giriş</span>
         </div>
       );
     }
@@ -528,14 +528,14 @@ export default function BarcodesPage() {
           <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center mx-auto mb-3">
             <ExclamationCircleIcon className="w-5 h-5 text-slate-600" />
           </div>
-          <div className="text-sm font-medium text-slate-900 mb-1">Barkod Bulunamadi</div>
+          <div className="text-sm font-medium text-slate-900 mb-1">Barkod Bulunamadı</div>
           <div className="text-xs text-slate-500 font-mono mb-3">{lookupResult.searchedBarcode}</div>
           <button
             onClick={() => router.push('/inventory/products/new')}
             className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
           >
             <PlusIcon className="w-4 h-4" />
-            Yeni Urun Ekle
+            Yeni Ürün Ekle
           </button>
         </div>
       );
@@ -551,7 +551,7 @@ export default function BarcodesPage() {
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-slate-700">
             <CheckCircleIcon className="w-4 h-4" />
-            <span className="text-sm font-medium">Urun Bulundu</span>
+            <span className="text-sm font-medium">Ürün Bulundu</span>
             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-200 text-slate-700">
               {lookupResult.matchType}
             </span>
@@ -649,7 +649,7 @@ export default function BarcodesPage() {
             </span>
           </div>
           <Descriptions column={1} size="small">
-            <Descriptions.Item label="Urun">{v.productName}</Descriptions.Item>
+            <Descriptions.Item label="Ürün">{v.productName}</Descriptions.Item>
             <Descriptions.Item label="Varyant">{v.variantName}</Descriptions.Item>
             <Descriptions.Item label="SKU">{v.sku}</Descriptions.Item>
             <Descriptions.Item label="Fiyat">
@@ -667,14 +667,14 @@ export default function BarcodesPage() {
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-slate-700">
             <CheckCircleIcon className="w-4 h-4" />
-            <span className="text-sm font-medium">Seri Numarasi Bulundu</span>
+            <span className="text-sm font-medium">Seri Numarası Bulundu</span>
             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-200 text-slate-700">
               {lookupResult.matchType}
             </span>
           </div>
           <Descriptions column={1} size="small">
             <Descriptions.Item label="Seri No">{s.serialNumber}</Descriptions.Item>
-            <Descriptions.Item label="Urun">{s.productName}</Descriptions.Item>
+            <Descriptions.Item label="Ürün">{s.productName}</Descriptions.Item>
             <Descriptions.Item label="Durum">
               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
                 {s.status}
@@ -699,7 +699,7 @@ export default function BarcodesPage() {
           </div>
           <Descriptions column={1} size="small">
             <Descriptions.Item label="Lot No">{l.lotNumber}</Descriptions.Item>
-            <Descriptions.Item label="Urun">{l.productName}</Descriptions.Item>
+            <Descriptions.Item label="Ürün">{l.productName}</Descriptions.Item>
             <Descriptions.Item label="Durum">
               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
                 {l.status}
@@ -724,7 +724,7 @@ export default function BarcodesPage() {
       label: (
         <span className="flex items-center gap-2">
           <ViewfinderCircleIcon className="w-4 h-4" />
-          Pro Tarayici
+          Pro Tarayıcı
         </span>
       ),
       children: (
@@ -782,7 +782,7 @@ export default function BarcodesPage() {
                 <Input
                   ref={scanInputRef}
                   size="large"
-                  placeholder={isScannerActive ? "Barkod tarayin veya girin..." : "Tarayici devre disi"}
+                  placeholder={isScannerActive ? "Barkod tarayın veya girin..." : "Tarayıcı devre dışı"}
                   prefix={<ViewfinderCircleIcon className="w-5 h-5 text-slate-400" />}
                   value={scanInput}
                   onChange={handleScanInputChange}
@@ -817,7 +817,7 @@ export default function BarcodesPage() {
                 ))}
               </Select>
 
-              <Tooltip title={soundEnabled ? "Ses Acik" : "Ses Kapali"}>
+              <Tooltip title={soundEnabled ? "Ses Açık" : "Ses Kapalı"}>
                 <button
                   onClick={() => setSoundEnabled(!soundEnabled)}
                   className={`p-2 rounded-md transition-colors ${soundEnabled ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
@@ -844,7 +844,7 @@ export default function BarcodesPage() {
             <div className="flex items-center gap-4 mt-3 text-sm">
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${isScannerActive ? 'bg-slate-900' : 'bg-slate-400'}`} />
-                <span className="text-slate-500">{isScannerActive ? 'Taramaya hazir' : 'Beklemede'}</span>
+                <span className="text-slate-500">{isScannerActive ? 'Taramaya hazır' : 'Beklemede'}</span>
               </div>
               {historyStats.totalValue > 0 && (
                 <>
@@ -879,21 +879,21 @@ export default function BarcodesPage() {
 
             <div className="bg-white border border-slate-200 rounded-xl">
               <div className="px-4 py-3 border-b border-slate-200">
-                <span className="text-sm font-medium text-slate-900">Pro Tarayici Ipuclari</span>
+                <span className="text-sm font-medium text-slate-900">Pro Tarayıcı İpuçları</span>
               </div>
               <div className="p-4">
                 <ul className="space-y-2 text-sm text-slate-600">
                   <li className="flex items-start gap-2">
                     <CheckCircleIcon className="w-4 h-4 text-slate-500 mt-0.5" />
-                    <span>Hardware scanner otomatik algilanir</span>
+                    <span>Hardware scanner otomatik algılanır</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircleIcon className="w-4 h-4 text-slate-500 mt-0.5" />
-                    <span>Ayni barkod tarandiginda miktar artar</span>
+                    <span>Aynı barkod tarandığında miktar artar</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircleIcon className="w-4 h-4 text-slate-500 mt-0.5" />
-                    <span>Ses acikken basari/hata bildirimi alirsiniz</span>
+                    <span>Ses açıkken başarı/hata bildirimi alırsınız</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircleIcon className="w-4 h-4 text-slate-500 mt-0.5" />
@@ -901,7 +901,7 @@ export default function BarcodesPage() {
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircleIcon className="w-4 h-4 text-slate-500 mt-0.5" />
-                    <span>Enter tusu ile hizli arama yapabilirsiniz</span>
+                    <span>Enter tuşu ile hızlı arama yapabilirsiniz</span>
                   </li>
                 </ul>
               </div>
@@ -912,7 +912,7 @@ export default function BarcodesPage() {
             <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <ClockIcon className="w-4 h-4 text-slate-400" />
-                <span className="text-sm font-medium text-slate-900">Tarama Gecmisi</span>
+                <span className="text-sm font-medium text-slate-900">Tarama Geçmişi</span>
                 <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
                   {historyStats.uniqueItems}
                 </span>
@@ -922,7 +922,7 @@ export default function BarcodesPage() {
                   onClick={() => {
                     const data = scanHistory.map(item => `${item.barcode}\t${item.quantity}`).join('\n');
                     navigator.clipboard.writeText(data);
-                    message.success('Gecmis kopyalandi');
+                    message.success('Geçmiş kopyalandı');
                   }}
                   disabled={scanHistory.length === 0}
                   className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
@@ -944,14 +944,14 @@ export default function BarcodesPage() {
                   <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
                     <ClockIcon className="w-6 h-6 text-slate-400" />
                   </div>
-                  <span className="text-sm text-slate-500">Henuz tarama yapilmadi</span>
+                  <span className="text-sm text-slate-500">Henüz tarama yapılmadı</span>
                 </div>
               ) : (
                 <Table
                   dataSource={scanHistory}
                   rowKey="id"
                   size="small"
-                  pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${total} kayit` }}
+                  pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt` }}
                   className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100"
                   columns={[
                     {
@@ -989,12 +989,12 @@ export default function BarcodesPage() {
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-200 text-slate-600">
-                            Bulunamadi
+                            Bulunamadı
                           </span>
                         ),
                     },
                     {
-                      title: 'Urun',
+                      title: 'Ürün',
                       key: 'item',
                       ellipsis: true,
                       render: (_, record: ScanHistoryItem) => {
@@ -1059,25 +1059,25 @@ export default function BarcodesPage() {
       label: (
         <span className="flex items-center gap-2">
           <QrCodeIcon className="w-4 h-4" />
-          Barkod Olusturucu
+          Barkod Oluşturucu
         </span>
       ),
       children: (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="mb-4">
-              <h3 className="text-sm font-medium text-slate-900">Barkod Olustur</h3>
+              <h3 className="text-sm font-medium text-slate-900">Barkod Oluştur</h3>
             </div>
             <Form form={generateForm} layout="vertical">
               <Form.Item
                 name="content"
-                label="Barkod Icerigi"
-                rules={[{ required: true, message: 'Barkod icerigi gerekli' }]}
+                label="Barkod İçeriği"
+                rules={[{ required: true, message: 'Barkod içeriği gerekli' }]}
               >
-                <Input placeholder="Barkod numarasi veya metin" className="!rounded-lg !border-slate-300" />
+                <Input placeholder="Barkod numarası veya metin" className="!rounded-lg !border-slate-300" />
               </Form.Item>
 
-              <Form.Item name="format" label="Barkod Formati" initialValue="Code128">
+              <Form.Item name="format" label="Barkod Formatı" initialValue="Code128">
                 <Select className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg">
                   {Object.entries(formatLabels).map(([value, label]) => (
                     <Select.Option key={value} value={value}>{label}</Select.Option>
@@ -1086,16 +1086,16 @@ export default function BarcodesPage() {
               </Form.Item>
 
               <div className="grid grid-cols-2 gap-4">
-                <Form.Item name="width" label="Genislik (px)" initialValue={300}>
+                <Form.Item name="width" label="Genişlik (px)" initialValue={300}>
                   <InputNumber min={100} max={1000} style={{ width: '100%' }} />
                 </Form.Item>
-                <Form.Item name="height" label="Yukseklik (px)" initialValue={100}>
+                <Form.Item name="height" label="Yükseklik (px)" initialValue={100}>
                   <InputNumber min={50} max={500} style={{ width: '100%' }} />
                 </Form.Item>
               </div>
 
               <Form.Item name="includeText" valuePropName="checked" initialValue={true}>
-                <Checkbox>Barkod metnini goster</Checkbox>
+                <Checkbox>Barkod metnini göster</Checkbox>
               </Form.Item>
 
               <Button
@@ -1105,14 +1105,14 @@ export default function BarcodesPage() {
                 icon={<QrCodeIcon className="w-4 h-4" />}
                 className="w-full !bg-slate-900 hover:!bg-slate-800 !border-slate-900"
               >
-                Barkod Olustur
+                Barkod Oluştur
               </Button>
             </Form>
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="mb-4">
-              <h3 className="text-sm font-medium text-slate-900">Onizleme</h3>
+              <h3 className="text-sm font-medium text-slate-900">Önizleme</h3>
             </div>
             {generatedBarcodeImage ? (
               <div className="text-center">
@@ -1127,7 +1127,7 @@ export default function BarcodesPage() {
                     icon={<ArrowDownTrayIcon className="w-4 h-4" />}
                     className="!border-slate-300 !text-slate-700"
                   >
-                    Indir
+                    İndir
                   </Button>
                   <Button
                     onClick={() => copyToClipboard(generateForm.getFieldValue('content'))}
@@ -1143,7 +1143,7 @@ export default function BarcodesPage() {
                 <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
                   <QrCodeIcon className="w-6 h-6 text-slate-400" />
                 </div>
-                <span className="text-sm text-slate-500">Barkod olusturun</span>
+                <span className="text-sm text-slate-500">Barkod oluşturun</span>
               </div>
             )}
           </div>
@@ -1155,23 +1155,23 @@ export default function BarcodesPage() {
       label: (
         <span className="flex items-center gap-2">
           <TagIcon className="w-4 h-4" />
-          Urun Etiketi
+          Ürün Etiketi
         </span>
       ),
       children: (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="mb-4">
-              <h3 className="text-sm font-medium text-slate-900">Urun Etiketi Olustur</h3>
+              <h3 className="text-sm font-medium text-slate-900">Ürün Etiketi Oluştur</h3>
             </div>
             <Form form={labelForm} layout="vertical">
               <Form.Item
                 name="productId"
-                label="Urun"
-                rules={[{ required: true, message: 'Urun secimi gerekli' }]}
+                label="Ürün"
+                rules={[{ required: true, message: 'Ürün seçimi gerekli' }]}
               >
                 <Select
-                  placeholder="Urun secin"
+                  placeholder="Ürün seçin"
                   showSearch
                   optionFilterProp="children"
                   onChange={setSelectedProductForLabel}
@@ -1191,7 +1191,7 @@ export default function BarcodesPage() {
                     ))}
                   </Select>
                 </Form.Item>
-                <Form.Item name="barcodeFormat" label="Barkod Formati" initialValue="Code128">
+                <Form.Item name="barcodeFormat" label="Barkod Formatı" initialValue="Code128">
                   <Select className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg">
                     {Object.entries(formatLabels).map(([value, label]) => (
                       <Select.Option key={value} value={value}>{label}</Select.Option>
@@ -1202,16 +1202,16 @@ export default function BarcodesPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <Form.Item name="includeProductName" valuePropName="checked" initialValue={true}>
-                  <Checkbox>Urun adini goster</Checkbox>
+                  <Checkbox>Ürün adını göster</Checkbox>
                 </Form.Item>
                 <Form.Item name="includePrice" valuePropName="checked" initialValue={true}>
-                  <Checkbox>Fiyati goster</Checkbox>
+                  <Checkbox>Fiyatı göster</Checkbox>
                 </Form.Item>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <Form.Item name="includeSKU" valuePropName="checked" initialValue={false}>
-                  <Checkbox>SKU goster</Checkbox>
+                  <Checkbox>SKU göster</Checkbox>
                 </Form.Item>
                 <Form.Item name="includeQRCode" valuePropName="checked" initialValue={false}>
                   <Checkbox>QR Kod ekle</Checkbox>
@@ -1225,14 +1225,14 @@ export default function BarcodesPage() {
                 icon={<TagIcon className="w-4 h-4" />}
                 className="w-full !bg-slate-900 hover:!bg-slate-800 !border-slate-900"
               >
-                Etiket Olustur
+                Etiket Oluştur
               </Button>
             </Form>
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="mb-4">
-              <h3 className="text-sm font-medium text-slate-900">Onizleme</h3>
+              <h3 className="text-sm font-medium text-slate-900">Önizleme</h3>
             </div>
             {generatedLabelImage ? (
               <div className="text-center">
@@ -1247,13 +1247,13 @@ export default function BarcodesPage() {
                     icon={<ArrowDownTrayIcon className="w-4 h-4" />}
                     className="!border-slate-300 !text-slate-700"
                   >
-                    Indir
+                    İndir
                   </Button>
                   <Button
                     icon={<PrinterIcon className="w-4 h-4" />}
                     className="!border-slate-300 !text-slate-700"
                   >
-                    Yazdir
+                    Yazdır
                   </Button>
                 </div>
               </div>
@@ -1262,7 +1262,7 @@ export default function BarcodesPage() {
                 <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
                   <TagIcon className="w-6 h-6 text-slate-400" />
                 </div>
-                <span className="text-sm text-slate-500">Etiket olusturun</span>
+                <span className="text-sm text-slate-500">Etiket oluşturun</span>
               </div>
             )}
           </div>
@@ -1275,8 +1275,8 @@ export default function BarcodesPage() {
     <div className="min-h-screen bg-slate-50 p-8">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Barkod Yonetimi</h1>
-          <p className="text-slate-500 mt-1">Barkod tarama, olusturma ve etiket islemleri</p>
+          <h1 className="text-2xl font-bold text-slate-900">Barkod Yönetimi</h1>
+          <p className="text-slate-500 mt-1">Barkod tarama, oluşturma ve etiket işlemleri</p>
         </div>
         <Button
           icon={<ArrowPathIcon className="w-4 h-4" />}

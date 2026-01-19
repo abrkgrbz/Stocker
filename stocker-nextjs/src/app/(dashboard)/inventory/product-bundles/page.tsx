@@ -33,7 +33,7 @@ import dayjs from 'dayjs';
 
 const bundleTypeConfig: Record<BundleType, { label: string }> = {
   Fixed: { label: 'Sabit' },
-  Configurable: { label: 'Yapilandirabilir' },
+  Configurable: { label: 'Yapılandırılabilir' },
   Kit: { label: 'Kit' },
   Package: { label: 'Paket' },
   Combo: { label: 'Kombo' },
@@ -42,8 +42,8 @@ const bundleTypeConfig: Record<BundleType, { label: string }> = {
 const pricingTypeConfig: Record<BundlePricingType, { label: string }> = {
   FixedPrice: { label: 'Sabit Fiyat' },
   DynamicSum: { label: 'Dinamik Toplam' },
-  DiscountedSum: { label: 'Indirimli Toplam' },
-  PercentageDiscount: { label: 'Yuzde Indirim' },
+  DiscountedSum: { label: 'İndirimli Toplam' },
+  PercentageDiscount: { label: 'Yüzde İndirim' },
 };
 
 export default function ProductBundlesPage() {
@@ -57,9 +57,9 @@ export default function ProductBundlesPage() {
   const handleDelete = async (id: number, name: string) => {
     Modal.confirm({
       title: 'Paketi Sil',
-      content: `"${name}" paketini silmek istediginize emin misiniz?`,
+      content: `"${name}" paketini silmek istediğinize emin misiniz?`,
       okText: 'Sil',
-      cancelText: 'Iptal',
+      cancelText: 'İptal',
       okButtonProps: { danger: true },
       onOk: async () => {
         try {
@@ -127,7 +127,7 @@ export default function ProductBundlesPage() {
       ),
     },
     {
-      title: 'Fiyatlandirma',
+      title: 'Fiyatlandırma',
       dataIndex: 'pricingType',
       key: 'pricingType',
       width: 140,
@@ -136,7 +136,7 @@ export default function ProductBundlesPage() {
       ),
     },
     {
-      title: 'Urun Sayisi',
+      title: 'Ürün Sayısı',
       dataIndex: 'items',
       key: 'items',
       width: 100,
@@ -166,12 +166,12 @@ export default function ProductBundlesPage() {
       ),
     },
     {
-      title: 'Gecerlilik',
+      title: 'Geçerlilik',
       key: 'validity',
       width: 130,
       render: (_, record) => {
         if (!record.validFrom && !record.validTo) {
-          return <span className="text-sm text-slate-400">Suresiz</span>;
+          return <span className="text-sm text-slate-400">Süresiz</span>;
         }
         const now = dayjs();
         const validFrom = record.validFrom ? dayjs(record.validFrom) : null;
@@ -181,11 +181,11 @@ export default function ProductBundlesPage() {
         let label = 'Aktif';
         if (validFrom && now.isBefore(validFrom)) {
           status = 'pending';
-          label = 'Baslamadi';
+          label = 'Başlamadı';
         }
         if (validTo && now.isAfter(validTo)) {
           status = 'expired';
-          label = 'Suresi Doldu';
+          label = 'Süresi Doldu';
         }
 
         return (
@@ -222,7 +222,7 @@ export default function ProductBundlesPage() {
       align: 'right',
       render: (_, record) => (
         <div className="flex items-center justify-end gap-1">
-          <Tooltip title="Duzenle">
+          <Tooltip title="Düzenle">
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -255,7 +255,7 @@ export default function ProductBundlesPage() {
       label: (
         <span className="flex items-center gap-2">
           <InboxIcon className="w-4 h-4" />
-          Tumu
+          Tümü
           <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
             {stats.total}
           </span>
@@ -279,7 +279,7 @@ export default function ProductBundlesPage() {
       label: (
         <span className="flex items-center gap-2">
           <CheckCircleIcon className="w-4 h-4" />
-          Gecerli
+          Geçerli
           <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
             {stats.valid}
           </span>
@@ -297,9 +297,9 @@ export default function ProductBundlesPage() {
             <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
               <GiftIcon className="w-5 h-5 text-white" />
             </div>
-            Urun Paketleri
+            Ürün Paketleri
           </h1>
-          <p className="text-slate-500 mt-1">Urun paketlerini ve kombolari yonetin</p>
+          <p className="text-slate-500 mt-1">Ürün paketlerini ve komboları yönetin</p>
         </div>
         <Space>
           <Button
@@ -358,7 +358,7 @@ export default function ProductBundlesPage() {
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.valid}</div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
-              Gecerli Paket
+              Geçerli Paket
             </div>
           </div>
         </div>
@@ -373,7 +373,7 @@ export default function ProductBundlesPage() {
               {stats.totalValue.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} TL
             </div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">
-              Toplam Deger
+              Toplam Değer
             </div>
           </div>
         </div>
@@ -415,10 +415,16 @@ export default function ProductBundlesPage() {
             loading={isLoading}
             pagination={{
               showSizeChanger: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} paket`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
             }}
             onRow={(record) => ({
-              onClick: () => router.push(`/inventory/product-bundles/${record.id}`),
+              onClick: (e) => {
+                const target = e.target as HTMLElement;
+                if (target.closest('.ant-dropdown-trigger') || target.closest('.ant-dropdown')) {
+                  return;
+                }
+                router.push(`/inventory/product-bundles/${record.id}`);
+              },
               style: { cursor: 'pointer' },
             })}
             className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"

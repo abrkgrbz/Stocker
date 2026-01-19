@@ -1,17 +1,26 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Form, Input, Switch, InputNumber, Select } from 'antd';
+import { Form } from 'antd';
 import { MapPinIcon } from '@heroicons/react/24/outline';
 import { useWarehouses } from '@/lib/api/hooks/useInventory';
-import type { LocationDto } from '@/lib/api/services/inventory.types';
-
-const { TextArea } = Input;
+import type { LocationDto, CreateLocationDto, UpdateLocationDto } from '@/lib/api/services/inventory.types';
+import {
+  FormHeader,
+  FormSection,
+  FormInput,
+  FormNumber,
+  FormSelect,
+  FormStatGrid,
+  useUnsavedChanges,
+  nameFieldRules,
+  codeFieldRules,
+} from '@/components/forms';
 
 interface LocationFormProps {
   form: ReturnType<typeof Form.useForm>[0];
   initialValues?: LocationDto;
-  onFinish: (values: any) => void;
+  onFinish: (values: CreateLocationDto | UpdateLocationDto) => void;
   loading?: boolean;
   defaultWarehouseId?: number;
 }
@@ -19,6 +28,18 @@ interface LocationFormProps {
 export default function LocationForm({ form, initialValues, onFinish, loading, defaultWarehouseId }: LocationFormProps) {
   const [isActive, setIsActive] = useState(true);
   const { data: warehouses = [] } = useWarehouses();
+
+  const warehouseOptions = warehouses.map((w) => ({
+    value: w.id,
+    label: w.name,
+  }));
+
+  // Unsaved changes tracking
+  const { markAsSaved } = useUnsavedChanges({
+    form,
+    enabled: true,
+    initialValues: initialValues || {},
+  });
 
   useEffect(() => {
     if (initialValues) {
@@ -29,11 +50,16 @@ export default function LocationForm({ form, initialValues, onFinish, loading, d
     }
   }, [form, initialValues, defaultWarehouseId]);
 
+  const handleFinish = (values: any) => {
+    markAsSaved();
+    onFinish(values);
+  };
+
   return (
     <Form
       form={form}
       layout="vertical"
-      onFinish={onFinish}
+      onFinish={handleFinish}
       disabled={loading}
       className="w-full"
       scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
@@ -41,165 +67,89 @@ export default function LocationForm({ form, initialValues, onFinish, loading, d
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
 
-        {/* ═══════════════════════════════════════════════════════════════
-            HEADER: Icon + Name + Status Toggle
-        ═══════════════════════════════════════════════════════════════ */}
-        <div className="px-8 py-6 border-b border-slate-200">
-          <div className="flex items-center gap-6">
-            {/* Location Icon */}
-            <div className="flex-shrink-0">
-              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
-                <MapPinIcon className="w-5 h-5 text-slate-500" />
-              </div>
-            </div>
+        {/* Header */}
+        <FormHeader
+          form={form}
+          icon={<MapPinIcon className="w-5 h-5 text-slate-500" />}
+          titleField="name"
+          titlePlaceholder="Lokasyon Adı Girin..."
+          titleRules={nameFieldRules('Lokasyon adı')}
+          descriptionField="description"
+          descriptionPlaceholder="Lokasyon hakkında kısa açıklama..."
+          showStatusToggle={true}
+          statusValue={isActive}
+          onStatusChange={setIsActive}
+          loading={loading}
+        />
 
-            {/* Location Name - Title Style */}
-            <div className="flex-1">
-              <Form.Item
-                name="name"
-                rules={[
-                  { required: true, message: 'Lokasyon adı zorunludur' },
-                  { max: 200, message: 'Lokasyon adı en fazla 200 karakter olabilir' },
-                ]}
-                className="mb-0"
-              >
-                <Input
-                  placeholder="Lokasyon Adı Girin..."
-                  variant="borderless"
-                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
-                />
-              </Form.Item>
-              <Form.Item name="description" className="mb-0 mt-1">
-                <Input
-                  placeholder="Lokasyon hakkında kısa açıklama..."
-                  variant="borderless"
-                  className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400"
-                />
-              </Form.Item>
-            </div>
-
-            {/* Status Toggle */}
-            <div className="flex-shrink-0">
-              <div className="flex items-center gap-3 bg-slate-100 px-4 py-2 rounded-lg">
-                <span className="text-sm font-medium text-slate-600">
-                  {isActive ? 'Aktif' : 'Pasif'}
-                </span>
-                <Form.Item name="isActive" valuePropName="checked" noStyle initialValue={true}>
-                  <Switch
-                    checked={isActive}
-                    onChange={(val) => {
-                      setIsActive(val);
-                      form.setFieldValue('isActive', val);
-                    }}
-                  />
-                </Form.Item>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════════════════════════
-            FORM BODY: High-Density Grid Layout
-        ═══════════════════════════════════════════════════════════════ */}
+        {/* Form Body */}
         <div className="px-8 py-6">
 
-          {/* ─────────────── TEMEL BİLGİLER ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Temel Bilgiler
-            </h3>
+          {/* Temel Bilgiler */}
+          <FormSection title="Temel Bilgiler">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Lokasyon Kodu <span className="text-red-500">*</span></label>
-                <Form.Item
+                <FormInput
                   name="code"
-                  rules={[{ required: true, message: 'Lokasyon kodu zorunludur' }]}
-                  className="mb-0"
-                >
-                  <Input
-                    placeholder="LOC-001"
-                    disabled={!!initialValues}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                  label="Lokasyon Kodu"
+                  required
+                  placeholder="LOC-001"
+                  disabled={!!initialValues}
+                  rules={codeFieldRules('Lokasyon kodu')}
+                />
               </div>
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Depo <span className="text-red-500">*</span></label>
-                <Form.Item
+                <FormSelect
                   name="warehouseId"
-                  rules={[{ required: true, message: 'Depo seçimi zorunludur' }]}
-                  className="mb-0"
-                >
-                  <Select
-                    placeholder="Depo seçin"
-                    disabled={!!initialValues}
-                    options={warehouses.map((w) => ({
-                      value: w.id,
-                      label: w.name,
-                    }))}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                  label="Depo"
+                  required
+                  placeholder="Depo seçin"
+                  disabled={!!initialValues}
+                  options={warehouseOptions}
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
-          {/* ─────────────── KONUM BİLGİLERİ ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Konum Bilgileri
-            </h3>
+          {/* Konum Bilgileri */}
+          <FormSection title="Konum Bilgileri">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Koridor</label>
-                <Form.Item name="aisle" className="mb-0">
-                  <Input
-                    placeholder="A"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="aisle"
+                  label="Koridor"
+                  placeholder="A"
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Raf</label>
-                <Form.Item name="shelf" className="mb-0">
-                  <Input
-                    placeholder="01"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="shelf"
+                  label="Raf"
+                  placeholder="01"
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Bölme</label>
-                <Form.Item name="bin" className="mb-0">
-                  <Input
-                    placeholder="001"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="bin"
+                  label="Bölme"
+                  placeholder="001"
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
-          {/* ─────────────── KAPASİTE ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Kapasite
-            </h3>
+          {/* Kapasite */}
+          <FormSection title="Kapasite">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Toplam Kapasite <span className="text-red-500">*</span></label>
-                <Form.Item
+                <FormNumber
                   name="capacity"
-                  rules={[{ required: true, message: 'Kapasite zorunludur' }]}
-                  className="mb-0"
-                  initialValue={100}
-                >
-                  <InputNumber
-                    placeholder="100"
-                    min={1}
-                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
-                  />
-                </Form.Item>
+                  label="Toplam Kapasite"
+                  required
+                  placeholder="100"
+                  min={1}
+                  formItemProps={{ initialValue: 100 }}
+                />
               </div>
               {initialValues && (
                 <div className="col-span-6">
@@ -210,35 +160,22 @@ export default function LocationForm({ form, initialValues, onFinish, loading, d
                 </div>
               )}
             </div>
-          </div>
+          </FormSection>
 
-          {/* ─────────────── İSTATİSTİKLER (Düzenleme Modu) ─────────────── */}
+          {/* İstatistikler (Düzenleme Modu) */}
           {initialValues && (
-            <div>
-              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-                İstatistikler
-              </h3>
-              <div className="grid grid-cols-12 gap-4">
-                <div className="col-span-6">
-                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
-                    <div className="text-2xl font-semibold text-slate-800">
-                      {initialValues.productCount || 0}
-                    </div>
-                    <div className="text-xs text-slate-500 mt-1">Ürün Sayısı</div>
-                  </div>
-                </div>
-                <div className="col-span-6">
-                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
-                    <div className="text-2xl font-semibold text-slate-800">
-                      {initialValues.capacity > 0
-                        ? Math.round((initialValues.usedCapacity / initialValues.capacity) * 100)
-                        : 0}%
-                    </div>
-                    <div className="text-xs text-slate-500 mt-1">Doluluk Oranı</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <FormSection title="İstatistikler">
+              <FormStatGrid
+                columns={2}
+                stats={[
+                  { value: initialValues.productCount || 0, label: 'Ürün Sayısı' },
+                  {
+                    value: `${initialValues.capacity > 0 ? Math.round((initialValues.usedCapacity / initialValues.capacity) * 100) : 0}%`,
+                    label: 'Doluluk Oranı',
+                  },
+                ]}
+              />
+            </FormSection>
           )}
 
         </div>

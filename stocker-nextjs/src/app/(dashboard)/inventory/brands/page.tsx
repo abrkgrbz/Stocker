@@ -27,6 +27,7 @@ import {
   TagIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
+import { TableEmptyState } from '@/components/primitives';
 import { useBrands, useDeleteBrand } from '@/lib/api/hooks/useInventory';
 import type { BrandDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
@@ -123,7 +124,7 @@ export default function BrandsPage() {
         ),
     },
     {
-      title: 'Urun Sayisi',
+      title: 'Ürün Sayısı',
       dataIndex: 'productCount',
       key: 'productCount',
       width: 120,
@@ -166,14 +167,14 @@ export default function BrandsPage() {
             <PencilIcon className="w-4 h-4" />
           </button>
           <Popconfirm
-            title="Markayi silmek istediginize emin misiniz?"
+            title="Markayı silmek istediğinize emin misiniz?"
             onConfirm={(e) => {
               e?.stopPropagation();
               handleDelete(record);
             }}
             onCancel={(e) => e?.stopPropagation()}
             okText="Evet"
-            cancelText="Hayir"
+            cancelText="Hayır"
             okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
             cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
           >
@@ -194,7 +195,7 @@ export default function BrandsPage() {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Markalar</h1>
-          <p className="text-slate-500 mt-1">Urun markalarini yonetin</p>
+          <p className="text-slate-500 mt-1">Ürün markalarını yönetin</p>
         </div>
         <Space>
           <Button
@@ -258,7 +259,7 @@ export default function BrandsPage() {
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{totalProducts}</div>
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Urun</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Ürün</div>
           </div>
         </div>
       </div>
@@ -283,7 +284,7 @@ export default function BrandsPage() {
                 onChange={(e) => setIncludeInactive(e.target.checked)}
                 className="rounded border-slate-300 text-slate-900 focus:ring-slate-500"
               />
-              Pasif markalari goster
+              Pasif markaları göster
             </label>
           </div>
         </div>
@@ -300,7 +301,14 @@ export default function BrandsPage() {
             loading={isLoading}
             pagination={{
               showSizeChanger: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} marka`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
+            }}
+            locale={{
+              emptyText: <TableEmptyState
+                icon={TagIcon}
+                title="Marka bulunamadi"
+                description="Henuz marka eklenmemis veya filtrelere uygun kayit yok."
+              />
             }}
             className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
           />

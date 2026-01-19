@@ -6,7 +6,6 @@ import {
   Button,
   Space,
   Tag,
-  Spin,
   Modal,
   Empty,
   Progress,
@@ -14,6 +13,7 @@ import {
   Input,
   Form,
 } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
   ArrowLeftIcon,
   BuildingStorefrontIcon,
@@ -126,7 +126,7 @@ export default function LotBatchDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }

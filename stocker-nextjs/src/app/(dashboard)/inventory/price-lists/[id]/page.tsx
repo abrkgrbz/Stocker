@@ -6,7 +6,6 @@ import {
   Button,
   Space,
   Tag,
-  Spin,
   Modal,
   Empty,
   Table,
@@ -16,6 +15,7 @@ import {
   Switch,
   Progress,
 } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
   ArrowLeftIcon,
   CalendarIcon,
@@ -289,7 +289,7 @@ export default function PriceListDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -654,7 +654,7 @@ export default function PriceListDetailPage() {
                 pagination={{
                   pageSize: 10,
                   showSizeChanger: true,
-                  showTotal: (total) => `Toplam ${total} kalem`,
+                  showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
                 }}
                 size="small"
                 locale={{ emptyText: 'Henüz fiyat kalemi eklenmedi' }}

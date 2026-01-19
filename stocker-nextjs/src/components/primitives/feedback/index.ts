@@ -19,3 +19,8 @@ export {
   Alert,
   type AlertProps,
 } from './Alert';
+
+export {
+  TableEmptyState,
+  type TableEmptyStateProps,
+} from './TableEmptyState';

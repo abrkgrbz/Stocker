@@ -118,7 +118,7 @@ export default function ProductVariantsPage() {
       ),
     },
     {
-      title: 'Urun',
+      title: 'Ürün',
       key: 'product',
       width: 180,
       render: (_, record) => (
@@ -200,13 +200,13 @@ export default function ProductVariantsPage() {
               {
                 key: 'view',
                 icon: <EyeIcon className="w-4 h-4" />,
-                label: 'Goruntule',
+                label: 'Görüntüle',
                 onClick: () => router.push(`/inventory/product-variants/${record.id}`),
               },
               {
                 key: 'edit',
                 icon: <PencilIcon className="w-4 h-4" />,
-                label: 'Duzenle',
+                label: 'Düzenle',
                 onClick: () => router.push(`/inventory/product-variants/${record.id}/edit`),
               },
               { type: 'divider' },
@@ -274,9 +274,9 @@ export default function ProductVariantsPage() {
             <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
               <Squares2X2Icon className="w-5 h-5 text-white" />
             </div>
-            Urun Varyantlari
+            Ürün Varyantları
           </h1>
-          <p className="text-slate-500 mt-1">SKU ve barkod bazli urun cesitleri</p>
+          <p className="text-slate-500 mt-1">SKU ve barkod bazlı ürün çeşitleri</p>
         </div>
         <Space>
           <Button
@@ -378,7 +378,7 @@ export default function ProductVariantsPage() {
             className="[&_.ant-input]:!border-slate-300 [&_.ant-input]:!rounded-lg"
           />
           <Select
-            placeholder="Urun filtrele"
+            placeholder="Ürün filtrele"
             style={{ width: 220 }}
             allowClear
             showSearch
@@ -421,13 +421,19 @@ export default function ProductVariantsPage() {
             loading={isLoading}
             rowSelection={rowSelection}
             onRow={(record) => ({
-              onClick: () => router.push(`/inventory/product-variants/${record.id}`),
+              onClick: (e) => {
+                const target = e.target as HTMLElement;
+                if (target.closest('.ant-dropdown-trigger') || target.closest('.ant-dropdown')) {
+                  return;
+                }
+                router.push(`/inventory/product-variants/${record.id}`);
+              },
               className: 'cursor-pointer',
             })}
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} varyant`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
             }}
             locale={{ emptyText: 'Varyant bulunamadi' }}
             className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
@@ -445,12 +451,12 @@ export default function ProductVariantsPage() {
         }}
         onOk={handleDelete}
         okText="Sil"
-        cancelText="Iptal"
+        cancelText="İptal"
         okButtonProps={{ danger: true, loading: deleteVariant.isPending }}
         cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
       >
         <p className="text-slate-600">
-          <strong className="text-slate-900">{variantToDelete?.variantName}</strong> varyantini silmek istediginize emin misiniz?
+          <strong className="text-slate-900">{variantToDelete?.variantName}</strong> varyantını silmek istediğinize emin misiniz?
         </p>
         <p className="text-slate-500 text-sm mt-2">
           SKU: {variantToDelete?.sku}

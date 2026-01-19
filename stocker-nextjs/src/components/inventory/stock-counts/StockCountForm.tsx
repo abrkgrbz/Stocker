@@ -1,17 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Form,
-  Input,
-  Select,
-  DatePicker,
-  Switch,
-  Button,
-  Table,
-  Empty,
-  InputNumber,
-} from 'antd';
+import { Form, Input, Button, Table, Empty, InputNumber, Select } from 'antd';
 import {
   CalculatorIcon,
   PlusIcon,
@@ -19,15 +9,23 @@ import {
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { useWarehouses, useProducts, useLocations, useStock } from '@/lib/api/hooks/useInventory';
-import { StockCountType, type StockCountDto, type CreateStockCountItemDto } from '@/lib/api/services/inventory.types';
+import { StockCountType, type StockCountDto, type CreateStockCountDto, type UpdateStockCountDto, type CreateStockCountItemDto } from '@/lib/api/services/inventory.types';
 import dayjs from 'dayjs';
-
-const { TextArea } = Input;
+import {
+  FormSection,
+  FormSelect,
+  FormDatePicker,
+  FormTextArea,
+  FormSwitch,
+  FormStatGrid,
+  useUnsavedChanges,
+  requiredRule,
+} from '@/components/forms';
 
 interface StockCountFormProps {
   form: ReturnType<typeof Form.useForm>[0];
   initialValues?: StockCountDto;
-  onFinish: (values: any) => void;
+  onFinish: (values: CreateStockCountDto | UpdateStockCountDto) => void;
   loading?: boolean;
 }
 
@@ -53,6 +51,23 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
   const { data: products = [] } = useProducts();
   const { data: locations = [] } = useLocations(warehouseId);
   const { data: warehouseStocks = [], isLoading: stocksLoading } = useStock(warehouseId);
+
+  const warehouseOptions = warehouses.map(w => ({
+    value: w.id,
+    label: w.name,
+  }));
+
+  const locationOptions = locations.map(l => ({
+    value: l.id,
+    label: l.name,
+  }));
+
+  // Unsaved changes tracking
+  const { markAsSaved } = useUnsavedChanges({
+    form,
+    enabled: true,
+    initialValues: initialValues || {},
+  });
 
   useEffect(() => {
     if (initialValues) {
@@ -110,6 +125,7 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
   };
 
   const handleFinish = (values: any) => {
+    markAsSaved();
     onFinish({
       ...values,
       countDate: values.countDate?.toISOString(),
@@ -295,156 +311,98 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
             </div>
           </div>
 
-          {/* ─────────────── DEPO & LOKASYON ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Depo & Lokasyon
-            </h3>
+          {/* Depo & Lokasyon */}
+          <FormSection title="Depo & Lokasyon">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Depo <span className="text-red-500">*</span></label>
-                <Form.Item
+                <FormSelect
                   name="warehouseId"
-                  rules={[{ required: true, message: 'Depo seçimi zorunludur' }]}
-                  className="mb-0"
-                >
-                  <Select
-                    placeholder="Depo seçin"
-                    showSearch
-                    optionFilterProp="label"
-                    onChange={(val) => setWarehouseId(val)}
-                    options={warehouses.map(w => ({
-                      value: w.id,
-                      label: w.name,
-                    }))}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                  label="Depo"
+                  required
+                  placeholder="Depo seçin"
+                  options={warehouseOptions}
+                  onChange={(val) => setWarehouseId(val)}
+                />
               </div>
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Lokasyon</label>
-                <Form.Item name="locationId" className="mb-0">
-                  <Select
-                    placeholder={warehouseId ? 'Tüm lokasyonlar' : '—'}
-                    allowClear
-                    showSearch
-                    optionFilterProp="label"
-                    disabled={!warehouseId}
-                    options={locations.map(l => ({
-                      value: l.id,
-                      label: l.name,
-                    }))}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                <FormSelect
+                  name="locationId"
+                  label="Lokasyon"
+                  placeholder={warehouseId ? 'Tüm lokasyonlar' : '—'}
+                  allowClear
+                  disabled={!warehouseId}
+                  options={locationOptions}
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
-          {/* ─────────────── TARİH & AYARLAR ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Tarih & Ayarlar
-            </h3>
+          {/* Tarih & Ayarlar */}
+          <FormSection title="Tarih & Ayarlar">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sayım Tarihi <span className="text-red-500">*</span></label>
-                <Form.Item
+                <FormDatePicker
                   name="countDate"
-                  rules={[{ required: true, message: 'Sayım tarihi zorunludur' }]}
-                  className="mb-0"
-                >
-                  <DatePicker
-                    style={{ width: '100%' }}
-                    format="DD.MM.YYYY"
-                    placeholder="Tarih seçin"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                  label="Sayım Tarihi"
+                  required
+                  placeholder="Tarih seçin"
+                />
               </div>
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Otomatik Düzeltme</label>
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <div>
-                    <div className="text-sm text-slate-700">
-                      {autoAdjust ? 'Farklar otomatik düzeltilecek' : 'Manuel onay gerekecek'}
-                    </div>
-                  </div>
-                  <Form.Item name="autoAdjust" valuePropName="checked" noStyle>
-                    <Switch
-                      checked={autoAdjust}
-                      onChange={(val) => {
-                        setAutoAdjust(val);
-                        form.setFieldValue('autoAdjust', val);
-                      }}
-                      checkedChildren="Evet"
-                      unCheckedChildren="Hayır"
-                    />
-                  </Form.Item>
-                </div>
+                <FormSwitch
+                  form={form}
+                  name="autoAdjust"
+                  title="Otomatik Düzeltme"
+                  value={autoAdjust}
+                  onChange={setAutoAdjust}
+                  descriptionTrue="Farklar otomatik düzeltilecek"
+                  descriptionFalse="Manuel onay gerekecek"
+                  checkedChildren="Evet"
+                  unCheckedChildren="Hayır"
+                  disabled={loading}
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
-          {/* ─────────────── İSTATİSTİKLER (Edit Mode) ─────────────── */}
+          {/* İstatistikler (Edit Mode) */}
           {initialValues && (
-            <div className="mb-8">
-              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-                Sayım İstatistikleri
-              </h3>
-              <div className="grid grid-cols-4 gap-4">
-                <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
-                  <div className="text-2xl font-semibold text-slate-800">
-                    {initialValues.totalItems || 0}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">Toplam Kalem</div>
-                </div>
-                <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
-                  <div className="text-2xl font-semibold text-slate-800">
-                    {initialValues.countedItems || 0}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">Sayılan</div>
-                </div>
-                <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
-                  <div className="text-2xl font-semibold text-orange-600">
-                    {initialValues.itemsWithDifferenceCount || 0}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">Fark Olan</div>
-                </div>
-                <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
-                  <div className={`text-2xl font-semibold ${(initialValues.totalDifference || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {(initialValues.totalDifference || 0) >= 0 ? '+' : ''}{initialValues.totalDifference || 0}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">Net Fark</div>
-                </div>
-              </div>
-            </div>
+            <FormSection title="Sayım İstatistikleri">
+              <FormStatGrid
+                columns={4}
+                stats={[
+                  { value: initialValues.totalItems || 0, label: 'Toplam Kalem' },
+                  { value: initialValues.countedItems || 0, label: 'Sayılan' },
+                  { value: initialValues.itemsWithDifferenceCount || 0, label: 'Fark Olan', variant: 'warning' },
+                  {
+                    value: `${(initialValues.totalDifference || 0) >= 0 ? '+' : ''}${initialValues.totalDifference || 0}`,
+                    label: 'Net Fark',
+                    variant: (initialValues.totalDifference || 0) >= 0 ? 'success' : 'danger',
+                  },
+                ]}
+              />
+            </FormSection>
           )}
 
-          {/* ─────────────── NOTLAR ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Notlar
-            </h3>
+          {/* Notlar */}
+          <FormSection title="Notlar">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-12">
-                <Form.Item name="notes" className="mb-0">
-                  <TextArea
-                    placeholder="Sayım ile ilgili ek notlar..."
-                    rows={3}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
-                  />
-                </Form.Item>
+                <FormTextArea
+                  name="notes"
+                  label="Notlar"
+                  placeholder="Sayım ile ilgili ek notlar..."
+                  rows={3}
+                  formItemProps={{ className: 'mb-0' }}
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
-          {/* ─────────────── SAYIM KALEMLERİ ─────────────── */}
-          <div>
-            <div className="flex items-center justify-between pb-2 mb-4 border-b border-slate-100">
-              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Sayım Kalemleri {items.length > 0 && `(${items.length})`}
-              </h3>
+          {/* Sayım Kalemleri */}
+          <FormSection
+            title={`Sayım Kalemleri ${items.length > 0 ? `(${items.length})` : ''}`}
+            rightContent={
               <div className="flex gap-2">
                 {warehouseId && (
                   <Button
@@ -469,8 +427,8 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
                   Ürün Ekle
                 </Button>
               </div>
-            </div>
-
+            }
+          >
             {items.length > 0 ? (
               <Table
                 dataSource={items.map((item, index) => ({ ...item, key: index }))}
@@ -511,7 +469,7 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
                 )}
               </Empty>
             )}
-          </div>
+          </FormSection>
 
         </div>
       </div>

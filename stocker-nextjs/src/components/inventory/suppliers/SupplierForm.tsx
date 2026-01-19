@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Form, Input, Switch, InputNumber } from 'antd';
+import { Form } from 'antd';
 import {
   BuildingStorefrontIcon,
   PhoneIcon,
@@ -9,19 +9,39 @@ import {
   GlobeAltIcon,
   UserIcon,
 } from '@heroicons/react/24/outline';
-import type { SupplierDto } from '@/lib/api/services/inventory.types';
-
-const { TextArea } = Input;
+import type { SupplierDto, CreateSupplierDto, UpdateSupplierDto } from '@/lib/api/services/inventory.types';
+import {
+  FormHeader,
+  FormSection,
+  FormInput,
+  FormTextArea,
+  FormNumber,
+  FormStatGrid,
+  useUnsavedChanges,
+  nameFieldRules,
+  codeFieldRules,
+  emailFieldRules,
+  phoneFieldRules,
+  urlFieldRules,
+  taxNumberRule,
+} from '@/components/forms';
 
 interface SupplierFormProps {
   form: ReturnType<typeof Form.useForm>[0];
   initialValues?: SupplierDto;
-  onFinish: (values: any) => void;
+  onFinish: (values: CreateSupplierDto | UpdateSupplierDto) => void;
   loading?: boolean;
 }
 
 export default function SupplierForm({ form, initialValues, onFinish, loading }: SupplierFormProps) {
   const [isActive, setIsActive] = useState(true);
+
+  // Unsaved changes tracking
+  const { markAsSaved } = useUnsavedChanges({
+    form,
+    enabled: true,
+    initialValues: initialValues || {},
+  });
 
   useEffect(() => {
     if (initialValues) {
@@ -31,15 +51,22 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
       form.setFieldsValue({
         paymentTerm: 30,
         creditLimit: 0,
+        isActive: true,
       });
     }
   }, [form, initialValues]);
+
+  // Handle form submission
+  const handleFinish = (values: any) => {
+    markAsSaved();
+    onFinish(values);
+  };
 
   return (
     <Form
       form={form}
       layout="vertical"
-      onFinish={onFinish}
+      onFinish={handleFinish}
       disabled={loading}
       className="w-full"
       scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
@@ -47,294 +74,206 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
 
-        {/* ═══════════════════════════════════════════════════════════════
-            HEADER: Icon + Name + Status Toggle
-        ═══════════════════════════════════════════════════════════════ */}
-        <div className="px-8 py-6 border-b border-slate-200">
-          <div className="flex items-center gap-6">
-            {/* Supplier Icon */}
-            <div className="flex-shrink-0">
-              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
-                <BuildingStorefrontIcon className="w-5 h-5 text-slate-500" />
-              </div>
-            </div>
+        {/* Header */}
+        <FormHeader
+          form={form}
+          icon={<BuildingStorefrontIcon className="w-5 h-5 text-slate-500" />}
+          titleField="name"
+          titlePlaceholder="Tedarikçi Adı Girin..."
+          titleRules={nameFieldRules('Tedarikçi adı')}
+          showStatusToggle={true}
+          statusValue={isActive}
+          onStatusChange={setIsActive}
+          loading={loading}
+        />
 
-            {/* Supplier Name - Title Style */}
-            <div className="flex-1">
-              <Form.Item
-                name="name"
-                rules={[
-                  { required: true, message: 'Tedarikçi adı zorunludur' },
-                  { max: 200, message: 'Tedarikçi adı en fazla 200 karakter olabilir' },
-                ]}
-                className="mb-0"
-              >
-                <Input
-                  placeholder="Tedarikçi Adı Girin..."
-                  variant="borderless"
-                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
-                />
-              </Form.Item>
-            </div>
-
-            {/* Status Toggle */}
-            <div className="flex-shrink-0">
-              <div className="flex items-center gap-3 bg-slate-100 px-4 py-2 rounded-lg">
-                <span className="text-sm font-medium text-slate-600">
-                  {isActive ? 'Aktif' : 'Pasif'}
-                </span>
-                <Form.Item name="isActive" valuePropName="checked" noStyle initialValue={true}>
-                  <Switch
-                    checked={isActive}
-                    onChange={(val) => {
-                      setIsActive(val);
-                      form.setFieldValue('isActive', val);
-                    }}
-                  />
-                </Form.Item>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════════════════════════
-            FORM BODY: High-Density Grid Layout
-        ═══════════════════════════════════════════════════════════════ */}
+        {/* Form Body */}
         <div className="px-8 py-6">
 
-          {/* ─────────────── TEMEL BİLGİLER ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Temel Bilgiler
-            </h3>
+          {/* Temel Bilgiler */}
+          <FormSection title="Temel Bilgiler">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Tedarikçi Kodu <span className="text-red-500">*</span></label>
-                <Form.Item
+                <FormInput
                   name="code"
-                  rules={[{ required: true, message: 'Tedarikçi kodu zorunludur' }]}
-                  className="mb-0"
-                >
-                  <Input
-                    placeholder="SUP-001"
-                    disabled={!!initialValues}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                  label="Tedarikçi Kodu"
+                  required
+                  placeholder="SUP-001"
+                  disabled={!!initialValues}
+                  rules={codeFieldRules('Tedarikçi kodu')}
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Vergi Numarası</label>
-                <Form.Item name="taxNumber" className="mb-0">
-                  <Input
-                    placeholder="1234567890"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="taxNumber"
+                  label="Vergi Numarası"
+                  placeholder="1234567890"
+                  rules={[taxNumberRule]}
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Vergi Dairesi</label>
-                <Form.Item name="taxOffice" className="mb-0">
-                  <Input
-                    placeholder="Vergi dairesi adı"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="taxOffice"
+                  label="Vergi Dairesi"
+                  placeholder="Vergi dairesi adı"
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
-          {/* ─────────────── İLETİŞİM BİLGİLERİ ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              İletişim Bilgileri
-            </h3>
+          {/* İletişim Bilgileri */}
+          <FormSection title="İletişim Bilgileri">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Telefon</label>
-                <Form.Item name="phone" className="mb-0">
-                  <Input
-                    placeholder="+90 212 123 4567"
-                    prefix={<PhoneIcon className="w-4 h-4 text-slate-400" />}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="phone"
+                  label="Telefon"
+                  placeholder="+90 212 123 4567"
+                  prefix={<PhoneIcon className="w-4 h-4 text-slate-400" />}
+                  rules={phoneFieldRules()}
+                />
               </div>
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Faks</label>
-                <Form.Item name="fax" className="mb-0">
-                  <Input
-                    placeholder="+90 212 123 4568"
-                    prefix={<PhoneIcon className="w-4 h-4 text-slate-400" />}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="fax"
+                  label="Faks"
+                  placeholder="+90 212 123 4568"
+                  prefix={<PhoneIcon className="w-4 h-4 text-slate-400" />}
+                  rules={phoneFieldRules()}
+                />
               </div>
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">E-posta</label>
-                <Form.Item name="email" className="mb-0" rules={[{ type: 'email', message: 'Geçerli bir e-posta adresi girin' }]}>
-                  <Input
-                    placeholder="info@supplier.com"
-                    prefix={<EnvelopeIcon className="w-4 h-4 text-slate-400" />}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="email"
+                  label="E-posta"
+                  placeholder="info@supplier.com"
+                  prefix={<EnvelopeIcon className="w-4 h-4 text-slate-400" />}
+                  rules={emailFieldRules()}
+                />
               </div>
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Web Sitesi</label>
-                <Form.Item name="website" className="mb-0">
-                  <Input
-                    placeholder="https://www.supplier.com"
-                    prefix={<GlobeAltIcon className="w-4 h-4 text-slate-400" />}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="website"
+                  label="Web Sitesi"
+                  placeholder="https://www.supplier.com"
+                  prefix={<GlobeAltIcon className="w-4 h-4 text-slate-400" />}
+                  rules={urlFieldRules()}
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
-          {/* ─────────────── İLGİLİ KİŞİ ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              İlgili Kişi
-            </h3>
+          {/* İlgili Kişi */}
+          <FormSection title="İlgili Kişi">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ad Soyad</label>
-                <Form.Item name="contactPerson" className="mb-0">
-                  <Input
-                    placeholder="İlgili kişi adı"
-                    prefix={<UserIcon className="w-4 h-4 text-slate-400" />}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="contactPerson"
+                  label="Ad Soyad"
+                  placeholder="İlgili kişi adı"
+                  prefix={<UserIcon className="w-4 h-4 text-slate-400" />}
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Telefon</label>
-                <Form.Item name="contactPhone" className="mb-0">
-                  <Input
-                    placeholder="+90 532 123 4567"
-                    prefix={<PhoneIcon className="w-4 h-4 text-slate-400" />}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="contactPhone"
+                  label="Telefon"
+                  placeholder="+90 532 123 4567"
+                  prefix={<PhoneIcon className="w-4 h-4 text-slate-400" />}
+                  rules={phoneFieldRules()}
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">E-posta</label>
-                <Form.Item name="contactEmail" className="mb-0" rules={[{ type: 'email', message: 'Geçerli bir e-posta adresi girin' }]}>
-                  <Input
-                    placeholder="contact@supplier.com"
-                    prefix={<EnvelopeIcon className="w-4 h-4 text-slate-400" />}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="contactEmail"
+                  label="E-posta"
+                  placeholder="contact@supplier.com"
+                  prefix={<EnvelopeIcon className="w-4 h-4 text-slate-400" />}
+                  rules={emailFieldRules()}
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
-          {/* ─────────────── ADRES BİLGİLERİ ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Adres Bilgileri
-            </h3>
+          {/* Adres Bilgileri */}
+          <FormSection title="Adres Bilgileri">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-12">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Adres</label>
-                <Form.Item name="street" className="mb-0">
-                  <TextArea
-                    placeholder="Sokak/Cadde adresi"
-                    rows={2}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
-                  />
-                </Form.Item>
+                <FormTextArea
+                  name="street"
+                  label="Adres"
+                  placeholder="Sokak/Cadde adresi"
+                  rows={2}
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Şehir</label>
-                <Form.Item name="city" className="mb-0">
-                  <Input
-                    placeholder="İstanbul"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="city"
+                  label="Şehir"
+                  placeholder="İstanbul"
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">İlçe/Bölge</label>
-                <Form.Item name="state" className="mb-0">
-                  <Input
-                    placeholder="Kadıköy"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="state"
+                  label="İlçe/Bölge"
+                  placeholder="Kadıköy"
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Posta Kodu</label>
-                <Form.Item name="postalCode" className="mb-0">
-                  <Input
-                    placeholder="34000"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="postalCode"
+                  label="Posta Kodu"
+                  placeholder="34000"
+                />
               </div>
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ülke</label>
-                <Form.Item name="country" className="mb-0">
-                  <Input
-                    placeholder="Türkiye"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="country"
+                  label="Ülke"
+                  placeholder="Türkiye"
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
-          {/* ─────────────── ÖDEME KOŞULLARI ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Ödeme Koşulları
-            </h3>
+          {/* Ödeme Koşulları */}
+          <FormSection title="Ödeme Koşulları">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Vade (Gün)</label>
-                <Form.Item name="paymentTerm" className="mb-0" initialValue={30}>
-                  <InputNumber
-                    placeholder="30"
-                    min={0}
-                    max={365}
-                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
-                  />
-                </Form.Item>
+                <FormNumber
+                  name="paymentTerm"
+                  label="Vade (Gün)"
+                  placeholder="30"
+                  min={0}
+                  max={365}
+                  formItemProps={{ initialValue: 30 }}
+                />
               </div>
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Kredi Limiti (₺)</label>
-                <Form.Item name="creditLimit" className="mb-0" initialValue={0}>
-                  <InputNumber
-                    placeholder="100000"
-                    min={0}
-                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                    parser={(value) => value!.replace(/\$\s?|(,*)/g, '') as any}
-                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
-                  />
-                </Form.Item>
+                <FormNumber
+                  name="creditLimit"
+                  label="Kredi Limiti (₺)"
+                  placeholder="100000"
+                  min={0}
+                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                  parser={(value) => value!.replace(/\$\s?|(,*)/g, '') as any}
+                  formItemProps={{ initialValue: 0 }}
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
-          {/* ─────────────── İSTATİSTİKLER (Düzenleme Modu) ─────────────── */}
+          {/* İstatistikler (Düzenleme Modu) */}
           {initialValues && (
-            <div>
-              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-                İstatistikler
-              </h3>
-              <div className="grid grid-cols-12 gap-4">
-                <div className="col-span-6">
-                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
-                    <div className="text-2xl font-semibold text-slate-800">
-                      {initialValues.productCount || 0}
-                    </div>
-                    <div className="text-xs text-slate-500 mt-1">Ürün Sayısı</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <FormSection title="İstatistikler">
+              <FormStatGrid
+                columns={2}
+                stats={[
+                  { value: initialValues.productCount || 0, label: 'Ürün Sayısı' },
+                ]}
+              />
+            </FormSection>
           )}
 
         </div>

@@ -659,7 +659,7 @@ export default function ForecastingPage() {
             pagination={{
               total: suggestions?.totalCount,
               pageSize: suggestions?.pageSize || 20,
-              showTotal: (total) => `Toplam ${total} öneri`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
             }}
             className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
           />

@@ -540,7 +540,7 @@ export default function AuditTrailPage() {
               pageSize: filter.pageSize,
               total: auditLogsData?.totalCount || 0,
               showSizeChanger: true,
-              showTotal: (total) => `Toplam ${total} kayıt`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
               onChange: (page, pageSize) => {
                 setFilter((prev) => ({
                   ...prev,

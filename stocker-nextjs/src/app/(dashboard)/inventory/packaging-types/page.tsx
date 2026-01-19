@@ -197,7 +197,7 @@ export default function PackagingTypesPage() {
       ),
     },
     {
-      title: 'Ozellikler',
+      title: 'Özellikler',
       key: 'features',
       width: 180,
       render: (_, record) => (
@@ -251,13 +251,13 @@ export default function PackagingTypesPage() {
               {
                 key: 'view',
                 icon: <EyeIcon className="w-4 h-4" />,
-                label: 'Goruntule',
+                label: 'Görüntüle',
                 onClick: () => router.push(`/inventory/packaging-types/${record.id}`),
               },
               {
                 key: 'edit',
                 icon: <PencilIcon className="w-4 h-4" />,
-                label: 'Duzenle',
+                label: 'Düzenle',
                 onClick: () => router.push(`/inventory/packaging-types/${record.id}/edit`),
               },
               {
@@ -296,7 +296,7 @@ export default function PackagingTypesPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-slate-900">Ambalaj Tipleri</h1>
-              <p className="text-slate-500 mt-1">Urun ambalaj tiplerini tanimlayin ve yonetin</p>
+              <p className="text-slate-500 mt-1">Ürün ambalaj tiplerini tanımlayın ve yönetin</p>
             </div>
           </div>
         </div>
@@ -413,11 +413,17 @@ export default function PackagingTypesPage() {
             total: filteredData.length,
             pageSize: 20,
             showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayit`,
+            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
           }}
           scroll={{ x: 1200 }}
           onRow={(record) => ({
-            onClick: () => router.push(`/inventory/packaging-types/${record.id}`),
+            onClick: (e) => {
+              const target = e.target as HTMLElement;
+              if (target.closest('.ant-dropdown-trigger') || target.closest('.ant-dropdown')) {
+                return;
+              }
+              router.push(`/inventory/packaging-types/${record.id}`);
+            },
             className: 'cursor-pointer hover:bg-slate-50',
           })}
           className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"

@@ -111,7 +111,7 @@ export default function BarcodeDefinitionsPage() {
       ),
     },
     {
-      title: 'Urun',
+      title: 'Ürün',
       key: 'product',
       width: 200,
       render: (_, record) => (
@@ -207,13 +207,13 @@ export default function BarcodeDefinitionsPage() {
               {
                 key: 'view',
                 icon: <EyeIcon className="w-4 h-4" />,
-                label: 'Goruntule',
+                label: 'Görüntüle',
                 onClick: () => router.push(`/inventory/barcode-definitions/${record.id}`),
               },
               {
                 key: 'edit',
                 icon: <PencilIcon className="w-4 h-4" />,
-                label: 'Duzenle',
+                label: 'Düzenle',
                 onClick: () => router.push(`/inventory/barcode-definitions/${record.id}/edit`),
               },
               {
@@ -251,8 +251,8 @@ export default function BarcodeDefinitionsPage() {
               <QrCodeIcon className="w-5 h-5 text-slate-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Barkod Tanimlari</h1>
-              <p className="text-slate-500 mt-1">Urunlere ait barkod tanimlarini yonetin</p>
+              <h1 className="text-2xl font-bold text-slate-900">Barkod Tanımları</h1>
+              <p className="text-slate-500 mt-1">Ürünlere ait barkod tanımlarını yönetin</p>
             </div>
           </div>
         </div>
@@ -344,7 +344,7 @@ export default function BarcodeDefinitionsPage() {
             className="w-64 [&_.ant-input]:!border-slate-300 [&_.ant-input]:!rounded-lg"
           />
           <Select
-            placeholder="Urune gore filtrele"
+            placeholder="Ürüne göre filtrele"
             allowClear
             style={{ width: 250 }}
             value={selectedProduct}
@@ -371,11 +371,17 @@ export default function BarcodeDefinitionsPage() {
             total: filteredData.length,
             pageSize: 20,
             showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayit`,
+            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
           }}
           scroll={{ x: 1200 }}
           onRow={(record) => ({
-            onClick: () => router.push(`/inventory/barcode-definitions/${record.id}`),
+            onClick: (e) => {
+              const target = e.target as HTMLElement;
+              if (target.closest('.ant-dropdown-trigger') || target.closest('.ant-dropdown')) {
+                return;
+              }
+              router.push(`/inventory/barcode-definitions/${record.id}`);
+            },
             className: 'cursor-pointer hover:bg-slate-50',
           })}
           className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"

@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Button, Tag, Spin, Descriptions, Space, Divider, Progress } from 'antd';
+import { Button, Tag, Descriptions, Space, Divider, Progress } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
   ArrowLeftIcon,
   PencilIcon,
@@ -102,8 +103,8 @@ export default function QualityControlDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <Spin size="large" />
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
+        <Spinner size="lg" />
       </div>
     );
   }

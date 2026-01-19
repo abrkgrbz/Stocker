@@ -22,6 +22,7 @@ import {
 import type { QualityControlDto } from '@/lib/api/services/inventory.types';
 import { QualityControlStatus } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
+import { TableEmptyState } from '@/components/primitives';
 import dayjs from 'dayjs';
 import { confirmAction } from '@/lib/utils/sweetalert';
 
@@ -48,13 +49,13 @@ const statusConfig: Record<QualityControlStatus, StatusConfig> = {
   [QualityControlStatus.Completed]: {
     color: '#ffffff',
     bgColor: '#475569',
-    label: 'Tamamlandi',
+    label: 'Tamamlandı',
     icon: <CheckCircleIcon className="w-3.5 h-3.5" />,
   },
   [QualityControlStatus.Cancelled]: {
     color: '#475569',
     bgColor: '#f1f5f9',
-    label: 'Iptal',
+    label: 'İptal',
     icon: <XCircleIcon className="w-3.5 h-3.5" />,
   },
 };
@@ -129,7 +130,7 @@ export default function QualityControlPage() {
       ),
     },
     {
-      title: 'Urun',
+      title: 'Ürün',
       key: 'product',
       width: 200,
       render: (_, record) => (
@@ -198,13 +199,13 @@ export default function QualityControlPage() {
           {
             key: 'view',
             icon: <EyeIcon className="w-4 h-4" />,
-            label: 'Goruntule',
+            label: 'Görüntüle',
             onClick: () => router.push(`/inventory/quality-control/${record.id}`),
           },
           {
             key: 'edit',
             icon: <PencilIcon className="w-4 h-4" />,
-            label: 'Duzenle',
+            label: 'Düzenle',
             onClick: () => router.push(`/inventory/quality-control/${record.id}/edit`),
           },
         ];
@@ -253,7 +254,7 @@ export default function QualityControlPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-slate-900">Kalite Kontrol</h1>
-              <p className="text-slate-500 mt-1">Urun kalite kontrollerini yonetin ve takip edin</p>
+              <p className="text-slate-500 mt-1">Ürün kalite kontrollerini yönetin ve takip edin</p>
             </div>
           </div>
         </div>
@@ -380,11 +381,17 @@ export default function QualityControlPage() {
             total: qualityControls.length,
             pageSize: 20,
             showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayit`,
+            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
           }}
           scroll={{ x: 1000 }}
           onRow={(record) => ({
-            onClick: () => router.push(`/inventory/quality-control/${record.id}`),
+            onClick: (e) => {
+              const target = e.target as HTMLElement;
+              if (target.closest('.ant-dropdown-trigger') || target.closest('.ant-dropdown')) {
+                return;
+              }
+              router.push(`/inventory/quality-control/${record.id}`);
+            },
             className: 'cursor-pointer hover:bg-slate-50',
           })}
           className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"

@@ -1,17 +1,23 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Form, Input, InputNumber, Select } from 'antd';
+import { Form } from 'antd';
 import { ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline';
-
-const { TextArea } = Input;
 import { useProducts, useWarehouses, useSuppliers, useUnits } from '@/lib/api/hooks/useInventory';
-import type { QualityControlDto } from '@/lib/api/services/inventory.types';
+import type { QualityControlDto, CreateQualityControlDto, UpdateQualityControlDto } from '@/lib/api/services/inventory.types';
+import {
+  FormSection,
+  FormInput,
+  FormTextArea,
+  FormSelect,
+  FormNumber,
+  useUnsavedChanges,
+} from '@/components/forms';
 
 interface QualityControlFormProps {
   form: ReturnType<typeof Form.useForm>[0];
   initialValues?: QualityControlDto;
-  onFinish: (values: any) => void;
+  onFinish: (values: CreateQualityControlDto | UpdateQualityControlDto) => void;
   loading?: boolean;
 }
 
@@ -53,6 +59,13 @@ export default function QualityControlForm({ form, initialValues, onFinish, load
     label: `${u.name} (${u.symbol || u.code})`,
   }));
 
+  // Unsaved changes tracking
+  const { markAsSaved } = useUnsavedChanges({
+    form,
+    enabled: true,
+    initialValues: initialValues || {},
+  });
+
   useEffect(() => {
     if (initialValues) {
       form.setFieldsValue(initialValues);
@@ -64,11 +77,17 @@ export default function QualityControlForm({ form, initialValues, onFinish, load
     }
   }, [form, initialValues]);
 
+  // Handle form submission
+  const handleFinish = (values: any) => {
+    markAsSaved();
+    onFinish(values);
+  };
+
   return (
     <Form
       form={form}
       layout="vertical"
-      onFinish={onFinish}
+      onFinish={handleFinish}
       disabled={loading}
       className="w-full"
       scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
@@ -76,9 +95,7 @@ export default function QualityControlForm({ form, initialValues, onFinish, load
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
 
-        {/* ═══════════════════════════════════════════════════════════════
-            HEADER: Icon + Title
-        ═══════════════════════════════════════════════════════════════ */}
+        {/* Header */}
         <div className="px-8 py-6 border-b border-slate-200">
           <div className="flex items-center gap-6">
             {/* QC Icon */}
@@ -100,196 +117,140 @@ export default function QualityControlForm({ form, initialValues, onFinish, load
           </div>
         </div>
 
-        {/* ═══════════════════════════════════════════════════════════════
-            FORM BODY: High-Density Grid Layout
-        ═══════════════════════════════════════════════════════════════ */}
+        {/* Form Body */}
         <div className="px-8 py-6">
 
-          {/* ─────────────── TEMEL BİLGİLER ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Temel Bilgiler
-            </h3>
+          {/* Temel Bilgiler */}
+          <FormSection title="Temel Bilgiler">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ürün <span className="text-red-500">*</span></label>
-                <Form.Item
+                <FormSelect
                   name="productId"
-                  rules={[{ required: true, message: 'Ürün seçimi zorunludur' }]}
-                  className="mb-0"
-                >
-                  <Select
-                    placeholder="Ürün seçin"
-                    showSearch
-                    optionFilterProp="label"
-                    options={productOptions}
-                    disabled={!!initialValues}
-                    onChange={(value) => setSelectedProductId(value)}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                  label="Ürün"
+                  required
+                  placeholder="Ürün seçin"
+                  disabled={!!initialValues}
+                  options={productOptions}
+                  onChange={(value) => setSelectedProductId(value)}
+                />
               </div>
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Kontrol Tipi <span className="text-red-500">*</span></label>
-                <Form.Item
+                <FormSelect
                   name="qcType"
-                  rules={[{ required: true, message: 'Kontrol tipi zorunludur' }]}
-                  className="mb-0"
-                >
-                  <Select
-                    placeholder="Tip seçin"
-                    options={qcTypeOptions}
-                    disabled={!!initialValues}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                  label="Kontrol Tipi"
+                  required
+                  placeholder="Tip seçin"
+                  disabled={!!initialValues}
+                  options={qcTypeOptions}
+                  showSearch={false}
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Denetlenen Miktar <span className="text-red-500">*</span></label>
-                <Form.Item
+                <FormNumber
                   name="inspectedQuantity"
-                  rules={[{ required: true, message: 'Miktar zorunludur' }]}
-                  className="mb-0"
-                >
-                  <InputNumber
-                    placeholder="100"
-                    min={0}
-                    disabled={!!initialValues}
-                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
-                  />
-                </Form.Item>
+                  label="Denetlenen Miktar"
+                  required
+                  placeholder="100"
+                  min={0}
+                  disabled={!!initialValues}
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Birim <span className="text-red-500">*</span></label>
-                <Form.Item
+                <FormSelect
                   name="unit"
-                  rules={[{ required: true, message: 'Birim zorunludur' }]}
-                  className="mb-0"
-                >
-                  <Select
-                    placeholder="Birim seçin"
-                    showSearch
-                    optionFilterProp="label"
-                    options={unitOptions}
-                    disabled={!!initialValues}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                  label="Birim"
+                  required
+                  placeholder="Birim seçin"
+                  disabled={!!initialValues}
+                  options={unitOptions}
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Numune Miktarı</label>
-                <Form.Item name="sampleQuantity" className="mb-0">
-                  <InputNumber
-                    placeholder="10"
-                    min={0}
-                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
-                  />
-                </Form.Item>
+                <FormNumber
+                  name="sampleQuantity"
+                  label="Numune Miktarı"
+                  placeholder="10"
+                  min={0}
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
-          {/* ─────────────── LOT VE TEDARİKÇİ BİLGİLERİ ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Lot ve Tedarikçi Bilgileri
-            </h3>
+          {/* Lot ve Tedarikçi Bilgileri */}
+          <FormSection title="Lot ve Tedarikçi Bilgileri">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Lot Numarası</label>
-                <Form.Item name="lotNumber" className="mb-0">
-                  <Input
-                    placeholder="LOT-2024-001"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="lotNumber"
+                  label="Lot Numarası"
+                  placeholder="LOT-2024-001"
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Tedarikçi</label>
-                <Form.Item name="supplierId" className="mb-0">
-                  <Select
-                    placeholder="Tedarikçi seçin"
-                    showSearch
-                    allowClear
-                    optionFilterProp="label"
-                    options={supplierOptions}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                <FormSelect
+                  name="supplierId"
+                  label="Tedarikçi"
+                  placeholder="Tedarikçi seçin"
+                  allowClear
+                  options={supplierOptions}
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Satınalma Sipariş No</label>
-                <Form.Item name="purchaseOrderNumber" className="mb-0">
-                  <Input
-                    placeholder="PO-2024-001"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="purchaseOrderNumber"
+                  label="Satınalma Sipariş No"
+                  placeholder="PO-2024-001"
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
-          {/* ─────────────── DENETİM BİLGİLERİ ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Denetim Bilgileri
-            </h3>
+          {/* Denetim Bilgileri */}
+          <FormSection title="Denetim Bilgileri">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Depo</label>
-                <Form.Item name="warehouseId" className="mb-0">
-                  <Select
-                    placeholder="Depo seçin"
-                    showSearch
-                    allowClear
-                    optionFilterProp="label"
-                    options={warehouseOptions}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
+                <FormSelect
+                  name="warehouseId"
+                  label="Depo"
+                  placeholder="Depo seçin"
+                  allowClear
+                  options={warehouseOptions}
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Denetim Yeri</label>
-                <Form.Item name="inspectionLocation" className="mb-0">
-                  <Input
-                    placeholder="Kalite Kontrol Bölümü"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="inspectionLocation"
+                  label="Denetim Yeri"
+                  placeholder="Kalite Kontrol Bölümü"
+                />
               </div>
               <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Denetim Standardı</label>
-                <Form.Item name="inspectionStandard" className="mb-0">
-                  <Input
-                    placeholder="ISO 9001"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
+                <FormInput
+                  name="inspectionStandard"
+                  label="Denetim Standardı"
+                  placeholder="ISO 9001"
+                />
               </div>
               <div className="col-span-12">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Denetim Notları</label>
-                <Form.Item name="inspectionNotes" className="mb-0">
-                  <TextArea
-                    placeholder="Denetim hakkında notlar..."
-                    rows={3}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
-                  />
-                </Form.Item>
+                <FormTextArea
+                  name="inspectionNotes"
+                  label="Denetim Notları"
+                  placeholder="Denetim hakkında notlar..."
+                  rows={3}
+                />
               </div>
               {initialValues && (
                 <div className="col-span-12">
-                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Dahili Notlar</label>
-                  <Form.Item name="internalNotes" className="mb-0">
-                    <TextArea
-                      placeholder="Dahili notlar..."
-                      rows={2}
-                      className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
-                    />
-                  </Form.Item>
+                  <FormTextArea
+                    name="internalNotes"
+                    label="Dahili Notlar"
+                    placeholder="Dahili notlar..."
+                    rows={2}
+                  />
                 </div>
               )}
             </div>
-          </div>
+          </FormSection>
 
         </div>
       </div>

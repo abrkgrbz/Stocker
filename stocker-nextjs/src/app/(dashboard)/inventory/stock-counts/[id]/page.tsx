@@ -7,7 +7,6 @@ import {
   Space,
   Table,
   Tag,
-  Spin,
   Alert,
   Modal,
   Progress,
@@ -15,6 +14,7 @@ import {
   Input,
   Empty,
 } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
   ArrowDownIcon,
   ArrowLeftIcon,
@@ -175,7 +175,7 @@ export default function StockCountDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
