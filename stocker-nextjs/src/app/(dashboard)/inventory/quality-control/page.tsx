@@ -394,6 +394,13 @@ export default function QualityControlPage() {
             },
             className: 'cursor-pointer hover:bg-slate-50',
           })}
+          locale={{
+            emptyText: <TableEmptyState
+              icon={ClipboardDocumentCheckIcon}
+              title="Kalite kontrolu bulunamadi"
+              description="Henuz kalite kontrolu eklenmemis veya filtrelere uygun kayit yok."
+            />
+          }}
           className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
         />
       </div>

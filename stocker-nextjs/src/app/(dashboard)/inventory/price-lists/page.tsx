@@ -36,6 +36,7 @@ import {
 } from '@/lib/api/hooks/useInventory';
 import type { PriceListListDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
+import { TableEmptyState } from '@/components/primitives';
 import dayjs from 'dayjs';
 
 export default function PriceListsPage() {

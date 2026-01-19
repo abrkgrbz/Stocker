@@ -22,6 +22,7 @@ import {
 } from '@/lib/api/hooks/useInventory';
 import type { PackagingTypeDto, PackagingCategory } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
+import { TableEmptyState } from '@/components/primitives';
 import { confirmAction } from '@/lib/utils/sweetalert';
 
 const categoryConfig: Record<number, { label: string }> = {

@@ -29,6 +29,7 @@ import {
 import { useProductBundles, useDeleteProductBundle } from '@/lib/api/hooks/useInventory';
 import type { ProductBundleDto, BundleType, BundlePricingType } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
+import { TableEmptyState } from '@/components/primitives';
 import dayjs from 'dayjs';
 
 const bundleTypeConfig: Record<BundleType, { label: string }> = {
