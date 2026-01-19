@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Space, Tag, Spin, Empty, Progress, Table } from 'antd';
+import { Button, Space, Tag, Spin, Empty, Progress, Table, Tabs } from 'antd';
 import {
   ArrowLeftIcon,
   ArrowsPointingOutIcon,
@@ -18,8 +18,11 @@ import {
   StarIcon,
   UserIcon,
   XCircleIcon,
+  CubeIcon,
+  ChartBarIcon,
+  InformationCircleIcon,
 } from '@heroicons/react/24/outline';
-import { useWarehouse, useLocations } from '@/lib/api/hooks/useInventory';
+import { useWarehouse, useLocations, useWarehouseStockSummary } from '@/lib/api/hooks/useInventory';
 import type { LocationDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
@@ -29,8 +32,12 @@ export default function WarehouseDetailPage() {
   const params = useParams();
   const id = Number(params.id);
 
+  // Active tab state
+  const [activeTab, setActiveTab] = useState('general');
+
   const { data: warehouse, isLoading, error } = useWarehouse(id);
   const { data: locations = [] } = useLocations(id);
+  const { data: stockSummary, isLoading: stockSummaryLoading } = useWarehouseStockSummary(id);
 
   if (isLoading) {
     return (
@@ -222,9 +229,8 @@ export default function WarehouseDetailPage() {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-8 py-6">
-        {/* Bento Grid Layout */}
-        <div className="grid grid-cols-12 gap-6">
-          {/* KPI Cards Row */}
+        {/* KPI Cards Row - Always Visible */}
+        <div className="grid grid-cols-12 gap-6 mb-6">
           <div className="col-span-12 md:col-span-3">
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
@@ -304,177 +310,349 @@ export default function WarehouseDetailPage() {
               </div>
             </div>
           </div>
-
-          {/* Warehouse Info Section */}
-          <div className="col-span-12 md:col-span-5">
-            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
-                Depo Bilgileri
-              </p>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-slate-400 mb-1">Depo Kodu</p>
-                    <p className="text-sm font-medium text-slate-900">{warehouse.code}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400 mb-1">Depo Adı</p>
-                    <p className="text-sm font-medium text-slate-900">{warehouse.name}</p>
-                  </div>
-                </div>
-                {warehouse.description && (
-                  <div>
-                    <p className="text-xs text-slate-400 mb-1">Açıklama</p>
-                    <p className="text-sm text-slate-600">{warehouse.description}</p>
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-4">
-                  {warehouse.manager && (
-                    <div>
-                      <p className="text-xs text-slate-400 mb-1">Yönetici</p>
-                      <div className="flex items-center gap-1.5">
-                        <UserIcon className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm font-medium text-slate-900">{warehouse.manager}</span>
-                      </div>
-                    </div>
-                  )}
-                  {warehouse.phone && (
-                    <div>
-                      <p className="text-xs text-slate-400 mb-1">Telefon</p>
-                      <div className="flex items-center gap-1.5">
-                        <PhoneIcon className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm font-medium text-slate-900">{warehouse.phone}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                {warehouse.totalArea > 0 && (
-                  <div>
-                    <p className="text-xs text-slate-400 mb-1">Toplam Alan</p>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-800 text-sm font-medium">
-                      {warehouse.totalArea.toLocaleString()} m²
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Address Section */}
-          <div className="col-span-12 md:col-span-4">
-            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
-                Adres Bilgileri
-              </p>
-              {address ? (
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
-                    <MapPinIcon className="w-5 h-5 text-slate-600" />
-                  </div>
-                  <div className="space-y-1">
-                    {warehouse.street && (
-                      <p className="text-sm font-medium text-slate-900">{warehouse.street}</p>
-                    )}
-                    <p className="text-sm text-slate-600">
-                      {[warehouse.city, warehouse.state].filter(Boolean).join(', ')}
-                    </p>
-                    <p className="text-sm text-slate-500">
-                      {[warehouse.postalCode, warehouse.country].filter(Boolean).join(' ')}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-24 text-slate-400">
-                  <span className="text-sm">Adres bilgisi girilmemiş</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Timestamps Section */}
-          <div className="col-span-12 md:col-span-3">
-            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
-                Kayıt Bilgileri
-              </p>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4 text-slate-400" />
-                    <span className="text-sm text-slate-500">Oluşturulma</span>
-                  </div>
-                  <span className="text-sm font-medium text-slate-900">
-                    {dayjs(warehouse.createdAt).format('DD/MM/YYYY')}
-                  </span>
-                </div>
-                {warehouse.updatedAt && (
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <CalendarIcon className="w-4 h-4 text-slate-400" />
-                      <span className="text-sm text-slate-500">Güncelleme</span>
-                    </div>
-                    <span className="text-sm font-medium text-slate-900">
-                      {dayjs(warehouse.updatedAt).format('DD/MM/YYYY')}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Locations Table Section */}
-          <div className="col-span-12">
-            <div className="bg-white border border-slate-200 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Lokasyonlar ({locations.length})
-                </p>
-                <Button
-                  type="primary"
-                  size="small"
-                  icon={<PlusIcon className="w-4 h-4" />}
-                  onClick={() => router.push(`/inventory/locations/new?warehouseId=${id}`)}
-                  style={{ background: '#1e293b', borderColor: '#1e293b' }}
-                >
-                  Yeni Lokasyon
-                </Button>
-              </div>
-              {locations.length > 0 ? (
-                <Table
-                  columns={locationColumns}
-                  dataSource={locations}
-                  rowKey="id"
-                  pagination={{
-                    pageSize: 10,
-                    showSizeChanger: true,
-                    showTotal: (total) => `Toplam ${total} lokasyon`,
-                  }}
-                  size="small"
-                  className="[&_.ant-table]:border-slate-200 [&_.ant-table-thead_.ant-table-cell]:bg-slate-50 [&_.ant-table-thead_.ant-table-cell]:text-slate-600 [&_.ant-table-thead_.ant-table-cell]:font-medium"
-                  onRow={(record) => ({
-                    onClick: () => router.push(`/inventory/locations/${record.id}`),
-                    className: 'cursor-pointer hover:bg-slate-50',
-                  })}
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-                    <MapPinIcon className="w-8 h-8 text-slate-400" />
-                  </div>
-                  <p className="text-slate-500 mb-4">Bu depoda henüz lokasyon tanımlanmamış</p>
-                  <Button
-                    type="primary"
-                    icon={<PlusIcon className="w-4 h-4" />}
-                    onClick={() => router.push(`/inventory/locations/new?warehouseId=${id}`)}
-                    style={{ background: '#1e293b', borderColor: '#1e293b' }}
-                  >
-                    Lokasyon Ekle
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
+
+        {/* Tabbed Content */}
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          className="[&_.ant-tabs-nav]:mb-6 [&_.ant-tabs-tab]:text-slate-600 [&_.ant-tabs-tab-active]:!text-slate-900 [&_.ant-tabs-ink-bar]:!bg-slate-900"
+          items={[
+            {
+              key: 'general',
+              label: (
+                <span className="flex items-center gap-2">
+                  <InformationCircleIcon className="w-4 h-4" />
+                  Genel Bilgiler
+                </span>
+              ),
+              children: (
+                <div className="grid grid-cols-12 gap-6">
+                  {/* Warehouse Info Section */}
+                  <div className="col-span-12 md:col-span-5">
+                    <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                        Depo Bilgileri
+                      </p>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-xs text-slate-400 mb-1">Depo Kodu</p>
+                            <p className="text-sm font-medium text-slate-900">{warehouse.code}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-400 mb-1">Depo Adı</p>
+                            <p className="text-sm font-medium text-slate-900">{warehouse.name}</p>
+                          </div>
+                        </div>
+                        {warehouse.description && (
+                          <div>
+                            <p className="text-xs text-slate-400 mb-1">Açıklama</p>
+                            <p className="text-sm text-slate-600">{warehouse.description}</p>
+                          </div>
+                        )}
+                        <div className="grid grid-cols-2 gap-4">
+                          {warehouse.manager && (
+                            <div>
+                              <p className="text-xs text-slate-400 mb-1">Yönetici</p>
+                              <div className="flex items-center gap-1.5">
+                                <UserIcon className="w-4 h-4 text-slate-400" />
+                                <span className="text-sm font-medium text-slate-900">{warehouse.manager}</span>
+                              </div>
+                            </div>
+                          )}
+                          {warehouse.phone && (
+                            <div>
+                              <p className="text-xs text-slate-400 mb-1">Telefon</p>
+                              <div className="flex items-center gap-1.5">
+                                <PhoneIcon className="w-4 h-4 text-slate-400" />
+                                <span className="text-sm font-medium text-slate-900">{warehouse.phone}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        {warehouse.totalArea > 0 && (
+                          <div>
+                            <p className="text-xs text-slate-400 mb-1">Toplam Alan</p>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-800 text-sm font-medium">
+                              {warehouse.totalArea.toLocaleString()} m²
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Address Section */}
+                  <div className="col-span-12 md:col-span-4">
+                    <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                        Adres Bilgileri
+                      </p>
+                      {address ? (
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                            <MapPinIcon className="w-5 h-5 text-slate-600" />
+                          </div>
+                          <div className="space-y-1">
+                            {warehouse.street && (
+                              <p className="text-sm font-medium text-slate-900">{warehouse.street}</p>
+                            )}
+                            <p className="text-sm text-slate-600">
+                              {[warehouse.city, warehouse.state].filter(Boolean).join(', ')}
+                            </p>
+                            <p className="text-sm text-slate-500">
+                              {[warehouse.postalCode, warehouse.country].filter(Boolean).join(' ')}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center h-24 text-slate-400">
+                          <span className="text-sm">Adres bilgisi girilmemiş</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Timestamps Section */}
+                  <div className="col-span-12 md:col-span-3">
+                    <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                        Kayıt Bilgileri
+                      </p>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <CalendarIcon className="w-4 h-4 text-slate-400" />
+                            <span className="text-sm text-slate-500">Oluşturulma</span>
+                          </div>
+                          <span className="text-sm font-medium text-slate-900">
+                            {dayjs(warehouse.createdAt).format('DD/MM/YYYY')}
+                          </span>
+                        </div>
+                        {warehouse.updatedAt && (
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              <CalendarIcon className="w-4 h-4 text-slate-400" />
+                              <span className="text-sm text-slate-500">Güncelleme</span>
+                            </div>
+                            <span className="text-sm font-medium text-slate-900">
+                              {dayjs(warehouse.updatedAt).format('DD/MM/YYYY')}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Locations Table Section */}
+                  <div className="col-span-12">
+                    <div className="bg-white border border-slate-200 rounded-xl p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Lokasyonlar ({locations.length})
+                        </p>
+                        <Button
+                          type="primary"
+                          size="small"
+                          icon={<PlusIcon className="w-4 h-4" />}
+                          onClick={() => router.push(`/inventory/locations/new?warehouseId=${id}`)}
+                          style={{ background: '#1e293b', borderColor: '#1e293b' }}
+                        >
+                          Yeni Lokasyon
+                        </Button>
+                      </div>
+                      {locations.length > 0 ? (
+                        <Table
+                          columns={locationColumns}
+                          dataSource={locations}
+                          rowKey="id"
+                          pagination={{
+                            pageSize: 10,
+                            showSizeChanger: true,
+                            showTotal: (total) => `Toplam ${total} lokasyon`,
+                          }}
+                          size="small"
+                          className="[&_.ant-table]:border-slate-200 [&_.ant-table-thead_.ant-table-cell]:bg-slate-50 [&_.ant-table-thead_.ant-table-cell]:text-slate-600 [&_.ant-table-thead_.ant-table-cell]:font-medium"
+                          onRow={(record) => ({
+                            onClick: () => router.push(`/inventory/locations/${record.id}`),
+                            className: 'cursor-pointer hover:bg-slate-50',
+                          })}
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-12">
+                          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                            <MapPinIcon className="w-8 h-8 text-slate-400" />
+                          </div>
+                          <p className="text-slate-500 mb-4">Bu depoda henüz lokasyon tanımlanmamış</p>
+                          <Button
+                            type="primary"
+                            icon={<PlusIcon className="w-4 h-4" />}
+                            onClick={() => router.push(`/inventory/locations/new?warehouseId=${id}`)}
+                            style={{ background: '#1e293b', borderColor: '#1e293b' }}
+                          >
+                            Lokasyon Ekle
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ),
+            },
+            {
+              key: 'stock',
+              label: (
+                <span className="flex items-center gap-2">
+                  <CubeIcon className="w-4 h-4" />
+                  Stok Özeti
+                </span>
+              ),
+              children: (
+                <div className="grid grid-cols-12 gap-6">
+                  {/* Stock Summary KPIs */}
+                  <div className="col-span-12 md:col-span-3">
+                    <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                          <CubeIcon className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Toplam Miktar
+                        </p>
+                      </div>
+                      <div className="flex items-end justify-between">
+                        <span className="text-3xl font-bold text-slate-900">
+                          {stockSummaryLoading ? '...' : (stockSummary?.totalQuantity || 0).toLocaleString('tr-TR')}
+                        </span>
+                        <span className="text-sm text-slate-400">adet</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="col-span-12 md:col-span-3">
+                    <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                          <ChartBarIcon className="w-5 h-5 text-amber-600" />
+                        </div>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Rezerve
+                        </p>
+                      </div>
+                      <div className="flex items-end justify-between">
+                        <span className="text-3xl font-bold text-slate-900">
+                          {stockSummaryLoading ? '...' : (stockSummary?.totalReserved || 0).toLocaleString('tr-TR')}
+                        </span>
+                        <span className="text-sm text-slate-400">adet</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="col-span-12 md:col-span-3">
+                    <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                          <XCircleIcon className="w-5 h-5 text-orange-600" />
+                        </div>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Düşük Stok
+                        </p>
+                      </div>
+                      <div className="flex items-end justify-between">
+                        <span className="text-3xl font-bold text-orange-600">
+                          {stockSummaryLoading ? '...' : (stockSummary?.lowStockItems || 0)}
+                        </span>
+                        <span className="text-sm text-slate-400">ürün</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="col-span-12 md:col-span-3">
+                    <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                          <XCircleIcon className="w-5 h-5 text-red-600" />
+                        </div>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Stokta Yok
+                        </p>
+                      </div>
+                      <div className="flex items-end justify-between">
+                        <span className="text-3xl font-bold text-red-600">
+                          {stockSummaryLoading ? '...' : (stockSummary?.outOfStockItems || 0)}
+                        </span>
+                        <span className="text-sm text-slate-400">ürün</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stock Value Card */}
+                  <div className="col-span-12">
+                    <div className="bg-white border border-slate-200 rounded-xl p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                            Toplam Stok Değeri
+                          </p>
+                          <span className="text-4xl font-bold text-slate-900">
+                            {stockSummaryLoading ? '...' : (stockSummary?.totalValue || 0).toLocaleString('tr-TR', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </span>
+                          <span className="text-2xl font-medium text-slate-400 ml-2">₺</span>
+                        </div>
+                        <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
+                          <CurrencyDollarIcon className="w-8 h-8 text-emerald-600" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="col-span-12">
+                    <div className="bg-white border border-slate-200 rounded-xl p-6">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                        Hızlı İşlemler
+                      </p>
+                      <div className="flex flex-wrap gap-3">
+                        <Button
+                          icon={<CubeIcon className="w-4 h-4" />}
+                          onClick={() => router.push(`/inventory/stock?warehouseId=${id}`)}
+                          className="border-slate-200 text-slate-700 hover:border-slate-300"
+                        >
+                          Stok Listesi
+                        </Button>
+                        <Button
+                          icon={<ChartBarIcon className="w-4 h-4" />}
+                          onClick={() => router.push(`/inventory/stock-movements?warehouseId=${id}`)}
+                          className="border-slate-200 text-slate-700 hover:border-slate-300"
+                        >
+                          Stok Hareketleri
+                        </Button>
+                        <Button
+                          icon={<PlusIcon className="w-4 h-4" />}
+                          onClick={() => router.push(`/inventory/stock-transfers/new?fromWarehouseId=${id}`)}
+                          className="border-slate-200 text-slate-700 hover:border-slate-300"
+                        >
+                          Transfer Oluştur
+                        </Button>
+                        <Button
+                          icon={<PlusIcon className="w-4 h-4" />}
+                          onClick={() => router.push(`/inventory/stock-counts/new?warehouseId=${id}`)}
+                          className="border-slate-200 text-slate-700 hover:border-slate-300"
+                        >
+                          Sayım Başlat
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ),
+            },
+          ]}
+        />
       </div>
     </div>
   );
