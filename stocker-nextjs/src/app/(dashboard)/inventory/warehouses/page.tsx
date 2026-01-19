@@ -230,20 +230,17 @@ export default function WarehousesPage() {
             key: 'view',
             icon: <EyeIcon className="w-4 h-4" />,
             label: 'Görüntüle',
-            onClick: () => handleView(record.id),
           },
           {
             key: 'edit',
             icon: <PencilIcon className="w-4 h-4" />,
             label: 'Düzenle',
-            onClick: () => handleEdit(record.id),
           },
           {
             key: 'setDefault',
             icon: <StarIcon className="w-4 h-4" />,
             label: 'Varsayılan Yap',
             disabled: record.isDefault,
-            onClick: () => handleSetDefault(record),
           },
           { type: 'divider' as const },
           {
@@ -252,12 +249,28 @@ export default function WarehousesPage() {
             label: 'Sil',
             danger: true,
             disabled: record.isDefault,
-            onClick: () => handleDelete(record),
           },
         ];
 
+        const handleMenuClick = ({ key }: { key: string }) => {
+          switch (key) {
+            case 'view':
+              handleView(record.id);
+              break;
+            case 'edit':
+              handleEdit(record.id);
+              break;
+            case 'setDefault':
+              handleSetDefault(record);
+              break;
+            case 'delete':
+              handleDelete(record);
+              break;
+          }
+        };
+
         return (
-          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+          <Dropdown menu={{ items: menuItems, onClick: handleMenuClick }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
               <EllipsisHorizontalIcon className="w-4 h-4" />
             </button>

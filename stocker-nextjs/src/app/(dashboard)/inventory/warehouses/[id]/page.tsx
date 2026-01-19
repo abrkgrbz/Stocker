@@ -21,9 +21,13 @@ import {
   CubeIcon,
   ChartBarIcon,
   InformationCircleIcon,
+  ViewColumnsIcon,
+  FireIcon,
+  ExclamationTriangleIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
-import { useWarehouse, useLocations, useWarehouseStockSummary } from '@/lib/api/hooks/useInventory';
-import type { LocationDto } from '@/lib/api/services/inventory.types';
+import { useWarehouse, useLocations, useWarehouseStockSummary, useWarehouseZones } from '@/lib/api/hooks/useInventory';
+import type { LocationDto, WarehouseZoneDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
@@ -38,6 +42,7 @@ export default function WarehouseDetailPage() {
   const { data: warehouse, isLoading, error } = useWarehouse(id);
   const { data: locations = [] } = useLocations(id);
   const { data: stockSummary, isLoading: stockSummaryLoading } = useWarehouseStockSummary(id);
+  const { data: zones = [], isLoading: zonesLoading } = useWarehouseZones(id);
 
   if (isLoading) {
     return (
@@ -125,6 +130,127 @@ export default function WarehouseDetailPage() {
           size="small"
           icon={<PencilIcon className="w-4 h-4" />}
           onClick={() => router.push(`/inventory/locations/${record.id}/edit`)}
+          className="text-slate-400 hover:text-slate-600"
+        />
+      ),
+    },
+  ];
+
+  // Zone type badge helper
+  const getZoneTypeBadge = (zoneType: string) => {
+    const types: Record<string, { label: string; color: string }> = {
+      Storage: { label: 'Depolama', color: 'bg-blue-50 text-blue-700' },
+      Receiving: { label: 'Kabul', color: 'bg-green-50 text-green-700' },
+      Shipping: { label: 'Sevkiyat', color: 'bg-purple-50 text-purple-700' },
+      Picking: { label: 'Toplama', color: 'bg-amber-50 text-amber-700' },
+      Packing: { label: 'Paketleme', color: 'bg-orange-50 text-orange-700' },
+      Returns: { label: 'İade', color: 'bg-red-50 text-red-700' },
+      Quarantine: { label: 'Karantina', color: 'bg-rose-50 text-rose-700' },
+      Cold: { label: 'Soğuk', color: 'bg-cyan-50 text-cyan-700' },
+      Hazardous: { label: 'Tehlikeli', color: 'bg-red-100 text-red-800' },
+      Other: { label: 'Diğer', color: 'bg-slate-50 text-slate-700' },
+    };
+    const config = types[zoneType] || types.Other;
+    return (
+      <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${config.color}`}>
+        {config.label}
+      </span>
+    );
+  };
+
+  const zoneColumns: ColumnsType<WarehouseZoneDto> = [
+    {
+      title: 'Kod',
+      dataIndex: 'code',
+      key: 'code',
+      width: 100,
+      render: (code) => <span className="font-medium text-slate-900">{code}</span>,
+    },
+    {
+      title: 'Ad',
+      dataIndex: 'name',
+      key: 'name',
+      render: (name) => <span className="text-slate-700">{name}</span>,
+    },
+    {
+      title: 'Tip',
+      dataIndex: 'zoneType',
+      key: 'zoneType',
+      width: 120,
+      render: (zoneType) => getZoneTypeBadge(zoneType),
+    },
+    {
+      title: 'Özellikler',
+      key: 'features',
+      width: 200,
+      render: (_, record) => (
+        <div className="flex flex-wrap gap-1">
+          {record.isTemperatureControlled && (
+            <Tag icon={<FireIcon className="w-3 h-3" />} className="border-0 bg-cyan-50 text-cyan-700 text-xs">
+              Sıcaklık
+            </Tag>
+          )}
+          {record.isHazardous && (
+            <Tag icon={<ExclamationTriangleIcon className="w-3 h-3" />} className="border-0 bg-red-50 text-red-700 text-xs">
+              Tehlikeli
+            </Tag>
+          )}
+          {record.requiresSpecialAccess && (
+            <Tag icon={<ShieldCheckIcon className="w-3 h-3" />} className="border-0 bg-purple-50 text-purple-700 text-xs">
+              Özel Erişim
+            </Tag>
+          )}
+          {record.isQuarantineZone && (
+            <Tag className="border-0 bg-rose-50 text-rose-700 text-xs">
+              Karantina
+            </Tag>
+          )}
+          {record.isDefaultPickingZone && (
+            <Tag className="border-0 bg-amber-50 text-amber-700 text-xs">
+              Varsayılan Toplama
+            </Tag>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: 'Lokasyon',
+      dataIndex: 'locationCount',
+      key: 'locationCount',
+      width: 100,
+      align: 'center',
+      render: (count) => <span className="text-slate-600">{count}</span>,
+    },
+    {
+      title: 'Durum',
+      dataIndex: 'isActive',
+      key: 'isActive',
+      width: 100,
+      align: 'center',
+      render: (active) => (
+        <Tag
+          icon={active ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
+          className={`border-0 ${
+            active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
+          }`}
+        >
+          {active ? 'Aktif' : 'Pasif'}
+        </Tag>
+      ),
+    },
+    {
+      title: '',
+      key: 'actions',
+      width: 80,
+      render: (_, record) => (
+        <Button
+          type="text"
+          size="small"
+          icon={<PencilIcon className="w-4 h-4" />}
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/inventory/warehouse-zones/${record.id}/edit`);
+          }}
           className="text-slate-400 hover:text-slate-600"
         />
       ),
@@ -646,6 +772,152 @@ export default function WarehouseDetailPage() {
                           Sayım Başlat
                         </Button>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              ),
+            },
+            {
+              key: 'zones',
+              label: (
+                <span className="flex items-center gap-2">
+                  <ViewColumnsIcon className="w-4 h-4" />
+                  Bölgeler
+                </span>
+              ),
+              children: (
+                <div className="grid grid-cols-12 gap-6">
+                  {/* Zone KPIs */}
+                  <div className="col-span-12 md:col-span-3">
+                    <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                          <ViewColumnsIcon className="w-5 h-5 text-indigo-600" />
+                        </div>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Toplam Bölge
+                        </p>
+                      </div>
+                      <div className="flex items-end justify-between">
+                        <span className="text-3xl font-bold text-slate-900">
+                          {zonesLoading ? '...' : zones.length}
+                        </span>
+                        <span className="text-sm text-slate-400">adet</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="col-span-12 md:col-span-3">
+                    <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                          <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
+                        </div>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Aktif Bölge
+                        </p>
+                      </div>
+                      <div className="flex items-end justify-between">
+                        <span className="text-3xl font-bold text-emerald-600">
+                          {zonesLoading ? '...' : zones.filter(z => z.isActive).length}
+                        </span>
+                        <span className="text-sm text-slate-400">adet</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="col-span-12 md:col-span-3">
+                    <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center">
+                          <FireIcon className="w-5 h-5 text-cyan-600" />
+                        </div>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Sıcaklık Kontrollü
+                        </p>
+                      </div>
+                      <div className="flex items-end justify-between">
+                        <span className="text-3xl font-bold text-cyan-600">
+                          {zonesLoading ? '...' : zones.filter(z => z.isTemperatureControlled).length}
+                        </span>
+                        <span className="text-sm text-slate-400">bölge</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="col-span-12 md:col-span-3">
+                    <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                          <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
+                        </div>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Tehlikeli Madde
+                        </p>
+                      </div>
+                      <div className="flex items-end justify-between">
+                        <span className="text-3xl font-bold text-red-600">
+                          {zonesLoading ? '...' : zones.filter(z => z.isHazardous).length}
+                        </span>
+                        <span className="text-sm text-slate-400">bölge</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Zones Table */}
+                  <div className="col-span-12">
+                    <div className="bg-white border border-slate-200 rounded-xl p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Bölgeler ({zones.length})
+                        </p>
+                        <Button
+                          type="primary"
+                          size="small"
+                          icon={<PlusIcon className="w-4 h-4" />}
+                          onClick={() => router.push(`/inventory/warehouse-zones/new?warehouseId=${id}`)}
+                          style={{ background: '#1e293b', borderColor: '#1e293b' }}
+                        >
+                          Yeni Bölge
+                        </Button>
+                      </div>
+                      {zonesLoading ? (
+                        <div className="flex justify-center py-12">
+                          <Spin />
+                        </div>
+                      ) : zones.length > 0 ? (
+                        <Table
+                          columns={zoneColumns}
+                          dataSource={zones}
+                          rowKey="id"
+                          pagination={{
+                            pageSize: 10,
+                            showSizeChanger: true,
+                            showTotal: (total) => `Toplam ${total} bölge`,
+                          }}
+                          size="small"
+                          className="[&_.ant-table]:border-slate-200 [&_.ant-table-thead_.ant-table-cell]:bg-slate-50 [&_.ant-table-thead_.ant-table-cell]:text-slate-600 [&_.ant-table-thead_.ant-table-cell]:font-medium"
+                          onRow={(record) => ({
+                            onClick: () => router.push(`/inventory/warehouse-zones/${record.id}`),
+                            className: 'cursor-pointer hover:bg-slate-50',
+                          })}
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-12">
+                          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                            <ViewColumnsIcon className="w-8 h-8 text-slate-400" />
+                          </div>
+                          <p className="text-slate-500 mb-4">Bu depoda henüz bölge tanımlanmamış</p>
+                          <Button
+                            type="primary"
+                            icon={<PlusIcon className="w-4 h-4" />}
+                            onClick={() => router.push(`/inventory/warehouse-zones/new?warehouseId=${id}`)}
+                            style={{ background: '#1e293b', borderColor: '#1e293b' }}
+                          >
+                            Bölge Ekle
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

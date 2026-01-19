@@ -489,6 +489,8 @@ export interface UpdateWarehouseDto {
   phone?: string;
   manager?: string;
   totalArea: number;
+  isActive?: boolean;
+  isDefault?: boolean;
 }
 
 export interface WarehouseListDto {
