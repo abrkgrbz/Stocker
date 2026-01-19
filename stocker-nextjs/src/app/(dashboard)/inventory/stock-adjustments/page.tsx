@@ -46,7 +46,7 @@ import type {
   StockMovementDto,
   InventoryAdjustmentFilterDto
 } from '@/lib/api/services/inventory.types';
-import { AdjustmentStatus } from '@/lib/api/services/inventory.types';
+// AdjustmentStatus enum kept for reference but status comparisons use string values
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import {
@@ -82,14 +82,14 @@ const adjustmentTypeLabels: Record<string, string> = {
   InternalTransfer: 'Dahili Transfer',
 };
 
-// Status labels and colors
-const statusConfig: Record<number, { label: string; color: string; bgColor: string }> = {
-  [AdjustmentStatus.Draft]: { label: 'Taslak', color: 'text-slate-600', bgColor: 'bg-slate-100' },
-  [AdjustmentStatus.PendingApproval]: { label: 'Onay Bekliyor', color: 'text-amber-700', bgColor: 'bg-amber-100' },
-  [AdjustmentStatus.Approved]: { label: 'Onaylandı', color: 'text-emerald-700', bgColor: 'bg-emerald-100' },
-  [AdjustmentStatus.Rejected]: { label: 'Reddedildi', color: 'text-red-700', bgColor: 'bg-red-100' },
-  [AdjustmentStatus.Processed]: { label: 'İşlendi', color: 'text-slate-900', bgColor: 'bg-slate-200' },
-  [AdjustmentStatus.Cancelled]: { label: 'İptal', color: 'text-slate-500', bgColor: 'bg-slate-100' },
+// Status labels and colors (using string keys to match backend response)
+const statusConfig: Record<string, { label: string; color: string; bgColor: string }> = {
+  Draft: { label: 'Taslak', color: 'text-slate-600', bgColor: 'bg-slate-100' },
+  PendingApproval: { label: 'Onay Bekliyor', color: 'text-amber-700', bgColor: 'bg-amber-100' },
+  Approved: { label: 'Onaylandı', color: 'text-emerald-700', bgColor: 'bg-emerald-100' },
+  Rejected: { label: 'Reddedildi', color: 'text-red-700', bgColor: 'bg-red-100' },
+  Processed: { label: 'İşlendi', color: 'text-slate-900', bgColor: 'bg-slate-200' },
+  Cancelled: { label: 'İptal', color: 'text-slate-500', bgColor: 'bg-slate-100' },
 };
 
 export default function StockAdjustmentsPage() {
@@ -98,7 +98,7 @@ export default function StockAdjustmentsPage() {
   // State
   const [searchText, setSearchText] = useState('');
   const [selectedWarehouse, setSelectedWarehouse] = useState<number | undefined>();
-  const [selectedStatus, setSelectedStatus] = useState<AdjustmentStatus | undefined>();
+  const [selectedStatus, setSelectedStatus] = useState<string | undefined>();
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedAdjustment, setSelectedAdjustment] = useState<InventoryAdjustmentDto | null>(null);
   const [reviewNotes, setReviewNotes] = useState('');
@@ -134,30 +134,30 @@ export default function StockAdjustmentsPage() {
         adj.adjustmentNumber.toLowerCase().includes(searchText.toLowerCase()) ||
         adj.warehouseName?.toLowerCase().includes(searchText.toLowerCase());
 
-      // Tab filter
+      // Tab filter (using string comparison to match backend response)
       let matchesTab = true;
       if (activeTab === 'pending') {
-        matchesTab = adj.status === AdjustmentStatus.PendingApproval;
+        matchesTab = adj.status === 'PendingApproval';
       } else if (activeTab === 'approved') {
-        matchesTab = adj.status === AdjustmentStatus.Approved || adj.status === AdjustmentStatus.Processed;
+        matchesTab = adj.status === 'Approved' || adj.status === 'Processed';
       } else if (activeTab === 'rejected') {
-        matchesTab = adj.status === AdjustmentStatus.Rejected;
+        matchesTab = adj.status === 'Rejected';
       } else if (activeTab === 'draft') {
-        matchesTab = adj.status === AdjustmentStatus.Draft;
+        matchesTab = adj.status === 'Draft';
       }
 
       return matchesSearch && matchesTab;
     });
   }, [adjustments, searchText, activeTab]);
 
-  // Stats
+  // Stats (using string comparison to match backend response)
   const stats = useMemo(() => {
-    const draft = adjustments.filter((a) => a.status === AdjustmentStatus.Draft).length;
-    const pending = adjustments.filter((a) => a.status === AdjustmentStatus.PendingApproval).length;
-    const approved = adjustments.filter((a) => a.status === AdjustmentStatus.Approved || a.status === AdjustmentStatus.Processed).length;
-    const rejected = adjustments.filter((a) => a.status === AdjustmentStatus.Rejected).length;
+    const draft = adjustments.filter((a) => a.status === 'Draft').length;
+    const pending = adjustments.filter((a) => a.status === 'PendingApproval').length;
+    const approved = adjustments.filter((a) => a.status === 'Approved' || a.status === 'Processed').length;
+    const rejected = adjustments.filter((a) => a.status === 'Rejected').length;
     const totalCostImpact = adjustments
-      .filter((a) => a.status === AdjustmentStatus.Processed)
+      .filter((a) => a.status === 'Processed')
       .reduce((sum, a) => sum + a.totalCostImpact, 0);
 
     return { draft, pending, approved, rejected, totalCostImpact };
@@ -352,8 +352,8 @@ export default function StockAdjustmentsPage() {
       dataIndex: 'status',
       key: 'status',
       width: 130,
-      render: (status: AdjustmentStatus) => {
-        const config = statusConfig[status] || statusConfig[AdjustmentStatus.Draft];
+      render: (status: string) => {
+        const config = statusConfig[status] || statusConfig['Draft'];
         return (
           <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${config.bgColor} ${config.color}`}>
             {config.label}
@@ -377,7 +377,7 @@ export default function StockAdjustmentsPage() {
         ];
 
         // Add approve/reject for pending
-        if (record.status === AdjustmentStatus.PendingApproval) {
+        if (record.status === 'PendingApproval') {
           menuItems.push(
             {
               key: 'approve',
@@ -389,7 +389,7 @@ export default function StockAdjustmentsPage() {
         }
 
         // Add delete for draft
-        if (record.status === AdjustmentStatus.Draft) {
+        if (record.status === 'Draft') {
           menuItems.push({
             key: 'delete',
             icon: <XMarkIcon className="w-4 h-4" />,
@@ -655,7 +655,7 @@ export default function StockAdjustmentsPage() {
         open={reviewModalOpen}
         onCancel={() => setReviewModalOpen(false)}
         footer={
-          selectedAdjustment?.status === AdjustmentStatus.PendingApproval ? (
+          selectedAdjustment?.status === 'PendingApproval' ? (
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
               <button
                 onClick={() => setReviewModalOpen(false)}
@@ -773,7 +773,7 @@ export default function StockAdjustmentsPage() {
             {selectedAdjustment.approvedBy && (
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
                 <span className="text-xs text-slate-500 uppercase tracking-wide">
-                  {selectedAdjustment.status === AdjustmentStatus.Rejected ? 'Reddeden' : 'Onaylayan'}
+                  {selectedAdjustment.status === 'Rejected' ? 'Reddeden' : 'Onaylayan'}
                 </span>
                 <div className="text-sm text-slate-700 mt-1">
                   {selectedAdjustment.approvedBy} - {dayjs(selectedAdjustment.approvedDate).format('DD.MM.YYYY HH:mm')}
@@ -787,7 +787,7 @@ export default function StockAdjustmentsPage() {
             )}
 
             {/* Review notes for rejection */}
-            {selectedAdjustment.status === AdjustmentStatus.PendingApproval && (
+            {selectedAdjustment.status === 'PendingApproval' && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   Değerlendirme Notu (Ret için zorunlu)

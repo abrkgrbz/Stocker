@@ -3648,8 +3648,8 @@ export interface InventoryAdjustmentDto {
   id: number;
   adjustmentNumber: string;
   adjustmentDate: DateTime;
-  adjustmentType: AdjustmentType;
-  reason: AdjustmentReason;
+  adjustmentType: string; // Backend returns string like "Increase", "Decrease"
+  reason: string; // Backend returns string like "StockCountVariance", "Damage"
   description?: string;
   warehouseId: number;
   warehouseName?: string;
@@ -3660,7 +3660,7 @@ export interface InventoryAdjustmentDto {
   referenceType?: string;
   totalCostImpact: number;
   currency: string;
-  status: AdjustmentStatus;
+  status: string; // Backend returns string like "Draft", "PendingApproval", "Approved"
   approvedBy?: string;
   approvedDate?: DateTime;
   rejectionReason?: string;
@@ -3737,9 +3737,9 @@ export interface RejectInventoryAdjustmentDto {
 
 export interface InventoryAdjustmentFilterDto {
   warehouseId?: number;
-  status?: AdjustmentStatus;
-  adjustmentType?: AdjustmentType;
-  reason?: AdjustmentReason;
+  status?: string; // Backend expects string like "Draft", "PendingApproval"
+  adjustmentType?: string; // Backend expects string like "Increase", "Decrease"
+  reason?: string; // Backend expects string like "StockCountVariance", "Damage"
   startDate?: DateTime;
   endDate?: DateTime;
 }
