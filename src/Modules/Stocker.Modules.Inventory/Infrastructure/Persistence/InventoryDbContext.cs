@@ -180,92 +180,91 @@ public class InventoryDbContext : DbContext
         modelBuilder.HasDefaultSchema("inventory");
 
         // Apply global query filters for multi-tenancy
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (tenantId.HasValue)
-        {
-            ApplyTenantQueryFilters(modelBuilder, tenantId.Value);
-        }
+        // NOTE: We always apply query filters using CurrentTenantId property
+        // which is evaluated at runtime for each query
+        ApplyTenantQueryFilters(modelBuilder);
 
         // Configure AuditLog entity
         ConfigureAuditLog(modelBuilder);
     }
 
-    private static void ApplyTenantQueryFilters(ModelBuilder modelBuilder, Guid tenantId)
+    private void ApplyTenantQueryFilters(ModelBuilder modelBuilder)
     {
         // Product Management entities - filter by TenantId and exclude soft-deleted records
-        modelBuilder.Entity<Product>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<Category>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<Brand>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<Unit>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<ProductImage>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<ProductBundle>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<ProductBundleItem>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<ProductVariant>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<ProductVariantOption>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
+        // NOTE: Using CurrentTenantId property which is evaluated at runtime for each query
+        modelBuilder.Entity<Product>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<Category>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<Brand>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<Unit>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<ProductImage>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<ProductBundle>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<ProductBundleItem>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<ProductVariant>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<ProductVariantOption>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
 
         // Product Attribute entities
-        modelBuilder.Entity<ProductAttribute>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<ProductAttributeOption>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<ProductAttributeValue>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
+        modelBuilder.Entity<ProductAttribute>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<ProductAttributeOption>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<ProductAttributeValue>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
 
         // Warehouse Management entities
-        modelBuilder.Entity<Warehouse>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<Location>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
+        modelBuilder.Entity<Warehouse>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<Location>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
 
         // Stock Management entities
-        modelBuilder.Entity<Stock>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<StockMovement>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<StockReservation>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
+        modelBuilder.Entity<Stock>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<StockMovement>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<StockReservation>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
 
         // Stock Transfer entities
-        modelBuilder.Entity<StockTransfer>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<StockTransferItem>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
+        modelBuilder.Entity<StockTransfer>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<StockTransferItem>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
 
         // Stock Count entities
-        modelBuilder.Entity<StockCount>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<StockCountItem>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
+        modelBuilder.Entity<StockCount>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<StockCountItem>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
 
         // Supplier entities
-        modelBuilder.Entity<Supplier>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<SupplierProduct>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<SupplierProductPriceTier>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
+        modelBuilder.Entity<Supplier>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<SupplierProduct>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<SupplierProductPriceTier>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
 
         // Price Management entities
-        modelBuilder.Entity<PriceList>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<PriceListItem>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
+        modelBuilder.Entity<PriceList>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<PriceListItem>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
 
         // Lot/Batch and Serial Number entities
-        modelBuilder.Entity<LotBatch>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<SerialNumber>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
+        modelBuilder.Entity<LotBatch>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<SerialNumber>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
 
         // Auto-Reorder entities
-        modelBuilder.Entity<ReorderRule>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<ReorderSuggestion>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
+        modelBuilder.Entity<ReorderRule>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<ReorderSuggestion>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
 
         // Additional feature entities
-        modelBuilder.Entity<BarcodeDefinition>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<PackagingType>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<WarehouseZone>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<ShelfLife>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
+        modelBuilder.Entity<BarcodeDefinition>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<PackagingType>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<WarehouseZone>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<ShelfLife>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
 
         // Quality Control entities
-        modelBuilder.Entity<QualityControl>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<QualityControlItem>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
+        modelBuilder.Entity<QualityControl>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<QualityControlItem>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
 
         // Consignment Stock entities
-        modelBuilder.Entity<ConsignmentStock>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<ConsignmentStockMovement>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
+        modelBuilder.Entity<ConsignmentStock>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<ConsignmentStockMovement>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
 
         // Cycle Count entities
-        modelBuilder.Entity<CycleCount>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<CycleCountItem>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
+        modelBuilder.Entity<CycleCount>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<CycleCountItem>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
 
         // Inventory Adjustment entities
-        modelBuilder.Entity<InventoryAdjustment>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
-        modelBuilder.Entity<InventoryAdjustmentItem>().HasQueryFilter(e => e.TenantId == tenantId && !e.IsDeleted);
+        modelBuilder.Entity<InventoryAdjustment>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
+        modelBuilder.Entity<InventoryAdjustmentItem>().HasQueryFilter(e => e.TenantId == CurrentTenantId && !e.IsDeleted);
 
         // Audit Log entity - keep only tenant filter for audit logs (we want to keep deleted audit records)
-        modelBuilder.Entity<AuditLog>().HasQueryFilter(e => e.TenantId == tenantId);
+        modelBuilder.Entity<AuditLog>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
     }
 
     private static void ConfigureAuditLog(ModelBuilder modelBuilder)
