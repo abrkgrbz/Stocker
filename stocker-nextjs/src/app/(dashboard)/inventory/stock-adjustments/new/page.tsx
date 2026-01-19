@@ -134,8 +134,14 @@ export default function NewStockAdjustmentPage() {
         return;
       }
 
-      // Determine adjustment type based on difference
-      const adjustmentType = difference > 0 ? AdjustmentType.Increase : AdjustmentType.Decrease;
+      // Determine adjustment type based on difference (backend expects string like "Increase", "Decrease")
+      const adjustmentTypeEnum = difference > 0 ? AdjustmentType.Increase : AdjustmentType.Decrease;
+      const adjustmentTypeString = AdjustmentType[adjustmentTypeEnum] as string;
+
+      // Convert reason enum to string if backend expects string
+      const reasonString = typeof values.reason === 'number'
+        ? AdjustmentReason[values.reason]
+        : values.reason;
 
       // Create adjustment item
       const item: CreateInventoryAdjustmentItemDto = {
@@ -143,16 +149,16 @@ export default function NewStockAdjustmentPage() {
         systemQuantity: currentQuantity,
         actualQuantity: newQuantity,
         unitCost: 0, // Will be calculated by backend
-        reasonCode: values.reason,
+        reasonCode: reasonString,
         notes: values.notes,
       };
 
       // Create adjustment DTO
       const data: CreateInventoryAdjustmentDto = {
-        warehouseId: values.warehouseId,
-        locationId: values.locationId,
-        adjustmentType: adjustmentType,
-        reason: values.reason,
+        warehouseId: String(values.warehouseId),
+        locationId: values.locationId ? String(values.locationId) : undefined,
+        adjustmentType: adjustmentTypeString,
+        reason: reasonString,
         description: values.notes,
         items: [item],
       };
