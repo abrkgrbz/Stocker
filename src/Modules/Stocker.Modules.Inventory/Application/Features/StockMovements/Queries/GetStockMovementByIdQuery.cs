@@ -28,7 +28,7 @@ public class GetStockMovementByIdQueryHandler : IRequestHandler<GetStockMovement
 
     public async Task<Result<StockMovementDto>> Handle(GetStockMovementByIdQuery request, CancellationToken cancellationToken)
     {
-        var movement = await _stockMovementRepository.GetByIdAsync(request.MovementId, cancellationToken);
+        var movement = await _stockMovementRepository.GetWithDetailsAsync(request.MovementId, cancellationToken);
 
         if (movement == null)
         {

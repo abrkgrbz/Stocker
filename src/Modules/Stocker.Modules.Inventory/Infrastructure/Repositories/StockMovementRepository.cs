@@ -15,6 +15,19 @@ public class StockMovementRepository : BaseRepository<StockMovement>, IStockMove
     {
     }
 
+    /// <summary>
+    /// Override to include Product and Warehouse for list display
+    /// </summary>
+    public override async Task<IReadOnlyList<StockMovement>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Include(m => m.Product)
+            .Include(m => m.Warehouse)
+            .Where(m => !m.IsDeleted)
+            .OrderByDescending(m => m.MovementDate)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<StockMovement?> GetWithDetailsAsync(int movementId, CancellationToken cancellationToken = default)
     {
         return await DbSet
