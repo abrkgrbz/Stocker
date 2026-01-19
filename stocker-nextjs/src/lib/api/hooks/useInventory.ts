@@ -4037,7 +4037,7 @@ export function useApproveInventoryAdjustment() {
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: inventoryKeys.inventoryAdjustment(id) });
       queryClient.invalidateQueries({ queryKey: inventoryKeys.inventoryAdjustments() });
-      queryClient.invalidateQueries({ queryKey: inventoryKeys.products() });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.products });
       queryClient.invalidateQueries({ queryKey: inventoryKeys.stock() });
       showSuccess('Stok düzeltme onaylandı ve uygulandı');
     },
