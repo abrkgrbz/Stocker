@@ -33,27 +33,27 @@ import {
   useCreateInventoryAdjustment,
   useSubmitInventoryAdjustment,
 } from '@/lib/api/hooks/useInventory';
-import type {
-  CreateInventoryAdjustmentDto,
-  CreateInventoryAdjustmentItemDto,
-  AdjustmentType,
+import {
   AdjustmentReason,
+  AdjustmentType,
+  type CreateInventoryAdjustmentDto,
+  type CreateInventoryAdjustmentItemDto,
 } from '@/lib/api/services/inventory.types';
 
 const { Text } = Typography;
 const { TextArea } = Input;
 
 const adjustmentReasons: { value: AdjustmentReason; label: string }[] = [
-  { value: 'CountDiscrepancy', label: 'Sayım Farkı' },
-  { value: 'Damage', label: 'Hasar' },
-  { value: 'Theft', label: 'Kayıp/Çalıntı' },
-  { value: 'Expiry', label: 'Son Kullanma Tarihi' },
-  { value: 'QualityIssue', label: 'Kalite Sorunu' },
-  { value: 'SystemError', label: 'Sistem Hatası' },
-  { value: 'Donation', label: 'Bağış' },
-  { value: 'InternalUse', label: 'Dahili Kullanım' },
-  { value: 'Found', label: 'Bulunan Stok' },
-  { value: 'Other', label: 'Diğer' },
+  { value: AdjustmentReason.StockCountVariance, label: 'Sayım Farkı' },
+  { value: AdjustmentReason.Damage, label: 'Hasar' },
+  { value: AdjustmentReason.Theft, label: 'Kayıp/Çalıntı' },
+  { value: AdjustmentReason.Expired, label: 'Son Kullanma Tarihi' },
+  { value: AdjustmentReason.QualityRejection, label: 'Kalite Sorunu' },
+  { value: AdjustmentReason.SystemCorrection, label: 'Sistem Hatası' },
+  { value: AdjustmentReason.Loss, label: 'Kayıp' },
+  { value: AdjustmentReason.CustomerReturn, label: 'Müşteri İadesi' },
+  { value: AdjustmentReason.SupplierReturn, label: 'Tedarikçi İadesi' },
+  { value: AdjustmentReason.ProductionScrap, label: 'Üretim Firesil' },
 ];
 
 export default function NewStockAdjustmentPage() {
@@ -135,7 +135,7 @@ export default function NewStockAdjustmentPage() {
       }
 
       // Determine adjustment type based on difference
-      const adjustmentType: AdjustmentType = difference > 0 ? 'Increase' : 'Decrease';
+      const adjustmentType = difference > 0 ? AdjustmentType.Increase : AdjustmentType.Decrease;
 
       // Create adjustment item
       const item: CreateInventoryAdjustmentItemDto = {
