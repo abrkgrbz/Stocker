@@ -52,7 +52,12 @@ public class GetLocationsQueryHandler : IRequestHandler<GetLocationsQuery, Resul
             Code = l.Code,
             Name = l.Name,
             WarehouseName = l.Warehouse?.Name,
+            Aisle = l.Aisle,
+            Shelf = l.Shelf,
+            Bin = l.Bin,
             FullPath = BuildFullPath(l.Aisle, l.Shelf, l.Bin),
+            Capacity = l.Capacity,
+            UsedCapacity = l.UsedCapacity,
             CapacityUsagePercent = l.Capacity > 0 ? (l.UsedCapacity / l.Capacity) * 100 : 0,
             IsActive = l.IsActive
         }).ToList();

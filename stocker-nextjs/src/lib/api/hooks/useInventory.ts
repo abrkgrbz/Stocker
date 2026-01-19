@@ -185,6 +185,13 @@ import type {
   CreateCycleCountDto,
   CycleCountStatus,
   UpdateCycleCountDto,
+  // Inventory Adjustments
+  InventoryAdjustmentDto,
+  CreateInventoryAdjustmentDto,
+  UpdateInventoryAdjustmentDto,
+  ApproveInventoryAdjustmentDto,
+  RejectInventoryAdjustmentDto,
+  InventoryAdjustmentFilterDto,
   // Additional types for hooks
   LowStockProductDto,
   WarehouseStockSummaryDto,
@@ -421,6 +428,10 @@ export const inventoryKeys = {
 
   // Shelf Life (Expiring Batches)
   expiringLotBatches: (daysUntilExpiry: number) => ['inventory', 'lot-batches', 'expiring', daysUntilExpiry] as const,
+
+  // Inventory Adjustments
+  inventoryAdjustments: () => ['inventory', 'adjustments'] as const,
+  inventoryAdjustment: (id: number) => ['inventory', 'adjustments', id] as const,
 };
 
 // =====================================
@@ -836,10 +847,10 @@ export function useSetDefaultWarehouse() {
 // LOCATIONS HOOKS
 // =====================================
 
-export function useLocations(warehouseId?: number) {
+export function useLocations(warehouseId?: number, includeInactive: boolean = false) {
   return useQuery<LocationDto[]>({
-    queryKey: inventoryKeys.locations(warehouseId),
-    queryFn: () => InventoryService.getLocations(warehouseId),
+    queryKey: [...inventoryKeys.locations(warehouseId), includeInactive],
+    queryFn: () => InventoryService.getLocations(warehouseId, includeInactive),
     ...queryOptions.static(),
   });
 }
@@ -3937,5 +3948,116 @@ export function useExpiringLotBatches(daysUntilExpiry: number = 30) {
     queryKey: inventoryKeys.expiringLotBatches(daysUntilExpiry),
     queryFn: () => InventoryService.getExpiringLotBatches(daysUntilExpiry),
     ...queryOptions.list(),
+  });
+}
+
+// =====================================
+// INVENTORY ADJUSTMENT HOOKS
+// =====================================
+
+export function useInventoryAdjustments(filter?: InventoryAdjustmentFilterDto) {
+  return useQuery<InventoryAdjustmentDto[]>({
+    queryKey: [...inventoryKeys.inventoryAdjustments(), filter],
+    queryFn: () => InventoryService.getInventoryAdjustments(filter),
+    ...queryOptions.list(),
+  });
+}
+
+export function useInventoryAdjustment(id: number) {
+  return useQuery<InventoryAdjustmentDto>({
+    queryKey: inventoryKeys.inventoryAdjustment(id),
+    queryFn: () => InventoryService.getInventoryAdjustment(id),
+    enabled: !!id,
+    ...queryOptions.detail(),
+  });
+}
+
+export function useCreateInventoryAdjustment() {
+  const queryClient = useQueryClient();
+  return useMutation<InventoryAdjustmentDto, Error, CreateInventoryAdjustmentDto>({
+    mutationFn: (data) => InventoryService.createInventoryAdjustment(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.inventoryAdjustments() });
+      showSuccess('Stok düzeltme talebi oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Stok düzeltme oluşturulurken hata oluştu');
+    },
+  });
+}
+
+export function useUpdateInventoryAdjustment() {
+  const queryClient = useQueryClient();
+  return useMutation<InventoryAdjustmentDto, Error, { id: number; data: UpdateInventoryAdjustmentDto }>({
+    mutationFn: ({ id, data }) => InventoryService.updateInventoryAdjustment(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.inventoryAdjustment(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.inventoryAdjustments() });
+      showSuccess('Stok düzeltme güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Stok düzeltme güncellenirken hata oluştu');
+    },
+  });
+}
+
+export function useDeleteInventoryAdjustment() {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, number>({
+    mutationFn: (id) => InventoryService.deleteInventoryAdjustment(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.inventoryAdjustments() });
+      showSuccess('Stok düzeltme silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Stok düzeltme silinirken hata oluştu');
+    },
+  });
+}
+
+export function useSubmitInventoryAdjustment() {
+  const queryClient = useQueryClient();
+  return useMutation<InventoryAdjustmentDto, Error, number>({
+    mutationFn: (id) => InventoryService.submitInventoryAdjustment(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.inventoryAdjustment(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.inventoryAdjustments() });
+      showSuccess('Stok düzeltme onaya gönderildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Stok düzeltme onaya gönderilirken hata oluştu');
+    },
+  });
+}
+
+export function useApproveInventoryAdjustment() {
+  const queryClient = useQueryClient();
+  return useMutation<InventoryAdjustmentDto, Error, { id: number; data: ApproveInventoryAdjustmentDto }>({
+    mutationFn: ({ id, data }) => InventoryService.approveInventoryAdjustment(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.inventoryAdjustment(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.inventoryAdjustments() });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.products() });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.stock() });
+      showSuccess('Stok düzeltme onaylandı ve uygulandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Stok düzeltme onaylanırken hata oluştu');
+    },
+  });
+}
+
+export function useRejectInventoryAdjustment() {
+  const queryClient = useQueryClient();
+  return useMutation<InventoryAdjustmentDto, Error, { id: number; data: RejectInventoryAdjustmentDto }>({
+    mutationFn: ({ id, data }) => InventoryService.rejectInventoryAdjustment(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.inventoryAdjustment(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.inventoryAdjustments() });
+      showSuccess('Stok düzeltme reddedildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Stok düzeltme reddedilirken hata oluştu');
+    },
   });
 }

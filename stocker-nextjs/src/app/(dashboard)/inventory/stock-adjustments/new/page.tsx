@@ -13,6 +13,7 @@ import {
   message,
   AutoComplete,
   Alert,
+  Radio,
 } from 'antd';
 import {
   ArrowDownIcon,
@@ -21,6 +22,7 @@ import {
   ArrowUpIcon,
   CheckIcon,
   MapPinIcon,
+  PaperAirplaneIcon,
   ShoppingBagIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -28,14 +30,20 @@ import {
   useLocations,
   useProducts,
   useStock,
-  useAdjustStock,
+  useCreateInventoryAdjustment,
+  useSubmitInventoryAdjustment,
 } from '@/lib/api/hooks/useInventory';
-import type { StockAdjustmentDto } from '@/lib/api/services/inventory.types';
+import type {
+  CreateInventoryAdjustmentDto,
+  CreateInventoryAdjustmentItemDto,
+  AdjustmentType,
+  AdjustmentReason,
+} from '@/lib/api/services/inventory.types';
 
 const { Text } = Typography;
 const { TextArea } = Input;
 
-const adjustmentReasons = [
+const adjustmentReasons: { value: AdjustmentReason; label: string }[] = [
   { value: 'CountDiscrepancy', label: 'Sayım Farkı' },
   { value: 'Damage', label: 'Hasar' },
   { value: 'Theft', label: 'Kayıp/Çalıntı' },
@@ -64,6 +72,7 @@ export default function NewStockAdjustmentPage() {
     code: string;
   } | null>(null);
   const [newQuantity, setNewQuantity] = useState<number>(0);
+  const [submitAction, setSubmitAction] = useState<'draft' | 'submit'>('submit');
 
   const { data: warehouses = [] } = useWarehouses();
   const { data: locations = [] } = useLocations(selectedWarehouse);
@@ -72,7 +81,8 @@ export default function NewStockAdjustmentPage() {
     selectedWarehouse,
     selectedProduct?.id
   );
-  const adjustStock = useAdjustStock();
+  const createAdjustment = useCreateInventoryAdjustment();
+  const submitAdjustment = useSubmitInventoryAdjustment();
 
   const currentQuantity = currentStock?.[0]?.quantity || 0;
   const difference = newQuantity - currentQuantity;
@@ -124,21 +134,48 @@ export default function NewStockAdjustmentPage() {
         return;
       }
 
-      const data: StockAdjustmentDto = {
+      // Determine adjustment type based on difference
+      const adjustmentType: AdjustmentType = difference > 0 ? 'Increase' : 'Decrease';
+
+      // Create adjustment item
+      const item: CreateInventoryAdjustmentItemDto = {
         productId: selectedProduct.id,
-        warehouseId: values.warehouseId,
-        locationId: values.locationId,
-        newQuantity: newQuantity,
-        reason: values.reason,
+        systemQuantity: currentQuantity,
+        actualQuantity: newQuantity,
+        unitCost: 0, // Will be calculated by backend
+        reasonCode: values.reason,
         notes: values.notes,
       };
 
-      await adjustStock.mutateAsync(data);
+      // Create adjustment DTO
+      const data: CreateInventoryAdjustmentDto = {
+        warehouseId: values.warehouseId,
+        locationId: values.locationId,
+        adjustmentType: adjustmentType,
+        reason: values.reason,
+        description: values.notes,
+        items: [item],
+      };
+
+      // Create the adjustment (starts as Draft)
+      const created = await createAdjustment.mutateAsync(data);
+
+      // If user selected to submit for approval, do it now
+      if (submitAction === 'submit' && created.id) {
+        await submitAdjustment.mutateAsync(created.id);
+        message.success('Stok düzeltme oluşturuldu ve onaya gönderildi');
+      } else {
+        message.success('Stok düzeltme taslak olarak kaydedildi');
+      }
+
       router.push('/inventory/stock-adjustments');
-    } catch {
-      // Validation or API error handled
+    } catch (error) {
+      console.error('Error creating adjustment:', error);
+      message.error('Stok düzeltme oluşturulurken bir hata oluştu');
     }
   };
+
+  const isLoading = createAdjustment.isPending || submitAdjustment.isPending;
 
   return (
     <div className="min-h-screen bg-white">
@@ -168,13 +205,19 @@ export default function NewStockAdjustmentPage() {
             <Button onClick={() => router.push('/inventory/stock-adjustments')}>Vazgeç</Button>
             <Button
               type="primary"
-              icon={<CheckIcon className="w-4 h-4" />}
-              loading={adjustStock.isPending}
+              icon={
+                submitAction === 'submit' ? (
+                  <PaperAirplaneIcon className="w-4 h-4" />
+                ) : (
+                  <CheckIcon className="w-4 h-4" />
+                )
+              }
+              loading={isLoading}
               onClick={handleSubmit}
               disabled={!selectedProduct || difference === 0}
               style={{ background: '#1a1a1a', borderColor: '#1a1a1a', color: 'white' }}
             >
-              Düzeltmeyi Kaydet
+              {submitAction === 'submit' ? 'Onaya Gönder' : 'Taslak Kaydet'}
             </Button>
           </Space>
         </div>
@@ -188,7 +231,7 @@ export default function NewStockAdjustmentPage() {
             <div className="lg:col-span-2 space-y-6">
               {/* Product Selection */}
               <div className="bg-white border border-slate-200 rounded-xl p-6">
-                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100 flex items-center">
                   <ShoppingBagIcon className="w-4 h-4 mr-2" /> Ürün Seçimi
                 </h3>
                 <Form.Item
@@ -240,12 +283,14 @@ export default function NewStockAdjustmentPage() {
 
               {/* Location */}
               <div className="bg-white border border-slate-200 rounded-xl p-6">
-                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100 flex items-center">
                   <MapPinIcon className="w-4 h-4 mr-2" /> Depo & Lokasyon
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-600 mb-1.5">Depo <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">
+                      Depo <span className="text-red-500">*</span>
+                    </label>
                     <Form.Item
                       name="warehouseId"
                       rules={[{ required: true, message: 'Depo seçiniz' }]}
@@ -282,7 +327,9 @@ export default function NewStockAdjustmentPage() {
                 </h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-600 mb-1.5">Düzeltme Nedeni <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">
+                      Düzeltme Nedeni <span className="text-red-500">*</span>
+                    </label>
                     <Form.Item
                       name="reason"
                       rules={[{ required: true, message: 'Neden seçiniz' }]}
@@ -307,6 +354,56 @@ export default function NewStockAdjustmentPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Submit Action Selection */}
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                  Kayıt İşlemi
+                </h3>
+                <Radio.Group
+                  value={submitAction}
+                  onChange={(e) => setSubmitAction(e.target.value)}
+                  className="w-full"
+                >
+                  <div className="space-y-3">
+                    <div
+                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        submitAction === 'submit'
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-slate-200 hover:border-slate-300'
+                      }`}
+                      onClick={() => setSubmitAction('submit')}
+                    >
+                      <Radio value="submit" className="w-full">
+                        <div className="ml-2">
+                          <div className="font-medium text-gray-900">Onaya Gönder</div>
+                          <div className="text-sm text-gray-500">
+                            Düzeltme kaydedilecek ve onay için yetkili kişiye gönderilecek
+                          </div>
+                        </div>
+                      </Radio>
+                    </div>
+                    <div
+                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        submitAction === 'draft'
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-slate-200 hover:border-slate-300'
+                      }`}
+                      onClick={() => setSubmitAction('draft')}
+                    >
+                      <Radio value="draft" className="w-full">
+                        <div className="ml-2">
+                          <div className="font-medium text-gray-900">Taslak Olarak Kaydet</div>
+                          <div className="text-sm text-gray-500">
+                            Düzeltme taslak olarak kaydedilecek, daha sonra düzenleyip onaya
+                            gönderebilirsiniz
+                          </div>
+                        </div>
+                      </Radio>
+                    </div>
+                  </div>
+                </Radio.Group>
+              </div>
             </div>
 
             {/* Right Panel - Quantity */}
@@ -318,14 +415,18 @@ export default function NewStockAdjustmentPage() {
                 {selectedProduct && selectedWarehouse ? (
                   <>
                     <div className="text-center mb-6">
-                      <Text type="secondary" className="text-xs block mb-1">Mevcut Stok</Text>
+                      <Text type="secondary" className="text-xs block mb-1">
+                        Mevcut Stok
+                      </Text>
                       <div className="text-4xl font-bold text-gray-900">{currentQuantity}</div>
                     </div>
 
                     <div className="h-px bg-slate-100 my-4" />
 
                     <div className="mb-4">
-                      <Text className="block text-sm font-medium text-slate-600 mb-2">Yeni Miktar:</Text>
+                      <Text className="block text-sm font-medium text-slate-600 mb-2">
+                        Yeni Miktar:
+                      </Text>
                       <InputNumber
                         value={newQuantity}
                         onChange={(val) => setNewQuantity(val || 0)}
@@ -364,8 +465,8 @@ export default function NewStockAdjustmentPage() {
                             difference > 0
                               ? '#10b981'
                               : difference < 0
-                              ? '#ef4444'
-                              : '#6b7280',
+                                ? '#ef4444'
+                                : '#6b7280',
                         }}
                       >
                         {difference > 0 ? (
@@ -395,17 +496,19 @@ export default function NewStockAdjustmentPage() {
                   </>
                 ) : (
                   <div className="text-center py-8">
-                    <Text type="secondary">
-                      Stok bilgilerini görmek için ürün ve depo seçin
-                    </Text>
+                    <Text type="secondary">Stok bilgilerini görmek için ürün ve depo seçin</Text>
                   </div>
                 )}
               </div>
 
               <Alert
-                message="Dikkat"
-                description="Stok düzeltmeleri geri alınamaz. Lütfen değişikliklerinizi kaydetmeden önce kontrol edin."
-                type="warning"
+                message="Onay Akışı"
+                description={
+                  submitAction === 'submit'
+                    ? 'Düzeltme onaylandıktan sonra stok otomatik olarak güncellenecektir.'
+                    : 'Taslak olarak kaydedilen düzeltmeler daha sonra onaya gönderilebilir.'
+                }
+                type="info"
                 showIcon
               />
             </div>

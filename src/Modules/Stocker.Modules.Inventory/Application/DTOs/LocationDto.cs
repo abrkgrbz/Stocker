@@ -60,7 +60,12 @@ public class LocationListDto
     public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string? WarehouseName { get; set; }
+    public string? Aisle { get; set; }
+    public string? Shelf { get; set; }
+    public string? Bin { get; set; }
     public string FullPath { get; set; } = string.Empty; // Aisle-Shelf-Bin
+    public decimal Capacity { get; set; }
+    public decimal UsedCapacity { get; set; }
     public decimal CapacityUsagePercent { get; set; }
     public bool IsActive { get; set; }
 }

@@ -1,11 +1,20 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+// TODO: Remove this bypass after Coolify migration is complete
+const TEMPORARY_BYPASS_SUBDOMAINS = ['awcs0wg4840co8wwsscwwwck']
+
 export function middleware(request: NextRequest) {
   // Check for auth bypass in development
   const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true'
 
   const hostname = request.headers.get('host') || ''
+  const subdomain = hostname.split('.')[0]
+
+  // Temporary bypass for specific subdomains (Coolify preview deployments, etc.)
+  if (TEMPORARY_BYPASS_SUBDOMAINS.includes(subdomain)) {
+    return NextResponse.next()
+  }
   const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || 'localhost:3001'
   const authDomain = process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'http://localhost:3000'
   const isDev = process.env.NODE_ENV === 'development'
@@ -20,8 +29,7 @@ export function middleware(request: NextRequest) {
   // Check if this is auth subdomain
   const isAuthDomain = hostname === authHostname || hostname === `auth.${baseDomain}`
 
-  // Extract subdomain (tenant code)
-  const subdomain = hostname.split('.')[0]
+  // subdomain already extracted above for bypass check
   const isTenantDomain = !isRootDomain && !isAuthDomain && subdomain !== 'www'
 
   // Protected routes that require authentication
@@ -29,8 +37,13 @@ export function middleware(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
 
   // Public routes that don't require auth
-  const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/landing', '/pricing']
+  const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/landing', '/pricing', '/invalid-tenant']
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
+
+  // Skip middleware for invalid-tenant page completely
+  if (pathname === '/invalid-tenant') {
+    return NextResponse.next()
+  }
 
   // Check authentication (tenant-code cookie exists)
   const tenantCodeCookie = request.cookies.get('tenant-code')

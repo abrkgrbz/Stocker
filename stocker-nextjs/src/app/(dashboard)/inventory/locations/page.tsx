@@ -48,9 +48,10 @@ export default function LocationsPage() {
   const [selectedWarehouse, setSelectedWarehouse] = useState<number | undefined>(
     initialWarehouseId ? Number(initialWarehouseId) : undefined
   );
+  const [includeInactive, setIncludeInactive] = useState(false);
 
   const { data: warehouses = [] } = useWarehouses();
-  const { data: locations = [], isLoading, refetch } = useLocations(selectedWarehouse);
+  const { data: locations = [], isLoading, refetch } = useLocations(selectedWarehouse, includeInactive);
   const deleteLocation = useDeleteLocation();
 
   const handleDelete = async (location: LocationDto) => {
@@ -325,6 +326,16 @@ export default function LocationsPage() {
             allowClear
             className="!rounded-lg !border-slate-300"
           />
+          <div className="flex-1" />
+          <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={includeInactive}
+              onChange={(e) => setIncludeInactive(e.target.checked)}
+              className="rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+            />
+            Pasif lokasyonlari goster
+          </label>
         </div>
 
         {isLoading ? (

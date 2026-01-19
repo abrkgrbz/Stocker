@@ -1,7 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { extractTenantSubdomain } from '@/lib/utils/auth';
 
 export interface TenantInfo {
@@ -36,6 +35,25 @@ const DEV_MOCK_TENANT: TenantInfo = {
   isActive: true,
 };
 
+// TODO: Remove this bypass after Coolify migration is complete
+const TEMPORARY_BYPASS_SUBDOMAINS = ['awcs0wg4840co8wwsscwwwck'];
+
+// Check if current subdomain should bypass tenant validation
+const shouldBypassTenantValidation = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const subdomain = window.location.hostname.split('.')[0];
+  return TEMPORARY_BYPASS_SUBDOMAINS.includes(subdomain);
+};
+
+// Mock tenant for bypassed subdomains
+const createBypassTenant = (subdomain: string): TenantInfo => ({
+  id: `bypass-${subdomain}`,
+  identifier: subdomain,
+  name: `Bypass Tenant (${subdomain})`,
+  domain: window.location.hostname,
+  isActive: true,
+});
+
 export function TenantProvider({ children, initialTenant }: TenantProviderProps) {
   // Check for auth bypass in development
   const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
@@ -45,7 +63,7 @@ export function TenantProvider({ children, initialTenant }: TenantProviderProps)
   );
   const [isLoading, setIsLoading] = useState(!isAuthBypassed);
   const [isValidating, setIsValidating] = useState(false);
-  const router = useRouter();
+  const hasInitialized = useRef(false);
 
   const extractTenantIdentifier = (): string | null => {
     if (typeof window === 'undefined') return null;
@@ -131,7 +149,10 @@ export function TenantProvider({ children, initialTenant }: TenantProviderProps)
     } catch (error) {
       console.error('❌ Tenant validation failed:', error);
       setTenant(null);
-      router.push('/invalid-tenant');
+      // Use hard redirect to prevent React re-render loops
+      if (typeof window !== 'undefined' && window.location.pathname !== '/invalid-tenant') {
+        window.location.href = '/invalid-tenant';
+      }
       return false;
     } finally {
       setIsValidating(false);
@@ -139,13 +160,38 @@ export function TenantProvider({ children, initialTenant }: TenantProviderProps)
   };
 
   useEffect(() => {
+    // Prevent multiple initializations
+    if (hasInitialized.current) {
+      return;
+    }
+
     // Skip tenant validation if auth bypassed
     if (isAuthBypassed) {
       console.log('🔓 Tenant bypassed - using dev mock tenant');
+      hasInitialized.current = true;
+      return;
+    }
+
+    // Skip tenant validation for temporarily bypassed subdomains (Coolify preview, etc.)
+    if (shouldBypassTenantValidation()) {
+      const subdomain = window.location.hostname.split('.')[0];
+      console.log('🔓 Temporary subdomain bypass - using mock tenant for:', subdomain);
+      setTenant(createBypassTenant(subdomain));
+      setIsLoading(false);
+      hasInitialized.current = true;
+      return;
+    }
+
+    // Skip tenant validation on invalid-tenant page to prevent infinite loop
+    if (typeof window !== 'undefined' && window.location.pathname === '/invalid-tenant') {
+      console.log('⏭️ Skipping tenant validation on invalid-tenant page');
+      setIsLoading(false);
+      hasInitialized.current = true;
       return;
     }
 
     const initializeTenant = async () => {
+      hasInitialized.current = true;
       setIsLoading(true);
       await validateTenant();
       setIsLoading(false);

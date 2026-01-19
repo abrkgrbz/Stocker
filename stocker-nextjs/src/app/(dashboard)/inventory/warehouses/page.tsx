@@ -105,7 +105,11 @@ export default function WarehousesPage() {
   };
 
   const handleSetDefault = async (warehouse: WarehouseDto) => {
-    if (warehouse.isDefault) return;
+    console.log('handleSetDefault called for warehouse:', warehouse);
+    if (warehouse.isDefault) {
+      console.log('Warehouse is already default, skipping');
+      return;
+    }
 
     Modal.confirm({
       title: 'Varsayılan Depo Ayarla',
@@ -115,9 +119,12 @@ export default function WarehousesPage() {
       okButtonProps: { className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' },
       cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
       onOk: async () => {
+        console.log('Modal confirmed, calling setDefaultWarehouse.mutateAsync for id:', warehouse.id);
         try {
           await setDefaultWarehouse.mutateAsync(warehouse.id);
+          console.log('setDefaultWarehouse successful');
         } catch (error) {
+          console.error('setDefaultWarehouse error:', error);
           // Error handled by hook
         }
       },

@@ -68,8 +68,9 @@ export default function CategoriesPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
   const [viewMode, setViewMode] = useState<'tree' | 'flat'>('tree');
+  const [includeInactive, setIncludeInactive] = useState(false);
 
-  const { data: categories = [], isLoading: flatLoading, refetch: refetchFlat } = useCategories();
+  const { data: categories = [], isLoading: flatLoading, refetch: refetchFlat } = useCategories(includeInactive);
   const { data: categoryTree = [], isLoading: treeLoading, refetch: refetchTree } = useCategoryTree();
   const deleteCategory = useDeleteCategory();
 
@@ -420,14 +421,25 @@ export default function CategoriesPage() {
         {/* Filters */}
         <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <Search
-              placeholder="Kategori ara..."
-              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              style={{ maxWidth: 300 }}
-              allowClear
-            />
+            <div className="flex items-center gap-4">
+              <Search
+                placeholder="Kategori ara..."
+                prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                style={{ maxWidth: 300 }}
+                allowClear
+              />
+              <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer whitespace-nowrap">
+                <input
+                  type="checkbox"
+                  checked={includeInactive}
+                  onChange={(e) => setIncludeInactive(e.target.checked)}
+                  className="rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+                />
+                Pasif kategorileri goster
+              </label>
+            </div>
             <Segmented
               value={viewMode}
               onChange={(value) => setViewMode(value as 'tree' | 'flat')}

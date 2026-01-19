@@ -211,6 +211,13 @@ import type {
   CreateCycleCountDto,
   UpdateCycleCountDto,
   CycleCountStatus,
+  // Inventory Adjustments
+  InventoryAdjustmentDto,
+  CreateInventoryAdjustmentDto,
+  UpdateInventoryAdjustmentDto,
+  ApproveInventoryAdjustmentDto,
+  RejectInventoryAdjustmentDto,
+  InventoryAdjustmentFilterDto,
 } from './inventory.types';
 
 // Import enums as values (not types) for use as default parameters
@@ -575,9 +582,9 @@ export class InventoryService {
   /**
    * Get all locations (optionally filtered by warehouse)
    */
-  static async getLocations(warehouseId?: number): Promise<LocationDto[]> {
+  static async getLocations(warehouseId?: number, includeInactive: boolean = false): Promise<LocationDto[]> {
     return ApiService.get<LocationDto[]>(this.getPath('locations'), {
-      params: { warehouseId },
+      params: { warehouseId, includeInactive },
     });
   }
 
@@ -2371,6 +2378,68 @@ export class InventoryService {
 
   static async getExpiringLotBatches(daysUntilExpiry: number = 30): Promise<LotBatchDto[]> {
     return ApiService.get<LotBatchDto[]>(this.getPath(`lot-batches/expiring?daysUntilExpiry=${daysUntilExpiry}`));
+  }
+
+  // =====================================
+  // INVENTORY ADJUSTMENTS (Approval Workflow)
+  // =====================================
+
+  /**
+   * Get all inventory adjustments with optional filters
+   */
+  static async getInventoryAdjustments(filter?: InventoryAdjustmentFilterDto): Promise<InventoryAdjustmentDto[]> {
+    return ApiService.get<InventoryAdjustmentDto[]>(this.getPath('adjustments'), {
+      params: filter,
+    });
+  }
+
+  /**
+   * Get an inventory adjustment by ID
+   */
+  static async getInventoryAdjustment(id: number): Promise<InventoryAdjustmentDto> {
+    return ApiService.get<InventoryAdjustmentDto>(this.getPath(`adjustments/${id}`));
+  }
+
+  /**
+   * Create a new inventory adjustment
+   */
+  static async createInventoryAdjustment(dto: CreateInventoryAdjustmentDto): Promise<InventoryAdjustmentDto> {
+    return ApiService.post<InventoryAdjustmentDto>(this.getPath('adjustments'), dto);
+  }
+
+  /**
+   * Update an inventory adjustment
+   */
+  static async updateInventoryAdjustment(id: number, dto: UpdateInventoryAdjustmentDto): Promise<InventoryAdjustmentDto> {
+    return ApiService.put<InventoryAdjustmentDto>(this.getPath(`adjustments/${id}`), dto);
+  }
+
+  /**
+   * Delete an inventory adjustment
+   */
+  static async deleteInventoryAdjustment(id: number): Promise<void> {
+    return ApiService.delete(this.getPath(`adjustments/${id}`));
+  }
+
+  /**
+   * Submit an inventory adjustment for approval
+   */
+  static async submitInventoryAdjustment(id: number): Promise<InventoryAdjustmentDto> {
+    return ApiService.post<InventoryAdjustmentDto>(this.getPath(`adjustments/${id}/submit`), {});
+  }
+
+  /**
+   * Approve an inventory adjustment
+   */
+  static async approveInventoryAdjustment(id: number, dto: ApproveInventoryAdjustmentDto): Promise<InventoryAdjustmentDto> {
+    return ApiService.post<InventoryAdjustmentDto>(this.getPath(`adjustments/${id}/approve`), dto);
+  }
+
+  /**
+   * Reject an inventory adjustment
+   */
+  static async rejectInventoryAdjustment(id: number, dto: RejectInventoryAdjustmentDto): Promise<InventoryAdjustmentDto> {
+    return ApiService.post<InventoryAdjustmentDto>(this.getPath(`adjustments/${id}/reject`), dto);
   }
 }
 

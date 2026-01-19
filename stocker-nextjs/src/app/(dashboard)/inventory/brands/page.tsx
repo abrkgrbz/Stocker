@@ -39,8 +39,9 @@ import {
 export default function BrandsPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
+  const [includeInactive, setIncludeInactive] = useState(false);
 
-  const { data: brands = [], isLoading, refetch } = useBrands();
+  const { data: brands = [], isLoading, refetch } = useBrands(includeInactive);
   const deleteBrand = useDeleteBrand();
 
   const handleDelete = async (brand: BrandDto) => {
@@ -264,15 +265,27 @@ export default function BrandsPage() {
 
       <div className="bg-white border border-slate-200 rounded-xl p-6">
         <div className="mb-6">
-          <Input
-            placeholder="Marka ara... (ad, aciklama)"
-            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ maxWidth: 400 }}
-            allowClear
-            className="!rounded-lg !border-slate-300"
-          />
+          <div className="flex flex-wrap items-center gap-4">
+            <Input
+              placeholder="Marka ara... (ad, aciklama)"
+              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              style={{ maxWidth: 400 }}
+              allowClear
+              className="!rounded-lg !border-slate-300"
+            />
+            <div className="flex-1" />
+            <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={includeInactive}
+                onChange={(e) => setIncludeInactive(e.target.checked)}
+                className="rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+              />
+              Pasif markalari goster
+            </label>
+          </div>
         </div>
 
         {isLoading ? (

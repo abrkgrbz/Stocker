@@ -3717,6 +3717,33 @@ export interface CreateInventoryAdjustmentItemDto {
   notes?: string;
 }
 
+export interface UpdateInventoryAdjustmentDto {
+  locationId?: number;
+  description?: string;
+  referenceNumber?: string;
+  referenceType?: string;
+  internalNotes?: string;
+  accountingNotes?: string;
+}
+
+export interface ApproveInventoryAdjustmentDto {
+  approvedBy: string;
+}
+
+export interface RejectInventoryAdjustmentDto {
+  rejectedBy: string;
+  reason: string;
+}
+
+export interface InventoryAdjustmentFilterDto {
+  warehouseId?: number;
+  status?: AdjustmentStatus;
+  adjustmentType?: AdjustmentType;
+  reason?: AdjustmentReason;
+  startDate?: DateTime;
+  endDate?: DateTime;
+}
+
 // =====================================
 // SERIAL NUMBER (Extended)
 // =====================================

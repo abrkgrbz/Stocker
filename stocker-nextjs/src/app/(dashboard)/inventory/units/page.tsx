@@ -39,8 +39,9 @@ import {
 export default function UnitsPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
+  const [includeInactive, setIncludeInactive] = useState(false);
 
-  const { data: units = [], isLoading, refetch } = useUnits();
+  const { data: units = [], isLoading, refetch } = useUnits(includeInactive);
   const deleteUnit = useDeleteUnit();
 
   const handleDelete = async (unit: UnitDto) => {
@@ -247,15 +248,27 @@ export default function UnitsPage() {
 
       <div className="bg-white border border-slate-200 rounded-xl p-6">
         <div className="mb-6">
-          <Input
-            placeholder="Birim ara... (ad, kod, sembol)"
-            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ maxWidth: 400 }}
-            allowClear
-            className="!rounded-lg !border-slate-300"
-          />
+          <div className="flex flex-wrap items-center gap-4">
+            <Input
+              placeholder="Birim ara... (ad, kod, sembol)"
+              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              style={{ maxWidth: 400 }}
+              allowClear
+              className="!rounded-lg !border-slate-300"
+            />
+            <div className="flex-1" />
+            <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={includeInactive}
+                onChange={(e) => setIncludeInactive(e.target.checked)}
+                className="rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+              />
+              Pasif birimleri goster
+            </label>
+          </div>
         </div>
 
         {isLoading ? (
