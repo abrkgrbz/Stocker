@@ -14,7 +14,7 @@ import { BarcodeType } from '@/lib/api/services/inventory.types';
 import { confirmAction } from '@/lib/utils/sweetalert';
 import dayjs from 'dayjs';
 
-const barcodeTypeLabels: Record<number, { label: string; color: string }> = {
+const barcodeTypeLabels: Record<string, { label: string; color: string }> = {
   [BarcodeType.EAN13]: { label: 'EAN-13', color: 'blue' },
   [BarcodeType.EAN8]: { label: 'EAN-8', color: 'cyan' },
   [BarcodeType.UPCA]: { label: 'UPC-A', color: 'purple' },

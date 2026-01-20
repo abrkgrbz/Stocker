@@ -249,7 +249,7 @@ export default function WarehousesPage() {
             label: 'Varsayılan Yap',
             disabled: record.isDefault,
           },
-          { type: 'divider' as const, key: 'divider-1' },
+          { type: 'divider' as const },
           {
             key: 'delete',
             icon: <TrashIcon className="w-4 h-4" />,
@@ -259,7 +259,7 @@ export default function WarehousesPage() {
           },
         ];
 
-        const handleMenuClick = ({ key }: { key: string }) => {
+        const handleMenuClick = (key: string) => {
           switch (key) {
             case 'view':
               handleView(record.id);
@@ -277,7 +277,7 @@ export default function WarehousesPage() {
         };
 
         return (
-          <Dropdown menu={{ items: menuItems, onClick: handleMenuClick }} trigger={['click']}>
+          <Dropdown menu={{ items: menuItems, onClick: ({ key }) => handleMenuClick(key) }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors" aria-label="Satır işlemleri">
               <EllipsisHorizontalIcon className="w-4 h-4" />
             </button>

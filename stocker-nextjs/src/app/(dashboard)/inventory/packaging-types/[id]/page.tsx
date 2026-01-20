@@ -13,7 +13,7 @@ import { usePackagingType, useDeletePackagingType } from '@/lib/api/hooks/useInv
 import { PackagingCategory } from '@/lib/api/services/inventory.types';
 import { confirmAction } from '@/lib/utils/sweetalert';
 
-const categoryLabels: Record<number, { label: string; color: string }> = {
+const categoryLabels: Record<string, { label: string; color: string }> = {
   [PackagingCategory.Box]: { label: 'Kutu', color: 'blue' },
   [PackagingCategory.Carton]: { label: 'Karton', color: 'orange' },
   [PackagingCategory.Pallet]: { label: 'Palet', color: 'purple' },

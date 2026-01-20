@@ -59,13 +59,13 @@ export default function EditCycleCountPage() {
 
   const getStatusTag = () => {
     switch (cycleCount.status) {
-      case 1: // Planned
+      case 'Planned':
         return <Tag icon={<ClockIcon className="w-4 h-4" />} color="blue">Planlandı</Tag>;
-      case 2: // InProgress
+      case 'InProgress':
         return <Tag icon={<ClockIcon className="w-4 h-4" />} color="processing">Devam Ediyor</Tag>;
-      case 3: // Completed
+      case 'Completed':
         return <Tag icon={<CheckCircleIcon className="w-4 h-4" />} color="success">Tamamlandı</Tag>;
-      case 4: // Cancelled
+      case 'Cancelled':
         return <Tag color="default">İptal Edildi</Tag>;
       default:
         return <Tag color="default">Bilinmeyen</Tag>;

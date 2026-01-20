@@ -2569,14 +2569,14 @@ export class InventoryService {
    * Get all shelf life rules
    */
   static async getShelfLifeRules(): Promise<ShelfLifeDto[]> {
-    return ApiService.get<ShelfLifeDto[]>(this.getPath('shelf-life'));
+    return ApiService.get<ShelfLifeDto[]>(this.getPath('shelf-lives'));
   }
 
   /**
    * Get shelf life rule by ID
    */
   static async getShelfLifeRule(id: number): Promise<ShelfLifeDto> {
-    return ApiService.get<ShelfLifeDto>(this.getPath(`shelf-life/${id}`));
+    return ApiService.get<ShelfLifeDto>(this.getPath(`shelf-lives/${id}`));
   }
 
   /**
@@ -2584,7 +2584,7 @@ export class InventoryService {
    */
   static async getShelfLifeByProduct(productId: number): Promise<ShelfLifeDto | null> {
     try {
-      return await ApiService.get<ShelfLifeDto>(this.getPath(`shelf-life/product/${productId}`));
+      return await ApiService.get<ShelfLifeDto>(this.getPath(`shelf-lives/product/${productId}`));
     } catch {
       return null;
     }
@@ -2594,35 +2594,35 @@ export class InventoryService {
    * Create a new shelf life rule
    */
   static async createShelfLife(dto: CreateShelfLifeDto): Promise<ShelfLifeDto> {
-    return ApiService.post<ShelfLifeDto>(this.getPath('shelf-life'), dto);
+    return ApiService.post<ShelfLifeDto>(this.getPath('shelf-lives'), dto);
   }
 
   /**
    * Update an existing shelf life rule
    */
   static async updateShelfLife(id: number, dto: UpdateShelfLifeDto): Promise<ShelfLifeDto> {
-    return ApiService.put<ShelfLifeDto>(this.getPath(`shelf-life/${id}`), dto);
+    return ApiService.put<ShelfLifeDto>(this.getPath(`shelf-lives/${id}`), dto);
   }
 
   /**
    * Delete a shelf life rule
    */
   static async deleteShelfLife(id: number): Promise<void> {
-    return ApiService.delete(this.getPath(`shelf-life/${id}`));
+    return ApiService.delete(this.getPath(`shelf-lives/${id}`));
   }
 
   /**
    * Activate a shelf life rule
    */
   static async activateShelfLife(id: number): Promise<ShelfLifeDto> {
-    return ApiService.post<ShelfLifeDto>(this.getPath(`shelf-life/${id}/activate`), {});
+    return ApiService.post<ShelfLifeDto>(this.getPath(`shelf-lives/${id}/activate`), {});
   }
 
   /**
    * Deactivate a shelf life rule
    */
   static async deactivateShelfLife(id: number): Promise<ShelfLifeDto> {
-    return ApiService.post<ShelfLifeDto>(this.getPath(`shelf-life/${id}/deactivate`), {});
+    return ApiService.post<ShelfLifeDto>(this.getPath(`shelf-lives/${id}/deactivate`), {});
   }
 }
 

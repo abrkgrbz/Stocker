@@ -25,25 +25,25 @@ import type { ColumnsType } from 'antd/es/table';
 import { TableEmptyState } from '@/components/primitives';
 import { confirmAction } from '@/lib/utils/sweetalert';
 
-const categoryConfig: Record<number, { label: string }> = {
-  1: { label: 'Kutu' },
-  2: { label: 'Karton' },
-  3: { label: 'Palet' },
-  4: { label: 'Kasa' },
-  5: { label: 'Torba' },
-  6: { label: 'Varil' },
-  7: { label: 'Konteyner' },
-  8: { label: 'Sise' },
-  9: { label: 'Kavanoz' },
-  10: { label: 'Tup' },
-  11: { label: 'Poset' },
-  12: { label: 'Rulo' },
-  99: { label: 'Diger' },
+const categoryConfig: Record<string, { label: string }> = {
+  Box: { label: 'Kutu' },
+  Carton: { label: 'Karton' },
+  Pallet: { label: 'Palet' },
+  Crate: { label: 'Kasa' },
+  Bag: { label: 'Torba' },
+  Drum: { label: 'Varil' },
+  Container: { label: 'Konteyner' },
+  Bottle: { label: 'Şişe' },
+  Jar: { label: 'Kavanoz' },
+  Tube: { label: 'Tüp' },
+  Pouch: { label: 'Poşet' },
+  Roll: { label: 'Rulo' },
+  Other: { label: 'Diğer' },
 };
 
 export default function PackagingTypesPage() {
   const router = useRouter();
-  const [selectedCategory, setSelectedCategory] = useState<number | undefined>();
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [searchText, setSearchText] = useState('');
 
   // API Hooks
@@ -397,7 +397,7 @@ export default function PackagingTypesPage() {
             className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           >
             {Object.entries(categoryConfig).map(([key, config]) => (
-              <Select.Option key={key} value={parseInt(key)}>
+              <Select.Option key={key} value={key}>
                 {config.label}
               </Select.Option>
             ))}

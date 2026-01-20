@@ -24,18 +24,19 @@ import type { ColumnsType } from 'antd/es/table';
 import { TableEmptyState } from '@/components/primitives';
 import { confirmAction, showError, showSuccess } from '@/lib/utils/sweetalert';
 
-const barcodeTypeConfig: Record<number, { label: string }> = {
-  1: { label: 'EAN-13' },
-  2: { label: 'EAN-8' },
-  3: { label: 'UPC-A' },
-  4: { label: 'UPC-E' },
-  5: { label: 'Code 128' },
-  6: { label: 'Code 39' },
-  7: { label: 'QR Code' },
-  8: { label: 'Data Matrix' },
-  9: { label: 'PDF417' },
-  10: { label: 'ITF-14' },
-  11: { label: 'Custom' },
+const barcodeTypeConfig: Record<string, { label: string }> = {
+  EAN13: { label: 'EAN-13' },
+  EAN8: { label: 'EAN-8' },
+  UPCA: { label: 'UPC-A' },
+  UPCE: { label: 'UPC-E' },
+  Code128: { label: 'Code 128' },
+  Code39: { label: 'Code 39' },
+  QRCode: { label: 'QR Code' },
+  DataMatrix: { label: 'Data Matrix' },
+  PDF417: { label: 'PDF417' },
+  ITF14: { label: 'ITF-14' },
+  GS1_128: { label: 'GS1-128' },
+  Internal: { label: 'Dahili' },
 };
 
 export default function BarcodeDefinitionsPage() {

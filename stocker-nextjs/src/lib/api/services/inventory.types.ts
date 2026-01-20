@@ -3791,31 +3791,31 @@ export interface UpdateReorderRuleDto {
 // =====================================
 
 export enum CycleCountType {
-  Standard = 1,
-  AbcBased = 2,
-  ZoneBased = 3,
-  CategoryBased = 4,
-  Random = 5,
-  MovementBased = 6,
+  Standard = 'Standard',
+  AbcBased = 'AbcBased',
+  ZoneBased = 'ZoneBased',
+  CategoryBased = 'CategoryBased',
+  Random = 'Random',
+  MovementBased = 'MovementBased',
 }
 
 export enum CycleCountStatus {
-  Planned = 0,
-  InProgress = 1,
-  Completed = 2,
-  Approved = 3,
-  Processed = 4,
-  Cancelled = 5,
+  Planned = 'Planned',
+  InProgress = 'InProgress',
+  Completed = 'Completed',
+  Approved = 'Approved',
+  Processed = 'Processed',
+  Cancelled = 'Cancelled',
 }
 
 export enum RecurrenceFrequency {
-  Daily = 1,
-  Weekly = 2,
-  BiWeekly = 3,
-  Monthly = 4,
-  Quarterly = 5,
-  SemiAnnually = 6,
-  Annually = 7,
+  Daily = 'Daily',
+  Weekly = 'Weekly',
+  BiWeekly = 'BiWeekly',
+  Monthly = 'Monthly',
+  Quarterly = 'Quarterly',
+  SemiAnnually = 'SemiAnnually',
+  Annually = 'Annually',
 }
 
 export interface CycleCountItemDto {
@@ -3931,19 +3931,19 @@ export interface UpdateCycleCountDto {
 // =====================================
 
 export enum PackagingCategory {
-  Box = 1,
-  Carton = 2,
-  Pallet = 3,
-  Crate = 4,
-  Bag = 5,
-  Drum = 6,
-  Container = 7,
-  Bottle = 8,
-  Jar = 9,
-  Tube = 10,
-  Pouch = 11,
-  Roll = 12,
-  Other = 99,
+  Box = 'Box',
+  Carton = 'Carton',
+  Pallet = 'Pallet',
+  Crate = 'Crate',
+  Bag = 'Bag',
+  Drum = 'Drum',
+  Container = 'Container',
+  Bottle = 'Bottle',
+  Jar = 'Jar',
+  Tube = 'Tube',
+  Pouch = 'Pouch',
+  Roll = 'Roll',
+  Other = 'Other',
 }
 
 export interface PackagingTypeDto {
@@ -4032,18 +4032,18 @@ export interface UpdatePackagingTypeDto {
 // =====================================
 
 export enum BarcodeType {
-  EAN13 = 1,
-  EAN8 = 2,
-  UPCA = 3,
-  UPCE = 4,
-  Code128 = 5,
-  Code39 = 6,
-  QRCode = 7,
-  DataMatrix = 8,
-  PDF417 = 9,
-  ITF14 = 10,
-  GS1_128 = 11,
-  Internal = 99,
+  EAN13 = 'EAN13',
+  EAN8 = 'EAN8',
+  UPCA = 'UPCA',
+  UPCE = 'UPCE',
+  Code128 = 'Code128',
+  Code39 = 'Code39',
+  QRCode = 'QRCode',
+  DataMatrix = 'DataMatrix',
+  PDF417 = 'PDF417',
+  ITF14 = 'ITF14',
+  GS1_128 = 'GS1_128',
+  Internal = 'Internal',
 }
 
 export interface BarcodeDefinitionDto {
