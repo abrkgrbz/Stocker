@@ -48,6 +48,9 @@ export default function WarehousesPage() {
   const router = useRouter();
   const [includeInactive, setIncludeInactive] = useState(false);
   const [searchText, setSearchText] = useState('');
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [defaultModalOpen, setDefaultModalOpen] = useState(false);
+  const [selectedWarehouse, setSelectedWarehouse] = useState<WarehouseDto | null>(null);
 
   // API Hooks
   const { data: warehouses = [], isLoading, refetch } = useWarehouses(includeInactive);
@@ -88,47 +91,40 @@ export default function WarehousesPage() {
       });
       return;
     }
-
-    Modal.confirm({
-      title: 'Depoyu Sil',
-      content: `"${warehouse.name}" deposunu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      okButtonProps: { className: '!bg-red-600 hover:!bg-red-700 !border-red-600' },
-      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
-      onOk: async () => {
-        try {
-          await deleteWarehouse.mutateAsync(warehouse.id);
-          showSuccess('Başarılı', 'Depo başarıyla silindi');
-        } catch {
-          showError('Silme işlemi başarısız oldu');
-        }
-      },
-    });
+    setSelectedWarehouse(warehouse);
+    setDeleteModalOpen(true);
   };
 
-  const handleSetDefault = async (warehouse: WarehouseDto) => {
+  const confirmDelete = async () => {
+    if (!selectedWarehouse) return;
+    try {
+      await deleteWarehouse.mutateAsync(selectedWarehouse.id);
+      showSuccess('Başarılı', 'Depo başarıyla silindi');
+      setDeleteModalOpen(false);
+      setSelectedWarehouse(null);
+    } catch {
+      showError('Silme işlemi başarısız oldu');
+    }
+  };
+
+  const handleSetDefault = (warehouse: WarehouseDto) => {
     if (warehouse.isDefault) {
       return;
     }
+    setSelectedWarehouse(warehouse);
+    setDefaultModalOpen(true);
+  };
 
-    Modal.confirm({
-      title: 'Varsayılan Depo Ayarla',
-      content: `"${warehouse.name}" deposunu varsayılan olarak ayarlamak istediğinizden emin misiniz?`,
-      okText: 'Ayarla',
-      cancelText: 'İptal',
-      okButtonProps: { className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' },
-      cancelButtonProps: { className: '!border-slate-300 !text-slate-600' },
-      onOk: async () => {
-        try {
-          await setDefaultWarehouse.mutateAsync(warehouse.id);
-          showSuccess('Başarılı', 'Varsayılan depo ayarlandı');
-        } catch {
-          showError('Varsayılan ayarlama işlemi başarısız oldu');
-        }
-      },
-    });
+  const confirmSetDefault = async () => {
+    if (!selectedWarehouse) return;
+    try {
+      await setDefaultWarehouse.mutateAsync(selectedWarehouse.id);
+      showSuccess('Başarılı', 'Varsayılan depo ayarlandı');
+      setDefaultModalOpen(false);
+      setSelectedWarehouse(null);
+    } catch {
+      showError('Varsayılan ayarlama işlemi başarısız oldu');
+    }
   };
 
   // Table columns
@@ -417,6 +413,51 @@ export default function WarehousesPage() {
             }}
           />
         </div>
+
+        {/* Delete Confirmation Modal */}
+        <Modal
+          title="Depoyu Sil"
+          open={deleteModalOpen}
+          onOk={confirmDelete}
+          onCancel={() => {
+            setDeleteModalOpen(false);
+            setSelectedWarehouse(null);
+          }}
+          okText="Sil"
+          cancelText="İptal"
+          okButtonProps={{
+            danger: true,
+            loading: deleteWarehouse.isPending,
+            className: '!bg-red-600 hover:!bg-red-700 !border-red-600',
+          }}
+          cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
+        >
+          <p>
+            &quot;{selectedWarehouse?.name}&quot; deposunu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+          </p>
+        </Modal>
+
+        {/* Set Default Confirmation Modal */}
+        <Modal
+          title="Varsayılan Depo Ayarla"
+          open={defaultModalOpen}
+          onOk={confirmSetDefault}
+          onCancel={() => {
+            setDefaultModalOpen(false);
+            setSelectedWarehouse(null);
+          }}
+          okText="Ayarla"
+          cancelText="İptal"
+          okButtonProps={{
+            loading: setDefaultWarehouse.isPending,
+            className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900',
+          }}
+          cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
+        >
+          <p>
+            &quot;{selectedWarehouse?.name}&quot; deposunu varsayılan olarak ayarlamak istediğinizden emin misiniz?
+          </p>
+        </Modal>
       </Spin>
     </div>
   );

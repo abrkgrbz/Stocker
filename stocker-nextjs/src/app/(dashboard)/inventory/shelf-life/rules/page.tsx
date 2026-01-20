@@ -24,7 +24,7 @@ import {
 import type { ShelfLifeDto } from '@/lib/api/services/inventory.types';
 import { ShelfLifeType, ShelfLifeRuleType, ExpiryAction } from '@/lib/api/services/inventory.types';
 
-const shelfLifeTypeLabels: Record<number, string> = {
+const shelfLifeTypeLabels: Record<string, string> = {
   [ShelfLifeType.ExpiryDate]: 'Son Kullanma Tarihi',
   [ShelfLifeType.BestBefore]: 'Tavsiye Edilen',
   [ShelfLifeType.ManufacturingDateBased]: 'Üretim Tarihli',
@@ -32,7 +32,7 @@ const shelfLifeTypeLabels: Record<number, string> = {
   [ShelfLifeType.AfterFirstUse]: 'İlk Kullanımdan Sonra',
 };
 
-const expiryActionLabels: Record<number, string> = {
+const expiryActionLabels: Record<string, string> = {
   [ExpiryAction.None]: 'Yok',
   [ExpiryAction.AlertOnly]: 'Sadece Uyarı',
   [ExpiryAction.BlockSales]: 'Satışı Engelle',

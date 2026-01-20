@@ -4107,26 +4107,26 @@ export interface UpdateBarcodeDefinitionDto {
 // =====================================
 
 export enum ShelfLifeType {
-  ExpiryDate = 1,
-  BestBefore = 2,
-  ManufacturingDateBased = 3,
-  AfterOpening = 4,
-  AfterFirstUse = 5,
+  ExpiryDate = 'ExpiryDate',
+  BestBefore = 'BestBefore',
+  ManufacturingDateBased = 'ManufacturingDateBased',
+  AfterOpening = 'AfterOpening',
+  AfterFirstUse = 'AfterFirstUse',
 }
 
 export enum ShelfLifeRuleType {
-  Days = 1,
-  Percentage = 2,
-  Both = 3,
+  Days = 'Days',
+  Percentage = 'Percentage',
+  Both = 'Both',
 }
 
 export enum ExpiryAction {
-  None = 0,
-  AlertOnly = 1,
-  BlockSales = 2,
-  Quarantine = 3,
-  Scrap = 4,
-  DiscountSale = 5,
+  None = 'None',
+  AlertOnly = 'AlertOnly',
+  BlockSales = 'BlockSales',
+  Quarantine = 'Quarantine',
+  Scrap = 'Scrap',
+  DiscountSale = 'DiscountSale',
 }
 
 export interface ShelfLifeDto {
