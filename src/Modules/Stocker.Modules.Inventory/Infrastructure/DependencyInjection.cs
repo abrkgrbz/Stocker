@@ -104,6 +104,7 @@ public static class DependencyInjection
         services.AddScoped<IConsignmentStockRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().ConsignmentStocks);
         services.AddScoped<ICycleCountRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().CycleCounts);
         services.AddScoped<IInventoryAdjustmentRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().InventoryAdjustments);
+        services.AddScoped<IReorderRuleRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().ReorderRules);
 
         // Register Cross-Module Services (Contract Implementations)
         services.AddScoped<Shared.Contracts.Inventory.IInventoryService, Application.Services.InventoryService>();
