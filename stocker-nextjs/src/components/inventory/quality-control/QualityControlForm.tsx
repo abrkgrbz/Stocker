@@ -22,13 +22,13 @@ interface QualityControlFormProps {
 }
 
 const qcTypeOptions = [
-  { value: 1, label: 'Giriş Denetimi' },
-  { value: 2, label: 'Çıkış Denetimi' },
-  { value: 3, label: 'Süreç İçi Denetim' },
-  { value: 4, label: 'Final Denetimi' },
-  { value: 5, label: 'Periyodik Denetim' },
-  { value: 6, label: 'Müşteri Şikayeti' },
-  { value: 7, label: 'İade Denetimi' },
+  { value: 'IncomingInspection', label: 'Giriş Denetimi' },
+  { value: 'OutgoingInspection', label: 'Çıkış Denetimi' },
+  { value: 'InProcessInspection', label: 'Süreç İçi Denetim' },
+  { value: 'FinalInspection', label: 'Final Denetimi' },
+  { value: 'PeriodicInspection', label: 'Periyodik Denetim' },
+  { value: 'CustomerComplaint', label: 'Müşteri Şikayeti' },
+  { value: 'ReturnInspection', label: 'İade Denetimi' },
 ];
 
 export default function QualityControlForm({ form, initialValues, onFinish, loading }: QualityControlFormProps) {

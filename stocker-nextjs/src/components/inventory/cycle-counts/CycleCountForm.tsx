@@ -25,28 +25,28 @@ interface CycleCountFormProps {
 }
 
 const countTypeOptions = [
-  { value: 1, label: 'Standart' },
-  { value: 2, label: 'ABC Bazlı' },
-  { value: 3, label: 'Bölge Bazlı' },
-  { value: 4, label: 'Kategori Bazlı' },
-  { value: 5, label: 'Rastgele' },
-  { value: 6, label: 'Hareket Bazlı' },
+  { value: 'Standard', label: 'Standart' },
+  { value: 'AbcBased', label: 'ABC Bazlı' },
+  { value: 'ZoneBased', label: 'Bölge Bazlı' },
+  { value: 'CategoryBased', label: 'Kategori Bazlı' },
+  { value: 'Random', label: 'Rastgele' },
+  { value: 'MovementBased', label: 'Hareket Bazlı' },
 ];
 
 const frequencyOptions = [
-  { value: 1, label: 'Günlük' },
-  { value: 2, label: 'Haftalık' },
-  { value: 3, label: 'İki Haftada Bir' },
-  { value: 4, label: 'Aylık' },
-  { value: 5, label: 'Üç Ayda Bir' },
-  { value: 6, label: 'Altı Ayda Bir' },
-  { value: 7, label: 'Yıllık' },
+  { value: 'Daily', label: 'Günlük' },
+  { value: 'Weekly', label: 'Haftalık' },
+  { value: 'BiWeekly', label: 'İki Haftada Bir' },
+  { value: 'Monthly', label: 'Aylık' },
+  { value: 'Quarterly', label: 'Üç Ayda Bir' },
+  { value: 'SemiAnnually', label: 'Altı Ayda Bir' },
+  { value: 'Annually', label: 'Yıllık' },
 ];
 
 const abcClassOptions = [
-  { value: 1, label: 'A Sınıfı' },
-  { value: 2, label: 'B Sınıfı' },
-  { value: 3, label: 'C Sınıfı' },
+  { value: 'A', label: 'A Sınıfı' },
+  { value: 'B', label: 'B Sınıfı' },
+  { value: 'C', label: 'C Sınıfı' },
 ];
 
 export default function CycleCountForm({ form, initialValues, onFinish, loading }: CycleCountFormProps) {
