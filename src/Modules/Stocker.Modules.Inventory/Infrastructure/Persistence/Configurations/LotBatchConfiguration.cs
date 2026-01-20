@@ -52,7 +52,7 @@ public class LotBatchConfiguration : IEntityTypeConfiguration<LotBatch>
 
         // Relationships
         builder.HasOne(l => l.Product)
-            .WithMany()
+            .WithMany(p => p.LotBatches)
             .HasForeignKey(l => l.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
 
