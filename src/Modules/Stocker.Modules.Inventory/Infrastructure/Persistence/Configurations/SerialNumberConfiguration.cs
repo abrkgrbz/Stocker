@@ -37,7 +37,7 @@ public class SerialNumberConfiguration : IEntityTypeConfiguration<SerialNumber>
 
         // Relationships
         builder.HasOne(s => s.Product)
-            .WithMany()
+            .WithMany(p => p.SerialNumbers)
             .HasForeignKey(s => s.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
 
