@@ -15,6 +15,16 @@ public class SerialNumberRepository : BaseRepository<SerialNumber>, ISerialNumbe
     {
     }
 
+    public override async Task<IReadOnlyList<SerialNumber>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Include(s => s.Product)
+            .Include(s => s.Warehouse)
+            .Where(s => !s.IsDeleted)
+            .OrderBy(s => s.Serial)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<SerialNumber?> GetBySerialAsync(string serial, CancellationToken cancellationToken = default)
     {
         return await DbSet
@@ -27,6 +37,7 @@ public class SerialNumberRepository : BaseRepository<SerialNumber>, ISerialNumbe
     public async Task<IReadOnlyList<SerialNumber>> GetByProductAsync(int productId, CancellationToken cancellationToken = default)
     {
         return await DbSet
+            .Include(s => s.Product)
             .Include(s => s.Warehouse)
             .Where(s => !s.IsDeleted && s.ProductId == productId)
             .OrderBy(s => s.Serial)
@@ -47,6 +58,7 @@ public class SerialNumberRepository : BaseRepository<SerialNumber>, ISerialNumbe
     {
         return await DbSet
             .Include(s => s.Product)
+            .Include(s => s.Warehouse)
             .Where(s => !s.IsDeleted && s.WarehouseId == warehouseId)
             .OrderBy(s => s.Serial)
             .ToListAsync(cancellationToken);
@@ -56,6 +68,7 @@ public class SerialNumberRepository : BaseRepository<SerialNumber>, ISerialNumbe
     {
         return await DbSet
             .Include(s => s.Product)
+            .Include(s => s.Warehouse)
             .Where(s => !s.IsDeleted && s.CustomerId == customerId)
             .OrderBy(s => s.Serial)
             .ToListAsync(cancellationToken);

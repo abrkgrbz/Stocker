@@ -48,6 +48,8 @@ public class ProductVariantRepository : BaseRepository<ProductVariant>, IProduct
     public async Task<ProductVariant?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
     {
         return await DbSet
+            .Include(v => v.Product)
+            .Include(v => v.Stocks.Where(s => !s.IsDeleted))
             .Where(v => !v.IsDeleted && v.Barcode == barcode)
             .FirstOrDefaultAsync(cancellationToken);
     }

@@ -14,6 +14,17 @@ public class StockRepository : BaseRepository<Stock>, IStockRepository
     {
     }
 
+    public override async Task<IReadOnlyList<Stock>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Include(s => s.Product)
+            .Include(s => s.Warehouse)
+            .Include(s => s.Location)
+            .Where(s => !s.IsDeleted)
+            .OrderBy(s => s.Product.Name)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<Stock?> GetByProductAndWarehouseAsync(int productId, int warehouseId, CancellationToken cancellationToken = default)
     {
         return await DbSet
@@ -116,6 +127,7 @@ public class StockRepository : BaseRepository<Stock>, IStockRepository
         return await DbSet
             .Include(s => s.Product)
             .Include(s => s.Warehouse)
+            .Include(s => s.Location)
             .Where(s => !s.IsDeleted && s.ExpiryDate.HasValue && s.ExpiryDate.Value <= expiryDate)
             .OrderBy(s => s.ExpiryDate)
             .ToListAsync(cancellationToken);
@@ -138,5 +150,12 @@ public class StockRepository : BaseRepository<Stock>, IStockRepository
             .Include(s => s.Warehouse)
             .Where(s => !s.IsDeleted && s.SerialNumber == serialNumber)
             .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<bool> HasStockAsync(int productId, CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Where(s => !s.IsDeleted && s.ProductId == productId && s.Quantity > 0)
+            .AnyAsync(cancellationToken);
     }
 }

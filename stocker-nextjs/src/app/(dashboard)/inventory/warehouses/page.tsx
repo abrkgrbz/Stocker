@@ -249,7 +249,7 @@ export default function WarehousesPage() {
             label: 'Varsayılan Yap',
             disabled: record.isDefault,
           },
-          { type: 'divider' as const },
+          { type: 'divider' as const, key: 'divider-1' },
           {
             key: 'delete',
             icon: <TrashIcon className="w-4 h-4" />,

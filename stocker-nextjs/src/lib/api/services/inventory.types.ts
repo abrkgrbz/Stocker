@@ -4221,52 +4221,52 @@ export interface UpdateShelfLifeDto {
 // =====================================
 
 export enum QualityControlType {
-  IncomingInspection = 1,
-  OutgoingInspection = 2,
-  InProcessInspection = 3,
-  FinalInspection = 4,
-  PeriodicInspection = 5,
-  CustomerComplaint = 6,
-  ReturnInspection = 7,
+  IncomingInspection = 'IncomingInspection',
+  OutgoingInspection = 'OutgoingInspection',
+  InProcessInspection = 'InProcessInspection',
+  FinalInspection = 'FinalInspection',
+  PeriodicInspection = 'PeriodicInspection',
+  CustomerComplaint = 'CustomerComplaint',
+  ReturnInspection = 'ReturnInspection',
 }
 
 export enum QualityControlStatus {
-  Pending = 0,
-  InProgress = 1,
-  Completed = 2,
-  Cancelled = 3,
+  Pending = 'Pending',
+  InProgress = 'InProgress',
+  Completed = 'Completed',
+  Cancelled = 'Cancelled',
 }
 
 export enum QualityControlResult {
-  Pending = 0,
-  Passed = 1,
-  Failed = 2,
-  PartialPass = 3,
-  ConditionalPass = 4,
+  Pending = 'Pending',
+  Passed = 'Passed',
+  Failed = 'Failed',
+  PartialPass = 'PartialPass',
+  ConditionalPass = 'ConditionalPass',
 }
 
 export enum QualityAction {
-  None = 0,
-  Accept = 1,
-  Reject = 2,
-  PartialAccept = 3,
-  AcceptWithDeviation = 4,
-  Rework = 5,
-  ReturnToSupplier = 6,
-  Scrap = 7,
-  Quarantine = 8,
+  None = 'None',
+  Accept = 'Accept',
+  Reject = 'Reject',
+  PartialAccept = 'PartialAccept',
+  AcceptWithDeviation = 'AcceptWithDeviation',
+  Rework = 'Rework',
+  ReturnToSupplier = 'ReturnToSupplier',
+  Scrap = 'Scrap',
+  Quarantine = 'Quarantine',
 }
 
 export enum RejectionCategory {
-  VisualDefect = 1,
-  DimensionalDeviation = 2,
-  FunctionalFailure = 3,
-  MaterialDefect = 4,
-  PackagingDamage = 5,
-  Contamination = 6,
-  DocumentationMissing = 7,
-  ExpiryDate = 8,
-  Other = 99,
+  VisualDefect = 'VisualDefect',
+  DimensionalDeviation = 'DimensionalDeviation',
+  FunctionalFailure = 'FunctionalFailure',
+  MaterialDefect = 'MaterialDefect',
+  PackagingDamage = 'PackagingDamage',
+  Contamination = 'Contamination',
+  DocumentationMissing = 'DocumentationMissing',
+  ExpiryDate = 'ExpiryDate',
+  Other = 'Other',
 }
 
 export interface QualityControlItemDto {

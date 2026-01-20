@@ -15,6 +15,15 @@ public class LotBatchRepository : BaseRepository<LotBatch>, ILotBatchRepository
     {
     }
 
+    public override async Task<IReadOnlyList<LotBatch>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Include(l => l.Product)
+            .Where(l => !l.IsDeleted)
+            .OrderBy(l => l.ExpiryDate)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<LotBatch?> GetByLotNumberAsync(string lotNumber, CancellationToken cancellationToken = default)
     {
         return await DbSet
@@ -26,6 +35,7 @@ public class LotBatchRepository : BaseRepository<LotBatch>, ILotBatchRepository
     public async Task<IReadOnlyList<LotBatch>> GetByProductAsync(int productId, CancellationToken cancellationToken = default)
     {
         return await DbSet
+            .Include(l => l.Product)
             .Where(l => !l.IsDeleted && l.ProductId == productId)
             .OrderBy(l => l.ExpiryDate)
             .ToListAsync(cancellationToken);

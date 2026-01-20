@@ -32,6 +32,10 @@ public class ProductRepository : BaseRepository<Product>, IProductRepository
     public async Task<Product?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
     {
         return await DbSet
+            .Include(p => p.Category)
+            .Include(p => p.UnitEntity)
+            .Include(p => p.Stocks.Where(s => !s.IsDeleted))
+                .ThenInclude(s => s.Warehouse)
             .Where(p => !p.IsDeleted && p.Code == code)
             .FirstOrDefaultAsync(cancellationToken);
     }
@@ -39,6 +43,10 @@ public class ProductRepository : BaseRepository<Product>, IProductRepository
     public async Task<Product?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
     {
         return await DbSet
+            .Include(p => p.Category)
+            .Include(p => p.UnitEntity)
+            .Include(p => p.Stocks.Where(s => !s.IsDeleted))
+                .ThenInclude(s => s.Warehouse)
             .Where(p => !p.IsDeleted && p.Barcode == barcode)
             .FirstOrDefaultAsync(cancellationToken);
     }

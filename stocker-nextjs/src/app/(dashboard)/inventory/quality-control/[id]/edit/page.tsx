@@ -12,7 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import QualityControlForm from '@/components/inventory/quality-control/QualityControlForm';
 import { useQualityControl, useUpdateQualityControl } from '@/lib/api/hooks/useInventory';
-import type { UpdateQualityControlDto } from '@/lib/api/services/inventory.types';
+import { QualityControlStatus, type UpdateQualityControlDto } from '@/lib/api/services/inventory.types';
 
 export default function EditQualityControlPage() {
   const router = useRouter();
@@ -60,13 +60,13 @@ export default function EditQualityControlPage() {
 
   const getStatusTag = () => {
     switch (qc.status) {
-      case 0: // Pending
+      case QualityControlStatus.Pending:
         return <Tag icon={<ClockIcon className="w-4 h-4" />} color="default">Beklemede</Tag>;
-      case 1: // InProgress
+      case QualityControlStatus.InProgress:
         return <Tag icon={<ClockIcon className="w-4 h-4" />} color="processing">Devam Ediyor</Tag>;
-      case 2: // Completed
+      case QualityControlStatus.Completed:
         return <Tag icon={<CheckCircleIcon className="w-4 h-4" />} color="success">Tamamlandı</Tag>;
-      case 3: // Cancelled
+      case QualityControlStatus.Cancelled:
         return <Tag icon={<XCircleIcon className="w-4 h-4" />} color="default">İptal Edildi</Tag>;
       default:
         return <Tag color="default">Bilinmeyen</Tag>;
