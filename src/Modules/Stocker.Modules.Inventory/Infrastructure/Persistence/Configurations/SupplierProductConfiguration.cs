@@ -54,7 +54,7 @@ public class SupplierProductConfiguration : IEntityTypeConfiguration<SupplierPro
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(sp => sp.Product)
-            .WithMany()
+            .WithMany(p => p.SupplierProducts)
             .HasForeignKey(sp => sp.ProductId)
             .OnDelete(DeleteBehavior.Cascade);
 

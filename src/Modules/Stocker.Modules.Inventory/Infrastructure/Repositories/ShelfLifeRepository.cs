@@ -14,6 +14,15 @@ public class ShelfLifeRepository : BaseRepository<ShelfLife>, IShelfLifeReposito
     {
     }
 
+    public override async Task<IReadOnlyList<ShelfLife>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Include(s => s.Product)
+            .Where(s => !s.IsDeleted)
+            .OrderBy(s => s.Product.Name)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<ShelfLife?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await DbSet

@@ -14,6 +14,17 @@ public class QualityControlRepository : BaseRepository<QualityControl>, IQuality
     {
     }
 
+    public override async Task<IReadOnlyList<QualityControl>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Include(q => q.Product)
+            .Include(q => q.Supplier)
+            .Include(q => q.Warehouse)
+            .Where(q => !q.IsDeleted)
+            .OrderByDescending(q => q.InspectionDate)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<QualityControl?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await DbSet
