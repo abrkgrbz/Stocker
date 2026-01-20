@@ -9,16 +9,16 @@ import {
 } from '@heroicons/react/24/outline';
 import { BrandForm } from '@/components/inventory/brands';
 import { useCreateBrand } from '@/lib/api/hooks/useInventory';
-import type { CreateBrandDto } from '@/lib/api/services/inventory.types';
+import type { CreateBrandDto, UpdateBrandDto } from '@/lib/api/services/inventory.types';
 
 export default function NewBrandPage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createBrand = useCreateBrand();
 
-  const handleSubmit = async (values: CreateBrandDto) => {
+  const handleSubmit = async (values: CreateBrandDto | UpdateBrandDto) => {
     try {
-      await createBrand.mutateAsync(values);
+      await createBrand.mutateAsync(values as CreateBrandDto);
       router.push('/inventory/brands');
     } catch (error) {
       // Error handled by hook
