@@ -14,6 +14,7 @@ import {
   Select,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { TableEmptyState } from '@/components/primitives';
 import {
   PlusIcon,
   MagnifyingGlassIcon,
@@ -354,6 +355,13 @@ export default function ConsignmentStocksPage() {
                 pageSize: 20,
                 showSizeChanger: true,
                 showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
+              }}
+              locale={{
+                emptyText: <TableEmptyState
+                  icon={BuildingStorefrontIcon}
+                  title="Konsinye stok bulunamadi"
+                  description="Henuz konsinye stok eklenmemis veya filtrelere uygun kayit yok."
+                />
               }}
               className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-600 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
             />

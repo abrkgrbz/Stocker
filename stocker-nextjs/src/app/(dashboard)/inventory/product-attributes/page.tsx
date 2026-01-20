@@ -36,6 +36,7 @@ import {
 import { useProductAttributes, useDeleteProductAttribute } from '@/lib/api/hooks/useInventory';
 import type { ProductAttributeDetailDto, AttributeType } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
+import { TableEmptyState } from '@/components/primitives';
 import { showSuccess, confirmDelete } from '@/lib/utils/sweetalert';
 
 const attributeTypeConfig: Record<AttributeType, { label: string; icon: React.ReactNode }> = {
@@ -477,6 +478,13 @@ export default function ProductAttributesPage() {
               },
               style: { cursor: 'pointer' },
             })}
+            locale={{
+              emptyText: <TableEmptyState
+                icon={TagIcon}
+                title="Ozellik bulunamadi"
+                description="Henuz ozellik eklenmemis veya filtrelere uygun kayit yok."
+              />
+            }}
             className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
           />
         )}

@@ -11,6 +11,7 @@ import {
 import { useLotBatches, useProducts } from '@/lib/api/hooks/useInventory';
 import type { LotBatchListDto, LotBatchFilterDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
+import { TableEmptyState } from '@/components/primitives';
 import dayjs from 'dayjs';
 
 export default function ShelfLifePage() {
@@ -335,6 +336,13 @@ export default function ShelfLifePage() {
             showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
           }}
           scroll={{ x: 1000 }}
+          locale={{
+            emptyText: <TableEmptyState
+              icon={ClockIcon}
+              title="Raf omru kaydi bulunamadi"
+              description="Henuz raf omru kaydi eklenmemis veya filtrelere uygun kayit yok."
+            />
+          }}
           className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
         />
       </div>
