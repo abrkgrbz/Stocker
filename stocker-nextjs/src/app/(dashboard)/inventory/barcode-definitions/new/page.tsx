@@ -6,20 +6,21 @@ import { Button, Space, Form } from 'antd';
 import { ArrowLeftIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { BarcodeDefinitionForm } from '@/components/inventory/barcode-definitions';
 import { useCreateBarcodeDefinition } from '@/lib/api/hooks/useInventory';
-import type { CreateBarcodeDefinitionDto } from '@/lib/api/services/inventory.types';
+import type { CreateBarcodeDefinitionDto, UpdateBarcodeDefinitionDto } from '@/lib/api/services/inventory.types';
 
 export default function NewBarcodeDefinitionPage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createBarcodeDefinition = useCreateBarcodeDefinition();
 
-  const handleSubmit = async (values: CreateBarcodeDefinitionDto) => {
-    try {
-      await createBarcodeDefinition.mutateAsync(values);
-      router.push('/inventory/barcode-definitions');
-    } catch (error) {
-      // Error handled by hook
-    }
+  const handleSubmit = (values: CreateBarcodeDefinitionDto | UpdateBarcodeDefinitionDto) => {
+    createBarcodeDefinition.mutateAsync(values as CreateBarcodeDefinitionDto)
+      .then(() => {
+        router.push('/inventory/barcode-definitions');
+      })
+      .catch(() => {
+        // Error handled by hook
+      });
   };
 
   return (
