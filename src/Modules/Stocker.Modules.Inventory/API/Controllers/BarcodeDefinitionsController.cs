@@ -144,6 +144,36 @@ public class BarcodeDefinitionsController : ControllerBase
     }
 
     /// <summary>
+    /// Lookup product by barcode
+    /// </summary>
+    [HttpGet("lookup/{barcode}")]
+    [ProducesResponseType(typeof(BarcodeDefinitionDto), 200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<BarcodeDefinitionDto>> LookupBarcode(string barcode)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var query = new GetBarcodeDefinitionByBarcodeQuery
+        {
+            TenantId = tenantId.Value,
+            Barcode = barcode
+        };
+
+        var result = await _mediator.Send(query);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
     /// Delete a barcode definition
     /// </summary>
     [HttpDelete("{id}")]

@@ -8,6 +8,7 @@ public record BarcodeDefinitionDto
     public int Id { get; init; }
     public int ProductId { get; init; }
     public string? ProductName { get; init; }
+    public string? ProductCode { get; init; }
     public int? ProductVariantId { get; init; }
     public string? ProductVariantName { get; init; }
     public string Barcode { get; init; } = string.Empty;

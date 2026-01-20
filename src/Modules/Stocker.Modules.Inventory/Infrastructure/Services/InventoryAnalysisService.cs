@@ -98,10 +98,10 @@ public class InventoryAnalysisService : IInventoryAnalysisService
             // Assign combined class
             product.CombinedClass = GetCombinedClass(product.AbcClass, product.XyzClass);
 
-            // Calculate estimated days of stock
+            // Calculate estimated days of stock (cap at 9999 to avoid overflow display issues)
             product.EstimatedDaysOfStock = product.AverageDailyDemand > 0
-                ? (int)(product.AvailableStock / product.AverageDailyDemand)
-                : int.MaxValue;
+                ? Math.Min(9999, (int)(product.AvailableStock / product.AverageDailyDemand))
+                : 9999; // Use 9999 instead of int.MaxValue for display purposes
 
             // Set management strategy and recommendations
             SetManagementStrategy(product);
