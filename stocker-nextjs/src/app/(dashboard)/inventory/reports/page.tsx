@@ -223,34 +223,34 @@ export default function InventoryReportsPage() {
   // ============= EXPORT HANDLERS =============
   const handleExport = (format: 'pdf' | 'excel', reportType: string) => {
     let data: Record<string, unknown>[] = [];
-    let columns: { key: string; header: string; formatter?: (v: number) => string }[] = [];
+    let columns: { key: string; label: string; format?: (v: any) => string }[] = [];
     let title = '';
 
     switch (reportType) {
       case 'stock-value':
         title = 'Stok Değeri Raporu';
         columns = [
-          { key: 'name', header: 'Kategori' },
-          { key: 'value', header: 'Değer (₺)', formatter: (v: number) => v.toLocaleString('tr-TR') },
-          { key: 'count', header: 'Ürün Sayısı' },
+          { key: 'name', label: 'Kategori' },
+          { key: 'value', label: 'Değer (₺)', format: (v: any) => (v as number).toLocaleString('tr-TR') },
+          { key: 'count', label: 'Ürün Sayısı' },
         ];
         data = stockValueByCategory;
         break;
       case 'abc':
         title = 'ABC Analizi Raporu';
         columns = [
-          { key: 'name', header: 'Ürün' },
-          { key: 'code', header: 'Kod' },
-          { key: 'stockValue', header: 'Stok Değeri', formatter: (v: number) => `₺${v.toLocaleString('tr-TR')}` },
-          { key: 'category', header: 'Sınıf' },
+          { key: 'name', label: 'Ürün' },
+          { key: 'code', label: 'Kod' },
+          { key: 'stockValue', label: 'Stok Değeri', format: (v: any) => `₺${(v as number).toLocaleString('tr-TR')}` },
+          { key: 'category', label: 'Sınıf' },
         ];
         data = abcAnalysis.products;
         break;
       case 'movements':
         title = 'Stok Hareketleri Özeti';
         columns = [
-          { key: 'name', header: 'Hareket Türü' },
-          { key: 'value', header: 'Adet' },
+          { key: 'name', label: 'Hareket Türü' },
+          { key: 'value', label: 'Adet' },
         ];
         data = movementsByType;
         break;

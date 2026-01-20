@@ -8,7 +8,6 @@ import {
   ShelfLifeType,
   ShelfLifeRuleType,
   ExpiryAction,
-  ZoneType,
   type ShelfLifeDto,
   type CreateShelfLifeDto,
   type UpdateShelfLifeDto,
@@ -53,14 +52,14 @@ const expiryActions = [
 ];
 
 const zoneTypes = [
-  { value: ZoneType.Storage, label: 'Depolama' },
-  { value: ZoneType.Receiving, label: 'Kabul' },
-  { value: ZoneType.Shipping, label: 'Sevkiyat' },
-  { value: ZoneType.Quality, label: 'Kalite Kontrol' },
-  { value: ZoneType.Returns, label: 'İade' },
-  { value: ZoneType.Quarantine, label: 'Karantina' },
-  { value: ZoneType.ColdStorage, label: 'Soğuk Depo' },
-  { value: ZoneType.Hazardous, label: 'Tehlikeli Madde' },
+  { value: 'DryStorage' as const, label: 'Depolama' },
+  { value: 'Receiving' as const, label: 'Kabul' },
+  { value: 'Shipping' as const, label: 'Sevkiyat' },
+  { value: 'General' as const, label: 'Kalite Kontrol' },
+  { value: 'Returns' as const, label: 'İade' },
+  { value: 'Quarantine' as const, label: 'Karantina' },
+  { value: 'ColdStorage' as const, label: 'Soğuk Depo' },
+  { value: 'Hazardous' as const, label: 'Tehlikeli Madde' },
 ];
 
 export default function ShelfLifeForm({ form, initialValues, onFinish, loading }: ShelfLifeFormProps) {
@@ -141,7 +140,6 @@ export default function ShelfLifeForm({ form, initialValues, onFinish, loading }
                 options={productOptions}
                 formItemProps={{
                   className: 'mb-0',
-                  rules: [{ required: true, message: 'Ürün seçimi zorunludur' }],
                 }}
                 className="w-full [&_.ant-select-selector]:!bg-transparent [&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!shadow-none [&_.ant-select-selection-item]:!text-2xl [&_.ant-select-selection-item]:!font-bold [&_.ant-select-selection-placeholder]:!text-2xl [&_.ant-select-selection-placeholder]:!font-medium [&_.ant-select-selection-placeholder]:!text-slate-400"
               />
@@ -156,6 +154,7 @@ export default function ShelfLifeForm({ form, initialValues, onFinish, loading }
                   <FormSwitch
                     form={form}
                     name="isActive"
+                    title="Durum"
                     value={isActive}
                     onChange={setIsActive}
                     disabled={loading}

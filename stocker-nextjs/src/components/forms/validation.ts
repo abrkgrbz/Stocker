@@ -98,9 +98,9 @@ export const noWhitespaceRule: Rule = {
  * Common validation rule sets
  */
 
-export const nameFieldRules = (fieldLabel: string = 'Bu alan'): Rule[] => [
+export const nameFieldRules = (fieldLabel: string = 'Bu alan', maxLength: number = 200): Rule[] => [
   requiredRule(fieldLabel),
-  maxLengthRule(200),
+  maxLengthRule(maxLength),
   noWhitespaceRule,
 ];
 

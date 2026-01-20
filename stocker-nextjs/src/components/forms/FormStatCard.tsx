@@ -13,6 +13,8 @@ interface FormStatCardProps {
   variant?: 'default' | 'success' | 'warning' | 'danger';
   /** Whether to show plus sign for positive numbers */
   showSign?: boolean;
+  /** Custom class name for the value */
+  valueClassName?: string;
   /** Custom class name */
   className?: string;
 }
@@ -23,6 +25,7 @@ export function FormStatCard({
   format,
   variant = 'default',
   showSign = false,
+  valueClassName,
   className = '',
 }: FormStatCardProps) {
   const variantClasses = {
@@ -39,7 +42,7 @@ export function FormStatCard({
 
   return (
     <div className={`p-4 bg-slate-50 rounded-lg border border-slate-200 text-center ${className}`}>
-      <div className={`text-2xl font-semibold ${variantClasses[variant]}`}>
+      <div className={`text-2xl font-semibold ${valueClassName || variantClasses[variant]}`}>
         {displayValue}
       </div>
       <div className="text-xs text-slate-500 mt-1">{label}</div>
@@ -55,6 +58,7 @@ interface FormStatGridProps {
     format?: (value: number | string) => string;
     variant?: 'default' | 'success' | 'warning' | 'danger';
     showSign?: boolean;
+    valueClassName?: string;
   }>;
   /** Number of columns */
   columns?: 2 | 3 | 4 | 6;

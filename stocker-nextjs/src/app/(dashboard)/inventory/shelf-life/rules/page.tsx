@@ -123,11 +123,11 @@ export default function ShelfLifeRulesPage() {
         const percent = record.minReceivingShelfLifePercent;
         const ruleType = record.receivingRuleType;
 
-        if (ruleType === ShelfLifeRuleType.Days) {
+        if (ruleType === 'Days') {
           return <span className="text-sm text-slate-600">{days} gün</span>;
-        } else if (ruleType === ShelfLifeRuleType.Percentage) {
+        } else if (ruleType === 'Percentage') {
           return <span className="text-sm text-slate-600">%{percent}</span>;
-        } else if (ruleType === ShelfLifeRuleType.Both) {
+        } else if (ruleType === 'Both') {
           return (
             <span className="text-sm text-slate-600">
               {days} gün / %{percent}
@@ -146,11 +146,11 @@ export default function ShelfLifeRulesPage() {
         const percent = record.minSalesShelfLifePercent;
         const ruleType = record.salesRuleType;
 
-        if (ruleType === ShelfLifeRuleType.Days) {
+        if (ruleType === 'Days') {
           return <span className="text-sm text-slate-600">{days} gün</span>;
-        } else if (ruleType === ShelfLifeRuleType.Percentage) {
+        } else if (ruleType === 'Percentage') {
           return <span className="text-sm text-slate-600">%{percent}</span>;
-        } else if (ruleType === ShelfLifeRuleType.Both) {
+        } else if (ruleType === 'Both') {
           return (
             <span className="text-sm text-slate-600">
               {days} gün / %{percent}

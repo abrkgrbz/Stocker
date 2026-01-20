@@ -137,6 +137,7 @@ export default function ProductBundleForm({ form, initialValues, onFinish, loadi
                 <FormSwitch
                   form={form}
                   name="isActive"
+                  title="Durum"
                   value={isActive}
                   onChange={setIsActive}
                   disabled={loading}

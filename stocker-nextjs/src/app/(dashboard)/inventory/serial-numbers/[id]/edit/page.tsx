@@ -32,6 +32,7 @@ const statusLabels: Record<SerialNumberStatus, string> = {
   [SerialNumberStatus.Scrapped]: 'Hurda',
   [SerialNumberStatus.Lost]: 'Kayıp',
   [SerialNumberStatus.OnLoan]: 'Ödünç Verildi',
+  [SerialNumberStatus.InTransit]: 'Transferde',
 };
 
 export default function EditSerialNumberPage() {

@@ -172,9 +172,9 @@ export default function StockAdjustmentDetailPage() {
       dataIndex: 'systemQuantity',
       key: 'systemQuantity',
       align: 'right',
-      render: (val: number, record) => (
+      render: (val: number) => (
         <span className="text-sm text-slate-600">
-          {val} {record.unitCode}
+          {val}
         </span>
       ),
     },
@@ -183,18 +183,18 @@ export default function StockAdjustmentDetailPage() {
       dataIndex: 'actualQuantity',
       key: 'actualQuantity',
       align: 'right',
-      render: (val: number, record) => (
+      render: (val: number) => (
         <span className="text-sm font-medium text-slate-900">
-          {val} {record.unitCode}
+          {val}
         </span>
       ),
     },
     {
       title: 'Fark',
-      dataIndex: 'differenceQuantity',
-      key: 'differenceQuantity',
+      dataIndex: 'varianceQuantity',
+      key: 'varianceQuantity',
       align: 'right',
-      render: (val: number, record) => {
+      render: (val: number) => {
         const isPositive = val > 0;
         const isNegative = val < 0;
         return (
@@ -203,7 +203,7 @@ export default function StockAdjustmentDetailPage() {
               isPositive ? 'text-emerald-600' : isNegative ? 'text-red-600' : 'text-slate-600'
             }`}
           >
-            {isPositive ? '+' : ''}{val} {record.unitCode}
+            {isPositive ? '+' : ''}{val}
           </span>
         );
       },

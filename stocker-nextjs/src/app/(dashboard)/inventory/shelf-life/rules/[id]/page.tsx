@@ -26,27 +26,27 @@ import {
 import { ShelfLifeType, ShelfLifeRuleType, ExpiryAction } from '@/lib/api/services/inventory.types';
 import dayjs from 'dayjs';
 
-const shelfLifeTypeLabels: Record<number, string> = {
-  [ShelfLifeType.ExpiryDate]: 'Son Kullanma Tarihi',
-  [ShelfLifeType.BestBefore]: 'Tavsiye Edilen (Best Before)',
-  [ShelfLifeType.ManufacturingDateBased]: 'Üretim Tarihi Bazlı',
-  [ShelfLifeType.AfterOpening]: 'Açıldıktan Sonra',
-  [ShelfLifeType.AfterFirstUse]: 'İlk Kullanımdan Sonra',
+const shelfLifeTypeLabels: Record<string, string> = {
+  'ExpiryDate': 'Son Kullanma Tarihi',
+  'BestBefore': 'Tavsiye Edilen (Best Before)',
+  'ManufacturingDateBased': 'Üretim Tarihi Bazlı',
+  'AfterOpening': 'Açıldıktan Sonra',
+  'AfterFirstUse': 'İlk Kullanımdan Sonra',
 };
 
-const ruleTypeLabels: Record<number, string> = {
-  [ShelfLifeRuleType.Days]: 'Gün Bazlı',
-  [ShelfLifeRuleType.Percentage]: 'Yüzde Bazlı',
-  [ShelfLifeRuleType.Both]: 'Gün ve Yüzde',
+const ruleTypeLabels: Record<string, string> = {
+  'Days': 'Gün Bazlı',
+  'Percentage': 'Yüzde Bazlı',
+  'Both': 'Gün ve Yüzde',
 };
 
-const expiryActionLabels: Record<number, string> = {
-  [ExpiryAction.None]: 'Hiçbir Şey Yapma',
-  [ExpiryAction.AlertOnly]: 'Sadece Uyarı',
-  [ExpiryAction.BlockSales]: 'Satışı Engelle',
-  [ExpiryAction.Quarantine]: 'Karantinaya Al',
-  [ExpiryAction.Scrap]: 'Hurda Olarak İşaretle',
-  [ExpiryAction.DiscountSale]: 'İndirimli Satış',
+const expiryActionLabels: Record<string, string> = {
+  'None': 'Hiçbir Şey Yapma',
+  'AlertOnly': 'Sadece Uyarı',
+  'BlockSales': 'Satışı Engelle',
+  'Quarantine': 'Karantinaya Al',
+  'Scrap': 'Hurda Olarak İşaretle',
+  'DiscountSale': 'İndirimli Satış',
 };
 
 export default function ShelfLifeRuleDetailPage() {
@@ -82,15 +82,15 @@ export default function ShelfLifeRuleDetailPage() {
   };
 
   const formatRuleValue = (
-    ruleType: number,
+    ruleType: string | undefined,
     days?: number,
     percent?: number
   ): string => {
-    if (ruleType === ShelfLifeRuleType.Days) {
+    if (ruleType === 'Days') {
       return `${days || 0} gün`;
-    } else if (ruleType === ShelfLifeRuleType.Percentage) {
+    } else if (ruleType === 'Percentage') {
       return `%${percent || 0}`;
-    } else if (ruleType === ShelfLifeRuleType.Both) {
+    } else if (ruleType === 'Both') {
       return `${days || 0} gün / %${percent || 0}`;
     }
     return '-';

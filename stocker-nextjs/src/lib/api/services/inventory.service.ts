@@ -86,6 +86,7 @@ import type {
   SerialNumberDto,
   SerialNumberListDto,
   CreateSerialNumberDto,
+  UpdateSerialNumberDto,
   SerialNumberFilterDto,
   ReceiveSerialNumberRequest,
   ReserveSerialNumberRequest,
@@ -95,6 +96,7 @@ import type {
   LotBatchDto,
   LotBatchListDto,
   CreateLotBatchDto,
+  UpdateLotBatchDto,
   LotBatchFilterDto,
   QuarantineRequest,
   // Product Attributes
