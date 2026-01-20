@@ -40,6 +40,7 @@ import {
 } from '@/lib/api/hooks/useInventory';
 import type { WarehouseDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
+import { showError, showSuccess } from '@/lib/utils/sweetalert';
 
 const { Search } = Input;
 
@@ -99,8 +100,9 @@ export default function WarehousesPage() {
       onOk: async () => {
         try {
           await deleteWarehouse.mutateAsync(warehouse.id);
-        } catch (error) {
-          // Error handled by hook
+          showSuccess('Başarılı', 'Depo başarıyla silindi');
+        } catch {
+          showError('Silme işlemi başarısız oldu');
         }
       },
     });
@@ -121,8 +123,9 @@ export default function WarehousesPage() {
       onOk: async () => {
         try {
           await setDefaultWarehouse.mutateAsync(warehouse.id);
-        } catch (error) {
-          // Error handled by hook
+          showSuccess('Başarılı', 'Varsayılan depo ayarlandı');
+        } catch {
+          showError('Varsayılan ayarlama işlemi başarısız oldu');
         }
       },
     });
@@ -275,7 +278,7 @@ export default function WarehousesPage() {
 
         return (
           <Dropdown menu={{ items: menuItems, onClick: handleMenuClick }} trigger={['click']}>
-            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors" aria-label="Satır işlemleri">
               <EllipsisHorizontalIcon className="w-4 h-4" />
             </button>
           </Dropdown>

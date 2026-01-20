@@ -22,7 +22,7 @@ import {
 import type { BarcodeDefinitionDto, BarcodeType } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import { TableEmptyState } from '@/components/primitives';
-import { confirmAction } from '@/lib/utils/sweetalert';
+import { confirmAction, showError, showSuccess } from '@/lib/utils/sweetalert';
 
 const barcodeTypeConfig: Record<number, { label: string }> = {
   1: { label: 'EAN-13' },
@@ -80,8 +80,9 @@ export default function BarcodeDefinitionsPage() {
     if (confirmed) {
       try {
         await deleteBarcode.mutateAsync(barcode.id);
-      } catch (error) {
-        // Error handled by hook
+        showSuccess('Başarılı', 'Barkod başarıyla silindi');
+      } catch {
+        showError('Silme işlemi başarısız oldu');
       }
     }
   };

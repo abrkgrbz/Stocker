@@ -37,6 +37,7 @@ import {
 import type { PriceListListDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import { TableEmptyState } from '@/components/primitives';
+import { showError, showSuccess } from '@/lib/utils/sweetalert';
 import dayjs from 'dayjs';
 
 export default function PriceListsPage() {
@@ -61,8 +62,9 @@ export default function PriceListsPage() {
       onOk: async () => {
         try {
           await deletePriceList.mutateAsync(id);
+          showSuccess('Başarılı', 'Fiyat listesi başarıyla silindi');
         } catch {
-          // Error handled by hook
+          showError('Silme işlemi başarısız oldu');
         }
       },
     });
@@ -71,24 +73,27 @@ export default function PriceListsPage() {
   const handleActivate = async (id: number) => {
     try {
       await activatePriceList.mutateAsync(id);
+      showSuccess('Başarılı', 'Fiyat listesi aktifleştirildi');
     } catch {
-      // Error handled by hook
+      showError('Aktifleştirme işlemi başarısız oldu');
     }
   };
 
   const handleDeactivate = async (id: number) => {
     try {
       await deactivatePriceList.mutateAsync(id);
+      showSuccess('Başarılı', 'Fiyat listesi pasifleştirildi');
     } catch {
-      // Error handled by hook
+      showError('Pasifleştirme işlemi başarısız oldu');
     }
   };
 
   const handleSetDefault = async (id: number) => {
     try {
       await setDefaultPriceList.mutateAsync(id);
+      showSuccess('Başarılı', 'Varsayılan fiyat listesi ayarlandı');
     } catch {
-      // Error handled by hook
+      showError('Varsayılan ayarlama işlemi başarısız oldu');
     }
   };
 
@@ -272,6 +277,7 @@ export default function PriceListsPage() {
         <Dropdown menu={{ items: getActionMenu(record) }} trigger={['click']}>
           <Button
             type="text"
+            aria-label="Satır işlemleri"
             icon={<EllipsisHorizontalIcon className="w-4 h-4" />}
             className="text-slate-600 hover:text-slate-900"
           />

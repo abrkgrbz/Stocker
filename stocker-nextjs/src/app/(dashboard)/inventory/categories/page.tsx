@@ -208,6 +208,7 @@ export default function CategoriesPage() {
           <button
             onClick={() => router.push(`/inventory/categories/${record.id}/edit`)}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+            aria-label="Düzenle"
           >
             <PencilSquareIcon className="w-4 h-4" />
           </button>
@@ -219,7 +220,7 @@ export default function CategoriesPage() {
             okButtonProps={{ className: '!bg-red-600 hover:!bg-red-700 !border-red-600' }}
             cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
           >
-            <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors">
+            <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors" aria-label="Sil">
               <TrashIcon className="w-4 h-4" />
             </button>
           </Popconfirm>
@@ -313,6 +314,7 @@ export default function CategoriesPage() {
             <button
               onClick={() => router.push(`/inventory/categories/${record.id}/edit`)}
               className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+              aria-label="Düzenle"
             >
               <PencilSquareIcon className="w-4 h-4" />
             </button>
@@ -327,7 +329,7 @@ export default function CategoriesPage() {
             cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
           >
             <Tooltip title="Sil">
-              <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors">
+              <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors" aria-label="Sil">
                 <TrashIcon className="w-4 h-4" />
               </button>
             </Tooltip>

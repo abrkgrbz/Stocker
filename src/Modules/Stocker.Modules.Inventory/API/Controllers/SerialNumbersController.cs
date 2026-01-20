@@ -123,6 +123,38 @@ public class SerialNumbersController : ControllerBase
     }
 
     /// <summary>
+    /// Update a serial number
+    /// </summary>
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(SerialNumberDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<SerialNumberDto>> UpdateSerialNumber(int id, [FromBody] UpdateSerialNumberDto data)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new UpdateSerialNumberCommand
+        {
+            TenantId = tenantId.Value,
+            SerialNumberId = id,
+            Data = data
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
     /// Receive a serial number into inventory
     /// </summary>
     [HttpPost("{id}/receive")]

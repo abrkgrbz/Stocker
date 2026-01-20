@@ -123,6 +123,38 @@ public class LotBatchesController : ControllerBase
     }
 
     /// <summary>
+    /// Update a lot batch
+    /// </summary>
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(LotBatchDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<LotBatchDto>> UpdateLotBatch(int id, [FromBody] UpdateLotBatchDto data)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new UpdateLotBatchCommand
+        {
+            TenantId = tenantId.Value,
+            LotBatchId = id,
+            Data = data
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
     /// Approve a lot batch
     /// </summary>
     [HttpPost("{id}/approve")]

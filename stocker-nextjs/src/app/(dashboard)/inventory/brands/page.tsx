@@ -163,6 +163,7 @@ export default function BrandsPage() {
               router.push(`/inventory/brands/${record.id}/edit`);
             }}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+            aria-label="Düzenle"
           >
             <PencilIcon className="w-4 h-4" />
           </button>
@@ -181,6 +182,7 @@ export default function BrandsPage() {
             <button
               onClick={(e) => e.stopPropagation()}
               className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+              aria-label="Sil"
             >
               <TrashIcon className="w-4 h-4" />
             </button>

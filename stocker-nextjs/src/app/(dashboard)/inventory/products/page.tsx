@@ -375,8 +375,9 @@ export default function ProductsPage() {
     if (confirmed) {
       try {
         await deleteProduct.mutateAsync(product.id);
+        showSuccess('Başarılı', 'Ürün başarıyla silindi');
       } catch {
-        // Error handled by hook
+        showError('Silme işlemi başarısız oldu');
       }
     }
   };
@@ -385,11 +386,13 @@ export default function ProductsPage() {
     try {
       if (product.isActive) {
         await deactivateProduct.mutateAsync(product.id);
+        showSuccess('Başarılı', 'Ürün pasifleştirildi');
       } else {
         await activateProduct.mutateAsync(product.id);
+        showSuccess('Başarılı', 'Ürün aktifleştirildi');
       }
     } catch {
-      // Error handled by hook
+      showError(product.isActive ? 'Pasifleştirme işlemi başarısız oldu' : 'Aktifleştirme işlemi başarısız oldu');
     }
   };
 
@@ -766,7 +769,7 @@ export default function ProductsPage() {
 
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-            <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} className="text-slate-600 hover:text-slate-900" />
+            <Button type="text" aria-label="Satır işlemleri" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} className="text-slate-600 hover:text-slate-900" />
           </Dropdown>
         );
       },

@@ -153,6 +153,7 @@ export default function UnitsPage() {
           <button
             onClick={() => router.push(`/inventory/units/${record.id}/edit`)}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+            aria-label="Düzenle"
           >
             <PencilIcon className="w-4 h-4" />
           </button>
@@ -164,7 +165,7 @@ export default function UnitsPage() {
             okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
             cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
           >
-            <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors">
+            <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors" aria-label="Sil">
               <TrashIcon className="w-4 h-4" />
             </button>
           </Popconfirm>

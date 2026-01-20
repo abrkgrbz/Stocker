@@ -1171,6 +1171,13 @@ export class InventoryService {
   }
 
   /**
+   * Update a serial number
+   */
+  static async updateSerialNumber(id: number, data: UpdateSerialNumberDto): Promise<SerialNumberDto> {
+    return ApiService.put<SerialNumberDto>(this.getPath(`serial-numbers/${id}`), data);
+  }
+
+  /**
    * Receive a serial number into inventory
    */
   static async receiveSerialNumber(id: number, request?: ReceiveSerialNumberRequest): Promise<void> {
@@ -1237,6 +1244,13 @@ export class InventoryService {
    */
   static async createLotBatch(data: CreateLotBatchDto): Promise<LotBatchDto> {
     return ApiService.post<LotBatchDto>(this.getPath('lot-batches'), data);
+  }
+
+  /**
+   * Update a lot batch
+   */
+  static async updateLotBatch(id: number, data: UpdateLotBatchDto): Promise<LotBatchDto> {
+    return ApiService.put<LotBatchDto>(this.getPath(`lot-batches/${id}`), data);
   }
 
   /**

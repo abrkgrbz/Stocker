@@ -187,7 +187,7 @@ export default function SuppliersPage() {
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <button
               className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
-              aria-label="İşlemler menüsü"
+              aria-label="Satır işlemleri"
             >
               <EllipsisHorizontalIcon className="w-4 h-4" />
             </button>

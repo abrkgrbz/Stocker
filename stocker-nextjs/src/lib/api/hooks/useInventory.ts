@@ -1823,6 +1823,23 @@ export function useCreateSerialNumber() {
   });
 }
 
+export function useUpdateSerialNumber() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateSerialNumberDto }) =>
+      InventoryService.updateSerialNumber(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['inventory', 'serial-numbers'] });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.serialNumber(id) });
+      showSuccess('Seri numarası güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Seri numarası güncellenemedi');
+    },
+  });
+}
+
 export function useReceiveSerialNumber() {
   const queryClient = useQueryClient();
 
@@ -1955,6 +1972,23 @@ export function useCreateLotBatch() {
     },
     onError: (error) => {
       showApiError(error, 'Lot/Parti oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateLotBatch() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateLotBatchDto }) =>
+      InventoryService.updateLotBatch(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['inventory', 'lot-batches'] });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.lotBatch(id) });
+      showSuccess('Lot/Parti güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Lot/Parti güncellenemedi');
     },
   });
 }

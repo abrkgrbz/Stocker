@@ -622,7 +622,7 @@ export default function StockTransfersPage() {
       fixed: 'right',
       render: (_, record) => (
         <Dropdown menu={{ items: getActionItems(record) }} trigger={['click']}>
-          <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+          <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors" aria-label="Satır işlemleri">
             <EllipsisHorizontalIcon className="w-4 h-4" />
           </button>
         </Dropdown>
