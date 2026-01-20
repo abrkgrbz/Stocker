@@ -68,9 +68,7 @@ export default function EditStockAdjustmentPage() {
   const { data: adjustment, isLoading, error } = useInventoryAdjustment(adjustmentId);
   const updateAdjustment = useUpdateInventoryAdjustment();
 
-  const { data: locations } = useLocations(
-    adjustment?.warehouseId ? { warehouseId: adjustment.warehouseId, pageSize: 100 } : { pageSize: 0 }
-  );
+  const { data: locations } = useLocations(adjustment?.warehouseId);
 
   useEffect(() => {
     if (adjustment) {
@@ -255,7 +253,7 @@ export default function EditStockAdjustmentPage() {
                       placeholder="Lokasyon seçin"
                       allowClear
                       disabled={!canEdit}
-                      options={locations?.items?.map((l) => ({
+                      options={locations?.map((l) => ({
                         value: l.id,
                         label: l.name,
                       }))}

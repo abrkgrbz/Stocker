@@ -10,16 +10,16 @@ import {
 import { WarehouseForm } from '@/components/inventory/warehouses';
 import { FormLoadingOverlay } from '@/components/forms';
 import { useCreateWarehouse } from '@/lib/api/hooks/useInventory';
-import type { CreateWarehouseDto } from '@/lib/api/services/inventory.types';
+import type { CreateWarehouseDto, UpdateWarehouseDto } from '@/lib/api/services/inventory.types';
 
 export default function NewWarehousePage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createWarehouse = useCreateWarehouse();
 
-  const handleSubmit = async (values: CreateWarehouseDto) => {
+  const handleSubmit = async (values: CreateWarehouseDto | UpdateWarehouseDto) => {
     try {
-      await createWarehouse.mutateAsync(values);
+      await createWarehouse.mutateAsync(values as CreateWarehouseDto);
       router.push('/inventory/warehouses');
     } catch (error) {
       // Error handled by hook

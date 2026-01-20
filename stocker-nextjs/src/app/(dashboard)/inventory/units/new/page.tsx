@@ -9,16 +9,16 @@ import {
 } from '@heroicons/react/24/outline';
 import { UnitForm } from '@/components/inventory/units';
 import { useCreateUnit } from '@/lib/api/hooks/useInventory';
-import type { CreateUnitDto } from '@/lib/api/services/inventory.types';
+import type { CreateUnitDto, UpdateUnitDto } from '@/lib/api/services/inventory.types';
 
 export default function NewUnitPage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createUnit = useCreateUnit();
 
-  const handleSubmit = async (values: CreateUnitDto) => {
+  const handleSubmit = async (values: CreateUnitDto | UpdateUnitDto) => {
     try {
-      await createUnit.mutateAsync(values);
+      await createUnit.mutateAsync(values as CreateUnitDto);
       router.push('/inventory/units');
     } catch (error) {
       // Error handled by hook

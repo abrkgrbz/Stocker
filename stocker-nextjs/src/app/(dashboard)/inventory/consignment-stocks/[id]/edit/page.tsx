@@ -30,9 +30,7 @@ export default function EditConsignmentStockPage() {
   const { data: warehouses } = useWarehouses();
 
   const selectedWarehouseId = Form.useWatch('warehouseId', form);
-  const { data: locations } = useLocations(
-    selectedWarehouseId ? { warehouseId: selectedWarehouseId, pageSize: 100 } : { pageSize: 0 }
-  );
+  const { data: locations } = useLocations(selectedWarehouseId);
 
   useEffect(() => {
     if (consignment) {
@@ -235,7 +233,7 @@ export default function EditConsignmentStockPage() {
                         optionFilterProp="label"
                         disabled={!selectedWarehouseId}
                         className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300"
-                        options={locations?.items?.map((l) => ({ value: l.id, label: l.name }))}
+                        options={locations?.map((l) => ({ value: l.id, label: l.name }))}
                       />
                     </Form.Item>
                   </div>

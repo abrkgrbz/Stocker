@@ -118,13 +118,8 @@ export default function ConsignmentStocksPage() {
       dataIndex: 'productName',
       key: 'productName',
       sorter: (a, b) => (a.productName || '').localeCompare(b.productName || ''),
-      render: (text, record) => (
-        <div>
-          <div className="text-sm font-medium text-slate-900">{text}</div>
-          {record.productSku && (
-            <div className="text-xs text-slate-500">{record.productSku}</div>
-          )}
-        </div>
+      render: (text) => (
+        <div className="text-sm font-medium text-slate-900">{text}</div>
       ),
     },
     {
@@ -143,15 +138,15 @@ export default function ConsignmentStocksPage() {
             {record.currentQuantity?.toLocaleString('tr-TR')}
           </div>
           <div className="text-xs text-slate-500">
-            Alınan: {record.receivedQuantity?.toLocaleString('tr-TR')}
+            Başlangıç: {record.initialQuantity?.toLocaleString('tr-TR')}
           </div>
         </div>
       ),
     },
     {
-      title: 'Birim Fiyat',
-      dataIndex: 'unitPrice',
-      key: 'unitPrice',
+      title: 'Birim Maliyet',
+      dataIndex: 'unitCost',
+      key: 'unitCost',
       align: 'right',
       render: (value, record) => (
         <span className="text-sm text-slate-600">
@@ -164,7 +159,7 @@ export default function ConsignmentStocksPage() {
       key: 'totalValue',
       align: 'right',
       render: (_, record) => {
-        const total = (record.currentQuantity || 0) * (record.unitPrice || 0);
+        const total = (record.currentQuantity || 0) * (record.unitCost || 0);
         return (
           <span className="text-sm font-semibold text-slate-900">
             {total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {record.currency}
@@ -182,9 +177,9 @@ export default function ConsignmentStocksPage() {
       },
     },
     {
-      title: 'Başlangıç',
-      dataIndex: 'startDate',
-      key: 'startDate',
+      title: 'Anlaşma Tarihi',
+      dataIndex: 'agreementDate',
+      key: 'agreementDate',
       render: (date) => (
         <span className="text-sm text-slate-600">
           {date ? dayjs(date).format('DD/MM/YYYY') : '-'}

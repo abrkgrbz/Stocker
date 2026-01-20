@@ -11,7 +11,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { UnitForm } from '@/components/inventory/units';
 import { useUnit, useUpdateUnit } from '@/lib/api/hooks/useInventory';
-import type { UpdateUnitDto } from '@/lib/api/services/inventory.types';
+import type { CreateUnitDto, UpdateUnitDto } from '@/lib/api/services/inventory.types';
 
 export default function EditUnitPage() {
   const router = useRouter();
@@ -22,9 +22,9 @@ export default function EditUnitPage() {
   const { data: unit, isLoading, error } = useUnit(unitId);
   const updateUnit = useUpdateUnit();
 
-  const handleSubmit = async (values: UpdateUnitDto) => {
+  const handleSubmit = async (values: CreateUnitDto | UpdateUnitDto) => {
     try {
-      await updateUnit.mutateAsync({ id: unitId, data: values });
+      await updateUnit.mutateAsync({ id: unitId, data: values as UpdateUnitDto });
       router.push('/inventory/units');
     } catch (error) {
       // Error handled by hook

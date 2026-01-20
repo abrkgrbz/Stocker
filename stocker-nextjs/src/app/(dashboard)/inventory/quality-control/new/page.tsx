@@ -9,16 +9,16 @@ import {
 } from '@heroicons/react/24/outline';
 import QualityControlForm from '@/components/inventory/quality-control/QualityControlForm';
 import { useCreateQualityControl } from '@/lib/api/hooks/useInventory';
-import type { CreateQualityControlDto } from '@/lib/api/services/inventory.types';
+import type { CreateQualityControlDto, UpdateQualityControlDto } from '@/lib/api/services/inventory.types';
 
 export default function NewQualityControlPage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createQC = useCreateQualityControl();
 
-  const handleSubmit = async (values: CreateQualityControlDto) => {
+  const handleSubmit = async (values: CreateQualityControlDto | UpdateQualityControlDto) => {
     try {
-      await createQC.mutateAsync(values);
+      await createQC.mutateAsync(values as CreateQualityControlDto);
       router.push('/inventory/quality-control');
     } catch (error) {
       // Error handled by hook

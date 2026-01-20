@@ -6,16 +6,16 @@ import { Button, Space, Form } from 'antd';
 import { ArrowLeftIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { PackagingTypeForm } from '@/components/inventory/packaging-types';
 import { useCreatePackagingType } from '@/lib/api/hooks/useInventory';
-import type { CreatePackagingTypeDto } from '@/lib/api/services/inventory.types';
+import type { CreatePackagingTypeDto, UpdatePackagingTypeDto } from '@/lib/api/services/inventory.types';
 
 export default function NewPackagingTypePage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createPackagingType = useCreatePackagingType();
 
-  const handleSubmit = async (values: CreatePackagingTypeDto) => {
+  const handleSubmit = async (values: CreatePackagingTypeDto | UpdatePackagingTypeDto) => {
     try {
-      await createPackagingType.mutateAsync(values);
+      await createPackagingType.mutateAsync(values as CreatePackagingTypeDto);
       router.push('/inventory/packaging-types');
     } catch (error) {
       // Error handled by hook

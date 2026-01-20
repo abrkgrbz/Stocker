@@ -7,7 +7,7 @@ import { Spinner } from '@/components/primitives';
 import { ArrowLeftIcon, CheckIcon, CheckCircleIcon, ClockIcon } from '@heroicons/react/24/outline';
 import { ProductForm } from '@/components/inventory/products';
 import { useProduct, useUpdateProduct, useUploadProductImage } from '@/lib/api/hooks/useInventory';
-import type { UpdateProductDto } from '@/lib/api/services/inventory.types';
+import type { CreateProductDto, UpdateProductDto } from '@/lib/api/services/inventory.types';
 
 interface ImageFileItem {
   file: File;
@@ -24,13 +24,13 @@ export default function EditProductPage() {
   const updateProduct = useUpdateProduct();
   const uploadImage = useUploadProductImage();
 
-  const handleSubmit = async (values: UpdateProductDto & { imageFiles?: ImageFileItem[] }) => {
+  const handleSubmit = async (values: (CreateProductDto | UpdateProductDto) & { imageFiles?: ImageFileItem[] }) => {
     // Extract image files from values
     const { imageFiles, ...productData } = values;
 
     try {
       // Update product data
-      await updateProduct.mutateAsync({ id: productId, data: productData });
+      await updateProduct.mutateAsync({ id: productId, data: productData as UpdateProductDto });
 
       // If new images were selected, upload them
       if (imageFiles && imageFiles.length > 0) {

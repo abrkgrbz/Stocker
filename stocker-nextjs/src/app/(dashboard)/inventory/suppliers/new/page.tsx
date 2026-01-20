@@ -9,16 +9,16 @@ import {
 } from '@heroicons/react/24/outline';
 import { SupplierForm } from '@/components/inventory/suppliers';
 import { useCreateSupplier } from '@/lib/api/hooks/useInventory';
-import type { CreateSupplierDto } from '@/lib/api/services/inventory.types';
+import type { CreateSupplierDto, UpdateSupplierDto } from '@/lib/api/services/inventory.types';
 
 export default function NewSupplierPage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createSupplier = useCreateSupplier();
 
-  const handleSubmit = async (values: CreateSupplierDto) => {
+  const handleSubmit = async (values: CreateSupplierDto | UpdateSupplierDto) => {
     try {
-      await createSupplier.mutateAsync(values);
+      await createSupplier.mutateAsync(values as CreateSupplierDto);
       router.push('/inventory/suppliers');
     } catch (error) {
       // Error handled by hook

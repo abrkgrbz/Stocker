@@ -39,7 +39,7 @@ export default function EditLotBatchPage() {
 
   const { data: lotBatch, isLoading, error } = useLotBatch(lotBatchId);
   const updateLotBatch = useUpdateLotBatch();
-  const { data: suppliers } = useSuppliers({ pageSize: 100 });
+  const { data: suppliers } = useSuppliers();
 
   useEffect(() => {
     if (lotBatch) {

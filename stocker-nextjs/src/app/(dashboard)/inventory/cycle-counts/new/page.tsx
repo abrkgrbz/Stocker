@@ -9,16 +9,16 @@ import {
 } from '@heroicons/react/24/outline';
 import CycleCountForm from '@/components/inventory/cycle-counts/CycleCountForm';
 import { useCreateCycleCount } from '@/lib/api/hooks/useInventory';
-import type { CreateCycleCountDto } from '@/lib/api/services/inventory.types';
+import type { CreateCycleCountDto, UpdateCycleCountDto } from '@/lib/api/services/inventory.types';
 
 export default function NewCycleCountPage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createCycleCount = useCreateCycleCount();
 
-  const handleSubmit = async (values: CreateCycleCountDto) => {
+  const handleSubmit = async (values: CreateCycleCountDto | UpdateCycleCountDto) => {
     try {
-      await createCycleCount.mutateAsync(values);
+      await createCycleCount.mutateAsync(values as CreateCycleCountDto);
       router.push('/inventory/cycle-counts');
     } catch (error) {
       // Error handled by hook

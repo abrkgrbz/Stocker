@@ -9,7 +9,7 @@ import {
   ClockIcon,
 } from '@heroicons/react/24/outline';
 import { useShelfLifeRule, useUpdateShelfLife } from '@/lib/api/hooks/useInventory';
-import type { UpdateShelfLifeDto } from '@/lib/api/services/inventory.types';
+import type { CreateShelfLifeDto, UpdateShelfLifeDto } from '@/lib/api/services/inventory.types';
 import { ShelfLifeType, ShelfLifeRuleType, ExpiryAction } from '@/lib/api/services/inventory.types';
 
 const { TextArea } = Input;
@@ -76,9 +76,9 @@ export default function EditShelfLifeRulePage() {
     }
   }, [rule, form]);
 
-  const handleSubmit = async (values: UpdateShelfLifeDto) => {
+  const handleSubmit = async (values: CreateShelfLifeDto | UpdateShelfLifeDto) => {
     try {
-      await updateRule.mutateAsync({ id, data: values });
+      await updateRule.mutateAsync({ id, data: values as UpdateShelfLifeDto });
       router.push(`/inventory/shelf-life/rules/${id}`);
     } catch {
       // Error handled by hook

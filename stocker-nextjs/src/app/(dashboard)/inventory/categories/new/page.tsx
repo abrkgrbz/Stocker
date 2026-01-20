@@ -6,16 +6,16 @@ import { Button, Space, Form } from 'antd';
 import { ArrowLeftIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { CategoryForm } from '@/components/inventory/categories';
 import { useCreateCategory } from '@/lib/api/hooks/useInventory';
-import type { CreateCategoryDto } from '@/lib/api/services/inventory.types';
+import type { CreateCategoryDto, UpdateCategoryDto } from '@/lib/api/services/inventory.types';
 
 export default function NewCategoryPage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createCategory = useCreateCategory();
 
-  const handleSubmit = async (values: CreateCategoryDto) => {
+  const handleSubmit = async (values: CreateCategoryDto | UpdateCategoryDto) => {
     try {
-      await createCategory.mutateAsync(values);
+      await createCategory.mutateAsync(values as CreateCategoryDto);
       router.push('/inventory/categories');
     } catch (error) {
       // Error handled by hook

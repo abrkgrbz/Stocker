@@ -13,7 +13,7 @@ import {
   useFormEnhancements,
 } from '@/components/forms';
 import { useCreateProduct, useUploadProductImage } from '@/lib/api/hooks/useInventory';
-import type { CreateProductDto } from '@/lib/api/services/inventory.types';
+import type { CreateProductDto, UpdateProductDto } from '@/lib/api/services/inventory.types';
 
 interface ImageFileItem {
   file: File;
@@ -47,13 +47,13 @@ export default function NewProductPage() {
     onSave: () => form.submit(),
   });
 
-  const handleSubmit = async (values: CreateProductDto & { imageFiles?: ImageFileItem[] }) => {
+  const handleSubmit = async (values: (CreateProductDto | UpdateProductDto) & { imageFiles?: ImageFileItem[] }) => {
     // Extract image files from values
     const { imageFiles, ...productData } = values;
 
     try {
       // First create the product
-      const createdProduct = await createProduct.mutateAsync(productData);
+      const createdProduct = await createProduct.mutateAsync(productData as CreateProductDto);
 
       // If images were selected, upload them
       if (imageFiles && imageFiles.length > 0 && createdProduct?.id) {

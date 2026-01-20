@@ -30,16 +30,26 @@ export default function NewConsignmentStockPage() {
   const { data: warehouses } = useWarehouses();
 
   const selectedWarehouseId = Form.useWatch('warehouseId', form);
-  const { data: locations } = useLocations(
-    selectedWarehouseId ? { warehouseId: selectedWarehouseId, pageSize: 100 } : { pageSize: 0 }
-  );
+  const { data: locations } = useLocations(selectedWarehouseId);
 
-  const handleSubmit = async (values: CreateConsignmentStockDto) => {
+  const handleSubmit = async (values: any) => {
     try {
       const data: CreateConsignmentStockDto = {
-        ...values,
-        startDate: values.startDate ? dayjs(values.startDate).toISOString() : undefined,
-        endDate: values.endDate ? dayjs(values.endDate).toISOString() : undefined,
+        supplierId: values.supplierId,
+        productId: values.productId,
+        warehouseId: values.warehouseId,
+        locationId: values.locationId,
+        initialQuantity: values.initialQuantity,
+        unit: values.unit || 'Adet',
+        unitCost: values.unitCost,
+        sellingPrice: values.sellingPrice,
+        currency: values.currency,
+        commissionRate: values.commissionRate,
+        lotNumber: values.lotNumber,
+        agreementEndDate: values.agreementEndDate ? dayjs(values.agreementEndDate).toISOString() : undefined,
+        maxConsignmentDays: values.maxConsignmentDays,
+        reconciliationPeriodDays: values.reconciliationPeriodDays,
+        agreementNotes: values.agreementNotes,
       };
       const result = await createConsignment.mutateAsync(data);
       router.push(`/inventory/consignment-stocks/${result.id}`);
@@ -192,7 +202,7 @@ export default function NewConsignmentStockPage() {
                         optionFilterProp="label"
                         disabled={!selectedWarehouseId}
                         className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300"
-                        options={locations?.items?.map((l) => ({ value: l.id, label: l.name }))}
+                        options={locations?.map((l) => ({ value: l.id, label: l.name }))}
                       />
                     </Form.Item>
                   </div>
@@ -205,12 +215,12 @@ export default function NewConsignmentStockPage() {
                   Miktar ve Fiyat
                 </h3>
                 <div className="grid grid-cols-12 gap-4">
-                  <div className="col-span-4">
+                  <div className="col-span-3">
                     <label className="block text-sm font-medium text-slate-600 mb-1.5">
-                      Alınan Miktar <span className="text-red-500">*</span>
+                      Başlangıç Miktarı <span className="text-red-500">*</span>
                     </label>
                     <Form.Item
-                      name="receivedQuantity"
+                      name="initialQuantity"
                       rules={[{ required: true, message: 'Miktar zorunludur' }]}
                       className="mb-0"
                     >
@@ -224,13 +234,29 @@ export default function NewConsignmentStockPage() {
                     </Form.Item>
                   </div>
 
-                  <div className="col-span-4">
+                  <div className="col-span-3">
                     <label className="block text-sm font-medium text-slate-600 mb-1.5">
-                      Birim Fiyat <span className="text-red-500">*</span>
+                      Birim
                     </label>
                     <Form.Item
-                      name="unitPrice"
-                      rules={[{ required: true, message: 'Birim fiyat zorunludur' }]}
+                      name="unit"
+                      initialValue="Adet"
+                      className="mb-0"
+                    >
+                      <Input
+                        placeholder="Adet"
+                        className="!bg-slate-50 !border-slate-300"
+                      />
+                    </Form.Item>
+                  </div>
+
+                  <div className="col-span-3">
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">
+                      Birim Maliyet <span className="text-red-500">*</span>
+                    </label>
+                    <Form.Item
+                      name="unitCost"
+                      rules={[{ required: true, message: 'Birim maliyet zorunludur' }]}
                       className="mb-0"
                     >
                       <InputNumber
@@ -243,14 +269,13 @@ export default function NewConsignmentStockPage() {
                     </Form.Item>
                   </div>
 
-                  <div className="col-span-4">
+                  <div className="col-span-3">
                     <label className="block text-sm font-medium text-slate-600 mb-1.5">
-                      Para Birimi <span className="text-red-500">*</span>
+                      Para Birimi
                     </label>
                     <Form.Item
                       name="currency"
                       initialValue="TRY"
-                      rules={[{ required: true, message: 'Para birimi zorunludur' }]}
                       className="mb-0"
                     >
                       <Select
@@ -267,17 +292,17 @@ export default function NewConsignmentStockPage() {
                 </div>
               </div>
 
-              {/* Anlaşma Tarihleri */}
+              {/* Anlaşma Ayarları */}
               <div className="mb-8">
                 <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-                  Anlaşma Tarihleri
+                  Anlaşma Ayarları
                 </h3>
                 <div className="grid grid-cols-12 gap-4">
-                  <div className="col-span-6">
+                  <div className="col-span-4">
                     <label className="block text-sm font-medium text-slate-600 mb-1.5">
-                      Başlangıç Tarihi
+                      Anlaşma Bitiş Tarihi
                     </label>
-                    <Form.Item name="startDate" className="mb-0">
+                    <Form.Item name="agreementEndDate" className="mb-0">
                       <DatePicker
                         placeholder="Tarih seçin"
                         className="w-full !bg-slate-50 !border-slate-300"
@@ -286,28 +311,58 @@ export default function NewConsignmentStockPage() {
                     </Form.Item>
                   </div>
 
-                  <div className="col-span-6">
+                  <div className="col-span-4">
                     <label className="block text-sm font-medium text-slate-600 mb-1.5">
-                      Bitiş Tarihi
+                      Maks. Konsinye Süresi (Gün)
                     </label>
-                    <Form.Item name="endDate" className="mb-0">
-                      <DatePicker
-                        placeholder="Tarih seçin"
-                        className="w-full !bg-slate-50 !border-slate-300"
-                        format="DD/MM/YYYY"
+                    <Form.Item name="maxConsignmentDays" className="mb-0">
+                      <InputNumber
+                        placeholder="90"
+                        min={1}
+                        style={{ width: '100%' }}
+                        className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
+                      />
+                    </Form.Item>
+                  </div>
+
+                  <div className="col-span-4">
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">
+                      Mutabakat Periyodu (Gün)
+                    </label>
+                    <Form.Item name="reconciliationPeriodDays" className="mb-0">
+                      <InputNumber
+                        placeholder="30"
+                        min={1}
+                        style={{ width: '100%' }}
+                        className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
                       />
                     </Form.Item>
                   </div>
                 </div>
               </div>
 
-              {/* Komisyon Ayarları */}
+              {/* Fiyat ve Komisyon Ayarları */}
               <div className="mb-8">
                 <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-                  Komisyon Ayarları
+                  Fiyat ve Komisyon
                 </h3>
                 <div className="grid grid-cols-12 gap-4">
-                  <div className="col-span-6">
+                  <div className="col-span-4">
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">
+                      Satış Fiyatı
+                    </label>
+                    <Form.Item name="sellingPrice" className="mb-0">
+                      <InputNumber
+                        placeholder="0.00"
+                        min={0}
+                        precision={2}
+                        style={{ width: '100%' }}
+                        className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
+                      />
+                    </Form.Item>
+                  </div>
+
+                  <div className="col-span-4">
                     <label className="block text-sm font-medium text-slate-600 mb-1.5">
                       Komisyon Oranı (%)
                     </label>
@@ -324,50 +379,34 @@ export default function NewConsignmentStockPage() {
                     </Form.Item>
                   </div>
 
-                  <div className="col-span-6">
+                  <div className="col-span-4">
                     <label className="block text-sm font-medium text-slate-600 mb-1.5">
-                      Minimum Satış Fiyatı
+                      Lot Numarası
                     </label>
-                    <Form.Item name="minimumSalePrice" className="mb-0">
-                      <InputNumber
-                        placeholder="0.00"
-                        min={0}
-                        precision={2}
-                        style={{ width: '100%' }}
-                        className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
+                    <Form.Item name="lotNumber" className="mb-0">
+                      <Input
+                        placeholder="Lot numarası"
+                        className="!bg-slate-50 !border-slate-300"
                       />
                     </Form.Item>
                   </div>
                 </div>
               </div>
 
-              {/* Açıklama ve Notlar */}
+              {/* Notlar */}
               <div>
                 <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-                  Açıklama ve Notlar
+                  Notlar
                 </h3>
                 <div className="grid grid-cols-12 gap-4">
                   <div className="col-span-12">
                     <label className="block text-sm font-medium text-slate-600 mb-1.5">
-                      Açıklama
+                      Anlaşma Notları
                     </label>
-                    <Form.Item name="description" className="mb-0">
+                    <Form.Item name="agreementNotes" className="mb-0">
                       <TextArea
                         rows={3}
-                        placeholder="Konsinye anlaşması hakkında açıklama..."
-                        className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900"
-                      />
-                    </Form.Item>
-                  </div>
-
-                  <div className="col-span-12">
-                    <label className="block text-sm font-medium text-slate-600 mb-1.5">
-                      Notlar
-                    </label>
-                    <Form.Item name="notes" className="mb-0">
-                      <TextArea
-                        rows={3}
-                        placeholder="Ek notlar..."
+                        placeholder="Tedarikçi ile yapılan anlaşma hakkında notlar..."
                         className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900"
                       />
                     </Form.Item>

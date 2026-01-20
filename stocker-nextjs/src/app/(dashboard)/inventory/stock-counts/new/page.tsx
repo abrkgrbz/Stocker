@@ -9,18 +9,18 @@ import {
 } from '@heroicons/react/24/outline';
 import { StockCountForm } from '@/components/inventory/stock-counts';
 import { useCreateStockCount } from '@/lib/api/hooks/useInventory';
-import type { CreateStockCountDto } from '@/lib/api/services/inventory.types';
+import type { CreateStockCountDto, UpdateStockCountDto } from '@/lib/api/services/inventory.types';
 
 export default function NewStockCountPage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createStockCount = useCreateStockCount();
 
-  const handleSubmit = async (values: CreateStockCountDto) => {
+  const handleSubmit = async (values: CreateStockCountDto | UpdateStockCountDto) => {
     try {
       // Add createdByUserId - in real app, get from auth context
       const data = {
-        ...values,
+        ...(values as CreateStockCountDto),
         createdByUserId: 1, // TODO: Get from auth context
       };
       await createStockCount.mutateAsync(data);

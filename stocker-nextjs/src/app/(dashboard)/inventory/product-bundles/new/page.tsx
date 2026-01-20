@@ -6,22 +6,23 @@ import { Button, Space, Form, message } from 'antd';
 import { ArrowLeftIcon, CheckIcon, GiftIcon } from '@heroicons/react/24/outline';
 import ProductBundleForm from '@/components/inventory/product-bundles/ProductBundleForm';
 import { useCreateProductBundle } from '@/lib/api/hooks/useInventory';
-import type { CreateProductBundleDto } from '@/lib/api/services/inventory.types';
+import type { CreateProductBundleDto, UpdateProductBundleDto } from '@/lib/api/services/inventory.types';
 
 export default function NewProductBundlePage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createBundle = useCreateProductBundle();
 
-  const handleSubmit = async (values: CreateProductBundleDto) => {
+  const handleSubmit = async (values: CreateProductBundleDto | UpdateProductBundleDto) => {
     try {
       // Transform dates if needed
+      const createValues = values as CreateProductBundleDto;
       const data = {
-        ...values,
-        validFrom: values.validFrom ? new Date(values.validFrom).toISOString() : undefined,
-        validTo: values.validTo ? new Date(values.validTo).toISOString() : undefined,
-        fixedPriceCurrency: values.fixedPrice ? 'TRY' : undefined,
-        items: values.items || [],
+        ...createValues,
+        validFrom: createValues.validFrom ? new Date(createValues.validFrom).toISOString() : undefined,
+        validTo: createValues.validTo ? new Date(createValues.validTo).toISOString() : undefined,
+        fixedPriceCurrency: createValues.fixedPrice ? 'TRY' : undefined,
+        items: createValues.items || [],
       };
       await createBundle.mutateAsync(data);
       message.success('Paket başarıyla oluşturuldu');

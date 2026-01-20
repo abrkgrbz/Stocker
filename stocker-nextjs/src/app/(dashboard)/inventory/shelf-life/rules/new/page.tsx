@@ -9,7 +9,7 @@ import {
   ClockIcon,
 } from '@heroicons/react/24/outline';
 import { useCreateShelfLife, useProducts } from '@/lib/api/hooks/useInventory';
-import type { CreateShelfLifeDto } from '@/lib/api/services/inventory.types';
+import type { CreateShelfLifeDto, UpdateShelfLifeDto } from '@/lib/api/services/inventory.types';
 import { ShelfLifeType, ShelfLifeRuleType, ExpiryAction } from '@/lib/api/services/inventory.types';
 
 const { TextArea } = Input;
@@ -46,9 +46,9 @@ export default function NewShelfLifeRulePage() {
   const receivingRuleType = Form.useWatch('receivingRuleType', form);
   const salesRuleType = Form.useWatch('salesRuleType', form);
 
-  const handleSubmit = async (values: CreateShelfLifeDto) => {
+  const handleSubmit = async (values: CreateShelfLifeDto | UpdateShelfLifeDto) => {
     try {
-      const result = await createRule.mutateAsync(values);
+      const result = await createRule.mutateAsync(values as CreateShelfLifeDto);
       router.push(`/inventory/shelf-life/rules/${result.id}`);
     } catch {
       // Error handled by hook

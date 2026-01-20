@@ -9,16 +9,16 @@ import {
 } from '@heroicons/react/24/outline';
 import { PriceListForm } from '@/components/inventory/price-lists';
 import { useCreatePriceList } from '@/lib/api/hooks/useInventory';
-import type { CreatePriceListDto } from '@/lib/api/services/inventory.types';
+import type { CreatePriceListDto, UpdatePriceListDto } from '@/lib/api/services/inventory.types';
 
 export default function NewPriceListPage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createPriceList = useCreatePriceList();
 
-  const handleSubmit = async (values: CreatePriceListDto) => {
+  const handleSubmit = async (values: CreatePriceListDto | UpdatePriceListDto) => {
     try {
-      await createPriceList.mutateAsync(values);
+      await createPriceList.mutateAsync(values as CreatePriceListDto);
       router.push('/inventory/price-lists');
     } catch (error) {
       // Error handled by hook

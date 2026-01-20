@@ -42,12 +42,10 @@ export default function EditSerialNumberPage() {
 
   const { data: serialNumber, isLoading, error } = useSerialNumber(serialNumberId);
   const updateSerialNumber = useUpdateSerialNumber();
-  const { data: warehouses } = useWarehouses({ pageSize: 100 });
+  const { data: warehouses } = useWarehouses();
 
   const selectedWarehouseId = Form.useWatch('warehouseId', form);
-  const { data: locations } = useLocations(
-    selectedWarehouseId ? { warehouseId: selectedWarehouseId, pageSize: 100 } : undefined
-  );
+  const { data: locations } = useLocations(selectedWarehouseId);
 
   useEffect(() => {
     if (serialNumber) {

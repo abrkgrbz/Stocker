@@ -9,7 +9,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { LocationForm } from '@/components/inventory/locations';
 import { useCreateLocation } from '@/lib/api/hooks/useInventory';
-import type { CreateLocationDto } from '@/lib/api/services/inventory.types';
+import type { CreateLocationDto, UpdateLocationDto } from '@/lib/api/services/inventory.types';
 
 export default function NewLocationPage() {
   const router = useRouter();
@@ -18,9 +18,9 @@ export default function NewLocationPage() {
   const [form] = Form.useForm();
   const createLocation = useCreateLocation();
 
-  const handleSubmit = async (values: CreateLocationDto) => {
+  const handleSubmit = async (values: CreateLocationDto | UpdateLocationDto) => {
     try {
-      await createLocation.mutateAsync(values);
+      await createLocation.mutateAsync(values as CreateLocationDto);
       router.push('/inventory/locations');
     } catch (error) {
       // Error handled by hook

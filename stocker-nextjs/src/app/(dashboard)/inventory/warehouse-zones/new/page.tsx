@@ -9,7 +9,7 @@ import {
 } from '@heroicons/react/24/outline';
 import WarehouseZoneForm from '@/components/inventory/warehouse-zones/WarehouseZoneForm';
 import { useCreateWarehouseZone } from '@/lib/api/hooks/useInventory';
-import type { CreateWarehouseZoneDto } from '@/lib/api/services/inventory.types';
+import type { CreateWarehouseZoneDto, UpdateWarehouseZoneDto } from '@/lib/api/services/inventory.types';
 
 export default function NewWarehouseZonePage() {
   const router = useRouter();
@@ -18,9 +18,9 @@ export default function NewWarehouseZonePage() {
   const [form] = Form.useForm();
   const createZone = useCreateWarehouseZone();
 
-  const handleSubmit = async (values: CreateWarehouseZoneDto) => {
+  const handleSubmit = async (values: CreateWarehouseZoneDto | UpdateWarehouseZoneDto) => {
     try {
-      await createZone.mutateAsync(values);
+      await createZone.mutateAsync(values as CreateWarehouseZoneDto);
       router.push('/inventory/warehouse-zones');
     } catch (error) {
       // Error handled by hook

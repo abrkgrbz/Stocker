@@ -161,9 +161,9 @@ export default function ConsignmentStockDetailPage() {
       dataIndex: 'unitPrice',
       key: 'unitPrice',
       align: 'right',
-      render: (price, record) => (
+      render: (price) => (
         <span className="text-sm text-slate-600">
-          {price?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {record.currency}
+          {price?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
         </span>
       ),
     },
@@ -172,9 +172,9 @@ export default function ConsignmentStockDetailPage() {
       dataIndex: 'totalAmount',
       key: 'totalAmount',
       align: 'right',
-      render: (amount, record) => (
+      render: (amount) => (
         <span className="text-sm font-semibold text-slate-900">
-          {amount?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {record.currency}
+          {amount?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
         </span>
       ),
     },
@@ -303,9 +303,6 @@ export default function ConsignmentStockDetailPage() {
                     <dt className="text-xs text-slate-500 mb-1">Ürün</dt>
                     <dd className="text-sm font-medium text-slate-900">
                       {consignment.productName}
-                      {consignment.productSku && (
-                        <span className="text-slate-500 font-normal ml-2">({consignment.productSku})</span>
-                      )}
                     </dd>
                   </div>
                   <div>
@@ -323,10 +320,10 @@ export default function ConsignmentStockDetailPage() {
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-slate-500 mb-1">Minimum Satış Fiyatı</dt>
+                    <dt className="text-xs text-slate-500 mb-1">Satış Fiyatı</dt>
                     <dd className="text-sm text-slate-900">
-                      {consignment.minimumSalePrice
-                        ? `${consignment.minimumSalePrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${consignment.currency}`
+                      {consignment.sellingPrice
+                        ? `${consignment.sellingPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${consignment.currency}`
                         : '-'
                       }
                     </dd>
@@ -336,22 +333,22 @@ export default function ConsignmentStockDetailPage() {
             </div>
 
             {/* Açıklama & Notlar */}
-            {(consignment.description || consignment.notes) && (
+            {(consignment.agreementNotes || consignment.internalNotes) && (
               <div className="bg-white border border-slate-200 rounded-xl">
                 <div className="px-6 py-4 border-b border-slate-100">
                   <h2 className="text-sm font-medium text-slate-900">Açıklama & Notlar</h2>
                 </div>
                 <div className="p-6 space-y-4">
-                  {consignment.description && (
+                  {consignment.agreementNotes && (
                     <div>
-                      <dt className="text-xs text-slate-500 mb-1">Açıklama</dt>
-                      <dd className="text-sm text-slate-700">{consignment.description}</dd>
+                      <dt className="text-xs text-slate-500 mb-1">Anlaşma Notları</dt>
+                      <dd className="text-sm text-slate-700">{consignment.agreementNotes}</dd>
                     </div>
                   )}
-                  {consignment.notes && (
+                  {consignment.internalNotes && (
                     <div>
-                      <dt className="text-xs text-slate-500 mb-1">Notlar</dt>
-                      <dd className="text-sm text-slate-700">{consignment.notes}</dd>
+                      <dt className="text-xs text-slate-500 mb-1">Dahili Notlar</dt>
+                      <dd className="text-sm text-slate-700">{consignment.internalNotes}</dd>
                     </div>
                   )}
                 </div>
@@ -375,9 +372,9 @@ export default function ConsignmentStockDetailPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                  <span className="text-sm text-slate-600">Alınan Miktar</span>
+                  <span className="text-sm text-slate-600">Başlangıç Miktarı</span>
                   <span className="text-sm text-slate-900">
-                    {consignment.receivedQuantity?.toLocaleString('tr-TR')}
+                    {consignment.initialQuantity?.toLocaleString('tr-TR')}
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-emerald-50 rounded-lg">
@@ -409,9 +406,9 @@ export default function ConsignmentStockDetailPage() {
               </h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                  <span className="text-sm text-slate-600">Birim Fiyat</span>
+                  <span className="text-sm text-slate-600">Birim Maliyet</span>
                   <span className="text-sm font-medium text-slate-900">
-                    {consignment.unitPrice?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {consignment.currency}
+                    {consignment.unitCost?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {consignment.currency}
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-emerald-50 rounded-lg">
@@ -421,15 +418,15 @@ export default function ConsignmentStockDetailPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                  <span className="text-sm text-slate-600">Toplam Ödeme</span>
+                  <span className="text-sm text-slate-600">Ödenen Tutar</span>
                   <span className="text-sm font-medium text-blue-600">
-                    {consignment.totalPaymentAmount?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {consignment.currency}
+                    {consignment.paidAmount?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {consignment.currency}
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-amber-50 rounded-lg">
-                  <span className="text-sm text-slate-600">Bakiye</span>
+                  <span className="text-sm text-slate-600">Kalan Tutar</span>
                   <span className="text-sm font-semibold text-amber-700">
-                    {consignment.balance?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {consignment.currency}
+                    {consignment.outstandingAmount?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {consignment.currency}
                   </span>
                 </div>
               </div>
@@ -447,9 +444,9 @@ export default function ConsignmentStockDetailPage() {
                     <CalendarIcon className="w-4 h-4 text-slate-500" />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500">Başlangıç</p>
+                    <p className="text-xs text-slate-500">Anlaşma Tarihi</p>
                     <p className="text-sm text-slate-900">
-                      {consignment.startDate ? dayjs(consignment.startDate).format('DD/MM/YYYY') : '-'}
+                      {consignment.agreementDate ? dayjs(consignment.agreementDate).format('DD/MM/YYYY') : '-'}
                     </p>
                   </div>
                 </div>
@@ -458,9 +455,9 @@ export default function ConsignmentStockDetailPage() {
                     <CalendarIcon className="w-4 h-4 text-slate-500" />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500">Bitiş</p>
+                    <p className="text-xs text-slate-500">Anlaşma Bitiş</p>
                     <p className="text-sm text-slate-900">
-                      {consignment.endDate ? dayjs(consignment.endDate).format('DD/MM/YYYY') : '-'}
+                      {consignment.agreementEndDate ? dayjs(consignment.agreementEndDate).format('DD/MM/YYYY') : '-'}
                     </p>
                   </div>
                 </div>
