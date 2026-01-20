@@ -45,6 +45,7 @@ import {
 import { StockCountStatus, StockCountType } from '@/lib/api/services/inventory.types';
 import type { StockCountListDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
+import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 import {
   exportToPDF,
@@ -406,8 +407,8 @@ export default function StockCountsPage() {
   };
 
   // Get action items based on status
-  const getActionItems = (count: StockCountListDto) => {
-    const items: any[] = [
+  const getActionItems = (count: StockCountListDto): MenuProps['items'] => {
+    const items: MenuProps['items'] = [
       {
         key: 'view',
         icon: <EyeIcon className="w-4 h-4" />,

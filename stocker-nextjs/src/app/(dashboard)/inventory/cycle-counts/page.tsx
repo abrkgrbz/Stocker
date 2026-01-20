@@ -24,6 +24,7 @@ import {
 import type { CycleCountDto } from '@/lib/api/services/inventory.types';
 import { CycleCountStatus, CycleCountType } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
+import type { MenuProps } from 'antd';
 import { TableEmptyState } from '@/components/primitives';
 import dayjs from 'dayjs';
 import { confirmAction } from '@/lib/utils/sweetalert';
@@ -230,7 +231,7 @@ export default function CycleCountsPage() {
       width: 80,
       fixed: 'right',
       render: (_, record) => {
-        const items: any[] = [
+        const items: MenuProps['items'] = [
           {
             key: 'view',
             icon: <EyeIcon className="w-4 h-4" />,

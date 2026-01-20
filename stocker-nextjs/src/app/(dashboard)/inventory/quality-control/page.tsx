@@ -22,6 +22,7 @@ import {
 import type { QualityControlDto } from '@/lib/api/services/inventory.types';
 import { QualityControlStatus } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
+import type { MenuProps } from 'antd';
 import { TableEmptyState } from '@/components/primitives';
 import dayjs from 'dayjs';
 import { confirmAction } from '@/lib/utils/sweetalert';
@@ -195,7 +196,7 @@ export default function QualityControlPage() {
       width: 80,
       fixed: 'right',
       render: (_, record) => {
-        const items: any[] = [
+        const items: MenuProps['items'] = [
           {
             key: 'view',
             icon: <EyeIcon className="w-4 h-4" />,

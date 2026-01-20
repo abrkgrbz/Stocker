@@ -46,6 +46,7 @@ import {
 } from '@/lib/api/hooks/useInventory';
 import type { StockTransferListDto, TransferStatus } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
+import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 import {
   exportToPDF,
@@ -464,8 +465,8 @@ export default function StockTransfersPage() {
   };
 
   // Get action items based on status
-  const getActionItems = (transfer: StockTransferListDto) => {
-    const items: any[] = [
+  const getActionItems = (transfer: StockTransferListDto): MenuProps['items'] => {
+    const items: MenuProps['items'] = [
       {
         key: 'view',
         icon: <EyeIcon className="w-4 h-4" />,

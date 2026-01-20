@@ -222,8 +222,8 @@ export default function InventoryReportsPage() {
 
   // ============= EXPORT HANDLERS =============
   const handleExport = (format: 'pdf' | 'excel', reportType: string) => {
-    let data: any[] = [];
-    let columns: any[] = [];
+    let data: Record<string, unknown>[] = [];
+    let columns: { key: string; header: string; formatter?: (v: number) => string }[] = [];
     let title = '';
 
     switch (reportType) {

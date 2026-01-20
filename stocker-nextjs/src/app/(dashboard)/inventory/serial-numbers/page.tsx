@@ -57,6 +57,7 @@ import type {
   CreateSerialNumberDto,
 } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
+import type { MenuProps } from 'antd';
 import { TableEmptyState } from '@/components/primitives';
 import dayjs from 'dayjs';
 
@@ -379,7 +380,7 @@ export default function SerialNumbersPage() {
       width: 100,
       fixed: 'right',
       render: (_, record) => {
-        const menuItems: any[] = [
+        const menuItems: MenuProps['items'] = [
           {
             key: 'view',
             icon: <EyeIcon className="w-4 h-4" />,
