@@ -158,5 +158,10 @@ public interface IInventoryUnitOfWork : IUnitOfWork
     /// </summary>
     IInventoryAdjustmentRepository InventoryAdjustments { get; }
 
+    /// <summary>
+    /// Gets the Reorder Rule repository.
+    /// </summary>
+    IReorderRuleRepository ReorderRules { get; }
+
     #endregion
 }

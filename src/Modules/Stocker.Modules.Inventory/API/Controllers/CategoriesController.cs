@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Application.Features.Categories.Commands;
 using Stocker.Modules.Inventory.Application.Features.Categories.Queries;
+using Stocker.Modules.Inventory.Application.Features.Products.Commands;
 using Stocker.SharedKernel.Authorization;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
@@ -261,8 +262,96 @@ public class CategoriesController : ControllerBase
         return Ok(new { message = "Kategori başarıyla pasifleştirildi" });
     }
 
+    /// <summary>
+    /// Bulk delete categories
+    /// </summary>
+    [HttpPost("bulk-delete")]
+    [ProducesResponseType(typeof(BulkDeleteResult), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<BulkDeleteResult>> BulkDeleteCategories([FromBody] BulkDeleteCategoriesRequest request)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new BulkDeleteCategoriesCommand
+        {
+            TenantId = tenantId.Value,
+            CategoryIds = request.Ids
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Bulk activate categories
+    /// </summary>
+    [HttpPost("bulk-activate")]
+    [ProducesResponseType(typeof(BulkStatusResult), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<BulkStatusResult>> BulkActivateCategories([FromBody] BulkStatusCategoriesRequest request)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new BulkActivateCategoriesCommand
+        {
+            TenantId = tenantId.Value,
+            CategoryIds = request.Ids
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Bulk deactivate categories
+    /// </summary>
+    [HttpPost("bulk-deactivate")]
+    [ProducesResponseType(typeof(BulkStatusResult), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<BulkStatusResult>> BulkDeactivateCategories([FromBody] BulkStatusCategoriesRequest request)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new BulkDeactivateCategoriesCommand
+        {
+            TenantId = tenantId.Value,
+            CategoryIds = request.Ids
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
+    }
+
     private static Error CreateTenantError()
     {
         return new Error("Tenant.Required", "Kiracı kimliği gereklidir", ErrorType.Validation);
     }
+}
+
+public class BulkDeleteCategoriesRequest
+{
+    public List<int> Ids { get; set; } = new();
+}
+
+public class BulkStatusCategoriesRequest
+{
+    public List<int> Ids { get; set; } = new();
 }

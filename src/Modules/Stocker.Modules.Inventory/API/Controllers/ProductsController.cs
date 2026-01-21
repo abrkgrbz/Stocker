@@ -10,6 +10,7 @@ using Stocker.Modules.Inventory.Application.Features.ProductImages.Queries;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.SharedKernel.Authorization;
 using Stocker.SharedKernel.Interfaces;
+using Stocker.SharedKernel.Pagination;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -51,6 +52,86 @@ public class ProductsController : ControllerBase
             IncludeInactive = includeInactive,
             CategoryId = categoryId,
             BrandId = brandId
+        };
+
+        var result = await _mediator.Send(query);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
+    }
+
+
+    /// <summary>
+    /// Get products with pagination and advanced filtering
+    /// </summary>
+    [HttpGet("paged")]
+    [ProducesResponseType(typeof(PagedResult<ProductDto>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<PagedResult<ProductDto>>> GetProductsPaged(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null,
+        [FromQuery] int? categoryId = null,
+        [FromQuery] int? brandId = null,
+        [FromQuery] string? productTypes = null,
+        [FromQuery] string? stockStatus = null,
+        [FromQuery] string? trackingType = null,
+        [FromQuery] decimal? minPrice = null,
+        [FromQuery] decimal? maxPrice = null,
+        [FromQuery] bool includeInactive = false,
+        [FromQuery] string? sortBy = "name",
+        [FromQuery] bool sortDescending = false)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        // Parse product types from comma-separated string
+        List<Domain.Enums.ProductType>? productTypeList = null;
+        if (!string.IsNullOrEmpty(productTypes))
+        {
+            productTypeList = productTypes.Split(',')
+                .Select(t => Enum.TryParse<Domain.Enums.ProductType>(t.Trim(), true, out var pt) ? pt : (Domain.Enums.ProductType?)null)
+                .Where(t => t.HasValue)
+                .Select(t => t!.Value)
+                .ToList();
+        }
+
+        // Parse stock status
+        StockStatus? stockStatusEnum = null;
+        if (!string.IsNullOrEmpty(stockStatus) && Enum.TryParse<StockStatus>(stockStatus, true, out var ss))
+        {
+            stockStatusEnum = ss;
+        }
+
+        // Parse tracking type
+        TrackingType? trackingTypeEnum = null;
+        if (!string.IsNullOrEmpty(trackingType) && Enum.TryParse<TrackingType>(trackingType, true, out var tt))
+        {
+            trackingTypeEnum = tt;
+        }
+
+        var query = new GetProductsPagedQuery
+        {
+            TenantId = tenantId.Value,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            Filters = new ProductFilterParams
+            {
+                SearchTerm = search,
+                CategoryId = categoryId,
+                BrandId = brandId,
+                ProductTypes = productTypeList,
+                StockStatus = stockStatusEnum,
+                TrackingType = trackingTypeEnum,
+                MinPrice = minPrice,
+                MaxPrice = maxPrice,
+                IncludeInactive = includeInactive,
+                SortBy = sortBy,
+                SortDescending = sortDescending
+            }
         };
 
         var result = await _mediator.Send(query);
@@ -453,8 +534,96 @@ public class ProductsController : ControllerBase
         return Ok();
     }
 
+    /// <summary>
+    /// Bulk delete products
+    /// </summary>
+    [HttpPost("bulk-delete")]
+    [ProducesResponseType(typeof(BulkDeleteResult), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<BulkDeleteResult>> BulkDeleteProducts([FromBody] BulkDeleteRequest request)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new BulkDeleteProductsCommand
+        {
+            TenantId = tenantId.Value,
+            ProductIds = request.Ids
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Bulk activate products
+    /// </summary>
+    [HttpPost("bulk-activate")]
+    [ProducesResponseType(typeof(BulkStatusResult), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<BulkStatusResult>> BulkActivateProducts([FromBody] BulkStatusRequest request)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new BulkActivateProductsCommand
+        {
+            TenantId = tenantId.Value,
+            ProductIds = request.Ids
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Bulk deactivate products
+    /// </summary>
+    [HttpPost("bulk-deactivate")]
+    [ProducesResponseType(typeof(BulkStatusResult), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<BulkStatusResult>> BulkDeactivateProducts([FromBody] BulkStatusRequest request)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new BulkDeactivateProductsCommand
+        {
+            TenantId = tenantId.Value,
+            ProductIds = request.Ids
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
+    }
+
     private static Error CreateTenantError()
     {
         return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
     }
+}
+
+public class BulkDeleteRequest
+{
+    public List<int> Ids { get; set; } = new();
+}
+
+public class BulkStatusRequest
+{
+    public List<int> Ids { get; set; } = new();
 }

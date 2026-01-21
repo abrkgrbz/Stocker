@@ -66,4 +66,9 @@ public interface IStockRepository : IInventoryRepository<Stock>
     /// Gets stock by serial number
     /// </summary>
     Task<Stock?> GetBySerialNumberAsync(string serialNumber, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks if a product has any stock records
+    /// </summary>
+    Task<bool> HasStockAsync(int productId, CancellationToken cancellationToken = default);
 }
