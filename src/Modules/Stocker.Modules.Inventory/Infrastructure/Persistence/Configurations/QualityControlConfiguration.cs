@@ -185,7 +185,7 @@ public class QualityControlAttachmentConfiguration : IEntityTypeConfiguration<Qu
 {
     public void Configure(EntityTypeBuilder<QualityControlAttachment> builder)
     {
-        builder.ToTable("QualityControlAttachments", "inventory");
+        builder.ToTable("QualityControlAttachment", "inventory");
 
         builder.HasKey(a => a.Id);
 
