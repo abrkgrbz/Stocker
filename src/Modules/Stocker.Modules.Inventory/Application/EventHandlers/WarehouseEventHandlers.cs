@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Stocker.Modules.Inventory.Application.Contracts;
 using Stocker.Modules.Inventory.Domain.Events;
 
 namespace Stocker.Modules.Inventory.Application.EventHandlers;
@@ -10,13 +11,17 @@ namespace Stocker.Modules.Inventory.Application.EventHandlers;
 public class WarehouseCreatedEventHandler : INotificationHandler<WarehouseCreatedDomainEvent>
 {
     private readonly ILogger<WarehouseCreatedEventHandler> _logger;
+    private readonly IInventoryAuditService _auditService;
 
-    public WarehouseCreatedEventHandler(ILogger<WarehouseCreatedEventHandler> logger)
+    public WarehouseCreatedEventHandler(
+        ILogger<WarehouseCreatedEventHandler> logger,
+        IInventoryAuditService auditService)
     {
         _logger = logger;
+        _auditService = auditService;
     }
 
-    public Task Handle(WarehouseCreatedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(WarehouseCreatedDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Warehouse created: {WarehouseCode} ({WarehouseName}), Branch: {BranchId}",
@@ -24,7 +29,14 @@ public class WarehouseCreatedEventHandler : INotificationHandler<WarehouseCreate
             notification.Name,
             notification.BranchId);
 
-        return Task.CompletedTask;
+        // Audit log
+        await _auditService.LogWarehouseEventAsync(
+            notification.TenantId,
+            notification.WarehouseId,
+            notification.Code,
+            "Created",
+            details: $"Name: {notification.Name}, Branch: {notification.BranchId}",
+            cancellationToken: cancellationToken);
     }
 }
 
@@ -34,13 +46,17 @@ public class WarehouseCreatedEventHandler : INotificationHandler<WarehouseCreate
 public class WarehouseUpdatedEventHandler : INotificationHandler<WarehouseUpdatedDomainEvent>
 {
     private readonly ILogger<WarehouseUpdatedEventHandler> _logger;
+    private readonly IInventoryAuditService _auditService;
 
-    public WarehouseUpdatedEventHandler(ILogger<WarehouseUpdatedEventHandler> logger)
+    public WarehouseUpdatedEventHandler(
+        ILogger<WarehouseUpdatedEventHandler> logger,
+        IInventoryAuditService auditService)
     {
         _logger = logger;
+        _auditService = auditService;
     }
 
-    public Task Handle(WarehouseUpdatedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(WarehouseUpdatedDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Warehouse updated: {WarehouseCode} ({WarehouseName}), Manager: {Manager}",
@@ -48,7 +64,14 @@ public class WarehouseUpdatedEventHandler : INotificationHandler<WarehouseUpdate
             notification.Name,
             notification.Manager ?? "Not assigned");
 
-        return Task.CompletedTask;
+        // Audit log
+        await _auditService.LogWarehouseEventAsync(
+            notification.TenantId,
+            notification.WarehouseId,
+            notification.Code,
+            "Updated",
+            details: $"Name: {notification.Name}, Manager: {notification.Manager ?? "Not assigned"}",
+            cancellationToken: cancellationToken);
     }
 }
 

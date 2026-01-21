@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Stocker.Modules.Inventory.Application.Contracts;
 using Stocker.Modules.Inventory.Domain.Events;
 
 namespace Stocker.Modules.Inventory.Application.EventHandlers;
@@ -12,13 +13,17 @@ namespace Stocker.Modules.Inventory.Application.EventHandlers;
 public class StockMovementCreatedEventHandler : INotificationHandler<StockMovementCreatedDomainEvent>
 {
     private readonly ILogger<StockMovementCreatedEventHandler> _logger;
+    private readonly IInventoryAuditService _auditService;
 
-    public StockMovementCreatedEventHandler(ILogger<StockMovementCreatedEventHandler> logger)
+    public StockMovementCreatedEventHandler(
+        ILogger<StockMovementCreatedEventHandler> logger,
+        IInventoryAuditService auditService)
     {
         _logger = logger;
+        _auditService = auditService;
     }
 
-    public Task Handle(StockMovementCreatedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(StockMovementCreatedDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Stock movement created: {DocumentNumber}, Type: {MovementType}, " +
@@ -30,10 +35,17 @@ public class StockMovementCreatedEventHandler : INotificationHandler<StockMoveme
             notification.Quantity,
             notification.TotalCost);
 
-        // Not: Stok güncelleme işlemi command handler'da yapılır
-        // Bu handler ek işlemler için kullanılır (maliyet hesaplama, loglama vb.)
-
-        return Task.CompletedTask;
+        // Audit log
+        await _auditService.LogStockMovementAsync(
+            notification.TenantId,
+            notification.ProductId,
+            notification.WarehouseId,
+            notification.MovementType.ToString(),
+            notification.Quantity,
+            0, // previousQuantity - not available in event
+            0, // newQuantity - not available in event
+            reference: notification.DocumentNumber,
+            cancellationToken: cancellationToken);
     }
 }
 
@@ -45,13 +57,17 @@ public class StockMovementCreatedEventHandler : INotificationHandler<StockMoveme
 public class StockMovementReversedEventHandler : INotificationHandler<StockMovementReversedDomainEvent>
 {
     private readonly ILogger<StockMovementReversedEventHandler> _logger;
+    private readonly IInventoryAuditService _auditService;
 
-    public StockMovementReversedEventHandler(ILogger<StockMovementReversedEventHandler> logger)
+    public StockMovementReversedEventHandler(
+        ILogger<StockMovementReversedEventHandler> logger,
+        IInventoryAuditService auditService)
     {
         _logger = logger;
+        _auditService = auditService;
     }
 
-    public Task Handle(StockMovementReversedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(StockMovementReversedDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogWarning(
             "Stock movement reversed: {DocumentNumber}, Original Movement: {ReversedMovementId}, " +
@@ -63,6 +79,16 @@ public class StockMovementReversedEventHandler : INotificationHandler<StockMovem
             notification.Quantity,
             notification.Reason);
 
-        return Task.CompletedTask;
+        // Audit log
+        await _auditService.LogStockMovementAsync(
+            notification.TenantId,
+            notification.ProductId,
+            notification.WarehouseId,
+            $"Reversed_{notification.MovementType}",
+            -notification.Quantity,
+            0, // previousQuantity
+            0, // newQuantity
+            reference: $"{notification.DocumentNumber} (Reversal of {notification.ReversedMovementId})",
+            cancellationToken: cancellationToken);
     }
 }
