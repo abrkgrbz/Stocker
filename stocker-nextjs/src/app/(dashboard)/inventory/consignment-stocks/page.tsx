@@ -12,6 +12,8 @@ import {
   Spin,
   Alert,
   Select,
+  Modal,
+  InputNumber,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { TableEmptyState } from '@/components/primitives';
@@ -30,6 +32,7 @@ import {
   useSuspendConsignmentStock,
   useReactivateConsignmentStock,
   useCloseConsignmentStock,
+  useRecordConsignmentSale,
 } from '@/lib/api/hooks/useInventory';
 import type { ConsignmentStockDto } from '@/lib/api/services/inventory.types';
 import { ConsignmentStatus } from '@/lib/api/services/inventory.types';
@@ -55,6 +58,13 @@ export default function ConsignmentStocksPage() {
   const suspendConsignment = useSuspendConsignmentStock();
   const reactivateConsignment = useReactivateConsignmentStock();
   const closeConsignment = useCloseConsignmentStock();
+  const recordSale = useRecordConsignmentSale();
+
+  // Sale modal state
+  const [saleModalOpen, setSaleModalOpen] = useState(false);
+  const [selectedConsignment, setSelectedConsignment] = useState<ConsignmentStockDto | null>(null);
+  const [saleQuantity, setSaleQuantity] = useState<number>(1);
+  const [saleNotes, setSaleNotes] = useState('');
 
   const filteredData = useMemo(() => {
     if (!consignmentStocks) return [];
@@ -86,6 +96,28 @@ export default function ConsignmentStocksPage() {
   const handleClose = (id: number) => {
     if (window.confirm('Bu konsinye anlaşmasını kapatmak istediğinizden emin misiniz?')) {
       closeConsignment.mutate(id);
+    }
+  };
+
+  const openSaleModal = (record: ConsignmentStockDto) => {
+    setSelectedConsignment(record);
+    setSaleQuantity(1);
+    setSaleNotes('');
+    setSaleModalOpen(true);
+  };
+
+  const handleRecordSale = async () => {
+    if (!selectedConsignment) return;
+    try {
+      await recordSale.mutateAsync({
+        id: selectedConsignment.id,
+        quantity: saleQuantity,
+        notes: saleNotes || undefined,
+      });
+      setSaleModalOpen(false);
+      setSelectedConsignment(null);
+    } catch {
+      // Error handled by hook
     }
   };
 
@@ -208,6 +240,15 @@ export default function ConsignmentStocksPage() {
                 disabled: record.status === 'Closed',
               },
               { type: 'divider' },
+              ...(record.status === 'Active' && (record.currentQuantity || 0) > 0
+                ? [
+                    {
+                      key: 'recordSale',
+                      label: 'Satış Kaydet',
+                      onClick: () => openSaleModal(record),
+                    },
+                  ]
+                : []),
               ...(record.status === 'Active'
                 ? [
                     {
@@ -363,6 +404,73 @@ export default function ConsignmentStocksPage() {
           )}
         </div>
       </div>
+
+      {/* Sale Record Modal */}
+      <Modal
+        title={
+          <span className="text-slate-900 font-semibold">Satış Kaydet: {selectedConsignment?.productName}</span>
+        }
+        open={saleModalOpen}
+        onOk={handleRecordSale}
+        onCancel={() => {
+          setSaleModalOpen(false);
+          setSelectedConsignment(null);
+        }}
+        confirmLoading={recordSale.isPending}
+        okText="Kaydet"
+        cancelText="İptal"
+        okButtonProps={{ style: { background: '#1e293b', borderColor: '#1e293b' } }}
+      >
+        {selectedConsignment && (
+          <div className="py-4 space-y-4">
+            <div className="bg-slate-50 p-4 rounded-lg">
+              <div className="flex justify-between mb-2">
+                <span className="text-slate-500">Konsinye No:</span>
+                <span className="font-medium text-slate-900">{selectedConsignment.consignmentNumber}</span>
+              </div>
+              <div className="flex justify-between mb-2">
+                <span className="text-slate-500">Tedarikçi:</span>
+                <span className="font-medium text-slate-900">{selectedConsignment.supplierName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Mevcut Miktar:</span>
+                <span className="font-medium text-slate-900">{selectedConsignment.currentQuantity}</span>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm text-slate-600 mb-2">Satış Miktarı:</p>
+              <InputNumber
+                value={saleQuantity}
+                onChange={(val) => setSaleQuantity(val || 1)}
+                min={1}
+                max={selectedConsignment.currentQuantity || 1}
+                style={{ width: '100%' }}
+                size="large"
+              />
+            </div>
+
+            <div>
+              <p className="text-sm text-slate-600 mb-2">Not (opsiyonel):</p>
+              <Input.TextArea
+                value={saleNotes}
+                onChange={(e) => setSaleNotes(e.target.value)}
+                rows={2}
+                placeholder="Satış notu..."
+              />
+            </div>
+
+            <div className="p-3 rounded-lg bg-emerald-50 text-emerald-700">
+              <div className="flex justify-between">
+                <span>Satış Tutarı:</span>
+                <span className="font-semibold">
+                  {(saleQuantity * (selectedConsignment.unitCost || 0)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {selectedConsignment.currency}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

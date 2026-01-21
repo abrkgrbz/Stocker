@@ -214,6 +214,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       '/inventory/shelf-life': '/inventory/shelf-life',
       '/inventory/quality-control': '/inventory/quality-control',
       '/inventory/cycle-counts': '/inventory/cycle-counts',
+      '/inventory/consignment-stocks': '/inventory/consignment-stocks',
       '/sales/orders': '/sales/orders',
       '/sales/invoices': '/sales/invoices',
       '/sales/e-invoices': '/sales/e-invoices',
