@@ -241,7 +241,7 @@ export default function ProductBundleDetailPage() {
   const savings = itemsTotal - (bundle.calculatedPrice || 0);
   const savingsPercent = itemsTotal > 0 ? (savings / itemsTotal) * 100 : 0;
 
-  const bundleTypeStyle = bundleTypeConfig[bundle.bundleType] || bundleTypeConfig.Fixed;
+  const bundleTypeStyle = bundleTypeConfig[bundle.bundleType] || bundleTypeConfig.FixedBundle;
 
   return (
     <div className="min-h-screen bg-slate-50">
