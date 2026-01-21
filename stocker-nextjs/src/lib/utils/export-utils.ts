@@ -4,18 +4,10 @@
  */
 
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import autoTable from 'jspdf-autotable';
 import type { UserOptions } from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import dayjs from 'dayjs';
-
-// Extend jsPDF type for autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: UserOptions) => jsPDF;
-    lastAutoTable: { finalY: number };
-  }
-}
 
 // ============================================
 // Types
@@ -193,7 +185,7 @@ export function exportToPDF<T>(config: ExportConfig<T>): void {
   });
 
   // Generate table
-  doc.autoTable({
+  autoTable(doc, {
     head: [headers],
     body: tableData,
     startY: yPos,

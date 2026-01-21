@@ -1,16 +1,7 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import type { ProductDto } from '@/lib/api/services/inventory.types';
-import type { UserOptions } from 'jspdf-autotable';
-
-// Extend jsPDF type for autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: UserOptions) => jsPDF;
-    lastAutoTable: { finalY: number };
-  }
-}
 
 export interface InventoryExportOptions {
   title?: string;
@@ -118,7 +109,7 @@ export function generateInventoryPDF(
   );
 
   // Generate table
-  doc.autoTable({
+  autoTable(doc, {
     head: [headers],
     body: data,
     startY: 42,

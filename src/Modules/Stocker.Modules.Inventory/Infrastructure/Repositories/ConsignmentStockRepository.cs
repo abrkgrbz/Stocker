@@ -21,7 +21,18 @@ public class ConsignmentStockRepository : BaseRepository<ConsignmentStock>, ICon
             .Include(c => c.Product)
             .Include(c => c.Warehouse)
             .Include(c => c.Location)
-            .Include(c => c.Movements)
+            .Where(c => !c.IsDeleted && c.Id == id)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<ConsignmentStock?> GetByIdWithMovementsAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Include(c => c.Supplier)
+            .Include(c => c.Product)
+            .Include(c => c.Warehouse)
+            .Include(c => c.Location)
+            .Include(c => c.Movements.OrderByDescending(m => m.MovementDate))
             .Where(c => !c.IsDeleted && c.Id == id)
             .FirstOrDefaultAsync(cancellationToken);
     }

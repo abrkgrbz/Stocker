@@ -28,6 +28,12 @@ public static class ControllersExtensions
             options.MaxModelBindingCollectionSize = 1000;
         })
         .AddApplicationPart(typeof(Stocker.Modules.CRM.CRMModule).Assembly)
+        .AddApplicationPart(typeof(Stocker.Modules.Inventory.InventoryModule).Assembly)
+        .AddApplicationPart(typeof(Stocker.Modules.Sales.SalesModule).Assembly)
+        .AddApplicationPart(typeof(Stocker.Modules.Purchase.PurchaseModule).Assembly)
+        .AddApplicationPart(typeof(Stocker.Modules.Finance.FinanceModule).Assembly)
+        .AddApplicationPart(typeof(Stocker.Modules.HR.HRModule).Assembly)
+        .AddApplicationPart(typeof(Stocker.Modules.CMS.CMSModule).Assembly)
         .AddJsonOptions(options =>
         {
             // Add enum converter

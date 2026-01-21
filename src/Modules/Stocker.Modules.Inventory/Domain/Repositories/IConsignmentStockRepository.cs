@@ -8,9 +8,14 @@ namespace Stocker.Modules.Inventory.Domain.Repositories;
 public interface IConsignmentStockRepository : IInventoryRepository<ConsignmentStock>
 {
     /// <summary>
-    /// Gets consignment stock by ID with movements
+    /// Gets consignment stock by ID
     /// </summary>
     Task<ConsignmentStock?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets consignment stock by ID with movements included
+    /// </summary>
+    Task<ConsignmentStock?> GetByIdWithMovementsAsync(int id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets consignment stock by number
