@@ -111,8 +111,11 @@ export default function ConsignmentStocksPage() {
     try {
       await recordSale.mutateAsync({
         id: selectedConsignment.id,
-        quantity: saleQuantity,
-        notes: saleNotes || undefined,
+        data: {
+          quantity: saleQuantity,
+          sellingPrice: selectedConsignment.unitCost || 0,
+          referenceNumber: saleNotes || undefined,
+        },
       });
       setSaleModalOpen(false);
       setSelectedConsignment(null);
