@@ -58,10 +58,10 @@ interface BundleItem {
 }
 
 const bundleTypes: { value: BundleType; label: string }[] = [
-  { value: BundleType.Fixed, label: 'Sabit' },
-  { value: BundleType.Configurable, label: 'Yapılandırılabilir' },
+  { value: BundleType.FixedBundle, label: 'Sabit' },
+  { value: BundleType.ConfigurableBundle, label: 'Yapılandırılabilir' },
   { value: BundleType.Kit, label: 'Kit' },
-  { value: BundleType.Package, label: 'Paket' },
+  { value: BundleType.Pack, label: 'Paket' },
   { value: BundleType.Combo, label: 'Kombo' },
 ];
 

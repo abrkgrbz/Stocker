@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Space, Table, Tag, Empty, Timeline, Progress, Modal } from 'antd';
+import { Button, Space, Table, Tag, Empty, Timeline, Progress, App } from 'antd';
 import { ExclamationCircleFilled } from '@ant-design/icons';
 import { Spinner } from '@/components/primitives';
 import {
@@ -108,6 +108,7 @@ export default function StockTransferDetailPage() {
   const router = useRouter();
   const params = useParams();
   const id = Number(params.id);
+  const { modal } = App.useApp();
 
   const { data: transfer, isLoading, error } = useStockTransfer(id);
   const submitTransfer = useSubmitStockTransfer();
@@ -117,7 +118,7 @@ export default function StockTransferDetailPage() {
   const cancelTransfer = useCancelStockTransfer();
 
   const handleSubmit = () => {
-    Modal.confirm({
+    modal.confirm({
       title: 'Transferi Gönder',
       icon: <ExclamationCircleFilled />,
       content: 'Bu transferi onaya göndermek istediğinizden emin misiniz?',
@@ -130,7 +131,7 @@ export default function StockTransferDetailPage() {
   };
 
   const handleApprove = () => {
-    Modal.confirm({
+    modal.confirm({
       title: 'Transferi Onayla',
       icon: <ExclamationCircleFilled />,
       content: 'Bu transferi onaylamak istediğinizden emin misiniz?',
@@ -143,7 +144,7 @@ export default function StockTransferDetailPage() {
   };
 
   const handleShip = () => {
-    Modal.confirm({
+    modal.confirm({
       title: 'Transferi Sevk Et',
       icon: <ExclamationCircleFilled />,
       content: 'Bu transferi sevk etmek istediğinizden emin misiniz?',
@@ -156,7 +157,7 @@ export default function StockTransferDetailPage() {
   };
 
   const handleReceive = () => {
-    Modal.confirm({
+    modal.confirm({
       title: 'Transferi Teslim Al',
       icon: <ExclamationCircleFilled />,
       content: 'Bu transferi teslim almak istediğinizden emin misiniz?',
@@ -169,7 +170,7 @@ export default function StockTransferDetailPage() {
   };
 
   const handleCancel = () => {
-    Modal.confirm({
+    modal.confirm({
       title: 'Transferi İptal Et',
       icon: <ExclamationCircleFilled style={{ color: '#ff4d4f' }} />,
       content: 'Bu transferi iptal etmek istediğinizden emin misiniz?',

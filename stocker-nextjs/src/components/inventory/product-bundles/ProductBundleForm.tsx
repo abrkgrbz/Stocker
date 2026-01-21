@@ -27,10 +27,10 @@ interface ProductBundleFormProps {
 }
 
 const bundleTypeOptions = [
-  { value: BundleType.Fixed, label: 'Sabit Paket' },
-  { value: BundleType.Configurable, label: 'Yapılandırılabilir Paket' },
+  { value: BundleType.FixedBundle, label: 'Sabit Paket' },
+  { value: BundleType.ConfigurableBundle, label: 'Yapılandırılabilir Paket' },
   { value: BundleType.Kit, label: 'Kit' },
-  { value: BundleType.Package, label: 'Çoklu Paket' },
+  { value: BundleType.Pack, label: 'Çoklu Paket' },
   { value: BundleType.Combo, label: 'Kombo' },
 ];
 
@@ -71,7 +71,7 @@ export default function ProductBundleForm({ form, initialValues, onFinish, loadi
       setRequireAllItems(initialValues.requireAllItems ?? true);
     } else {
       form.setFieldsValue({
-        bundleType: BundleType.Fixed,
+        bundleType: BundleType.FixedBundle,
         pricingType: BundlePricingType.DynamicSum,
         requireAllItems: true,
         displayOrder: 0,

@@ -33,10 +33,10 @@ import { TableEmptyState } from '@/components/primitives';
 import dayjs from 'dayjs';
 
 const bundleTypeConfig: Record<BundleType, { label: string }> = {
-  Fixed: { label: 'Sabit' },
-  Configurable: { label: 'Yapılandırılabilir' },
+  FixedBundle: { label: 'Sabit' },
+  ConfigurableBundle: { label: 'Yapılandırılabilir' },
   Kit: { label: 'Kit' },
-  Package: { label: 'Paket' },
+  Pack: { label: 'Paket' },
   Combo: { label: 'Kombo' },
 };
 

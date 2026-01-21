@@ -1729,10 +1729,10 @@ export interface CreateProductVariantOptionDto {
 // =====================================
 
 export enum BundleType {
-  Fixed = 'Fixed',
-  Configurable = 'Configurable',
+  FixedBundle = 'FixedBundle',
+  ConfigurableBundle = 'ConfigurableBundle',
   Kit = 'Kit',
-  Package = 'Package',
+  Pack = 'Pack',
   Combo = 'Combo'
 }
 

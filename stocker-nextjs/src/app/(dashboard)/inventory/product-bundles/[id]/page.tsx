@@ -40,10 +40,10 @@ import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
 const bundleTypeConfig: Record<BundleType, { label: string; bgColor: string; textColor: string }> = {
-  Fixed: { label: 'Sabit', bgColor: 'bg-blue-50', textColor: 'text-blue-700' },
-  Configurable: { label: 'Yapılandırılabilir', bgColor: 'bg-purple-50', textColor: 'text-purple-700' },
+  FixedBundle: { label: 'Sabit', bgColor: 'bg-blue-50', textColor: 'text-blue-700' },
+  ConfigurableBundle: { label: 'Yapılandırılabilir', bgColor: 'bg-purple-50', textColor: 'text-purple-700' },
   Kit: { label: 'Kit', bgColor: 'bg-cyan-50', textColor: 'text-cyan-700' },
-  Package: { label: 'Paket', bgColor: 'bg-green-50', textColor: 'text-green-700' },
+  Pack: { label: 'Paket', bgColor: 'bg-green-50', textColor: 'text-green-700' },
   Combo: { label: 'Kombo', bgColor: 'bg-orange-50', textColor: 'text-orange-700' },
 };
 
