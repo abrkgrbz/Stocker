@@ -201,6 +201,9 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             data.Height,
             data.DimensionUnit);
 
+        // Raise domain event for audit logging
+        product.RaiseCreatedEvent();
+
         // Save to repository
         await _unitOfWork.Products.AddAsync(product, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

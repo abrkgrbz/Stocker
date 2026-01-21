@@ -91,6 +91,7 @@ public class CreateCycleCountCommandHandler : IRequestHandler<CreateCycleCountCo
         }
 
         entity.SetTenantId(request.TenantId);
+        entity.RaiseCreatedEvent();
         await _unitOfWork.CycleCounts.AddAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

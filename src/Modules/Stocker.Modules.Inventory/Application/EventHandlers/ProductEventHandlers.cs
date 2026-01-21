@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Stocker.Infrastructure.Metrics;
+using Stocker.Modules.Inventory.Application.Contracts;
 using Stocker.Modules.Inventory.Domain.Events;
 using Stocker.SignalR.Services;
 
@@ -13,12 +14,15 @@ public class ProductCreatedEventHandler : INotificationHandler<ProductCreatedDom
 {
     private readonly ILogger<ProductCreatedEventHandler> _logger;
     private readonly IDomainEventMonitorService? _monitorService;
+    private readonly IInventoryAuditService _auditService;
 
     public ProductCreatedEventHandler(
         ILogger<ProductCreatedEventHandler> logger,
+        IInventoryAuditService auditService,
         IDomainEventMonitorService? monitorService = null)
     {
         _logger = logger;
+        _auditService = auditService;
         _monitorService = monitorService;
     }
 
@@ -40,6 +44,14 @@ public class ProductCreatedEventHandler : INotificationHandler<ProductCreatedDom
 
             // Record Prometheus metric
             DomainEventMetrics.RecordEventRaised("Inventory", "ProductCreated", "Product", notification.TenantId.ToString());
+
+            // Audit log
+            await _auditService.LogProductCreatedAsync(
+                notification.TenantId,
+                notification.ProductId,
+                notification.Code,
+                notification.Name,
+                cancellationToken: cancellationToken);
 
             // Broadcast to monitoring clients
             if (_monitorService != null)
@@ -81,12 +93,15 @@ public class ProductUpdatedEventHandler : INotificationHandler<ProductUpdatedDom
 {
     private readonly ILogger<ProductUpdatedEventHandler> _logger;
     private readonly IDomainEventMonitorService? _monitorService;
+    private readonly IInventoryAuditService _auditService;
 
     public ProductUpdatedEventHandler(
         ILogger<ProductUpdatedEventHandler> logger,
+        IInventoryAuditService auditService,
         IDomainEventMonitorService? monitorService = null)
     {
         _logger = logger;
+        _auditService = auditService;
         _monitorService = monitorService;
     }
 
@@ -105,6 +120,14 @@ public class ProductUpdatedEventHandler : INotificationHandler<ProductUpdatedDom
                 notification.UnitPrice);
 
             DomainEventMetrics.RecordEventRaised("Inventory", "ProductUpdated", "Product", notification.TenantId.ToString());
+
+            // Audit log
+            await _auditService.LogProductUpdatedAsync(
+                notification.TenantId,
+                notification.ProductId,
+                notification.Code,
+                notification.Name,
+                cancellationToken: cancellationToken);
 
             if (_monitorService != null)
             {
