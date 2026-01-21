@@ -103,6 +103,7 @@ public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComman
 
         // Set tenant ID
         category.SetTenantId(request.TenantId);
+        category.RaiseCreatedEvent();
 
         if (!string.IsNullOrEmpty(request.CategoryData.Description))
         {

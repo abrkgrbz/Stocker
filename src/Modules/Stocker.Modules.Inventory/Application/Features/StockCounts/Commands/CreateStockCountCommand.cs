@@ -53,6 +53,7 @@ public class CreateStockCountCommandHandler : IRequestHandler<CreateStockCountCo
             data.CreatedByUserId);
 
         stockCount.SetTenantId(request.TenantId);
+        stockCount.RaiseCreatedEvent();
         stockCount.SetLocation(data.LocationId);
         stockCount.SetDescription(data.Description);
         stockCount.SetNotes(data.Notes);

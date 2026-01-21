@@ -64,6 +64,7 @@ public class CreateLotBatchCommandHandler : IRequestHandler<CreateLotBatchComman
 
         var lotBatch = new LotBatch(data.LotNumber, data.ProductId, data.InitialQuantity, data.ExpiryDate);
         lotBatch.SetTenantId(request.TenantId);
+        lotBatch.RaiseCreatedEvent();
         lotBatch.SetSupplierInfo(data.SupplierId, data.SupplierLotNumber);
         lotBatch.SetDates(data.ManufacturedDate, data.ExpiryDate);
         lotBatch.SetCertificate(data.CertificateNumber);

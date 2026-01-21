@@ -62,6 +62,7 @@ public class CreateSerialNumberCommandHandler : IRequestHandler<CreateSerialNumb
 
         var serialNumber = new SerialNumber(data.Serial, data.ProductId);
         serialNumber.SetTenantId(request.TenantId);
+        serialNumber.RaiseCreatedEvent();
         serialNumber.SetWarehouse(data.WarehouseId, data.LocationId);
         serialNumber.SetManufacturedDate(data.ManufacturedDate);
         serialNumber.SetBatchInfo(data.BatchNumber, data.SupplierSerial);

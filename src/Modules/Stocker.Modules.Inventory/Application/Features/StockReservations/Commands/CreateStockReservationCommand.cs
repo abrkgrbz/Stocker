@@ -63,6 +63,7 @@ public class CreateStockReservationCommandHandler : IRequestHandler<CreateStockR
             data.ExpirationDate);
 
         reservation.SetTenantId(request.TenantId);
+        reservation.RaiseCreatedEvent();
         reservation.SetLocation(data.LocationId);
 
         if (!string.IsNullOrEmpty(data.ReferenceDocumentType) && !string.IsNullOrEmpty(data.ReferenceDocumentNumber))

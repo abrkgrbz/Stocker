@@ -67,6 +67,7 @@ public class CreateBrandCommandHandler : IRequestHandler<CreateBrandCommand, Res
 
         // Set tenant ID for multi-tenancy
         brand.SetTenantId(request.TenantId);
+        brand.RaiseCreatedEvent();
 
         await _unitOfWork.Brands.AddAsync(brand, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

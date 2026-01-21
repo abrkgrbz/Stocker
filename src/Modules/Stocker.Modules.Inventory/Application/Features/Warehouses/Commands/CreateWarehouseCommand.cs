@@ -78,6 +78,7 @@ public class CreateWarehouseCommandHandler : IRequestHandler<CreateWarehouseComm
             request.WarehouseData.BranchId);
 
         warehouse.SetTenantId(request.TenantId);
+        warehouse.RaiseCreatedEvent();
 
         // Set address and other details if provided
         Address? address = null;

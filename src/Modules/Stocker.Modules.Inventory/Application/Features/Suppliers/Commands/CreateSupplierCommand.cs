@@ -82,6 +82,7 @@ public class CreateSupplierCommandHandler : IRequestHandler<CreateSupplierComman
         }
 
         supplier.SetTenantId(request.TenantId);
+        supplier.RaiseCreatedEvent();
         supplier.UpdateSupplierInfo(data.Name, data.TaxNumber, data.TaxOffice, email, phone, address);
         supplier.SetContactInfo(data.ContactPerson, data.ContactPhone, data.ContactEmail);
         supplier.SetCreditInfo(data.CreditLimit, data.PaymentTermDays ?? 30);

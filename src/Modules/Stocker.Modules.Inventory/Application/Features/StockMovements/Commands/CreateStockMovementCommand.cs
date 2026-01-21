@@ -65,6 +65,7 @@ public class CreateStockMovementCommandHandler : IRequestHandler<CreateStockMove
             data.UserId);
 
         movement.SetTenantId(request.TenantId);
+        movement.RaiseCreatedEvent();
         movement.SetLocations(data.FromLocationId, data.ToLocationId);
 
         if (!string.IsNullOrEmpty(data.SerialNumber))

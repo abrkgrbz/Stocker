@@ -83,6 +83,7 @@ public class CreateInventoryAdjustmentCommandHandler : IRequestHandler<CreateInv
         }
 
         entity.SetTenantId(request.TenantId);
+        entity.RaiseCreatedEvent();
         await _unitOfWork.InventoryAdjustments.AddAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

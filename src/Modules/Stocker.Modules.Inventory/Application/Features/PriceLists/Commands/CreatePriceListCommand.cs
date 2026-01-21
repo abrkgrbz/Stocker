@@ -51,6 +51,7 @@ public class CreatePriceListCommandHandler : IRequestHandler<CreatePriceListComm
 
         var priceList = new PriceList(data.Code, data.Name, data.Currency);
         priceList.SetTenantId(request.TenantId);
+        priceList.RaiseCreatedEvent();
         priceList.UpdatePriceList(data.Name, data.Description, data.Currency);
 
         if (data.GlobalDiscountPercentage.HasValue)

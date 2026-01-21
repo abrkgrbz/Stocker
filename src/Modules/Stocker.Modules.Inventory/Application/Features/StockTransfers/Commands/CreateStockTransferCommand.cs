@@ -63,6 +63,7 @@ public class CreateStockTransferCommandHandler : IRequestHandler<CreateStockTran
             data.CreatedByUserId);
 
         transfer.SetTenantId(request.TenantId);
+        transfer.RaiseCreatedEvent();
         transfer.SetDescription(data.Description);
         transfer.SetNotes(data.Notes);
         transfer.SetExpectedArrival(data.ExpectedArrivalDate);
