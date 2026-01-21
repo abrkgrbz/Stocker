@@ -113,10 +113,15 @@ export default function LotBatchesPage() {
   }, [activeTab, selectedProduct, selectedStatus, expiringWithinDays]);
 
   // API Hooks
-  const { data: products = [] } = useProducts();
+  const { data: products = [], isLoading: productsLoading } = useProducts();
   const { data: suppliers = [] } = useSuppliers();
   const { data: lotBatches = [], isLoading, refetch } = useLotBatches(filter);
   const { data: selectedLotBatch } = useLotBatch(selectedLotBatchId || 0);
+
+  // Filter products with lot tracking enabled
+  const lotTrackableProducts = useMemo(() => {
+    return products.filter(p => p.trackLotNumbers);
+  }, [products]);
 
   const createLotBatch = useCreateLotBatch();
   const approveLotBatch = useApproveLotBatch();
@@ -679,14 +684,31 @@ export default function LotBatchesPage() {
               name="productId"
               label={<span className="text-slate-700 font-medium">Ürün</span>}
               rules={[{ required: true, message: 'Ürün seçimi gerekli' }]}
+              help={lotTrackableProducts.length === 0 && !productsLoading ? (
+                <span className="text-amber-600 text-xs">
+                  Lot takipli ürün bulunamadı. Ürün ayarlarından &quot;Lot Takibi&quot; seçeneğini aktifleştirin.
+                </span>
+              ) : undefined}
             >
               <Select
-                placeholder="Ürün seçin"
+                placeholder={productsLoading ? "Yükleniyor..." : "Ürün seçin"}
                 showSearch
                 optionFilterProp="children"
+                loading={productsLoading}
+                disabled={lotTrackableProducts.length === 0}
                 className="[&_.ant-select-selector]:!rounded-lg [&_.ant-select-selector]:!border-slate-300"
+                notFoundContent={
+                  productsLoading ? "Yükleniyor..." :
+                  lotTrackableProducts.length === 0 ? (
+                    <div className="text-center py-2">
+                      <ExclamationTriangleIcon className="w-8 h-8 mx-auto text-amber-500 mb-2" />
+                      <p className="text-slate-500 text-sm">Lot takipli ürün bulunamadı</p>
+                      <p className="text-slate-400 text-xs">Ürün ayarlarından &quot;Lot Takibi&quot; aktifleştirin</p>
+                    </div>
+                  ) : "Veri Yok"
+                }
               >
-                {products.filter(p => p.trackLotNumbers).map((p) => (
+                {lotTrackableProducts.map((p) => (
                   <Select.Option key={p.id} value={p.id}>
                     {p.code} - {p.name}
                   </Select.Option>

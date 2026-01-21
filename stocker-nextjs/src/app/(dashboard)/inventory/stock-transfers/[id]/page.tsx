@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Space, Table, Tag, Empty, Timeline, Progress, Modal } from 'antd';
+import { Button, Space, Table, Tag, Empty, Timeline, Progress, App } from 'antd';
 import { Spinner } from '@/components/primitives';
 import {
   ArrowLeftIcon,
@@ -107,6 +107,7 @@ export default function StockTransferDetailPage() {
   const router = useRouter();
   const params = useParams();
   const id = Number(params.id);
+  const { modal } = App.useApp();
 
   const { data: transfer, isLoading, error } = useStockTransfer(id);
   const submitTransfer = useSubmitStockTransfer();
@@ -116,7 +117,7 @@ export default function StockTransferDetailPage() {
   const cancelTransfer = useCancelStockTransfer();
 
   const handleSubmit = () => {
-    Modal.confirm({
+    modal.confirm({
       title: 'Transferi Gönder',
       content: 'Bu transferi onaya göndermek istediğinizden emin misiniz?',
       okText: 'Gönder',
@@ -128,7 +129,7 @@ export default function StockTransferDetailPage() {
   };
 
   const handleApprove = () => {
-    Modal.confirm({
+    modal.confirm({
       title: 'Transferi Onayla',
       content: 'Bu transferi onaylamak istediğinizden emin misiniz?',
       okText: 'Onayla',
@@ -140,7 +141,7 @@ export default function StockTransferDetailPage() {
   };
 
   const handleShip = () => {
-    Modal.confirm({
+    modal.confirm({
       title: 'Transferi Sevk Et',
       content: 'Bu transferi sevk etmek istediğinizden emin misiniz?',
       okText: 'Sevk Et',
@@ -152,7 +153,7 @@ export default function StockTransferDetailPage() {
   };
 
   const handleReceive = () => {
-    Modal.confirm({
+    modal.confirm({
       title: 'Transferi Teslim Al',
       content: 'Bu transferi teslim almak istediğinizden emin misiniz?',
       okText: 'Teslim Al',
@@ -164,7 +165,7 @@ export default function StockTransferDetailPage() {
   };
 
   const handleCancel = () => {
-    Modal.confirm({
+    modal.confirm({
       title: 'Transferi İptal Et',
       content: 'Bu transferi iptal etmek istediğinizden emin misiniz?',
       okText: 'İptal Et',
