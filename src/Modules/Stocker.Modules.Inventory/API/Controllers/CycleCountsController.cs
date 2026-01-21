@@ -148,6 +148,37 @@ public class CycleCountsController : ControllerBase
     }
 
     /// <summary>
+    /// Start a cycle count
+    /// </summary>
+    [HttpPost("{id}/start")]
+    [ProducesResponseType(typeof(CycleCountDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<ActionResult<CycleCountDto>> StartCycleCount(int id)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new StartCycleCountCommand
+        {
+            TenantId = tenantId.Value,
+            Id = id
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
     /// Delete a cycle count
     /// </summary>
     [HttpDelete("{id}")]

@@ -130,3 +130,20 @@ public record UpdateQualityControlDto
     public string? InspectionNotes { get; init; }
     public string? InternalNotes { get; init; }
 }
+
+/// <summary>
+/// DTO for approving a quality control inspection
+/// </summary>
+public record ApproveQualityControlDto
+{
+    public string? Notes { get; init; }
+}
+
+/// <summary>
+/// DTO for rejecting a quality control inspection
+/// </summary>
+public record RejectQualityControlDto
+{
+    public string? Reason { get; init; }
+    public Domain.Entities.RejectionCategory? Category { get; init; }
+}

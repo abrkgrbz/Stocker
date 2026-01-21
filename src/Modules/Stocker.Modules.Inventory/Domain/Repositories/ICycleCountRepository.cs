@@ -8,9 +8,14 @@ namespace Stocker.Modules.Inventory.Domain.Repositories;
 public interface ICycleCountRepository : IInventoryRepository<CycleCount>
 {
     /// <summary>
-    /// Gets cycle count by ID with items
+    /// Gets cycle count by ID
     /// </summary>
     Task<CycleCount?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets cycle count by ID with items included
+    /// </summary>
+    Task<CycleCount?> GetByIdWithItemsAsync(int id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets cycle count by plan number

@@ -20,6 +20,16 @@ public class CycleCountRepository : BaseRepository<CycleCount>, ICycleCountRepos
             .Include(c => c.Warehouse)
             .Include(c => c.Zone)
             .Include(c => c.Category)
+            .Where(c => !c.IsDeleted && c.Id == id)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<CycleCount?> GetByIdWithItemsAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Include(c => c.Warehouse)
+            .Include(c => c.Zone)
+            .Include(c => c.Category)
             .Include(c => c.Items)
                 .ThenInclude(i => i.Product)
             .Include(c => c.Items)

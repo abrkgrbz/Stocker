@@ -186,6 +186,71 @@ public class QualityControlsController : ControllerBase
     }
 
     /// <summary>
+    /// Approve a quality control inspection (quick approval)
+    /// </summary>
+    [HttpPost("{id}/approve")]
+    [ProducesResponseType(typeof(QualityControlDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<ActionResult<QualityControlDto>> ApproveQualityControl(int id, [FromBody] ApproveQualityControlDto? dto = null)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new ApproveQualityControlCommand
+        {
+            TenantId = tenantId.Value,
+            Id = id,
+            Notes = dto?.Notes
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Reject a quality control inspection
+    /// </summary>
+    [HttpPost("{id}/reject")]
+    [ProducesResponseType(typeof(QualityControlDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<ActionResult<QualityControlDto>> RejectQualityControl(int id, [FromBody] RejectQualityControlDto? dto = null)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new RejectQualityControlCommand
+        {
+            TenantId = tenantId.Value,
+            Id = id,
+            Reason = dto?.Reason,
+            Category = dto?.Category
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
     /// Delete a quality control record
     /// </summary>
     [HttpDelete("{id}")]
