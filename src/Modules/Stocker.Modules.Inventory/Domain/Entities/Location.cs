@@ -56,13 +56,48 @@ public class Location : BaseEntity
     
     public void UpdateUsedCapacity(decimal usedCapacity)
     {
-        if (usedCapacity > Capacity)
+        if (Capacity > 0 && usedCapacity > Capacity)
             throw new InvalidOperationException("Used capacity cannot exceed total capacity");
-            
+
         UsedCapacity = usedCapacity;
     }
-    
-    public decimal GetAvailableCapacity() => Capacity - UsedCapacity;
+
+    /// <summary>
+    /// Increases used capacity when stock is added to this location.
+    /// Skips validation if Capacity is 0 (unlimited).
+    /// </summary>
+    public void IncreaseUsedCapacity(decimal amount)
+    {
+        if (amount <= 0) return;
+
+        if (Capacity > 0 && (UsedCapacity + amount) > Capacity)
+            throw new InvalidOperationException(
+                $"Lokasyon kapasitesi aşılıyor. Mevcut: {UsedCapacity}, Eklenecek: {amount}, Kapasite: {Capacity}");
+
+        UsedCapacity += amount;
+    }
+
+    /// <summary>
+    /// Decreases used capacity when stock is removed from this location.
+    /// </summary>
+    public void DecreaseUsedCapacity(decimal amount)
+    {
+        if (amount <= 0) return;
+
+        UsedCapacity = Math.Max(0, UsedCapacity - amount);
+    }
+
+    /// <summary>
+    /// Checks if the location has enough available capacity for the given amount.
+    /// Returns true if Capacity is 0 (unlimited).
+    /// </summary>
+    public bool HasAvailableCapacity(decimal amount)
+    {
+        if (Capacity <= 0) return true;
+        return (UsedCapacity + amount) <= Capacity;
+    }
+
+    public decimal GetAvailableCapacity() => Capacity > 0 ? Capacity - UsedCapacity : decimal.MaxValue;
 
     public void SetWarehouseZone(int? warehouseZoneId) => WarehouseZoneId = warehouseZoneId;
 

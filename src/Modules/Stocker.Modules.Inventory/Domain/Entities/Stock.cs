@@ -37,7 +37,20 @@ public class Stock : BaseEntity
 
     public void SetLocation(int? locationId)
     {
+        var previousLocationId = LocationId;
         LocationId = locationId;
+
+        if (previousLocationId != locationId)
+        {
+            RaiseDomainEvent(new StockLocationChangedDomainEvent(
+                Id,
+                TenantId,
+                ProductId,
+                WarehouseId,
+                previousLocationId,
+                locationId,
+                Quantity));
+        }
     }
 
     public void SetSerialNumber(string serialNumber)
@@ -87,6 +100,9 @@ public class Stock : BaseEntity
         if (quantity <= 0)
             throw new ArgumentException("Quantity must be greater than zero");
 
+        if (IsExpired())
+            throw new InvalidOperationException("Son kullanma tarihi geçmiş stok çıkışı yapılamaz");
+
         if (quantity > AvailableQuantity)
             throw new InvalidOperationException("Insufficient available stock");
 
@@ -114,6 +130,9 @@ public class Stock : BaseEntity
     {
         if (quantity <= 0)
             throw new ArgumentException("Quantity must be greater than zero");
+
+        if (IsExpired())
+            throw new InvalidOperationException("Son kullanma tarihi geçmiş stok için rezervasyon yapılamaz");
 
         if (quantity > AvailableQuantity)
             throw new InvalidOperationException("Insufficient available stock for reservation");
@@ -156,6 +175,13 @@ public class Stock : BaseEntity
 
     public void AdjustStock(decimal newQuantity)
     {
+        if (newQuantity < 0)
+            throw new ArgumentException("Stok miktarı negatif olamaz");
+
+        if (newQuantity < ReservedQuantity)
+            throw new InvalidOperationException(
+                $"Yeni miktar ({newQuantity}) rezerve edilmiş miktarın ({ReservedQuantity}) altına düşemez");
+
         var previousQuantity = Quantity;
         Quantity = newQuantity;
         LastMovementDate = DateTime.UtcNow;

@@ -76,6 +76,7 @@ const productTypeConfig: Record<ProductType, { color: string; bgColor: string; l
 interface FilterState {
   searchText: string;
   categoryId?: number;
+  subCategoryId?: number;
   brandId?: number;
   productTypes: ProductType[];
   includeInactive: boolean;
@@ -98,6 +99,7 @@ interface SavedView {
 const defaultFilters: FilterState = {
   searchText: '',
   categoryId: undefined,
+  subCategoryId: undefined,
   brandId: undefined,
   productTypes: [],
   includeInactive: false,
@@ -186,13 +188,30 @@ export default function ProductsPage() {
   }, [filters.searchText]);
 
   // API Hooks
-  const { data: products = [], isLoading, refetch } = useProducts(filters.includeInactive, filters.categoryId, filters.brandId);
+  // Use subCategoryId if selected, otherwise use categoryId for API filtering
+  const effectiveCategoryId = filters.subCategoryId || filters.categoryId;
+  const { data: products = [], isLoading, refetch } = useProducts(filters.includeInactive, effectiveCategoryId, filters.brandId);
   const { data: categories = [] } = useCategories();
   const { data: brands = [] } = useBrands();
   const deleteProduct = useDeleteProduct();
   const activateProduct = useActivateProduct();
   const deactivateProduct = useDeactivateProduct();
   const updateProduct = useUpdateProduct();
+
+  // Calculate subcategories based on selected category
+  const subCategoryOptions = useMemo(() => {
+    if (!filters.categoryId) return [];
+    return categories
+      .filter(c => c.parentCategoryId === filters.categoryId)
+      .map(c => ({ value: c.id, label: c.name }));
+  }, [categories, filters.categoryId]);
+
+  // Get only root categories for the main category filter
+  const rootCategoryOptions = useMemo(() => {
+    return categories
+      .filter(c => !c.parentCategoryId)
+      .map(c => ({ value: c.id, label: c.name }));
+  }, [categories]);
 
   // Calculate price and stock ranges for sliders
   const priceStats = useMemo(() => {
@@ -425,8 +444,30 @@ export default function ProductsPage() {
           const product = products.find(p => p.id === productId);
           if (!product) continue;
 
-          const updateData: Partial<UpdateProductDto> = {};
+          // Start with existing product data as base
+          const updateData: UpdateProductDto = {
+            name: product.name,
+            description: product.description,
+            barcode: product.barcode,
+            sku: product.sku,
+            categoryId: product.categoryId,
+            brandId: product.brandId,
+            unitId: product.unitId || 1,
+            productType: product.productType || 'Finished',
+            unitPrice: product.unitPrice,
+            unitPriceCurrency: product.unitPriceCurrency || 'TRY',
+            costPrice: product.costPrice,
+            costPriceCurrency: product.costPriceCurrency || 'TRY',
+            minStockLevel: product.minStockLevel || 0,
+            maxStockLevel: product.maxStockLevel || 0,
+            reorderLevel: product.reorderLevel || 0,
+            reorderQuantity: product.reorderQuantity || 0,
+            leadTimeDays: product.leadTimeDays || 0,
+            trackSerialNumbers: product.trackSerialNumbers || false,
+            trackLotNumbers: product.trackLotNumbers || false,
+          };
 
+          // Apply bulk changes on top
           if (values.categoryId) {
             updateData.categoryId = values.categoryId;
           }
@@ -448,10 +489,8 @@ export default function ProductsPage() {
             updateData.unitPrice = Math.max(0, newPrice);
           }
 
-          if (Object.keys(updateData).length > 0) {
-            await updateProduct.mutateAsync({ id: productId, data: updateData as UpdateProductDto });
-            successCount++;
-          }
+          await updateProduct.mutateAsync({ id: productId, data: updateData });
+          successCount++;
         } catch {
           errorCount++;
         }
@@ -948,12 +987,26 @@ export default function ProductsPage() {
           <Select
             placeholder="Kategori"
             value={filters.categoryId}
-            onChange={(v) => updateFilter('categoryId', v)}
+            onChange={(v) => {
+              updateFilter('categoryId', v);
+              updateFilter('subCategoryId', undefined);
+            }}
             allowClear
             style={{ width: 160 }}
-            options={categories.map((c) => ({ value: c.id, label: c.name }))}
+            options={rootCategoryOptions}
             className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           />
+          {subCategoryOptions.length > 0 && (
+            <Select
+              placeholder="Alt Kategori"
+              value={filters.subCategoryId}
+              onChange={(v) => updateFilter('subCategoryId', v)}
+              allowClear
+              style={{ width: 160 }}
+              options={subCategoryOptions}
+              className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
+            />
+          )}
           <Select
             placeholder="Marka"
             value={filters.brandId}
@@ -1079,7 +1132,13 @@ export default function ProductsPage() {
               {filters.categoryId && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
                   Kategori: {categories.find(c => c.id === filters.categoryId)?.name}
-                  <button onClick={() => updateFilter('categoryId', undefined)}><XMarkIcon className="w-3 h-3" /></button>
+                  <button onClick={() => { updateFilter('categoryId', undefined); updateFilter('subCategoryId', undefined); }}><XMarkIcon className="w-3 h-3" /></button>
+                </span>
+              )}
+              {filters.subCategoryId && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
+                  Alt Kategori: {categories.find(c => c.id === filters.subCategoryId)?.name}
+                  <button onClick={() => updateFilter('subCategoryId', undefined)}><XMarkIcon className="w-3 h-3" /></button>
                 </span>
               )}
               {filters.brandId && (

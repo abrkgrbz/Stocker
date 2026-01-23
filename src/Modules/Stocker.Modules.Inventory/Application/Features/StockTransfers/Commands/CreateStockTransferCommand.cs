@@ -68,8 +68,25 @@ public class CreateStockTransferCommandHandler : IRequestHandler<CreateStockTran
         transfer.SetNotes(data.Notes);
         transfer.SetExpectedArrival(data.ExpectedArrivalDate);
 
+        // Validate stock availability and reserve stock for each item
         foreach (var itemDto in data.Items)
         {
+            // Check source stock availability
+            var sourceStock = await _unitOfWork.Stocks.GetByProductAndLocationAsync(
+                itemDto.ProductId, data.SourceWarehouseId, itemDto.SourceLocationId, cancellationToken);
+
+            if (sourceStock == null || sourceStock.AvailableQuantity < itemDto.RequestedQuantity)
+            {
+                var product = await _unitOfWork.Products.GetByIdAsync(itemDto.ProductId, cancellationToken);
+                return Result<StockTransferDto>.Failure(
+                    Error.Validation("Stock.Insufficient",
+                        $"Ürün '{product?.Name ?? itemDto.ProductId.ToString()}' için kaynak depoda yeterli stok bulunmuyor. " +
+                        $"Kullanılabilir: {sourceStock?.AvailableQuantity ?? 0}, İstenen: {itemDto.RequestedQuantity}"));
+            }
+
+            // Reserve the stock for this transfer
+            sourceStock.ReserveStock(itemDto.RequestedQuantity);
+
             var item = transfer.AddItem(
                 itemDto.ProductId,
                 itemDto.RequestedQuantity,

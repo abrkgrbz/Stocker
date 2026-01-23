@@ -54,6 +54,66 @@ public class CreateStockMovementCommandHandler : IRequestHandler<CreateStockMove
             return Result<StockMovementDto>.Failure(new Error("Warehouse.NotFound", $"Warehouse with ID {data.WarehouseId} not found", ErrorType.NotFound));
         }
 
+        // Validate destination location capacity and zone for incoming movements
+        Location? toLocation = null;
+        Location? fromLocation = null;
+
+        if (data.ToLocationId.HasValue)
+        {
+            toLocation = await _unitOfWork.Locations.GetByIdAsync(data.ToLocationId.Value, cancellationToken);
+            if (toLocation != null)
+            {
+                // Check capacity for incoming movements
+                if (!toLocation.HasAvailableCapacity(data.Quantity))
+                {
+                    return Result<StockMovementDto>.Failure(
+                        Error.Validation("Location.CapacityExceeded",
+                            $"Hedef lokasyon kapasitesi yetersiz. Kullanılabilir: {toLocation.GetAvailableCapacity()}, İstenen: {data.Quantity}"));
+                }
+
+                // Check zone constraints
+                if (toLocation.WarehouseZoneId.HasValue)
+                {
+                    var zone = await _unitOfWork.WarehouseZones.GetByIdAsync(toLocation.WarehouseZoneId.Value, cancellationToken);
+                    if (zone != null && zone.IsQuarantineZone)
+                    {
+                        return Result<StockMovementDto>.Failure(
+                            Error.Validation("Zone.QuarantineRestriction",
+                                "Karantina bölgesine normal hareket ile stok yerleştirilemez"));
+                    }
+                }
+            }
+        }
+
+        if (data.FromLocationId.HasValue)
+        {
+            fromLocation = await _unitOfWork.Locations.GetByIdAsync(data.FromLocationId.Value, cancellationToken);
+        }
+
+        // Validate serial number uniqueness for incoming movements
+        if (!string.IsNullOrEmpty(data.SerialNumber))
+        {
+            var existingStock = await _unitOfWork.Stocks.GetBySerialNumberAsync(data.SerialNumber, cancellationToken);
+            if (existingStock != null && existingStock.Quantity > 0)
+            {
+                return Result<StockMovementDto>.Failure(
+                    Error.Validation("Stock.DuplicateSerial",
+                        $"Bu seri numarası zaten aktif bir stokta mevcut: '{data.SerialNumber}'"));
+            }
+        }
+
+        // Validate lot number exists if specified (for traceability)
+        if (!string.IsNullOrEmpty(data.LotNumber))
+        {
+            var existingLot = await _unitOfWork.LotBatches.GetByLotNumberAsync(data.LotNumber, cancellationToken);
+            if (existingLot == null)
+            {
+                return Result<StockMovementDto>.Failure(
+                    Error.Validation("Stock.LotNotFound",
+                        $"Belirtilen lot numarası bulunamadı: '{data.LotNumber}'. Önce lot kaydı oluşturulmalıdır."));
+            }
+        }
+
         var movement = new StockMovement(
             data.DocumentNumber,
             data.MovementDate,
@@ -122,15 +182,28 @@ public class CreateStockMovementCommandHandler : IRequestHandler<CreateStockMove
         if (data.MovementType == StockMovementType.Counting)
         {
             // Counting sets the stock to exact quantity
+            var previousQuantity = stock.Quantity;
             stock.AdjustStock(data.Quantity);
+            // Update location capacity based on adjustment difference
+            var difference = data.Quantity - previousQuantity;
+            if (difference > 0 && toLocation != null)
+                toLocation.IncreaseUsedCapacity(difference);
+            else if (difference < 0 && fromLocation != null)
+                fromLocation.DecreaseUsedCapacity(Math.Abs(difference));
         }
         else if (isIncoming)
         {
             stock.IncreaseStock(data.Quantity);
+            // Update destination location capacity
+            if (toLocation != null)
+                toLocation.IncreaseUsedCapacity(data.Quantity);
         }
         else
         {
             stock.DecreaseStock(data.Quantity);
+            // Update source location capacity
+            if (fromLocation != null)
+                fromLocation.DecreaseUsedCapacity(data.Quantity);
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);

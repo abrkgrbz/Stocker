@@ -84,6 +84,18 @@ public sealed record StockBelowMinimumDomainEvent(
     decimal ReorderPoint) : DomainEvent;
 
 /// <summary>
+/// Stok lokasyonu değiştiğinde tetiklenen event.
+/// </summary>
+public sealed record StockLocationChangedDomainEvent(
+    int StockId,
+    Guid TenantId,
+    int ProductId,
+    int WarehouseId,
+    int? PreviousLocationId,
+    int? NewLocationId,
+    decimal Quantity) : DomainEvent;
+
+/// <summary>
 /// Stok son kullanma tarihi yaklaştığında tetiklenen event.
 /// </summary>
 public sealed record StockExpiringDomainEvent(

@@ -92,6 +92,49 @@ public class MoveStockCommandHandler : IRequestHandler<MoveStockCommand, Result<
                 Error.NotFound("Warehouse", $"Hedef depo bulunamadı (ID: {data.DestinationWarehouseId})"));
         }
 
+        // Validate destination location capacity and zone constraints
+        Location? sourceLocation = null;
+        Location? destLocation = null;
+
+        if (data.SourceLocationId.HasValue)
+        {
+            sourceLocation = await _unitOfWork.Locations.GetByIdAsync(data.SourceLocationId.Value, cancellationToken);
+        }
+
+        if (data.DestinationLocationId.HasValue)
+        {
+            destLocation = await _unitOfWork.Locations.GetByIdAsync(data.DestinationLocationId.Value, cancellationToken);
+            if (destLocation == null)
+            {
+                return Result<StockMovementDto>.Failure(
+                    Error.NotFound("Location", $"Hedef lokasyon bulunamadı (ID: {data.DestinationLocationId.Value})"));
+            }
+
+            // Check destination location capacity
+            if (!destLocation.HasAvailableCapacity(data.Quantity))
+            {
+                return Result<StockMovementDto>.Failure(
+                    Error.Validation("Location.CapacityExceeded",
+                        $"Hedef lokasyon kapasitesi yetersiz. Kullanılabilir: {destLocation.GetAvailableCapacity()}, İstenen: {data.Quantity}"));
+            }
+
+            // Check zone constraints if location has a zone
+            if (destLocation.WarehouseZoneId.HasValue)
+            {
+                var zone = await _unitOfWork.WarehouseZones.GetByIdAsync(destLocation.WarehouseZoneId.Value, cancellationToken);
+                if (zone != null)
+                {
+                    // Prevent placing items in quarantine zone via regular transfer
+                    if (zone.IsQuarantineZone)
+                    {
+                        return Result<StockMovementDto>.Failure(
+                            Error.Validation("Zone.QuarantineRestriction",
+                                "Karantina bölgesine normal transfer ile stok yerleştirilemez"));
+                    }
+                }
+            }
+        }
+
         // Get source stock
         var sourceStock = await _unitOfWork.Stocks.GetByProductAndLocationAsync(
             data.ProductId, data.SourceWarehouseId, data.SourceLocationId, cancellationToken);
@@ -120,6 +163,16 @@ public class MoveStockCommandHandler : IRequestHandler<MoveStockCommand, Result<
         // Perform the transfer
         sourceStock.DecreaseStock(data.Quantity);
         destStock.IncreaseStock(data.Quantity);
+
+        // Update location capacities
+        if (sourceLocation != null)
+        {
+            sourceLocation.DecreaseUsedCapacity(data.Quantity);
+        }
+        if (destLocation != null)
+        {
+            destLocation.IncreaseUsedCapacity(data.Quantity);
+        }
 
         // Create stock movement record
         var documentNumber = await _unitOfWork.StockMovements.GenerateDocumentNumberAsync(

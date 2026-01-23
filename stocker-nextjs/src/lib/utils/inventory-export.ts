@@ -50,6 +50,22 @@ const productTypeLabels: Record<string, string> = {
   FixedAsset: 'Duran Varlık',
 };
 
+/**
+ * Transliterate Turkish characters to ASCII equivalents for PDF compatibility.
+ * jsPDF standard fonts (Helvetica, Courier, Times) do not support Turkish chars.
+ */
+function transliterateTurkish(text: string): string {
+  const map: Record<string, string> = {
+    'ç': 'c', 'Ç': 'C',
+    'ğ': 'g', 'Ğ': 'G',
+    'ı': 'i', 'İ': 'I',
+    'ö': 'o', 'Ö': 'O',
+    'ş': 's', 'Ş': 'S',
+    'ü': 'u', 'Ü': 'U',
+  };
+  return text.replace(/[çÇğĞıİöÖşŞüÜ]/g, (char) => map[char] || char);
+}
+
 function formatCellValue(key: string, value: any): string {
   if (value === null || value === undefined) return '-';
 
@@ -85,27 +101,27 @@ export function generateInventoryPDF(
 
   // Title
   doc.setFontSize(18);
-  doc.text(title, 14, 22);
+  doc.text(transliterateTurkish(title), 14, 22);
 
   // Metadata
   doc.setFontSize(10);
   doc.setTextColor(100);
-  doc.text(`Oluşturulma Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 14, 30);
-  doc.text(`Toplam Ürün: ${products.length}`, 14, 36);
+  doc.text(transliterateTurkish(`Olusturulma Tarihi: ${new Date().toLocaleDateString('tr-TR')}`), 14, 30);
+  doc.text(transliterateTurkish(`Toplam Urun: ${products.length}`), 14, 36);
 
   // Calculate totals
   const totalValue = products.reduce((sum, p) => sum + (p.unitPrice || 0) * p.totalStockQuantity, 0);
   const totalStock = products.reduce((sum, p) => sum + p.totalStockQuantity, 0);
   const lowStockCount = products.filter((p) => p.totalStockQuantity < p.minStockLevel).length;
 
-  doc.text(`Toplam Stok Değeri: ₺${totalValue.toLocaleString('tr-TR')}`, 100, 30);
-  doc.text(`Toplam Stok Miktarı: ${totalStock.toLocaleString('tr-TR')}`, 100, 36);
-  doc.text(`Düşük Stoklu Ürün: ${lowStockCount}`, 200, 30);
+  doc.text(transliterateTurkish(`Toplam Stok Degeri: TL ${totalValue.toLocaleString('tr-TR')}`), 100, 30);
+  doc.text(transliterateTurkish(`Toplam Stok Miktari: ${totalStock.toLocaleString('tr-TR')}`), 100, 36);
+  doc.text(transliterateTurkish(`Dusuk Stoklu Urun: ${lowStockCount}`), 200, 30);
 
-  // Prepare table data
-  const headers = columns.map((col) => columnLabels[col] || col);
+  // Prepare table data - transliterate all text for PDF font compatibility
+  const headers = columns.map((col) => transliterateTurkish(columnLabels[col] || col));
   const data = products.map((product) =>
-    columns.map((col) => formatCellValue(col, (product as any)[col]))
+    columns.map((col) => transliterateTurkish(formatCellValue(col, (product as any)[col])))
   );
 
   // Generate table
@@ -142,7 +158,7 @@ export function generateInventoryPDF(
     doc.setFontSize(8);
     doc.setTextColor(150);
     doc.text(
-      `Sayfa ${i} / ${pageCount}`,
+      `Sayfa ${i} / ${pageCount}`,  // "Sayfa" has no special chars
       doc.internal.pageSize.getWidth() / 2,
       doc.internal.pageSize.getHeight() - 10,
       { align: 'center' }

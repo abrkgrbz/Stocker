@@ -50,6 +50,20 @@ public class CreateLocationCommandHandler : IRequestHandler<CreateLocationComman
             return Result<LocationDto>.Failure(new Error("Location.DuplicateCode", $"'{data.Code}' kodlu konum bu depoda zaten mevcut", ErrorType.Conflict));
         }
 
+        // Validate that new location capacity doesn't exceed warehouse TotalArea
+        if (warehouse.TotalArea > 0 && data.Capacity > 0)
+        {
+            var existingLocations = await _unitOfWork.Locations.GetByWarehouseAsync(data.WarehouseId, cancellationToken);
+            var totalExistingCapacity = existingLocations.Sum(l => l.Capacity);
+            if ((totalExistingCapacity + data.Capacity) > warehouse.TotalArea)
+            {
+                return Result<LocationDto>.Failure(
+                    Error.Validation("Warehouse.AreaExceeded",
+                        $"Depo toplam alanı aşılıyor. Depo alanı: {warehouse.TotalArea}, " +
+                        $"Mevcut lokasyon kapasitesi: {totalExistingCapacity}, Eklenmek istenen: {data.Capacity}"));
+            }
+        }
+
         var location = new Location(data.WarehouseId, data.Code, data.Name);
         location.SetTenantId(request.TenantId);
         location.UpdateLocation(data.Name, data.Description);

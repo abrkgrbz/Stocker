@@ -43,6 +43,33 @@ public class UpdateLocationCommandHandler : IRequestHandler<UpdateLocationComman
         }
 
         var data = request.Data;
+
+        // Validate that updated capacity doesn't exceed warehouse TotalArea
+        if (data.Capacity > 0 && data.Capacity != location.Capacity)
+        {
+            var warehouse = await _unitOfWork.Warehouses.GetByIdAsync(location.WarehouseId, cancellationToken);
+            if (warehouse != null && warehouse.TotalArea > 0)
+            {
+                var existingLocations = await _unitOfWork.Locations.GetByWarehouseAsync(location.WarehouseId, cancellationToken);
+                var totalOtherCapacity = existingLocations.Where(l => l.Id != location.Id).Sum(l => l.Capacity);
+                if ((totalOtherCapacity + data.Capacity) > warehouse.TotalArea)
+                {
+                    return Result<LocationDto>.Failure(
+                        Error.Validation("Warehouse.AreaExceeded",
+                            $"Depo toplam alanı aşılıyor. Depo alanı: {warehouse.TotalArea}, " +
+                            $"Diğer lokasyon kapasitesi: {totalOtherCapacity}, Güncellenecek: {data.Capacity}"));
+                }
+            }
+        }
+
+        // Don't allow reducing capacity below used capacity
+        if (data.Capacity > 0 && data.Capacity < location.UsedCapacity)
+        {
+            return Result<LocationDto>.Failure(
+                Error.Validation("Location.CapacityBelowUsed",
+                    $"Kapasite mevcut kullanımın altına düşürülemez. Kullanılan: {location.UsedCapacity}, İstenen kapasite: {data.Capacity}"));
+        }
+
         location.UpdateLocation(data.Name, data.Description);
         location.SetLocationDetails(data.Aisle, data.Shelf, data.Bin);
         location.SetCapacity(data.Capacity);
