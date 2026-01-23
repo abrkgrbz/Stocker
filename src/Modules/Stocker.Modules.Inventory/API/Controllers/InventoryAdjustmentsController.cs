@@ -211,6 +211,39 @@ public class InventoryAdjustmentsController : ControllerBase
     }
 
     /// <summary>
+    /// Reject an inventory adjustment
+    /// </summary>
+    [HttpPost("{id}/reject")]
+    [ProducesResponseType(typeof(InventoryAdjustmentDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<ActionResult<InventoryAdjustmentDto>> RejectInventoryAdjustment(int id, RejectInventoryAdjustmentDto dto)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var command = new RejectInventoryAdjustmentCommand
+        {
+            TenantId = tenantId.Value,
+            Id = id,
+            RejectedBy = dto.RejectedBy,
+            Reason = dto.Reason
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
     /// Delete an inventory adjustment
     /// </summary>
     [HttpDelete("{id}")]
