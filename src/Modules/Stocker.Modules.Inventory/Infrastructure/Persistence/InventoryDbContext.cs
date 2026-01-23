@@ -140,6 +140,12 @@ public class InventoryDbContext : DbContext
 
     #endregion
 
+    #region DbSets - Idempotency
+
+    public DbSet<ProcessedRequest> ProcessedRequests { get; set; } = null!;
+
+    #endregion
+
     #region DbSets - Audit
 
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
@@ -186,6 +192,33 @@ public class InventoryDbContext : DbContext
 
         // Configure AuditLog entity
         ConfigureAuditLog(modelBuilder);
+
+        // Configure optimistic concurrency using PostgreSQL xmin system column
+        ApplyOptimisticConcurrency(modelBuilder);
+    }
+
+    private static void ApplyOptimisticConcurrency(ModelBuilder modelBuilder)
+    {
+        // Critical entities that need concurrency protection using PostgreSQL xmin system column
+        ConfigureXminConcurrency<Stock>(modelBuilder);
+        ConfigureXminConcurrency<Location>(modelBuilder);
+        ConfigureXminConcurrency<StockTransfer>(modelBuilder);
+        ConfigureXminConcurrency<StockTransferItem>(modelBuilder);
+        ConfigureXminConcurrency<LotBatch>(modelBuilder);
+        ConfigureXminConcurrency<SerialNumber>(modelBuilder);
+        ConfigureXminConcurrency<StockReservation>(modelBuilder);
+        ConfigureXminConcurrency<CycleCount>(modelBuilder);
+        ConfigureXminConcurrency<InventoryAdjustment>(modelBuilder);
+    }
+
+    private static void ConfigureXminConcurrency<T>(ModelBuilder modelBuilder) where T : SharedKernel.Common.BaseEntity
+    {
+        modelBuilder.Entity<T>()
+            .Property(e => e.xmin)
+            .HasColumnName("xmin")
+            .HasColumnType("xid")
+            .ValueGeneratedOnAddOrUpdate()
+            .IsConcurrencyToken();
     }
 
     private void ApplyTenantQueryFilters(ModelBuilder modelBuilder)

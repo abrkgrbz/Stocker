@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Stocker.Modules.Inventory.Application.Behaviors;
 using System.Reflection;
 
 namespace Stocker.Modules.Inventory.Application;
@@ -23,8 +24,8 @@ public static class DependencyInjection
         // Add FluentValidation
         services.AddValidatorsFromAssembly(assembly);
 
-        // Validation behavior is already registered in the main application
-        // No need to register it again here
+        // Add Idempotency pipeline behavior
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(IdempotencyBehavior<,>));
 
         return services;
     }

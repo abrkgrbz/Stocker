@@ -61,4 +61,10 @@ public interface ICycleCountRepository : IInventoryRepository<CycleCount>
     /// Gets upcoming scheduled cycle counts
     /// </summary>
     Task<IReadOnlyList<CycleCount>> GetUpcomingAsync(int daysAhead, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks if there is an active (InProgress) cycle count that covers the given location.
+    /// Used to prevent stock movements to/from locations under active counting.
+    /// </summary>
+    Task<bool> HasActiveCountForLocationAsync(int warehouseId, int? locationId, CancellationToken cancellationToken = default);
 }

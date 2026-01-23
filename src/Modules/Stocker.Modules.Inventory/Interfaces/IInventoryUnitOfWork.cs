@@ -163,5 +163,10 @@ public interface IInventoryUnitOfWork : IUnitOfWork
     /// </summary>
     IReorderRuleRepository ReorderRules { get; }
 
+    /// <summary>
+    /// Gets the Processed Request repository for idempotency checking.
+    /// </summary>
+    IProcessedRequestRepository ProcessedRequests { get; }
+
     #endregion
 }

@@ -25,6 +25,13 @@ public class StockConfiguration : IEntityTypeConfiguration<Stock>
         builder.Property(s => s.ReservedQuantity)
             .HasPrecision(18, 4);
 
+        // Database-level constraints to prevent negative quantities
+        builder.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_Stocks_Quantity_NonNegative", "\"Quantity\" >= 0");
+            t.HasCheckConstraint("CK_Stocks_ReservedQuantity_NonNegative", "\"ReservedQuantity\" >= 0");
+        });
+
         // AvailableQuantity is a computed property in entity, not stored in DB
         builder.Ignore(s => s.AvailableQuantity);
 

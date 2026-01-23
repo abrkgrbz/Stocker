@@ -120,4 +120,26 @@ public class CycleCountRepository : BaseRepository<CycleCount>, ICycleCountRepos
             .OrderBy(c => c.ScheduledStartDate)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<bool> HasActiveCountForLocationAsync(int warehouseId, int? locationId, CancellationToken cancellationToken = default)
+    {
+        // Check if there's an InProgress cycle count that covers this warehouse
+        var query = DbSet
+            .Include(c => c.Items)
+            .Where(c => !c.IsDeleted &&
+                c.Status == CycleCountStatus.InProgress &&
+                c.WarehouseId == warehouseId);
+
+        if (locationId.HasValue)
+        {
+            // Check if cycle count covers the specific location (via items or warehouse-wide)
+            query = query.Where(c =>
+                // Warehouse-wide count (no specific items with locations = covers all)
+                !c.Items.Any(i => i.LocationId.HasValue) ||
+                // Or has items specifically targeting this location
+                c.Items.Any(i => i.LocationId == locationId.Value));
+        }
+
+        return await query.AnyAsync(cancellationToken);
+    }
 }

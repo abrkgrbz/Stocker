@@ -9,6 +9,12 @@ public abstract class BaseEntity : ITenantEntity
 
     public int Id { get; protected set; }
     public Guid TenantId { get; protected set; }
+
+    /// <summary>
+    /// PostgreSQL system column used as concurrency token.
+    /// Automatically managed by PostgreSQL - changes on every row update.
+    /// </summary>
+    public uint xmin { get; protected set; }
     public DateTime CreatedDate { get; protected set; }
     public DateTime? UpdatedDate { get; protected set; }
     public string? CreatedBy { get; protected set; }

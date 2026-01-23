@@ -1,5 +1,7 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Stocker.Modules.Inventory.Application.Behaviors;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Enums;
@@ -8,9 +10,10 @@ using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockMovements.Commands;
 
-public class CreateStockMovementCommand : IRequest<Result<StockMovementDto>>
+public class CreateStockMovementCommand : IRequest<Result<StockMovementDto>>, IIdempotentCommand
 {
     public Guid TenantId { get; set; }
+    public Guid RequestId { get; set; }
     public CreateStockMovementDto Data { get; set; } = null!;
 }
 
@@ -40,6 +43,45 @@ public class CreateStockMovementCommandHandler : IRequestHandler<CreateStockMove
 
     public async Task<Result<StockMovementDto>> Handle(CreateStockMovementCommand request, CancellationToken cancellationToken)
     {
+        const int maxRetries = 3;
+
+        for (int attempt = 0; attempt < maxRetries; attempt++)
+        {
+            try
+            {
+                await _unitOfWork.BeginTransactionAsync(cancellationToken);
+
+                var result = await ExecuteCore(request, cancellationToken);
+
+                if (result.IsFailure)
+                {
+                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                    return result;
+                }
+
+                await _unitOfWork.CommitTransactionAsync(cancellationToken);
+                return result;
+            }
+            catch (DbUpdateConcurrencyException) when (attempt < maxRetries - 1)
+            {
+                // Concurrency conflict - retry with fresh data
+                await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                continue;
+            }
+            catch (Exception)
+            {
+                if (_unitOfWork.HasActiveTransaction)
+                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                throw;
+            }
+        }
+
+        return Result<StockMovementDto>.Failure(
+            Error.Validation("Concurrency.MaxRetries", "İşlem eşzamanlılık çakışması nedeniyle tamamlanamadı. Lütfen tekrar deneyin."));
+    }
+
+    private async Task<Result<StockMovementDto>> ExecuteCore(CreateStockMovementCommand request, CancellationToken cancellationToken)
+    {
         var data = request.Data;
 
         var product = await _unitOfWork.Products.GetByIdAsync(data.ProductId, cancellationToken);
@@ -52,6 +94,31 @@ public class CreateStockMovementCommandHandler : IRequestHandler<CreateStockMove
         if (warehouse == null)
         {
             return Result<StockMovementDto>.Failure(new Error("Warehouse.NotFound", $"Warehouse with ID {data.WarehouseId} not found", ErrorType.NotFound));
+        }
+
+        // Check cycle count lock - prevent movements to/from locations under active counting
+        if (data.FromLocationId.HasValue)
+        {
+            var fromLocked = await _unitOfWork.CycleCounts.HasActiveCountForLocationAsync(
+                data.WarehouseId, data.FromLocationId, cancellationToken);
+            if (fromLocked)
+            {
+                return Result<StockMovementDto>.Failure(
+                    Error.Validation("CycleCount.LocationLocked",
+                        "Kaynak lokasyonda aktif sayım işlemi devam ediyor. Sayım tamamlanana kadar stok hareketi yapılamaz."));
+            }
+        }
+
+        if (data.ToLocationId.HasValue)
+        {
+            var toLocked = await _unitOfWork.CycleCounts.HasActiveCountForLocationAsync(
+                data.WarehouseId, data.ToLocationId, cancellationToken);
+            if (toLocked)
+            {
+                return Result<StockMovementDto>.Failure(
+                    Error.Validation("CycleCount.LocationLocked",
+                        "Hedef lokasyonda aktif sayım işlemi devam ediyor. Sayım tamamlanana kadar stok hareketi yapılamaz."));
+            }
         }
 
         // Validate destination location capacity and zone for incoming movements
@@ -144,7 +211,7 @@ public class CreateStockMovementCommandHandler : IRequestHandler<CreateStockMove
 
         // Update Stock table based on movement type
         var stock = await _unitOfWork.Stocks.GetByProductAndWarehouseAsync(data.ProductId, data.WarehouseId, cancellationToken);
-        
+
         if (stock == null)
         {
             // Create new stock record if it doesn't exist

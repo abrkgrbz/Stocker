@@ -101,6 +101,7 @@ public sealed class InventoryUnitOfWork : IInventoryUnitOfWork, IAsyncDisposable
     private ICycleCountRepository? _cycleCounts;
     private IInventoryAdjustmentRepository? _inventoryAdjustments;
     private IReorderRuleRepository? _reorderRules;
+    private IProcessedRequestRepository? _processedRequests;
 
     #endregion
 
@@ -242,6 +243,10 @@ public sealed class InventoryUnitOfWork : IInventoryUnitOfWork, IAsyncDisposable
     /// <inheritdoc />
     public IReorderRuleRepository ReorderRules =>
         _reorderRules ??= GetOrAddSpecificRepository<IReorderRuleRepository, ReorderRuleRepository>();
+
+    /// <inheritdoc />
+    public IProcessedRequestRepository ProcessedRequests =>
+        _processedRequests ??= GetOrAddSpecificRepository<IProcessedRequestRepository, ProcessedRequestRepository>();
 
     #endregion
 
