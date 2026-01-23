@@ -33,6 +33,12 @@ public class DeleteWarehouseCommandHandler : IRequestHandler<DeleteWarehouseComm
             return Result.Failure(Error.NotFound("Warehouse", $"Depo bulunamadı (ID: {request.WarehouseId})"));
         }
 
+        // Check if it's the default warehouse
+        if (warehouse.IsDefault)
+        {
+            return Result.Failure(Error.Validation("Warehouse.IsDefault", "Varsayılan depo silinemez"));
+        }
+
         // Check if warehouse has stock
         var stocks = await _unitOfWork.Stocks.GetByWarehouseAsync(request.WarehouseId, cancellationToken);
         if (stocks.Any(s => s.Quantity > 0))
@@ -40,10 +46,25 @@ public class DeleteWarehouseCommandHandler : IRequestHandler<DeleteWarehouseComm
             return Result.Failure(Error.Validation("Warehouse.HasStock", "Stoku olan depo silinemez. Önce stokları taşıyın veya silin."));
         }
 
-        // Check if it's the default warehouse
-        if (warehouse.IsDefault)
+        // Check for active reservations
+        var reservations = await _unitOfWork.StockReservations.GetByWarehouseAsync(request.WarehouseId, cancellationToken);
+        if (reservations.Any(r => r.Status == Domain.Enums.ReservationStatus.Active || r.Status == Domain.Enums.ReservationStatus.PartiallyFulfilled))
         {
-            return Result.Failure(Error.Validation("Warehouse.IsDefault", "Varsayılan depo silinemez"));
+            return Result.Failure(Error.Validation("Warehouse.HasActiveReservations", "Aktif rezervasyonu olan depo silinemez. Önce rezervasyonları iptal edin."));
+        }
+
+        // Check for active/pending transfers (source or destination)
+        var transfers = await _unitOfWork.StockTransfers.GetByWarehouseAsync(request.WarehouseId, cancellationToken);
+        if (transfers.Any(t => t.Status != Domain.Enums.TransferStatus.Completed && t.Status != Domain.Enums.TransferStatus.Cancelled))
+        {
+            return Result.Failure(Error.Validation("Warehouse.HasActiveTransfers", "Tamamlanmamış transfer emri olan depo silinemez. Önce transferleri tamamlayın veya iptal edin."));
+        }
+
+        // Check for active cycle counts
+        var hasActiveCycleCount = await _unitOfWork.CycleCounts.HasActiveCountForLocationAsync(request.WarehouseId, null, cancellationToken);
+        if (hasActiveCycleCount)
+        {
+            return Result.Failure(Error.Validation("Warehouse.HasActiveCycleCount", "Aktif sayım işlemi olan depo silinemez. Önce sayımı tamamlayın."));
         }
 
         await _unitOfWork.Warehouses.RemoveByIdAsync(warehouse.Id, cancellationToken);

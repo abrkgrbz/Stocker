@@ -51,6 +51,27 @@ public class DeactivateWarehouseCommandHandler : IRequestHandler<DeactivateWareh
             return Result.Failure(Error.Validation("Warehouse.HasStock", "Stoku olan depo pasifleştirilemez. Önce stokları taşıyın veya silin."));
         }
 
+        // Check for active reservations
+        var reservations = await _unitOfWork.StockReservations.GetByWarehouseAsync(request.WarehouseId, cancellationToken);
+        if (reservations.Any(r => r.Status == Domain.Enums.ReservationStatus.Active || r.Status == Domain.Enums.ReservationStatus.PartiallyFulfilled))
+        {
+            return Result.Failure(Error.Validation("Warehouse.HasActiveReservations", "Aktif rezervasyonu olan depo pasifleştirilemez. Önce rezervasyonları iptal edin."));
+        }
+
+        // Check for active/pending transfers
+        var transfers = await _unitOfWork.StockTransfers.GetByWarehouseAsync(request.WarehouseId, cancellationToken);
+        if (transfers.Any(t => t.Status != Domain.Enums.TransferStatus.Completed && t.Status != Domain.Enums.TransferStatus.Cancelled))
+        {
+            return Result.Failure(Error.Validation("Warehouse.HasActiveTransfers", "Tamamlanmamış transfer emri olan depo pasifleştirilemez."));
+        }
+
+        // Check for active cycle counts
+        var hasActiveCycleCount = await _unitOfWork.CycleCounts.HasActiveCountForLocationAsync(request.WarehouseId, null, cancellationToken);
+        if (hasActiveCycleCount)
+        {
+            return Result.Failure(Error.Validation("Warehouse.HasActiveCycleCount", "Aktif sayım işlemi olan depo pasifleştirilemez."));
+        }
+
         warehouse.Deactivate();
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

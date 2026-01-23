@@ -37,6 +37,11 @@ public class CreateStockReservationCommandHandler : IRequestHandler<CreateStockR
         _unitOfWork = unitOfWork;
     }
 
+    /// <summary>
+    /// Default TTL for reservations without explicit expiration (24 hours)
+    /// </summary>
+    private static readonly TimeSpan DefaultReservationTtl = TimeSpan.FromHours(24);
+
     public async Task<Result<StockReservationDto>> Handle(CreateStockReservationCommand request, CancellationToken cancellationToken)
     {
         var data = request.Data;
@@ -53,6 +58,26 @@ public class CreateStockReservationCommandHandler : IRequestHandler<CreateStockR
             return Result<StockReservationDto>.Failure(new Error("Warehouse.NotFound", $"Warehouse with ID {data.WarehouseId} not found", ErrorType.NotFound));
         }
 
+        // Enforce expiration date - use default TTL if not specified
+        var expirationDate = data.ExpirationDate ?? DateTime.UtcNow.Add(DefaultReservationTtl);
+
+        // Check available stock before reserving
+        var stock = await _unitOfWork.Stocks.GetByProductAndWarehouseAsync(data.ProductId, data.WarehouseId, cancellationToken);
+        if (stock == null)
+        {
+            return Result<StockReservationDto>.Failure(new Error("Stock.NotFound",
+                $"Ürün ID {data.ProductId} için depo ID {data.WarehouseId}'de stok bulunamadı.", ErrorType.NotFound));
+        }
+
+        if (stock.AvailableQuantity < data.Quantity)
+        {
+            return Result<StockReservationDto>.Failure(new Error("Stock.InsufficientAvailable",
+                $"Yetersiz kullanılabilir stok. Talep: {data.Quantity}, Kullanılabilir: {stock.AvailableQuantity}", ErrorType.Validation));
+        }
+
+        // Reserve stock atomically
+        stock.ReserveStock(data.Quantity);
+
         var reservation = new StockReservation(
             data.ReservationNumber,
             data.ProductId,
@@ -60,7 +85,7 @@ public class CreateStockReservationCommandHandler : IRequestHandler<CreateStockR
             data.Quantity,
             data.ReservationType,
             data.CreatedByUserId,
-            data.ExpirationDate);
+            expirationDate);
 
         reservation.SetTenantId(request.TenantId);
         reservation.RaiseCreatedEvent();

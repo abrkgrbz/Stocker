@@ -1,4 +1,5 @@
 using MediatR;
+using Stocker.Modules.Inventory.Domain.Enums;
 using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
@@ -29,7 +30,7 @@ public class RejectStockTransferCommandHandler : IRequestHandler<RejectStockTran
 
     public async Task<Result> Handle(RejectStockTransferCommand request, CancellationToken cancellationToken)
     {
-        var transfer = await _unitOfWork.StockTransfers.GetByIdAsync(request.TransferId, cancellationToken);
+        var transfer = await _unitOfWork.StockTransfers.GetWithItemsAsync(request.TransferId, cancellationToken);
         if (transfer == null)
         {
             return Result.Failure(Error.NotFound("StockTransfer", $"Stock transfer with ID {request.TransferId} not found"));
@@ -37,6 +38,21 @@ public class RejectStockTransferCommandHandler : IRequestHandler<RejectStockTran
 
         try
         {
+            // Release reserved stock before rejecting (stock is reserved at creation)
+            if (transfer.Status == TransferStatus.Pending)
+            {
+                foreach (var item in transfer.Items)
+                {
+                    var stock = await _unitOfWork.Stocks.GetByProductAndLocationAsync(
+                        item.ProductId, transfer.SourceWarehouseId, item.SourceLocationId, cancellationToken);
+
+                    if (stock != null && stock.ReservedQuantity >= item.RequestedQuantity)
+                    {
+                        stock.ReleaseReservation(item.RequestedQuantity);
+                    }
+                }
+            }
+
             transfer.Reject(request.RejectedByUserId, request.Reason);
         }
         catch (InvalidOperationException ex)

@@ -11,6 +11,7 @@ using Stocker.Modules.Inventory.Infrastructure.Configuration;
 using Stocker.Modules.Inventory.Infrastructure.EventConsumers;
 using Stocker.Modules.Inventory.Infrastructure.Persistence;
 using Stocker.Modules.Inventory.Infrastructure.Repositories;
+using Stocker.Modules.Inventory.Infrastructure.BackgroundServices;
 using Stocker.Modules.Inventory.Infrastructure.Services;
 using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Interfaces;
@@ -162,6 +163,10 @@ public static class DependencyInjection
         services.AddScoped<Domain.Services.IStockLevelService, StockLevelService>();
         services.AddScoped<Domain.Services.IStockMovementService, StockMovementService>();
         services.AddScoped<Domain.Services.IStockReservationService, StockReservationService>();
+
+        // Register Background Services
+        services.AddHostedService<ReservationCleanupService>();
+        services.AddHostedService<TransferTimeoutMonitorService>();
 
         return services;
     }

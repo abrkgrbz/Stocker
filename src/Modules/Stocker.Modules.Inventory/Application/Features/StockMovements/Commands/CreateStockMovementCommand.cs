@@ -267,6 +267,15 @@ public class CreateStockMovementCommandHandler : IRequestHandler<CreateStockMove
         }
         else
         {
+            // Pre-check available quantity before attempting decrease
+            if (stock.AvailableQuantity < data.Quantity)
+            {
+                return Result<StockMovementDto>.Failure(
+                    Error.Validation("Stock.InsufficientAvailable",
+                        $"Yetersiz kullanılabilir stok. Mevcut: {stock.AvailableQuantity}, İstenen: {data.Quantity}. " +
+                        $"(Toplam: {stock.Quantity}, Rezerve: {stock.ReservedQuantity})"));
+            }
+
             stock.DecreaseStock(data.Quantity);
             // Update source location capacity
             if (fromLocation != null)

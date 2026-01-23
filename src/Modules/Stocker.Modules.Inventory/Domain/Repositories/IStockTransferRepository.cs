@@ -47,4 +47,14 @@ public interface IStockTransferRepository : IInventoryRepository<StockTransfer>
     /// Generates a unique transfer number
     /// </summary>
     Task<string> GenerateTransferNumberAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all transfers involving a warehouse (as source or destination)
+    /// </summary>
+    Task<IReadOnlyList<StockTransfer>> GetByWarehouseAsync(int warehouseId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets InTransit transfers that are overdue (past expected arrival or shipped too long ago)
+    /// </summary>
+    Task<IReadOnlyList<StockTransfer>> GetOverdueInTransitAsync(TimeSpan maxTransitDuration, CancellationToken cancellationToken = default);
 }

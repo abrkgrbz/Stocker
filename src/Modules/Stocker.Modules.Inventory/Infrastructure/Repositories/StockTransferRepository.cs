@@ -109,6 +109,32 @@ public class StockTransferRepository : BaseRepository<StockTransfer>, IStockTran
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<StockTransfer>> GetByWarehouseAsync(int warehouseId, CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Where(t => !t.IsDeleted &&
+                (t.SourceWarehouseId == warehouseId || t.DestinationWarehouseId == warehouseId))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<StockTransfer>> GetOverdueInTransitAsync(TimeSpan maxTransitDuration, CancellationToken cancellationToken = default)
+    {
+        var cutoffDate = DateTime.UtcNow.Subtract(maxTransitDuration);
+        return await DbSet
+            .Include(t => t.SourceWarehouse)
+            .Include(t => t.DestinationWarehouse)
+            .Where(t => !t.IsDeleted &&
+                t.Status == TransferStatus.InTransit &&
+                (
+                    // Past expected arrival date
+                    (t.ExpectedArrivalDate.HasValue && t.ExpectedArrivalDate.Value < DateTime.UtcNow) ||
+                    // Or shipped too long ago without expected arrival
+                    (t.ShippedDate.HasValue && t.ShippedDate.Value < cutoffDate)
+                ))
+            .OrderBy(t => t.ShippedDate)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<string> GenerateTransferNumberAsync(CancellationToken cancellationToken = default)
     {
         var today = DateTime.UtcNow;
