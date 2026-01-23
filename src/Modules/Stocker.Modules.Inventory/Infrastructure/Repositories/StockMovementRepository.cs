@@ -108,6 +108,15 @@ public class StockMovementRepository : BaseRepository<StockMovement>, IStockMove
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<long> GetNextSequenceNumberAsync(int productId, int warehouseId, CancellationToken cancellationToken = default)
+    {
+        var maxSequence = await DbSet
+            .Where(m => m.ProductId == productId && m.WarehouseId == warehouseId)
+            .MaxAsync(m => (long?)m.SequenceNumber, cancellationToken) ?? 0L;
+
+        return maxSequence + 1;
+    }
+
     public async Task<string> GenerateDocumentNumberAsync(StockMovementType movementType, CancellationToken cancellationToken = default)
     {
         var today = DateTime.UtcNow;

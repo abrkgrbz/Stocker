@@ -52,4 +52,10 @@ public interface IStockMovementRepository : IInventoryRepository<StockMovement>
     /// Generates a unique document number
     /// </summary>
     Task<string> GenerateDocumentNumberAsync(StockMovementType movementType, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the next sequence number for a product+warehouse combination.
+    /// Used for clock-skew-independent ordering of stock movements.
+    /// </summary>
+    Task<long> GetNextSequenceNumberAsync(int productId, int warehouseId, CancellationToken cancellationToken = default);
 }

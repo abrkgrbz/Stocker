@@ -167,6 +167,7 @@ public static class DependencyInjection
         // Register Background Services
         services.AddHostedService<ReservationCleanupService>();
         services.AddHostedService<TransferTimeoutMonitorService>();
+        services.AddHostedService<AuditFallbackProcessorService>();
 
         return services;
     }

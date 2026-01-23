@@ -195,6 +195,11 @@ public class CreateStockMovementCommandHandler : IRequestHandler<CreateStockMove
         movement.RaiseCreatedEvent();
         movement.SetLocations(data.FromLocationId, data.ToLocationId);
 
+        // Set sequence number for clock-skew-independent ordering
+        var sequenceNumber = await _unitOfWork.StockMovements.GetNextSequenceNumberAsync(
+            data.ProductId, data.WarehouseId, cancellationToken);
+        movement.SetSequenceNumber(sequenceNumber);
+
         if (!string.IsNullOrEmpty(data.SerialNumber))
             movement.SetSerialNumber(data.SerialNumber);
 

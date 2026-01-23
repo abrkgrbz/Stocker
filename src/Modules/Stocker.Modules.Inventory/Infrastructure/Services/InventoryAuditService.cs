@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +12,28 @@ using Stocker.SharedKernel.Interfaces;
 namespace Stocker.Modules.Inventory.Infrastructure.Services;
 
 /// <summary>
-/// Implementation of inventory audit service
+/// Represents an audit log entry that failed to write to the database and is queued for retry
+/// </summary>
+public class AuditFallbackEntry
+{
+    public Guid Id { get; set; }
+    public DateTime Timestamp { get; set; }
+    public string EntityType { get; set; } = string.Empty;
+    public string EntityId { get; set; } = string.Empty;
+    public string EntityName { get; set; } = string.Empty;
+    public string Action { get; set; } = string.Empty;
+    public string? OldValue { get; set; }
+    public string? NewValue { get; set; }
+    public string? AdditionalData { get; set; }
+    public string? TenantId { get; set; }
+    public string? UserId { get; set; }
+    public string? UserName { get; set; }
+    public string? FailureReason { get; set; }
+    public int RetryCount { get; set; }
+}
+
+/// <summary>
+/// Implementation of inventory audit service with fallback queue for resilience
 /// </summary>
 public class InventoryAuditService : IInventoryAuditService
 {
@@ -19,6 +41,12 @@ public class InventoryAuditService : IInventoryAuditService
     private readonly ITenantService _tenantService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<InventoryAuditService> _logger;
+
+    /// <summary>
+    /// Thread-safe fallback queue for audit entries that failed to persist to DB.
+    /// Entries are retried by AuditFallbackProcessorService.
+    /// </summary>
+    internal static readonly ConcurrentQueue<AuditFallbackEntry> FallbackQueue = new();
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -120,7 +148,35 @@ public class InventoryAuditService : IInventoryAuditService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to log audit entry for {EntityType} {EntityId}", entityType, entityId);
+            _logger.LogError(ex, "Failed to log audit entry for {EntityType} {EntityId}. Falling back to local storage.", entityType, entityId);
+
+            // Fallback: Write to in-memory queue for later processing
+            try
+            {
+                var fallbackEntry = new AuditFallbackEntry
+                {
+                    Id = Guid.NewGuid(),
+                    Timestamp = DateTime.UtcNow,
+                    EntityType = entityType,
+                    EntityId = entityId,
+                    EntityName = entityName,
+                    Action = action,
+                    OldValue = oldValue != null ? JsonSerializer.Serialize(oldValue, JsonOptions) : null,
+                    NewValue = newValue != null ? JsonSerializer.Serialize(newValue, JsonOptions) : null,
+                    AdditionalData = additionalData,
+                    TenantId = _tenantService.GetCurrentTenantId()?.ToString(),
+                    UserId = GetCurrentUserId(),
+                    UserName = GetCurrentUserName(),
+                    FailureReason = ex.Message
+                };
+
+                FallbackQueue.Enqueue(fallbackEntry);
+                _logger.LogWarning("Audit entry queued in fallback storage. Queue size: {QueueSize}", FallbackQueue.Count);
+            }
+            catch (Exception fallbackEx)
+            {
+                _logger.LogCritical(fallbackEx, "CRITICAL: Both primary and fallback audit logging failed for {EntityType} {EntityId}", entityType, entityId);
+            }
             // Don't throw - audit logging should not break the main operation
         }
     }

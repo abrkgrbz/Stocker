@@ -55,15 +55,17 @@ public class WarehouseConfiguration : IEntityTypeConfiguration<Warehouse>
             .HasPrecision(18, 2);
 
         // Relationships
+        // IMPORTANT: Restrict prevents accidental warehouse deletion from cascading to locations/zones.
+        // Application-level checks in DeactivateWarehouseCommand enforce this business rule.
         builder.HasMany(w => w.Locations)
             .WithOne(l => l.Warehouse)
             .HasForeignKey(l => l.WarehouseId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(w => w.Zones)
             .WithOne(z => z.Warehouse)
             .HasForeignKey(z => z.WarehouseId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(w => w.Stocks)
             .WithOne(s => s.Warehouse)

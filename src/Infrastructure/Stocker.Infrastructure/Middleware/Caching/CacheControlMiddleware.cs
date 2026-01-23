@@ -76,8 +76,15 @@ public class CacheControlMiddleware
                     response.Headers[HeaderNames.Vary] = cachePolicy.Vary;
                 }
 
+                // For no-store policies, add legacy headers for defense-in-depth
+                // (older HTTP/1.0 proxies may not understand Cache-Control)
+                if (cachePolicy.CacheControl.Contains("no-store"))
+                {
+                    response.Headers[HeaderNames.Pragma] = "no-cache";
+                    response.Headers[HeaderNames.Expires] = "0";
+                }
                 // Set Expires header if max-age is specified
-                if (cachePolicy.MaxAge.HasValue)
+                else if (cachePolicy.MaxAge.HasValue)
                 {
                     var expires = DateTimeOffset.UtcNow.AddSeconds(cachePolicy.MaxAge.Value);
                     response.Headers[HeaderNames.Expires] = expires.ToString("R");
@@ -152,12 +159,12 @@ public class CacheControlOptions
             MaxAge = 31536000 // 1 year
         },
 
-        // API responses - no browser cache to ensure fresh data after mutations
+        // API responses - no browser/CDN cache to ensure fresh tenant-specific data
         ["/api"] = new CachePolicy
         {
-            CacheControl = "private, no-cache, no-store, must-revalidate",
+            CacheControl = "no-store, no-cache, private, must-revalidate",
             MaxAge = 0,
-            Vary = "Accept, Accept-Encoding, Authorization"
+            Vary = "Accept, Accept-Encoding, Authorization, X-Tenant-Id"
         },
 
         // Public data that rarely changes

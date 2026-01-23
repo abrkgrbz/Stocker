@@ -50,6 +50,11 @@ public class StockMovementConfiguration : IEntityTypeConfiguration<StockMovement
         builder.Property(m => m.Description)
             .HasMaxLength(500);
 
+        // Sequence number for clock-skew-independent ordering
+        builder.Property(m => m.SequenceNumber)
+            .IsRequired()
+            .HasDefaultValue(0L);
+
         // Relationships
         builder.HasOne(m => m.FromLocation)
             .WithMany()
@@ -74,5 +79,9 @@ public class StockMovementConfiguration : IEntityTypeConfiguration<StockMovement
         builder.HasIndex(m => new { m.TenantId, m.MovementDate });
         builder.HasIndex(m => new { m.TenantId, m.MovementType });
         builder.HasIndex(m => new { m.TenantId, m.ReferenceDocumentType, m.ReferenceDocumentNumber });
+
+        // Compound index for clock-skew-independent ordering of movements per product+warehouse
+        builder.HasIndex(m => new { m.TenantId, m.ProductId, m.WarehouseId, m.SequenceNumber })
+            .IsUnique();
     }
 }

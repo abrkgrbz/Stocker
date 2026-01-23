@@ -26,6 +26,13 @@ public class StockMovement : BaseEntity
     public bool IsReversed { get; private set; }
     public int? ReversedMovementId { get; private set; }
 
+    /// <summary>
+    /// Monotonically increasing sequence number per product+warehouse combination.
+    /// Provides clock-skew-independent ordering of stock movements.
+    /// Used instead of MovementDate for determining movement order when clock drift is a concern.
+    /// </summary>
+    public long SequenceNumber { get; private set; }
+
     public virtual Product Product { get; private set; }
     public virtual Warehouse Warehouse { get; private set; }
     public virtual Location? FromLocation { get; private set; }
@@ -76,6 +83,17 @@ public class StockMovement : BaseEntity
             SerialNumber,
             ReferenceDocumentType,
             ReferenceDocumentNumber));
+    }
+
+    /// <summary>
+    /// Sets the sequence number for clock-skew-independent ordering.
+    /// Should be called by the application layer with the next sequence for this product+warehouse.
+    /// </summary>
+    public void SetSequenceNumber(long sequenceNumber)
+    {
+        if (sequenceNumber <= 0)
+            throw new ArgumentException("Sequence number must be positive", nameof(sequenceNumber));
+        SequenceNumber = sequenceNumber;
     }
 
     public void SetLocations(int? fromLocationId, int? toLocationId)

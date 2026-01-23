@@ -44,11 +44,11 @@ public class LocationConfiguration : IEntityTypeConfiguration<Location>
         builder.Property(l => l.UsedCapacity)
             .HasPrecision(18, 4);
 
-        // Relationship to Warehouse
+        // Relationship to Warehouse (Restrict: warehouse cannot be deleted while locations exist)
         builder.HasOne(l => l.Warehouse)
             .WithMany(w => w.Locations)
             .HasForeignKey(l => l.WarehouseId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Relationship to WarehouseZone
         builder.HasOne(l => l.WarehouseZone)

@@ -70,11 +70,11 @@ public class WarehouseZoneConfiguration : IEntityTypeConfiguration<WarehouseZone
         builder.Property(z => z.MaxWeightPerArea)
             .HasPrecision(18, 2);
 
-        // Relationship to Warehouse
+        // Relationship to Warehouse (Restrict: warehouse cannot be deleted while zones exist)
         builder.HasOne(z => z.Warehouse)
             .WithMany(w => w.Zones)
             .HasForeignKey(z => z.WarehouseId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Relationship to Locations
         builder.HasMany(z => z.Locations)
