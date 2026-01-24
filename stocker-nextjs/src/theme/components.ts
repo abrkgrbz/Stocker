@@ -577,9 +577,9 @@ export const darkComponents: ComponentsConfig = {
     groupTitleFontSize: 11,
     // Horizontal menu
     horizontalItemSelectedBg: 'transparent',
-    horizontalItemSelectedColor: brand.primary[400],
+    horizontalItemSelectedColor: slate[100],
     horizontalItemHoverBg: 'transparent',
-    horizontalItemHoverColor: brand.primary[300],
+    horizontalItemHoverColor: slate[200],
   },
 
   // Button Component
@@ -616,8 +616,8 @@ export const darkComponents: ComponentsConfig = {
   // Input Component
   Input: {
     activeBg: '#1f1f1f',
-    activeBorderColor: brand.primary[400],
-    activeShadow: `0 0 0 2px ${brand.primary[500]}26`,
+    activeBorderColor: slate[400],
+    activeShadow: `0 0 0 2px ${slate[900]}26`,
     hoverBg: '#1f1f1f',
     hoverBorderColor: slate[600],
     addonBg: '#262626',
@@ -655,8 +655,8 @@ export const darkComponents: ComponentsConfig = {
     headerFilterHoverBg: '#262626',
     headerSplitColor: slate[700],
     rowHoverBg: 'rgba(255, 255, 255, 0.04)',
-    rowSelectedBg: 'rgba(99, 102, 241, 0.15)',
-    rowSelectedHoverBg: 'rgba(99, 102, 241, 0.25)',
+    rowSelectedBg: 'rgba(26, 26, 26, 0.15)',
+    rowSelectedHoverBg: 'rgba(26, 26, 26, 0.25)',
     rowExpandedBg: '#1f1f1f',
     borderColor: slate[700],
     cellPaddingBlock: 14,
@@ -716,9 +716,9 @@ export const darkComponents: ComponentsConfig = {
   Tabs: {
     itemColor: slate[400],
     itemHoverColor: slate[200],
-    itemSelectedColor: brand.primary[400],
-    itemActiveColor: brand.primary[300],
-    inkBarColor: brand.primary[400],
+    itemSelectedColor: slate[100],
+    itemActiveColor: slate[50],
+    inkBarColor: slate[200],
     cardBg: '#1f1f1f',
     cardGutter: 4,
     cardPadding: '8px 16px',
@@ -746,8 +746,8 @@ export const darkComponents: ComponentsConfig = {
 
   // Switch Component
   Switch: {
-    colorPrimary: brand.primary[500],
-    colorPrimaryHover: brand.primary[400],
+    colorPrimary: slate[200],
+    colorPrimaryHover: slate[100],
     handleBg: '#ffffff',
     handleShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
     trackHeight: 22,
@@ -759,21 +759,21 @@ export const darkComponents: ComponentsConfig = {
 
   // Checkbox Component
   Checkbox: {
-    colorPrimary: brand.primary[500],
-    colorPrimaryHover: brand.primary[400],
+    colorPrimary: slate[200],
+    colorPrimaryHover: slate[100],
     borderRadiusSM: 4,
     controlInteractiveSize: 18,
   },
 
   // Radio Component
   Radio: {
-    colorPrimary: brand.primary[500],
-    colorPrimaryHover: brand.primary[400],
+    colorPrimary: slate[200],
+    colorPrimaryHover: slate[100],
     dotSize: 10,
     radioSize: 18,
-    buttonSolidCheckedBg: brand.primary[500],
-    buttonSolidCheckedColor: '#ffffff',
-    buttonSolidCheckedHoverBg: brand.primary[400],
+    buttonSolidCheckedBg: slate[200],
+    buttonSolidCheckedColor: '#0a0a0a',
+    buttonSolidCheckedHoverBg: slate[100],
   },
 
   // Tooltip Component
@@ -794,7 +794,7 @@ export const darkComponents: ComponentsConfig = {
 
   // Progress Component
   Progress: {
-    defaultColor: brand.primary[400],
+    defaultColor: slate[200],
     remainingColor: slate[700],
     circleTextColor: slate[200],
     lineBorderRadius: 100,
@@ -883,12 +883,12 @@ export const darkComponents: ComponentsConfig = {
   Slider: {
     railBg: slate[700],
     railHoverBg: slate[600],
-    trackBg: brand.primary[400],
-    trackHoverBg: brand.primary[300],
-    handleColor: brand.primary[400],
-    handleActiveColor: brand.primary[300],
+    trackBg: slate[200],
+    trackHoverBg: slate[100],
+    handleColor: slate[200],
+    handleActiveColor: slate[100],
     dotBorderColor: slate[600],
-    dotActiveBorderColor: brand.primary[400],
+    dotActiveBorderColor: slate[200],
     handleSize: 14,
     handleSizeHover: 16,
     railSize: 4,

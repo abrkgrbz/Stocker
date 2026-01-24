@@ -233,16 +233,16 @@ export const lightTokens: Partial<AliasToken> = {
 
 export const darkTokens: Partial<AliasToken> = {
   // Brand Colors (adjusted for dark mode)
-  colorPrimary: brand.primary[400],
-  colorPrimaryHover: brand.primary[300],
-  colorPrimaryActive: brand.primary[500],
-  colorPrimaryBg: 'rgba(99, 102, 241, 0.15)',
-  colorPrimaryBgHover: 'rgba(99, 102, 241, 0.25)',
-  colorPrimaryBorder: brand.primary[600],
-  colorPrimaryBorderHover: brand.primary[500],
-  colorPrimaryText: brand.primary[400],
-  colorPrimaryTextHover: brand.primary[300],
-  colorPrimaryTextActive: brand.primary[500],
+  colorPrimary: slate[200],
+  colorPrimaryHover: slate[100],
+  colorPrimaryActive: slate[300],
+  colorPrimaryBg: 'rgba(255, 255, 255, 0.08)',
+  colorPrimaryBgHover: 'rgba(255, 255, 255, 0.12)',
+  colorPrimaryBorder: slate[600],
+  colorPrimaryBorderHover: slate[500],
+  colorPrimaryText: slate[200],
+  colorPrimaryTextHover: slate[100],
+  colorPrimaryTextActive: slate[300],
 
   // Success Colors (dark mode)
   colorSuccess: '#34d399',
@@ -320,9 +320,9 @@ export const darkTokens: Partial<AliasToken> = {
   // Other
   wireframe: false,
   colorWhite: '#ffffff',
-  colorLink: brand.primary[400],
-  colorLinkHover: brand.primary[300],
-  colorLinkActive: brand.primary[500],
+  colorLink: slate[200],
+  colorLinkHover: slate[100],
+  colorLinkActive: slate[300],
 };
 
 export default {

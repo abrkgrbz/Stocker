@@ -35,19 +35,19 @@ export const slate = {
 // =====================================
 
 export const brand = {
-  // Primary - Corporate Blue (Refined Indigo)
+  // Primary - Corporate Black (Slate/Charcoal)
   primary: {
-    50: '#eef2ff',
-    100: '#e0e7ff',
-    200: '#c7d2fe',
-    300: '#a5b4fc',
-    400: '#818cf8',
-    500: '#6366f1',  // Main brand color
-    600: '#4f46e5',  // Hover state
-    700: '#4338ca',  // Active state
-    800: '#3730a3',
-    900: '#312e81',
-    950: '#1e1b4b',
+    50: '#f8fafc',
+    100: '#f1f5f9',
+    200: '#e2e8f0',
+    300: '#cbd5e1',
+    400: '#94a3b8',
+    500: '#1a1a1a',  // Main brand color
+    600: '#111111',  // Hover state
+    700: '#0a0a0a',  // Active state
+    800: '#050505',
+    900: '#000000',
+    950: '#000000',
   },
 
   // Secondary - Emerald (Success/Positive Actions)
