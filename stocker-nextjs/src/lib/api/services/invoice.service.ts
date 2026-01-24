@@ -1,96 +1,23 @@
 import { ApiService } from '../api-service';
+import type { Invoice, InvoiceListItem, InvoiceType } from '@/features/sales/types';
 
 // =====================================
-// TYPES - Based on Backend API
+// TYPES - Synchronized with Backend InvoiceDto.cs
+// Field names match backend exactly (no mapping needed)
+// For Türkçe labels, use invoice-adapter.ts
 // =====================================
 
-export interface InvoiceItem {
-  id: string;
-  invoiceId: string;
-  lineNumber: number;
-  salesOrderItemId: string | null;
-  productId: string | null;
-  productCode: string;
-  productName: string;
-  description: string | null;
-  unit: string;
-  quantity: number;
-  unitPrice: number;
-  discountRate: number;
-  discountAmount: number;
-  vatRate: number;
-  vatAmount: number;
-  lineTotal: number;
-  lineTotalWithVat: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Invoice {
-  id: string;
-  tenantId: string;
-  invoiceNumber: string;
-  invoiceDate: string;
-  dueDate: string;
-  salesOrderId: string | null;
-  customerId: string | null;
-  customerName: string;
-  customerEmail: string | null;
-  customerTaxNumber: string | null;
-  customerAddress: string | null;
-  status: InvoiceStatus;
-  type: InvoiceType;
-  currency: string;
-  subTotal: number;
-  discountAmount: number;
-  discountRate: number;
-  taxTotal: number;
-  grandTotal: number;
-  paidAmount: number;
-  balanceDue: number;
-  notes: string | null;
-  paymentTerms: string | null;
-  isEInvoice: boolean;
-  eInvoiceId: string | null;
-  eInvoiceStatus: string | null;
-  eInvoiceSentAt: string | null;
-  sentAt: string | null;
-  items: InvoiceItem[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface InvoiceListItem {
-  id: string;
-  invoiceNumber: string;
-  invoiceDate: string;
-  dueDate: string;
-  customerId: string | null;
-  customerName: string;
-  status: InvoiceStatus;
-  type: InvoiceType;
-  grandTotal: number;
-  paidAmount: number;
-  balanceDue: number;
-  currency: string;
-  itemCount: number;
-  isEInvoice: boolean;
-}
-
-export type InvoiceStatus =
-  | 'Draft'
-  | 'Issued'
-  | 'Sent'
-  | 'PartiallyPaid'
-  | 'Paid'
-  | 'Overdue'
-  | 'Cancelled';
-
-export type InvoiceType =
-  | 'Sales'
-  | 'Return'
-  | 'Credit'
-  | 'Debit';
+// Re-export types from the canonical source
+export type {
+  Invoice,
+  InvoiceItem,
+  InvoiceListItem,
+  InvoiceStatus,
+  InvoiceType,
+  EInvoiceStatus,
+  EArchiveStatus,
+  TaxIdType,
+} from '@/features/sales/types';
 
 export interface InvoiceStatistics {
   totalInvoices: number;
@@ -144,6 +71,16 @@ export interface CreateInvoiceCommand {
   discountRate?: number;
   discountAmount?: number;
   isEInvoice?: boolean;
+  // Türk Mevzuatı Alanları
+  customerTaxOffice?: string;
+  customerPhone?: string;
+  customerTaxIdType?: 'VKN' | 'TCKN' | 'Foreign';
+  customerTaxOfficeCode?: string;
+  invoiceSeries?: string;
+  // Tevkifat
+  hasWithholdingTax?: boolean;
+  withholdingTaxRate?: number;
+  withholdingTaxCode?: string;
   items: CreateInvoiceItemCommand[];
 }
 
@@ -353,6 +290,59 @@ export class InvoiceService {
    */
   static async deleteInvoice(id: string): Promise<void> {
     return ApiService.delete<void>(`${BASE_URL}/${id}`);
+  }
+
+  // =====================================
+  // TÜRK MEVZUATI ENDPOINTLERİ
+  // =====================================
+
+  /**
+   * Void an invoice (Hükümsüz kılma)
+   */
+  static async voidInvoice(id: string, reason: string): Promise<Invoice> {
+    return ApiService.post<Invoice>(`${BASE_URL}/${id}/void`, { id, reason });
+  }
+
+  /**
+   * Apply withholding tax (Tevkifat uygula)
+   */
+  static async applyWithholdingTax(id: string, rate: number, code: string): Promise<Invoice> {
+    return ApiService.post<Invoice>(`${BASE_URL}/${id}/withholding-tax`, { id, rate, code });
+  }
+
+  /**
+   * Remove withholding tax (Tevkifat kaldır)
+   */
+  static async removeWithholdingTax(id: string): Promise<Invoice> {
+    return ApiService.delete<Invoice>(`${BASE_URL}/${id}/withholding-tax`);
+  }
+
+  /**
+   * Set e-archive information (E-Arşiv bilgisi ata)
+   */
+  static async setEArchive(id: string, eArchiveNumber: string): Promise<Invoice> {
+    return ApiService.post<Invoice>(`${BASE_URL}/${id}/e-archive`, { id, eArchiveNumber });
+  }
+
+  /**
+   * Set GİB UUID
+   */
+  static async setGibUuid(id: string, gibUuid: string): Promise<Invoice> {
+    return ApiService.post<Invoice>(`${BASE_URL}/${id}/gib-uuid`, { id, gibUuid });
+  }
+
+  /**
+   * Update e-invoice status (E-Fatura durumu güncelle)
+   */
+  static async updateEInvoiceStatus(id: string, status: string, errorMessage?: string): Promise<Invoice> {
+    return ApiService.post<Invoice>(`${BASE_URL}/${id}/e-invoice-status`, { id, status, errorMessage });
+  }
+
+  /**
+   * Update e-archive status (E-Arşiv durumu güncelle)
+   */
+  static async updateEArchiveStatus(id: string, status: string, errorMessage?: string): Promise<Invoice> {
+    return ApiService.post<Invoice>(`${BASE_URL}/${id}/e-archive-status`, { id, status, errorMessage });
   }
 }
 

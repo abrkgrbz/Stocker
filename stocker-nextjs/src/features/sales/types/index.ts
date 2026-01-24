@@ -370,23 +370,44 @@ export interface GetQuotationsParams {
 
 // =====================================
 // INVOICE ENUMS & TYPES
+// Synchronized with Backend: Invoice.cs, InvoiceDto.cs
 // =====================================
 
 export type InvoiceStatus =
   | 'Draft'
   | 'Issued'
   | 'Sent'
-  | 'Paid'
   | 'PartiallyPaid'
+  | 'Paid'
   | 'Overdue'
   | 'Cancelled'
   | 'Voided';
 
 export type InvoiceType =
-  | 'Standard'
-  | 'Proforma'
+  | 'Sales'
+  | 'Return'
   | 'Credit'
-  | 'Debit';
+  | 'Debit'
+  | 'Proforma'
+  | 'Advance'
+  | 'Export';
+
+export type EInvoiceStatus =
+  | 'Pending'
+  | 'Sending'
+  | 'Sent'
+  | 'Accepted'
+  | 'Rejected'
+  | 'Error';
+
+export type EArchiveStatus =
+  | 'Pending'
+  | 'Created'
+  | 'Signed'
+  | 'Sent'
+  | 'Error';
+
+export type TaxIdType = 'VKN' | 'TCKN' | 'Foreign';
 
 export interface InvoiceItem {
   id: string;
@@ -432,11 +453,48 @@ export interface Invoice {
   status: string;
   type: string;
   notes?: string;
+  paymentTerms?: string;
+
+  // E-Fatura / E-Arşiv
   eInvoiceId?: string;
   isEInvoice: boolean;
   eInvoiceDate?: string;
+  gibUuid?: string;
+  eInvoiceStatus?: string;
+  eInvoiceErrorMessage?: string;
+  isEArchive?: boolean;
+  eArchiveNumber?: string;
+  eArchiveDate?: string;
+  eArchiveStatus?: string;
+
+  // Tevkifat (Withholding Tax)
+  hasWithholdingTax?: boolean;
+  withholdingTaxRate?: number;
+  withholdingTaxAmount?: number;
+  withholdingTaxCode?: string;
+
+  // Fatura Numaralama (VUK Uyumlu)
+  invoiceSeries?: string;
+  sequenceNumber?: number;
+  invoiceYear?: number;
+
+  // Müşteri Vergi Bilgileri (Genişletilmiş)
+  customerTaxIdType?: string;
+  customerTaxOfficeCode?: string;
+  customerPhone?: string;
+  customerTaxOffice?: string;
+
+  // Kaynak Belge İlişkileri
+  salesOrderNumber?: string;
+  shipmentId?: string;
+  shipmentNumber?: string;
+  deliveryNoteId?: string;
+  deliveryNoteNumber?: string;
+  quotationId?: string;
+
   createdAt: string;
   updatedAt?: string;
+  sentAt?: string;
   items: InvoiceItem[];
 }
 
@@ -445,6 +503,7 @@ export interface InvoiceListItem {
   invoiceNumber: string;
   invoiceDate: string;
   dueDate?: string;
+  customerId?: string;
   customerName?: string;
   totalAmount: number;
   paidAmount: number;
@@ -455,6 +514,10 @@ export interface InvoiceListItem {
   isEInvoice: boolean;
   itemCount: number;
   createdAt: string;
+  // Kaynak Belge Referansları
+  salesOrderNumber?: string;
+  shipmentNumber?: string;
+  deliveryNoteNumber?: string;
 }
 
 // =====================================
