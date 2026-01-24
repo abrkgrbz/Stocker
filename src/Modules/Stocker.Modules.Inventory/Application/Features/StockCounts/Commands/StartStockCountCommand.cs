@@ -32,10 +32,31 @@ public class StartStockCountCommandHandler : IRequestHandler<StartStockCountComm
 
     public async Task<Result<bool>> Handle(StartStockCountCommand request, CancellationToken cancellationToken)
     {
-        var stockCount = await _unitOfWork.StockCounts.GetByIdAsync(request.StockCountId, cancellationToken);
+        var stockCount = await _unitOfWork.StockCounts.GetWithItemsAsync(request.StockCountId, cancellationToken);
         if (stockCount == null)
         {
             return Result<bool>.Failure(new Error("StockCount.NotFound", $"Stock count with ID {request.StockCountId} not found", ErrorType.NotFound));
+        }
+
+        // If no items exist, auto-populate from warehouse stocks
+        if (!stockCount.Items.Any())
+        {
+            var stocks = await _unitOfWork.Stocks.GetByWarehouseAsync(stockCount.WarehouseId, cancellationToken);
+
+            if (stocks.Any())
+            {
+                foreach (var stock in stocks)
+                {
+                    stockCount.AddItem(stock.ProductId, stock.Quantity);
+                }
+            }
+            else
+            {
+                return Result<bool>.Failure(new Error(
+                    "StockCount.NoItems",
+                    "Bu depoda sayım yapılacak stok bulunamadı. Lütfen önce ürün ekleyin.",
+                    ErrorType.Validation));
+            }
         }
 
         try
