@@ -77,6 +77,23 @@ public sealed class SalesUnitOfWork : ISalesUnitOfWork, IAsyncDisposable
     private ICustomerContractRepository? _customerContracts;
     private ISalesTerritoryRepository? _salesTerritories;
     private IShipmentRepository? _shipments;
+    private IQuotationRepository? _quotations;
+    private IDiscountRepository? _discounts;
+    private IPromotionRepository? _promotions;
+    private ICommissionRepository? _commissions;
+    private ISalesReturnRepository? _salesReturns;
+    private IAdvancePaymentRepository? _advancePayments;
+    private ICreditNoteRepository? _creditNotes;
+    private IServiceOrderRepository? _serviceOrders;
+    private IWarrantyRepository? _warranties;
+    private IPriceListRepository? _priceLists;
+    private IDeliveryNoteRepository? _deliveryNotes;
+    private IBackOrderRepository? _backOrders;
+    private IInventoryReservationRepository? _inventoryReservations;
+    private IOpportunityRepository? _opportunities;
+    private ISalesPipelineRepository? _salesPipelines;
+    private ISalesTargetRepository? _salesTargets;
+    private ICustomerSegmentRepository? _customerSegments;
 
     #endregion
 
@@ -130,6 +147,74 @@ public sealed class SalesUnitOfWork : ISalesUnitOfWork, IAsyncDisposable
     /// <inheritdoc />
     public IShipmentRepository Shipments =>
         _shipments ??= GetOrAddSpecificRepository<IShipmentRepository, ShipmentRepository>();
+
+    /// <inheritdoc />
+    public IQuotationRepository Quotations =>
+        _quotations ??= GetOrAddSpecificRepository<IQuotationRepository, QuotationRepository>();
+
+    /// <inheritdoc />
+    public IDiscountRepository Discounts =>
+        _discounts ??= GetOrAddSpecificRepository<IDiscountRepository, DiscountRepository>();
+
+    /// <inheritdoc />
+    public IPromotionRepository Promotions =>
+        _promotions ??= GetOrAddSpecificRepository<IPromotionRepository, PromotionRepository>();
+
+    /// <inheritdoc />
+    public ICommissionRepository Commissions =>
+        _commissions ??= GetOrAddSpecificRepository<ICommissionRepository, CommissionRepository>();
+
+    /// <inheritdoc />
+    public ISalesReturnRepository SalesReturns =>
+        _salesReturns ??= GetOrAddSpecificRepository<ISalesReturnRepository, SalesReturnRepository>();
+
+    /// <inheritdoc />
+    public IAdvancePaymentRepository AdvancePayments =>
+        _advancePayments ??= GetOrAddSpecificRepository<IAdvancePaymentRepository, AdvancePaymentRepository>();
+
+    /// <inheritdoc />
+    public ICreditNoteRepository CreditNotes =>
+        _creditNotes ??= GetOrAddSpecificRepository<ICreditNoteRepository, CreditNoteRepository>();
+
+    /// <inheritdoc />
+    public IServiceOrderRepository ServiceOrders =>
+        _serviceOrders ??= GetOrAddSpecificRepository<IServiceOrderRepository, ServiceOrderRepository>();
+
+    /// <inheritdoc />
+    public IWarrantyRepository Warranties =>
+        _warranties ??= GetOrAddSpecificRepository<IWarrantyRepository, WarrantyRepository>();
+
+    /// <inheritdoc />
+    public IPriceListRepository PriceLists =>
+        _priceLists ??= GetOrAddSpecificRepository<IPriceListRepository, PriceListRepository>();
+
+    /// <inheritdoc />
+    public IDeliveryNoteRepository DeliveryNotes =>
+        _deliveryNotes ??= GetOrAddSpecificRepository<IDeliveryNoteRepository, DeliveryNoteRepository>();
+
+    /// <inheritdoc />
+    public IBackOrderRepository BackOrders =>
+        _backOrders ??= GetOrAddSpecificRepository<IBackOrderRepository, BackOrderRepository>();
+
+    /// <inheritdoc />
+    public IInventoryReservationRepository InventoryReservations =>
+        _inventoryReservations ??= GetOrAddSpecificRepository<IInventoryReservationRepository, InventoryReservationRepository>();
+
+    /// <inheritdoc />
+    public IOpportunityRepository Opportunities =>
+        _opportunities ??= GetOrAddSpecificRepository<IOpportunityRepository, OpportunityRepository>();
+
+    /// <inheritdoc />
+    public ISalesPipelineRepository SalesPipelines =>
+        _salesPipelines ??= GetOrAddSpecificRepository<ISalesPipelineRepository, SalesPipelineRepository>();
+
+    /// <inheritdoc />
+    public ISalesTargetRepository SalesTargets =>
+        _salesTargets ??= GetOrAddSpecificRepository<ISalesTargetRepository, SalesTargetRepository>();
+
+    /// <inheritdoc />
+    public ICustomerSegmentRepository CustomerSegments =>
+        _customerSegments ??= GetOrAddSpecificRepository<ICustomerSegmentRepository, CustomerSegmentRepository>();
 
     #endregion
 

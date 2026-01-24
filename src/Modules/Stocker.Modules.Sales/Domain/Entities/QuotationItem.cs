@@ -9,7 +9,7 @@ namespace Stocker.Modules.Sales.Domain.Entities;
 public class QuotationItem : TenantEntity
 {
     public Guid QuotationId { get; private set; }
-    public Guid ProductId { get; private set; }
+    public int? ProductId { get; private set; }
     public string ProductName { get; private set; } = string.Empty;
     public string? ProductCode { get; private set; }
     public string? Description { get; private set; }
@@ -31,7 +31,7 @@ public class QuotationItem : TenantEntity
 
     public static Result<QuotationItem> Create(
         Guid tenantId,
-        Guid productId,
+        int? productId,
         string productName,
         string? productCode,
         decimal quantity,
@@ -42,8 +42,6 @@ public class QuotationItem : TenantEntity
         string? description = null,
         string unit = "Adet")
     {
-        if (productId == Guid.Empty)
-            return Result<QuotationItem>.Failure(Error.Validation("QuotationItem.ProductId", "Product is required"));
 
         if (string.IsNullOrWhiteSpace(productName))
             return Result<QuotationItem>.Failure(Error.Validation("QuotationItem.ProductName", "Product name is required"));

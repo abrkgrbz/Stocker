@@ -54,7 +54,7 @@ public record QuotationItemDto
 {
     public Guid Id { get; init; }
     public Guid QuotationId { get; init; }
-    public Guid ProductId { get; init; }
+    public int? ProductId { get; init; }
     public string ProductName { get; init; } = string.Empty;
     public string? ProductCode { get; init; }
     public string? Description { get; init; }
@@ -113,7 +113,7 @@ public record CreateQuotationDto
 
 public record CreateQuotationItemDto
 {
-    public Guid ProductId { get; init; }
+    public int? ProductId { get; init; }
     public string ProductName { get; init; } = string.Empty;
     public string? ProductCode { get; init; }
     public string? Description { get; init; }

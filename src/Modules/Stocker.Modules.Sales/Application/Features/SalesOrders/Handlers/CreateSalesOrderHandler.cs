@@ -1,5 +1,6 @@
 using MassTransit;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.Modules.Sales.Application.Features.SalesOrders.Commands;

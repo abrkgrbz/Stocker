@@ -68,4 +68,103 @@ public interface ISalesUnitOfWork : IUnitOfWork
     IShipmentRepository Shipments { get; }
 
     #endregion
+
+    #region Quotation & Pricing Repositories
+
+    /// <summary>
+    /// Gets the Quotation repository.
+    /// </summary>
+    IQuotationRepository Quotations { get; }
+
+    /// <summary>
+    /// Gets the Discount repository.
+    /// </summary>
+    IDiscountRepository Discounts { get; }
+
+    /// <summary>
+    /// Gets the Promotion repository.
+    /// </summary>
+    IPromotionRepository Promotions { get; }
+
+    /// <summary>
+    /// Gets the Commission repository.
+    /// </summary>
+    ICommissionRepository Commissions { get; }
+
+    /// <summary>
+    /// Gets the PriceList repository.
+    /// Used for B2B pricing management, tiered pricing, and customer-specific price lists.
+    /// </summary>
+    IPriceListRepository PriceLists { get; }
+
+    /// <summary>
+    /// Gets the DeliveryNote repository.
+    /// Used for delivery note (irsaliye) management.
+    /// </summary>
+    IDeliveryNoteRepository DeliveryNotes { get; }
+
+    /// <summary>
+    /// Gets the BackOrder repository.
+    /// </summary>
+    IBackOrderRepository BackOrders { get; }
+
+    /// <summary>
+    /// Gets the InventoryReservation repository.
+    /// </summary>
+    IInventoryReservationRepository InventoryReservations { get; }
+
+    /// <summary>
+    /// Gets the Opportunity repository.
+    /// </summary>
+    IOpportunityRepository Opportunities { get; }
+
+    /// <summary>
+    /// Gets the SalesPipeline repository.
+    /// </summary>
+    ISalesPipelineRepository SalesPipelines { get; }
+
+    /// <summary>
+    /// Gets the SalesTarget repository.
+    /// </summary>
+    ISalesTargetRepository SalesTargets { get; }
+
+    /// <summary>
+    /// Gets the CustomerSegment repository.
+    /// </summary>
+    ICustomerSegmentRepository CustomerSegments { get; }
+
+    #endregion
+
+    #region Returns & Credits Repositories
+
+    /// <summary>
+    /// Gets the Sales Return repository.
+    /// </summary>
+    ISalesReturnRepository SalesReturns { get; }
+
+    /// <summary>
+    /// Gets the Advance Payment repository.
+    /// </summary>
+    IAdvancePaymentRepository AdvancePayments { get; }
+
+    /// <summary>
+    /// Gets the Credit Note repository.
+    /// </summary>
+    ICreditNoteRepository CreditNotes { get; }
+
+    #endregion
+
+    #region Service & Warranty Repositories
+
+    /// <summary>
+    /// Gets the Service Order repository.
+    /// </summary>
+    IServiceOrderRepository ServiceOrders { get; }
+
+    /// <summary>
+    /// Gets the Warranty repository.
+    /// </summary>
+    IWarrantyRepository Warranties { get; }
+
+    #endregion
 }
