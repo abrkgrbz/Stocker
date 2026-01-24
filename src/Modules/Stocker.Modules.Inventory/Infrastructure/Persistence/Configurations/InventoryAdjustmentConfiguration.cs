@@ -95,7 +95,7 @@ public class InventoryAdjustmentConfiguration : IEntityTypeConfiguration<Invento
         builder.HasIndex(a => new { a.TenantId, a.AdjustmentType });
         builder.HasIndex(a => new { a.TenantId, a.Reason });
         builder.HasIndex(a => new { a.TenantId, a.StockCountId })
-            .HasFilter("[StockCountId] IS NOT NULL");
+            .HasFilter("\"StockCountId\" IS NOT NULL");
     }
 }
 

@@ -75,6 +75,6 @@ public class LotBatchConfiguration : IEntityTypeConfiguration<LotBatch>
         builder.HasIndex(l => new { l.TenantId, l.ExpiryDate });
         builder.HasIndex(l => new { l.TenantId, l.IsQuarantined });
         builder.HasIndex(l => new { l.TenantId, l.SupplierId })
-            .HasFilter("[SupplierId] IS NOT NULL");
+            .HasFilter("\"SupplierId\" IS NOT NULL");
     }
 }

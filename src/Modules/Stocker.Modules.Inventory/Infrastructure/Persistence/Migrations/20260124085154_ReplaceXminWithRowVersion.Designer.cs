@@ -197,7 +197,7 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.HasIndex("TenantId", "Gtin")
-                        .HasFilter("[Gtin] IS NOT NULL");
+                        .HasFilter("\"Gtin\" IS NOT NULL");
 
                     b.HasIndex("TenantId", "IsActive");
 
@@ -974,7 +974,7 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId", "Status");
 
                     b.HasIndex("TenantId", "StockCountId")
-                        .HasFilter("[StockCountId] IS NOT NULL");
+                        .HasFilter("\"StockCountId\" IS NOT NULL");
 
                     b.HasIndex("TenantId", "WarehouseId");
 
@@ -1282,7 +1282,7 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId", "Status");
 
                     b.HasIndex("TenantId", "SupplierId")
-                        .HasFilter("[SupplierId] IS NOT NULL");
+                        .HasFilter("\"SupplierId\" IS NOT NULL");
 
                     b.HasIndex("TenantId", "ProductId", "LotNumber")
                         .IsUnique();
@@ -1776,7 +1776,7 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId", "SKU")
                         .IsUnique()
-                        .HasFilter("[SKU] IS NOT NULL");
+                        .HasFilter("\"SKU\" IS NOT NULL");
 
                     b.ToTable("Products", "inventory");
                 });
@@ -2584,7 +2584,7 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId", "InspectionDate");
 
                     b.HasIndex("TenantId", "LotNumber")
-                        .HasFilter("[LotNumber] IS NOT NULL");
+                        .HasFilter("\"LotNumber\" IS NOT NULL");
 
                     b.HasIndex("TenantId", "ProductId");
 
@@ -2598,7 +2598,7 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId", "Status");
 
                     b.HasIndex("TenantId", "SupplierId")
-                        .HasFilter("[SupplierId] IS NOT NULL");
+                        .HasFilter("\"SupplierId\" IS NOT NULL");
 
                     b.ToTable("QualityControls", "inventory");
                 });
@@ -3094,15 +3094,15 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                     b.HasIndex("WarehouseId");
 
                     b.HasIndex("TenantId", "BatchNumber")
-                        .HasFilter("[BatchNumber] IS NOT NULL");
+                        .HasFilter("\"BatchNumber\" IS NOT NULL");
 
                     b.HasIndex("TenantId", "CustomerId")
-                        .HasFilter("[CustomerId] IS NOT NULL");
+                        .HasFilter("\"CustomerId\" IS NOT NULL");
 
                     b.HasIndex("TenantId", "ProductId");
 
                     b.HasIndex("TenantId", "SalesOrderId")
-                        .HasFilter("[SalesOrderId] IS NOT NULL");
+                        .HasFilter("\"SalesOrderId\" IS NOT NULL");
 
                     b.HasIndex("TenantId", "Serial")
                         .IsUnique();
@@ -3110,10 +3110,10 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId", "Status");
 
                     b.HasIndex("TenantId", "WarehouseId")
-                        .HasFilter("[WarehouseId] IS NOT NULL");
+                        .HasFilter("\"WarehouseId\" IS NOT NULL");
 
                     b.HasIndex("TenantId", "WarrantyEndDate")
-                        .HasFilter("[WarrantyEndDate] IS NOT NULL");
+                        .HasFilter("\"WarrantyEndDate\" IS NOT NULL");
 
                     b.HasIndex("TenantId", "ProductId", "Serial");
 

@@ -71,7 +71,7 @@ public class BarcodeDefinitionConfiguration : IEntityTypeConfiguration<BarcodeDe
         builder.HasIndex(b => new { b.TenantId, b.ProductId });
         builder.HasIndex(b => new { b.TenantId, b.ProductId, b.IsPrimary });
         builder.HasIndex(b => new { b.TenantId, b.Gtin })
-            .HasFilter("[Gtin] IS NOT NULL");
+            .HasFilter("\"Gtin\" IS NOT NULL");
         builder.HasIndex(b => new { b.TenantId, b.IsActive });
     }
 }

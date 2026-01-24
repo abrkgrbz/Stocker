@@ -154,6 +154,6 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasIndex(p => new { p.TenantId, p.Name });
         builder.HasIndex(p => new { p.TenantId, p.SKU })
             .IsUnique()
-            .HasFilter("[SKU] IS NOT NULL");
+            .HasFilter("\"SKU\" IS NOT NULL");
     }
 }

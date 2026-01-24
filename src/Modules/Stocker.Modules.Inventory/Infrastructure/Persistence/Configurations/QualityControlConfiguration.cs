@@ -130,13 +130,13 @@ public class QualityControlConfiguration : IEntityTypeConfiguration<QualityContr
         builder.HasIndex(q => new { q.TenantId, q.QcNumber }).IsUnique();
         builder.HasIndex(q => new { q.TenantId, q.ProductId });
         builder.HasIndex(q => new { q.TenantId, q.SupplierId })
-            .HasFilter("[SupplierId] IS NOT NULL");
+            .HasFilter("\"SupplierId\" IS NOT NULL");
         builder.HasIndex(q => new { q.TenantId, q.Status });
         builder.HasIndex(q => new { q.TenantId, q.Result });
         builder.HasIndex(q => new { q.TenantId, q.InspectionDate });
         builder.HasIndex(q => new { q.TenantId, q.QcType });
         builder.HasIndex(q => new { q.TenantId, q.LotNumber })
-            .HasFilter("[LotNumber] IS NOT NULL");
+            .HasFilter("\"LotNumber\" IS NOT NULL");
     }
 }
 

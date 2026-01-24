@@ -1511,7 +1511,7 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId", "SKU")
                         .IsUnique()
-                        .HasFilter("[SKU] IS NOT NULL");
+                        .HasFilter("\"SKU\" IS NOT NULL");
 
                     b.ToTable("Products", "inventory");
                 });

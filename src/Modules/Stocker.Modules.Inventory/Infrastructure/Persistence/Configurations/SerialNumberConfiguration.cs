@@ -58,14 +58,14 @@ public class SerialNumberConfiguration : IEntityTypeConfiguration<SerialNumber>
         builder.HasIndex(s => new { s.TenantId, s.ProductId, s.Serial });
         builder.HasIndex(s => new { s.TenantId, s.Status });
         builder.HasIndex(s => new { s.TenantId, s.WarehouseId })
-            .HasFilter("[WarehouseId] IS NOT NULL");
+            .HasFilter("\"WarehouseId\" IS NOT NULL");
         builder.HasIndex(s => new { s.TenantId, s.CustomerId })
-            .HasFilter("[CustomerId] IS NOT NULL");
+            .HasFilter("\"CustomerId\" IS NOT NULL");
         builder.HasIndex(s => new { s.TenantId, s.SalesOrderId })
-            .HasFilter("[SalesOrderId] IS NOT NULL");
+            .HasFilter("\"SalesOrderId\" IS NOT NULL");
         builder.HasIndex(s => new { s.TenantId, s.BatchNumber })
-            .HasFilter("[BatchNumber] IS NOT NULL");
+            .HasFilter("\"BatchNumber\" IS NOT NULL");
         builder.HasIndex(s => new { s.TenantId, s.WarrantyEndDate })
-            .HasFilter("[WarrantyEndDate] IS NOT NULL");
+            .HasFilter("\"WarrantyEndDate\" IS NOT NULL");
     }
 }

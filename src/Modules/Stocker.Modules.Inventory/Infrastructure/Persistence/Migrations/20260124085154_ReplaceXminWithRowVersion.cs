@@ -1870,14 +1870,14 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                 schema: "inventory",
                 table: "SerialNumbers",
                 columns: new[] { "TenantId", "BatchNumber" },
-                filter: "[BatchNumber] IS NOT NULL");
+                filter: "\"BatchNumber\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SerialNumbers_TenantId_CustomerId",
                 schema: "inventory",
                 table: "SerialNumbers",
                 columns: new[] { "TenantId", "CustomerId" },
-                filter: "[CustomerId] IS NOT NULL");
+                filter: "\"CustomerId\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SerialNumbers_TenantId_ProductId",
@@ -1896,7 +1896,7 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                 schema: "inventory",
                 table: "SerialNumbers",
                 columns: new[] { "TenantId", "SalesOrderId" },
-                filter: "[SalesOrderId] IS NOT NULL");
+                filter: "\"SalesOrderId\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SerialNumbers_TenantId_Serial",
@@ -1916,14 +1916,14 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                 schema: "inventory",
                 table: "SerialNumbers",
                 columns: new[] { "TenantId", "WarehouseId" },
-                filter: "[WarehouseId] IS NOT NULL");
+                filter: "\"WarehouseId\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SerialNumbers_TenantId_WarrantyEndDate",
                 schema: "inventory",
                 table: "SerialNumbers",
                 columns: new[] { "TenantId", "WarrantyEndDate" },
-                filter: "[WarrantyEndDate] IS NOT NULL");
+                filter: "\"WarrantyEndDate\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_QualityControls_TenantId",
@@ -1942,7 +1942,7 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                 schema: "inventory",
                 table: "QualityControls",
                 columns: new[] { "TenantId", "LotNumber" },
-                filter: "[LotNumber] IS NOT NULL");
+                filter: "\"LotNumber\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_QualityControls_TenantId_ProductId",
@@ -1980,7 +1980,7 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                 schema: "inventory",
                 table: "QualityControls",
                 columns: new[] { "TenantId", "SupplierId" },
-                filter: "[SupplierId] IS NOT NULL");
+                filter: "\"SupplierId\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_QualityControlItems_TenantId",
@@ -2085,7 +2085,7 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                 schema: "inventory",
                 table: "LotBatches",
                 columns: new[] { "TenantId", "SupplierId" },
-                filter: "[SupplierId] IS NOT NULL");
+                filter: "\"SupplierId\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_InventoryAdjustments_TenantId",
@@ -2129,7 +2129,7 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                 schema: "inventory",
                 table: "InventoryAdjustments",
                 columns: new[] { "TenantId", "StockCountId" },
-                filter: "[StockCountId] IS NOT NULL");
+                filter: "\"StockCountId\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_InventoryAdjustments_TenantId_WarehouseId",
@@ -2313,7 +2313,7 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                 schema: "inventory",
                 table: "BarcodeDefinitions",
                 columns: new[] { "TenantId", "Gtin" },
-                filter: "[Gtin] IS NOT NULL");
+                filter: "\"Gtin\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_BarcodeDefinitions_TenantId_IsActive",
