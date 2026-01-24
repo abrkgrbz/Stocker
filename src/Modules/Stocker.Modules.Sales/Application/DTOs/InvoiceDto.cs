@@ -217,6 +217,7 @@ public record InvoiceListDto
     public string InvoiceNumber { get; init; } = string.Empty;
     public DateTime InvoiceDate { get; init; }
     public DateTime? DueDate { get; init; }
+    public Guid? CustomerId { get; init; }
     public string? CustomerName { get; init; }
     public decimal TotalAmount { get; init; }
     public decimal PaidAmount { get; init; }
@@ -241,6 +242,7 @@ public record InvoiceListDto
             InvoiceNumber = entity.InvoiceNumber,
             InvoiceDate = entity.InvoiceDate,
             DueDate = entity.DueDate,
+            CustomerId = entity.CustomerId,
             CustomerName = entity.CustomerName,
             TotalAmount = entity.TotalAmount,
             PaidAmount = entity.PaidAmount,

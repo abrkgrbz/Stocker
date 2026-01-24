@@ -76,6 +76,8 @@ export function mapBackendInvoice(backendData: Record<string, unknown>): Backend
     deliveryNoteId: backendData.deliveryNoteId as string | undefined,
     deliveryNoteNumber: backendData.deliveryNoteNumber as string | undefined,
     quotationId: backendData.quotationId as string | undefined,
+    // Billing Address Snapshot
+    billingAddressSnapshot: backendData.billingAddressSnapshot as BackendInvoice['billingAddressSnapshot'],
     // Timestamps
     createdAt: backendData.createdAt as string,
     updatedAt: backendData.updatedAt as string | undefined,
@@ -116,6 +118,7 @@ export function mapBackendInvoiceListItem(backendData: Record<string, unknown>):
     invoiceNumber: backendData.invoiceNumber as string,
     invoiceDate: backendData.invoiceDate as string,
     dueDate: backendData.dueDate as string | undefined,
+    customerId: backendData.customerId as string | undefined,
     customerName: backendData.customerName as string | undefined,
     totalAmount: backendData.totalAmount as number,
     paidAmount: backendData.paidAmount as number,

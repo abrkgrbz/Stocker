@@ -413,8 +413,8 @@ export default function InvoiceDetailPage() {
                   </Link>
                 </Descriptions.Item>
               )}
-              {invoice.paymentTerms && (
-                <Descriptions.Item label="Ödeme Koşulları">{invoice.paymentTerms}</Descriptions.Item>
+              {invoice.notes && (
+                <Descriptions.Item label="Notlar">{invoice.notes}</Descriptions.Item>
               )}
             </Descriptions>
           </Card>
@@ -578,11 +578,6 @@ export default function InvoiceDetailPage() {
           <Descriptions.Item label="Son Güncelleme">
             {dayjs(invoice.updatedAt).format('DD/MM/YYYY HH:mm')}
           </Descriptions.Item>
-          {invoice.sentAt && (
-            <Descriptions.Item label="Gönderilme">
-              {dayjs(invoice.sentAt).format('DD/MM/YYYY HH:mm')}
-            </Descriptions.Item>
-          )}
         </Descriptions>
       </Card>
 

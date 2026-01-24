@@ -122,7 +122,6 @@ export default function InvoiceForm({ form, initialValues, onFinish, loading }: 
         currency: initialValues.currency || 'TRY',
         type: initialValues.type || 'Sales',
         notes: initialValues.notes,
-        paymentTerms: initialValues.paymentTerms,
         discountRate: initialValues.discountRate || 0,
         isEInvoice: initialValues.isEInvoice || false,
       });
@@ -171,7 +170,7 @@ export default function InvoiceForm({ form, initialValues, onFinish, loading }: 
         customerEmail: customer.email,
         customerTaxNumber: customer.taxId,
         customerAddress: customer.address,
-        paymentTerms: customer.paymentTerms,
+        notes: customer.paymentTerms,
       });
     }
   };
@@ -612,11 +611,11 @@ export default function InvoiceForm({ form, initialValues, onFinish, loading }: 
                 </Form.Item>
               </div>
               <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ödeme Koşulları</label>
-                <Form.Item name="paymentTerms" className="mb-0">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Notlar</label>
+                <Form.Item name="notes" className="mb-0">
                   <TextArea
                     rows={3}
-                    placeholder="Ödeme koşulları"
+                    placeholder="Fatura notları"
                     className="!bg-slate-50 !border-slate-300 !resize-none"
                   />
                 </Form.Item>

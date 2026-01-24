@@ -229,15 +229,6 @@ export async function generateInvoicePDF(
     doc.text(notesLines, margin, y);
   }
 
-  // Payment Terms
-  if (invoice.paymentTerms) {
-    y += 15;
-    doc.setFont('helvetica', 'bold');
-    doc.text('Odeme Kosullari:', margin, y);
-    y += 6;
-    doc.setFont('helvetica', 'normal');
-    doc.text(invoice.paymentTerms, margin, y);
-  }
 
   // Footer
   const footerY = doc.internal.pageSize.getHeight() - 15;

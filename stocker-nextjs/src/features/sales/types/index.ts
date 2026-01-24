@@ -31,6 +31,22 @@ export interface MoneyDto {
   currency: string;
 }
 
+export interface AddressSnapshot {
+  recipientName: string;
+  recipientPhone?: string;
+  companyName?: string;
+  addressLine1: string;
+  addressLine2?: string;
+  district?: string;
+  town?: string;
+  city: string;
+  state?: string;
+  country: string;
+  postalCode?: string;
+  taxId?: string;
+  taxOffice?: string;
+}
+
 // =====================================
 // SALES ORDER ENUMS & TYPES
 // =====================================
@@ -95,6 +111,24 @@ export interface SalesOrder {
   approvedDate?: string;
   isCancelled: boolean;
   cancellationReason?: string;
+  // Address Snapshots
+  shippingAddressSnapshot?: AddressSnapshot;
+  billingAddressSnapshot?: AddressSnapshot;
+
+  // Source Document Relations
+  quotationId?: string;
+  quotationNumber?: string;
+  opportunityId?: string;
+  customerContractId?: string;
+
+  // Invoicing Status
+  invoicingStatus: string;
+  totalInvoicedAmount: number;
+
+  // Fulfillment Status
+  fulfillmentStatus: string;
+  completedShipmentCount: number;
+
   createdAt: string;
   updatedAt?: string;
   items: SalesOrderItem[];
@@ -111,6 +145,9 @@ export interface SalesOrderListItem {
   isApproved: boolean;
   isCancelled: boolean;
   itemCount: number;
+  quotationNumber?: string;
+  invoicingStatus: string;
+  fulfillmentStatus: string;
   createdAt: string;
 }
 
@@ -310,49 +347,63 @@ export interface QuotationStatistics {
 }
 
 export interface CreateQuotationDto {
-  quotationDate: string;
-  validUntil: string;
+  name?: string;
+  quotationDate?: string;
   customerId?: string;
-  customerName: string;
+  customerName?: string;
   customerEmail?: string;
-  currency?: string;
-  shippingAddress?: string;
-  billingAddress?: string;
-  notes?: string;
-  termsAndConditions?: string;
+  customerPhone?: string;
+  customerTaxNumber?: string;
+  contactId?: string;
+  contactName?: string;
+  opportunityId?: string;
   salesPersonId?: string;
   salesPersonName?: string;
-  discountRate?: number;
-  discountAmount?: number;
+  currency?: string;
+  validityDays?: number;
+  shippingAddress?: string;
+  billingAddress?: string;
+  paymentTerms?: string;
+  deliveryTerms?: string;
+  notes?: string;
+  termsAndConditions?: string;
   items: CreateQuotationItemDto[];
 }
 
 export interface CreateQuotationItemDto {
-  productId?: string;
-  productCode: string;
+  productId: string;
   productName: string;
-  unit: string;
-  quantity: number;
-  unitPrice: number;
-  vatRate: number;
+  productCode?: string;
   description?: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
   discountRate?: number;
+  discountAmount?: number;
+  vatRate?: number;
 }
 
 export interface UpdateQuotationDto {
-  validUntil?: string;
+  name?: string;
   customerId?: string;
   customerName?: string;
   customerEmail?: string;
-  currency?: string;
-  shippingAddress?: string;
-  billingAddress?: string;
-  notes?: string;
-  termsAndConditions?: string;
+  customerPhone?: string;
+  customerTaxNumber?: string;
+  contactId?: string;
+  contactName?: string;
   salesPersonId?: string;
   salesPersonName?: string;
+  validityDays?: number;
+  shippingAmount?: number;
   discountAmount?: number;
   discountRate?: number;
+  shippingAddress?: string;
+  billingAddress?: string;
+  paymentTerms?: string;
+  deliveryTerms?: string;
+  notes?: string;
+  termsAndConditions?: string;
 }
 
 export interface GetQuotationsParams {
@@ -453,7 +504,6 @@ export interface Invoice {
   status: string;
   type: string;
   notes?: string;
-  paymentTerms?: string;
 
   // E-Fatura / E-Arşiv
   eInvoiceId?: string;
@@ -462,21 +512,21 @@ export interface Invoice {
   gibUuid?: string;
   eInvoiceStatus?: string;
   eInvoiceErrorMessage?: string;
-  isEArchive?: boolean;
+  isEArchive: boolean;
   eArchiveNumber?: string;
   eArchiveDate?: string;
   eArchiveStatus?: string;
 
   // Tevkifat (Withholding Tax)
-  hasWithholdingTax?: boolean;
-  withholdingTaxRate?: number;
-  withholdingTaxAmount?: number;
+  hasWithholdingTax: boolean;
+  withholdingTaxRate: number;
+  withholdingTaxAmount: number;
   withholdingTaxCode?: string;
 
   // Fatura Numaralama (VUK Uyumlu)
   invoiceSeries?: string;
-  sequenceNumber?: number;
-  invoiceYear?: number;
+  sequenceNumber: number;
+  invoiceYear: number;
 
   // Müşteri Vergi Bilgileri (Genişletilmiş)
   customerTaxIdType?: string;
@@ -492,9 +542,11 @@ export interface Invoice {
   deliveryNoteNumber?: string;
   quotationId?: string;
 
+  // Billing Address Snapshot
+  billingAddressSnapshot?: AddressSnapshot;
+
   createdAt: string;
   updatedAt?: string;
-  sentAt?: string;
   items: InvoiceItem[];
 }
 
@@ -1259,14 +1311,16 @@ export interface CustomerContractDto {
   customerTaxNumber?: string;
   startDate: string;
   endDate: string;
-  signedDate?: string;
+  signedDate: string;
   status: ContractStatus;
-  contractValue?: MoneyDto;
-  minimumAnnualCommitment?: MoneyDto;
+  contractValue?: number;
+  contractValueCurrency?: string;
+  minimumAnnualCommitment?: number;
   priceListId?: string;
   generalDiscountPercentage?: number;
   defaultPaymentDueDays: number;
-  creditLimit?: MoneyDto;
+  creditLimit?: number;
+  creditLimitCurrency?: string;
   autoRenewal: boolean;
   renewalPeriodMonths?: number;
   renewalNoticeBeforeDays?: number;
@@ -1277,10 +1331,10 @@ export interface CustomerContractDto {
   companySignatory?: string;
   companySignatoryTitle?: string;
   specialTerms?: string;
-  internalNotes?: string;
   terminatedDate?: string;
   terminationReason?: string;
   terminationType?: TerminationType;
+  // SLA Properties
   serviceLevel: ServiceLevelAgreement;
   responseTimeHours?: number;
   resolutionTimeHours?: number;
@@ -1288,18 +1342,17 @@ export interface CustomerContractDto {
   dedicatedSupportContact?: string;
   supportPriority: SupportPriority;
   includesOnSiteSupport: boolean;
-  currentCreditBalance?: MoneyDto;
-  availableCredit?: MoneyDto;
+  currentCreditBalance: number;
+  availableCredit: number;
   creditLimitLastReviewDate?: string;
-  renewalGracePeriodDays?: number;
+  renewalGracePeriodDays: number;
   isBlocked: boolean;
   blockReason?: string;
+  daysUntilExpiration: number;
+  isActive: boolean;
+  isInGracePeriod: boolean;
   priceAgreements: ContractPriceAgreementDto[];
   paymentTerms: ContractPaymentTermDto[];
-  commitments: ContractCommitmentDto[];
-  documents: ContractDocumentDto[];
-  daysUntilExpiration: number;
-  isExpiringSoon: boolean;
 }
 
 export interface CustomerContractListDto {
@@ -1307,16 +1360,15 @@ export interface CustomerContractListDto {
   contractNumber: string;
   title: string;
   contractType: ContractType;
-  customerId: string;
   customerName: string;
   startDate: string;
   endDate: string;
   status: ContractStatus;
-  contractValue?: MoneyDto;
-  serviceLevel: ServiceLevelAgreement;
-  salesRepresentativeName?: string;
+  creditLimit?: number;
+  availableCredit: number;
+  isBlocked: boolean;
   daysUntilExpiration: number;
-  isExpiringSoon: boolean;
+  requiresRenewalNotification: boolean;
 }
 
 export interface ContractPriceAgreementDto {
@@ -1324,11 +1376,10 @@ export interface ContractPriceAgreementDto {
   productId: string;
   productCode: string;
   productName: string;
-  specialPrice: MoneyDto;
+  specialPrice: number;
+  currency: string;
   discountPercentage?: number;
-  minimumQuantity: number;
-  effectiveFrom: string;
-  effectiveTo?: string;
+  minimumQuantity?: number;
   isActive: boolean;
 }
 
@@ -1336,9 +1387,8 @@ export interface ContractPaymentTermDto {
   id: string;
   termType: PaymentTermType;
   dueDays: number;
-  discountPercentage?: number;
-  discountDays?: number;
-  description?: string;
+  earlyPaymentDiscountPercentage?: number;
+  earlyPaymentDiscountDays?: number;
   isDefault: boolean;
 }
 
@@ -1493,8 +1543,10 @@ export interface SalesTerritoryDto {
   territoryManagerId?: string;
   territoryManagerName?: string;
   defaultPriceListId?: string;
-  potentialValue?: MoneyDto;
-  annualTarget?: MoneyDto;
+  potentialValue?: number;
+  potentialValueCurrency?: string;
+  annualTarget?: number;
+  annualTargetCurrency?: string;
   lastPerformanceScore?: number;
   lastPerformanceDate?: string;
   notes?: string;
@@ -1615,6 +1667,7 @@ export interface AssignCustomerToTerritoryCommand {
 
 // =====================================
 // SHIPMENT ENUMS & TYPES
+// Synchronized with Backend: ShipmentDto.cs
 // =====================================
 
 export type ShipmentStatus = 'Draft' | 'Confirmed' | 'Preparing' | 'PickedUp' | 'Packed' | 'Shipped' | 'InTransit' | 'OutForDelivery' | 'Delivered' | 'Failed' | 'Cancelled' | 'Returned';
@@ -1625,59 +1678,87 @@ export interface ShipmentDto {
   id: string;
   shipmentNumber: string;
   salesOrderId: string;
-  orderNumber: string;
-  customerId: string;
-  customerName: string;
-  status: ShipmentStatus;
-  shipmentType: ShipmentType;
-  priority: ShipmentPriority;
-  warehouseId?: string;
-  warehouseName?: string;
-  shippingAddressLine1: string;
-  shippingAddressLine2?: string;
-  shippingCity: string;
-  shippingState?: string;
-  shippingPostalCode?: string;
-  shippingCountry: string;
-  recipientName: string;
+  salesOrderNumber: string;
+  shipmentDate: string;
+  expectedDeliveryDate?: string;
+  actualDeliveryDate?: string;
+
+  // Customer
+  customerId?: string;
+  customerName?: string;
+  recipientName?: string;
   recipientPhone?: string;
-  recipientEmail?: string;
+
+  // Address
+  shippingAddress: string;
+  shippingDistrict?: string;
+  shippingCity?: string;
+  shippingCountry: string;
+  shippingPostalCode?: string;
+
+  // Carrier
+  shipmentType: string;
   carrierId?: string;
   carrierName?: string;
-  carrierService?: string;
   trackingNumber?: string;
   trackingUrl?: string;
-  estimatedShipDate?: string;
-  actualShipDate?: string;
-  estimatedDeliveryDate?: string;
-  actualDeliveryDate?: string;
-  totalWeight?: number;
-  weightUnit: string;
-  totalPackages: number;
-  shippingCost?: MoneyDto;
-  insuranceValue?: MoneyDto;
-  requiresSignature: boolean;
-  deliveryInstructions?: string;
-  internalNotes?: string;
-  items: ShipmentItemDto[];
+  vehiclePlate?: string;
+  driverName?: string;
+  driverPhone?: string;
+
+  // Measurement
+  totalWeight: number;
+  totalVolume?: number;
+  packageCount: number;
+  shippingCost: number;
+  currency: string;
+  insuranceAmount?: number;
+  customerShippingFee?: number;
+  isFreeShipping: boolean;
+
+  // Warehouse
+  warehouseId?: string;
+  warehouseName?: string;
+  branchId?: string;
+
+  // Status
+  status: string;
+  isDeliveryNoteCreated: boolean;
+  deliveryNoteId?: string;
+  isInvoiced: boolean;
+  invoiceId?: string;
+  proofOfDelivery?: string;
+  receivedBy?: string;
+  deliveryNotes?: string;
+
+  // General
+  notes?: string;
+  specialInstructions?: string;
+  priority: string;
   createdAt: string;
   updatedAt?: string;
+  createdBy?: string;
+
+  items: ShipmentItemDto[];
 }
 
 export interface ShipmentListDto {
   id: string;
   shipmentNumber: string;
-  orderNumber: string;
-  customerName: string;
-  status: ShipmentStatus;
-  shipmentType: ShipmentType;
-  priority: ShipmentPriority;
+  salesOrderNumber: string;
+  shipmentDate: string;
+  expectedDeliveryDate?: string;
+  customerName?: string;
+  shippingCity?: string;
+  shipmentType: string;
   carrierName?: string;
   trackingNumber?: string;
-  estimatedDeliveryDate?: string;
-  actualDeliveryDate?: string;
-  shippingCity: string;
-  totalPackages: number;
+  status: string;
+  packageCount: number;
+  totalWeight: number;
+  priority: string;
+  isDeliveryNoteCreated: boolean;
+  isInvoiced: boolean;
   createdAt: string;
 }
 
@@ -1689,13 +1770,13 @@ export interface ShipmentItemDto {
   productName: string;
   quantity: number;
   unit: string;
-  weight?: number;
-  isPicked: boolean;
-  pickedAt?: string;
-  pickedBy?: string;
-  isPacked: boolean;
-  packedAt?: string;
-  packedBy?: string;
+  unitWeight?: number;
+  totalWeight: number;
+  packageCount: number;
+  lotNumber?: string;
+  serialNumber?: string;
+  expiryDate?: string;
+  notes?: string;
 }
 
 export interface ShipmentQueryParams {
@@ -1704,7 +1785,7 @@ export interface ShipmentQueryParams {
   shipmentType?: ShipmentType;
   priority?: ShipmentPriority;
   customerId?: string;
-  orderId?: string;
+  salesOrderId?: string;
   carrierId?: string;
   warehouseId?: string;
   fromDate?: string;
@@ -1718,38 +1799,19 @@ export interface CreateShipmentCommand {
   shipmentType?: ShipmentType;
   priority?: ShipmentPriority;
   warehouseId?: string;
-  shippingAddressLine1: string;
-  shippingAddressLine2?: string;
-  shippingCity: string;
-  shippingState?: string;
+  shippingAddress: string;
+  shippingDistrict?: string;
+  shippingCity?: string;
+  shippingCountry?: string;
   shippingPostalCode?: string;
-  shippingCountry: string;
-  recipientName: string;
+  recipientName?: string;
   recipientPhone?: string;
-  recipientEmail?: string;
   carrierId?: string;
   carrierName?: string;
-  estimatedShipDate?: string;
-  estimatedDeliveryDate?: string;
-  requiresSignature?: boolean;
-  deliveryInstructions?: string;
-  internalNotes?: string;
+  expectedDeliveryDate?: string;
+  notes?: string;
+  specialInstructions?: string;
   items?: CreateShipmentItemCommand[];
-}
-
-export interface CreateShipmentFromOrderCommand {
-  salesOrderId: string;
-  shipmentType?: ShipmentType;
-  priority?: ShipmentPriority;
-  warehouseId?: string;
-  carrierId?: string;
-  carrierName?: string;
-  estimatedShipDate?: string;
-  estimatedDeliveryDate?: string;
-  requiresSignature?: boolean;
-  deliveryInstructions?: string;
-  internalNotes?: string;
-  includeAllItems?: boolean;
 }
 
 export interface CreateShipmentItemCommand {
@@ -1759,7 +1821,9 @@ export interface CreateShipmentItemCommand {
   productName: string;
   quantity: number;
   unit: string;
-  weight?: number;
+  unitWeight?: number;
+  lotNumber?: string;
+  serialNumber?: string;
 }
 
 export interface UpdateShipmentCommand {
@@ -1767,26 +1831,45 @@ export interface UpdateShipmentCommand {
   priority?: ShipmentPriority;
   carrierId?: string;
   carrierName?: string;
-  carrierService?: string;
-  estimatedShipDate?: string;
-  estimatedDeliveryDate?: string;
-  requiresSignature?: boolean;
-  deliveryInstructions?: string;
-  internalNotes?: string;
+  expectedDeliveryDate?: string;
+  notes?: string;
+  specialInstructions?: string;
 }
 
 export interface ShipShipmentCommand {
   trackingNumber?: string;
   trackingUrl?: string;
-  carrierService?: string;
-  actualShipDate?: string;
+  vehiclePlate?: string;
+  driverName?: string;
+  driverPhone?: string;
 }
 
 export interface DeliverShipmentCommand {
   actualDeliveryDate?: string;
   receivedBy?: string;
-  signature?: string;
+  proofOfDelivery?: string;
   deliveryNotes?: string;
+}
+
+export interface UpdateTrackingCommand {
+  trackingNumber?: string;
+  trackingUrl?: string;
+  vehiclePlate?: string;
+  driverName?: string;
+  driverPhone?: string;
+}
+
+export interface CreateShipmentFromOrderCommand {
+  salesOrderId: string;
+  shipmentType?: ShipmentType;
+  priority?: ShipmentPriority;
+  warehouseId?: string;
+  carrierId?: string;
+  carrierName?: string;
+  expectedDeliveryDate?: string;
+  notes?: string;
+  specialInstructions?: string;
+  includeAllItems?: boolean;
 }
 
 export interface AddShipmentItemCommand {
@@ -1796,18 +1879,14 @@ export interface AddShipmentItemCommand {
   productName: string;
   quantity: number;
   unit: string;
-  weight?: number;
+  unitWeight?: number;
+  lotNumber?: string;
+  serialNumber?: string;
 }
 
 export interface UpdateShipmentItemCommand {
   quantity?: number;
-  weight?: number;
-}
-
-export interface UpdateTrackingCommand {
-  trackingNumber?: string;
-  trackingUrl?: string;
-  carrierService?: string;
+  unitWeight?: number;
 }
 
 // =====================================
