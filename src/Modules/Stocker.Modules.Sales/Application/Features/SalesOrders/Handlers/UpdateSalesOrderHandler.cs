@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.Modules.Sales.Application.Features.SalesOrders.Commands;
+using Stocker.Modules.Sales.Application.Services;
+using Stocker.Modules.Sales.Domain;
 using Stocker.Modules.Sales.Domain.Entities;
 using Stocker.Modules.Sales.Interfaces;
 using Stocker.SharedKernel.Results;
@@ -16,13 +18,16 @@ namespace Stocker.Modules.Sales.Application.Features.SalesOrders.Handlers;
 public class UpdateSalesOrderHandler : IRequestHandler<UpdateSalesOrderCommand, Result<SalesOrderDto>>
 {
     private readonly ISalesUnitOfWork _unitOfWork;
+    private readonly ISalesAuditService _auditService;
     private readonly ILogger<UpdateSalesOrderHandler> _logger;
 
     public UpdateSalesOrderHandler(
         ISalesUnitOfWork unitOfWork,
+        ISalesAuditService auditService,
         ILogger<UpdateSalesOrderHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _auditService = auditService;
         _logger = logger;
     }
 
@@ -33,10 +38,10 @@ public class UpdateSalesOrderHandler : IRequestHandler<UpdateSalesOrderCommand, 
         var order = await _unitOfWork.SalesOrders.GetWithItemsAsync(request.Id, cancellationToken);
 
         if (order == null || order.TenantId != tenantId)
-            return Result<SalesOrderDto>.Failure(Error.NotFound("SalesOrder", "Sipariş bulunamadı"));
+            return Result<SalesOrderDto>.Failure(SalesErrors.Order.NotFound());
 
         if (order.Status != SalesOrderStatus.Draft)
-            return Result<SalesOrderDto>.Failure(Error.Conflict("SalesOrder", "Yalnızca taslak siparişler güncellenebilir"));
+            return Result<SalesOrderDto>.Failure(SalesErrors.Order.OnlyDraftCanBeUpdated);
 
         // Update customer
         order.UpdateCustomer(request.CustomerId, request.CustomerName, request.CustomerEmail);
@@ -70,11 +75,18 @@ public class UpdateSalesOrderHandler : IRequestHandler<UpdateSalesOrderCommand, 
         catch (DbUpdateConcurrencyException ex)
         {
             _logger.LogWarning(ex, "Sipariş {OrderId} güncellenirken eşzamanlılık çakışması tespit edildi", order.Id);
-            return Result<SalesOrderDto>.Failure(Error.Conflict("SalesOrder",
-                "Bu sipariş başka bir kullanıcı tarafından değiştirilmiş. Lütfen sayfayı yenileyip tekrar deneyin."));
+            return Result<SalesOrderDto>.Failure(SalesErrors.Order.ConcurrencyConflict);
         }
 
         _logger.LogInformation("Sales order {OrderId} updated for tenant {TenantId}", order.Id, tenantId);
+
+        // Audit log - sipariş güncelleme kaydı
+        await _auditService.LogOrderUpdatedAsync(
+            order.Id,
+            order.OrderNumber,
+            new { request.CustomerId, request.CustomerName, request.DeliveryDate, request.DiscountAmount, request.DiscountRate },
+            new { order.CustomerName, order.DeliveryDate, order.DiscountAmount, order.DiscountRate, order.TotalAmount },
+            cancellationToken);
 
         return Result<SalesOrderDto>.Success(SalesOrderDto.FromEntity(order));
     }
@@ -87,11 +99,13 @@ public class UpdateSalesOrderHandler : IRequestHandler<UpdateSalesOrderCommand, 
 public class AddSalesOrderItemHandler : IRequestHandler<AddSalesOrderItemCommand, Result<SalesOrderDto>>
 {
     private readonly ISalesUnitOfWork _unitOfWork;
+    private readonly ISalesAuditService _auditService;
     private readonly ILogger<AddSalesOrderItemHandler> _logger;
 
-    public AddSalesOrderItemHandler(ISalesUnitOfWork unitOfWork, ILogger<AddSalesOrderItemHandler> logger)
+    public AddSalesOrderItemHandler(ISalesUnitOfWork unitOfWork, ISalesAuditService auditService, ILogger<AddSalesOrderItemHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _auditService = auditService;
         _logger = logger;
     }
 
@@ -102,7 +116,7 @@ public class AddSalesOrderItemHandler : IRequestHandler<AddSalesOrderItemCommand
         var order = await _unitOfWork.SalesOrders.GetWithItemsAsync(request.SalesOrderId, cancellationToken);
 
         if (order == null || order.TenantId != tenantId)
-            return Result<SalesOrderDto>.Failure(Error.NotFound("SalesOrder", "Sipariş bulunamadı"));
+            return Result<SalesOrderDto>.Failure(SalesErrors.Order.NotFound());
 
         var lineNumber = order.Items.Any() ? order.Items.Max(i => i.LineNumber) + 1 : 1;
 
@@ -137,9 +151,17 @@ public class AddSalesOrderItemHandler : IRequestHandler<AddSalesOrderItemCommand
         catch (DbUpdateConcurrencyException ex)
         {
             _logger.LogWarning(ex, "Sipariş {OrderId} kalem eklenirken eşzamanlılık çakışması", request.SalesOrderId);
-            return Result<SalesOrderDto>.Failure(Error.Conflict("SalesOrder",
-                "Bu sipariş başka bir kullanıcı tarafından değiştirilmiş. Lütfen sayfayı yenileyip tekrar deneyin."));
+            return Result<SalesOrderDto>.Failure(SalesErrors.Order.ConcurrencyConflict);
         }
+
+        // Audit log - kalem ekleme kaydı
+        await _auditService.LogOrderItemAddedAsync(
+            order.Id,
+            order.OrderNumber,
+            request.ProductName,
+            request.Quantity,
+            request.UnitPrice,
+            cancellationToken);
 
         return Result<SalesOrderDto>.Success(SalesOrderDto.FromEntity(order));
     }
@@ -152,11 +174,13 @@ public class AddSalesOrderItemHandler : IRequestHandler<AddSalesOrderItemCommand
 public class RemoveSalesOrderItemHandler : IRequestHandler<RemoveSalesOrderItemCommand, Result<SalesOrderDto>>
 {
     private readonly ISalesUnitOfWork _unitOfWork;
+    private readonly ISalesAuditService _auditService;
     private readonly ILogger<RemoveSalesOrderItemHandler> _logger;
 
-    public RemoveSalesOrderItemHandler(ISalesUnitOfWork unitOfWork, ILogger<RemoveSalesOrderItemHandler> logger)
+    public RemoveSalesOrderItemHandler(ISalesUnitOfWork unitOfWork, ISalesAuditService auditService, ILogger<RemoveSalesOrderItemHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _auditService = auditService;
         _logger = logger;
     }
 
@@ -167,7 +191,7 @@ public class RemoveSalesOrderItemHandler : IRequestHandler<RemoveSalesOrderItemC
         var order = await _unitOfWork.SalesOrders.GetWithItemsAsync(request.SalesOrderId, cancellationToken);
 
         if (order == null || order.TenantId != tenantId)
-            return Result<SalesOrderDto>.Failure(Error.NotFound("SalesOrder", "Sipariş bulunamadı"));
+            return Result<SalesOrderDto>.Failure(SalesErrors.Order.NotFound());
 
         var removeResult = order.RemoveItem(request.ItemId);
         if (!removeResult.IsSuccess)
@@ -180,9 +204,15 @@ public class RemoveSalesOrderItemHandler : IRequestHandler<RemoveSalesOrderItemC
         catch (DbUpdateConcurrencyException ex)
         {
             _logger.LogWarning(ex, "Sipariş {OrderId} kalem silinirken eşzamanlılık çakışması", request.SalesOrderId);
-            return Result<SalesOrderDto>.Failure(Error.Conflict("SalesOrder",
-                "Bu sipariş başka bir kullanıcı tarafından değiştirilmiş. Lütfen sayfayı yenileyip tekrar deneyin."));
+            return Result<SalesOrderDto>.Failure(SalesErrors.Order.ConcurrencyConflict);
         }
+
+        // Audit log - kalem silme kaydı
+        await _auditService.LogOrderItemRemovedAsync(
+            order.Id,
+            order.OrderNumber,
+            request.ItemId,
+            cancellationToken);
 
         return Result<SalesOrderDto>.Success(SalesOrderDto.FromEntity(order));
     }
@@ -195,13 +225,16 @@ public class RemoveSalesOrderItemHandler : IRequestHandler<RemoveSalesOrderItemC
 public class ApproveSalesOrderHandler : IRequestHandler<ApproveSalesOrderCommand, Result<SalesOrderDto>>
 {
     private readonly ISalesUnitOfWork _unitOfWork;
+    private readonly ISalesAuditService _auditService;
     private readonly ILogger<ApproveSalesOrderHandler> _logger;
 
     public ApproveSalesOrderHandler(
         ISalesUnitOfWork unitOfWork,
+        ISalesAuditService auditService,
         ILogger<ApproveSalesOrderHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _auditService = auditService;
         _logger = logger;
     }
 
@@ -212,7 +245,7 @@ public class ApproveSalesOrderHandler : IRequestHandler<ApproveSalesOrderCommand
         var order = await _unitOfWork.SalesOrders.GetWithItemsAsync(request.Id, cancellationToken);
 
         if (order == null || order.TenantId != tenantId)
-            return Result<SalesOrderDto>.Failure(Error.NotFound("SalesOrder", "Sipariş bulunamadı"));
+            return Result<SalesOrderDto>.Failure(SalesErrors.Order.NotFound());
 
         // TODO: Get actual user ID from context
         var userId = Guid.NewGuid();
@@ -227,11 +260,13 @@ public class ApproveSalesOrderHandler : IRequestHandler<ApproveSalesOrderCommand
         catch (DbUpdateConcurrencyException ex)
         {
             _logger.LogWarning(ex, "Sipariş {OrderId} onaylanırken eşzamanlılık çakışması", order.Id);
-            return Result<SalesOrderDto>.Failure(Error.Conflict("SalesOrder",
-                "Bu sipariş başka bir kullanıcı tarafından değiştirilmiş. Lütfen sayfayı yenileyip tekrar deneyin."));
+            return Result<SalesOrderDto>.Failure(SalesErrors.Order.ConcurrencyConflict);
         }
 
         _logger.LogInformation("Sales order {OrderId} approved for tenant {TenantId}", order.Id, tenantId);
+
+        // Audit log - sipariş onay kaydı
+        await _auditService.LogOrderApprovedAsync(order.Id, order.OrderNumber, userId, cancellationToken);
 
         return Result<SalesOrderDto>.Success(SalesOrderDto.FromEntity(order));
     }
@@ -244,13 +279,16 @@ public class ApproveSalesOrderHandler : IRequestHandler<ApproveSalesOrderCommand
 public class CancelSalesOrderHandler : IRequestHandler<CancelSalesOrderCommand, Result<SalesOrderDto>>
 {
     private readonly ISalesUnitOfWork _unitOfWork;
+    private readonly ISalesAuditService _auditService;
     private readonly ILogger<CancelSalesOrderHandler> _logger;
 
     public CancelSalesOrderHandler(
         ISalesUnitOfWork unitOfWork,
+        ISalesAuditService auditService,
         ILogger<CancelSalesOrderHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _auditService = auditService;
         _logger = logger;
     }
 
@@ -261,7 +299,7 @@ public class CancelSalesOrderHandler : IRequestHandler<CancelSalesOrderCommand, 
         var order = await _unitOfWork.SalesOrders.GetWithItemsAsync(request.Id, cancellationToken);
 
         if (order == null || order.TenantId != tenantId)
-            return Result<SalesOrderDto>.Failure(Error.NotFound("SalesOrder", "Sipariş bulunamadı"));
+            return Result<SalesOrderDto>.Failure(SalesErrors.Order.NotFound());
 
         var result = order.Cancel(request.Reason);
         if (!result.IsSuccess)
@@ -274,11 +312,13 @@ public class CancelSalesOrderHandler : IRequestHandler<CancelSalesOrderCommand, 
         catch (DbUpdateConcurrencyException ex)
         {
             _logger.LogWarning(ex, "Sipariş {OrderId} iptal edilirken eşzamanlılık çakışması", order.Id);
-            return Result<SalesOrderDto>.Failure(Error.Conflict("SalesOrder",
-                "Bu sipariş başka bir kullanıcı tarafından değiştirilmiş. Lütfen sayfayı yenileyip tekrar deneyin."));
+            return Result<SalesOrderDto>.Failure(SalesErrors.Order.ConcurrencyConflict);
         }
 
         _logger.LogInformation("Sales order {OrderId} cancelled for tenant {TenantId}", order.Id, tenantId);
+
+        // Audit log - sipariş iptal kaydı
+        await _auditService.LogOrderCancelledAsync(order.Id, order.OrderNumber, request.Reason, cancellationToken);
 
         return Result<SalesOrderDto>.Success(SalesOrderDto.FromEntity(order));
     }
@@ -291,13 +331,16 @@ public class CancelSalesOrderHandler : IRequestHandler<CancelSalesOrderCommand, 
 public class DeleteSalesOrderHandler : IRequestHandler<DeleteSalesOrderCommand, Result>
 {
     private readonly ISalesUnitOfWork _unitOfWork;
+    private readonly ISalesAuditService _auditService;
     private readonly ILogger<DeleteSalesOrderHandler> _logger;
 
     public DeleteSalesOrderHandler(
         ISalesUnitOfWork unitOfWork,
+        ISalesAuditService auditService,
         ILogger<DeleteSalesOrderHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _auditService = auditService;
         _logger = logger;
     }
 
@@ -308,10 +351,13 @@ public class DeleteSalesOrderHandler : IRequestHandler<DeleteSalesOrderCommand, 
         var order = await _unitOfWork.SalesOrders.GetWithItemsAsync(request.Id, cancellationToken);
 
         if (order == null || order.TenantId != tenantId)
-            return Result.Failure(Error.NotFound("SalesOrder", "Sipariş bulunamadı"));
+            return Result.Failure(SalesErrors.Order.NotFound());
 
         if (order.Status != SalesOrderStatus.Draft && order.Status != SalesOrderStatus.Cancelled)
-            return Result.Failure(Error.Conflict("SalesOrder", "Yalnızca taslak veya iptal edilmiş siparişler silinebilir"));
+            return Result.Failure(SalesErrors.Order.OnlyDraftOrCancelledCanBeDeleted);
+
+        var orderNumber = order.OrderNumber;
+        var orderStatus = order.Status.ToString();
 
         _unitOfWork.SalesOrders.Remove(order);
 
@@ -322,11 +368,13 @@ public class DeleteSalesOrderHandler : IRequestHandler<DeleteSalesOrderCommand, 
         catch (DbUpdateConcurrencyException ex)
         {
             _logger.LogWarning(ex, "Sipariş {OrderId} silinirken eşzamanlılık çakışması", order.Id);
-            return Result.Failure(Error.Conflict("SalesOrder",
-                "Bu sipariş başka bir kullanıcı tarafından değiştirilmiş. Lütfen sayfayı yenileyip tekrar deneyin."));
+            return Result.Failure(SalesErrors.Order.ConcurrencyConflict);
         }
 
         _logger.LogInformation("Sales order {OrderId} deleted for tenant {TenantId}", order.Id, tenantId);
+
+        // Audit log - sipariş silme kaydı
+        await _auditService.LogOrderDeletedAsync(request.Id, orderNumber, orderStatus, cancellationToken);
 
         return Result.Success();
     }

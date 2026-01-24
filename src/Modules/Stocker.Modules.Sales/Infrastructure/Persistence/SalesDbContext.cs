@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.Sales.Domain.Entities;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.MultiTenancy;
+using AuditLog = Stocker.Domain.Tenant.Entities.AuditLog;
 
 namespace Stocker.Modules.Sales.Infrastructure.Persistence;
 
@@ -89,6 +90,9 @@ public class SalesDbContext : DbContext
     // Customer Segments
     public DbSet<CustomerSegment> CustomerSegments { get; set; } = null!;
 
+    // Audit Logs
+    public DbSet<AuditLog> AuditLogs { get; set; } = null!;
+
     public SalesDbContext(
         DbContextOptions<SalesDbContext> options,
         ITenantService tenantService)
@@ -166,7 +170,33 @@ public class SalesDbContext : DbContext
 
             // Customer Segments
             modelBuilder.Entity<CustomerSegment>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Audit Logs
+            modelBuilder.Entity<AuditLog>().HasQueryFilter(e => e.TenantId == tenantId.Value);
         }
+
+        // Configure AuditLog entity
+        ConfigureAuditLog(modelBuilder);
+    }
+
+    private static void ConfigureAuditLog(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.ToTable("audit_logs", "sales");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.EntityName).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.EntityId).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Action).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.UserId).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.UserName).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.UserEmail).HasMaxLength(255);
+            entity.Property(e => e.IpAddress).HasMaxLength(50);
+            entity.Property(e => e.UserAgent).HasMaxLength(500);
+            entity.HasIndex(e => new { e.EntityName, e.EntityId });
+            entity.HasIndex(e => e.Timestamp);
+            entity.HasIndex(e => e.UserId);
+        });
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

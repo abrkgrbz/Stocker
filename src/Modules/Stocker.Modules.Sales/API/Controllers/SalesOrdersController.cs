@@ -1,10 +1,12 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Stocker.Application.Common.Extensions;
 using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.Modules.Sales.Application.Features.SalesOrders.Commands;
 using Stocker.Modules.Sales.Application.Features.SalesOrders.Queries;
 using Stocker.Modules.Sales.Application.Services;
+using Stocker.Modules.Sales.Infrastructure.RateLimiting;
 using Stocker.SharedKernel.Authorization;
 using Stocker.SharedKernel.Pagination;
 
@@ -31,6 +33,7 @@ public class SalesOrdersController : ControllerBase
     /// </summary>
     [HttpGet]
     [HasPermission("Sales.Orders", "View")]
+    [SalesRateLimit(SalesRateLimitPolicies.ReadOperationLimit, policyName: "OrderList")]
     public async Task<ActionResult<PagedResult<SalesOrderListDto>>> GetOrders(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
@@ -59,11 +62,7 @@ public class SalesOrdersController : ControllerBase
         };
 
         var result = await _mediator.Send(query, cancellationToken);
-
-        if (!result.IsSuccess)
-            return BadRequest(new { error = result.Error.Description });
-
-        return Ok(result.Value);
+        return result.ToActionResult();
     }
 
     /// <summary>
@@ -71,27 +70,18 @@ public class SalesOrdersController : ControllerBase
     /// </summary>
     [HttpGet("{id:guid}")]
     [HasPermission("Sales.Orders", "View")]
+    [SalesRateLimit(SalesRateLimitPolicies.ReadOperationLimit, policyName: "OrderDetail")]
     public async Task<ActionResult<SalesOrderDto>> GetOrderById(Guid id, CancellationToken cancellationToken)
     {
         var accessResult = await _resourceAuth.CanAccessSalesOrderAsync(id, cancellationToken);
         if (!accessResult.IsSuccess)
-            return accessResult.Error.Code == "NotFound"
-                ? NotFound(new { error = accessResult.Error.Description })
-                : Unauthorized(new { error = accessResult.Error.Description });
+            return accessResult.ToActionResult();
         if (!accessResult.Value)
             return Forbid();
 
         var query = new GetSalesOrderByIdQuery { Id = id };
         var result = await _mediator.Send(query, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            if (result.Error.Code == "NotFound")
-                return NotFound(new { error = result.Error.Description });
-            return BadRequest(new { error = result.Error.Description });
-        }
-
-        return Ok(result.Value);
+        return result.ToActionResult();
     }
 
     /// <summary>
@@ -99,21 +89,14 @@ public class SalesOrdersController : ControllerBase
     /// </summary>
     [HttpGet("number/{orderNumber}")]
     [HasPermission("Sales.Orders", "View")]
+    [SalesRateLimit(SalesRateLimitPolicies.ReadOperationLimit, policyName: "OrderByNumber")]
     public async Task<ActionResult<SalesOrderDto>> GetOrderByNumber(
         string orderNumber,
         CancellationToken cancellationToken)
     {
         var query = new GetSalesOrderByNumberQuery { OrderNumber = orderNumber };
         var result = await _mediator.Send(query, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            if (result.Error.Code == "NotFound")
-                return NotFound(new { error = result.Error.Description });
-            return BadRequest(new { error = result.Error.Description });
-        }
-
-        return Ok(result.Value);
+        return result.ToActionResult();
     }
 
     /// <summary>
@@ -121,6 +104,7 @@ public class SalesOrdersController : ControllerBase
     /// </summary>
     [HttpGet("statistics")]
     [HasPermission("Sales.Orders", "View")]
+    [SalesRateLimit(SalesRateLimitPolicies.ReadOperationLimit, policyName: "Statistics")]
     public async Task<ActionResult<SalesOrderStatisticsDto>> GetStatistics(
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null,
@@ -133,11 +117,7 @@ public class SalesOrdersController : ControllerBase
         };
 
         var result = await _mediator.Send(query, cancellationToken);
-
-        if (!result.IsSuccess)
-            return BadRequest(new { error = result.Error.Description });
-
-        return Ok(result.Value);
+        return result.ToActionResult();
     }
 
     /// <summary>
@@ -145,6 +125,7 @@ public class SalesOrdersController : ControllerBase
     /// </summary>
     [HttpPost]
     [HasPermission("Sales.Orders", "Create")]
+    [SalesRateLimit(SalesRateLimitPolicies.OrderCreationLimit, policyName: "OrderCreation")]
     public async Task<ActionResult<SalesOrderDto>> CreateOrder(
         [FromBody] CreateSalesOrderCommand command,
         CancellationToken cancellationToken)
@@ -152,9 +133,9 @@ public class SalesOrdersController : ControllerBase
         var result = await _mediator.Send(command, cancellationToken);
 
         if (!result.IsSuccess)
-            return BadRequest(new { error = result.Error.Description });
+            return result.ToActionResult();
 
-        return CreatedAtAction(nameof(GetOrderById), new { id = result.Value.Id }, result.Value);
+        return CreatedAtAction(nameof(GetOrderById), new { id = result.Value!.Id }, result.Value);
     }
 
     /// <summary>
@@ -162,6 +143,7 @@ public class SalesOrdersController : ControllerBase
     /// </summary>
     [HttpPut("{id:guid}")]
     [HasPermission("Sales.Orders", "Edit")]
+    [SalesRateLimit(SalesRateLimitPolicies.OrderModificationLimit, policyName: "OrderUpdate")]
     public async Task<ActionResult<SalesOrderDto>> UpdateOrder(
         Guid id,
         [FromBody] UpdateSalesOrderCommand command,
@@ -172,22 +154,12 @@ public class SalesOrdersController : ControllerBase
 
         var modifyResult = await _resourceAuth.CanModifySalesOrderAsync(id, cancellationToken);
         if (!modifyResult.IsSuccess)
-            return modifyResult.Error.Code == "NotFound"
-                ? NotFound(new { error = modifyResult.Error.Description })
-                : Unauthorized(new { error = modifyResult.Error.Description });
+            return modifyResult.ToActionResult();
         if (!modifyResult.Value)
             return Forbid();
 
         var result = await _mediator.Send(command, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            if (result.Error.Code == "NotFound")
-                return NotFound(new { error = result.Error.Description });
-            return BadRequest(new { error = result.Error.Description });
-        }
-
-        return Ok(result.Value);
+        return result.ToActionResult();
     }
 
     /// <summary>
@@ -195,6 +167,7 @@ public class SalesOrdersController : ControllerBase
     /// </summary>
     [HttpPost("{id:guid}/items")]
     [HasPermission("Sales.Orders", "Edit")]
+    [SalesRateLimit(SalesRateLimitPolicies.OrderModificationLimit, policyName: "ItemAdd")]
     public async Task<ActionResult<SalesOrderDto>> AddItem(
         Guid id,
         [FromBody] AddSalesOrderItemCommand command,
@@ -205,22 +178,12 @@ public class SalesOrdersController : ControllerBase
 
         var modifyResult = await _resourceAuth.CanModifySalesOrderAsync(id, cancellationToken);
         if (!modifyResult.IsSuccess)
-            return modifyResult.Error.Code == "NotFound"
-                ? NotFound(new { error = modifyResult.Error.Description })
-                : Unauthorized(new { error = modifyResult.Error.Description });
+            return modifyResult.ToActionResult();
         if (!modifyResult.Value)
             return Forbid();
 
         var result = await _mediator.Send(command, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            if (result.Error.Code == "NotFound")
-                return NotFound(new { error = result.Error.Description });
-            return BadRequest(new { error = result.Error.Description });
-        }
-
-        return Ok(result.Value);
+        return result.ToActionResult();
     }
 
     /// <summary>
@@ -228,6 +191,7 @@ public class SalesOrdersController : ControllerBase
     /// </summary>
     [HttpDelete("{orderId:guid}/items/{itemId:guid}")]
     [HasPermission("Sales.Orders", "Edit")]
+    [SalesRateLimit(SalesRateLimitPolicies.OrderModificationLimit, policyName: "ItemRemove")]
     public async Task<ActionResult<SalesOrderDto>> RemoveItem(
         Guid orderId,
         Guid itemId,
@@ -235,9 +199,7 @@ public class SalesOrdersController : ControllerBase
     {
         var modifyResult = await _resourceAuth.CanModifySalesOrderAsync(orderId, cancellationToken);
         if (!modifyResult.IsSuccess)
-            return modifyResult.Error.Code == "NotFound"
-                ? NotFound(new { error = modifyResult.Error.Description })
-                : Unauthorized(new { error = modifyResult.Error.Description });
+            return modifyResult.ToActionResult();
         if (!modifyResult.Value)
             return Forbid();
 
@@ -248,15 +210,7 @@ public class SalesOrdersController : ControllerBase
         };
 
         var result = await _mediator.Send(command, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            if (result.Error.Code == "NotFound")
-                return NotFound(new { error = result.Error.Description });
-            return BadRequest(new { error = result.Error.Description });
-        }
-
-        return Ok(result.Value);
+        return result.ToActionResult();
     }
 
     /// <summary>
@@ -264,19 +218,12 @@ public class SalesOrdersController : ControllerBase
     /// </summary>
     [HttpPost("{id:guid}/approve")]
     [HasPermission("Sales.Orders", "Approve")]
+    [SalesRateLimit(SalesRateLimitPolicies.ApprovalLimit, policyName: "OrderApproval")]
     public async Task<ActionResult<SalesOrderDto>> ApproveOrder(Guid id, CancellationToken cancellationToken)
     {
         var command = new ApproveSalesOrderCommand { Id = id };
         var result = await _mediator.Send(command, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            if (result.Error.Code == "NotFound")
-                return NotFound(new { error = result.Error.Description });
-            return BadRequest(new { error = result.Error.Description });
-        }
-
-        return Ok(result.Value);
+        return result.ToActionResult();
     }
 
     /// <summary>
@@ -284,19 +231,12 @@ public class SalesOrdersController : ControllerBase
     /// </summary>
     [HttpPost("{id:guid}/confirm")]
     [HasPermission("Sales.Orders", "Edit")]
+    [SalesRateLimit(SalesRateLimitPolicies.StatusTransitionLimit, policyName: "StatusChange")]
     public async Task<ActionResult<SalesOrderDto>> ConfirmOrder(Guid id, CancellationToken cancellationToken)
     {
         var command = new ConfirmSalesOrderCommand { Id = id };
         var result = await _mediator.Send(command, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            if (result.Error.Code == "NotFound")
-                return NotFound(new { error = result.Error.Description });
-            return BadRequest(new { error = result.Error.Description });
-        }
-
-        return Ok(result.Value);
+        return result.ToActionResult();
     }
 
     /// <summary>
@@ -304,19 +244,12 @@ public class SalesOrdersController : ControllerBase
     /// </summary>
     [HttpPost("{id:guid}/ship")]
     [HasPermission("Sales.Orders", "Edit")]
+    [SalesRateLimit(SalesRateLimitPolicies.StatusTransitionLimit, policyName: "StatusChange")]
     public async Task<ActionResult<SalesOrderDto>> ShipOrder(Guid id, CancellationToken cancellationToken)
     {
         var command = new ShipSalesOrderCommand { Id = id };
         var result = await _mediator.Send(command, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            if (result.Error.Code == "NotFound")
-                return NotFound(new { error = result.Error.Description });
-            return BadRequest(new { error = result.Error.Description });
-        }
-
-        return Ok(result.Value);
+        return result.ToActionResult();
     }
 
     /// <summary>
@@ -324,19 +257,12 @@ public class SalesOrdersController : ControllerBase
     /// </summary>
     [HttpPost("{id:guid}/deliver")]
     [HasPermission("Sales.Orders", "Edit")]
+    [SalesRateLimit(SalesRateLimitPolicies.StatusTransitionLimit, policyName: "StatusChange")]
     public async Task<ActionResult<SalesOrderDto>> DeliverOrder(Guid id, CancellationToken cancellationToken)
     {
         var command = new DeliverSalesOrderCommand { Id = id };
         var result = await _mediator.Send(command, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            if (result.Error.Code == "NotFound")
-                return NotFound(new { error = result.Error.Description });
-            return BadRequest(new { error = result.Error.Description });
-        }
-
-        return Ok(result.Value);
+        return result.ToActionResult();
     }
 
     /// <summary>
@@ -344,19 +270,12 @@ public class SalesOrdersController : ControllerBase
     /// </summary>
     [HttpPost("{id:guid}/complete")]
     [HasPermission("Sales.Orders", "Edit")]
+    [SalesRateLimit(SalesRateLimitPolicies.StatusTransitionLimit, policyName: "StatusChange")]
     public async Task<ActionResult<SalesOrderDto>> CompleteOrder(Guid id, CancellationToken cancellationToken)
     {
         var command = new CompleteSalesOrderCommand { Id = id };
         var result = await _mediator.Send(command, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            if (result.Error.Code == "NotFound")
-                return NotFound(new { error = result.Error.Description });
-            return BadRequest(new { error = result.Error.Description });
-        }
-
-        return Ok(result.Value);
+        return result.ToActionResult();
     }
 
     /// <summary>
@@ -364,6 +283,7 @@ public class SalesOrdersController : ControllerBase
     /// </summary>
     [HttpPost("{id:guid}/cancel")]
     [HasPermission("Sales.Orders", "Cancel")]
+    [SalesRateLimit(SalesRateLimitPolicies.CancellationLimit, policyName: "OrderCancel")]
     public async Task<ActionResult<SalesOrderDto>> CancelOrder(
         Guid id,
         [FromBody] CancelSalesOrderCommand command,
@@ -374,22 +294,12 @@ public class SalesOrdersController : ControllerBase
 
         var modifyResult = await _resourceAuth.CanModifySalesOrderAsync(id, cancellationToken);
         if (!modifyResult.IsSuccess)
-            return modifyResult.Error.Code == "NotFound"
-                ? NotFound(new { error = modifyResult.Error.Description })
-                : Unauthorized(new { error = modifyResult.Error.Description });
+            return modifyResult.ToActionResult();
         if (!modifyResult.Value)
             return Forbid();
 
         var result = await _mediator.Send(command, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            if (result.Error.Code == "NotFound")
-                return NotFound(new { error = result.Error.Description });
-            return BadRequest(new { error = result.Error.Description });
-        }
-
-        return Ok(result.Value);
+        return result.ToActionResult();
     }
 
     /// <summary>
@@ -397,13 +307,12 @@ public class SalesOrdersController : ControllerBase
     /// </summary>
     [HttpDelete("{id:guid}")]
     [HasPermission("Sales.Orders", "Delete")]
+    [SalesRateLimit(SalesRateLimitPolicies.CancellationLimit, policyName: "OrderDelete")]
     public async Task<ActionResult> DeleteOrder(Guid id, CancellationToken cancellationToken)
     {
         var modifyResult = await _resourceAuth.CanModifySalesOrderAsync(id, cancellationToken);
         if (!modifyResult.IsSuccess)
-            return modifyResult.Error.Code == "NotFound"
-                ? NotFound(new { error = modifyResult.Error.Description })
-                : Unauthorized(new { error = modifyResult.Error.Description });
+            return modifyResult.ToActionResult();
         if (!modifyResult.Value)
             return Forbid();
 
@@ -411,11 +320,7 @@ public class SalesOrdersController : ControllerBase
         var result = await _mediator.Send(command, cancellationToken);
 
         if (!result.IsSuccess)
-        {
-            if (result.Error.Code == "NotFound")
-                return NotFound(new { error = result.Error.Description });
-            return BadRequest(new { error = result.Error.Description });
-        }
+            return result.ToActionResult();
 
         return NoContent();
     }

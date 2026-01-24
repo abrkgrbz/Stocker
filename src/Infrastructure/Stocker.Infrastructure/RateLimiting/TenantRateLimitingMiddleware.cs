@@ -112,8 +112,8 @@ public class TenantRateLimitingMiddleware
             "/hubs/", // SignalR hubs have their own rate limiting (SignalRRateLimiter)
             "/api/auth", // Auth endpoints handle their own security (lockout, etc.)
             "/api/crm", // CRM endpoints for stress testing
-            "/api/inventory", // Inventory endpoints for stress testing
-            "/api/sales" // Sales endpoints for stress testing
+            "/api/inventory", // Inventory endpoints have module-specific rate limiting
+            "/api/sales" // Sales endpoints have module-specific rate limiting (SalesRateLimitAttribute)
         };
 
         foreach (var skipPath in skipPaths)

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.Modules.Sales.Application.Features.SalesOrders.Commands;
 using Stocker.Modules.Sales.Application.Services;
+using Stocker.Modules.Sales.Domain;
 using Stocker.Modules.Sales.Domain.Entities;
 using Stocker.Modules.Sales.Domain.ValueObjects;
 using Stocker.Modules.Sales.Interfaces;
@@ -31,6 +32,7 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
     private readonly IInventoryService _inventoryService;
     private readonly IPriceValidationService _priceValidationService;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly ISalesAuditService _auditService;
     private readonly ILogger<CreateSalesOrderHandler> _logger;
 
     public CreateSalesOrderHandler(
@@ -38,12 +40,14 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
         IInventoryService inventoryService,
         IPriceValidationService priceValidationService,
         IPublishEndpoint publishEndpoint,
+        ISalesAuditService auditService,
         ILogger<CreateSalesOrderHandler> logger)
     {
         _unitOfWork = unitOfWork;
         _inventoryService = inventoryService;
         _priceValidationService = priceValidationService;
         _publishEndpoint = publishEndpoint;
+        _auditService = auditService;
         _logger = logger;
     }
 
@@ -68,8 +72,7 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
             if (contract == null)
             {
                 _logger.LogWarning("Contract {ContractId} not found", request.CustomerContractId);
-                return Result<SalesOrderDto>.Failure(
-                    Error.NotFound("Contract.NotFound", "Specified customer contract not found."));
+                return Result<SalesOrderDto>.Failure(SalesErrors.Contract.NotFound());
             }
         }
         else if (request.CustomerId.HasValue && request.ValidateCreditLimit)
@@ -174,8 +177,7 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
                             item.ProductCode, item.Quantity, availableStock);
 
                         return Result<SalesOrderDto>.Failure(
-                            Error.Validation("Stock.Insufficient",
-                                $"Insufficient stock for {item.ProductCode}. Required: {item.Quantity}, Available: {availableStock}"));
+                            SalesErrors.Order.InsufficientStock(item.ProductCode, item.Quantity, availableStock));
                     }
                 }
             }
@@ -559,6 +561,15 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
                 "Failed to publish SalesOrderCreatedEvent for order {OrderNumber}. Order is committed but event was not published.",
                 orderNumber);
         }
+
+        // Audit log - sipariş oluşturma kaydı
+        await _auditService.LogOrderCreatedAsync(
+            savedOrder.Id,
+            savedOrder.OrderNumber,
+            savedOrder.CustomerName ?? "",
+            savedOrder.TotalAmount,
+            savedOrder.Items.Count,
+            cancellationToken);
 
         return Result<SalesOrderDto>.Success(SalesOrderDto.FromEntity(savedOrder));
     }

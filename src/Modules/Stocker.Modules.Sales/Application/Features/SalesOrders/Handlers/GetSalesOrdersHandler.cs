@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.Modules.Sales.Application.Features.SalesOrders.Queries;
 using Stocker.Modules.Sales.Application.Services;
+using Stocker.Modules.Sales.Domain;
 using Stocker.Modules.Sales.Domain.Entities;
 using Stocker.Modules.Sales.Interfaces;
 using Stocker.SharedKernel.Interfaces;
@@ -152,7 +153,7 @@ public class GetSalesOrderByIdHandler : IRequestHandler<GetSalesOrderByIdQuery, 
         var order = await _unitOfWork.SalesOrders.GetWithItemsAsync(request.Id, cancellationToken);
 
         if (order == null || order.TenantId != tenantId)
-            return Result<SalesOrderDto>.Failure(Error.NotFound("SalesOrder", "Sales order not found"));
+            return Result<SalesOrderDto>.Failure(SalesErrors.Order.NotFound(request.Id));
 
         return Result<SalesOrderDto>.Success(SalesOrderDto.FromEntity(order));
     }

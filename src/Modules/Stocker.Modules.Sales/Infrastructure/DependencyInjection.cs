@@ -7,6 +7,7 @@ using Stocker.Modules.Sales.Domain.Repositories;
 using Stocker.Modules.Sales.Infrastructure.EventConsumers;
 using Stocker.Modules.Sales.Infrastructure.Persistence;
 using Stocker.Modules.Sales.Infrastructure.Persistence.Repositories;
+using Stocker.Modules.Sales.Infrastructure.Services;
 using Stocker.Modules.Sales.Interfaces;
 using Stocker.Modules.Stocker.Modules.Sales.Infrastructure.EventConsumers;
 using Stocker.SharedKernel.Interfaces;
@@ -92,6 +93,7 @@ public static class DependencyInjection
         // Application Services
         services.AddScoped<IPriceValidationService, PriceValidationService>();
         services.AddScoped<IResourceAuthorizationService, ResourceAuthorizationService>();
+        services.AddScoped<ISalesAuditService, SalesAuditService>();
 
         // Phase 5: Returns & Credits Repositories
         services.AddScoped<ISalesReturnRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().SalesReturns);
