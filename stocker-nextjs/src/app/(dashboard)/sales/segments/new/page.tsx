@@ -12,18 +12,18 @@ import type { CreateCustomerSegmentDto } from '@/features/sales';
 import Link from 'next/link';
 
 const priorityOptions = [
-  { value: 'VeryHigh', label: 'Platinum', description: 'En yuksek oncelik' },
-  { value: 'High', label: 'Gold', description: 'Yuksek oncelik' },
-  { value: 'Medium', label: 'Silver', description: 'Orta oncelik' },
-  { value: 'Low', label: 'Bronze', description: 'Dusuk oncelik' },
-  { value: 'VeryLow', label: 'Standard', description: 'Standart oncelik' },
+  { value: 1, label: 'Platinum', description: 'En yuksek oncelik' },
+  { value: 2, label: 'Gold', description: 'Yuksek oncelik' },
+  { value: 3, label: 'Silver', description: 'Orta oncelik' },
+  { value: 4, label: 'Bronze', description: 'Dusuk oncelik' },
+  { value: 5, label: 'Standard', description: 'Standart oncelik' },
 ];
 
 export default function NewSegmentPage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createMutation = useCreateSegment();
-  const [selectedPriority, setSelectedPriority] = React.useState<string>('Medium');
+  const [selectedPriority, setSelectedPriority] = React.useState<number>(3);
 
   const handleSubmit = async (values: Record<string, unknown>) => {
     try {
