@@ -127,6 +127,10 @@ public static class DependencyInjection
                 .Build();
         });
 
+        // Register Event Sourcing Infrastructure
+        services.AddScoped<EventSourcing.StockEventStore>();
+        services.AddScoped<EventSourcing.PointInTimeQueryService>();
+
         // Register Security Infrastructure
         services.AddScoped<Security.FieldAuditTracker>();
         services.AddScoped<Security.DataMaskingService>();
