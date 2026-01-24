@@ -297,6 +297,9 @@ public class CycleCount : BaseEntity
         if (!_items.Any())
             throw new InvalidOperationException("En az bir kalem gereklidir.");
 
+        // Ensure TotalItems is synchronized with actual items count
+        TotalItems = _items.Count;
+        CountedItems = _items.Count(i => i.IsCounted);
         ActualStartDate = DateTime.UtcNow;
         Status = CycleCountStatus.InProgress;
 

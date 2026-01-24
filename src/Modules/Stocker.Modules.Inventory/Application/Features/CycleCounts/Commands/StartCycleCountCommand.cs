@@ -40,14 +40,37 @@ public class StartCycleCountCommandHandler : IRequestHandler<StartCycleCountComm
                 new Error("CycleCount.InvalidStatus", "Sadece planlanmış sayımlar başlatılabilir", ErrorType.Validation));
         }
 
-        // If no items exist, add demo items from active products
+        // If no items exist, populate from warehouse stocks
         if (!cycleCount.Items.Any())
         {
-            var activeProducts = await _unitOfWork.Products.GetActiveProductsAsync(cancellationToken);
+            var stocks = await _unitOfWork.Stocks.GetByWarehouseAsync(cycleCount.WarehouseId, cancellationToken);
 
-            foreach (var product in activeProducts.Take(10))
+            if (stocks.Any())
             {
-                cycleCount.AddItem(product.Id, null, 0, product.UnitPrice?.Amount);
+                foreach (var stock in stocks)
+                {
+                    cycleCount.AddItem(
+                        stock.ProductId,
+                        stock.LocationId,
+                        stock.Quantity,
+                        stock.Product?.CostPrice?.Amount);
+                }
+            }
+            else
+            {
+                // Fallback: use active products with 0 quantity if no stocks exist
+                var activeProducts = await _unitOfWork.Products.GetActiveProductsAsync(cancellationToken);
+
+                if (!activeProducts.Any())
+                {
+                    return Result<CycleCountDto>.Failure(
+                        new Error("CycleCount.NoItems", "Bu depoda sayım yapılacak ürün bulunamadı. Lütfen önce ürün ekleyin.", ErrorType.Validation));
+                }
+
+                foreach (var product in activeProducts)
+                {
+                    cycleCount.AddItem(product.Id, null, 0, product.CostPrice?.Amount);
+                }
             }
         }
 
@@ -92,7 +115,28 @@ public class StartCycleCountCommandHandler : IRequestHandler<StartCycleCountComm
             ApprovedBy = cc.ApprovedBy,
             ApprovedDate = cc.ApprovedDate,
             PlanningNotes = cc.PlanningNotes,
-            CountNotes = cc.CountNotes
+            CountNotes = cc.CountNotes,
+            Items = cc.Items?.Select(i => new CycleCountItemDto
+            {
+                Id = i.Id,
+                ProductId = i.ProductId,
+                ProductName = i.Product?.Name,
+                LocationId = i.LocationId,
+                LocationName = i.Location?.Name,
+                LotNumber = i.LotNumber,
+                SystemQuantity = i.SystemQuantity,
+                CountedQuantity = i.CountedQuantity,
+                VarianceQuantity = i.VarianceQuantity,
+                VariancePercent = i.VariancePercent,
+                IsCounted = i.IsCounted,
+                HasVariance = i.HasVariance,
+                UnitCost = i.UnitCost,
+                VarianceValue = i.VarianceValue,
+                CountedDate = i.CountedDate,
+                CountedBy = i.CountedBy,
+                Notes = i.Notes,
+                CountAttempts = i.CountAttempts
+            }).ToList() ?? new List<CycleCountItemDto>()
         };
     }
 }

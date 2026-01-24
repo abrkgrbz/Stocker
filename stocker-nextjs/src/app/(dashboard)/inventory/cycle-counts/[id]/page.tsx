@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Button, Tag, Descriptions, Space, Divider, Progress } from 'antd';
+import { Button, Tag, Descriptions, Space, Divider, Progress, Table } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { Spinner } from '@/components/primitives';
 import {
   ArrowLeftIcon,
@@ -16,7 +17,7 @@ import {
   useStartCycleCount,
   useCompleteCycleCount,
 } from '@/lib/api/hooks/useInventory';
-import { CycleCountStatus, CycleCountType } from '@/lib/api/services/inventory.types';
+import { CycleCountStatus, CycleCountType, CycleCountItemDto } from '@/lib/api/services/inventory.types';
 import { confirmAction } from '@/lib/utils/sweetalert';
 import dayjs from 'dayjs';
 
@@ -260,6 +261,72 @@ export default function CycleCountDetailPage() {
                 {count.accuracyPercent ? `%${count.accuracyPercent.toFixed(1)}` : '-'}
               </Descriptions.Item>
             </Descriptions>
+
+            {/* Items Table */}
+            {count.items && count.items.length > 0 && (
+              <>
+                <Divider />
+                <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4">
+                  Sayım Kalemleri ({count.items.length})
+                </h3>
+                <Table<CycleCountItemDto>
+                  dataSource={count.items}
+                  rowKey="id"
+                  size="small"
+                  pagination={count.items.length > 10 ? { pageSize: 10 } : false}
+                  columns={[
+                    {
+                      title: 'Ürün',
+                      dataIndex: 'productName',
+                      key: 'productName',
+                      render: (text: string) => text || '-',
+                    },
+                    {
+                      title: 'Konum',
+                      dataIndex: 'locationName',
+                      key: 'locationName',
+                      render: (text: string) => text || '-',
+                    },
+                    {
+                      title: 'Sistem Miktarı',
+                      dataIndex: 'systemQuantity',
+                      key: 'systemQuantity',
+                      align: 'right' as const,
+                      render: (val: number) => val?.toLocaleString('tr-TR') ?? '0',
+                    },
+                    {
+                      title: 'Sayılan Miktar',
+                      dataIndex: 'countedQuantity',
+                      key: 'countedQuantity',
+                      align: 'right' as const,
+                      render: (val: number | null) => val != null ? val.toLocaleString('tr-TR') : '-',
+                    },
+                    {
+                      title: 'Durum',
+                      dataIndex: 'isCounted',
+                      key: 'isCounted',
+                      align: 'center' as const,
+                      render: (isCounted: boolean, record: CycleCountItemDto) => {
+                        if (!isCounted) return <Tag color="default">Bekliyor</Tag>;
+                        if (record.hasVariance) return <Tag color="orange">Fark Var</Tag>;
+                        return <Tag color="green">Sayıldı</Tag>;
+                      },
+                    },
+                    {
+                      title: 'Fark',
+                      dataIndex: 'varianceQuantity',
+                      key: 'varianceQuantity',
+                      align: 'right' as const,
+                      render: (val: number, record: CycleCountItemDto) => {
+                        if (!record.isCounted) return '-';
+                        if (val === 0) return <span className="text-green-600">0</span>;
+                        return <span className={val > 0 ? 'text-blue-600' : 'text-red-600'}>{val > 0 ? '+' : ''}{val.toLocaleString('tr-TR')}</span>;
+                      },
+                    },
+                  ] as ColumnsType<CycleCountItemDto>}
+                />
+              </>
+            )}
 
             {count.description && (
               <>
