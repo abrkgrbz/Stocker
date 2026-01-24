@@ -1808,6 +1808,19 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                 table: "Stocks",
                 sql: "\"ReservedQuantity\" >= 0");
 
+            // Fix existing duplicate SequenceNumber=0 values before creating unique index
+            migrationBuilder.Sql(@"
+                UPDATE inventory.""StockMovements"" SET ""SequenceNumber"" = sub.rn
+                FROM (
+                    SELECT ""Id"", ROW_NUMBER() OVER (
+                        PARTITION BY ""TenantId"", ""ProductId"", ""WarehouseId""
+                        ORDER BY ""MovementDate"", ""Id""
+                    ) as rn
+                    FROM inventory.""StockMovements""
+                ) sub
+                WHERE inventory.""StockMovements"".""Id"" = sub.""Id"";
+            ");
+
             migrationBuilder.CreateIndex(
                 name: "IX_StockMovements_TenantId_ProductId_WarehouseId_SequenceNumber",
                 schema: "inventory",
