@@ -23,6 +23,7 @@ import { AuthProvider } from '@/lib/auth';
 import { TenantProvider } from '@/lib/tenant';
 import { ToastProvider } from '@/lib/notifications/toast-provider';
 import { ReCaptchaProvider } from '@/providers/ReCaptchaProvider';
+import { SessionExpiryWarning } from '@/components/session/SessionExpiryWarning';
 import { lightTheme } from '@/theme';
 
 // =====================================
@@ -121,6 +122,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <AuthProvider>
               <ReCaptchaProvider>
                 <ToastProvider />
+                <SessionExpiryWarning />
                 {children}
               </ReCaptchaProvider>
             </AuthProvider>

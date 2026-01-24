@@ -283,7 +283,7 @@ export default function QuotationDetailPage() {
                     </Table.Summary.Cell>
                     <Table.Summary.Cell index={1} align="right">
                       <strong style={{ fontSize: 16, color: '#1890ff' }}>
-                        {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: quotation.currency }).format(quotation.grandTotal ?? 0)}
+                        {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: quotation.currency }).format(quotation.totalAmount ?? 0)}
                       </strong>
                     </Table.Summary.Cell>
                   </Table.Summary.Row>

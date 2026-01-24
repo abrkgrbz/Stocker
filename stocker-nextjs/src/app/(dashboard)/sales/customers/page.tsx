@@ -49,7 +49,7 @@ export default function CustomerBalancePage() {
     const balanceMap = new Map<string, CustomerBalance>();
 
     invoices.forEach((invoice: InvoiceListItem) => {
-      if (invoice.status === 'Cancelled') return;
+      if (invoice.status === 'Cancelled' || !invoice.customerName) return;
 
       const existing = balanceMap.get(invoice.customerName) || {
         customerName: invoice.customerName,
@@ -63,13 +63,13 @@ export default function CustomerBalancePage() {
         lastInvoiceDate: null,
       };
 
-      existing.totalInvoiced += invoice.grandTotal;
+      existing.totalInvoiced += invoice.totalAmount;
       existing.totalPaid += invoice.paidAmount;
-      existing.balance += invoice.balanceDue;
+      existing.balance += invoice.remainingAmount;
       existing.invoiceCount += 1;
 
       if (invoice.status === 'Overdue') {
-        existing.overdueAmount += invoice.balanceDue;
+        existing.overdueAmount += invoice.remainingAmount;
         existing.overdueCount += 1;
       }
 

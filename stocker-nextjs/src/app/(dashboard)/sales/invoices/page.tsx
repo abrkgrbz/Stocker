@@ -57,6 +57,7 @@ const statusConfig: Record<InvoiceStatus, { bgColor: string; textColor: string; 
   Paid: { bgColor: 'bg-slate-700', textColor: 'text-white', label: 'Ödendi' },
   Overdue: { bgColor: 'bg-slate-800', textColor: 'text-white', label: 'Vadesi Geçmiş' },
   Cancelled: { bgColor: 'bg-slate-900', textColor: 'text-white', label: 'İptal Edildi' },
+  Voided: { bgColor: 'bg-slate-900', textColor: 'text-white', label: 'Geçersiz' },
 };
 
 const statusOptions = [
@@ -119,8 +120,8 @@ export default function InvoicesPage() {
   const stats = useMemo(() => {
     const draft = invoices.filter(i => i.status === 'Draft').length;
     const overdue = invoices.filter(i => i.status === 'Overdue').length;
-    const totalValue = invoices.reduce((sum, i) => sum + (i.grandTotal || 0), 0);
-    const totalDue = invoices.reduce((sum, i) => sum + (i.balanceDue || 0), 0);
+    const totalValue = invoices.reduce((sum, i) => sum + (i.totalAmount || 0), 0);
+    const totalDue = invoices.reduce((sum, i) => sum + (i.remainingAmount || 0), 0);
     return { draft, overdue, totalValue, totalDue };
   }, [invoices]);
 
@@ -634,7 +635,7 @@ export default function InvoicesPage() {
                       </td>
                       <td className="px-4 py-4 text-right">
                         <div className="text-sm font-medium text-slate-900">
-                          {(invoice.grandTotal || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {invoice.currency}
+                          {(invoice.totalAmount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {invoice.currency}
                         </div>
                       </td>
                       <td className="px-4 py-4 text-right">
@@ -643,8 +644,8 @@ export default function InvoicesPage() {
                         </div>
                       </td>
                       <td className="px-4 py-4 text-right">
-                        <div className={`text-sm font-medium ${(invoice.balanceDue || 0) > 0 ? 'text-slate-900' : 'text-slate-500'}`}>
-                          {(invoice.balanceDue || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {invoice.currency}
+                        <div className={`text-sm font-medium ${(invoice.remainingAmount || 0) > 0 ? 'text-slate-900' : 'text-slate-500'}`}>
+                          {(invoice.remainingAmount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {invoice.currency}
                         </div>
                       </td>
                       <td className="px-4 py-4 text-center">

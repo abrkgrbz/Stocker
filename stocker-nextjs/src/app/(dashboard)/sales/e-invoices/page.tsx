@@ -39,6 +39,7 @@ const invoiceStatusConfig: Record<InvoiceStatus, { color: string; bgColor: strin
   Paid: { color: 'text-white', bgColor: 'bg-slate-700', label: 'Ödendi' },
   Overdue: { color: 'text-white', bgColor: 'bg-slate-800', label: 'Vadesi Geçmiş' },
   Cancelled: { color: 'text-white', bgColor: 'bg-slate-900', label: 'İptal' },
+  Voided: { color: 'text-white', bgColor: 'bg-slate-900', label: 'Geçersiz' },
 };
 
 type TabKey = 'all' | 'pending' | 'sent' | 'history';
@@ -230,7 +231,7 @@ export default function EInvoicePage() {
               </tr>
             ) : (
               dataSource.map((record) => {
-                const statusConfig = invoiceStatusConfig[record.status];
+                const statusConfig = invoiceStatusConfig[record.status as InvoiceStatus];
                 const eInvoiceStatus = 'Pending';
                 const eStatusConfig = eInvoiceStatusConfig[eInvoiceStatus];
                 const isSelectable = record.status === 'Issued';
@@ -259,7 +260,7 @@ export default function EInvoicePage() {
                     <td className="px-4 py-4 text-sm text-slate-600">{record.customerName}</td>
                     <td className="px-4 py-4 text-sm text-slate-600">{dayjs(record.invoiceDate).format('DD/MM/YYYY')}</td>
                     <td className="px-4 py-4 text-sm text-slate-900 text-right font-medium">
-                      {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: record.currency }).format(record.grandTotal)}
+                      {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: record.currency }).format(record.totalAmount)}
                     </td>
                     <td className="px-4 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusConfig.bgColor} ${statusConfig.color}`}>
@@ -636,7 +637,7 @@ export default function EInvoicePage() {
                       <div>
                         <p className="text-xs text-slate-500">Tutar:</p>
                         <p className="text-sm font-medium text-slate-900">
-                          {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: currentInvoice.currency }).format(currentInvoice.grandTotal)}
+                          {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: currentInvoice.currency }).format(currentInvoice.totalAmount)}
                         </p>
                       </div>
                       <div>

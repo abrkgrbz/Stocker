@@ -78,7 +78,7 @@ export async function generateInvoicePDF(
   doc.text('Musteri Bilgileri:', margin, y);
   doc.setFont('helvetica', 'normal');
   y += 6;
-  doc.text(invoice.customerName, margin, y);
+  doc.text(invoice.customerName || '', margin, y);
   y += 5;
   if (invoice.customerTaxNumber) {
     doc.text(`VKN: ${invoice.customerTaxNumber}`, margin, y);
@@ -111,7 +111,7 @@ export async function generateInvoicePDF(
   doc.setFont('helvetica', 'bold');
   doc.text('Vade Tarihi:', rightX, rightY);
   doc.setFont('helvetica', 'normal');
-  doc.text(formatDate(invoice.dueDate), rightX + 35, rightY);
+  doc.text(formatDate(invoice.dueDate || ''), rightX + 35, rightY);
   rightY += 6;
 
   doc.setFont('helvetica', 'bold');
@@ -172,7 +172,7 @@ export async function generateInvoicePDF(
     colX += colWidths[4];
     doc.text(formatCurrency(item.vatAmount, invoice.currency), colX, y);
     colX += colWidths[5];
-    doc.text(formatCurrency(item.lineTotalWithVat, invoice.currency), colX, y);
+    doc.text(formatCurrency(item.lineTotal, invoice.currency), colX, y);
 
     y += rowHeight + 3;
   });
@@ -197,13 +197,13 @@ export async function generateInvoicePDF(
   }
 
   doc.text('KDV Toplami:', totalsX, y);
-  doc.text(formatCurrency(invoice.taxTotal, invoice.currency), pageWidth - margin, y, { align: 'right' });
+  doc.text(formatCurrency(invoice.vatAmount, invoice.currency), pageWidth - margin, y, { align: 'right' });
   y += 6;
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.text('Genel Toplam:', totalsX, y);
-  doc.text(formatCurrency(invoice.grandTotal, invoice.currency), pageWidth - margin, y, { align: 'right' });
+  doc.text(formatCurrency(invoice.totalAmount, invoice.currency), pageWidth - margin, y, { align: 'right' });
 
   if (invoice.paidAmount > 0) {
     y += 8;
@@ -214,7 +214,7 @@ export async function generateInvoicePDF(
     y += 6;
     doc.setFont('helvetica', 'bold');
     doc.text('Kalan Borc:', totalsX, y);
-    doc.text(formatCurrency(invoice.balanceDue, invoice.currency), pageWidth - margin, y, { align: 'right' });
+    doc.text(formatCurrency(invoice.remainingAmount, invoice.currency), pageWidth - margin, y, { align: 'right' });
   }
 
   // Notes

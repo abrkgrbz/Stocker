@@ -59,6 +59,7 @@ const statusConfig: Record<InvoiceStatus, { color: string; label: string; icon: 
   Paid: { color: 'green', label: 'Ödendi', icon: <CheckCircleIcon className="w-4 h-4" /> },
   Overdue: { color: 'red', label: 'Vadesi Geçmiş', icon: <XCircleIcon className="w-4 h-4" /> },
   Cancelled: { color: 'red', label: 'İptal Edildi', icon: <XCircleIcon className="w-4 h-4" /> },
+  Voided: { color: 'red', label: 'Geçersiz', icon: <XCircleIcon className="w-4 h-4" /> },
 };
 
 const typeLabels: Record<InvoiceType, string> = {
@@ -66,6 +67,9 @@ const typeLabels: Record<InvoiceType, string> = {
   Return: 'İade Faturası',
   Credit: 'Alacak Dekontu',
   Debit: 'Borç Dekontu',
+  Proforma: 'Proforma Fatura',
+  Advance: 'Avans Faturası',
+  Export: 'İhracat Faturası',
 };
 
 export default function InvoiceDetailPage() {
@@ -130,7 +134,7 @@ export default function InvoiceDetailPage() {
 
   const handleOpenPaymentModal = () => {
     paymentForm.setFieldsValue({
-      amount: invoice?.balanceDue || 0,
+      amount: invoice?.remainingAmount || 0,
       paymentDate: dayjs(),
       paymentMethod: 'BankTransfer',
     });
@@ -234,8 +238,8 @@ export default function InvoiceDetailPage() {
     },
     {
       title: 'Toplam',
-      dataIndex: 'lineTotalWithVat',
-      key: 'lineTotalWithVat',
+      dataIndex: 'lineTotal',
+      key: 'lineTotal',
       align: 'right',
       render: (total) => (
         <span className="font-semibold">
@@ -265,7 +269,7 @@ export default function InvoiceDetailPage() {
     );
   }
 
-  const statusInfo = statusConfig[invoice.status];
+  const statusInfo = statusConfig[invoice.status as InvoiceStatus];
 
   return (
     <div className="p-6">
@@ -280,7 +284,7 @@ export default function InvoiceDetailPage() {
             <Title level={2} className="!mb-0">
               {invoice.invoiceNumber}
             </Title>
-            <Text type="secondary">{typeLabels[invoice.type]}</Text>
+            <Text type="secondary">{typeLabels[invoice.type as InvoiceType]}</Text>
           </div>
           <Tag color={statusInfo.color} icon={statusInfo.icon} className="ml-4">
             {statusInfo.label}
@@ -316,7 +320,7 @@ export default function InvoiceDetailPage() {
               Gönder
             </Button>
           )}
-          {invoice.status !== 'Cancelled' && invoice.status !== 'Paid' && invoice.status !== 'Draft' && invoice.balanceDue > 0 && (
+          {invoice.status !== 'Cancelled' && invoice.status !== 'Paid' && invoice.status !== 'Draft' && invoice.remainingAmount > 0 && (
             <Button
               type="primary"
               icon={<CurrencyDollarIcon className="w-4 h-4" />}
@@ -344,7 +348,7 @@ export default function InvoiceDetailPage() {
           <Card>
             <Statistic
               title="Toplam Tutar"
-              value={invoice.grandTotal}
+              value={invoice.totalAmount}
               precision={2}
               suffix={invoice.currency}
               valueStyle={{ color: '#1890ff' }}
@@ -366,10 +370,10 @@ export default function InvoiceDetailPage() {
           <Card>
             <Statistic
               title="Kalan Tutar"
-              value={invoice.balanceDue}
+              value={invoice.remainingAmount}
               precision={2}
               suffix={invoice.currency}
-              valueStyle={{ color: invoice.balanceDue > 0 ? '#ff4d4f' : '#52c41a' }}
+              valueStyle={{ color: invoice.remainingAmount > 0 ? '#ff4d4f' : '#52c41a' }}
             />
           </Card>
         </Col>
@@ -379,7 +383,7 @@ export default function InvoiceDetailPage() {
               title="Vade Tarihi"
               value={dayjs(invoice.dueDate).format('DD/MM/YYYY')}
               valueStyle={{
-                color: dayjs(invoice.dueDate).isBefore(dayjs()) && invoice.balanceDue > 0
+                color: dayjs(invoice.dueDate).isBefore(dayjs()) && invoice.remainingAmount > 0
                   ? '#ff4d4f'
                   : undefined,
               }}
@@ -400,7 +404,7 @@ export default function InvoiceDetailPage() {
               <Descriptions.Item label="Vade Tarihi">
                 {dayjs(invoice.dueDate).format('DD/MM/YYYY')}
               </Descriptions.Item>
-              <Descriptions.Item label="Fatura Tipi">{typeLabels[invoice.type]}</Descriptions.Item>
+              <Descriptions.Item label="Fatura Tipi">{typeLabels[invoice.type as InvoiceType]}</Descriptions.Item>
               <Descriptions.Item label="Para Birimi">{invoice.currency}</Descriptions.Item>
               {invoice.salesOrderId && (
                 <Descriptions.Item label="Sipariş">
@@ -440,7 +444,7 @@ export default function InvoiceDetailPage() {
             <Descriptions.Item label="E-Fatura ID">{invoice.eInvoiceId || '-'}</Descriptions.Item>
             <Descriptions.Item label="E-Fatura Durumu">{invoice.eInvoiceStatus || '-'}</Descriptions.Item>
             <Descriptions.Item label="Gönderim Tarihi">
-              {invoice.eInvoiceSentAt ? dayjs(invoice.eInvoiceSentAt).format('DD/MM/YYYY HH:mm') : '-'}
+              {invoice.eInvoiceDate ? dayjs(invoice.eInvoiceDate).format('DD/MM/YYYY HH:mm') : '-'}
             </Descriptions.Item>
           </Descriptions>
         </Card>
@@ -484,7 +488,7 @@ export default function InvoiceDetailPage() {
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={1} colSpan={2} align="right">
                   <Text>
-                    {invoice.taxTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {invoice.currency}
+                    {invoice.vatAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {invoice.currency}
                   </Text>
                 </Table.Summary.Cell>
               </Table.Summary.Row>
@@ -494,7 +498,7 @@ export default function InvoiceDetailPage() {
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={1} colSpan={2} align="right">
                   <Text strong className="text-lg text-blue-600">
-                    {invoice.grandTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {invoice.currency}
+                    {invoice.totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {invoice.currency}
                   </Text>
                 </Table.Summary.Cell>
               </Table.Summary.Row>
@@ -608,7 +612,7 @@ export default function InvoiceDetailPage() {
             <InputNumber
               style={{ width: '100%' }}
               min={0.01}
-              max={invoice?.balanceDue}
+              max={invoice?.remainingAmount}
               precision={2}
               addonAfter={invoice?.currency}
               placeholder="Ödeme tutarını giriniz"
@@ -641,7 +645,7 @@ export default function InvoiceDetailPage() {
           <div className="bg-gray-50 p-3 rounded-md">
             <div className="flex justify-between mb-1">
               <Text type="secondary">Fatura Toplamı:</Text>
-              <Text>{invoice?.grandTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {invoice?.currency}</Text>
+              <Text>{invoice?.totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {invoice?.currency}</Text>
             </div>
             <div className="flex justify-between mb-1">
               <Text type="secondary">Ödenen:</Text>
@@ -650,7 +654,7 @@ export default function InvoiceDetailPage() {
             <Divider className="my-2" />
             <div className="flex justify-between">
               <Text strong>Kalan Tutar:</Text>
-              <Text strong className="text-red-600">{invoice?.balanceDue.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {invoice?.currency}</Text>
+              <Text strong className="text-red-600">{invoice?.remainingAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {invoice?.currency}</Text>
             </div>
           </div>
         </Form>

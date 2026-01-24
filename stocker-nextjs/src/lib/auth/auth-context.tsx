@@ -43,6 +43,11 @@ interface AuthContextType {
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   /**
+   * Refresh the session by calling the refresh-token endpoint
+   * Used by SessionExpiryWarning to extend the session
+   */
+  refreshSession: () => Promise<void>;
+  /**
    * Check if user has a specific permission
    * @param resource The resource name (e.g., "CRM", "Users")
    * @param permissionType The permission type (e.g., "View", "Edit", "Create", "Delete")
@@ -217,6 +222,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
         logger.info('Logout complete - redirecting to /login', { component: 'AuthContext' });
         router.push('/login');
       }
+    }
+  };
+
+  const refreshSession = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${apiUrl}/api/auth/refresh-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Session refresh failed');
+      }
+
+      // Refresh user data after token renewal
+      await refreshUser();
+      logger.info('Session refreshed successfully', { component: 'AuthContext' });
+    } catch (error) {
+      logger.error('Failed to refresh session', error instanceof Error ? error : new Error(String(error)), { component: 'AuthContext' });
+      throw error;
     }
   };
 
@@ -425,6 +452,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     register,
     logout,
     refreshUser,
+    refreshSession,
     hasPermission,
     hasAnyPermission,
     canAccessModule,

@@ -40,7 +40,7 @@ export default function SalesDashboardPage() {
   const { data: overdueInvoices, isLoading: overdueLoading } = useInvoices({ status: 'Overdue', pageSize: 5 });
 
   const hasOverdueInvoices = (invoiceStats?.overdueInvoices ?? 0) > 0;
-  const overdueAmount = overdueInvoices?.items?.reduce((sum, inv) => sum + inv.grandTotal, 0) ?? 0;
+  const overdueAmount = overdueInvoices?.items?.reduce((sum, inv) => sum + inv.totalAmount, 0) ?? 0;
 
   const columns = [
     {
@@ -69,8 +69,8 @@ export default function SalesDashboardPage() {
     },
     {
       title: 'Tutar',
-      dataIndex: 'grandTotal',
-      key: 'grandTotal',
+      dataIndex: 'totalAmount',
+      key: 'totalAmount',
       render: (amount: number, record: SalesOrderListItem) => (
         <span className="font-medium text-slate-900">
           {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: record.currency }).format(amount)}
@@ -434,7 +434,7 @@ export default function SalesDashboardPage() {
                     </div>
                     <p className="text-sm text-slate-500">{invoice.customerName}</p>
                     <p className="text-sm font-medium text-slate-900 mt-1">
-                      {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: invoice.currency }).format(invoice.grandTotal)}
+                      {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: invoice.currency }).format(invoice.totalAmount)}
                     </p>
                   </button>
                 );

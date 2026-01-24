@@ -70,7 +70,7 @@ export default function PaymentForm({ form, initialValues, onFinish, loading, pr
   const invoiceOptions = useMemo(() =>
     invoicesData?.items?.map((invoice) => ({
       value: invoice.id,
-      label: `${invoice.invoiceNumber} - ${invoice.customerName} - ${invoice.balanceDue.toLocaleString('tr-TR')} ${invoice.currency}`,
+      label: `${invoice.invoiceNumber} - ${invoice.customerName} - ${invoice.remainingAmount.toLocaleString('tr-TR')} ${invoice.currency}`,
       invoice,
     })) || [], [invoicesData]);
 
@@ -114,7 +114,7 @@ export default function PaymentForm({ form, initialValues, onFinish, loading, pr
     if (invoice) {
       form.setFieldsValue({
         customerId: invoice.customerId,
-        amount: invoice.balanceDue,
+        amount: invoice.remainingAmount,
         currency: invoice.currency,
       });
       setSelectedCurrency(invoice.currency);
