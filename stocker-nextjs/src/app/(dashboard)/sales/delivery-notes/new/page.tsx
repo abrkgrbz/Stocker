@@ -344,9 +344,9 @@ export default function NewDeliveryNotePage() {
                   allowClear
                   showSearch
                   className="w-full"
-                  options={[]}
+                  options={[] as { value: string; label: string }[]}
                   filterOption={(input, option) =>
-                    ((option?.label as string) ?? '').toLowerCase().includes(input.toLowerCase())
+                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                   }
                 />
               </Form.Item>
