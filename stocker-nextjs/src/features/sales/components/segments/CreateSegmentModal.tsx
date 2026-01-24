@@ -70,7 +70,7 @@ export function CreateSegmentModal({
         };
 
         updateSegment.mutate(
-          { id: editingSegment.id, data: updateData },
+          { id: editingSegment.id, data: updateData as unknown as Record<string, unknown> },
           {
             onSuccess: () => {
               form.resetFields();
