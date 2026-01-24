@@ -213,9 +213,13 @@ public static class DependencyInjection
         services.AddHostedService<TransferTimeoutMonitorService>();
         services.AddHostedService<AuditFallbackProcessorService>();
 
+        // Register Diagnostics Service
+        services.AddSingleton<Health.InventoryDiagnosticsService>();
+
         // Health checks
         services.AddHealthChecks()
-            .AddCheck<Health.InventoryHealthCheck>("inventory_services", tags: new[] { "inventory", "background-services" });
+            .AddCheck<Health.InventoryHealthCheck>("inventory_services", tags: new[] { "inventory", "background-services" })
+            .AddCheck<Health.InventoryInfrastructureHealthCheck>("inventory_infrastructure", tags: new[] { "inventory", "infrastructure" });
 
         return services;
     }

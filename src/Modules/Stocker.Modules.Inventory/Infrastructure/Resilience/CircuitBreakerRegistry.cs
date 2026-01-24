@@ -33,6 +33,14 @@ public class CircuitBreakerRegistry
     }
 
     /// <summary>
+    /// Get all circuit breakers as name-instance pairs.
+    /// </summary>
+    public IReadOnlyList<(string Name, CircuitBreaker Breaker)> GetAll()
+    {
+        return _breakers.Select(kvp => (kvp.Key, kvp.Value)).ToList().AsReadOnly();
+    }
+
+    /// <summary>
     /// Get circuit breaker status for monitoring/health checks.
     /// </summary>
     public IReadOnlyDictionary<string, CircuitBreakerStatus> GetAllStatuses()
