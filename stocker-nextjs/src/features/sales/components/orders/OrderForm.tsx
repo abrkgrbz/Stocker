@@ -286,7 +286,7 @@ export function OrderForm({ orderId, mode }: OrderFormProps) {
       key: 'unitPrice',
       width: 120,
       render: (_, record) => (
-        <InputNumber
+        <InputNumber<number>
           value={record.unitPrice}
           onChange={(value) => updateItem(record.key, 'unitPrice', value || 0)}
           min={0}

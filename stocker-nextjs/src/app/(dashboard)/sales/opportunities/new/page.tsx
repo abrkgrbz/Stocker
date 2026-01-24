@@ -212,7 +212,7 @@ export default function NewOpportunityPage() {
                 label={<span className="text-slate-700 font-medium">Tahmini Deger</span>}
                 rules={[{ required: true, message: 'Deger zorunludur' }]}
               >
-                <InputNumber
+                <InputNumber<number>
                   className="w-full"
                   min={0}
                   placeholder="0"

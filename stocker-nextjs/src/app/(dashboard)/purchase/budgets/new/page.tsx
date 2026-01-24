@@ -143,7 +143,7 @@ export default function NewPurchaseBudgetPage() {
                   label={<span className="text-xs text-slate-500">Toplam Bütçe</span>}
                   rules={[{ required: true, message: 'Tutar zorunludur' }]}
                 >
-                  <InputNumber
+                  <InputNumber<number>
                     className="w-full"
                     min={0}
                     precision={2}

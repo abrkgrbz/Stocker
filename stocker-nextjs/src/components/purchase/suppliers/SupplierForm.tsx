@@ -346,7 +346,7 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Kredi Limiti</label>
                 <Form.Item name="creditLimit" className="mb-0">
-                  <InputNumber
+                  <InputNumber<number>
                     style={{ width: '100%' }}
                     min={0}
                     placeholder="0"

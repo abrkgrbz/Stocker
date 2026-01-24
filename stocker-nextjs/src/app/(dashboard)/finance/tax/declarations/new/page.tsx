@@ -219,7 +219,7 @@ export default function NewTaxDeclarationPage() {
       key: 'taxBase',
       width: 150,
       render: (_: unknown, record: DetailItem) => (
-        <InputNumber
+        <InputNumber<number>
           value={record.taxBase}
           onChange={value => handleDetailChange(record.key, 'taxBase', value || 0)}
           formatter={value => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
@@ -249,7 +249,7 @@ export default function NewTaxDeclarationPage() {
       key: 'calculatedTax',
       width: 150,
       render: (_: unknown, record: DetailItem) => (
-        <InputNumber
+        <InputNumber<number>
           value={record.calculatedTax}
           onChange={value => handleDetailChange(record.key, 'calculatedTax', value || 0)}
           formatter={value => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
@@ -264,7 +264,7 @@ export default function NewTaxDeclarationPage() {
       key: 'deductibleTax',
       width: 150,
       render: (_: unknown, record: DetailItem) => (
-        <InputNumber
+        <InputNumber<number>
           value={record.deductibleTax}
           onChange={value => handleDetailChange(record.key, 'deductibleTax', value || 0)}
           formatter={value => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}

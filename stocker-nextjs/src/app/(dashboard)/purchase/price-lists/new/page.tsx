@@ -138,7 +138,7 @@ export default function NewPriceListPage() {
       key: 'basePrice',
       width: 140,
       render: (_: any, record: PriceListItemRow) => (
-        <InputNumber
+        <InputNumber<number>
           min={0}
           precision={2}
           value={record.basePrice}

@@ -219,7 +219,7 @@ export default function NewSalesTargetPage() {
                 label={<span className="text-slate-700 font-medium">Toplam Hedef Tutari</span>}
                 rules={[{ required: true, message: 'Hedef tutari zorunludur' }]}
               >
-                <InputNumber
+                <InputNumber<number>
                   className="w-full"
                   min={0}
                   placeholder="0"

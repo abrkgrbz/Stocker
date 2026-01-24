@@ -236,7 +236,7 @@ export default function NewBaBsFormPage() {
       key: 'vatAmount',
       width: 140,
       render: (_, record) => (
-        <InputNumber
+        <InputNumber<number>
           value={record.vatAmount}
           onChange={(value) => updateItem(record.key, 'vatAmount', value)}
           min={0}
