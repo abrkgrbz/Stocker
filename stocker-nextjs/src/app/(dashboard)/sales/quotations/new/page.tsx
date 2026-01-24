@@ -36,7 +36,7 @@ const { TextArea } = Input;
 
 interface QuotationItem {
   key: string;
-  productId: string;
+  productId: number | null;
   productName?: string;
   quantity: number;
   unitPrice: number;
@@ -69,7 +69,7 @@ export default function NewQuotationPage() {
   const handleAddItem = () => {
     const newItem: QuotationItem = {
       key: Date.now().toString(),
-      productId: '',
+      productId: null,
       quantity: 1,
       unitPrice: 0,
       discountPercent: 0,
@@ -90,7 +90,7 @@ export default function NewQuotationPage() {
         if (item.key === key) {
           const updated = { ...item, [field]: value };
           if (field === 'productId') {
-            const product = products.find((p: ProductDto) => String(p.id) === String(value));
+            const product = products.find((p: ProductDto) => p.id === value);
             if (product) {
               updated.productName = product.name;
               updated.unitPrice = product.unitPrice || 0;
@@ -132,9 +132,9 @@ export default function NewQuotationPage() {
       notes: values.notes,
       termsAndConditions: values.termsAndConditions,
       items: items.map((item): CreateQuotationItemDto => {
-        const product = products.find((p: ProductDto) => String(p.id) === String(item.productId));
+        const product = products.find((p: ProductDto) => p.id === item.productId);
         return {
-          productId: item.productId,
+          productId: item.productId ?? undefined,
           productCode: product?.code || product?.sku || '',
           productName: item.productName || product?.name || '',
           unit: product?.unitName || 'Adet',
@@ -142,6 +142,7 @@ export default function NewQuotationPage() {
           unitPrice: item.unitPrice,
           vatRate: item.taxRate,
           discountRate: item.discountPercent,
+          discountAmount: item.discountAmount,
         };
       }),
     };
@@ -167,7 +168,7 @@ export default function NewQuotationPage() {
           placeholder="Ürün seçin"
           showSearch
           optionFilterProp="children"
-          value={record.productId || undefined}
+          value={record.productId ?? undefined}
           onChange={(value) => handleItemChange(record.key, 'productId', value)}
           options={products.map((p: ProductDto) => ({ value: p.id, label: p.name }))}
         />

@@ -17,3 +17,8 @@ export * from './service-order.service';
 export * from './warranty.service';
 export * from './segment.service';
 export * from './target.service';
+export * from './pricelist.service';
+export * from './delivery-note.service';
+export * from './back-order.service';
+export * from './opportunity.service';
+export * from './pipeline.service';

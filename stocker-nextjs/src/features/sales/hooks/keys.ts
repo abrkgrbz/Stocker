@@ -19,6 +19,11 @@ import type {
   WarrantyQueryParams,
   CustomerSegmentQueryParams,
   SalesTargetQueryParams,
+  PriceListQueryParams,
+  DeliveryNoteQueryParams,
+  BackOrderQueryParams,
+  OpportunityQueryParams,
+  SalesPipelineQueryParams,
 } from '../types';
 
 /**
@@ -267,6 +272,72 @@ export const salesKeys = {
     statistics: () => [...salesKeys.targets.all(), 'statistics'] as const,
     leaderboard: (period?: string, limit?: number) =>
       [...salesKeys.targets.all(), 'leaderboard', { period, limit }] as const,
+  },
+
+  // =====================================
+  // PRICE LISTS
+  // =====================================
+  priceLists: {
+    all: () => [...salesKeys.all, 'price-lists'] as const,
+    lists: () => [...salesKeys.priceLists.all(), 'list'] as const,
+    list: (params?: PriceListQueryParams) => [...salesKeys.priceLists.lists(), { ...params }] as const,
+    details: () => [...salesKeys.priceLists.all(), 'detail'] as const,
+    detail: (id: string) => [...salesKeys.priceLists.details(), id] as const,
+    byCode: (code: string) => [...salesKeys.priceLists.all(), 'code', code] as const,
+    active: () => [...salesKeys.priceLists.all(), 'active'] as const,
+  },
+
+  // =====================================
+  // DELIVERY NOTES
+  // =====================================
+  deliveryNotes: {
+    all: () => [...salesKeys.all, 'delivery-notes'] as const,
+    lists: () => [...salesKeys.deliveryNotes.all(), 'list'] as const,
+    list: (params?: DeliveryNoteQueryParams) => [...salesKeys.deliveryNotes.lists(), { ...params }] as const,
+    details: () => [...salesKeys.deliveryNotes.all(), 'detail'] as const,
+    detail: (id: string) => [...salesKeys.deliveryNotes.details(), id] as const,
+    byNumber: (number: string) => [...salesKeys.deliveryNotes.all(), 'number', number] as const,
+    byOrder: (orderId: string) => [...salesKeys.deliveryNotes.all(), 'order', orderId] as const,
+  },
+
+  // =====================================
+  // BACK ORDERS
+  // =====================================
+  backOrders: {
+    all: () => [...salesKeys.all, 'back-orders'] as const,
+    lists: () => [...salesKeys.backOrders.all(), 'list'] as const,
+    list: (params?: BackOrderQueryParams) => [...salesKeys.backOrders.lists(), { ...params }] as const,
+    details: () => [...salesKeys.backOrders.all(), 'detail'] as const,
+    detail: (id: string) => [...salesKeys.backOrders.details(), id] as const,
+    byOrder: (orderId: string) => [...salesKeys.backOrders.all(), 'order', orderId] as const,
+    byCustomer: (customerId: string) => [...salesKeys.backOrders.all(), 'customer', customerId] as const,
+    critical: () => [...salesKeys.backOrders.all(), 'critical'] as const,
+  },
+
+  // =====================================
+  // OPPORTUNITIES
+  // =====================================
+  opportunities: {
+    all: () => [...salesKeys.all, 'opportunities'] as const,
+    lists: () => [...salesKeys.opportunities.all(), 'list'] as const,
+    list: (params?: OpportunityQueryParams) => [...salesKeys.opportunities.lists(), { ...params }] as const,
+    details: () => [...salesKeys.opportunities.all(), 'detail'] as const,
+    detail: (id: string) => [...salesKeys.opportunities.details(), id] as const,
+    byPipeline: (pipelineId: string) => [...salesKeys.opportunities.all(), 'pipeline', pipelineId] as const,
+    byCustomer: (customerId: string) => [...salesKeys.opportunities.all(), 'customer', customerId] as const,
+    won: () => [...salesKeys.opportunities.all(), 'won'] as const,
+  },
+
+  // =====================================
+  // SALES PIPELINES
+  // =====================================
+  pipelines: {
+    all: () => [...salesKeys.all, 'pipelines'] as const,
+    lists: () => [...salesKeys.pipelines.all(), 'list'] as const,
+    list: (params?: SalesPipelineQueryParams) => [...salesKeys.pipelines.lists(), { ...params }] as const,
+    details: () => [...salesKeys.pipelines.all(), 'detail'] as const,
+    detail: (id: string) => [...salesKeys.pipelines.details(), id] as const,
+    active: () => [...salesKeys.pipelines.all(), 'active'] as const,
   },
 } as const;
 

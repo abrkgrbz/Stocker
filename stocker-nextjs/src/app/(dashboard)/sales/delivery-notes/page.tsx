@@ -1,676 +1,322 @@
 'use client';
 
 /**
- * Delivery Notes Page
- * Official documents sent with shipments
- * Document grid view with print preview modal
+ * Delivery Notes List Page
+ * Irsaliyeleri yonetin - Monochrome Design System
  */
 
 import React, { useState } from 'react';
-import { Modal, message } from 'antd';
+import { useRouter } from 'next/navigation';
 import {
-  FileText,
-  Truck,
-  Search,
-  Printer,
-  Download,
-  Eye,
-  Calendar,
-  Package,
-  CheckCircle,
-  Clock,
-  X,
-  Hash,
-} from 'lucide-react';
+  DocumentTextIcon,
+  PlusIcon,
+  MagnifyingGlassIcon,
+  EyeIcon,
+  TruckIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  PaperAirplaneIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
+import { Table, Dropdown, Select, DatePicker } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+import Link from 'next/link';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
+import { useDeliveryNotes } from '@/features/sales';
+import type { DeliveryNoteListDto, DeliveryNoteQueryParams } from '@/features/sales';
 
 dayjs.locale('tr');
 
-// Types
-type DeliveryStatus = 'Preparing' | 'InTransit' | 'Delivered' | 'Returned';
+const { RangePicker } = DatePicker;
 
-interface DeliveryNoteItem {
-  productName: string;
-  productSku: string;
-  quantity: number;
-  unit: string;
-}
+const statusConfig: Record<string, { label: string; bgColor: string; textColor: string }> = {
+  Draft: { label: 'Taslak', bgColor: 'bg-slate-100', textColor: 'text-slate-600' },
+  Dispatched: { label: 'Sevk Edildi', bgColor: 'bg-slate-300', textColor: 'text-slate-800' },
+  InTransit: { label: 'Yolda', bgColor: 'bg-slate-500', textColor: 'text-white' },
+  Delivered: { label: 'Teslim Edildi', bgColor: 'bg-slate-800', textColor: 'text-white' },
+  Cancelled: { label: 'Iptal', bgColor: 'bg-slate-900', textColor: 'text-white' },
+};
 
-interface DeliveryNote {
-  id: string;
-  documentNumber: string;
-  orderNumber: string;
-  orderId: string;
-  customerId: string;
-  customerName: string;
-  customerAddress: string;
-  customerPhone: string;
-  shipDate: string;
-  deliveryDate: string | null;
-  carrierName: string;
-  carrierTrackingNumber: string | null;
-  status: DeliveryStatus;
-  items: DeliveryNoteItem[];
-  totalPackages: number;
-  totalWeight: number;
-  notes?: string;
-  preparedBy: string;
-  deliveredTo?: string;
-}
-
-// Mock data
-const mockDeliveryNotes: DeliveryNote[] = [
-  {
-    id: '1',
-    documentNumber: 'DN-2024-001450',
-    orderNumber: 'SIP-2024-001234',
-    orderId: 'ord1',
-    customerId: 'c1',
-    customerName: 'MediaMarkt Turkey',
-    customerAddress: 'Atatürk Mah. İstanbul Cad. No:123 Ataşehir/İstanbul',
-    customerPhone: '+90 212 555 1234',
-    shipDate: '2024-12-24T10:00:00',
-    deliveryDate: null,
-    carrierName: 'Aras Kargo',
-    carrierTrackingNumber: 'ARK123456789',
-    status: 'InTransit',
-    items: [
-      { productName: 'iPhone 15 Pro Max 256GB', productSku: 'APL-IP15PM-256', quantity: 5, unit: 'Adet' },
-      { productName: 'AirPods Pro 2', productSku: 'APL-APP2', quantity: 10, unit: 'Adet' },
-    ],
-    totalPackages: 3,
-    totalWeight: 4.5,
-    preparedBy: 'Ahmet Yılmaz',
-  },
-  {
-    id: '2',
-    documentNumber: 'DN-2024-001449',
-    orderNumber: 'SIP-2024-001230',
-    orderId: 'ord2',
-    customerId: 'c2',
-    customerName: 'Teknosa A.Ş.',
-    customerAddress: 'Maslak Mah. Büyükdere Cad. No:45 Sarıyer/İstanbul',
-    customerPhone: '+90 212 444 5678',
-    shipDate: '2024-12-23T14:00:00',
-    deliveryDate: '2024-12-24T11:30:00',
-    carrierName: 'MNG Kargo',
-    carrierTrackingNumber: 'MNG987654321',
-    status: 'Delivered',
-    items: [
-      { productName: 'MacBook Pro 14" M3', productSku: 'APL-MBP14-M3', quantity: 3, unit: 'Adet' },
-    ],
-    totalPackages: 3,
-    totalWeight: 7.2,
-    preparedBy: 'Zeynep Kaya',
-    deliveredTo: 'Ali Veli - Depo Sorumlusu',
-  },
-  {
-    id: '3',
-    documentNumber: 'DN-2024-001448',
-    orderNumber: 'SIP-2024-001225',
-    orderId: 'ord3',
-    customerId: 'c3',
-    customerName: 'Hepsiburada',
-    customerAddress: 'Sarıgazi Mah. Bağdat Cad. No:789 Sancaktepe/İstanbul',
-    customerPhone: '+90 216 333 9876',
-    shipDate: '2024-12-22T09:00:00',
-    deliveryDate: '2024-12-23T16:45:00',
-    carrierName: 'Yurtiçi Kargo',
-    carrierTrackingNumber: 'YK456789123',
-    status: 'Delivered',
-    items: [
-      { productName: 'Samsung Galaxy S24 Ultra', productSku: 'SAM-S24U-512', quantity: 10, unit: 'Adet' },
-      { productName: 'Samsung Galaxy Watch 6', productSku: 'SAM-GW6', quantity: 15, unit: 'Adet' },
-      { productName: 'Samsung Galaxy Buds 2 Pro', productSku: 'SAM-GB2P', quantity: 20, unit: 'Adet' },
-    ],
-    totalPackages: 5,
-    totalWeight: 8.8,
-    preparedBy: 'Mehmet Demir',
-    deliveredTo: 'Ayşe Hanım - Giriş Kontrol',
-  },
-  {
-    id: '4',
-    documentNumber: 'DN-2024-001447',
-    orderNumber: 'SIP-2024-001220',
-    orderId: 'ord4',
-    customerId: 'c4',
-    customerName: 'Vatan Bilgisayar',
-    customerAddress: 'Barbaros Mah. Halk Cad. No:56 Beşiktaş/İstanbul',
-    customerPhone: '+90 212 222 3456',
-    shipDate: '2024-12-24T08:00:00',
-    deliveryDate: null,
-    carrierName: 'PTT Kargo',
-    carrierTrackingNumber: null,
-    status: 'Preparing',
-    items: [
-      { productName: 'Dell XPS 15', productSku: 'DEL-XPS15-I7', quantity: 2, unit: 'Adet' },
-    ],
-    totalPackages: 2,
-    totalWeight: 5.4,
-    preparedBy: 'Can Arslan',
-  },
-  {
-    id: '5',
-    documentNumber: 'DN-2024-001446',
-    orderNumber: 'SIP-2024-001215',
-    orderId: 'ord5',
-    customerId: 'c5',
-    customerName: 'n11.com',
-    customerAddress: 'Kozyatağı Mah. Değirmen Sok. No:12 Kadıköy/İstanbul',
-    customerPhone: '+90 216 111 2222',
-    shipDate: '2024-12-21T11:00:00',
-    deliveryDate: null,
-    carrierName: 'Sürat Kargo',
-    carrierTrackingNumber: 'SRT741852963',
-    status: 'InTransit',
-    items: [
-      { productName: 'Sony WH-1000XM5', productSku: 'SNY-WH1000XM5', quantity: 20, unit: 'Adet' },
-      { productName: 'Sony WF-1000XM5', productSku: 'SNY-WF1000XM5', quantity: 30, unit: 'Adet' },
-    ],
-    totalPackages: 4,
-    totalWeight: 6.2,
-    preparedBy: 'Elif Özcan',
-  },
-  {
-    id: '6',
-    documentNumber: 'DN-2024-001445',
-    orderNumber: 'SIP-2024-001210',
-    orderId: 'ord6',
-    customerId: 'c6',
-    customerName: 'Trendyol',
-    customerAddress: 'Altunizade Mah. Ordu Cad. No:88 Üsküdar/İstanbul',
-    customerPhone: '+90 216 777 8888',
-    shipDate: '2024-12-20T15:00:00',
-    deliveryDate: null,
-    carrierName: 'Aras Kargo',
-    carrierTrackingNumber: 'ARK369258147',
-    status: 'Returned',
-    items: [
-      { productName: 'iPad Pro 12.9" M2', productSku: 'APL-IPADP-129', quantity: 8, unit: 'Adet' },
-    ],
-    totalPackages: 2,
-    totalWeight: 3.8,
-    preparedBy: 'Deniz Yıldız',
-    notes: 'Teslimat adresi yanlış, iade edildi',
-  },
-];
+const typeLabels: Record<string, string> = {
+  Sales: 'Satis',
+  Return: 'Iade',
+  Transfer: 'Transfer',
+  Sample: 'Numune',
+  Other: 'Diger',
+};
 
 export default function DeliveryNotesPage() {
-  const [deliveryNotes] = useState<DeliveryNote[]>(mockDeliveryNotes);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<DeliveryStatus | 'All'>('All');
-  const [previewNote, setPreviewNote] = useState<DeliveryNote | null>(null);
-  const [previewOpen, setPreviewOpen] = useState(false);
-
-  const getStatusConfig = (status: DeliveryStatus) => {
-    const configs = {
-      Preparing: {
-        label: 'Hazırlanıyor',
-        bgColor: 'bg-slate-100',
-        textColor: 'text-slate-600',
-        borderColor: 'border-slate-200',
-        icon: Clock,
-      },
-      InTransit: {
-        label: 'Yolda',
-        bgColor: 'bg-slate-200',
-        textColor: 'text-slate-700',
-        borderColor: 'border-slate-300',
-        icon: Truck,
-      },
-      Delivered: {
-        label: 'Teslim Edildi',
-        bgColor: 'bg-slate-700',
-        textColor: 'text-white',
-        borderColor: 'border-slate-600',
-        icon: CheckCircle,
-      },
-      Returned: {
-        label: 'İade Edildi',
-        bgColor: 'bg-slate-900',
-        textColor: 'text-white',
-        borderColor: 'border-slate-800',
-        icon: X,
-      },
-    };
-    return configs[status];
-  };
-
-  const handlePrintPreview = (note: DeliveryNote) => {
-    setPreviewNote(note);
-    setPreviewOpen(true);
-  };
-
-  const handlePrint = () => {
-    window.print();
-    message.success('Yazdırma iletişim kutusu açıldı');
-  };
-
-  // Filter
-  const filteredNotes = deliveryNotes.filter((note) => {
-    const matchesSearch =
-      note.documentNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      note.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      note.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      note.carrierName.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus = statusFilter === 'All' || note.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
+  const router = useRouter();
+  const [params, setParams] = useState<DeliveryNoteQueryParams>({
+    page: 1,
+    pageSize: 10,
   });
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const inTransitCount = deliveryNotes.filter((n) => n.status === 'InTransit').length;
-  const deliveredCount = deliveryNotes.filter((n) => n.status === 'Delivered').length;
+  const { data, isLoading } = useDeliveryNotes(params);
+  const deliveryNotes = data?.items ?? [];
+  const totalCount = data?.totalCount ?? 0;
+
+  const dispatchedCount = deliveryNotes.filter((d) => d.status === 'Dispatched').length;
+  const inTransitCount = deliveryNotes.filter((d) => d.status === 'InTransit').length;
+  const deliveredCount = deliveryNotes.filter((d) => d.status === 'Delivered' || d.isDelivered).length;
+
+  const columns: ColumnsType<DeliveryNoteListDto> = [
+    {
+      title: 'Irsaliye No',
+      dataIndex: 'deliveryNoteNumber',
+      key: 'deliveryNoteNumber',
+      width: 160,
+      render: (number: string) => (
+        <span className="font-mono text-sm font-medium text-slate-900">{number}</span>
+      ),
+    },
+    {
+      title: 'Tarih',
+      dataIndex: 'deliveryNoteDate',
+      key: 'deliveryNoteDate',
+      width: 120,
+      render: (date: string) => (
+        <span className="text-sm text-slate-600">{dayjs(date).format('DD.MM.YYYY')}</span>
+      ),
+    },
+    {
+      title: 'Alici',
+      dataIndex: 'receiverName',
+      key: 'receiverName',
+      render: (name: string) => (
+        <span className="text-sm font-medium text-slate-900">{name}</span>
+      ),
+    },
+    {
+      title: 'Siparis No',
+      dataIndex: 'salesOrderNumber',
+      key: 'salesOrderNumber',
+      width: 150,
+      render: (orderNumber: string | undefined) => (
+        orderNumber ? (
+          <span className="text-sm text-slate-600 font-mono">{orderNumber}</span>
+        ) : (
+          <span className="text-sm text-slate-400">-</span>
+        )
+      ),
+    },
+    {
+      title: 'Tip',
+      dataIndex: 'deliveryNoteType',
+      key: 'deliveryNoteType',
+      width: 100,
+      render: (type: string) => (
+        <span className="px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded">
+          {typeLabels[type] || type}
+        </span>
+      ),
+    },
+    {
+      title: 'Durum',
+      dataIndex: 'status',
+      key: 'status',
+      width: 130,
+      render: (status: string) => {
+        const config = statusConfig[status] || statusConfig.Draft;
+        return (
+          <span className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded ${config.bgColor} ${config.textColor}`}>
+            {config.label}
+          </span>
+        );
+      },
+    },
+    {
+      title: 'Kalem',
+      dataIndex: 'totalLineCount',
+      key: 'totalLineCount',
+      width: 70,
+      align: 'center',
+      render: (count: number) => (
+        <span className="text-sm text-slate-600">{count}</span>
+      ),
+    },
+    {
+      title: 'Islemler',
+      key: 'actions',
+      width: 80,
+      align: 'center',
+      render: (_, record) => (
+        <Dropdown
+          menu={{
+            items: [
+              {
+                key: 'view',
+                label: 'Goruntule',
+                icon: <EyeIcon className="w-4 h-4" />,
+                onClick: () => router.push(`/sales/delivery-notes/${record.id}`),
+              },
+            ],
+          }}
+          trigger={['click']}
+        >
+          <button className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+            </svg>
+          </button>
+        </Dropdown>
+      ),
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-slate-50 p-8">
-      {/* Header */}
-      <div className="flex items-start gap-4 mb-8">
-        <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center flex-shrink-0">
-          <FileText className="w-6 h-6 text-white" />
-        </div>
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-slate-900">İrsaliyeler</h1>
-            <span className="px-2.5 py-0.5 text-sm font-medium bg-slate-200 text-slate-700 rounded-full">
-              {deliveryNotes.length}
-            </span>
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+              <DocumentTextIcon className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Irsaliyeler</h1>
+              <p className="text-sm text-slate-500">Sevkiyat irsaliyelerini yonetin</p>
+            </div>
           </div>
-          <p className="text-sm text-slate-500">Sevkiyat ile gönderilen resmi belgeler</p>
+          <Link
+            href="/sales/delivery-notes/new"
+            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Yeni Irsaliye
+          </Link>
         </div>
-      </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white border border-slate-200 rounded-xl p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-slate-600" />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <DocumentTextIcon className="w-5 h-5 text-slate-600" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-500">Toplam</p>
+                <p className="text-xl font-bold text-slate-900">{totalCount}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-slate-500">Toplam İrsaliye</p>
-              <p className="text-xl font-bold text-slate-900">{deliveryNotes.length}</p>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <PaperAirplaneIcon className="w-5 h-5 text-slate-600" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-500">Sevk Edildi</p>
+                <p className="text-xl font-bold text-slate-900">{dispatchedCount}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <TruckIcon className="w-5 h-5 text-slate-600" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-500">Yolda</p>
+                <p className="text-xl font-bold text-slate-900">{inTransitCount}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CheckCircleIcon className="w-5 h-5 text-slate-600" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-500">Teslim Edildi</p>
+                <p className="text-xl font-bold text-slate-900">{deliveredCount}</p>
+              </div>
             </div>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-              <Truck className="w-5 h-5 text-slate-600" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500">Yolda</p>
-              <p className="text-xl font-bold text-slate-900">{inTransitCount}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-slate-600" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500">Teslim Edildi</p>
-              <p className="text-xl font-bold text-slate-900">{deliveredCount}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-              <Package className="w-5 h-5 text-slate-600" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500">Toplam Koli</p>
-              <p className="text-xl font-bold text-slate-900">
-                {deliveryNotes.reduce((sum, n) => sum + n.totalPackages, 0)}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="relative flex-1 min-w-[200px] max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Belge no, sipariş no, müşteri veya kargo ara..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+        {/* Filters */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="relative flex-1 min-w-[200px] max-w-md">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Irsaliye no, alici veya siparis no ara..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+              />
+            </div>
+            <Select
+              placeholder="Durum"
+              allowClear
+              className="min-w-[140px]"
+              onChange={(value) => setParams((prev) => ({ ...prev, status: value, page: 1 }))}
+              options={[
+                { value: 'Draft', label: 'Taslak' },
+                { value: 'Dispatched', label: 'Sevk Edildi' },
+                { value: 'InTransit', label: 'Yolda' },
+                { value: 'Delivered', label: 'Teslim Edildi' },
+                { value: 'Cancelled', label: 'Iptal' },
+              ]}
+            />
+            <Select
+              placeholder="Tip"
+              allowClear
+              className="min-w-[120px]"
+              onChange={(value) => setParams((prev) => ({ ...prev, deliveryNoteType: value, page: 1 }))}
+              options={[
+                { value: 'Sales', label: 'Satis' },
+                { value: 'Return', label: 'Iade' },
+                { value: 'Transfer', label: 'Transfer' },
+                { value: 'Sample', label: 'Numune' },
+              ]}
+            />
+            <RangePicker
+              placeholder={['Baslangic', 'Bitis']}
+              format="DD.MM.YYYY"
+              onChange={(dates) => {
+                if (dates && dates[0] && dates[1]) {
+                  setParams((prev) => ({
+                    ...prev,
+                    fromDate: dates[0]!.format('YYYY-MM-DD'),
+                    toDate: dates[1]!.format('YYYY-MM-DD'),
+                    page: 1,
+                  }));
+                } else {
+                  setParams((prev) => ({ ...prev, fromDate: undefined, toDate: undefined, page: 1 }));
+                }
+              }}
             />
           </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as DeliveryStatus | 'All')}
-            className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent bg-white"
-          >
-            <option value="All">Tüm Durumlar</option>
-            <option value="Preparing">Hazırlanıyor</option>
-            <option value="InTransit">Yolda</option>
-            <option value="Delivered">Teslim Edildi</option>
-            <option value="Returned">İade Edildi</option>
-          </select>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <Table
+            className="enterprise-table"
+            columns={columns}
+            dataSource={deliveryNotes}
+            rowKey="id"
+            loading={isLoading}
+            pagination={{
+              current: params.page,
+              pageSize: params.pageSize,
+              total: totalCount,
+              showSizeChanger: true,
+              showTotal: (total) => `Toplam ${total} kayit`,
+              onChange: (page, pageSize) => setParams((prev) => ({ ...prev, page, pageSize })),
+            }}
+            onRow={(record) => ({
+              onClick: () => router.push(`/sales/delivery-notes/${record.id}`),
+              className: 'cursor-pointer hover:bg-slate-50',
+            })}
+          />
         </div>
       </div>
-
-      {/* Document Grid */}
-      {filteredNotes.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-xl p-12">
-          <div className="flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-              <FileText className="w-8 h-8 text-slate-400" />
-            </div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">İrsaliye bulunamadı</h3>
-            <p className="text-sm text-slate-500">Arama kriterlerinize uygun irsaliye yok</p>
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredNotes.map((note) => {
-            const statusConfig = getStatusConfig(note.status);
-            const StatusIcon = statusConfig.icon;
-
-            return (
-              <div
-                key={note.id}
-                onClick={() => handlePrintPreview(note)}
-                className={`
-                  bg-white border-2 rounded-xl overflow-hidden cursor-pointer transition-all
-                  hover:shadow-lg hover:border-slate-400
-                  ${statusConfig.borderColor}
-                `}
-                style={{
-                  backgroundImage:
-                    'repeating-linear-gradient(0deg, transparent, transparent 24px, #f8fafc 24px, #f8fafc 25px)',
-                }}
-              >
-                {/* Document Header - looks like paper */}
-                <div className="bg-white border-b border-slate-200 px-5 py-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-5 h-5 text-slate-400" />
-                      <span className="font-bold text-slate-900">{note.documentNumber}</span>
-                    </div>
-                    <span
-                      className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${statusConfig.bgColor} ${statusConfig.textColor}`}
-                    >
-                      <StatusIcon className="w-3.5 h-3.5" />
-                      {statusConfig.label}
-                    </span>
-                  </div>
-                  <div className="text-sm text-slate-500">
-                    Sipariş: {note.orderNumber}
-                  </div>
-                </div>
-
-                {/* Document Body */}
-                <div className="px-5 py-4 space-y-3">
-                  {/* Customer */}
-                  <div>
-                    <div className="text-xs text-slate-400 uppercase tracking-wide mb-1">
-                      Alıcı
-                    </div>
-                    <div className="font-medium text-slate-900">{note.customerName}</div>
-                  </div>
-
-                  {/* Ship Date & Carrier */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <div className="text-xs text-slate-400 uppercase tracking-wide mb-1">
-                        Sevk Tarihi
-                      </div>
-                      <div className="flex items-center gap-1 text-sm text-slate-700">
-                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                        {dayjs(note.shipDate).format('DD MMM YYYY')}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-slate-400 uppercase tracking-wide mb-1">
-                        Kargo
-                      </div>
-                      <div className="flex items-center gap-1 text-sm text-slate-700">
-                        <Truck className="w-3.5 h-3.5 text-slate-400" />
-                        {note.carrierName}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Items Preview */}
-                  <div>
-                    <div className="text-xs text-slate-400 uppercase tracking-wide mb-1">
-                      Ürünler ({note.items.length})
-                    </div>
-                    <div className="text-sm text-slate-600 line-clamp-2">
-                      {note.items.map((item) => `${item.quantity}x ${item.productName}`).join(', ')}
-                    </div>
-                  </div>
-
-                  {/* Package Info */}
-                  <div className="flex items-center gap-4 pt-2 border-t border-dashed border-slate-200">
-                    <div className="flex items-center gap-1 text-sm text-slate-500">
-                      <Package className="w-4 h-4" />
-                      {note.totalPackages} koli
-                    </div>
-                    <div className="text-sm text-slate-500">
-                      {note.totalWeight} kg
-                    </div>
-                  </div>
-                </div>
-
-                {/* Document Footer */}
-                <div className="bg-slate-50 px-5 py-3 flex items-center justify-between">
-                  <div className="text-xs text-slate-400">
-                    Hazırlayan: {note.preparedBy}
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-slate-700 font-medium">
-                    <Eye className="w-3.5 h-3.5" />
-                    Önizle
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Print Preview Modal */}
-      <Modal
-        title={null}
-        open={previewOpen}
-        onCancel={() => {
-          setPreviewOpen(false);
-          setPreviewNote(null);
-        }}
-        footer={null}
-        width={700}
-        centered
-      >
-        {previewNote && (
-          <div className="print-preview">
-            {/* Modal Header Actions */}
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
-              <h2 className="text-lg font-bold text-slate-900">İrsaliye Önizleme</h2>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handlePrint}
-                  className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors"
-                >
-                  <Printer className="w-4 h-4" />
-                  Yazdır
-                </button>
-                <button
-                  onClick={() => message.info('PDF indirme özelliği yakında!')}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:border-slate-400 transition-colors"
-                >
-                  <Download className="w-4 h-4" />
-                  PDF
-                </button>
-              </div>
-            </div>
-
-            {/* Document Content */}
-            <div className="bg-white border border-slate-200 rounded-lg p-8">
-              {/* Document Header */}
-              <div className="flex items-start justify-between mb-8 pb-6 border-b-2 border-slate-900">
-                <div>
-                  <h1 className="text-2xl font-bold text-slate-900 mb-1">İRSALİYE</h1>
-                  <div className="text-sm text-slate-500">Delivery Note / Sevk Belgesi</div>
-                </div>
-                <div className="text-right">
-                  <div className="flex items-center gap-2 text-lg font-bold text-slate-900">
-                    <Hash className="w-5 h-5" />
-                    {previewNote.documentNumber}
-                  </div>
-                  <div className="text-sm text-slate-500 mt-1">
-                    Sipariş: {previewNote.orderNumber}
-                  </div>
-                </div>
-              </div>
-
-              {/* Parties */}
-              <div className="grid grid-cols-2 gap-8 mb-8">
-                <div>
-                  <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
-                    Gönderen
-                  </div>
-                  <div className="space-y-1">
-                    <div className="font-semibold text-slate-900">Stocker A.Ş.</div>
-                    <div className="text-sm text-slate-600">
-                      Merkez Mah. Teknoloji Cad. No:1
-                      <br />
-                      Maslak / İstanbul
-                    </div>
-                    <div className="text-sm text-slate-600">Tel: +90 212 999 0000</div>
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
-                    Alıcı
-                  </div>
-                  <div className="space-y-1">
-                    <div className="font-semibold text-slate-900">{previewNote.customerName}</div>
-                    <div className="text-sm text-slate-600">{previewNote.customerAddress}</div>
-                    <div className="text-sm text-slate-600">Tel: {previewNote.customerPhone}</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Shipment Info */}
-              <div className="grid grid-cols-4 gap-4 mb-8 p-4 bg-slate-50 rounded-lg">
-                <div>
-                  <div className="text-xs text-slate-400 mb-1">Sevk Tarihi</div>
-                  <div className="font-medium text-slate-900">
-                    {dayjs(previewNote.shipDate).format('DD.MM.YYYY HH:mm')}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-slate-400 mb-1">Kargo Firması</div>
-                  <div className="font-medium text-slate-900">{previewNote.carrierName}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-slate-400 mb-1">Takip No</div>
-                  <div className="font-medium text-slate-900">
-                    {previewNote.carrierTrackingNumber || '-'}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-slate-400 mb-1">Durum</div>
-                  <div className="font-medium text-slate-700">
-                    {getStatusConfig(previewNote.status).label}
-                  </div>
-                </div>
-              </div>
-
-              {/* Items Table */}
-              <div className="mb-8">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b-2 border-slate-200">
-                      <th className="text-left text-xs font-semibold text-slate-500 uppercase py-3 pr-4">
-                        #
-                      </th>
-                      <th className="text-left text-xs font-semibold text-slate-500 uppercase py-3 pr-4">
-                        Ürün Kodu
-                      </th>
-                      <th className="text-left text-xs font-semibold text-slate-500 uppercase py-3 pr-4">
-                        Ürün Adı
-                      </th>
-                      <th className="text-right text-xs font-semibold text-slate-500 uppercase py-3 pr-4">
-                        Miktar
-                      </th>
-                      <th className="text-left text-xs font-semibold text-slate-500 uppercase py-3">
-                        Birim
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {previewNote.items.map((item, index) => (
-                      <tr key={index} className="border-b border-slate-100">
-                        <td className="py-3 pr-4 text-sm text-slate-500">{index + 1}</td>
-                        <td className="py-3 pr-4 text-sm font-mono text-slate-600">
-                          {item.productSku}
-                        </td>
-                        <td className="py-3 pr-4 text-sm text-slate-900">{item.productName}</td>
-                        <td className="py-3 pr-4 text-sm text-right font-semibold text-slate-900">
-                          {item.quantity}
-                        </td>
-                        <td className="py-3 text-sm text-slate-600">{item.unit}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Summary */}
-              <div className="grid grid-cols-2 gap-8 mb-8">
-                <div className="p-4 border border-slate-200 rounded-lg">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-xs text-slate-400 mb-1">Toplam Koli</div>
-                      <div className="text-xl font-bold text-slate-900">
-                        {previewNote.totalPackages}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-slate-400 mb-1">Toplam Ağırlık</div>
-                      <div className="text-xl font-bold text-slate-900">
-                        {previewNote.totalWeight} kg
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 border border-slate-200 rounded-lg">
-                  <div className="text-xs text-slate-400 mb-2">Notlar</div>
-                  <div className="text-sm text-slate-600">
-                    {previewNote.notes || 'Özel not bulunmamaktadır.'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Signatures */}
-              <div className="grid grid-cols-2 gap-8 pt-8 border-t border-slate-200">
-                <div>
-                  <div className="text-xs text-slate-400 mb-8">Teslim Eden</div>
-                  <div className="border-b border-slate-300 mb-2" />
-                  <div className="text-sm text-slate-600">{previewNote.preparedBy}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-slate-400 mb-8">Teslim Alan</div>
-                  <div className="border-b border-slate-300 mb-2" />
-                  <div className="text-sm text-slate-600">
-                    {previewNote.deliveredTo || 'İmza / Kaşe'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </Modal>
     </div>
   );
 }

@@ -11,13 +11,13 @@ import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import type {
   SalesTargetDto,
   SalesTargetListDto,
-  SalesTargetStatisticsDto,
-  LeaderboardEntryDto,
-  PagedResult,
+  CreateSalesTargetDto,
+  AssignSalesTargetDto,
+  AddSalesTargetPeriodDto,
+  AddSalesTargetProductDto,
+  RecordAchievementDto,
   SalesTargetQueryParams,
-  CreateSalesTargetCommand,
-  UpdateSalesTargetCommand,
-  UpdateTargetProgressCommand,
+  PagedResult,
 } from '../types';
 
 // =====================================
@@ -47,12 +47,34 @@ export function useSalesTarget(id: string) {
 }
 
 /**
- * Hook to fetch targets by sales rep
+ * Hook to fetch target by code
  */
-export function useSalesTargetsBySalesRep(salesRepId: string) {
+export function useSalesTargetByCode(code: string) {
+  return useQuery<SalesTargetDto>({
+    queryKey: [...salesKeys.targets.all(), 'code', code] as const,
+    queryFn: () => targetService.getTargetByCode(code),
+    ...queryOptions.detail({ enabled: !!code }),
+  });
+}
+
+/**
+ * Hook to fetch targets by year
+ */
+export function useSalesTargetsByYear(year: number) {
+  return useQuery<SalesTargetListDto[]>({
+    queryKey: [...salesKeys.targets.all(), 'year', year] as const,
+    queryFn: () => targetService.getTargetsByYear(year),
+    ...queryOptions.list({ enabled: !!year }),
+  });
+}
+
+/**
+ * Hook to fetch targets by sales representative
+ */
+export function useSalesTargetsByRepresentative(salesRepId: string) {
   return useQuery<SalesTargetListDto[]>({
     queryKey: salesKeys.targets.bySalesRep(salesRepId),
-    queryFn: () => targetService.getTargetsBySalesRep(salesRepId),
+    queryFn: () => targetService.getTargetsByRepresentative(salesRepId),
     ...queryOptions.list({ enabled: !!salesRepId }),
   });
 }
@@ -69,46 +91,13 @@ export function useSalesTargetsByTeam(teamId: string) {
 }
 
 /**
- * Hook to fetch current period targets
+ * Hook to fetch active targets
  */
-export function useCurrentSalesTargets() {
+export function useActiveTargets() {
   return useQuery<SalesTargetListDto[]>({
     queryKey: salesKeys.targets.current(),
-    queryFn: () => targetService.getCurrentTargets(),
-    ...queryOptions.realtime(),
-  });
-}
-
-/**
- * Hook to fetch my targets (current user)
- */
-export function useMyTargets() {
-  return useQuery<SalesTargetListDto[]>({
-    queryKey: salesKeys.targets.my(),
-    queryFn: () => targetService.getMyTargets(),
-    ...queryOptions.realtime(),
-  });
-}
-
-/**
- * Hook to fetch target statistics
- */
-export function useSalesTargetStatistics() {
-  return useQuery<SalesTargetStatisticsDto>({
-    queryKey: salesKeys.targets.statistics(),
-    queryFn: () => targetService.getTargetStatistics(),
-    ...queryOptions.realtime(),
-  });
-}
-
-/**
- * Hook to fetch leaderboard
- */
-export function useLeaderboard(period?: string, limit?: number) {
-  return useQuery<LeaderboardEntryDto[]>({
-    queryKey: salesKeys.targets.leaderboard(period, limit),
-    queryFn: () => targetService.getLeaderboard(period, limit),
-    ...queryOptions.realtime(),
+    queryFn: () => targetService.getActiveTargets(),
+    ...queryOptions.list(),
   });
 }
 
@@ -123,56 +112,152 @@ export function useCreateSalesTarget() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateSalesTargetCommand) => targetService.createTarget(data),
+    mutationFn: (data: CreateSalesTargetDto) => targetService.createTarget(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: salesKeys.targets.lists() });
-      queryClient.invalidateQueries({ queryKey: salesKeys.targets.statistics() });
-      queryClient.invalidateQueries({ queryKey: salesKeys.targets.leaderboard() });
-      showSuccess('Sales target created successfully');
+      showSuccess('Satış hedefi başarıyla oluşturuldu');
     },
     onError: (error) => {
-      showApiError(error, 'Failed to create sales target');
+      showApiError(error, 'Satış hedefi oluşturulamadı');
     },
   });
 }
 
 /**
- * Hook to update a target
+ * Hook to assign target to a representative
  */
-export function useUpdateSalesTarget() {
+export function useAssignTargetToRepresentative() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateSalesTargetCommand }) =>
-      targetService.updateTarget(id, data),
+    mutationFn: ({ id, data }: { id: string; data: AssignSalesTargetDto }) =>
+      targetService.assignToRepresentative(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.targets.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.targets.lists() });
+      showSuccess('Hedef temsilciye atandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Hedef temsilciye atanamadı');
+    },
+  });
+}
+
+/**
+ * Hook to assign target to a team
+ */
+export function useAssignTargetToTeam() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: AssignSalesTargetDto }) =>
+      targetService.assignToTeam(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.targets.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.targets.lists() });
+      showSuccess('Hedef takıma atandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Hedef takıma atanamadı');
+    },
+  });
+}
+
+/**
+ * Hook to assign target to a territory
+ */
+export function useAssignTargetToTerritory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: AssignSalesTargetDto }) =>
+      targetService.assignToTerritory(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.targets.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.targets.lists() });
+      showSuccess('Hedef bölgeye atandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Hedef bölgeye atanamadı');
+    },
+  });
+}
+
+/**
+ * Hook to add a period to a target
+ */
+export function useAddTargetPeriod() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: AddSalesTargetPeriodDto }) =>
+      targetService.addPeriod(id, data),
     onSuccess: (updatedTarget) => {
       queryClient.setQueryData(salesKeys.targets.detail(updatedTarget.id), updatedTarget);
       queryClient.invalidateQueries({ queryKey: salesKeys.targets.lists() });
-      showSuccess('Sales target updated successfully');
+      showSuccess('Hedef dönemi eklendi');
     },
     onError: (error) => {
-      showApiError(error, 'Failed to update sales target');
+      showApiError(error, 'Hedef dönemi eklenemedi');
     },
   });
 }
 
 /**
- * Hook to delete a target
+ * Hook to generate periods for a target
  */
-export function useDeleteSalesTarget() {
+export function useGenerateTargetPeriods() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => targetService.deleteTarget(id),
-    onSuccess: (_, deletedId) => {
-      queryClient.removeQueries({ queryKey: salesKeys.targets.detail(deletedId) });
+    mutationFn: (id: string) => targetService.generatePeriods(id),
+    onSuccess: (updatedTarget) => {
+      queryClient.setQueryData(salesKeys.targets.detail(updatedTarget.id), updatedTarget);
       queryClient.invalidateQueries({ queryKey: salesKeys.targets.lists() });
-      queryClient.invalidateQueries({ queryKey: salesKeys.targets.statistics() });
-      queryClient.invalidateQueries({ queryKey: salesKeys.targets.leaderboard() });
-      showSuccess('Sales target deleted successfully');
+      showSuccess('Hedef dönemleri oluşturuldu');
     },
     onError: (error) => {
-      showApiError(error, 'Failed to delete sales target');
+      showApiError(error, 'Hedef dönemleri oluşturulamadı');
+    },
+  });
+}
+
+/**
+ * Hook to add a product to a target
+ */
+export function useAddTargetProduct() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: AddSalesTargetProductDto }) =>
+      targetService.addProduct(id, data),
+    onSuccess: (updatedTarget) => {
+      queryClient.setQueryData(salesKeys.targets.detail(updatedTarget.id), updatedTarget);
+      queryClient.invalidateQueries({ queryKey: salesKeys.targets.lists() });
+      showSuccess('Hedef ürün eklendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Hedef ürün eklenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to record an achievement against a target
+ */
+export function useRecordAchievement() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: RecordAchievementDto }) =>
+      targetService.recordAchievement(id, data),
+    onSuccess: (updatedTarget) => {
+      queryClient.setQueryData(salesKeys.targets.detail(updatedTarget.id), updatedTarget);
+      queryClient.invalidateQueries({ queryKey: salesKeys.targets.lists() });
+      showSuccess('Başarı kaydedildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Başarı kaydedilemedi');
     },
   });
 }
@@ -182,108 +267,59 @@ export function useDeleteSalesTarget() {
 // =====================================
 
 /**
- * Hook to update target progress
- */
-export function useUpdateTargetProgress() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateTargetProgressCommand }) =>
-      targetService.updateProgress(id, data),
-    onSuccess: (updatedTarget) => {
-      queryClient.setQueryData(salesKeys.targets.detail(updatedTarget.id), updatedTarget);
-      queryClient.invalidateQueries({ queryKey: salesKeys.targets.lists() });
-      queryClient.invalidateQueries({ queryKey: salesKeys.targets.statistics() });
-      queryClient.invalidateQueries({ queryKey: salesKeys.targets.leaderboard() });
-      showSuccess('Progress updated');
-    },
-    onError: (error) => {
-      showApiError(error, 'Failed to update progress');
-    },
-  });
-}
-
-/**
  * Hook to activate a target
  */
 export function useActivateSalesTarget() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => targetService.activateTarget(id),
-    onSuccess: (updatedTarget) => {
-      queryClient.setQueryData(salesKeys.targets.detail(updatedTarget.id), updatedTarget);
+    mutationFn: (id: string) => targetService.activate(id),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: salesKeys.targets.lists() });
       queryClient.invalidateQueries({ queryKey: salesKeys.targets.current() });
-      queryClient.invalidateQueries({ queryKey: salesKeys.targets.statistics() });
-      showSuccess('Target activated');
+      showSuccess('Satış hedefi aktifleştirildi');
     },
     onError: (error) => {
-      showApiError(error, 'Failed to activate target');
+      showApiError(error, 'Satış hedefi aktifleştirilemedi');
     },
   });
 }
 
 /**
- * Hook to deactivate a target
+ * Hook to close a target
  */
-export function useDeactivateSalesTarget() {
+export function useCloseSalesTarget() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => targetService.deactivateTarget(id),
-    onSuccess: (updatedTarget) => {
-      queryClient.setQueryData(salesKeys.targets.detail(updatedTarget.id), updatedTarget);
+    mutationFn: (id: string) => targetService.close(id),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: salesKeys.targets.lists() });
       queryClient.invalidateQueries({ queryKey: salesKeys.targets.current() });
-      queryClient.invalidateQueries({ queryKey: salesKeys.targets.statistics() });
-      showSuccess('Target deactivated');
+      showSuccess('Satış hedefi kapatıldı');
     },
     onError: (error) => {
-      showApiError(error, 'Failed to deactivate target');
+      showApiError(error, 'Satış hedefi kapatılamadı');
     },
   });
 }
 
 /**
- * Hook to recalculate target progress
+ * Hook to cancel a target
  */
-export function useRecalculateTargetProgress() {
+export function useCancelSalesTarget() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => targetService.recalculateProgress(id),
-    onSuccess: (updatedTarget) => {
-      queryClient.setQueryData(salesKeys.targets.detail(updatedTarget.id), updatedTarget);
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      targetService.cancel(id, reason),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: salesKeys.targets.lists() });
-      queryClient.invalidateQueries({ queryKey: salesKeys.targets.statistics() });
-      queryClient.invalidateQueries({ queryKey: salesKeys.targets.leaderboard() });
-      showSuccess('Progress recalculated');
+      queryClient.invalidateQueries({ queryKey: salesKeys.targets.current() });
+      showSuccess('Satış hedefi iptal edildi');
     },
     onError: (error) => {
-      showApiError(error, 'Failed to recalculate progress');
-    },
-  });
-}
-
-/**
- * Hook to bulk create targets for team
- */
-export function useBulkCreateTeamTargets() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ teamId, data }: { teamId: string; data: Omit<CreateSalesTargetCommand, 'salesRepId'>[] }) =>
-      targetService.bulkCreateForTeam(teamId, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: salesKeys.targets.lists() });
-      queryClient.invalidateQueries({ queryKey: salesKeys.targets.byTeam(variables.teamId) });
-      queryClient.invalidateQueries({ queryKey: salesKeys.targets.statistics() });
-      queryClient.invalidateQueries({ queryKey: salesKeys.targets.leaderboard() });
-      showSuccess('Team targets created successfully');
-    },
-    onError: (error) => {
-      showApiError(error, 'Failed to create team targets');
+      showApiError(error, 'Satış hedefi iptal edilemedi');
     },
   });
 }

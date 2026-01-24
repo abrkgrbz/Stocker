@@ -292,8 +292,8 @@ export interface CreateQuotationDto {
 }
 
 export interface CreateQuotationItemDto {
-  productId?: string;
-  productCode: string;
+  productId?: number;
+  productCode?: string;
   productName: string;
   unit: string;
   quantity: number;
@@ -301,6 +301,7 @@ export interface CreateQuotationItemDto {
   vatRate: number;
   description?: string;
   discountRate?: number;
+  discountAmount?: number;
 }
 
 export interface UpdateQuotationDto {
