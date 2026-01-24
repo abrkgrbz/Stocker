@@ -3173,6 +3173,11 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)");
 
+                    b.Property<long>("SequenceNumber")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
+
                     b.Property<int?>("ReferenceDocumentId")
                         .HasColumnType("integer");
 
@@ -3238,6 +3243,9 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId", "WarehouseId");
 
                     b.HasIndex("TenantId", "ReferenceDocumentType", "ReferenceDocumentNumber");
+
+                    b.HasIndex("TenantId", "ProductId", "WarehouseId", "SequenceNumber")
+                        .IsUnique();
 
                     b.ToTable("StockMovements", "inventory");
                 });
@@ -4283,7 +4291,7 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                     b.HasOne("Stocker.Modules.Inventory.Domain.Entities.Warehouse", "Warehouse")
                         .WithMany("Locations")
                         .HasForeignKey("WarehouseId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Stocker.Modules.Inventory.Domain.Entities.WarehouseZone", "WarehouseZone")
@@ -5057,25 +5065,6 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Stocker.Modules.Inventory.Domain.Entities.Supplier", b =>
                 {
-                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.Email", "Email", b1 =>
-                        {
-                            b1.Property<int>("SupplierId")
-                                .HasColumnType("integer");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(255)
-                                .HasColumnType("character varying(255)")
-                                .HasColumnName("Email");
-
-                            b1.HasKey("SupplierId");
-
-                            b1.ToTable("Suppliers", "inventory");
-
-                            b1.WithOwner()
-                                .HasForeignKey("SupplierId");
-                        });
-
                     b.OwnsOne("Stocker.Domain.Common.ValueObjects.Address", "Address", b1 =>
                         {
                             b1.Property<int>("SupplierId")
@@ -5123,6 +5112,25 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                                 .HasMaxLength(200)
                                 .HasColumnType("character varying(200)")
                                 .HasColumnName("Street");
+
+                            b1.HasKey("SupplierId");
+
+                            b1.ToTable("Suppliers", "inventory");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SupplierId");
+                        });
+
+                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.Email", "Email", b1 =>
+                        {
+                            b1.Property<int>("SupplierId")
+                                .HasColumnType("integer");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(255)
+                                .HasColumnType("character varying(255)")
+                                .HasColumnName("Email");
 
                             b1.HasKey("SupplierId");
 
@@ -5394,7 +5402,7 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                     b.HasOne("Stocker.Modules.Inventory.Domain.Entities.Warehouse", "Warehouse")
                         .WithMany("Zones")
                         .HasForeignKey("WarehouseId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Warehouse");

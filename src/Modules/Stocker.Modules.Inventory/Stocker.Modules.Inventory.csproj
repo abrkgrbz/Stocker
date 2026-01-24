@@ -9,6 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Stocker.IntegrationTests" />
+    <InternalsVisibleTo Include="Stocker.UnitTests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Core\Stocker.SharedKernel\Stocker.SharedKernel.csproj" />
     <ProjectReference Include="..\..\Core\Stocker.Domain\Stocker.Domain.csproj" />
     <ProjectReference Include="..\..\Core\Stocker.Application\Stocker.Application.csproj" />

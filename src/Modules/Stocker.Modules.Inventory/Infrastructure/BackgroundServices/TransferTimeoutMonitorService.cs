@@ -18,6 +18,16 @@ public class TransferTimeoutMonitorService : BackgroundService
     private static readonly TimeSpan Interval = TimeSpan.FromMinutes(30);
     private static readonly TimeSpan MaxTransitDuration = TimeSpan.FromDays(7);
 
+    /// <summary>
+    /// Last known count of overdue transfers. Exposed for health check monitoring.
+    /// </summary>
+    internal static int LastOverdueTransferCount { get; private set; }
+
+    /// <summary>
+    /// Last time the overdue check was executed successfully.
+    /// </summary>
+    internal static DateTime? LastCheckTime { get; private set; }
+
     public TransferTimeoutMonitorService(
         IServiceScopeFactory scopeFactory,
         ILogger<TransferTimeoutMonitorService> logger)
@@ -57,6 +67,9 @@ public class TransferTimeoutMonitorService : BackgroundService
         var transferRepository = scope.ServiceProvider.GetRequiredService<IStockTransferRepository>();
 
         var overdueTransfers = await transferRepository.GetOverdueInTransitAsync(MaxTransitDuration, cancellationToken);
+
+        LastOverdueTransferCount = overdueTransfers.Count;
+        LastCheckTime = DateTime.UtcNow;
 
         if (overdueTransfers.Count > 0)
         {

@@ -169,6 +169,10 @@ public static class DependencyInjection
         services.AddHostedService<TransferTimeoutMonitorService>();
         services.AddHostedService<AuditFallbackProcessorService>();
 
+        // Health checks
+        services.AddHealthChecks()
+            .AddCheck<Health.InventoryHealthCheck>("inventory_services", tags: new[] { "inventory", "background-services" });
+
         return services;
     }
 
