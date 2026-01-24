@@ -11,12 +11,17 @@ import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import type {
   CustomerSegmentDto,
   CustomerSegmentListDto,
-  CustomerSegmentStatisticsDto,
-  PagedResult,
+  CreateCustomerSegmentDto,
+  SetSegmentPricingDto,
+  SetSegmentCreditTermsDto,
+  SetSegmentServiceLevelDto,
+  SetSegmentEligibilityDto,
+  SetSegmentBenefitsDto,
+  SetSegmentVisualDto,
+  UpdateSegmentDetailsDto,
+  AssignCustomerToSegmentDto,
   CustomerSegmentQueryParams,
-  CreateCustomerSegmentCommand,
-  UpdateCustomerSegmentCommand,
-  AssignCustomersToSegmentCommand,
+  PagedResult,
 } from '../types';
 
 // =====================================
@@ -68,24 +73,24 @@ export function useActiveSegments() {
 }
 
 /**
- * Hook to fetch segment statistics
+ * Hook to fetch default segment
  */
-export function useSegmentStatistics() {
-  return useQuery<CustomerSegmentStatisticsDto>({
-    queryKey: salesKeys.segments.statistics(),
-    queryFn: () => segmentService.getSegmentStatistics(),
-    ...queryOptions.realtime(),
+export function useDefaultSegment() {
+  return useQuery<CustomerSegmentDto>({
+    queryKey: [...salesKeys.segments.all(), 'default'] as const,
+    queryFn: () => segmentService.getDefaultSegment(),
+    ...queryOptions.detail({}),
   });
 }
 
 /**
- * Hook to fetch customers in a segment
+ * Hook to fetch segments by priority
  */
-export function useSegmentCustomers(id: string) {
-  return useQuery<string[]>({
-    queryKey: salesKeys.segments.customers(id),
-    queryFn: () => segmentService.getSegmentCustomers(id),
-    ...queryOptions.list({ enabled: !!id }),
+export function useSegmentsByPriority(priority: string) {
+  return useQuery<CustomerSegmentListDto[]>({
+    queryKey: [...salesKeys.segments.all(), 'priority', priority] as const,
+    queryFn: () => segmentService.getSegmentsByPriority(priority),
+    ...queryOptions.list({ enabled: !!priority }),
   });
 }
 
@@ -100,54 +105,211 @@ export function useCreateSegment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateCustomerSegmentCommand) => segmentService.createSegment(data),
+    mutationFn: (data: CreateCustomerSegmentDto) => segmentService.createSegment(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: salesKeys.segments.lists() });
-      queryClient.invalidateQueries({ queryKey: salesKeys.segments.statistics() });
-      showSuccess('Segment created successfully');
+      showSuccess('Segment başarıyla oluşturuldu');
     },
     onError: (error) => {
-      showApiError(error, 'Failed to create segment');
+      showApiError(error, 'Segment oluşturulamadı');
     },
   });
 }
 
 /**
- * Hook to update a segment
+ * Hook to set segment pricing
  */
-export function useUpdateSegment() {
+export function useSetSegmentPricing() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateCustomerSegmentCommand }) =>
-      segmentService.updateSegment(id, data),
-    onSuccess: (updatedSegment) => {
-      queryClient.setQueryData(salesKeys.segments.detail(updatedSegment.id), updatedSegment);
+    mutationFn: ({ id, data }: { id: string; data: SetSegmentPricingDto }) =>
+      segmentService.setPricing(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: salesKeys.segments.lists() });
-      showSuccess('Segment updated successfully');
+      showSuccess('Segment fiyatlandırması güncellendi');
     },
     onError: (error) => {
-      showApiError(error, 'Failed to update segment');
+      showApiError(error, 'Segment fiyatlandırması güncellenemedi');
     },
   });
 }
 
 /**
- * Hook to delete a segment
+ * Hook to set segment credit terms
  */
-export function useDeleteSegment() {
+export function useSetSegmentCreditTerms() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => segmentService.deleteSegment(id),
-    onSuccess: (_, deletedId) => {
-      queryClient.removeQueries({ queryKey: salesKeys.segments.detail(deletedId) });
+    mutationFn: ({ id, data }: { id: string; data: SetSegmentCreditTermsDto }) =>
+      segmentService.setCreditTerms(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: salesKeys.segments.lists() });
-      queryClient.invalidateQueries({ queryKey: salesKeys.segments.statistics() });
-      showSuccess('Segment deleted successfully');
+      showSuccess('Segment kredi koşulları güncellendi');
     },
     onError: (error) => {
-      showApiError(error, 'Failed to delete segment');
+      showApiError(error, 'Segment kredi koşulları güncellenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to set segment service level
+ */
+export function useSetSegmentServiceLevel() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: SetSegmentServiceLevelDto }) =>
+      segmentService.setServiceLevel(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.lists() });
+      showSuccess('Segment hizmet seviyesi güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Segment hizmet seviyesi güncellenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to set segment eligibility
+ */
+export function useSetSegmentEligibility() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: SetSegmentEligibilityDto }) =>
+      segmentService.setEligibility(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.lists() });
+      showSuccess('Segment uygunluk kriterleri güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Segment uygunluk kriterleri güncellenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to set segment benefits
+ */
+export function useSetSegmentBenefits() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: SetSegmentBenefitsDto }) =>
+      segmentService.setBenefits(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.lists() });
+      showSuccess('Segment avantajları güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Segment avantajları güncellenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to set segment visual settings
+ */
+export function useSetSegmentVisual() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: SetSegmentVisualDto }) =>
+      segmentService.setVisual(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.lists() });
+      showSuccess('Segment görsel ayarları güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Segment görsel ayarları güncellenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to update segment details
+ */
+export function useUpdateSegmentDetails() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateSegmentDetailsDto }) =>
+      segmentService.updateDetails(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.lists() });
+      showSuccess('Segment detayları güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Segment detayları güncellenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to assign a customer to a segment
+ */
+export function useAssignCustomerToSegment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: AssignCustomerToSegmentDto }) =>
+      segmentService.assignCustomer(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.lists() });
+      showSuccess('Müşteri segmente atandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Müşteri segmente atanamadı');
+    },
+  });
+}
+
+/**
+ * Hook to remove a customer from a segment
+ */
+export function useRemoveCustomerFromSegment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, customerId }: { id: string; customerId: string }) =>
+      segmentService.removeCustomer(id, customerId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.lists() });
+      showSuccess('Müşteri segmentten çıkarıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Müşteri segmentten çıkarılamadı');
+    },
+  });
+}
+
+/**
+ * Hook to set a segment as default
+ */
+export function useSetDefaultSegment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => segmentService.setDefault(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.all() });
+      showSuccess('Varsayılan segment ayarlandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Varsayılan segment ayarlanamadı');
     },
   });
 }
@@ -163,16 +325,14 @@ export function useActivateSegment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => segmentService.activateSegment(id),
-    onSuccess: (updatedSegment) => {
-      queryClient.setQueryData(salesKeys.segments.detail(updatedSegment.id), updatedSegment);
+    mutationFn: (id: string) => segmentService.activate(id),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: salesKeys.segments.lists() });
       queryClient.invalidateQueries({ queryKey: salesKeys.segments.active() });
-      queryClient.invalidateQueries({ queryKey: salesKeys.segments.statistics() });
-      showSuccess('Segment activated');
+      showSuccess('Segment aktifleştirildi');
     },
     onError: (error) => {
-      showApiError(error, 'Failed to activate segment');
+      showApiError(error, 'Segment aktifleştirilemedi');
     },
   });
 }
@@ -184,80 +344,14 @@ export function useDeactivateSegment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => segmentService.deactivateSegment(id),
-    onSuccess: (updatedSegment) => {
-      queryClient.setQueryData(salesKeys.segments.detail(updatedSegment.id), updatedSegment);
+    mutationFn: (id: string) => segmentService.deactivate(id),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: salesKeys.segments.lists() });
       queryClient.invalidateQueries({ queryKey: salesKeys.segments.active() });
-      queryClient.invalidateQueries({ queryKey: salesKeys.segments.statistics() });
-      showSuccess('Segment deactivated');
+      showSuccess('Segment deaktif edildi');
     },
     onError: (error) => {
-      showApiError(error, 'Failed to deactivate segment');
-    },
-  });
-}
-
-/**
- * Hook to assign customers to a segment
- */
-export function useAssignCustomersToSegment() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: AssignCustomersToSegmentCommand }) =>
-      segmentService.assignCustomers(id, data),
-    onSuccess: (updatedSegment) => {
-      queryClient.setQueryData(salesKeys.segments.detail(updatedSegment.id), updatedSegment);
-      queryClient.invalidateQueries({ queryKey: salesKeys.segments.customers(updatedSegment.id) });
-      queryClient.invalidateQueries({ queryKey: salesKeys.segments.lists() });
-      queryClient.invalidateQueries({ queryKey: salesKeys.segments.statistics() });
-      showSuccess('Customers assigned to segment');
-    },
-    onError: (error) => {
-      showApiError(error, 'Failed to assign customers');
-    },
-  });
-}
-
-/**
- * Hook to remove customer from a segment
- */
-export function useRemoveCustomerFromSegment() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, customerId }: { id: string; customerId: string }) =>
-      segmentService.removeCustomer(id, customerId),
-    onSuccess: (updatedSegment) => {
-      queryClient.setQueryData(salesKeys.segments.detail(updatedSegment.id), updatedSegment);
-      queryClient.invalidateQueries({ queryKey: salesKeys.segments.customers(updatedSegment.id) });
-      queryClient.invalidateQueries({ queryKey: salesKeys.segments.lists() });
-      showSuccess('Customer removed from segment');
-    },
-    onError: (error) => {
-      showApiError(error, 'Failed to remove customer');
-    },
-  });
-}
-
-/**
- * Hook to recalculate segment membership
- */
-export function useRecalculateSegment() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => segmentService.recalculateSegment(id),
-    onSuccess: (updatedSegment) => {
-      queryClient.setQueryData(salesKeys.segments.detail(updatedSegment.id), updatedSegment);
-      queryClient.invalidateQueries({ queryKey: salesKeys.segments.customers(updatedSegment.id) });
-      queryClient.invalidateQueries({ queryKey: salesKeys.segments.lists() });
-      queryClient.invalidateQueries({ queryKey: salesKeys.segments.statistics() });
-      showSuccess('Segment recalculated');
-    },
-    onError: (error) => {
-      showApiError(error, 'Failed to recalculate segment');
+      showApiError(error, 'Segment deaktif edilemedi');
     },
   });
 }

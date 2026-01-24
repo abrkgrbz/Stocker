@@ -1,567 +1,333 @@
 'use client';
 
 /**
- * Back Orders Page
- * Manage items that were ordered but not in stock
- * Critical backorders (waiting > 7 days) shown at top
+ * Back Orders List Page
+ * Bekleyen siparisleri yonetin - Monochrome Design System
  */
 
 import React, { useState } from 'react';
-import { Modal, message } from 'antd';
+import { useRouter } from 'next/navigation';
 import {
-  Package,
-  Clock,
-  AlertTriangle,
-  Search,
-  CheckCircle,
-  Truck,
-  Calendar,
-  ArrowRight,
-  User,
-  ShoppingCart,
-} from 'lucide-react';
+  ClockIcon,
+  PlusIcon,
+  MagnifyingGlassIcon,
+  EyeIcon,
+  ExclamationTriangleIcon,
+  InboxStackIcon,
+  ArrowPathIcon,
+} from '@heroicons/react/24/outline';
+import { Table, Dropdown, Select } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+import Link from 'next/link';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
+import { useBackOrders } from '@/features/sales';
+import type { BackOrderListDto, BackOrderQueryParams } from '@/features/sales';
 
 dayjs.locale('tr');
 
-// Types
-type BackOrderStatus = 'Waiting' | 'PartiallyAvailable' | 'ReadyToShip' | 'Cancelled';
-type BackOrderPriority = 'Normal' | 'High' | 'Critical';
+const statusConfig: Record<string, { label: string; bgColor: string; textColor: string }> = {
+  Created: { label: 'Bekliyor', bgColor: 'bg-slate-100', textColor: 'text-slate-600' },
+  PartiallyFulfilled: { label: 'Kismi Karsilandi', bgColor: 'bg-slate-400', textColor: 'text-white' },
+  Fulfilled: { label: 'Karsilandi', bgColor: 'bg-slate-800', textColor: 'text-white' },
+  Cancelled: { label: 'Iptal', bgColor: 'bg-slate-900', textColor: 'text-white' },
+};
 
-interface BackOrder {
-  id: string;
-  orderNumber: string;
-  orderDate: string;
-  customerId: string;
-  customerName: string;
-  productId: string;
-  productName: string;
-  productSku: string;
-  orderedQuantity: number;
-  waitingQuantity: number;
-  availableQuantity: number;
-  estimatedRestockDate: string | null;
-  status: BackOrderStatus;
-  priority: BackOrderPriority;
-  waitingDays: number;
-  notes?: string;
-}
-
-// Mock data
-const mockBackOrders: BackOrder[] = [
-  {
-    id: '1',
-    orderNumber: 'SIP-2024-001250',
-    orderDate: '2024-12-10',
-    customerId: 'c1',
-    customerName: 'MediaMarkt Turkey',
-    productId: 'p1',
-    productName: 'PlayStation 5 Slim',
-    productSku: 'SNY-PS5-SLIM',
-    orderedQuantity: 50,
-    waitingQuantity: 50,
-    availableQuantity: 0,
-    estimatedRestockDate: '2024-12-28',
-    status: 'Waiting',
-    priority: 'Critical',
-    waitingDays: 15,
-  },
-  {
-    id: '2',
-    orderNumber: 'SIP-2024-001248',
-    orderDate: '2024-12-12',
-    customerId: 'c2',
-    customerName: 'Teknosa A.Ş.',
-    productId: 'p2',
-    productName: 'iPhone 15 Pro Max 512GB',
-    productSku: 'APL-IP15PM-512',
-    orderedQuantity: 30,
-    waitingQuantity: 20,
-    availableQuantity: 10,
-    estimatedRestockDate: '2024-12-26',
-    status: 'PartiallyAvailable',
-    priority: 'High',
-    waitingDays: 13,
-  },
-  {
-    id: '3',
-    orderNumber: 'SIP-2024-001255',
-    orderDate: '2024-12-15',
-    customerId: 'c3',
-    customerName: 'Hepsiburada',
-    productId: 'p3',
-    productName: 'MacBook Air M3 15"',
-    productSku: 'APL-MBA15-M3',
-    orderedQuantity: 25,
-    waitingQuantity: 25,
-    availableQuantity: 0,
-    estimatedRestockDate: null,
-    status: 'Waiting',
-    priority: 'Critical',
-    waitingDays: 10,
-  },
-  {
-    id: '4',
-    orderNumber: 'SIP-2024-001260',
-    orderDate: '2024-12-18',
-    customerId: 'c4',
-    customerName: 'Vatan Bilgisayar',
-    productId: 'p4',
-    productName: 'Samsung Galaxy Tab S9 Ultra',
-    productSku: 'SAM-TABS9U',
-    orderedQuantity: 15,
-    waitingQuantity: 15,
-    availableQuantity: 15,
-    estimatedRestockDate: '2024-12-25',
-    status: 'ReadyToShip',
-    priority: 'Normal',
-    waitingDays: 7,
-  },
-  {
-    id: '5',
-    orderNumber: 'SIP-2024-001262',
-    orderDate: '2024-12-19',
-    customerId: 'c5',
-    customerName: 'n11.com',
-    productId: 'p5',
-    productName: 'Sony WF-1000XM5',
-    productSku: 'SNY-WF1000XM5',
-    orderedQuantity: 100,
-    waitingQuantity: 60,
-    availableQuantity: 40,
-    estimatedRestockDate: '2024-12-30',
-    status: 'PartiallyAvailable',
-    priority: 'Normal',
-    waitingDays: 6,
-  },
-  {
-    id: '6',
-    orderNumber: 'SIP-2024-001265',
-    orderDate: '2024-12-20',
-    customerId: 'c6',
-    customerName: 'Trendyol',
-    productId: 'p6',
-    productName: 'Apple Watch Ultra 2',
-    productSku: 'APL-AWU2',
-    orderedQuantity: 40,
-    waitingQuantity: 40,
-    availableQuantity: 0,
-    estimatedRestockDate: '2025-01-05',
-    status: 'Waiting',
-    priority: 'High',
-    waitingDays: 5,
-  },
-  {
-    id: '7',
-    orderNumber: 'SIP-2024-001200',
-    orderDate: '2024-12-01',
-    customerId: 'c7',
-    customerName: 'Amazon Turkey',
-    productId: 'p7',
-    productName: 'Nintendo Switch OLED',
-    productSku: 'NIN-SWOLED',
-    orderedQuantity: 80,
-    waitingQuantity: 0,
-    availableQuantity: 0,
-    estimatedRestockDate: null,
-    status: 'Cancelled',
-    priority: 'Normal',
-    waitingDays: 24,
-    notes: 'Müşteri talebi ile iptal edildi',
-  },
-];
+const priorityConfig: Record<string, { label: string; bgColor: string; textColor: string }> = {
+  Low: { label: 'Dusuk', bgColor: 'bg-slate-100', textColor: 'text-slate-500' },
+  Normal: { label: 'Normal', bgColor: 'bg-slate-200', textColor: 'text-slate-700' },
+  High: { label: 'Yuksek', bgColor: 'bg-slate-600', textColor: 'text-white' },
+  Urgent: { label: 'Kritik', bgColor: 'bg-slate-900', textColor: 'text-white' },
+};
 
 export default function BackOrdersPage() {
-  const [backOrders, setBackOrders] = useState<BackOrder[]>(mockBackOrders);
+  const router = useRouter();
+  const [params, setParams] = useState<BackOrderQueryParams>({
+    page: 1,
+    pageSize: 10,
+  });
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<BackOrderStatus | 'All'>('All');
-  const [priorityFilter, setPriorityFilter] = useState<BackOrderPriority | 'All'>('All');
-  const [showCriticalOnly, setShowCriticalOnly] = useState(false);
 
-  const getStatusConfig = (status: BackOrderStatus) => {
-    const configs = {
-      Waiting: {
-        label: 'Stok Bekleniyor',
-        bgColor: 'bg-slate-200',
-        textColor: 'text-slate-700',
-        borderColor: 'border-slate-300',
-      },
-      PartiallyAvailable: {
-        label: 'Kısmen Mevcut',
-        bgColor: 'bg-slate-300',
-        textColor: 'text-slate-800',
-        borderColor: 'border-slate-400',
-      },
-      ReadyToShip: {
-        label: 'Gönderime Hazır',
-        bgColor: 'bg-slate-700',
-        textColor: 'text-white',
-        borderColor: 'border-slate-600',
-      },
-      Cancelled: {
-        label: 'İptal Edildi',
-        bgColor: 'bg-slate-100',
-        textColor: 'text-slate-500',
-        borderColor: 'border-slate-200',
-      },
-    };
-    return configs[status];
-  };
+  const { data, isLoading } = useBackOrders(params);
+  const backOrders = data?.items ?? [];
+  const totalCount = data?.totalCount ?? 0;
 
-  const getPriorityConfig = (priority: BackOrderPriority) => {
-    const configs = {
-      Normal: { label: 'Normal', color: 'text-slate-600', bgColor: 'bg-slate-100' },
-      High: { label: 'Yüksek', color: 'text-slate-700', bgColor: 'bg-slate-200' },
-      Critical: { label: 'Kritik', color: 'text-white', bgColor: 'bg-slate-900' },
-    };
-    return configs[priority];
-  };
+  const waitingCount = backOrders.filter((b) => b.status === 'Created').length;
+  const partialCount = backOrders.filter((b) => b.status === 'PartiallyFulfilled').length;
+  const criticalCount = backOrders.filter((b) => {
+    const daysSinceOrder = dayjs().diff(dayjs(b.backOrderDate), 'day');
+    return daysSinceOrder > 7 && b.status === 'Created';
+  }).length;
 
-  const handleAllocateStock = (id: string) => {
-    const backOrder = backOrders.find((bo) => bo.id === id);
-    if (!backOrder) return;
-
-    if (backOrder.availableQuantity >= backOrder.waitingQuantity) {
-      // Full allocation
-      setBackOrders((prev) =>
-        prev.map((bo) =>
-          bo.id === id
-            ? { ...bo, status: 'ReadyToShip' as BackOrderStatus, waitingQuantity: 0 }
-            : bo
+  const columns: ColumnsType<BackOrderListDto> = [
+    {
+      title: 'Siparis No',
+      dataIndex: 'backOrderNumber',
+      key: 'backOrderNumber',
+      width: 150,
+      render: (number: string) => (
+        <span className="font-mono text-sm font-medium text-slate-900">{number}</span>
+      ),
+    },
+    {
+      title: 'Musteri',
+      dataIndex: 'customerName',
+      key: 'customerName',
+      render: (name: string | undefined, record) => (
+        <div>
+          <div className="text-sm font-medium text-slate-900">{name || '-'}</div>
+          <div className="text-xs text-slate-500 font-mono">{record.salesOrderNumber}</div>
+        </div>
+      ),
+    },
+    {
+      title: 'Tahmini Tedarik',
+      dataIndex: 'estimatedRestockDate',
+      key: 'estimatedRestockDate',
+      width: 130,
+      render: (date: string | undefined) => (
+        date ? (
+          <span className="text-sm text-slate-600">{dayjs(date).format('DD.MM.YYYY')}</span>
+        ) : (
+          <span className="text-sm text-slate-400">Belirsiz</span>
         )
-      );
-      message.success('Stok tahsis edildi, sipariş gönderime hazır!');
-    } else if (backOrder.availableQuantity > 0) {
-      // Partial allocation
-      Modal.confirm({
-        title: 'Kısmi Stok Tahsisi',
-        content: `Sadece ${backOrder.availableQuantity} adet mevcut. ${backOrder.waitingQuantity} adet bekleniyor. Mevcut stoku tahsis etmek istiyor musunuz?`,
-        okText: 'Tahsis Et',
-        cancelText: 'Vazgeç',
-        onOk: () => {
-          setBackOrders((prev) =>
-            prev.map((bo) =>
-              bo.id === id
-                ? {
-                    ...bo,
-                    status: 'PartiallyAvailable' as BackOrderStatus,
-                    waitingQuantity: bo.waitingQuantity - bo.availableQuantity,
-                    availableQuantity: 0,
-                  }
-                : bo
-            )
-          );
-          message.success('Mevcut stok tahsis edildi');
-        },
-      });
-    } else {
-      message.warning('Tahsis edilecek stok bulunmuyor');
-    }
-  };
-
-  // Filter and sort
-  const filteredBackOrders = backOrders.filter((bo) => {
-    const matchesSearch =
-      bo.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      bo.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      bo.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      bo.productSku.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus = statusFilter === 'All' || bo.status === statusFilter;
-    const matchesPriority = priorityFilter === 'All' || bo.priority === priorityFilter;
-    const matchesCritical = !showCriticalOnly || bo.waitingDays >= 7;
-
-    return matchesSearch && matchesStatus && matchesPriority && matchesCritical;
-  });
-
-  // Sort: Critical first (waiting > 7 days), then by waiting days
-  const sortedBackOrders = [...filteredBackOrders].sort((a, b) => {
-    if (a.status === 'Cancelled' && b.status !== 'Cancelled') return 1;
-    if (a.status !== 'Cancelled' && b.status === 'Cancelled') return -1;
-    if (a.waitingDays >= 7 && b.waitingDays < 7) return -1;
-    if (a.waitingDays < 7 && b.waitingDays >= 7) return 1;
-    return b.waitingDays - a.waitingDays;
-  });
-
-  const criticalCount = backOrders.filter(
-    (bo) => bo.waitingDays >= 7 && bo.status !== 'Cancelled'
-  ).length;
-  const waitingCount = backOrders.filter((bo) => bo.status === 'Waiting').length;
-  const readyCount = backOrders.filter((bo) => bo.status === 'ReadyToShip').length;
+      ),
+    },
+    {
+      title: 'Kalem',
+      dataIndex: 'totalItemCount',
+      key: 'totalItemCount',
+      width: 70,
+      align: 'center',
+      render: (count: number) => (
+        <span className="text-sm text-slate-600">{count}</span>
+      ),
+    },
+    {
+      title: 'Bekleyen Miktar',
+      dataIndex: 'totalPendingQuantity',
+      key: 'totalPendingQuantity',
+      width: 130,
+      align: 'right',
+      render: (qty: number) => (
+        <span className="text-sm font-semibold text-slate-900">{qty}</span>
+      ),
+    },
+    {
+      title: 'Oncelik',
+      dataIndex: 'priority',
+      key: 'priority',
+      width: 100,
+      render: (priority: string) => {
+        const config = priorityConfig[priority] || priorityConfig.Normal;
+        return (
+          <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded ${config.bgColor} ${config.textColor}`}>
+            {config.label}
+          </span>
+        );
+      },
+    },
+    {
+      title: 'Durum',
+      dataIndex: 'status',
+      key: 'status',
+      width: 140,
+      render: (status: string) => {
+        const config = statusConfig[status] || statusConfig.Created;
+        return (
+          <span className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded ${config.bgColor} ${config.textColor}`}>
+            {config.label}
+          </span>
+        );
+      },
+    },
+    {
+      title: 'Bekleme',
+      key: 'waitingDays',
+      width: 90,
+      align: 'center',
+      render: (_, record) => {
+        const days = dayjs().diff(dayjs(record.backOrderDate), 'day');
+        return (
+          <span className={`text-sm font-medium ${days > 7 ? 'text-slate-900' : 'text-slate-500'}`}>
+            {days} gun
+          </span>
+        );
+      },
+    },
+    {
+      title: 'Islemler',
+      key: 'actions',
+      width: 80,
+      align: 'center',
+      render: (_, record) => (
+        <Dropdown
+          menu={{
+            items: [
+              {
+                key: 'view',
+                label: 'Goruntule',
+                icon: <EyeIcon className="w-4 h-4" />,
+                onClick: () => router.push(`/sales/backorders/${record.id}`),
+              },
+            ],
+          }}
+          trigger={['click']}
+        >
+          <button className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+            </svg>
+          </button>
+        </Dropdown>
+      ),
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-slate-50 p-8">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-8">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center flex-shrink-0">
-            <Clock className="w-6 h-6 text-white" />
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+              <ClockIcon className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Bekleyen Siparisler</h1>
+              <p className="text-sm text-slate-500">Stokta olmayan siparisleri takip edin</p>
+            </div>
           </div>
-          <div>
+          <Link
+            href="/sales/backorders/new"
+            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Yeni Kayit
+          </Link>
+        </div>
+
+        {/* Critical Alert */}
+        {criticalCount > 0 && (
+          <div className="bg-slate-900 text-white rounded-xl p-4 mb-6 flex items-center gap-3">
+            <ExclamationTriangleIcon className="w-5 h-5 flex-shrink-0" />
+            <p className="text-sm font-medium">
+              {criticalCount} kritik bekleyen siparis var! (7 gunden fazla bekliyor)
+            </p>
+          </div>
+        )}
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-slate-900">Bekleyen Siparişler</h1>
-              <span className="px-2.5 py-0.5 text-sm font-medium bg-slate-200 text-slate-700 rounded-full">
-                {backOrders.filter((bo) => bo.status !== 'Cancelled').length}
-              </span>
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <InboxStackIcon className="w-5 h-5 text-slate-600" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-500">Toplam</p>
+                <p className="text-xl font-bold text-slate-900">{totalCount}</p>
+              </div>
             </div>
-            <p className="text-sm text-slate-500">Stokta olmayan ve tedarik beklenen sipariş kalemleri</p>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ClockIcon className="w-5 h-5 text-slate-600" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-500">Bekliyor</p>
+                <p className="text-xl font-bold text-slate-900">{waitingCount}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ArrowPathIcon className="w-5 h-5 text-slate-600" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-500">Kismi Hazir</p>
+                <p className="text-xl font-bold text-slate-900">{partialCount}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ExclamationTriangleIcon className="w-5 h-5 text-slate-600" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-500">Kritik (&gt;7 gun)</p>
+                <p className="text-xl font-bold text-slate-900">{criticalCount}</p>
+              </div>
+            </div>
           </div>
         </div>
-        <button
-          onClick={() => setShowCriticalOnly(!showCriticalOnly)}
-          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            showCriticalOnly
-              ? 'bg-slate-900 text-white'
-              : 'bg-white border border-slate-300 text-slate-600 hover:border-slate-400'
-          }`}
-        >
-          <AlertTriangle className="w-4 h-4" />
-          {showCriticalOnly ? 'Kritik Gösteriliyor' : 'Sadece Kritik'}
-        </button>
-      </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white border border-slate-200 rounded-xl p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-              <Clock className="w-5 h-5 text-slate-600" />
+        {/* Filters */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="relative flex-1 min-w-[200px] max-w-md">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Siparis no veya musteri ara..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+              />
             </div>
-            <div>
-              <p className="text-sm text-slate-500">Stok Bekleniyor</p>
-              <p className="text-xl font-bold text-slate-900">{waitingCount}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5 text-slate-600" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500">Kritik ({'>'}7 gün)</p>
-              <p className="text-xl font-bold text-slate-900">{criticalCount}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-              <Truck className="w-5 h-5 text-slate-600" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500">Gönderime Hazır</p>
-              <p className="text-xl font-bold text-slate-900">{readyCount}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-              <Package className="w-5 h-5 text-slate-600" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500">Toplam Bekleyen Adet</p>
-              <p className="text-xl font-bold text-slate-900">
-                {backOrders
-                  .filter((bo) => bo.status !== 'Cancelled')
-                  .reduce((sum, bo) => sum + bo.waitingQuantity, 0)}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="relative flex-1 min-w-[200px] max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Sipariş no, müşteri veya ürün ara..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+            <Select
+              placeholder="Durum"
+              allowClear
+              className="min-w-[150px]"
+              onChange={(value) => setParams((prev) => ({ ...prev, status: value, page: 1 }))}
+              options={[
+                { value: 'Created', label: 'Bekliyor' },
+                { value: 'PartiallyFulfilled', label: 'Kismi Karsilandi' },
+                { value: 'Fulfilled', label: 'Karsilandi' },
+                { value: 'Cancelled', label: 'Iptal' },
+              ]}
+            />
+            <Select
+              placeholder="Oncelik"
+              allowClear
+              className="min-w-[130px]"
+              onChange={(value) => setParams((prev) => ({ ...prev, priority: value, page: 1 }))}
+              options={[
+                { value: 'Low', label: 'Dusuk' },
+                { value: 'Normal', label: 'Normal' },
+                { value: 'High', label: 'Yuksek' },
+                { value: 'Urgent', label: 'Kritik' },
+              ]}
             />
           </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as BackOrderStatus | 'All')}
-            className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent bg-white"
-          >
-            <option value="All">Tüm Durumlar</option>
-            <option value="Waiting">Stok Bekleniyor</option>
-            <option value="PartiallyAvailable">Kısmen Mevcut</option>
-            <option value="ReadyToShip">Gönderime Hazır</option>
-            <option value="Cancelled">İptal Edildi</option>
-          </select>
-          <select
-            value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value as BackOrderPriority | 'All')}
-            className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent bg-white"
-          >
-            <option value="All">Tüm Öncelikler</option>
-            <option value="Critical">Kritik</option>
-            <option value="High">Yüksek</option>
-            <option value="Normal">Normal</option>
-          </select>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <Table
+            className="enterprise-table"
+            columns={columns}
+            dataSource={backOrders}
+            rowKey="id"
+            loading={isLoading}
+            pagination={{
+              current: params.page,
+              pageSize: params.pageSize,
+              total: totalCount,
+              showSizeChanger: true,
+              showTotal: (total) => `Toplam ${total} kayit`,
+              onChange: (page, pageSize) => setParams((prev) => ({ ...prev, page, pageSize })),
+            }}
+            onRow={(record) => ({
+              onClick: () => router.push(`/sales/backorders/${record.id}`),
+              className: 'cursor-pointer hover:bg-slate-50',
+            })}
+          />
         </div>
       </div>
-
-      {/* Back Orders List */}
-      {sortedBackOrders.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-xl p-12">
-          <div className="flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-              <Package className="w-8 h-8 text-slate-400" />
-            </div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">Bekleyen sipariş bulunamadı</h3>
-            <p className="text-sm text-slate-500">Arama kriterlerinize uygun bekleyen sipariş yok</p>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {sortedBackOrders.map((backOrder) => {
-            const statusConfig = getStatusConfig(backOrder.status);
-            const priorityConfig = getPriorityConfig(backOrder.priority);
-            const isCritical = backOrder.waitingDays >= 7 && backOrder.status !== 'Cancelled';
-
-            return (
-              <div
-                key={backOrder.id}
-                className={`
-                  bg-white border rounded-xl overflow-hidden transition-all
-                  ${isCritical ? 'border-slate-400 shadow-sm' : 'border-slate-200'}
-                  ${backOrder.status === 'Cancelled' ? 'opacity-60' : ''}
-                `}
-              >
-                {/* Critical Banner */}
-                {isCritical && (
-                  <div className="bg-slate-900 text-white px-4 py-1.5 text-xs font-medium flex items-center gap-2">
-                    <AlertTriangle className="w-3.5 h-3.5" />
-                    Kritik: {backOrder.waitingDays} gündür bekleniyor
-                  </div>
-                )}
-
-                <div className="p-5">
-                  <div className="flex items-start justify-between gap-4">
-                    {/* Left: Order & Product Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="flex items-center gap-2">
-                          <ShoppingCart className="w-4 h-4 text-slate-400" />
-                          <span className="font-semibold text-slate-900">
-                            {backOrder.orderNumber}
-                          </span>
-                        </div>
-                        <span
-                          className={`px-2 py-0.5 rounded text-xs font-medium ${priorityConfig.bgColor} ${priorityConfig.color}`}
-                        >
-                          {priorityConfig.label}
-                        </span>
-                        <span
-                          className={`px-2 py-0.5 rounded text-xs font-medium ${statusConfig.bgColor} ${statusConfig.textColor}`}
-                        >
-                          {statusConfig.label}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2 text-sm text-slate-600 mb-3">
-                        <User className="w-4 h-4 text-slate-400" />
-                        <span className="font-medium">{backOrder.customerName}</span>
-                        <span className="text-slate-300">•</span>
-                        <span className="text-slate-500">
-                          {dayjs(backOrder.orderDate).format('DD MMM YYYY')}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                        <div className="w-10 h-10 rounded bg-white border border-slate-200 flex items-center justify-center">
-                          <Package className="w-5 h-5 text-slate-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-slate-900 truncate">
-                            {backOrder.productName}
-                          </div>
-                          <div className="text-xs text-slate-500">{backOrder.productSku}</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-slate-900">
-                            {backOrder.waitingQuantity} adet
-                          </div>
-                          <div className="text-xs text-slate-500">bekleniyor</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Right: Actions & Info */}
-                    <div className="flex flex-col items-end gap-3 shrink-0">
-                      {/* Restock Date */}
-                      <div className="text-right">
-                        <div className="text-xs text-slate-500 mb-1">Tahmini Stok Tarihi</div>
-                        {backOrder.estimatedRestockDate ? (
-                          <div className="flex items-center gap-1.5 text-sm font-medium text-slate-700">
-                            <Calendar className="w-4 h-4 text-slate-400" />
-                            {dayjs(backOrder.estimatedRestockDate).format('DD MMM YYYY')}
-                          </div>
-                        ) : (
-                          <div className="text-sm text-slate-400 italic">Belirsiz</div>
-                        )}
-                      </div>
-
-                      {/* Available Stock */}
-                      {backOrder.status !== 'Cancelled' && backOrder.availableQuantity > 0 && (
-                        <div className="px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-center">
-                          <div className="text-xs text-slate-600">Mevcut Stok</div>
-                          <div className="text-lg font-bold text-slate-900">
-                            {backOrder.availableQuantity}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Action Button */}
-                      {backOrder.status !== 'Cancelled' && backOrder.status !== 'ReadyToShip' && (
-                        <button
-                          onClick={() => handleAllocateStock(backOrder.id)}
-                          disabled={backOrder.availableQuantity === 0}
-                          className={`
-                            flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all
-                            ${
-                              backOrder.availableQuantity > 0
-                                ? 'bg-slate-900 text-white hover:bg-slate-800 shadow-sm'
-                                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                            }
-                          `}
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                          Stok Tahsis Et
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
-                      )}
-
-                      {backOrder.status === 'ReadyToShip' && (
-                        <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-700 text-white rounded-lg text-sm font-medium">
-                          <Truck className="w-4 h-4" />
-                          Gönderime Hazır
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Notes */}
-                  {backOrder.notes && (
-                    <div className="mt-3 pt-3 border-t border-slate-100 text-sm text-slate-500 italic">
-                      {backOrder.notes}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }

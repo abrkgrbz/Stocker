@@ -1,143 +1,73 @@
-// =====================================
-// SALES TARGET SERVICE
-// Feature-Based Architecture
-// =====================================
-
 import { ApiService } from '@/lib/api/api-service';
 import type {
   SalesTargetDto,
   SalesTargetListDto,
-  SalesTargetStatisticsDto,
+  CreateSalesTargetDto,
+  AssignSalesTargetDto,
+  AddSalesTargetPeriodDto,
+  AddSalesTargetProductDto,
+  RecordAchievementDto,
   SalesTargetQueryParams,
-  CreateSalesTargetCommand,
-  UpdateSalesTargetCommand,
-  UpdateTargetProgressCommand,
-  LeaderboardEntryDto,
   PagedResult,
 } from '../types';
 
-const BASE_URL = '/sales/targets';
+const BASE_URL = '/sales/SalesTargets';
 
 export const targetService = {
-  // =====================================
-  // QUERY OPERATIONS
-  // =====================================
-
-  /**
-   * Get paginated sales targets
-   */
   async getTargets(params?: SalesTargetQueryParams): Promise<PagedResult<SalesTargetListDto>> {
     return ApiService.get<PagedResult<SalesTargetListDto>>(BASE_URL, { params });
   },
-
-  /**
-   * Get a single target by ID
-   */
   async getTarget(id: string): Promise<SalesTargetDto> {
     return ApiService.get<SalesTargetDto>(`${BASE_URL}/${id}`);
   },
-
-  /**
-   * Get targets by sales rep
-   */
-  async getTargetsBySalesRep(salesRepId: string): Promise<SalesTargetListDto[]> {
-    return ApiService.get<SalesTargetListDto[]>(`${BASE_URL}/sales-rep/${salesRepId}`);
+  async getTargetByCode(code: string): Promise<SalesTargetDto> {
+    return ApiService.get<SalesTargetDto>(`${BASE_URL}/by-code/${code}`);
   },
-
-  /**
-   * Get targets by team
-   */
+  async getTargetsByYear(year: number): Promise<SalesTargetListDto[]> {
+    return ApiService.get<SalesTargetListDto[]>(`${BASE_URL}/by-year/${year}`);
+  },
+  async getTargetsByRepresentative(salesRepId: string): Promise<SalesTargetListDto[]> {
+    return ApiService.get<SalesTargetListDto[]>(`${BASE_URL}/by-representative/${salesRepId}`);
+  },
   async getTargetsByTeam(teamId: string): Promise<SalesTargetListDto[]> {
-    return ApiService.get<SalesTargetListDto[]>(`${BASE_URL}/team/${teamId}`);
+    return ApiService.get<SalesTargetListDto[]>(`${BASE_URL}/by-team/${teamId}`);
   },
-
-  /**
-   * Get current period targets
-   */
-  async getCurrentTargets(): Promise<SalesTargetListDto[]> {
-    return ApiService.get<SalesTargetListDto[]>(`${BASE_URL}/current`);
+  async getActiveTargets(): Promise<SalesTargetListDto[]> {
+    return ApiService.get<SalesTargetListDto[]>(`${BASE_URL}/active`);
   },
-
-  /**
-   * Get target statistics
-   */
-  async getTargetStatistics(): Promise<SalesTargetStatisticsDto> {
-    return ApiService.get<SalesTargetStatisticsDto>(`${BASE_URL}/statistics`);
-  },
-
-  /**
-   * Get leaderboard
-   */
-  async getLeaderboard(period?: string, limit?: number): Promise<LeaderboardEntryDto[]> {
-    return ApiService.get<LeaderboardEntryDto[]>(`${BASE_URL}/leaderboard`, {
-      params: { period, limit },
-    });
-  },
-
-  /**
-   * Get my targets (current user)
-   */
-  async getMyTargets(): Promise<SalesTargetListDto[]> {
-    return ApiService.get<SalesTargetListDto[]>(`${BASE_URL}/my`);
-  },
-
-  // =====================================
-  // MUTATION OPERATIONS
-  // =====================================
-
-  /**
-   * Create a new target
-   */
-  async createTarget(data: CreateSalesTargetCommand): Promise<SalesTargetDto> {
+  async createTarget(data: CreateSalesTargetDto): Promise<SalesTargetDto> {
     return ApiService.post<SalesTargetDto>(BASE_URL, data);
   },
-
-  /**
-   * Update a target
-   */
-  async updateTarget(id: string, data: UpdateSalesTargetCommand): Promise<SalesTargetDto> {
-    return ApiService.put<SalesTargetDto>(`${BASE_URL}/${id}`, data);
+  async assignToRepresentative(id: string, data: AssignSalesTargetDto): Promise<void> {
+    await ApiService.post(`${BASE_URL}/${id}/assign-representative`, data);
   },
-
-  /**
-   * Delete a target
-   */
-  async deleteTarget(id: string): Promise<void> {
-    await ApiService.delete(`${BASE_URL}/${id}`);
+  async assignToTeam(id: string, data: AssignSalesTargetDto): Promise<void> {
+    await ApiService.post(`${BASE_URL}/${id}/assign-team`, data);
   },
-
-  /**
-   * Update target progress
-   */
-  async updateProgress(id: string, data: UpdateTargetProgressCommand): Promise<SalesTargetDto> {
-    return ApiService.post<SalesTargetDto>(`${BASE_URL}/${id}/progress`, data);
+  async assignToTerritory(id: string, data: AssignSalesTargetDto): Promise<void> {
+    await ApiService.post(`${BASE_URL}/${id}/assign-territory`, data);
   },
-
-  /**
-   * Activate a target
-   */
-  async activateTarget(id: string): Promise<SalesTargetDto> {
-    return ApiService.post<SalesTargetDto>(`${BASE_URL}/${id}/activate`);
+  async addPeriod(id: string, data: AddSalesTargetPeriodDto): Promise<SalesTargetDto> {
+    return ApiService.post<SalesTargetDto>(`${BASE_URL}/${id}/periods`, data);
   },
-
-  /**
-   * Deactivate a target
-   */
-  async deactivateTarget(id: string): Promise<SalesTargetDto> {
-    return ApiService.post<SalesTargetDto>(`${BASE_URL}/${id}/deactivate`);
+  async generatePeriods(id: string): Promise<SalesTargetDto> {
+    return ApiService.post<SalesTargetDto>(`${BASE_URL}/${id}/generate-periods`);
   },
-
-  /**
-   * Recalculate target progress from orders
-   */
-  async recalculateProgress(id: string): Promise<SalesTargetDto> {
-    return ApiService.post<SalesTargetDto>(`${BASE_URL}/${id}/recalculate`);
+  async addProduct(id: string, data: AddSalesTargetProductDto): Promise<SalesTargetDto> {
+    return ApiService.post<SalesTargetDto>(`${BASE_URL}/${id}/products`, data);
   },
-
-  /**
-   * Bulk create targets for team
-   */
-  async bulkCreateForTeam(teamId: string, data: Omit<CreateSalesTargetCommand, 'salesRepId'>[]): Promise<SalesTargetDto[]> {
-    return ApiService.post<SalesTargetDto[]>(`${BASE_URL}/bulk/team/${teamId}`, data);
+  async recordAchievement(id: string, data: RecordAchievementDto): Promise<SalesTargetDto> {
+    return ApiService.post<SalesTargetDto>(`${BASE_URL}/${id}/achievements`, data);
+  },
+  async activate(id: string): Promise<void> {
+    await ApiService.post(`${BASE_URL}/${id}/activate`);
+  },
+  async close(id: string): Promise<void> {
+    await ApiService.post(`${BASE_URL}/${id}/close`);
+  },
+  async cancel(id: string, reason: string): Promise<void> {
+    await ApiService.post(`${BASE_URL}/${id}/cancel`, JSON.stringify(reason), {
+      headers: { 'Content-Type': 'application/json' },
+    });
   },
 };

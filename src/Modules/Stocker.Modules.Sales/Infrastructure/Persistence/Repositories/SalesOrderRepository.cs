@@ -45,8 +45,16 @@ public class SalesOrderRepository : BaseRepository<SalesOrder>, ISalesOrderRepos
             .ToListAsync(cancellationToken);
     }
 
+    // Advisory lock key - sipariş numarası üretiminde race condition önleme
+    private const long OrderNumberLockKey = 7_294_815_361; // Sabit hash - "SalesOrderNumber"
+
     public async Task<string> GenerateOrderNumberAsync(CancellationToken cancellationToken = default)
     {
+        // PostgreSQL transaction-scoped advisory lock
+        // Aynı anda yalnızca bir sipariş numarası üretilebilir, transaction commit/rollback ile serbest bırakılır
+        await _context.Database.ExecuteSqlRawAsync(
+            "SELECT pg_advisory_xact_lock({0})", OrderNumberLockKey, cancellationToken);
+
         var today = DateTime.UtcNow;
         var prefix = $"SO-{today:yyyyMMdd}-";
 

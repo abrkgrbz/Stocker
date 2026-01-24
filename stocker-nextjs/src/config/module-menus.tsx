@@ -371,6 +371,16 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
         ],
       },
       {
+        key: 'sales-opportunities',
+        icon: <RocketLaunchIcon className="w-4 h-4" />,
+        label: 'Fırsatlar',
+        permission: 'Sales.Opportunities:View',
+        children: [
+          { key: '/sales/opportunities', icon: <RocketLaunchIcon className="w-4 h-4" />, label: 'Satış Fırsatları', permission: 'Sales.Opportunities:View' },
+          { key: '/sales/pipelines', icon: <FunnelIcon className="w-4 h-4" />, label: 'Satış Hatları', permission: 'Sales.Pipelines:View' },
+        ],
+      },
+      {
         key: 'sales-logistics',
         icon: <ArrowsRightLeftIcon className="w-4 h-4" />,
         label: 'Lojistik',

@@ -57,6 +57,38 @@ public class SalesDbContext : DbContext
     public DbSet<Warranty> Warranties { get; set; } = null!;
     public DbSet<WarrantyClaim> WarrantyClaims { get; set; } = null!;
 
+    // Price Lists
+    public DbSet<PriceList> PriceLists { get; set; } = null!;
+    public DbSet<PriceListItem> PriceListItems { get; set; } = null!;
+    public DbSet<PriceListCustomer> PriceListCustomers { get; set; } = null!;
+
+    // Delivery Notes
+    public DbSet<DeliveryNote> DeliveryNotes { get; set; } = null!;
+    public DbSet<DeliveryNoteItem> DeliveryNoteItems { get; set; } = null!;
+
+    // Back Orders
+    public DbSet<BackOrder> BackOrders { get; set; } = null!;
+    public DbSet<BackOrderItem> BackOrderItems { get; set; } = null!;
+
+    // Inventory Reservations
+    public DbSet<InventoryReservation> InventoryReservations { get; set; } = null!;
+
+    // Opportunities
+    public DbSet<Opportunity> Opportunities { get; set; } = null!;
+
+    // Sales Pipelines
+    public DbSet<SalesPipeline> SalesPipelines { get; set; } = null!;
+    public DbSet<PipelineStage> PipelineStages { get; set; } = null!;
+
+    // Sales Targets
+    public DbSet<SalesTarget> SalesTargets { get; set; } = null!;
+    public DbSet<SalesTargetPeriod> SalesTargetPeriods { get; set; } = null!;
+    public DbSet<SalesTargetProduct> SalesTargetProducts { get; set; } = null!;
+    public DbSet<SalesTargetAchievement> SalesTargetAchievements { get; set; } = null!;
+
+    // Customer Segments
+    public DbSet<CustomerSegment> CustomerSegments { get; set; } = null!;
+
     public SalesDbContext(
         DbContextOptions<SalesDbContext> options,
         ITenantService tenantService)
@@ -108,6 +140,32 @@ public class SalesDbContext : DbContext
             // Warranties
             modelBuilder.Entity<Warranty>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             modelBuilder.Entity<WarrantyClaim>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Price Lists
+            modelBuilder.Entity<PriceList>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Delivery Notes
+            modelBuilder.Entity<DeliveryNote>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Back Orders
+            modelBuilder.Entity<BackOrder>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<BackOrderItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Inventory Reservations
+            modelBuilder.Entity<InventoryReservation>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Opportunities
+            modelBuilder.Entity<Opportunity>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Sales Pipelines
+            modelBuilder.Entity<SalesPipeline>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<PipelineStage>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Sales Targets
+            modelBuilder.Entity<SalesTarget>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Customer Segments
+            modelBuilder.Entity<CustomerSegment>().HasQueryFilter(e => e.TenantId == tenantId.Value);
         }
     }
 

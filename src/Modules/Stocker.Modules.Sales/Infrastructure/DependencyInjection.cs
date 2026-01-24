@@ -2,6 +2,7 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Stocker.Modules.Sales.Application.Services;
 using Stocker.Modules.Sales.Domain.Repositories;
 using Stocker.Modules.Sales.Infrastructure.EventConsumers;
 using Stocker.Modules.Sales.Infrastructure.Persistence;
@@ -72,6 +73,34 @@ public static class DependencyInjection
         // Phase 3: Contract & Territory Repositories
         services.AddScoped<ICustomerContractRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().CustomerContracts);
         services.AddScoped<ISalesTerritoryRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().SalesTerritories);
+        services.AddScoped<IShipmentRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().Shipments);
+
+        // Phase 4: Quotation & Pricing Repositories
+        services.AddScoped<IQuotationRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().Quotations);
+        services.AddScoped<IDiscountRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().Discounts);
+        services.AddScoped<IPromotionRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().Promotions);
+        services.AddScoped<ICommissionRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().Commissions);
+        services.AddScoped<IPriceListRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().PriceLists);
+        services.AddScoped<IDeliveryNoteRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().DeliveryNotes);
+        services.AddScoped<IBackOrderRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().BackOrders);
+        services.AddScoped<IInventoryReservationRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().InventoryReservations);
+        services.AddScoped<IOpportunityRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().Opportunities);
+        services.AddScoped<ISalesPipelineRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().SalesPipelines);
+        services.AddScoped<ISalesTargetRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().SalesTargets);
+        services.AddScoped<ICustomerSegmentRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().CustomerSegments);
+
+        // Application Services
+        services.AddScoped<IPriceValidationService, PriceValidationService>();
+        services.AddScoped<IResourceAuthorizationService, ResourceAuthorizationService>();
+
+        // Phase 5: Returns & Credits Repositories
+        services.AddScoped<ISalesReturnRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().SalesReturns);
+        services.AddScoped<IAdvancePaymentRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().AdvancePayments);
+        services.AddScoped<ICreditNoteRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().CreditNotes);
+
+        // Phase 6: Service & Warranty Repositories
+        services.AddScoped<IServiceOrderRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().ServiceOrders);
+        services.AddScoped<IWarrantyRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().Warranties);
 
         return services;
     }

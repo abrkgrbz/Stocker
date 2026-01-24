@@ -1,8 +1,10 @@
 using MassTransit;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.Modules.Sales.Application.Features.SalesOrders.Commands;
+using Stocker.Modules.Sales.Application.Services;
 using Stocker.Modules.Sales.Domain.Entities;
 using Stocker.Modules.Sales.Domain.ValueObjects;
 using Stocker.Modules.Sales.Interfaces;
@@ -27,17 +29,20 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
 {
     private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IInventoryService _inventoryService;
+    private readonly IPriceValidationService _priceValidationService;
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly ILogger<CreateSalesOrderHandler> _logger;
 
     public CreateSalesOrderHandler(
         ISalesUnitOfWork unitOfWork,
         IInventoryService inventoryService,
+        IPriceValidationService priceValidationService,
         IPublishEndpoint publishEndpoint,
         ILogger<CreateSalesOrderHandler> logger)
     {
         _unitOfWork = unitOfWork;
         _inventoryService = inventoryService;
+        _priceValidationService = priceValidationService;
         _publishEndpoint = publishEndpoint;
         _logger = logger;
     }
@@ -45,6 +50,7 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
     public async Task<Result<SalesOrderDto>> Handle(CreateSalesOrderCommand request, CancellationToken cancellationToken)
     {
         var tenantId = _unitOfWork.TenantId;
+        const int maxRetries = 3;
 
         _logger.LogInformation("Creating sales order for tenant {TenantId}, customer {CustomerId}",
             tenantId, request.CustomerId);
@@ -176,235 +182,339 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // STEP 5: Create Sales Order
+        // STEP 4b: Validate Prices Against System Pricing
         // ═══════════════════════════════════════════════════════════════════════════
-        var orderNumber = await _unitOfWork.SalesOrders.GenerateOrderNumberAsync(cancellationToken);
+        var validatedPrices = new Dictionary<Guid, decimal>();
 
-        var orderResult = SalesOrder.Create(
-            tenantId,
-            orderNumber,
-            request.OrderDate,
-            request.CustomerId,
-            request.CustomerName,
-            request.CustomerEmail,
-            request.Currency);
-
-        if (!orderResult.IsSuccess)
-            return Result<SalesOrderDto>.Failure(orderResult.Error!);
-
-        var order = orderResult.Value!;
-
-        // Set additional properties
-        if (request.ShippingAddress != null || request.BillingAddress != null)
-            order.SetAddresses(request.ShippingAddress, request.BillingAddress);
-
-        if (!string.IsNullOrEmpty(request.Notes))
-            order.SetNotes(request.Notes);
-
-        if (request.SalesPersonId.HasValue)
-            order.SetSalesPerson(request.SalesPersonId, request.SalesPersonName);
-
-        // Create and set address snapshots
-        if (request.ShippingAddressSnapshot != null)
+        foreach (var item in request.Items)
         {
-            var shippingSnapshot = ShippingAddressSnapshot.Create(
-                request.ShippingAddressSnapshot.RecipientName,
-                request.ShippingAddressSnapshot.AddressLine1,
-                request.ShippingAddressSnapshot.City,
-                request.ShippingAddressSnapshot.Country,
-                request.ShippingAddressSnapshot.RecipientPhone,
-                request.ShippingAddressSnapshot.CompanyName,
-                request.ShippingAddressSnapshot.AddressLine2,
-                request.ShippingAddressSnapshot.District,
-                request.ShippingAddressSnapshot.Town,
-                request.ShippingAddressSnapshot.State,
-                request.ShippingAddressSnapshot.PostalCode,
-                request.ShippingAddressSnapshot.TaxId,
-                request.ShippingAddressSnapshot.TaxOffice);
-
-            ShippingAddressSnapshot? billingSnapshot = null;
-            if (request.BillingAddressSnapshot != null)
+            if (item.ProductId.HasValue)
             {
-                billingSnapshot = ShippingAddressSnapshot.Create(
-                    request.BillingAddressSnapshot.RecipientName,
-                    request.BillingAddressSnapshot.AddressLine1,
-                    request.BillingAddressSnapshot.City,
-                    request.BillingAddressSnapshot.Country,
-                    request.BillingAddressSnapshot.RecipientPhone,
-                    request.BillingAddressSnapshot.CompanyName,
-                    request.BillingAddressSnapshot.AddressLine2,
-                    request.BillingAddressSnapshot.District,
-                    request.BillingAddressSnapshot.Town,
-                    request.BillingAddressSnapshot.State,
-                    request.BillingAddressSnapshot.PostalCode,
-                    request.BillingAddressSnapshot.TaxId,
-                    request.BillingAddressSnapshot.TaxOffice);
-            }
+                var priceResult = await _priceValidationService.ValidateAndGetPriceAsync(
+                    item.ProductId.Value,
+                    item.UnitPrice,
+                    item.Quantity,
+                    request.CustomerId,
+                    request.Currency,
+                    cancellationToken);
 
-            order.SetAddressSnapshots(shippingSnapshot, billingSnapshot);
-        }
-
-        // Set source document relations
-        if (request.QuotationId.HasValue)
-            order.SetSourceQuotation(request.QuotationId.Value, request.QuotationNumber);
-
-        if (request.OpportunityId.HasValue)
-            order.SetOpportunity(request.OpportunityId.Value);
-
-        if (request.CustomerContractId.HasValue)
-            order.SetCustomerContract(request.CustomerContractId.Value);
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // STEP 6: Set Territory (Phase 3)
-        // ═══════════════════════════════════════════════════════════════════════════
-        if (territory != null)
-        {
-            order.SetTerritory(territory.Id, territory.Name);
-            _logger.LogDebug("Assigned order to territory {TerritoryName}", territory.Name);
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // STEP 7: Add Order Items
-        // ═══════════════════════════════════════════════════════════════════════════
-        var lineNumber = 1;
-        var backOrderItems = new List<(SalesOrderItem Item, decimal ShortQuantity)>();
-
-        foreach (var itemCmd in request.Items)
-        {
-            var itemResult = SalesOrderItem.Create(
-                tenantId,
-                order.Id,
-                lineNumber++,
-                itemCmd.ProductId,
-                itemCmd.ProductCode,
-                itemCmd.ProductName,
-                itemCmd.Unit,
-                itemCmd.Quantity,
-                itemCmd.UnitPrice,
-                itemCmd.VatRate,
-                itemCmd.Description);
-
-            if (!itemResult.IsSuccess)
-                return Result<SalesOrderDto>.Failure(itemResult.Error!);
-
-            var item = itemResult.Value!;
-
-            if (itemCmd.DiscountRate > 0)
-                item.ApplyDiscount(itemCmd.DiscountRate);
-
-            order.AddItem(item);
-
-            // Track items that need back orders
-            if (request.AllowBackOrders && itemCmd.ProductId.HasValue)
-            {
-                var stockResult = stockCheckResults.FirstOrDefault(s => s.Item == itemCmd);
-                if (!stockResult.HasSufficientStock)
-                {
-                    var shortQuantity = itemCmd.Quantity - stockResult.AvailableStock;
-                    backOrderItems.Add((item, shortQuantity));
-                }
-            }
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // STEP 8: Set Payment Due Date (Phase 3)
-        // ═══════════════════════════════════════════════════════════════════════════
-        var paymentDueDays = request.PaymentDueDays ?? contract?.DefaultPaymentDueDays ?? 30;
-        var paymentDueDate = request.OrderDate.AddDays(paymentDueDays);
-        order.SetPaymentDueDate(paymentDueDate);
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // STEP 9: Save Order
-        // ═══════════════════════════════════════════════════════════════════════════
-        await _unitOfWork.SalesOrders.AddAsync(order, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        _logger.LogInformation("Sales order {OrderNumber} created for tenant {TenantId}", orderNumber, tenantId);
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // STEP 10: Reserve Stock (Phase 3)
-        // ═══════════════════════════════════════════════════════════════════════════
-        if (request.ReserveStock)
-        {
-            var reservations = request.Items
-                .Where(i => i.ProductId.HasValue)
-                .Select(i =>
-                {
-                    var stockResult = stockCheckResults.FirstOrDefault(s => s.Item == i);
-                    var quantityToReserve = request.AllowBackOrders && !stockResult.HasSufficientStock
-                        ? stockResult.AvailableStock
-                        : i.Quantity;
-
-                    return new StockReservationDto
-                    {
-                        ProductId = i.ProductId!.Value,
-                        Quantity = quantityToReserve,
-                        Unit = i.Unit
-                    };
-                })
-                .Where(r => r.Quantity > 0)
-                .ToList();
-
-            if (reservations.Any())
-            {
-                var reservationSuccess = await _inventoryService.ReserveStockAsync(
-                    order.Id, tenantId, reservations, cancellationToken);
-
-                if (reservationSuccess)
-                {
-                    var totalReserved = reservations.Sum(r => r.Quantity);
-                    var expiryDate = DateTime.UtcNow.AddHours(request.ReservationExpiryHours);
-                    order.RecordStockReservation(totalReserved, expiryDate);
-
-                    await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-                    _logger.LogInformation(
-                        "Reserved {TotalQuantity} units for order {OrderNumber}",
-                        totalReserved, orderNumber);
-                }
-                else
+                if (!priceResult.IsSuccess)
                 {
                     _logger.LogWarning(
-                        "Failed to reserve stock for order {OrderNumber}. Proceeding without reservation.",
-                        orderNumber);
+                        "Price validation failed for product {ProductCode}: {Error}",
+                        item.ProductCode, priceResult.Error?.Description);
+                    return Result<SalesOrderDto>.Failure(priceResult.Error!);
                 }
+
+                validatedPrices[item.ProductId.Value] = priceResult.Value;
             }
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // STEP 11: Record Back Orders (Phase 3)
+        // ATOMIC TRANSACTION: All Sales DB operations in a single transaction
         // ═══════════════════════════════════════════════════════════════════════════
-        if (backOrderItems.Any())
+        var stockWasReserved = false;
+        SalesOrder? order = null;
+        string? orderNumber = null;
+
+        for (int attempt = 0; attempt < maxRetries; attempt++)
         {
-            foreach (var (item, shortQuantity) in backOrderItems)
+            try
             {
-                order.RecordBackOrderCreated();
-                _logger.LogInformation(
-                    "Back order recorded for {ProductCode}: {ShortQuantity} units",
-                    item.ProductCode, shortQuantity);
+                await _unitOfWork.BeginTransactionAsync(cancellationToken);
+
+                // ═══════════════════════════════════════════════════════════════════
+                // STEP 5: Create Sales Order
+                // ═══════════════════════════════════════════════════════════════════
+                orderNumber = await _unitOfWork.SalesOrders.GenerateOrderNumberAsync(cancellationToken);
+
+                var orderResult = SalesOrder.Create(
+                    tenantId,
+                    orderNumber,
+                    request.OrderDate,
+                    request.CustomerId,
+                    request.CustomerName,
+                    request.CustomerEmail,
+                    request.Currency);
+
+                if (!orderResult.IsSuccess)
+                {
+                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                    return Result<SalesOrderDto>.Failure(orderResult.Error!);
+                }
+
+                order = orderResult.Value!;
+
+                // Set additional properties
+                if (request.ShippingAddress != null || request.BillingAddress != null)
+                    order.SetAddresses(request.ShippingAddress, request.BillingAddress);
+
+                if (!string.IsNullOrEmpty(request.Notes))
+                    order.SetNotes(request.Notes);
+
+                if (request.SalesPersonId.HasValue)
+                    order.SetSalesPerson(request.SalesPersonId, request.SalesPersonName);
+
+                // Create and set address snapshots
+                if (request.ShippingAddressSnapshot != null)
+                {
+                    var shippingSnapshot = ShippingAddressSnapshot.Create(
+                        request.ShippingAddressSnapshot.RecipientName,
+                        request.ShippingAddressSnapshot.AddressLine1,
+                        request.ShippingAddressSnapshot.City,
+                        request.ShippingAddressSnapshot.Country,
+                        request.ShippingAddressSnapshot.RecipientPhone,
+                        request.ShippingAddressSnapshot.CompanyName,
+                        request.ShippingAddressSnapshot.AddressLine2,
+                        request.ShippingAddressSnapshot.District,
+                        request.ShippingAddressSnapshot.Town,
+                        request.ShippingAddressSnapshot.State,
+                        request.ShippingAddressSnapshot.PostalCode,
+                        request.ShippingAddressSnapshot.TaxId,
+                        request.ShippingAddressSnapshot.TaxOffice);
+
+                    ShippingAddressSnapshot? billingSnapshot = null;
+                    if (request.BillingAddressSnapshot != null)
+                    {
+                        billingSnapshot = ShippingAddressSnapshot.Create(
+                            request.BillingAddressSnapshot.RecipientName,
+                            request.BillingAddressSnapshot.AddressLine1,
+                            request.BillingAddressSnapshot.City,
+                            request.BillingAddressSnapshot.Country,
+                            request.BillingAddressSnapshot.RecipientPhone,
+                            request.BillingAddressSnapshot.CompanyName,
+                            request.BillingAddressSnapshot.AddressLine2,
+                            request.BillingAddressSnapshot.District,
+                            request.BillingAddressSnapshot.Town,
+                            request.BillingAddressSnapshot.State,
+                            request.BillingAddressSnapshot.PostalCode,
+                            request.BillingAddressSnapshot.TaxId,
+                            request.BillingAddressSnapshot.TaxOffice);
+                    }
+
+                    order.SetAddressSnapshots(shippingSnapshot, billingSnapshot);
+                }
+
+                // Set source document relations
+                if (request.QuotationId.HasValue)
+                    order.SetSourceQuotation(request.QuotationId.Value, request.QuotationNumber);
+
+                if (request.OpportunityId.HasValue)
+                    order.SetOpportunity(request.OpportunityId.Value);
+
+                if (request.CustomerContractId.HasValue)
+                    order.SetCustomerContract(request.CustomerContractId.Value);
+
+                // ═══════════════════════════════════════════════════════════════════
+                // STEP 6: Set Territory
+                // ═══════════════════════════════════════════════════════════════════
+                if (territory != null)
+                {
+                    order.SetTerritory(territory.Id, territory.Name);
+                    _logger.LogDebug("Assigned order to territory {TerritoryName}", territory.Name);
+                }
+
+                // ═══════════════════════════════════════════════════════════════════
+                // STEP 7: Add Order Items
+                // ═══════════════════════════════════════════════════════════════════
+                var lineNumber = 1;
+                var backOrderItems = new List<(SalesOrderItem Item, decimal ShortQuantity)>();
+
+                foreach (var itemCmd in request.Items)
+                {
+                    // Use validated system price if available, otherwise client price
+                    var unitPrice = itemCmd.ProductId.HasValue &&
+                                    validatedPrices.TryGetValue(itemCmd.ProductId.Value, out var sysPrice)
+                        ? sysPrice
+                        : itemCmd.UnitPrice;
+
+                    var itemResult = SalesOrderItem.Create(
+                        tenantId,
+                        order.Id,
+                        lineNumber++,
+                        itemCmd.ProductId,
+                        itemCmd.ProductCode,
+                        itemCmd.ProductName,
+                        itemCmd.Unit,
+                        itemCmd.Quantity,
+                        unitPrice,
+                        itemCmd.VatRate,
+                        itemCmd.Description);
+
+                    if (!itemResult.IsSuccess)
+                    {
+                        await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                        return Result<SalesOrderDto>.Failure(itemResult.Error!);
+                    }
+
+                    var item = itemResult.Value!;
+
+                    if (itemCmd.DiscountRate > 0)
+                        item.ApplyDiscount(itemCmd.DiscountRate);
+
+                    order.AddItem(item);
+
+                    // Track items that need back orders
+                    if (request.AllowBackOrders && itemCmd.ProductId.HasValue)
+                    {
+                        var stockResult = stockCheckResults.FirstOrDefault(s => s.Item == itemCmd);
+                        if (!stockResult.HasSufficientStock)
+                        {
+                            var shortQuantity = itemCmd.Quantity - stockResult.AvailableStock;
+                            backOrderItems.Add((item, shortQuantity));
+                        }
+                    }
+                }
+
+                // ═══════════════════════════════════════════════════════════════════
+                // STEP 8: Set Payment Due Date
+                // ═══════════════════════════════════════════════════════════════════
+                var paymentDueDays = request.PaymentDueDays ?? contract?.DefaultPaymentDueDays ?? 30;
+                var paymentDueDate = request.OrderDate.AddDays(paymentDueDays);
+                order.SetPaymentDueDate(paymentDueDate);
+
+                // ═══════════════════════════════════════════════════════════════════
+                // STEP 9: Add Order to tracking (no save yet)
+                // ═══════════════════════════════════════════════════════════════════
+                await _unitOfWork.SalesOrders.AddAsync(order, cancellationToken);
+
+                // ═══════════════════════════════════════════════════════════════════
+                // STEP 10: Reserve Stock (cross-module, commits to InventoryDb independently)
+                // ═══════════════════════════════════════════════════════════════════
+                if (request.ReserveStock)
+                {
+                    var reservations = request.Items
+                        .Where(i => i.ProductId.HasValue)
+                        .Select(i =>
+                        {
+                            var stockResult = stockCheckResults.FirstOrDefault(s => s.Item == i);
+                            var quantityToReserve = request.AllowBackOrders && !stockResult.HasSufficientStock
+                                ? stockResult.AvailableStock
+                                : i.Quantity;
+
+                            return new StockReservationDto
+                            {
+                                ProductId = i.ProductId!.Value,
+                                Quantity = quantityToReserve,
+                                Unit = i.Unit
+                            };
+                        })
+                        .Where(r => r.Quantity > 0)
+                        .ToList();
+
+                    if (reservations.Any())
+                    {
+                        var reservationSuccess = await _inventoryService.ReserveStockAsync(
+                            order.Id, tenantId, reservations, cancellationToken);
+
+                        if (reservationSuccess)
+                        {
+                            stockWasReserved = true;
+                            var totalReserved = reservations.Sum(r => r.Quantity);
+                            var expiryDate = DateTime.UtcNow.AddHours(request.ReservationExpiryHours);
+                            order.RecordStockReservation(totalReserved, expiryDate);
+
+                            _logger.LogInformation(
+                                "Reserved {TotalQuantity} units for order {OrderNumber}",
+                                totalReserved, orderNumber);
+                        }
+                        else
+                        {
+                            _logger.LogWarning(
+                                "Failed to reserve stock for order {OrderNumber}. Proceeding without reservation.",
+                                orderNumber);
+                        }
+                    }
+                }
+
+                // ═══════════════════════════════════════════════════════════════════
+                // STEP 11: Record Back Orders (in-memory, no separate save)
+                // ═══════════════════════════════════════════════════════════════════
+                if (backOrderItems.Any())
+                {
+                    foreach (var (item, shortQuantity) in backOrderItems)
+                    {
+                        order.RecordBackOrderCreated();
+                        _logger.LogInformation(
+                            "Back order recorded for {ProductCode}: {ShortQuantity} units",
+                            item.ProductCode, shortQuantity);
+                    }
+                }
+
+                // ═══════════════════════════════════════════════════════════════════
+                // STEP 12: Update Contract Credit Usage (in-memory, no separate save)
+                // ═══════════════════════════════════════════════════════════════════
+                if (contract != null)
+                {
+                    var orderTotal = order.TotalAmount;
+                    contract.RecordCreditUsage(orderTotal);
+
+                    _logger.LogDebug(
+                        "Recorded credit usage of {Amount} for contract {ContractNumber}",
+                        orderTotal, contract.ContractNumber);
+                }
+
+                // ═══════════════════════════════════════════════════════════════════
+                // SINGLE COMMIT: All Sales DB changes in one atomic operation
+                // ═══════════════════════════════════════════════════════════════════
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.CommitTransactionAsync(cancellationToken);
+
+                _logger.LogInformation("Sales order {OrderNumber} committed for tenant {TenantId}",
+                    orderNumber, tenantId);
+
+                break; // Success, exit retry loop
             }
+            catch (DbUpdateConcurrencyException ex) when (attempt < maxRetries - 1)
+            {
+                _logger.LogWarning(ex,
+                    "Concurrency conflict on attempt {Attempt} for order creation. Retrying...",
+                    attempt + 1);
 
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+                if (_unitOfWork.HasActiveTransaction)
+                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+
+                // Compensate inventory reservation if it was already committed
+                if (stockWasReserved && order != null)
+                {
+                    await _inventoryService.ReleaseReservedStockAsync(order.Id, tenantId, cancellationToken);
+                    stockWasReserved = false;
+                }
+
+                order = null;
+                orderNumber = null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create sales order for tenant {TenantId}", tenantId);
+
+                if (_unitOfWork.HasActiveTransaction)
+                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+
+                // Compensate inventory reservation if it was already committed
+                if (stockWasReserved && order != null)
+                {
+                    try
+                    {
+                        await _inventoryService.ReleaseReservedStockAsync(order.Id, tenantId, cancellationToken);
+                        _logger.LogInformation("Compensated stock reservation for failed order {OrderId}", order.Id);
+                    }
+                    catch (Exception compensationEx)
+                    {
+                        _logger.LogCritical(compensationEx,
+                            "CRITICAL: Failed to compensate stock reservation for order {OrderId}. Manual intervention required.",
+                            order.Id);
+                    }
+                }
+
+                throw;
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // STEP 12: Update Contract Credit Usage (Phase 3)
+        // STEP 13: Publish Event (after successful commit)
         // ═══════════════════════════════════════════════════════════════════════════
-        if (contract != null)
-        {
-            var orderTotal = order.TotalAmount;
-            contract.RecordCreditUsage(orderTotal);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-            _logger.LogDebug(
-                "Recorded credit usage of {Amount} for contract {ContractNumber}",
-                orderTotal, contract.ContractNumber);
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // STEP 13: Reload and Publish Event
-        // ═══════════════════════════════════════════════════════════════════════════
-        var savedOrder = await _unitOfWork.SalesOrders.GetWithItemsAsync(order.Id, cancellationToken);
+        var savedOrder = await _unitOfWork.SalesOrders.GetWithItemsAsync(order!.Id, cancellationToken);
 
         var integrationEvent = new SalesOrderCreatedEvent(
             OrderId: savedOrder!.Id,
@@ -428,16 +538,27 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
             CreatedBy: null // TODO: Get from current user context
         );
 
-        await _publishEndpoint.Publish(integrationEvent, cancellationToken);
+        try
+        {
+            await _publishEndpoint.Publish(integrationEvent, cancellationToken);
 
-        _logger.LogInformation(
-            "Published SalesOrderCreatedEvent for order {OrderNumber} with {ItemCount} items. " +
-            "Territory: {TerritoryName}, PaymentDue: {PaymentDueDate}, StockReserved: {IsStockReserved}",
-            orderNumber,
-            savedOrder.Items.Count,
-            savedOrder.TerritoryName ?? "N/A",
-            savedOrder.PaymentDueDate?.ToString("yyyy-MM-dd") ?? "N/A",
-            savedOrder.IsStockReserved);
+            _logger.LogInformation(
+                "Published SalesOrderCreatedEvent for order {OrderNumber} with {ItemCount} items. " +
+                "Territory: {TerritoryName}, PaymentDue: {PaymentDueDate}, StockReserved: {IsStockReserved}",
+                orderNumber,
+                savedOrder.Items.Count,
+                savedOrder.TerritoryName ?? "N/A",
+                savedOrder.PaymentDueDate?.ToString("yyyy-MM-dd") ?? "N/A",
+                savedOrder.IsStockReserved);
+        }
+        catch (Exception ex)
+        {
+            // Event publish failure should not fail the order creation
+            // The order is already committed - log for manual retry or future Outbox pattern
+            _logger.LogError(ex,
+                "Failed to publish SalesOrderCreatedEvent for order {OrderNumber}. Order is committed but event was not published.",
+                orderNumber);
+        }
 
         return Result<SalesOrderDto>.Success(SalesOrderDto.FromEntity(savedOrder));
     }

@@ -371,7 +371,7 @@ export interface CreateQuotationDto {
 }
 
 export interface CreateQuotationItemDto {
-  productId: string;
+  productId?: number;
   productName: string;
   productCode?: string;
   description?: string;
@@ -2711,222 +2711,773 @@ export interface ResolveWarrantyClaimCommand {
 }
 
 // =====================================
-// CUSTOMER SEGMENTS
+// CUSTOMER SEGMENTS (Updated)
 // =====================================
 
-export type SegmentCriteriaType =
-  | 'OrderValue'
-  | 'OrderFrequency'
-  | 'ProductCategory'
-  | 'Location'
-  | 'Custom';
+export type SegmentPriority = 'VeryLow' | 'Low' | 'Medium' | 'High' | 'VeryHigh';
+export type ServiceLevel = 'Basic' | 'Standard' | 'Premium' | 'Enterprise' | 'VIP';
 
 export interface CustomerSegmentDto {
   id: string;
-  name: string;
   code: string;
+  name: string;
   description?: string;
-  discountRate: number;
-  priority: number;
-  customerCount: number;
+  discountPercentage: number;
+  minimumOrderAmount: number;
+  maximumOrderAmount: number;
+  allowSpecialPricing: boolean;
+  defaultCreditLimit: number;
+  defaultPaymentTermDays: number;
+  requiresAdvancePayment: boolean;
+  advancePaymentPercentage: number;
+  priority: string;
+  serviceLevel: string;
+  maxResponseTimeHours: number;
+  hasDedicatedSupport: boolean;
+  minimumAnnualRevenue: number;
+  minimumOrderCount: number;
+  minimumMonthsAsCustomer: number;
+  freeShipping: boolean;
+  freeShippingThreshold: number;
+  earlyAccessToProducts: boolean;
+  exclusivePromotions: boolean;
+  benefitsDescription?: string;
+  color?: string;
+  badgeIcon?: string;
   isActive: boolean;
-  criteriaType?: SegmentCriteriaType;
-  criteriaValue?: string;
-  minOrderValue?: number;
-  maxOrderValue?: number;
-  createdAt: string;
-  updatedAt?: string;
-  createdBy?: string;
-  createdByName?: string;
+  isDefault: boolean;
+  customerCount: number;
+  totalRevenue: number;
+  averageOrderValue: number;
 }
 
 export interface CustomerSegmentListDto {
   id: string;
-  name: string;
   code: string;
-  description?: string;
-  discountRate: number;
-  priority: number;
-  customerCount: number;
+  name: string;
+  priority: string;
+  serviceLevel: string;
+  discountPercentage: number;
   isActive: boolean;
-  createdAt: string;
+  isDefault: boolean;
+  customerCount: number;
+  color?: string;
+  badgeIcon?: string;
 }
 
-export interface CustomerSegmentStatisticsDto {
-  totalCount: number;
-  activeCount: number;
-  inactiveCount: number;
-  totalCustomersSegmented: number;
-  averageDiscountRate: number;
+export interface CreateCustomerSegmentDto {
+  code: string;
+  name: string;
+  priority: string;
+  description?: string;
+}
+
+export interface SetSegmentPricingDto {
+  discountPercentage: number;
+  minimumOrderAmount: number;
+  maximumOrderAmount: number;
+}
+
+export interface SetSegmentCreditTermsDto {
+  creditLimit: number;
+  paymentTermDays: number;
+  requiresAdvancePayment: boolean;
+  advancePaymentPercentage: number;
+}
+
+export interface SetSegmentServiceLevelDto {
+  priority: string;
+  serviceLevel: string;
+  maxResponseTimeHours: number;
+  dedicatedSupport: boolean;
+}
+
+export interface SetSegmentEligibilityDto {
+  minimumAnnualRevenue: number;
+  minimumOrderCount: number;
+  minimumMonthsAsCustomer: number;
+}
+
+export interface SetSegmentBenefitsDto {
+  freeShipping: boolean;
+  freeShippingThreshold: number;
+  earlyAccessToProducts: boolean;
+  exclusivePromotions: boolean;
+  benefitsDescription?: string;
+}
+
+export interface SetSegmentVisualDto {
+  color?: string;
+  badgeIcon?: string;
+}
+
+export interface UpdateSegmentDetailsDto {
+  name?: string;
+  description?: string;
+}
+
+export interface AssignCustomerToSegmentDto {
+  customerId: string;
 }
 
 export interface CustomerSegmentQueryParams {
-  searchTerm?: string;
-  isActive?: boolean;
   page?: number;
   pageSize?: number;
-}
-
-export interface CreateCustomerSegmentCommand {
-  name: string;
-  code: string;
-  description?: string;
-  discountRate: number;
-  priority: number;
+  priority?: string;
   isActive?: boolean;
-  criteriaType?: SegmentCriteriaType;
-  criteriaValue?: string;
-  minOrderValue?: number;
-  maxOrderValue?: number;
-}
-
-export interface UpdateCustomerSegmentCommand {
-  name?: string;
-  description?: string;
-  discountRate?: number;
-  priority?: number;
-  isActive?: boolean;
-  criteriaType?: SegmentCriteriaType;
-  criteriaValue?: string;
-  minOrderValue?: number;
-  maxOrderValue?: number;
-}
-
-export interface AssignCustomersToSegmentCommand {
-  customerIds: string[];
 }
 
 // =====================================
-// SALES TARGETS
+// SALES TARGETS (Updated)
 // =====================================
 
-export type SalesTargetType =
-  | 'Monthly'
-  | 'Quarterly'
-  | 'Yearly';
-
-export type SalesTargetMetric =
-  | 'Revenue'
-  | 'OrderCount'
-  | 'NewCustomers'
-  | 'ProductUnits';
-
-export type SalesTargetStatus =
-  | 'NotStarted'
-  | 'InProgress'
-  | 'Achieved'
-  | 'Exceeded'
-  | 'Failed';
+export type SalesTargetType = 'Individual' | 'Team' | 'Territory' | 'Product' | 'Category' | 'Overall';
+export type TargetPeriodType = 'Monthly' | 'Quarterly' | 'SemiAnnual' | 'Annual';
+export type TargetMetricType = 'Revenue' | 'Quantity' | 'OrderCount' | 'NewCustomers' | 'Margin' | 'AverageOrderValue';
+export type SalesTargetStatus = 'Draft' | 'Active' | 'Completed' | 'Cancelled' | 'Expired';
+export type TargetForecast = 'OnTrack' | 'AtRisk' | 'BehindSchedule' | 'WillExceed' | 'Insufficient';
 
 export interface SalesTargetDto {
   id: string;
-  salesRepId: string;
-  salesRepName: string;
-  salesRepAvatar?: string;
-  salesRepEmail?: string;
-  department?: string;
-  teamId?: string;
-  teamName?: string;
-  targetType: SalesTargetType;
-  metric: SalesTargetMetric;
-  period: string;
-  periodStart: string;
-  periodEnd: string;
-  targetAmount: number;
-  achievedAmount: number;
-  progressPercentage: number;
-  remainingAmount: number;
-  bonusThreshold: number;
-  bonusRate: number;
-  estimatedBonus: number;
-  rank?: number;
-  streak: number;
-  status: SalesTargetStatus;
-  isActive: boolean;
+  targetCode: string;
+  name: string;
+  description?: string;
+  targetType: string;
+  periodType: string;
+  year: number;
+  salesRepresentativeId?: string;
+  salesRepresentativeName?: string;
+  salesTeamId?: string;
+  salesTeamName?: string;
+  salesTerritoryId?: string;
+  salesTerritoryName?: string;
+  totalTargetAmount: number;
+  totalActualAmount: number;
+  currency: string;
+  metricType: string;
+  targetQuantity?: number;
+  actualQuantity?: number;
+  minimumAchievementPercentage: number;
+  status: string;
+  achievementPercentage: number;
+  forecast: string;
+  parentTargetId?: string;
   notes?: string;
-  createdAt: string;
-  updatedAt?: string;
-  createdBy?: string;
+  periods: SalesTargetPeriodDto[];
+  productTargets: SalesTargetProductDto[];
 }
 
 export interface SalesTargetListDto {
   id: string;
-  salesRepId: string;
-  salesRepName: string;
-  salesRepAvatar?: string;
-  department?: string;
-  targetType: SalesTargetType;
-  period: string;
-  targetAmount: number;
-  achievedAmount: number;
-  progressPercentage: number;
-  bonusThreshold: number;
-  rank?: number;
-  streak: number;
-  status: SalesTargetStatus;
-  isActive: boolean;
+  targetCode: string;
+  name: string;
+  targetType: string;
+  periodType: string;
+  year: number;
+  salesRepresentativeName?: string;
+  salesTeamName?: string;
+  totalTargetAmount: number;
+  totalActualAmount: number;
+  currency: string;
+  status: string;
+  achievementPercentage: number;
+  forecast: string;
 }
 
-export interface SalesTargetStatisticsDto {
-  totalTargets: number;
-  achievedCount: number;
-  inProgressCount: number;
-  failedCount: number;
-  averageProgress: number;
-  topPerformerId?: string;
-  topPerformerName?: string;
-  topPerformerProgress?: number;
+export interface SalesTargetPeriodDto {
+  id: string;
+  periodNumber: number;
+  startDate: string;
+  endDate: string;
+  targetAmount: number;
+  actualAmount: number;
+  currency: string;
+  targetQuantity?: number;
+  actualQuantity?: number;
+  achievementPercentage: number;
+}
+
+export interface SalesTargetProductDto {
+  id: string;
+  productId: string;
+  productCode: string;
+  productName: string;
+  targetAmount: number;
+  actualAmount: number;
+  currency: string;
+  targetQuantity?: number;
+  actualQuantity?: number;
+  weight: number;
+  achievementPercentage: number;
+}
+
+export interface CreateSalesTargetDto {
+  name: string;
+  description?: string;
+  targetType: string;
+  periodType: string;
+  metricType: string;
+  year: number;
   totalTargetAmount: number;
-  totalAchievedAmount: number;
+  currency: string;
+  minimumAchievementPercentage: number;
+  generatePeriods: boolean;
+}
+
+export interface AssignSalesTargetDto {
+  assigneeId: string;
+  assigneeName: string;
+}
+
+export interface AddSalesTargetPeriodDto {
+  periodNumber: number;
+  startDate: string;
+  endDate: string;
+  targetAmount: number;
+  targetQuantity?: number;
+}
+
+export interface AddSalesTargetProductDto {
+  productId: string;
+  productCode: string;
+  productName: string;
+  targetAmount: number;
+  targetQuantity?: number;
+  weight: number;
+}
+
+export interface RecordAchievementDto {
+  achievementDate: string;
+  amount: number;
+  quantity?: number;
+  salesOrderId?: string;
+  invoiceId?: string;
+  productId?: string;
+  customerId?: string;
 }
 
 export interface SalesTargetQueryParams {
-  searchTerm?: string;
-  salesRepId?: string;
-  teamId?: string;
-  targetType?: SalesTargetType;
-  metric?: SalesTargetMetric;
-  status?: SalesTargetStatus;
-  period?: string;
-  isActive?: boolean;
   page?: number;
   pageSize?: number;
+  year?: number;
+  status?: string;
+  targetType?: string;
+  salesRepresentativeId?: string;
+  salesTeamId?: string;
 }
 
-export interface CreateSalesTargetCommand {
-  salesRepId: string;
-  targetType: SalesTargetType;
-  metric: SalesTargetMetric;
-  period: string;
-  periodStart: string;
-  periodEnd: string;
-  targetAmount: number;
-  bonusThreshold: number;
-  bonusRate: number;
+// =====================================
+// PRICE LIST
+// =====================================
+
+export type PriceListType = 'Standard' | 'Promotional' | 'Contract' | 'Wholesale' | 'Retail';
+
+export interface PriceListDto {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  type: string;
+  currencyCode: string;
+  validFrom: string;
+  validTo?: string;
+  isTaxIncluded: boolean;
+  priority: number;
+  minimumOrderAmount?: number;
+  minimumOrderCurrency?: string;
+  isActive: boolean;
+  basePriceListId?: string;
+  baseAdjustmentPercentage?: number;
+  salesTerritoryId?: string;
+  customerSegment?: string;
+  items: PriceListItemDto[];
+  assignedCustomers: PriceListCustomerDto[];
+}
+
+export interface PriceListListDto {
+  id: string;
+  code: string;
+  name: string;
+  type: string;
+  currencyCode: string;
+  validFrom: string;
+  validTo?: string;
+  isActive: boolean;
+  priority: number;
+  itemCount: number;
+  customerCount: number;
+}
+
+export interface PriceListItemDto {
+  id: string;
+  productId: string;
+  productCode: string;
+  productName: string;
+  unitPrice: number;
+  unitPriceCurrency: string;
+  unitOfMeasure: string;
+  minimumQuantity?: number;
+  maximumQuantity?: number;
+  discountPercentage?: number;
+  lastPriceUpdate: string;
+  previousPrice?: number;
+  isActive: boolean;
+}
+
+export interface PriceListCustomerDto {
+  id: string;
+  customerId: string;
+  customerName: string;
+  validFrom: string;
+  validTo?: string;
+  isActive: boolean;
+}
+
+export interface CreatePriceListDto {
+  code: string;
+  name: string;
+  description?: string;
+  type?: string;
+  currencyCode: string;
+  validFrom: string;
+  validTo?: string;
+  isTaxIncluded?: boolean;
+  priority?: number;
+}
+
+export interface AddPriceListItemDto {
+  productId: string;
+  productCode: string;
+  productName: string;
+  unitPrice: number;
+  currency: string;
+  unitOfMeasure: string;
+  minimumQuantity?: number;
+  maximumQuantity?: number;
+}
+
+export interface PriceListQueryParams {
+  page?: number;
+  pageSize?: number;
+  type?: string;
+  isActive?: boolean;
+  currencyCode?: string;
+}
+
+// =====================================
+// DELIVERY NOTE
+// =====================================
+
+export type DeliveryNoteType = 'Sales' | 'Return' | 'Transfer' | 'Sample' | 'Other';
+export type DeliveryNoteStatus = 'Draft' | 'Dispatched' | 'InTransit' | 'Delivered' | 'Cancelled';
+export type TransportMode = 'Road' | 'Sea' | 'Air' | 'Rail' | 'Multimodal';
+
+export interface DeliveryNoteDto {
+  id: string;
+  deliveryNoteNumber: string;
+  series: string;
+  sequenceNumber: number;
+  deliveryNoteDate: string;
+  deliveryNoteType: string;
+  status: string;
+  isEDeliveryNote: boolean;
+  eDeliveryNoteUuid?: string;
+  eDeliveryNoteStatus?: string;
+  shipmentId?: string;
+  salesOrderId?: string;
+  salesOrderNumber?: string;
+  invoiceId?: string;
+  invoiceNumber?: string;
+  senderTaxId: string;
+  senderName: string;
+  senderTaxOffice?: string;
+  senderAddress: string;
+  senderCity?: string;
+  senderDistrict?: string;
+  receiverId?: string;
+  receiverTaxId: string;
+  receiverName: string;
+  receiverTaxOffice?: string;
+  receiverAddress: string;
+  receiverCity?: string;
+  receiverDistrict?: string;
+  transportMode?: string;
+  carrierName?: string;
+  vehiclePlate?: string;
+  driverName?: string;
+  totalLineCount: number;
+  totalQuantity: number;
+  totalGrossWeight?: number;
+  totalNetWeight?: number;
+  dispatchDate: string;
+  isDelivered: boolean;
+  deliveryDate?: string;
+  receivedBy?: string;
+  description?: string;
+  notes?: string;
+  warehouseId?: string;
+  items: DeliveryNoteItemDto[];
+}
+
+export interface DeliveryNoteListDto {
+  id: string;
+  deliveryNoteNumber: string;
+  deliveryNoteDate: string;
+  deliveryNoteType: string;
+  status: string;
+  receiverName: string;
+  salesOrderNumber?: string;
+  totalLineCount: number;
+  totalQuantity: number;
+  isEDeliveryNote: boolean;
+  isDelivered: boolean;
+  deliveryDate?: string;
+}
+
+export interface DeliveryNoteItemDto {
+  id: string;
+  lineNumber: number;
+  productId: string;
+  productCode: string;
+  productName: string;
+  quantity: number;
+  unit: string;
+  grossWeight?: number;
+  netWeight?: number;
+  lotNumber?: string;
+  serialNumber?: string;
+  expiryDate?: string;
   notes?: string;
 }
 
-export interface UpdateSalesTargetCommand {
-  targetAmount?: number;
-  bonusThreshold?: number;
-  bonusRate?: number;
-  notes?: string;
+export interface CreateDeliveryNoteDto {
+  series: string;
+  deliveryNoteDate: string;
+  deliveryNoteType?: string;
+  senderTaxId: string;
+  senderName: string;
+  senderAddress: string;
+  senderTaxOffice?: string;
+  senderCity?: string;
+  senderDistrict?: string;
+  receiverTaxId: string;
+  receiverName: string;
+  receiverAddress: string;
+  receiverTaxOffice?: string;
+  receiverCity?: string;
+  receiverDistrict?: string;
+  receiverId?: string;
+  salesOrderId?: string;
+  salesOrderNumber?: string;
+  warehouseId?: string;
+  description?: string;
+  items: CreateDeliveryNoteItemDto[];
 }
 
-export interface UpdateTargetProgressCommand {
-  achievedAmount: number;
-  notes?: string;
+export interface CreateDeliveryNoteItemDto {
+  productId: string;
+  productCode: string;
+  productName: string;
+  quantity: number;
+  unit: string;
+  lotNumber?: string;
+  serialNumber?: string;
+  grossWeight?: number;
+  netWeight?: number;
 }
 
-export interface LeaderboardEntryDto {
-  rank: number;
-  salesRepId: string;
-  salesRepName: string;
-  salesRepAvatar?: string;
-  department?: string;
-  targetAmount: number;
-  achievedAmount: number;
-  progressPercentage: number;
-  streak: number;
-  estimatedBonus: number;
+export interface DispatchDeliveryNoteDto {
+  dispatchDate?: string;
+  carrierName?: string;
+  carrierTaxId?: string;
+  vehiclePlate?: string;
+  trailerPlate?: string;
+  driverName?: string;
+  driverNationalId?: string;
+  transportMode?: string;
+}
+
+export interface DeliveryNoteQueryParams {
+  page?: number;
+  pageSize?: number;
+  status?: string;
+  deliveryNoteType?: string;
+  salesOrderId?: string;
+  fromDate?: string;
+  toDate?: string;
+}
+
+// =====================================
+// BACK ORDER
+// =====================================
+
+export type BackOrderType = 'Standard' | 'Rush' | 'PreOrder';
+export type BackOrderPriority = 'Low' | 'Normal' | 'High' | 'Urgent';
+export type BackOrderStatus = 'Created' | 'PartiallyFulfilled' | 'Fulfilled' | 'Cancelled';
+
+export interface BackOrderDto {
+  id: string;
+  backOrderNumber: string;
+  backOrderDate: string;
+  type: string;
+  priority: string;
+  status: string;
+  salesOrderId: string;
+  salesOrderNumber: string;
+  customerId?: string;
+  customerName?: string;
+  warehouseId?: string;
+  warehouseCode?: string;
+  estimatedRestockDate?: string;
+  actualFulfillmentDate?: string;
+  customerNotified: boolean;
+  isAutoFulfill: boolean;
+  totalItemCount: number;
+  totalPendingQuantity: number;
+  totalFulfilledQuantity: number;
+  notes?: string;
+  items: BackOrderItemDto[];
+}
+
+export interface BackOrderListDto {
+  id: string;
+  backOrderNumber: string;
+  backOrderDate: string;
+  type: string;
+  priority: string;
+  status: string;
+  salesOrderNumber: string;
+  customerName?: string;
+  estimatedRestockDate?: string;
+  totalItemCount: number;
+  totalPendingQuantity: number;
+}
+
+export interface BackOrderItemDto {
+  id: string;
+  lineNumber: number;
+  productId?: string;
+  productCode: string;
+  productName: string;
+  unit: string;
+  orderedQuantity: number;
+  availableQuantity: number;
+  pendingQuantity: number;
+  fulfilledQuantity: number;
+  unitPrice: number;
+  isFullyFulfilled: boolean;
+  substituteProductCode?: string;
+  purchaseOrderNumber?: string;
+}
+
+export interface CreateBackOrderDto {
+  salesOrderId: string;
+  salesOrderNumber: string;
+  customerId?: string;
+  customerName?: string;
+  customerEmail?: string;
+  warehouseId?: string;
+  warehouseCode?: string;
+  type?: string;
+  priority?: string;
+  estimatedRestockDate?: string;
+  notes?: string;
+  items: CreateBackOrderItemDto[];
+}
+
+export interface CreateBackOrderItemDto {
+  salesOrderItemId: string;
+  productId?: string;
+  productCode: string;
+  productName: string;
+  unit: string;
+  orderedQuantity: number;
+  availableQuantity: number;
+  unitPrice: number;
+}
+
+export interface FulfillBackOrderItemDto {
+  itemId: string;
+  quantity: number;
+}
+
+export interface BackOrderQueryParams {
+  page?: number;
+  pageSize?: number;
+  status?: string;
+  priority?: string;
+  salesOrderId?: string;
+  customerId?: string;
+}
+
+// =====================================
+// OPPORTUNITY
+// =====================================
+
+export type OpportunityStage = 'Lead' | 'Qualified' | 'Proposal' | 'Negotiation' | 'ClosedWon' | 'ClosedLost';
+export type OpportunitySource = 'Website' | 'Referral' | 'ColdCall' | 'Email' | 'SocialMedia' | 'Exhibition' | 'Partner' | 'Other';
+export type OpportunityPriority = 'Low' | 'Medium' | 'High' | 'Critical';
+
+export interface OpportunityDto {
+  id: string;
+  opportunityNumber: string;
+  title: string;
+  description?: string;
+  customerId?: string;
+  customerName?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  stage: string;
+  source: string;
+  priority: string;
+  pipelineId?: string;
+  pipelineStageId?: string;
+  estimatedValue: number;
+  currency: string;
+  probability: number;
+  weightedValue: number;
+  createdDate: string;
+  expectedCloseDate?: string;
+  actualCloseDate?: string;
+  lastActivityDate?: string;
+  nextFollowUpDate?: string;
+  isWon: boolean;
+  isLost: boolean;
+  closedReason?: string;
+  lostToCompetitor?: string;
+  salesPersonId?: string;
+  salesPersonName?: string;
+  quotationId?: string;
+  quotationNumber?: string;
+  salesOrderId?: string;
+  salesOrderNumber?: string;
+  notes?: string;
+  tags?: string;
+}
+
+export interface OpportunityListDto {
+  id: string;
+  opportunityNumber: string;
+  title: string;
+  customerName?: string;
+  stage: string;
+  priority: string;
+  estimatedValue: number;
+  currency: string;
+  probability: number;
+  weightedValue: number;
+  expectedCloseDate?: string;
+  salesPersonName?: string;
+  isWon: boolean;
+  isLost: boolean;
+}
+
+export interface CreateOpportunityDto {
+  title: string;
+  description?: string;
+  estimatedValue: number;
+  currency: string;
+  customerId?: string;
+  customerName?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  source?: string;
+  priority?: string;
+  expectedCloseDate?: string;
+  salesPersonId?: string;
+  salesPersonName?: string;
+  pipelineId?: string;
+  notes?: string;
+  tags?: string;
+}
+
+export interface OpportunityQueryParams {
+  page?: number;
+  pageSize?: number;
+  stage?: string;
+  source?: string;
+  priority?: string;
+  customerId?: string;
+  salesPersonId?: string;
+  pipelineId?: string;
+  fromDate?: string;
+  toDate?: string;
+}
+
+// =====================================
+// SALES PIPELINE
+// =====================================
+
+export type PipelineType = 'Sales' | 'Service' | 'Marketing' | 'Custom';
+export type PipelineStageCategory = 'Lead' | 'Qualification' | 'Proposal' | 'Negotiation' | 'Closing' | 'Won' | 'Lost';
+
+export interface SalesPipelineDto {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  isDefault: boolean;
+  isActive: boolean;
+  type: string;
+  totalOpportunities: number;
+  totalPipelineValue: number;
+  averageConversionRate: number;
+  averageDaysToClose: number;
+  stages: PipelineStageDto[];
+}
+
+export interface SalesPipelineListDto {
+  id: string;
+  code: string;
+  name: string;
+  isDefault: boolean;
+  isActive: boolean;
+  type: string;
+  totalOpportunities: number;
+  totalPipelineValue: number;
+  stageCount: number;
+}
+
+export interface PipelineStageDto {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  orderIndex: number;
+  category: string;
+  successProbability: number;
+  opportunityCount: number;
+  stageValue: number;
+  requiresApproval: boolean;
+  maxDaysInStage?: number;
+  color?: string;
+  icon?: string;
+}
+
+export interface CreateSalesPipelineDto {
+  code: string;
+  name: string;
+  description?: string;
+  type?: string;
+  createWithDefaultStages?: boolean;
+}
+
+export interface AddPipelineStageDto {
+  code: string;
+  name: string;
+  description?: string;
+  orderIndex: number;
+  successProbability: number;
+  category: string;
+  color?: string;
+  icon?: string;
+}
+
+export interface SalesPipelineQueryParams {
+  page?: number;
+  pageSize?: number;
+  type?: string;
+  isActive?: boolean;
 }

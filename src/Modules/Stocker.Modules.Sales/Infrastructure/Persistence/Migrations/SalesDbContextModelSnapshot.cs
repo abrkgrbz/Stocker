@@ -1320,6 +1320,370 @@ namespace Stocker.Modules.Sales.Infrastructure.Persistence.Migrations
                     b.ToTable("CustomerSegments", "sales");
                 });
 
+            modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.DeliveryNote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CarrierName")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("CarrierTaxId")
+                        .HasMaxLength(11)
+                        .HasColumnType("character varying(11)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DeliveryAddress")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("DeliveryCity")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("DeliveryDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeliveryDistrict")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("DeliveryNoteDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeliveryNoteNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("DeliveryNoteType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime>("DispatchDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<TimeSpan?>("DispatchTime")
+                        .HasColumnType("interval");
+
+                    b.Property<string>("DriverName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("DriverNationalId")
+                        .HasMaxLength(11)
+                        .HasColumnType("character varying(11)");
+
+                    b.Property<string>("EDeliveryNoteStatus")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<Guid?>("EDeliveryNoteUuid")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("InvoiceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("InvoiceNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("IsDelivered")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsEDeliveryNote")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPrinted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsSigned")
+                        .HasColumnType("boolean");
+
+                    b.Property<TimeSpan>("IssueTime")
+                        .HasColumnType("interval");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int?>("PackageCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PackageType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("PrintDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReceivedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("ReceiverAddress")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ReceiverCity")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ReceiverCountry")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ReceiverDistrict")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("ReceiverId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ReceiverName")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("ReceiverPostalCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("ReceiverSignature")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ReceiverTaxId")
+                        .IsRequired()
+                        .HasMaxLength(11)
+                        .HasColumnType("character varying(11)");
+
+                    b.Property<string>("ReceiverTaxOffice")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("SalesOrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SalesOrderNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("SenderAddress")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("SenderCity")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("SenderCountry")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("SenderDistrict")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("SenderName")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("SenderTaxId")
+                        .IsRequired()
+                        .HasMaxLength(11)
+                        .HasColumnType("character varying(11)");
+
+                    b.Property<string>("SenderTaxOffice")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("SequenceNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Series")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<Guid?>("ShipmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("SignDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("TotalGrossWeight")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<int>("TotalLineCount")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("TotalNetWeight")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal>("TotalQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal?>("TotalVolume")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<string>("TrailerPlate")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("TransportMode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VehiclePlate")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid?>("WarehouseId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvoiceId");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.HasIndex("SalesOrderId");
+
+                    b.HasIndex("ShipmentId");
+
+                    b.HasIndex("TenantId", "DeliveryNoteDate");
+
+                    b.HasIndex("TenantId", "DeliveryNoteNumber")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "Status");
+
+                    b.ToTable("DeliveryNotes", "sales");
+                });
+
+            modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.DeliveryNoteItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CountryOfOrigin")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("DeliveryNoteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal?>("GrossWeight")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<string>("HsCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("LineNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LotNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<decimal?>("NetWeight")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ProductCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ProductDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<string>("SerialNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("UnitCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<decimal?>("Volume")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeliveryNoteId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("DeliveryNoteItems", "sales");
+                });
+
             modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.Discount", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2316,6 +2680,181 @@ namespace Stocker.Modules.Sales.Infrastructure.Persistence.Migrations
                     b.ToTable("PipelineStages", "sales");
                 });
 
+            modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.PriceList", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("BaseAdjustmentPercentage")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<Guid?>("BasePriceListId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("CustomerSegment")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsTaxIncluded")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("SalesTerritoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ValidTo")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("Priority");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("Type");
+
+                    b.HasIndex("ValidFrom");
+
+                    b.HasIndex("ValidTo");
+
+                    b.HasIndex("TenantId", "Code")
+                        .IsUnique();
+
+                    b.ToTable("PriceLists", "sales");
+                });
+
+            modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.PriceListCustomer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CustomerName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("PriceListId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ValidTo")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("PriceListId", "CustomerId");
+
+                    b.ToTable("PriceListCustomers", "sales");
+                });
+
+            modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.PriceListItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("DiscountPercentage")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("LastPriceUpdate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal?>("MaximumQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal?>("MinimumQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<Guid>("PriceListId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProductCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("UnitOfMeasure")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("PriceListId", "ProductId");
+
+                    b.ToTable("PriceListItems", "sales");
+                });
+
             modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.Promotion", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2713,8 +3252,8 @@ namespace Stocker.Modules.Sales.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uuid");
+                    b.Property<int?>("ProductId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("ProductName")
                         .IsRequired()
@@ -3481,6 +4020,232 @@ namespace Stocker.Modules.Sales.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("SalesReturnItems", "sales");
+                });
+
+            modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.SalesTarget", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("ActualQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("MetricType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<decimal>("MinimumAchievementPercentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<Guid?>("ParentTargetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PeriodType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<Guid?>("SalesRepresentativeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SalesRepresentativeName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("SalesTeamId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SalesTeamName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("SalesTerritoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SalesTerritoryName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("TargetCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<decimal?>("TargetQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<string>("TargetType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SalesRepresentativeId");
+
+                    b.HasIndex("SalesTeamId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TargetCode");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("Year");
+
+                    b.HasIndex("TenantId", "TargetCode")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "Year", "Status");
+
+                    b.ToTable("SalesTargets", "sales");
+                });
+
+            modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.SalesTargetAchievement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AchievementDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("InvoiceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<DateTime>("RecordedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("SalesOrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SalesTargetId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AchievementDate");
+
+                    b.HasIndex("SalesOrderId");
+
+                    b.HasIndex("SalesTargetId");
+
+                    b.ToTable("SalesTargetAchievements", "sales");
+                });
+
+            modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.SalesTargetPeriod", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("ActualQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("PeriodNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("SalesTargetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal?>("TargetQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SalesTargetId", "PeriodNumber")
+                        .IsUnique();
+
+                    b.ToTable("SalesTargetPeriods", "sales");
+                });
+
+            modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.SalesTargetProduct", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("ActualQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<string>("ProductCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("SalesTargetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("TargetQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal>("Weight")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SalesTargetId", "ProductId")
+                        .IsUnique();
+
+                    b.ToTable("SalesTargetProducts", "sales");
                 });
 
             modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.SalesTerritory", b =>
@@ -4631,6 +5396,15 @@ namespace Stocker.Modules.Sales.Infrastructure.Persistence.Migrations
                     b.Navigation("MinimumAnnualCommitment");
                 });
 
+            modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.DeliveryNoteItem", b =>
+                {
+                    b.HasOne("Stocker.Modules.Sales.Domain.Entities.DeliveryNote", null)
+                        .WithMany("Items")
+                        .HasForeignKey("DeliveryNoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.Invoice", b =>
                 {
                     b.HasOne("Stocker.Modules.Sales.Domain.Entities.SalesOrder", "SalesOrder")
@@ -4752,6 +5526,106 @@ namespace Stocker.Modules.Sales.Infrastructure.Persistence.Migrations
                         .WithMany("Stages")
                         .HasForeignKey("PipelineId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.PriceList", b =>
+                {
+                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.Money", "MinimumOrderAmount", b1 =>
+                        {
+                            b1.Property<Guid>("PriceListId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("numeric(18,4)")
+                                .HasColumnName("MinimumOrderAmount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(10)
+                                .HasColumnType("character varying(10)")
+                                .HasColumnName("MinimumOrderCurrency");
+
+                            b1.HasKey("PriceListId");
+
+                            b1.ToTable("PriceLists", "sales");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PriceListId");
+                        });
+
+                    b.Navigation("MinimumOrderAmount");
+                });
+
+            modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.PriceListCustomer", b =>
+                {
+                    b.HasOne("Stocker.Modules.Sales.Domain.Entities.PriceList", null)
+                        .WithMany("AssignedCustomers")
+                        .HasForeignKey("PriceListId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.PriceListItem", b =>
+                {
+                    b.HasOne("Stocker.Modules.Sales.Domain.Entities.PriceList", null)
+                        .WithMany("Items")
+                        .HasForeignKey("PriceListId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.Money", "PreviousPrice", b1 =>
+                        {
+                            b1.Property<Guid>("PriceListItemId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("numeric(18,4)")
+                                .HasColumnName("PreviousPrice");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(10)
+                                .HasColumnType("character varying(10)")
+                                .HasColumnName("PreviousPriceCurrency");
+
+                            b1.HasKey("PriceListItemId");
+
+                            b1.ToTable("PriceListItems", "sales");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PriceListItemId");
+                        });
+
+                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.Money", "UnitPrice", b1 =>
+                        {
+                            b1.Property<Guid>("PriceListItemId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("numeric(18,4)")
+                                .HasColumnName("UnitPrice");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(10)
+                                .HasColumnType("character varying(10)")
+                                .HasColumnName("UnitPriceCurrency");
+
+                            b1.HasKey("PriceListItemId");
+
+                            b1.ToTable("PriceListItems", "sales");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PriceListItemId");
+                        });
+
+                    b.Navigation("PreviousPrice");
+
+                    b.Navigation("UnitPrice")
                         .IsRequired();
                 });
 
@@ -4966,6 +5840,225 @@ namespace Stocker.Modules.Sales.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.SalesTarget", b =>
+                {
+                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.Money", "TotalActualAmount", b1 =>
+                        {
+                            b1.Property<Guid>("SalesTargetId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("TotalActualAmount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("TotalActualCurrency");
+
+                            b1.HasKey("SalesTargetId");
+
+                            b1.ToTable("SalesTargets", "sales");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SalesTargetId");
+                        });
+
+                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.Money", "TotalTargetAmount", b1 =>
+                        {
+                            b1.Property<Guid>("SalesTargetId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("TotalTargetAmount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("TotalTargetCurrency");
+
+                            b1.HasKey("SalesTargetId");
+
+                            b1.ToTable("SalesTargets", "sales");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SalesTargetId");
+                        });
+
+                    b.Navigation("TotalActualAmount")
+                        .IsRequired();
+
+                    b.Navigation("TotalTargetAmount")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.SalesTargetAchievement", b =>
+                {
+                    b.HasOne("Stocker.Modules.Sales.Domain.Entities.SalesTarget", null)
+                        .WithMany("Achievements")
+                        .HasForeignKey("SalesTargetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.Money", "Amount", b1 =>
+                        {
+                            b1.Property<Guid>("SalesTargetAchievementId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("Amount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("Currency");
+
+                            b1.HasKey("SalesTargetAchievementId");
+
+                            b1.ToTable("SalesTargetAchievements", "sales");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SalesTargetAchievementId");
+                        });
+
+                    b.Navigation("Amount")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.SalesTargetPeriod", b =>
+                {
+                    b.HasOne("Stocker.Modules.Sales.Domain.Entities.SalesTarget", null)
+                        .WithMany("Periods")
+                        .HasForeignKey("SalesTargetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.Money", "ActualAmount", b1 =>
+                        {
+                            b1.Property<Guid>("SalesTargetPeriodId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("ActualAmount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("ActualCurrency");
+
+                            b1.HasKey("SalesTargetPeriodId");
+
+                            b1.ToTable("SalesTargetPeriods", "sales");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SalesTargetPeriodId");
+                        });
+
+                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.Money", "TargetAmount", b1 =>
+                        {
+                            b1.Property<Guid>("SalesTargetPeriodId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("TargetAmount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("TargetCurrency");
+
+                            b1.HasKey("SalesTargetPeriodId");
+
+                            b1.ToTable("SalesTargetPeriods", "sales");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SalesTargetPeriodId");
+                        });
+
+                    b.Navigation("ActualAmount")
+                        .IsRequired();
+
+                    b.Navigation("TargetAmount")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.SalesTargetProduct", b =>
+                {
+                    b.HasOne("Stocker.Modules.Sales.Domain.Entities.SalesTarget", null)
+                        .WithMany("ProductTargets")
+                        .HasForeignKey("SalesTargetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.Money", "ActualAmount", b1 =>
+                        {
+                            b1.Property<Guid>("SalesTargetProductId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("ActualAmount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("ActualCurrency");
+
+                            b1.HasKey("SalesTargetProductId");
+
+                            b1.ToTable("SalesTargetProducts", "sales");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SalesTargetProductId");
+                        });
+
+                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.Money", "TargetAmount", b1 =>
+                        {
+                            b1.Property<Guid>("SalesTargetProductId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("TargetAmount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("TargetCurrency");
+
+                            b1.HasKey("SalesTargetProductId");
+
+                            b1.ToTable("SalesTargetProducts", "sales");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SalesTargetProductId");
+                        });
+
+                    b.Navigation("ActualAmount")
+                        .IsRequired();
+
+                    b.Navigation("TargetAmount")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.SalesTerritory", b =>
                 {
                     b.HasOne("Stocker.Modules.Sales.Domain.Entities.SalesTerritory", null)
@@ -5106,8 +6199,20 @@ namespace Stocker.Modules.Sales.Infrastructure.Persistence.Migrations
                     b.Navigation("PriceAgreements");
                 });
 
+            modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.DeliveryNote", b =>
+                {
+                    b.Navigation("Items");
+                });
+
             modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.Invoice", b =>
                 {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.PriceList", b =>
+                {
+                    b.Navigation("AssignedCustomers");
+
                     b.Navigation("Items");
                 });
 
@@ -5134,6 +6239,15 @@ namespace Stocker.Modules.Sales.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.SalesReturn", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.SalesTarget", b =>
+                {
+                    b.Navigation("Achievements");
+
+                    b.Navigation("Periods");
+
+                    b.Navigation("ProductTargets");
                 });
 
             modelBuilder.Entity("Stocker.Modules.Sales.Domain.Entities.SalesTerritory", b =>
