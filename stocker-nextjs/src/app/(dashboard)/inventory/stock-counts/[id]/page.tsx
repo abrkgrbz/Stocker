@@ -14,6 +14,7 @@ import {
   Input,
   Empty,
 } from 'antd';
+import { confirmAction } from '@/lib/utils/sweetalert';
 import { Spinner } from '@/components/primitives';
 import {
   ArrowDownIcon,
@@ -82,59 +83,70 @@ export default function StockCountDetailPage() {
   const cancelCount = useCancelStockCount();
   const recordCount = useCountStockCountItem();
 
-  const handleStart = () => {
-    Modal.confirm({
-      title: 'Sayımı Başlat',
-      content: 'Bu sayımı başlatmak istediğinizden emin misiniz? Sayım kalemleri otomatik olarak depo stoklarından oluşturulacaktır.',
-      okText: 'Başlat',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await startCount.mutateAsync({ id, countedByUserId: 1 });
-        } catch {
-          // Error is handled by hook's onError callback
-        }
-      },
-    });
+  const handleStart = async () => {
+    const confirmed = await confirmAction(
+      'Sayımı Başlat',
+      'Bu sayımı başlatmak istediğinizden emin misiniz? Sayım kalemleri otomatik olarak depo stoklarından oluşturulacaktır.',
+      'Başlat'
+    );
+    if (confirmed) {
+      try {
+        await startCount.mutateAsync({ id, countedByUserId: 1 });
+      } catch {
+        // Error is handled by hook's onError callback
+      }
+    }
   };
 
-  const handleComplete = () => {
-    Modal.confirm({
-      title: 'Sayımı Tamamla',
-      content: 'Bu sayımı tamamlamak istediğinizden emin misiniz? Tamamlandıktan sonra değişiklik yapılamaz.',
-      okText: 'Tamamla',
-      cancelText: 'İptal',
-      onOk: async () => {
+  const handleComplete = async () => {
+    const confirmed = await confirmAction(
+      'Sayımı Tamamla',
+      'Bu sayımı tamamlamak istediğinizden emin misiniz? Tamamlandıktan sonra değişiklik yapılamaz.',
+      'Tamamla',
+      'warning'
+    );
+    if (confirmed) {
+      try {
         await completeCount.mutateAsync(id);
-      },
-    });
+      } catch {
+        // Error is handled by hook's onError callback
+      }
+    }
   };
 
-  const handleApprove = () => {
-    Modal.confirm({
-      title: 'Sayımı Onayla',
-      content: stockCount?.autoAdjust
-        ? 'Bu sayımı onaylamak istediğinizden emin misiniz? Stok farkları otomatik düzeltilecektir.'
-        : 'Bu sayımı onaylamak istediğinizden emin misiniz?',
-      okText: 'Onayla',
-      cancelText: 'İptal',
-      onOk: async () => {
+  const handleApprove = async () => {
+    const message = stockCount?.autoAdjust
+      ? 'Bu sayımı onaylamak istediğinizden emin misiniz? Stok farkları otomatik düzeltilecektir.'
+      : 'Bu sayımı onaylamak istediğinizden emin misiniz?';
+    const confirmed = await confirmAction(
+      'Sayımı Onayla',
+      message,
+      'Onayla',
+      'success'
+    );
+    if (confirmed) {
+      try {
         await approveCount.mutateAsync({ id, approvedByUserId: 1 });
-      },
-    });
+      } catch {
+        // Error is handled by hook's onError callback
+      }
+    }
   };
 
-  const handleCancel = () => {
-    Modal.confirm({
-      title: 'Sayımı İptal Et',
-      content: 'Bu sayımı iptal etmek istediğinizden emin misiniz?',
-      okText: 'İptal Et',
-      okType: 'danger',
-      cancelText: 'Vazgeç',
-      onOk: async () => {
+  const handleCancel = async () => {
+    const confirmed = await confirmAction(
+      'Sayımı İptal Et',
+      'Bu sayımı iptal etmek istediğinizden emin misiniz?',
+      'İptal Et',
+      'danger'
+    );
+    if (confirmed) {
+      try {
         await cancelCount.mutateAsync({ id, reason: 'Kullanıcı tarafından iptal edildi' });
-      },
-    });
+      } catch {
+        // Error is handled by hook's onError callback
+      }
+    }
   };
 
   const handleRecordCount = async () => {
