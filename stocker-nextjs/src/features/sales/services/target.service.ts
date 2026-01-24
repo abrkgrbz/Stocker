@@ -8,6 +8,8 @@ import type {
   AddSalesTargetProductDto,
   RecordAchievementDto,
   SalesTargetQueryParams,
+  LeaderboardEntryDto,
+  SalesTargetStatisticsDto,
   PagedResult,
 } from '../types';
 
@@ -73,10 +75,10 @@ export const targetService = {
   async deactivate(id: string): Promise<void> {
     await ApiService.post(`${BASE_URL}/${id}/deactivate`);
   },
-  async getStatistics(): Promise<Record<string, unknown>> {
-    return ApiService.get<Record<string, unknown>>(`${BASE_URL}/statistics`);
+  async getStatistics(): Promise<SalesTargetStatisticsDto> {
+    return ApiService.get<SalesTargetStatisticsDto>(`${BASE_URL}/statistics`);
   },
-  async getLeaderboard(period?: string, limit?: number): Promise<Record<string, unknown>[]> {
-    return ApiService.get<Record<string, unknown>[]>(`${BASE_URL}/leaderboard`, { params: { period, limit } });
+  async getLeaderboard(period?: string, limit?: number): Promise<LeaderboardEntryDto[]> {
+    return ApiService.get<LeaderboardEntryDto[]>(`${BASE_URL}/leaderboard`, { params: { period, limit } });
   },
 };
