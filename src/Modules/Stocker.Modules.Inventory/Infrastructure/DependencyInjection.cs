@@ -153,6 +153,13 @@ public static class DependencyInjection
         services.AddSingleton<Resilience.ChaosConfiguration>();
         services.AddSingleton<Resilience.ChaosEngine>();
 
+        // Register Integration Infrastructure (Webhook, Retry Queue, Outbox, API Adapter)
+        services.AddHttpClient("Webhook");
+        services.AddSingleton<Integration.WebhookService>();
+        services.AddSingleton<Integration.RetryQueue>();
+        services.AddSingleton<Integration.OutboxProcessor>();
+        services.AddSingleton<Integration.ExternalApiAdapterFactory>();
+
         // Register Product Image Storage Service with Circuit Breaker decorator
         services.AddScoped<MinioProductImageStorageService>();
         services.AddScoped<IProductImageStorageService>(sp =>
