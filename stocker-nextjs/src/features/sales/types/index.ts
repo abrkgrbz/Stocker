@@ -2770,7 +2770,7 @@ export interface CustomerSegmentListDto {
 export interface CreateCustomerSegmentDto {
   code: string;
   name: string;
-  priority: string;
+  priority: number;
   description?: string;
 }
 
