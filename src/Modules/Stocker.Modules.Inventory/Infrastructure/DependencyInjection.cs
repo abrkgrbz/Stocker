@@ -14,6 +14,7 @@ using Stocker.Modules.Inventory.Infrastructure.Repositories;
 using Stocker.Modules.Inventory.Infrastructure.BackgroundServices;
 using Stocker.Modules.Inventory.Infrastructure.Services;
 using Stocker.Modules.Inventory.Interfaces;
+using Microsoft.Extensions.Logging;
 using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.Inventory.Infrastructure;
@@ -126,8 +127,25 @@ public static class DependencyInjection
                 .Build();
         });
 
-        // Register Product Image Storage Service
-        services.AddScoped<IProductImageStorageService, MinioProductImageStorageService>();
+        // Register Resilience Infrastructure
+        services.AddSingleton<Resilience.CircuitBreakerRegistry>();
+        services.AddSingleton<Resilience.IDistributedLockService, Resilience.InMemoryDistributedLockService>();
+        services.AddScoped<Resilience.SagaOrchestratorFactory>();
+
+        // Register Observability (Metrics + Tracing)
+        services.AddSingleton<Observability.InventoryMetrics>();
+
+        // Register Chaos Engineering (disabled by default, enable only in test environments)
+        services.AddSingleton<Resilience.ChaosConfiguration>();
+        services.AddSingleton<Resilience.ChaosEngine>();
+
+        // Register Product Image Storage Service with Circuit Breaker decorator
+        services.AddScoped<MinioProductImageStorageService>();
+        services.AddScoped<IProductImageStorageService>(sp =>
+            new Resilience.ResilientStorageService(
+                sp.GetRequiredService<MinioProductImageStorageService>(),
+                sp.GetRequiredService<Resilience.CircuitBreakerRegistry>(),
+                sp.GetRequiredService<ILogger<Resilience.ResilientStorageService>>()));
 
         // Register Barcode Service
         services.AddScoped<IBarcodeService, BarcodeService>();
@@ -144,8 +162,13 @@ public static class DependencyInjection
         // Register Excel Export/Import Service
         services.AddScoped<IExcelExportService, ExcelExportService>();
 
-        // Register Stock Alert Notification Service (SignalR-based real-time notifications)
-        services.AddScoped<IStockAlertNotificationService, StockAlertNotificationService>();
+        // Register Stock Alert Notification Service with Circuit Breaker decorator
+        services.AddScoped<StockAlertNotificationService>();
+        services.AddScoped<IStockAlertNotificationService>(sp =>
+            new Resilience.ResilientNotificationService(
+                sp.GetRequiredService<StockAlertNotificationService>(),
+                sp.GetRequiredService<Resilience.CircuitBreakerRegistry>(),
+                sp.GetRequiredService<ILogger<Resilience.ResilientNotificationService>>()));
 
         // Register Inventory Analysis Service (ABC/XYZ, turnover, dead stock)
         services.AddScoped<IInventoryAnalysisService, InventoryAnalysisService>();

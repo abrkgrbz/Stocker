@@ -7,6 +7,7 @@ using Stocker.Modules.Inventory.Application.Features.StockMovements.Queries;
 using Stocker.Modules.Inventory.Domain.Enums;
 using Stocker.SharedKernel.Authorization;
 using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Infrastructure.RateLimiting;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -16,6 +17,7 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 [Route("api/inventory/stock-movements")]
 [RequireModule("Inventory")]
 [ApiExplorerSettings(GroupName = "inventory")]
+[InventoryRateLimit(InventoryRateLimitPolicies.StockMovementLimit, policyName: "stock-movements")]
 public class StockMovementsController : ControllerBase
 {
     private readonly IMediator _mediator;

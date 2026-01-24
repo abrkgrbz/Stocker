@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Stocker.Modules.Inventory.Application.Services;
 using Stocker.SharedKernel.Authorization;
 using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Infrastructure.RateLimiting;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
 
@@ -16,6 +17,7 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 [Route("api/inventory/excel")]
 [RequireModule("Inventory")]
 [ApiExplorerSettings(GroupName = "inventory")]
+[InventoryRateLimit(InventoryRateLimitPolicies.BulkOperationLimit, policyName: "bulk-operations")]
 public class ExcelExportController : ControllerBase
 {
     private readonly IExcelExportService _excelExportService;

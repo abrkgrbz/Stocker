@@ -6,6 +6,7 @@ using Stocker.Modules.Inventory.Application.Features.InventoryAdjustments.Comman
 using Stocker.Modules.Inventory.Application.Features.InventoryAdjustments.Queries;
 using Stocker.SharedKernel.Authorization;
 using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Infrastructure.RateLimiting;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -15,6 +16,7 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 [Route("api/inventory/adjustments")]
 [RequireModule("Inventory")]
 [ApiExplorerSettings(GroupName = "inventory")]
+[InventoryRateLimit(InventoryRateLimitPolicies.AdjustmentLimit, policyName: "adjustments")]
 public class InventoryAdjustmentsController : ControllerBase
 {
     private readonly IMediator _mediator;

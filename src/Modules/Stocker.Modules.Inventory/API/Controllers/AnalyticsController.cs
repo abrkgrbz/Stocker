@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Stocker.Modules.Inventory.Application.Features.Analytics.Queries;
 using Stocker.SharedKernel.Authorization;
 using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Infrastructure.RateLimiting;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -13,6 +14,7 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 [Route("api/inventory/analytics")]
 [RequireModule("Inventory")]
 [ApiExplorerSettings(GroupName = "inventory")]
+[InventoryRateLimit(InventoryRateLimitPolicies.AnalyticsLimit, policyName: "analytics")]
 public class AnalyticsController : ControllerBase
 {
     private readonly IMediator _mediator;
