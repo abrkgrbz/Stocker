@@ -214,10 +214,7 @@ public class InventoryDbContext : DbContext
     private static void ConfigureXminConcurrency<T>(ModelBuilder modelBuilder) where T : SharedKernel.Common.BaseEntity
     {
         modelBuilder.Entity<T>()
-            .Property(e => e.xmin)
-            .HasColumnName("xmin")
-            .HasColumnType("xid")
-            .ValueGeneratedOnAddOrUpdate()
+            .Property(e => e.RowVersion)
             .IsConcurrencyToken();
     }
 
@@ -340,6 +337,16 @@ public class InventoryDbContext : DbContext
                         "Either set TenantId explicitly on the entity or ensure tenant context is available.");
                 }
                 entry.Property(nameof(ITenantEntity.TenantId)).CurrentValue = tenantId.Value;
+            }
+        }
+
+        // Increment RowVersion for modified entities (optimistic concurrency)
+        foreach (var entry in ChangeTracker.Entries<SharedKernel.Common.BaseEntity>())
+        {
+            if (entry.State == EntityState.Modified)
+            {
+                entry.Property(nameof(SharedKernel.Common.BaseEntity.RowVersion)).CurrentValue =
+                    entry.Entity.RowVersion + 1;
             }
         }
 
