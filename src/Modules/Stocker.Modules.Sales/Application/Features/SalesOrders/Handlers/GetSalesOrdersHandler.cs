@@ -3,8 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.Modules.Sales.Application.Features.SalesOrders.Queries;
+using Stocker.Modules.Sales.Application.Services;
 using Stocker.Modules.Sales.Domain.Entities;
 using Stocker.Modules.Sales.Interfaces;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Pagination;
 using Stocker.SharedKernel.Results;
 
@@ -13,17 +15,24 @@ namespace Stocker.Modules.Sales.Application.Features.SalesOrders.Handlers;
 /// <summary>
 /// Handler for GetSalesOrdersQuery
 /// Uses ISalesUnitOfWork for consistent data access
+/// Applies territory-based filtering for non-manager users
 /// </summary>
 public class GetSalesOrdersHandler : IRequestHandler<GetSalesOrdersQuery, Result<PagedResult<SalesOrderListDto>>>
 {
     private readonly ISalesUnitOfWork _unitOfWork;
+    private readonly IResourceAuthorizationService _resourceAuth;
+    private readonly ICurrentUserService _currentUser;
     private readonly ILogger<GetSalesOrdersHandler> _logger;
 
     public GetSalesOrdersHandler(
         ISalesUnitOfWork unitOfWork,
+        IResourceAuthorizationService resourceAuth,
+        ICurrentUserService currentUser,
         ILogger<GetSalesOrdersHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _resourceAuth = resourceAuth;
+        _currentUser = currentUser;
         _logger = logger;
     }
 
@@ -35,6 +44,29 @@ public class GetSalesOrdersHandler : IRequestHandler<GetSalesOrdersQuery, Result
             .Include(o => o.Items)
             .Where(o => o.TenantId == tenantId)
             .AsQueryable();
+
+        // Territory-based access control: non-managers only see their own orders
+        if (!_resourceAuth.IsManager())
+        {
+            var userId = _currentUser.UserId;
+            var territoryIds = await _resourceAuth.GetUserTerritoryIdsAsync(cancellationToken);
+
+            if (userId.HasValue)
+            {
+                if (territoryIds.Count > 0)
+                {
+                    // User sees orders where they are sales person OR order is in their territory
+                    query = query.Where(o =>
+                        o.SalesPersonId == userId.Value ||
+                        (o.TerritoryId.HasValue && territoryIds.Contains(o.TerritoryId.Value)));
+                }
+                else
+                {
+                    // No territory assignments - only see own orders
+                    query = query.Where(o => o.SalesPersonId == userId.Value);
+                }
+            }
+        }
 
         // Apply filters
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
@@ -129,14 +161,22 @@ public class GetSalesOrderByIdHandler : IRequestHandler<GetSalesOrderByIdQuery, 
 /// <summary>
 /// Handler for GetSalesOrderStatisticsQuery
 /// Uses ISalesUnitOfWork for consistent data access
+/// Applies territory-based filtering for non-manager users
 /// </summary>
 public class GetSalesOrderStatisticsHandler : IRequestHandler<GetSalesOrderStatisticsQuery, Result<SalesOrderStatisticsDto>>
 {
     private readonly ISalesUnitOfWork _unitOfWork;
+    private readonly IResourceAuthorizationService _resourceAuth;
+    private readonly ICurrentUserService _currentUser;
 
-    public GetSalesOrderStatisticsHandler(ISalesUnitOfWork unitOfWork)
+    public GetSalesOrderStatisticsHandler(
+        ISalesUnitOfWork unitOfWork,
+        IResourceAuthorizationService resourceAuth,
+        ICurrentUserService currentUser)
     {
         _unitOfWork = unitOfWork;
+        _resourceAuth = resourceAuth;
+        _currentUser = currentUser;
     }
 
     public async Task<Result<SalesOrderStatisticsDto>> Handle(GetSalesOrderStatisticsQuery request, CancellationToken cancellationToken)
@@ -145,6 +185,27 @@ public class GetSalesOrderStatisticsHandler : IRequestHandler<GetSalesOrderStati
 
         var query = _unitOfWork.SalesOrders.AsQueryable()
             .Where(o => o.TenantId == tenantId);
+
+        // Territory-based access control for statistics
+        if (!_resourceAuth.IsManager())
+        {
+            var userId = _currentUser.UserId;
+            var territoryIds = await _resourceAuth.GetUserTerritoryIdsAsync(cancellationToken);
+
+            if (userId.HasValue)
+            {
+                if (territoryIds.Count > 0)
+                {
+                    query = query.Where(o =>
+                        o.SalesPersonId == userId.Value ||
+                        (o.TerritoryId.HasValue && territoryIds.Contains(o.TerritoryId.Value)));
+                }
+                else
+                {
+                    query = query.Where(o => o.SalesPersonId == userId.Value);
+                }
+            }
+        }
 
         if (request.FromDate.HasValue)
             query = query.Where(o => o.OrderDate >= request.FromDate.Value);

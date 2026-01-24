@@ -2,6 +2,7 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Stocker.Modules.Sales.Application.Services;
 using Stocker.Modules.Sales.Domain.Repositories;
 using Stocker.Modules.Sales.Infrastructure.EventConsumers;
 using Stocker.Modules.Sales.Infrastructure.Persistence;
@@ -87,6 +88,10 @@ public static class DependencyInjection
         services.AddScoped<ISalesPipelineRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().SalesPipelines);
         services.AddScoped<ISalesTargetRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().SalesTargets);
         services.AddScoped<ICustomerSegmentRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().CustomerSegments);
+
+        // Application Services
+        services.AddScoped<IPriceValidationService, PriceValidationService>();
+        services.AddScoped<IResourceAuthorizationService, ResourceAuthorizationService>();
 
         // Phase 5: Returns & Credits Repositories
         services.AddScoped<ISalesReturnRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().SalesReturns);

@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.Modules.Sales.Application.Features.SalesOrders.Commands;
@@ -31,13 +32,22 @@ public class ConfirmSalesOrderHandler : IRequestHandler<ConfirmSalesOrderCommand
         var order = await _unitOfWork.SalesOrders.GetWithItemsAsync(request.Id, cancellationToken);
 
         if (order == null || order.TenantId != tenantId)
-            return Result<SalesOrderDto>.Failure(Error.NotFound("SalesOrder", "Sales order not found"));
+            return Result<SalesOrderDto>.Failure(Error.NotFound("SalesOrder", "Sipariş bulunamadı"));
 
         var result = order.Confirm();
         if (!result.IsSuccess)
             return Result<SalesOrderDto>.Failure(result.Error);
 
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _logger.LogWarning(ex, "Sipariş {OrderId} onaylanırken eşzamanlılık çakışması", order.Id);
+            return Result<SalesOrderDto>.Failure(Error.Conflict("SalesOrder",
+                "Bu sipariş başka bir kullanıcı tarafından değiştirilmiş. Lütfen sayfayı yenileyip tekrar deneyin."));
+        }
 
         _logger.LogInformation("Sales order {OrderId} confirmed for tenant {TenantId}", order.Id, tenantId);
 
@@ -69,13 +79,22 @@ public class ShipSalesOrderHandler : IRequestHandler<ShipSalesOrderCommand, Resu
         var order = await _unitOfWork.SalesOrders.GetWithItemsAsync(request.Id, cancellationToken);
 
         if (order == null || order.TenantId != tenantId)
-            return Result<SalesOrderDto>.Failure(Error.NotFound("SalesOrder", "Sales order not found"));
+            return Result<SalesOrderDto>.Failure(Error.NotFound("SalesOrder", "Sipariş bulunamadı"));
 
         var result = order.Ship();
         if (!result.IsSuccess)
             return Result<SalesOrderDto>.Failure(result.Error);
 
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _logger.LogWarning(ex, "Sipariş {OrderId} sevk edilirken eşzamanlılık çakışması", order.Id);
+            return Result<SalesOrderDto>.Failure(Error.Conflict("SalesOrder",
+                "Bu sipariş başka bir kullanıcı tarafından değiştirilmiş. Lütfen sayfayı yenileyip tekrar deneyin."));
+        }
 
         _logger.LogInformation("Sales order {OrderId} shipped for tenant {TenantId}", order.Id, tenantId);
 
@@ -107,13 +126,22 @@ public class DeliverSalesOrderHandler : IRequestHandler<DeliverSalesOrderCommand
         var order = await _unitOfWork.SalesOrders.GetWithItemsAsync(request.Id, cancellationToken);
 
         if (order == null || order.TenantId != tenantId)
-            return Result<SalesOrderDto>.Failure(Error.NotFound("SalesOrder", "Sales order not found"));
+            return Result<SalesOrderDto>.Failure(Error.NotFound("SalesOrder", "Sipariş bulunamadı"));
 
         var result = order.Deliver();
         if (!result.IsSuccess)
             return Result<SalesOrderDto>.Failure(result.Error);
 
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _logger.LogWarning(ex, "Sipariş {OrderId} teslim edilirken eşzamanlılık çakışması", order.Id);
+            return Result<SalesOrderDto>.Failure(Error.Conflict("SalesOrder",
+                "Bu sipariş başka bir kullanıcı tarafından değiştirilmiş. Lütfen sayfayı yenileyip tekrar deneyin."));
+        }
 
         _logger.LogInformation("Sales order {OrderId} delivered for tenant {TenantId}", order.Id, tenantId);
 
@@ -145,13 +173,22 @@ public class CompleteSalesOrderHandler : IRequestHandler<CompleteSalesOrderComma
         var order = await _unitOfWork.SalesOrders.GetWithItemsAsync(request.Id, cancellationToken);
 
         if (order == null || order.TenantId != tenantId)
-            return Result<SalesOrderDto>.Failure(Error.NotFound("SalesOrder", "Sales order not found"));
+            return Result<SalesOrderDto>.Failure(Error.NotFound("SalesOrder", "Sipariş bulunamadı"));
 
         var result = order.Complete();
         if (!result.IsSuccess)
             return Result<SalesOrderDto>.Failure(result.Error);
 
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _logger.LogWarning(ex, "Sipariş {OrderId} tamamlanırken eşzamanlılık çakışması", order.Id);
+            return Result<SalesOrderDto>.Failure(Error.Conflict("SalesOrder",
+                "Bu sipariş başka bir kullanıcı tarafından değiştirilmiş. Lütfen sayfayı yenileyip tekrar deneyin."));
+        }
 
         _logger.LogInformation("Sales order {OrderId} completed for tenant {TenantId}", order.Id, tenantId);
 

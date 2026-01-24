@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.Modules.Sales.Application.Features.SalesOrders.Commands;
 using Stocker.Modules.Sales.Application.Features.SalesOrders.Queries;
+using Stocker.Modules.Sales.Application.Services;
 using Stocker.SharedKernel.Authorization;
 using Stocker.SharedKernel.Pagination;
 
@@ -17,16 +18,19 @@ namespace Stocker.Modules.Sales.API.Controllers;
 public class SalesOrdersController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IResourceAuthorizationService _resourceAuth;
 
-    public SalesOrdersController(IMediator mediator)
+    public SalesOrdersController(IMediator mediator, IResourceAuthorizationService resourceAuth)
     {
         _mediator = mediator;
+        _resourceAuth = resourceAuth;
     }
 
     /// <summary>
     /// Gets all sales orders with pagination and filtering
     /// </summary>
     [HttpGet]
+    [HasPermission("Sales.Orders", "View")]
     public async Task<ActionResult<PagedResult<SalesOrderListDto>>> GetOrders(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
@@ -66,8 +70,17 @@ public class SalesOrdersController : ControllerBase
     /// Gets a sales order by ID
     /// </summary>
     [HttpGet("{id:guid}")]
+    [HasPermission("Sales.Orders", "View")]
     public async Task<ActionResult<SalesOrderDto>> GetOrderById(Guid id, CancellationToken cancellationToken)
     {
+        var accessResult = await _resourceAuth.CanAccessSalesOrderAsync(id, cancellationToken);
+        if (!accessResult.IsSuccess)
+            return accessResult.Error.Code == "NotFound"
+                ? NotFound(new { error = accessResult.Error.Description })
+                : Unauthorized(new { error = accessResult.Error.Description });
+        if (!accessResult.Value)
+            return Forbid();
+
         var query = new GetSalesOrderByIdQuery { Id = id };
         var result = await _mediator.Send(query, cancellationToken);
 
@@ -85,6 +98,7 @@ public class SalesOrdersController : ControllerBase
     /// Gets a sales order by order number
     /// </summary>
     [HttpGet("number/{orderNumber}")]
+    [HasPermission("Sales.Orders", "View")]
     public async Task<ActionResult<SalesOrderDto>> GetOrderByNumber(
         string orderNumber,
         CancellationToken cancellationToken)
@@ -106,6 +120,7 @@ public class SalesOrdersController : ControllerBase
     /// Gets sales order statistics
     /// </summary>
     [HttpGet("statistics")]
+    [HasPermission("Sales.Orders", "View")]
     public async Task<ActionResult<SalesOrderStatisticsDto>> GetStatistics(
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null,
@@ -129,6 +144,7 @@ public class SalesOrdersController : ControllerBase
     /// Creates a new sales order
     /// </summary>
     [HttpPost]
+    [HasPermission("Sales.Orders", "Create")]
     public async Task<ActionResult<SalesOrderDto>> CreateOrder(
         [FromBody] CreateSalesOrderCommand command,
         CancellationToken cancellationToken)
@@ -145,6 +161,7 @@ public class SalesOrdersController : ControllerBase
     /// Updates a sales order
     /// </summary>
     [HttpPut("{id:guid}")]
+    [HasPermission("Sales.Orders", "Edit")]
     public async Task<ActionResult<SalesOrderDto>> UpdateOrder(
         Guid id,
         [FromBody] UpdateSalesOrderCommand command,
@@ -152,6 +169,14 @@ public class SalesOrdersController : ControllerBase
     {
         if (id != command.Id)
             return BadRequest(new { error = "ID mismatch" });
+
+        var modifyResult = await _resourceAuth.CanModifySalesOrderAsync(id, cancellationToken);
+        if (!modifyResult.IsSuccess)
+            return modifyResult.Error.Code == "NotFound"
+                ? NotFound(new { error = modifyResult.Error.Description })
+                : Unauthorized(new { error = modifyResult.Error.Description });
+        if (!modifyResult.Value)
+            return Forbid();
 
         var result = await _mediator.Send(command, cancellationToken);
 
@@ -169,6 +194,7 @@ public class SalesOrdersController : ControllerBase
     /// Adds an item to a sales order
     /// </summary>
     [HttpPost("{id:guid}/items")]
+    [HasPermission("Sales.Orders", "Edit")]
     public async Task<ActionResult<SalesOrderDto>> AddItem(
         Guid id,
         [FromBody] AddSalesOrderItemCommand command,
@@ -176,6 +202,14 @@ public class SalesOrdersController : ControllerBase
     {
         if (id != command.SalesOrderId)
             return BadRequest(new { error = "ID mismatch" });
+
+        var modifyResult = await _resourceAuth.CanModifySalesOrderAsync(id, cancellationToken);
+        if (!modifyResult.IsSuccess)
+            return modifyResult.Error.Code == "NotFound"
+                ? NotFound(new { error = modifyResult.Error.Description })
+                : Unauthorized(new { error = modifyResult.Error.Description });
+        if (!modifyResult.Value)
+            return Forbid();
 
         var result = await _mediator.Send(command, cancellationToken);
 
@@ -193,11 +227,20 @@ public class SalesOrdersController : ControllerBase
     /// Removes an item from a sales order
     /// </summary>
     [HttpDelete("{orderId:guid}/items/{itemId:guid}")]
+    [HasPermission("Sales.Orders", "Edit")]
     public async Task<ActionResult<SalesOrderDto>> RemoveItem(
         Guid orderId,
         Guid itemId,
         CancellationToken cancellationToken)
     {
+        var modifyResult = await _resourceAuth.CanModifySalesOrderAsync(orderId, cancellationToken);
+        if (!modifyResult.IsSuccess)
+            return modifyResult.Error.Code == "NotFound"
+                ? NotFound(new { error = modifyResult.Error.Description })
+                : Unauthorized(new { error = modifyResult.Error.Description });
+        if (!modifyResult.Value)
+            return Forbid();
+
         var command = new RemoveSalesOrderItemCommand
         {
             SalesOrderId = orderId,
@@ -220,6 +263,7 @@ public class SalesOrdersController : ControllerBase
     /// Approves a sales order
     /// </summary>
     [HttpPost("{id:guid}/approve")]
+    [HasPermission("Sales.Orders", "Approve")]
     public async Task<ActionResult<SalesOrderDto>> ApproveOrder(Guid id, CancellationToken cancellationToken)
     {
         var command = new ApproveSalesOrderCommand { Id = id };
@@ -239,6 +283,7 @@ public class SalesOrdersController : ControllerBase
     /// Confirms a sales order (customer confirmation received)
     /// </summary>
     [HttpPost("{id:guid}/confirm")]
+    [HasPermission("Sales.Orders", "Edit")]
     public async Task<ActionResult<SalesOrderDto>> ConfirmOrder(Guid id, CancellationToken cancellationToken)
     {
         var command = new ConfirmSalesOrderCommand { Id = id };
@@ -258,6 +303,7 @@ public class SalesOrdersController : ControllerBase
     /// Marks a sales order as shipped
     /// </summary>
     [HttpPost("{id:guid}/ship")]
+    [HasPermission("Sales.Orders", "Edit")]
     public async Task<ActionResult<SalesOrderDto>> ShipOrder(Guid id, CancellationToken cancellationToken)
     {
         var command = new ShipSalesOrderCommand { Id = id };
@@ -277,6 +323,7 @@ public class SalesOrdersController : ControllerBase
     /// Marks a sales order as delivered
     /// </summary>
     [HttpPost("{id:guid}/deliver")]
+    [HasPermission("Sales.Orders", "Edit")]
     public async Task<ActionResult<SalesOrderDto>> DeliverOrder(Guid id, CancellationToken cancellationToken)
     {
         var command = new DeliverSalesOrderCommand { Id = id };
@@ -296,6 +343,7 @@ public class SalesOrdersController : ControllerBase
     /// Marks a sales order as completed
     /// </summary>
     [HttpPost("{id:guid}/complete")]
+    [HasPermission("Sales.Orders", "Edit")]
     public async Task<ActionResult<SalesOrderDto>> CompleteOrder(Guid id, CancellationToken cancellationToken)
     {
         var command = new CompleteSalesOrderCommand { Id = id };
@@ -315,6 +363,7 @@ public class SalesOrdersController : ControllerBase
     /// Cancels a sales order
     /// </summary>
     [HttpPost("{id:guid}/cancel")]
+    [HasPermission("Sales.Orders", "Cancel")]
     public async Task<ActionResult<SalesOrderDto>> CancelOrder(
         Guid id,
         [FromBody] CancelSalesOrderCommand command,
@@ -322,6 +371,14 @@ public class SalesOrdersController : ControllerBase
     {
         if (id != command.Id)
             return BadRequest(new { error = "ID mismatch" });
+
+        var modifyResult = await _resourceAuth.CanModifySalesOrderAsync(id, cancellationToken);
+        if (!modifyResult.IsSuccess)
+            return modifyResult.Error.Code == "NotFound"
+                ? NotFound(new { error = modifyResult.Error.Description })
+                : Unauthorized(new { error = modifyResult.Error.Description });
+        if (!modifyResult.Value)
+            return Forbid();
 
         var result = await _mediator.Send(command, cancellationToken);
 
@@ -339,8 +396,17 @@ public class SalesOrdersController : ControllerBase
     /// Deletes a sales order
     /// </summary>
     [HttpDelete("{id:guid}")]
+    [HasPermission("Sales.Orders", "Delete")]
     public async Task<ActionResult> DeleteOrder(Guid id, CancellationToken cancellationToken)
     {
+        var modifyResult = await _resourceAuth.CanModifySalesOrderAsync(id, cancellationToken);
+        if (!modifyResult.IsSuccess)
+            return modifyResult.Error.Code == "NotFound"
+                ? NotFound(new { error = modifyResult.Error.Description })
+                : Unauthorized(new { error = modifyResult.Error.Description });
+        if (!modifyResult.Value)
+            return Forbid();
+
         var command = new DeleteSalesOrderCommand { Id = id };
         var result = await _mediator.Send(command, cancellationToken);
 

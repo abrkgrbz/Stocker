@@ -140,6 +140,9 @@ public class SalesOrder : TenantAggregateRoot
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
 
+    /// <summary>Concurrency token - eşzamanlı güncelleme çakışmalarını tespit etmek için</summary>
+    public uint RowVersion { get; private set; }
+
     public IReadOnlyList<SalesOrderItem> Items => _items.AsReadOnly();
 
     private SalesOrder() : base() { }

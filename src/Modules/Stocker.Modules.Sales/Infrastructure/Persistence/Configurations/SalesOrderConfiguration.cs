@@ -72,6 +72,13 @@ public class SalesOrderConfiguration : IEntityTypeConfiguration<SalesOrder>
         builder.Property(o => o.CancellationReason)
             .HasMaxLength(500);
 
+        // Concurrency Token - Optimistic Locking (PostgreSQL xmin system column)
+        builder.Property(o => o.RowVersion)
+            .HasColumnName("xmin")
+            .HasColumnType("xid")
+            .ValueGeneratedOnAddOrUpdate()
+            .IsConcurrencyToken();
+
         // Yeni alanlar - Kaynak belge ilişkileri
         builder.Property(o => o.QuotationNumber)
             .HasMaxLength(50);
