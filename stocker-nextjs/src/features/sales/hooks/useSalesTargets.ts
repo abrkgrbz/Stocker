@@ -17,6 +17,8 @@ import type {
   AddSalesTargetProductDto,
   RecordAchievementDto,
   SalesTargetQueryParams,
+  LeaderboardEntryDto,
+  SalesTargetStatisticsDto,
   PagedResult,
 } from '../types';
 
@@ -347,7 +349,7 @@ export function useDeactivateSalesTarget() {
  * Hook to get sales target statistics
  */
 export function useSalesTargetStatistics() {
-  return useQuery({
+  return useQuery<SalesTargetStatisticsDto>({
     queryKey: salesKeys.targets.statistics(),
     queryFn: () => targetService.getStatistics(),
     ...queryOptions.staleShort,
@@ -358,7 +360,7 @@ export function useSalesTargetStatistics() {
  * Hook to get leaderboard data
  */
 export function useLeaderboard(period?: string, limit?: number) {
-  return useQuery({
+  return useQuery<LeaderboardEntryDto[]>({
     queryKey: [...salesKeys.targets.all(), 'leaderboard', period, limit] as const,
     queryFn: () => targetService.getLeaderboard(period, limit),
     ...queryOptions.staleShort,
