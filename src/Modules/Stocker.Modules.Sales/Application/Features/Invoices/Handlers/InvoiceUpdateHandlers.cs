@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.Modules.Sales.Application.Features.Invoices.Commands;
 using Stocker.Modules.Sales.Domain.Entities;
+using Stocker.Modules.Sales.Domain.Services;
 using Stocker.Modules.Sales.Interfaces;
 using Stocker.SharedKernel.Results;
 
@@ -258,6 +259,260 @@ public class SetEInvoiceHandler : IRequestHandler<SetEInvoiceCommand, Result<Inv
 
         _logger.LogInformation("E-Invoice ID {EInvoiceId} set for invoice {InvoiceId} for tenant {TenantId}",
             request.EInvoiceId, invoice.Id, tenantId);
+
+        return Result<InvoiceDto>.Success(InvoiceDto.FromEntity(invoice));
+    }
+}
+
+/// <summary>
+/// Handler for VoidInvoiceCommand - Faturayı hükümsüz kılar
+/// </summary>
+public class VoidInvoiceHandler : IRequestHandler<VoidInvoiceCommand, Result<InvoiceDto>>
+{
+    private readonly ISalesUnitOfWork _unitOfWork;
+    private readonly ILogger<VoidInvoiceHandler> _logger;
+
+    public VoidInvoiceHandler(ISalesUnitOfWork unitOfWork, ILogger<VoidInvoiceHandler> logger)
+    {
+        _unitOfWork = unitOfWork;
+        _logger = logger;
+    }
+
+    public async Task<Result<InvoiceDto>> Handle(VoidInvoiceCommand request, CancellationToken cancellationToken)
+    {
+        var tenantId = _unitOfWork.TenantId;
+        var invoice = await _unitOfWork.Invoices.GetWithItemsAsync(request.Id, cancellationToken);
+
+        if (invoice == null || invoice.TenantId != tenantId)
+            return Result<InvoiceDto>.Failure(Error.NotFound("Invoice", "Invoice not found"));
+
+        var result = invoice.Void(request.Reason);
+        if (!result.IsSuccess)
+            return Result<InvoiceDto>.Failure(result.Error);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Invoice {InvoiceId} voided for tenant {TenantId}. Reason: {Reason}",
+            invoice.Id, tenantId, request.Reason);
+
+        return Result<InvoiceDto>.Success(InvoiceDto.FromEntity(invoice));
+    }
+}
+
+/// <summary>
+/// Handler for ApplyWithholdingTaxCommand - Tevkifat uygular
+/// GİB tevkifat kodları ve oranlarını doğrular
+/// </summary>
+public class ApplyWithholdingTaxHandler : IRequestHandler<ApplyWithholdingTaxCommand, Result<InvoiceDto>>
+{
+    private readonly ISalesUnitOfWork _unitOfWork;
+    private readonly ILogger<ApplyWithholdingTaxHandler> _logger;
+
+    public ApplyWithholdingTaxHandler(ISalesUnitOfWork unitOfWork, ILogger<ApplyWithholdingTaxHandler> logger)
+    {
+        _unitOfWork = unitOfWork;
+        _logger = logger;
+    }
+
+    public async Task<Result<InvoiceDto>> Handle(ApplyWithholdingTaxCommand request, CancellationToken cancellationToken)
+    {
+        var tenantId = _unitOfWork.TenantId;
+        var invoice = await _unitOfWork.Invoices.GetWithItemsAsync(request.Id, cancellationToken);
+
+        if (invoice == null || invoice.TenantId != tenantId)
+            return Result<InvoiceDto>.Failure(Error.NotFound("Invoice", "Invoice not found"));
+
+        // Validate withholding tax code
+        var codeValidation = TurkishTaxValidationService.ValidateWithholdingTaxCode(request.Code);
+        if (!codeValidation.IsSuccess)
+            return Result<InvoiceDto>.Failure(codeValidation.Error);
+
+        // Validate withholding tax rate
+        var rateValidation = TurkishTaxValidationService.ValidateWithholdingTaxRate(request.Rate);
+        if (!rateValidation.IsSuccess)
+            return Result<InvoiceDto>.Failure(rateValidation.Error);
+
+        var result = invoice.ApplyWithholdingTax(request.Rate, request.Code);
+        if (!result.IsSuccess)
+            return Result<InvoiceDto>.Failure(result.Error);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Withholding tax applied to invoice {InvoiceId}. Rate: {Rate}, Code: {Code}",
+            invoice.Id, request.Rate, request.Code);
+
+        return Result<InvoiceDto>.Success(InvoiceDto.FromEntity(invoice));
+    }
+}
+
+/// <summary>
+/// Handler for RemoveWithholdingTaxCommand - Tevkifatı kaldırır
+/// </summary>
+public class RemoveWithholdingTaxHandler : IRequestHandler<RemoveWithholdingTaxCommand, Result<InvoiceDto>>
+{
+    private readonly ISalesUnitOfWork _unitOfWork;
+    private readonly ILogger<RemoveWithholdingTaxHandler> _logger;
+
+    public RemoveWithholdingTaxHandler(ISalesUnitOfWork unitOfWork, ILogger<RemoveWithholdingTaxHandler> logger)
+    {
+        _unitOfWork = unitOfWork;
+        _logger = logger;
+    }
+
+    public async Task<Result<InvoiceDto>> Handle(RemoveWithholdingTaxCommand request, CancellationToken cancellationToken)
+    {
+        var tenantId = _unitOfWork.TenantId;
+        var invoice = await _unitOfWork.Invoices.GetWithItemsAsync(request.Id, cancellationToken);
+
+        if (invoice == null || invoice.TenantId != tenantId)
+            return Result<InvoiceDto>.Failure(Error.NotFound("Invoice", "Invoice not found"));
+
+        var result = invoice.RemoveWithholdingTax();
+        if (!result.IsSuccess)
+            return Result<InvoiceDto>.Failure(result.Error);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Withholding tax removed from invoice {InvoiceId}", invoice.Id);
+
+        return Result<InvoiceDto>.Success(InvoiceDto.FromEntity(invoice));
+    }
+}
+
+/// <summary>
+/// Handler for SetEArchiveCommand - E-Arşiv bilgisi atar
+/// </summary>
+public class SetEArchiveHandler : IRequestHandler<SetEArchiveCommand, Result<InvoiceDto>>
+{
+    private readonly ISalesUnitOfWork _unitOfWork;
+    private readonly ILogger<SetEArchiveHandler> _logger;
+
+    public SetEArchiveHandler(ISalesUnitOfWork unitOfWork, ILogger<SetEArchiveHandler> logger)
+    {
+        _unitOfWork = unitOfWork;
+        _logger = logger;
+    }
+
+    public async Task<Result<InvoiceDto>> Handle(SetEArchiveCommand request, CancellationToken cancellationToken)
+    {
+        var tenantId = _unitOfWork.TenantId;
+        var invoice = await _unitOfWork.Invoices.GetWithItemsAsync(request.Id, cancellationToken);
+
+        if (invoice == null || invoice.TenantId != tenantId)
+            return Result<InvoiceDto>.Failure(Error.NotFound("Invoice", "Invoice not found"));
+
+        var result = invoice.SetEArchive(request.EArchiveNumber);
+        if (!result.IsSuccess)
+            return Result<InvoiceDto>.Failure(result.Error);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("E-Archive number {EArchiveNumber} set for invoice {InvoiceId}",
+            request.EArchiveNumber, invoice.Id);
+
+        return Result<InvoiceDto>.Success(InvoiceDto.FromEntity(invoice));
+    }
+}
+
+/// <summary>
+/// Handler for SetGibUuidCommand - GİB UUID atar
+/// </summary>
+public class SetGibUuidHandler : IRequestHandler<SetGibUuidCommand, Result<InvoiceDto>>
+{
+    private readonly ISalesUnitOfWork _unitOfWork;
+    private readonly ILogger<SetGibUuidHandler> _logger;
+
+    public SetGibUuidHandler(ISalesUnitOfWork unitOfWork, ILogger<SetGibUuidHandler> logger)
+    {
+        _unitOfWork = unitOfWork;
+        _logger = logger;
+    }
+
+    public async Task<Result<InvoiceDto>> Handle(SetGibUuidCommand request, CancellationToken cancellationToken)
+    {
+        var tenantId = _unitOfWork.TenantId;
+        var invoice = await _unitOfWork.Invoices.GetWithItemsAsync(request.Id, cancellationToken);
+
+        if (invoice == null || invoice.TenantId != tenantId)
+            return Result<InvoiceDto>.Failure(Error.NotFound("Invoice", "Invoice not found"));
+
+        var result = invoice.SetGibUuid(request.GibUuid);
+        if (!result.IsSuccess)
+            return Result<InvoiceDto>.Failure(result.Error);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("GİB UUID {GibUuid} set for invoice {InvoiceId}", request.GibUuid, invoice.Id);
+
+        return Result<InvoiceDto>.Success(InvoiceDto.FromEntity(invoice));
+    }
+}
+
+/// <summary>
+/// Handler for UpdateEInvoiceStatusCommand - E-Fatura durumunu günceller
+/// </summary>
+public class UpdateEInvoiceStatusHandler : IRequestHandler<UpdateEInvoiceStatusCommand, Result<InvoiceDto>>
+{
+    private readonly ISalesUnitOfWork _unitOfWork;
+    private readonly ILogger<UpdateEInvoiceStatusHandler> _logger;
+
+    public UpdateEInvoiceStatusHandler(ISalesUnitOfWork unitOfWork, ILogger<UpdateEInvoiceStatusHandler> logger)
+    {
+        _unitOfWork = unitOfWork;
+        _logger = logger;
+    }
+
+    public async Task<Result<InvoiceDto>> Handle(UpdateEInvoiceStatusCommand request, CancellationToken cancellationToken)
+    {
+        var tenantId = _unitOfWork.TenantId;
+        var invoice = await _unitOfWork.Invoices.GetWithItemsAsync(request.Id, cancellationToken);
+
+        if (invoice == null || invoice.TenantId != tenantId)
+            return Result<InvoiceDto>.Failure(Error.NotFound("Invoice", "Invoice not found"));
+
+        var result = invoice.UpdateEInvoiceStatus(request.Status, request.ErrorMessage);
+        if (!result.IsSuccess)
+            return Result<InvoiceDto>.Failure(result.Error);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("E-Invoice status updated to {Status} for invoice {InvoiceId}",
+            request.Status, invoice.Id);
+
+        return Result<InvoiceDto>.Success(InvoiceDto.FromEntity(invoice));
+    }
+}
+
+/// <summary>
+/// Handler for UpdateEArchiveStatusCommand - E-Arşiv durumunu günceller
+/// </summary>
+public class UpdateEArchiveStatusHandler : IRequestHandler<UpdateEArchiveStatusCommand, Result<InvoiceDto>>
+{
+    private readonly ISalesUnitOfWork _unitOfWork;
+    private readonly ILogger<UpdateEArchiveStatusHandler> _logger;
+
+    public UpdateEArchiveStatusHandler(ISalesUnitOfWork unitOfWork, ILogger<UpdateEArchiveStatusHandler> logger)
+    {
+        _unitOfWork = unitOfWork;
+        _logger = logger;
+    }
+
+    public async Task<Result<InvoiceDto>> Handle(UpdateEArchiveStatusCommand request, CancellationToken cancellationToken)
+    {
+        var tenantId = _unitOfWork.TenantId;
+        var invoice = await _unitOfWork.Invoices.GetWithItemsAsync(request.Id, cancellationToken);
+
+        if (invoice == null || invoice.TenantId != tenantId)
+            return Result<InvoiceDto>.Failure(Error.NotFound("Invoice", "Invoice not found"));
+
+        var result = invoice.UpdateEArchiveStatus(request.Status, request.ErrorMessage);
+        if (!result.IsSuccess)
+            return Result<InvoiceDto>.Failure(result.Error);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("E-Archive status updated to {Status} for invoice {InvoiceId}",
+            request.Status, invoice.Id);
 
         return Result<InvoiceDto>.Success(InvoiceDto.FromEntity(invoice));
     }

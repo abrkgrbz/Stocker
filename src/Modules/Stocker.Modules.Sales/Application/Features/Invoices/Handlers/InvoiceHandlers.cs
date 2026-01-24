@@ -44,9 +44,9 @@ public class CreateInvoiceHandler : IRequestHandler<CreateInvoiceCommand, Result
             request.CustomerId,
             request.CustomerName,
             request.CustomerEmail,
-            null, // customerPhone
+            request.CustomerPhone,
             request.CustomerTaxNumber,
-            null, // customerTaxOffice
+            request.CustomerTaxOffice,
             request.CustomerAddress,
             request.Currency);
 
@@ -60,6 +60,19 @@ public class CreateInvoiceHandler : IRequestHandler<CreateInvoiceCommand, Result
 
         if (!string.IsNullOrEmpty(request.Notes))
             invoice.SetNotes(request.Notes);
+
+        // Türk Mevzuatı: E-Fatura, Tevkifat, Fatura Serisi, Müşteri Vergi Bilgileri
+        if (request.IsEInvoice)
+            invoice.SetEInvoice(string.Empty); // E-Invoice ID will be set when sent to GİB
+
+        if (request.HasWithholdingTax && !string.IsNullOrEmpty(request.WithholdingTaxCode))
+            invoice.ApplyWithholdingTax(request.WithholdingTaxRate, request.WithholdingTaxCode);
+
+        if (!string.IsNullOrEmpty(request.InvoiceSeries))
+            invoice.SetInvoiceNumbering(request.InvoiceSeries, 0, request.InvoiceDate.Year);
+
+        if (request.CustomerTaxIdType.HasValue)
+            invoice.SetCustomerTaxIdType(request.CustomerTaxIdType.Value, request.CustomerTaxOfficeCode);
 
         var lineNumber = 1;
         foreach (var itemCmd in request.Items)

@@ -45,7 +45,7 @@ public class SalesTerritoryConfiguration : IEntityTypeConfiguration<SalesTerrito
             .HasMaxLength(100);
 
         builder.Property(t => t.GeoBoundary)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         // Manager
         builder.Property(t => t.TerritoryManagerName)

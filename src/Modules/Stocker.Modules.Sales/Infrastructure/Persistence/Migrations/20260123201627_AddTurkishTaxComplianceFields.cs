@@ -11,16 +11,6 @@ namespace Stocker.Modules.Sales.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<string>(
-                name: "GeoBoundary",
-                schema: "sales",
-                table: "SalesTerritories",
-                type: "nvarchar(max)",
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "text",
-                oldNullable: true);
-
             migrationBuilder.AddColumn<string>(
                 name: "CustomerTaxIdType",
                 schema: "sales",
@@ -152,16 +142,6 @@ namespace Stocker.Modules.Sales.Infrastructure.Persistence.Migrations
                 nullable: false,
                 defaultValue: 0m);
 
-            migrationBuilder.AlterColumn<string>(
-                name: "InternalNotes",
-                schema: "sales",
-                table: "CustomerContracts",
-                type: "nvarchar(max)",
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "text",
-                oldNullable: true);
-
             migrationBuilder.CreateIndex(
                 name: "IX_Invoices_TenantId_EArchiveNumber",
                 schema: "sales",
@@ -279,25 +259,6 @@ namespace Stocker.Modules.Sales.Infrastructure.Persistence.Migrations
                 schema: "sales",
                 table: "Invoices");
 
-            migrationBuilder.AlterColumn<string>(
-                name: "GeoBoundary",
-                schema: "sales",
-                table: "SalesTerritories",
-                type: "text",
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "nvarchar(max)",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<string>(
-                name: "InternalNotes",
-                schema: "sales",
-                table: "CustomerContracts",
-                type: "text",
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "nvarchar(max)",
-                oldNullable: true);
         }
     }
 }

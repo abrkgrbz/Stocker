@@ -1057,7 +1057,7 @@ namespace Stocker.Modules.Sales.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("InternalNotes")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsBlocked")
                         .HasColumnType("boolean");
@@ -3509,7 +3509,7 @@ namespace Stocker.Modules.Sales.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<string>("GeoBoundary")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("HierarchyLevel")
                         .HasColumnType("integer");

@@ -63,7 +63,7 @@ public class CustomerContractConfiguration : IEntityTypeConfiguration<CustomerCo
             .HasMaxLength(4000);
 
         builder.Property(c => c.InternalNotes)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         // Termination
         builder.Property(c => c.TerminationType)

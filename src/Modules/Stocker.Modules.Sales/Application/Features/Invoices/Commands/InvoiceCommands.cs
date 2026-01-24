@@ -18,6 +18,20 @@ public record CreateInvoiceCommand : IRequest<Result<InvoiceDto>>
     public string? CustomerAddress { get; init; }
     public string Currency { get; init; } = "TRY";
     public string? Notes { get; init; }
+
+    // Türk Mevzuatı Alanları
+    public string? CustomerTaxOffice { get; init; }
+    public string? CustomerPhone { get; init; }
+    public TaxIdType? CustomerTaxIdType { get; init; }
+    public string? CustomerTaxOfficeCode { get; init; }
+    public bool IsEInvoice { get; init; }
+    public string? InvoiceSeries { get; init; }
+
+    // Tevkifat
+    public bool HasWithholdingTax { get; init; }
+    public decimal WithholdingTaxRate { get; init; }
+    public string? WithholdingTaxCode { get; init; }
+
     public List<CreateInvoiceItemCommand> Items { get; init; } = new();
 }
 
@@ -106,4 +120,50 @@ public record CancelInvoiceCommand : IRequest<Result<InvoiceDto>>
 public record DeleteInvoiceCommand : IRequest<Result>
 {
     public Guid Id { get; init; }
+}
+
+public record VoidInvoiceCommand : IRequest<Result<InvoiceDto>>
+{
+    public Guid Id { get; init; }
+    public string Reason { get; init; } = string.Empty;
+}
+
+public record ApplyWithholdingTaxCommand : IRequest<Result<InvoiceDto>>
+{
+    public Guid Id { get; init; }
+    /// <summary>Tevkifat oranı (örn: 9/10 için 90)</summary>
+    public decimal Rate { get; init; }
+    /// <summary>GİB tevkifat kodu</summary>
+    public string Code { get; init; } = string.Empty;
+}
+
+public record RemoveWithholdingTaxCommand : IRequest<Result<InvoiceDto>>
+{
+    public Guid Id { get; init; }
+}
+
+public record SetEArchiveCommand : IRequest<Result<InvoiceDto>>
+{
+    public Guid Id { get; init; }
+    public string EArchiveNumber { get; init; } = string.Empty;
+}
+
+public record SetGibUuidCommand : IRequest<Result<InvoiceDto>>
+{
+    public Guid Id { get; init; }
+    public string GibUuid { get; init; } = string.Empty;
+}
+
+public record UpdateEInvoiceStatusCommand : IRequest<Result<InvoiceDto>>
+{
+    public Guid Id { get; init; }
+    public EInvoiceStatus Status { get; init; }
+    public string? ErrorMessage { get; init; }
+}
+
+public record UpdateEArchiveStatusCommand : IRequest<Result<InvoiceDto>>
+{
+    public Guid Id { get; init; }
+    public EArchiveStatus Status { get; init; }
+    public string? ErrorMessage { get; init; }
 }

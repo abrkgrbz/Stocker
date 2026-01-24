@@ -26,9 +26,33 @@ public record InvoiceDto
     public string Status { get; init; } = string.Empty;
     public string Type { get; init; } = string.Empty;
     public string? Notes { get; init; }
+    // E-Fatura / E-Arşiv
     public string? EInvoiceId { get; init; }
     public bool IsEInvoice { get; init; }
     public DateTime? EInvoiceDate { get; init; }
+    public string? GibUuid { get; init; }
+    public string? EInvoiceStatus { get; init; }
+    public string? EInvoiceErrorMessage { get; init; }
+    public bool IsEArchive { get; init; }
+    public string? EArchiveNumber { get; init; }
+    public DateTime? EArchiveDate { get; init; }
+    public string? EArchiveStatus { get; init; }
+
+    // Tevkifat (Withholding Tax)
+    public bool HasWithholdingTax { get; init; }
+    public decimal WithholdingTaxRate { get; init; }
+    public decimal WithholdingTaxAmount { get; init; }
+    public string? WithholdingTaxCode { get; init; }
+
+    // Fatura Numaralama (VUK Uyumlu)
+    public string? InvoiceSeries { get; init; }
+    public int SequenceNumber { get; init; }
+    public int InvoiceYear { get; init; }
+
+    // Müşteri Vergi Bilgileri (Genişletilmiş)
+    public string? CustomerTaxIdType { get; init; }
+    public string? CustomerTaxOfficeCode { get; init; }
+
     public DateTime CreatedAt { get; init; }
     public DateTime? UpdatedAt { get; init; }
     public List<InvoiceItemDto> Items { get; init; } = new();
@@ -74,9 +98,33 @@ public record InvoiceDto
             Status = entity.Status.ToString(),
             Type = entity.Type.ToString(),
             Notes = entity.Notes,
+            // E-Fatura / E-Arşiv
             EInvoiceId = entity.EInvoiceId,
             IsEInvoice = entity.IsEInvoice,
             EInvoiceDate = entity.EInvoiceDate,
+            GibUuid = entity.GibUuid,
+            EInvoiceStatus = entity.EInvoiceStatus?.ToString(),
+            EInvoiceErrorMessage = entity.EInvoiceErrorMessage,
+            IsEArchive = entity.IsEArchive,
+            EArchiveNumber = entity.EArchiveNumber,
+            EArchiveDate = entity.EArchiveDate,
+            EArchiveStatus = entity.EArchiveStatus?.ToString(),
+
+            // Tevkifat
+            HasWithholdingTax = entity.HasWithholdingTax,
+            WithholdingTaxRate = entity.WithholdingTaxRate,
+            WithholdingTaxAmount = entity.WithholdingTaxAmount,
+            WithholdingTaxCode = entity.WithholdingTaxCode,
+
+            // Fatura Numaralama
+            InvoiceSeries = entity.InvoiceSeries,
+            SequenceNumber = entity.SequenceNumber,
+            InvoiceYear = entity.InvoiceYear,
+
+            // Müşteri Vergi Bilgileri
+            CustomerTaxIdType = entity.CustomerTaxIdType?.ToString(),
+            CustomerTaxOfficeCode = entity.CustomerTaxOfficeCode,
+
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             Items = entity.Items.Select(InvoiceItemDto.FromEntity).ToList(),

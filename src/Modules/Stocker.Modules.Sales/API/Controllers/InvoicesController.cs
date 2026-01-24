@@ -347,4 +347,173 @@ public class InvoicesController : ControllerBase
 
         return NoContent();
     }
+
+    // =====================================
+    // TÜRK MEVZUATI ENDPOINTLERİ
+    // =====================================
+
+    /// <summary>
+    /// Voids an invoice (Hükümsüz kılma)
+    /// </summary>
+    [HttpPost("{id:guid}/void")]
+    public async Task<ActionResult<InvoiceDto>> VoidInvoice(
+        Guid id,
+        [FromBody] VoidInvoiceCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.Id)
+            return BadRequest(new { error = "ID mismatch" });
+
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            if (result.Error.Code == "NotFound")
+                return NotFound(new { error = result.Error.Description });
+            return BadRequest(new { error = result.Error.Description });
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Applies withholding tax to an invoice (Tevkifat uygula)
+    /// </summary>
+    [HttpPost("{id:guid}/withholding-tax")]
+    public async Task<ActionResult<InvoiceDto>> ApplyWithholdingTax(
+        Guid id,
+        [FromBody] ApplyWithholdingTaxCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.Id)
+            return BadRequest(new { error = "ID mismatch" });
+
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            if (result.Error.Code == "NotFound")
+                return NotFound(new { error = result.Error.Description });
+            return BadRequest(new { error = result.Error.Description });
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Removes withholding tax from an invoice (Tevkifat kaldır)
+    /// </summary>
+    [HttpDelete("{id:guid}/withholding-tax")]
+    public async Task<ActionResult<InvoiceDto>> RemoveWithholdingTax(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var command = new RemoveWithholdingTaxCommand { Id = id };
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            if (result.Error.Code == "NotFound")
+                return NotFound(new { error = result.Error.Description });
+            return BadRequest(new { error = result.Error.Description });
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Sets e-archive information (E-Arşiv bilgisi ata)
+    /// </summary>
+    [HttpPost("{id:guid}/e-archive")]
+    public async Task<ActionResult<InvoiceDto>> SetEArchive(
+        Guid id,
+        [FromBody] SetEArchiveCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.Id)
+            return BadRequest(new { error = "ID mismatch" });
+
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            if (result.Error.Code == "NotFound")
+                return NotFound(new { error = result.Error.Description });
+            return BadRequest(new { error = result.Error.Description });
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Sets GİB UUID for an invoice
+    /// </summary>
+    [HttpPost("{id:guid}/gib-uuid")]
+    public async Task<ActionResult<InvoiceDto>> SetGibUuid(
+        Guid id,
+        [FromBody] SetGibUuidCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.Id)
+            return BadRequest(new { error = "ID mismatch" });
+
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            if (result.Error.Code == "NotFound")
+                return NotFound(new { error = result.Error.Description });
+            return BadRequest(new { error = result.Error.Description });
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Updates e-invoice status (E-Fatura durumu güncelle)
+    /// </summary>
+    [HttpPost("{id:guid}/e-invoice-status")]
+    public async Task<ActionResult<InvoiceDto>> UpdateEInvoiceStatus(
+        Guid id,
+        [FromBody] UpdateEInvoiceStatusCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.Id)
+            return BadRequest(new { error = "ID mismatch" });
+
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            if (result.Error.Code == "NotFound")
+                return NotFound(new { error = result.Error.Description });
+            return BadRequest(new { error = result.Error.Description });
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Updates e-archive status (E-Arşiv durumu güncelle)
+    /// </summary>
+    [HttpPost("{id:guid}/e-archive-status")]
+    public async Task<ActionResult<InvoiceDto>> UpdateEArchiveStatus(
+        Guid id,
+        [FromBody] UpdateEArchiveStatusCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.Id)
+            return BadRequest(new { error = "ID mismatch" });
+
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            if (result.Error.Code == "NotFound")
+                return NotFound(new { error = result.Error.Description });
+            return BadRequest(new { error = result.Error.Description });
+        }
+
+        return Ok(result.Value);
+    }
 }

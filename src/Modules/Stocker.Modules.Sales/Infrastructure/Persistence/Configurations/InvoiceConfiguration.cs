@@ -91,8 +91,61 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.Property(i => i.Notes)
             .HasMaxLength(2000);
 
+        // E-Fatura
         builder.Property(i => i.EInvoiceId)
             .HasMaxLength(100);
+
+        builder.Property(i => i.EInvoiceDate);
+
+        builder.Property(i => i.EInvoiceStatus)
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
+        builder.Property(i => i.EInvoiceErrorMessage)
+            .HasMaxLength(500);
+
+        builder.Property(i => i.GibUuid)
+            .HasMaxLength(36);
+
+        // E-Arşiv
+        builder.Property(i => i.IsEArchive);
+
+        builder.Property(i => i.EArchiveNumber)
+            .HasMaxLength(100);
+
+        builder.Property(i => i.EArchiveDate);
+
+        builder.Property(i => i.EArchiveStatus)
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
+        // Tevkifat
+        builder.Property(i => i.HasWithholdingTax);
+
+        builder.Property(i => i.WithholdingTaxRate)
+            .HasPrecision(5, 2);
+
+        builder.Property(i => i.WithholdingTaxAmount)
+            .HasPrecision(18, 2);
+
+        builder.Property(i => i.WithholdingTaxCode)
+            .HasMaxLength(10);
+
+        // Fatura Numaralama (VUK Uyumlu)
+        builder.Property(i => i.InvoiceSeries)
+            .HasMaxLength(5);
+
+        builder.Property(i => i.SequenceNumber);
+
+        builder.Property(i => i.InvoiceYear);
+
+        // Müşteri Vergi Bilgileri (Türk Mevzuatı)
+        builder.Property(i => i.CustomerTaxIdType)
+            .HasConversion<string>()
+            .HasMaxLength(10);
+
+        builder.Property(i => i.CustomerTaxOfficeCode)
+            .HasMaxLength(10);
 
         // BillingAddressSnapshot - Owned Entity olarak yapılandır
         builder.OwnsOne(i => i.BillingAddressSnapshot, address =>
@@ -135,5 +188,8 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.HasIndex(i => new { i.TenantId, i.DeliveryNoteId });
         builder.HasIndex(i => new { i.TenantId, i.QuotationId });
         builder.HasIndex(i => new { i.TenantId, i.EInvoiceId });
+        builder.HasIndex(i => new { i.TenantId, i.GibUuid });
+        builder.HasIndex(i => new { i.TenantId, i.EArchiveNumber });
+        builder.HasIndex(i => new { i.TenantId, i.InvoiceSeries, i.InvoiceYear, i.SequenceNumber });
     }
 }
