@@ -355,3 +355,59 @@ export function useDeactivateSegment() {
     },
   });
 }
+
+/**
+ * Hook to delete a segment
+ */
+export function useDeleteSegment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => segmentService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.lists() });
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.active() });
+      showSuccess('Segment silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Segment silinemedi');
+    },
+  });
+}
+
+/**
+ * Hook to recalculate a segment's customers
+ */
+export function useRecalculateSegment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => segmentService.recalculate(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.lists() });
+      showSuccess('Segment yeniden hesaplandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Segment yeniden hesaplanamadı');
+    },
+  });
+}
+
+/**
+ * Hook to update a segment
+ */
+export function useUpdateSegment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
+      segmentService.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.segments.lists() });
+      showSuccess('Segment güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Segment güncellenemedi');
+    },
+  });
+}

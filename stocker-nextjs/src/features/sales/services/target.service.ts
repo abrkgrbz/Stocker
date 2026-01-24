@@ -70,4 +70,13 @@ export const targetService = {
       headers: { 'Content-Type': 'application/json' },
     });
   },
+  async deactivate(id: string): Promise<void> {
+    await ApiService.post(`${BASE_URL}/${id}/deactivate`);
+  },
+  async getStatistics(): Promise<Record<string, unknown>> {
+    return ApiService.get<Record<string, unknown>>(`${BASE_URL}/statistics`);
+  },
+  async getLeaderboard(period?: string, limit?: number): Promise<Record<string, unknown>[]> {
+    return ApiService.get<Record<string, unknown>[]>(`${BASE_URL}/leaderboard`, { params: { period, limit } });
+  },
 };

@@ -129,16 +129,16 @@ export function TargetGrid({
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-slate-400" />
-              <Select
+              <Select<SalesTargetType>
                 value={params.targetType}
                 onChange={handleTargetTypeChange}
                 style={{ width: 150 }}
                 placeholder="Dönem"
                 allowClear
                 options={[
-                  { value: 'Monthly', label: 'Aylık' },
-                  { value: 'Quarterly', label: 'Çeyreklik' },
-                  { value: 'Yearly', label: 'Yıllık' },
+                  { value: 'Monthly' as const, label: 'Aylık' },
+                  { value: 'Quarterly' as const, label: 'Çeyreklik' },
+                  { value: 'Yearly' as const, label: 'Yıllık' },
                 ]}
               />
             </div>

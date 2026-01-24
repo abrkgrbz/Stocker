@@ -133,7 +133,7 @@ export default function NewBackOrderPage() {
                   className="w-full"
                   options={[]}
                   filterOption={(input, option) =>
-                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                    ((option?.label as string) ?? '').toLowerCase().includes(input.toLowerCase())
                   }
                 />
               </Form.Item>

@@ -217,7 +217,7 @@ export default function NewOpportunityPage() {
                   min={0}
                   placeholder="0"
                   formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
-                  parser={(value) => value?.replace(/\./g, '') as unknown as number}
+                  parser={(value) => Number(value?.replace(/\./g, '') || 0)}
                 />
               </Form.Item>
               <Form.Item

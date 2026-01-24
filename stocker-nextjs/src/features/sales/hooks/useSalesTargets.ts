@@ -323,3 +323,44 @@ export function useCancelSalesTarget() {
     },
   });
 }
+
+/**
+ * Hook to deactivate a sales target
+ */
+export function useDeactivateSalesTarget() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => targetService.deactivate(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.targets.lists() });
+      queryClient.invalidateQueries({ queryKey: salesKeys.targets.current() });
+      showSuccess('Satış hedefi deaktif edildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Satış hedefi deaktif edilemedi');
+    },
+  });
+}
+
+/**
+ * Hook to get sales target statistics
+ */
+export function useSalesTargetStatistics() {
+  return useQuery({
+    queryKey: salesKeys.targets.statistics(),
+    queryFn: () => targetService.getStatistics(),
+    ...queryOptions.staleShort,
+  });
+}
+
+/**
+ * Hook to get leaderboard data
+ */
+export function useLeaderboard(period?: string, limit?: number) {
+  return useQuery({
+    queryKey: [...salesKeys.targets.all(), 'leaderboard', period, limit] as const,
+    queryFn: () => targetService.getLeaderboard(period, limit),
+    ...queryOptions.staleShort,
+  });
+}

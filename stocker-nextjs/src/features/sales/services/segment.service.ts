@@ -75,4 +75,13 @@ export const segmentService = {
   async deactivate(id: string): Promise<void> {
     await ApiService.post(`${BASE_URL}/${id}/deactivate`);
   },
+  async delete(id: string): Promise<void> {
+    await ApiService.delete(`${BASE_URL}/${id}`);
+  },
+  async recalculate(id: string): Promise<void> {
+    await ApiService.post(`${BASE_URL}/${id}/recalculate`);
+  },
+  async update(id: string, data: Record<string, unknown>): Promise<void> {
+    await ApiService.put(`${BASE_URL}/${id}`, data);
+  },
 };

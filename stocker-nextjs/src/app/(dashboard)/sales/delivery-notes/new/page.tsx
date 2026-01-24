@@ -346,7 +346,7 @@ export default function NewDeliveryNotePage() {
                   className="w-full"
                   options={[]}
                   filterOption={(input, option) =>
-                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                    ((option?.label as string) ?? '').toLowerCase().includes(input.toLowerCase())
                   }
                 />
               </Form.Item>

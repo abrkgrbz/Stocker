@@ -66,7 +66,7 @@ export default function NewPipelinePage() {
 
   const handleStageChange = (index: number, field: keyof StageFormValues, value: string | number) => {
     const newStages = [...stages];
-    (newStages[index] as Record<string, unknown>)[field] = value;
+    newStages[index] = { ...newStages[index], [field]: value };
     setStages(newStages);
   };
 

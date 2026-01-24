@@ -2755,9 +2755,11 @@ export interface CustomerSegmentListDto {
   id: string;
   code: string;
   name: string;
-  priority: string;
+  description?: string;
+  priority: number;
   serviceLevel: string;
   discountPercentage: number;
+  discountRate: number;
   isActive: boolean;
   isDefault: boolean;
   customerCount: number;
@@ -2770,6 +2772,33 @@ export interface CreateCustomerSegmentDto {
   name: string;
   priority: string;
   description?: string;
+}
+
+export type SegmentCriteriaType = 'OrderValue' | 'OrderFrequency' | 'ProductCategory' | 'Location' | 'Custom';
+
+export interface CreateCustomerSegmentCommand {
+  name: string;
+  code: string;
+  description?: string;
+  discountRate: number;
+  priority: number;
+  isActive: boolean;
+  criteriaType?: SegmentCriteriaType;
+  criteriaValue?: string;
+  minOrderValue?: number;
+  maxOrderValue?: number;
+}
+
+export interface UpdateCustomerSegmentCommand {
+  name?: string;
+  description?: string;
+  discountRate?: number;
+  priority?: number;
+  isActive?: boolean;
+  criteriaType?: SegmentCriteriaType;
+  criteriaValue?: string;
+  minOrderValue?: number;
+  maxOrderValue?: number;
 }
 
 export interface SetSegmentPricingDto {
@@ -2867,21 +2896,55 @@ export interface SalesTargetDto {
   productTargets: SalesTargetProductDto[];
 }
 
+export type SalesTargetType = 'Monthly' | 'Quarterly' | 'Yearly';
+
 export interface SalesTargetListDto {
   id: string;
   targetCode: string;
   name: string;
   targetType: string;
   periodType: string;
+  period?: string;
   year: number;
   salesRepresentativeName?: string;
+  salesRepName: string;
+  salesRepAvatar?: string;
   salesTeamName?: string;
+  department?: string;
+  rank?: number;
+  streak: number;
   totalTargetAmount: number;
+  targetAmount: number;
   totalActualAmount: number;
+  achievedAmount: number;
+  progressPercentage: number;
+  bonusThreshold: number;
   currency: string;
   status: string;
   achievementPercentage: number;
   forecast: string;
+}
+
+export interface LeaderboardEntryDto {
+  id: string;
+  rank: number;
+  salesRepName: string;
+  salesRepAvatar?: string;
+  department?: string;
+  achievedAmount: number;
+  targetAmount: number;
+  achievementPercentage: number;
+  streak?: number;
+}
+
+export interface SalesTargetStatisticsDto {
+  totalTargets: number;
+  activeTargets: number;
+  completedTargets: number;
+  averageAchievement: number;
+  totalTargetAmount: number;
+  totalAchievedAmount: number;
+  topPerformerName?: string;
 }
 
 export interface SalesTargetPeriodDto {
@@ -2961,7 +3024,8 @@ export interface SalesTargetQueryParams {
   pageSize?: number;
   year?: number;
   status?: string;
-  targetType?: string;
+  targetType?: SalesTargetType;
+  period?: string;
   salesRepresentativeId?: string;
   salesTeamId?: string;
 }
