@@ -2927,6 +2927,7 @@ export interface SalesTargetListDto {
 
 export interface LeaderboardEntryDto {
   id: string;
+  salesRepId: string;
   rank: number;
   salesRepName: string;
   salesRepAvatar?: string;
@@ -2934,6 +2935,7 @@ export interface LeaderboardEntryDto {
   achievedAmount: number;
   targetAmount: number;
   achievementPercentage: number;
+  progressPercentage: number;
   streak?: number;
 }
 
