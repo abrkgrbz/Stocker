@@ -136,7 +136,12 @@
       "Bash(timeout:*)",
       "Bash(dir /s /b \"C:\\\\Users\\\\PC\\\\.claude\\\\commands\")",
       "Bash(powershell -Command \"Get-ChildItem -Path ''C:\\\\Users\\\\PC\\\\.claude\\\\commands'' -Recurse | Select-Object FullName\")",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: Remove edit pages with missing API hooks\n\nRemove lot-batches and serial-numbers edit pages that depend on\nuseUpdateLotBatch and useUpdateSerialNumber hooks which don''t exist\nin the codebase. The backend API doesn''t have update endpoints for\nthese entities yet.\n\nThis fixes the deployment build failure.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: Remove edit pages with missing API hooks\n\nRemove lot-batches and serial-numbers edit pages that depend on\nuseUpdateLotBatch and useUpdateSerialNumber hooks which don''t exist\nin the codebase. The backend API doesn''t have update endpoints for\nthese entities yet.\n\nThis fixes the deployment build failure.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_navigate",
+      "mcp__serena__list_memories",
+      "mcp__sequential-thinking__sequentialthinking"
     ],
     "deny": [],
     "ask": []
