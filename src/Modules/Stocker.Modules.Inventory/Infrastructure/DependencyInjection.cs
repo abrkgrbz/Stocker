@@ -127,6 +127,10 @@ public static class DependencyInjection
                 .Build();
         });
 
+        // Register Caching & Performance Infrastructure
+        services.AddScoped<Caching.TenantResponseCache>();
+        services.AddScoped<Persistence.BulkOperations.BulkOperationService>();
+
         // Register Resilience Infrastructure
         services.AddSingleton<Resilience.CircuitBreakerRegistry>();
         services.AddSingleton<Resilience.IDistributedLockService, Resilience.InMemoryDistributedLockService>();
