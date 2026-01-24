@@ -127,6 +127,12 @@ public static class DependencyInjection
                 .Build();
         });
 
+        // Register Security Infrastructure
+        services.AddScoped<Security.FieldAuditTracker>();
+        services.AddScoped<Security.DataMaskingService>();
+        services.AddScoped<Security.TenantQueryGuard>();
+        services.AddScoped<Security.SecurityEventLogger>();
+
         // Register Caching & Performance Infrastructure
         services.AddScoped<Caching.TenantResponseCache>();
         services.AddScoped<Persistence.BulkOperations.BulkOperationService>();
