@@ -148,3 +148,102 @@ public record UpdateQuotationDto
     public string? Notes { get; init; }
     public string? TermsAndConditions { get; init; }
 }
+
+/// <summary>
+/// Manual mapping extensions for Quotation entities - bypasses AutoMapper issues
+/// </summary>
+public static class QuotationMappingExtensions
+{
+    public static QuotationDto ToDto(this Quotation quotation)
+    {
+        return new QuotationDto
+        {
+            Id = quotation.Id,
+            QuotationNumber = quotation.QuotationNumber,
+            Name = quotation.Name,
+            QuotationDate = quotation.QuotationDate,
+            ExpirationDate = quotation.ExpirationDate,
+            CustomerId = quotation.CustomerId,
+            CustomerName = quotation.CustomerName,
+            CustomerEmail = quotation.CustomerEmail,
+            CustomerPhone = quotation.CustomerPhone,
+            CustomerTaxNumber = quotation.CustomerTaxNumber,
+            ContactId = quotation.ContactId,
+            ContactName = quotation.ContactName,
+            OpportunityId = quotation.OpportunityId,
+            SalesPersonId = quotation.SalesPersonId,
+            SalesPersonName = quotation.SalesPersonName,
+            SubTotal = quotation.SubTotal,
+            DiscountAmount = quotation.DiscountAmount,
+            DiscountRate = quotation.DiscountRate,
+            VatAmount = quotation.VatAmount,
+            ShippingAmount = quotation.ShippingAmount,
+            TotalAmount = quotation.TotalAmount,
+            Currency = quotation.Currency,
+            ExchangeRate = quotation.ExchangeRate,
+            Status = quotation.Status.ToString(),
+            ShippingAddress = quotation.ShippingAddress,
+            BillingAddress = quotation.BillingAddress,
+            PaymentTerms = quotation.PaymentTerms,
+            DeliveryTerms = quotation.DeliveryTerms,
+            ValidityDays = quotation.ValidityDays,
+            Notes = quotation.Notes,
+            TermsAndConditions = quotation.TermsAndConditions,
+            ApprovedBy = quotation.ApprovedBy,
+            ApprovedDate = quotation.ApprovedDate,
+            SentDate = quotation.SentDate,
+            AcceptedDate = quotation.AcceptedDate,
+            RejectedDate = quotation.RejectedDate,
+            RejectionReason = quotation.RejectionReason,
+            ConvertedToOrderId = quotation.ConvertedToOrderId,
+            ConvertedDate = quotation.ConvertedDate,
+            RevisionNumber = quotation.RevisionNumber,
+            ParentQuotationId = quotation.ParentQuotationId,
+            CreatedAt = quotation.CreatedAt,
+            UpdatedAt = quotation.UpdatedAt,
+            Items = quotation.Items.Select(i => i.ToDto()).ToList()
+        };
+    }
+
+    public static QuotationItemDto ToDto(this QuotationItem item)
+    {
+        return new QuotationItemDto
+        {
+            Id = item.Id,
+            QuotationId = item.QuotationId,
+            ProductId = item.ProductId,
+            ProductName = item.ProductName,
+            ProductCode = item.ProductCode,
+            Description = item.Description,
+            Quantity = item.Quantity,
+            Unit = item.Unit,
+            UnitPrice = item.UnitPrice,
+            DiscountRate = item.DiscountRate,
+            DiscountAmount = item.DiscountAmount,
+            VatRate = item.VatRate,
+            VatAmount = item.VatAmount,
+            LineTotal = item.LineTotal,
+            SortOrder = item.SortOrder
+        };
+    }
+
+    public static QuotationListDto ToListDto(this Quotation quotation)
+    {
+        return new QuotationListDto
+        {
+            Id = quotation.Id,
+            QuotationNumber = quotation.QuotationNumber,
+            Name = quotation.Name,
+            QuotationDate = quotation.QuotationDate,
+            ExpirationDate = quotation.ExpirationDate,
+            CustomerName = quotation.CustomerName,
+            SalesPersonName = quotation.SalesPersonName,
+            TotalAmount = quotation.TotalAmount,
+            Currency = quotation.Currency,
+            Status = quotation.Status.ToString(),
+            ItemCount = quotation.Items.Count,
+            RevisionNumber = quotation.RevisionNumber,
+            CreatedAt = quotation.CreatedAt
+        };
+    }
+}

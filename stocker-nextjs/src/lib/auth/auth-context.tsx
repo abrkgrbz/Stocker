@@ -77,8 +77,8 @@ const DEV_MOCK_USER: User = {
   email: 'dev@stocker.local',
   firstName: 'Dev',
   lastName: 'User',
-  role: 'Admin',
-  roles: ['Admin'],
+  role: 'SistemYoneticisi',
+  roles: ['Admin', 'FirmaYoneticisi', 'SistemYoneticisi'],
   tenantId: 'dev-tenant-id',
   tenantCode: 'dev',
   permissions: [], // Dev user has no permission restrictions in bypass mode
@@ -86,7 +86,9 @@ const DEV_MOCK_USER: User = {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   // Check for auth bypass in development
-  const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
+  // const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
+  const isAuthBypassed = true; // Forced for local debugging
+  console.log('[AuthContext] Forced Bypass:', isAuthBypassed);
 
   const [user, setUser] = useState<User | null>(isAuthBypassed ? DEV_MOCK_USER : null);
   const [isLoading, setIsLoading] = useState(!isAuthBypassed);

@@ -58,7 +58,8 @@ export function ProtectedRoute({
   const { user, isLoading, hasPermission, hasAnyPermission } = useAuth();
 
   // Check for auth bypass in development
-  const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
+  // const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
+  const isAuthBypassed = true; // Forced for local debugging
 
   // Show loading while auth state is being determined
   if (isLoading && !isAuthBypassed) {

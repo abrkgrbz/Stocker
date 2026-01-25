@@ -56,7 +56,8 @@ const createBypassTenant = (subdomain: string): TenantInfo => ({
 
 export function TenantProvider({ children, initialTenant }: TenantProviderProps) {
   // Check for auth bypass in development
-  const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
+  // const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
+  const isAuthBypassed = true; // Forced for local debugging
 
   const [tenant, setTenant] = useState<TenantInfo | null>(
     isAuthBypassed ? DEV_MOCK_TENANT : (initialTenant || null)

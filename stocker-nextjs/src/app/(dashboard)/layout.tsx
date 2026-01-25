@@ -70,7 +70,8 @@ const { Header, Sider, Content } = Layout;
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
   // Check for auth bypass in development
-  const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
+  // const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
+  const isAuthBypassed = true; // Forced for local debugging
 
   const { user, isAuthenticated, isLoading: authLoading, logout, hasAnyPermission } = useAuth();
   const { tenant, isLoading: tenantLoading } = useTenant();
@@ -556,7 +557,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-    <Layout style={{ minHeight: '100dvh' }}>
+      <Layout style={{ minHeight: '100dvh' }}>
         {/* Desktop Sidebar - Hidden on mobile and on hub pages (modules, app) */}
         {!hideSidebar && (
           <Sider

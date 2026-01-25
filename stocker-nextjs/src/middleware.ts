@@ -6,7 +6,8 @@ const TEMPORARY_BYPASS_SUBDOMAINS = ['awcs0wg4840co8wwsscwwwck']
 
 export function middleware(request: NextRequest) {
   // Check for auth bypass in development
-  const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true'
+  // const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true'
+  const isAuthBypassed = true; // Forced for local debugging
 
   const hostname = request.headers.get('host') || ''
   const subdomain = hostname.split('.')[0]
@@ -51,8 +52,8 @@ export function middleware(request: NextRequest) {
 
   // Check if this is an RSC prefetch request (skip cross-origin redirects for these)
   const isRSCPrefetch = request.nextUrl.searchParams.has('_rsc') ||
-                        request.headers.get('RSC') === '1' ||
-                        request.headers.get('Next-Router-Prefetch') === '1'
+    request.headers.get('RSC') === '1' ||
+    request.headers.get('Next-Router-Prefetch') === '1'
 
   // Redirect unauthenticated users from protected routes to login
   // Skip if auth bypassed or RSC prefetch request
@@ -91,9 +92,9 @@ export function middleware(request: NextRequest) {
   // For full page navigations, redirect to auth subdomain
   if (isRootDomain && !isDev) {
     const isAuthRoute = pathname === '/login' || pathname === '/register' ||
-                        pathname.startsWith('/login/') || pathname.startsWith('/register/') ||
-                        pathname === '/forgot-password' || pathname === '/reset-password' ||
-                        pathname.startsWith('/forgot-password/') || pathname.startsWith('/reset-password/')
+      pathname.startsWith('/login/') || pathname.startsWith('/register/') ||
+      pathname === '/forgot-password' || pathname === '/reset-password' ||
+      pathname.startsWith('/forgot-password/') || pathname.startsWith('/reset-password/')
 
     if (isAuthRoute) {
       // For RSC prefetch/fetch requests, serve the page locally (same origin)

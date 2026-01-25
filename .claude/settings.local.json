@@ -141,7 +141,9 @@
       "mcp__playwright__browser_snapshot",
       "mcp__playwright__browser_navigate",
       "mcp__serena__list_memories",
-      "mcp__sequential-thinking__sequentialthinking"
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix\\(sales\\): add missing averageProgress and achievedCount to SalesTargetStatisticsDto\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix\\(sales\\): replace non-existent staleShort with realtime\\(\\) in query options\n\nqueryOptions.staleShort does not exist - use queryOptions.realtime\\(\\) instead\nwhich provides 30 second stale time for statistics and leaderboard data.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ],
     "deny": [],
     "ask": []

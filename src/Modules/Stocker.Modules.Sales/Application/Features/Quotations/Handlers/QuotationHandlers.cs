@@ -1,4 +1,3 @@
-using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.Sales.Application.DTOs;
@@ -15,16 +14,15 @@ namespace Stocker.Modules.Sales.Application.Features.Quotations.Handlers;
 /// <summary>
 /// Handler for CreateQuotationCommand
 /// Uses ISalesUnitOfWork for consistent data access
+/// Uses manual mapping extensions instead of AutoMapper
 /// </summary>
 public class CreateQuotationHandler : IRequestHandler<CreateQuotationCommand, Result<QuotationDto>>
 {
     private readonly ISalesUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
 
-    public CreateQuotationHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
+    public CreateQuotationHandler(ISalesUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
     }
 
     public async Task<Result<QuotationDto>> Handle(CreateQuotationCommand request, CancellationToken cancellationToken)
@@ -92,23 +90,22 @@ public class CreateQuotationHandler : IRequestHandler<CreateQuotationCommand, Re
         await _unitOfWork.Repository<Quotation>().AddAsync(quotation, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result<QuotationDto>.Success(_mapper.Map<QuotationDto>(quotation));
+        return Result<QuotationDto>.Success(quotation.ToDto());
     }
 }
 
 /// <summary>
 /// Handler for GetQuotationByIdQuery
 /// Uses ISalesUnitOfWork for consistent data access
+/// Uses manual mapping extensions instead of AutoMapper
 /// </summary>
 public class GetQuotationByIdHandler : IRequestHandler<GetQuotationByIdQuery, Result<QuotationDto>>
 {
     private readonly ISalesUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
 
-    public GetQuotationByIdHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
+    public GetQuotationByIdHandler(ISalesUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
     }
 
     public async Task<Result<QuotationDto>> Handle(GetQuotationByIdQuery request, CancellationToken cancellationToken)
@@ -122,7 +119,7 @@ public class GetQuotationByIdHandler : IRequestHandler<GetQuotationByIdQuery, Re
         if (quotation == null)
             return Result<QuotationDto>.Failure(Error.NotFound("Quotation", "Quotation not found"));
 
-        return Result<QuotationDto>.Success(_mapper.Map<QuotationDto>(quotation));
+        return Result<QuotationDto>.Success(quotation.ToDto());
     }
 }
 
@@ -215,16 +212,15 @@ public class GetQuotationsHandler : IRequestHandler<GetQuotationsQuery, Result<P
 /// <summary>
 /// Handler for UpdateQuotationCommand
 /// Uses ISalesUnitOfWork for consistent data access
+/// Uses manual mapping extensions instead of AutoMapper
 /// </summary>
 public class UpdateQuotationHandler : IRequestHandler<UpdateQuotationCommand, Result<QuotationDto>>
 {
     private readonly ISalesUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
 
-    public UpdateQuotationHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
+    public UpdateQuotationHandler(ISalesUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
     }
 
     public async Task<Result<QuotationDto>> Handle(UpdateQuotationCommand request, CancellationToken cancellationToken)
@@ -286,24 +282,23 @@ public class UpdateQuotationHandler : IRequestHandler<UpdateQuotationCommand, Re
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result<QuotationDto>.Success(_mapper.Map<QuotationDto>(quotation));
+        return Result<QuotationDto>.Success(quotation.ToDto());
     }
 }
 
 /// <summary>
 /// Handler for ApproveQuotationCommand
 /// Uses ISalesUnitOfWork for consistent data access
+/// Uses manual mapping extensions instead of AutoMapper
 /// </summary>
 public class ApproveQuotationHandler : IRequestHandler<ApproveQuotationCommand, Result<QuotationDto>>
 {
     private readonly ISalesUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
     private readonly ICurrentUserService _currentUserService;
 
-    public ApproveQuotationHandler(ISalesUnitOfWork unitOfWork, IMapper mapper, ICurrentUserService currentUserService)
+    public ApproveQuotationHandler(ISalesUnitOfWork unitOfWork, ICurrentUserService currentUserService)
     {
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
         _currentUserService = currentUserService;
     }
 
@@ -326,23 +321,22 @@ public class ApproveQuotationHandler : IRequestHandler<ApproveQuotationCommand, 
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result<QuotationDto>.Success(_mapper.Map<QuotationDto>(quotation));
+        return Result<QuotationDto>.Success(quotation.ToDto());
     }
 }
 
 /// <summary>
 /// Handler for SendQuotationCommand
 /// Uses ISalesUnitOfWork for consistent data access
+/// Uses manual mapping extensions instead of AutoMapper
 /// </summary>
 public class SendQuotationHandler : IRequestHandler<SendQuotationCommand, Result<QuotationDto>>
 {
     private readonly ISalesUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
 
-    public SendQuotationHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
+    public SendQuotationHandler(ISalesUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
     }
 
     public async Task<Result<QuotationDto>> Handle(SendQuotationCommand request, CancellationToken cancellationToken)
@@ -363,23 +357,22 @@ public class SendQuotationHandler : IRequestHandler<SendQuotationCommand, Result
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result<QuotationDto>.Success(_mapper.Map<QuotationDto>(quotation));
+        return Result<QuotationDto>.Success(quotation.ToDto());
     }
 }
 
 /// <summary>
 /// Handler for AcceptQuotationCommand
 /// Uses ISalesUnitOfWork for consistent data access
+/// Uses manual mapping extensions instead of AutoMapper
 /// </summary>
 public class AcceptQuotationHandler : IRequestHandler<AcceptQuotationCommand, Result<QuotationDto>>
 {
     private readonly ISalesUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
 
-    public AcceptQuotationHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
+    public AcceptQuotationHandler(ISalesUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
     }
 
     public async Task<Result<QuotationDto>> Handle(AcceptQuotationCommand request, CancellationToken cancellationToken)
@@ -400,23 +393,22 @@ public class AcceptQuotationHandler : IRequestHandler<AcceptQuotationCommand, Re
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result<QuotationDto>.Success(_mapper.Map<QuotationDto>(quotation));
+        return Result<QuotationDto>.Success(quotation.ToDto());
     }
 }
 
 /// <summary>
 /// Handler for RejectQuotationCommand
 /// Uses ISalesUnitOfWork for consistent data access
+/// Uses manual mapping extensions instead of AutoMapper
 /// </summary>
 public class RejectQuotationHandler : IRequestHandler<RejectQuotationCommand, Result<QuotationDto>>
 {
     private readonly ISalesUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
 
-    public RejectQuotationHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
+    public RejectQuotationHandler(ISalesUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
     }
 
     public async Task<Result<QuotationDto>> Handle(RejectQuotationCommand request, CancellationToken cancellationToken)
@@ -437,7 +429,7 @@ public class RejectQuotationHandler : IRequestHandler<RejectQuotationCommand, Re
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result<QuotationDto>.Success(_mapper.Map<QuotationDto>(quotation));
+        return Result<QuotationDto>.Success(quotation.ToDto());
     }
 }
 
