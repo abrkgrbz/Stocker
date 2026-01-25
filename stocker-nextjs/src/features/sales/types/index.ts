@@ -3027,6 +3027,7 @@ export interface SalesTargetQueryParams {
   year?: number;
   status?: string;
   targetType?: SalesTargetType;
+  periodType?: TargetPeriodType;
   period?: string;
   salesRepresentativeId?: string;
   salesTeamId?: string;

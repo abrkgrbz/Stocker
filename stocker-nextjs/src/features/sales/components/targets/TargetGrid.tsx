@@ -17,9 +17,7 @@ import {
   useSalesTargetStatistics,
   useLeaderboard,
 } from '../../hooks';
-import type { SalesTargetQueryParams } from '../../types';
-
-type TargetPeriodFilter = 'Monthly' | 'Quarterly' | 'Yearly';
+import type { SalesTargetQueryParams, TargetPeriodType } from '../../types';
 
 interface TargetGridProps {
   params?: SalesTargetQueryParams;
@@ -49,8 +47,8 @@ export function TargetGrid({
   // Get unique departments for filter
   const departments = [...new Set(targets.map((t) => t.department).filter(Boolean))];
 
-  const handleTargetTypeChange = (value: TargetPeriodFilter | undefined) => {
-    onParamsChange?.({ ...params, targetType: value });
+  const handlePeriodTypeChange = (value: TargetPeriodType | undefined) => {
+    onParamsChange?.({ ...params, periodType: value });
   };
 
   const handleDepartmentChange = (value: string | undefined) => {
@@ -131,16 +129,17 @@ export function TargetGrid({
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-slate-400" />
-              <Select<TargetPeriodFilter>
-                value={params.targetType}
-                onChange={handleTargetTypeChange}
+              <Select<TargetPeriodType>
+                value={params.periodType}
+                onChange={handlePeriodTypeChange}
                 style={{ width: 150 }}
                 placeholder="Dönem"
                 allowClear
                 options={[
                   { value: 'Monthly' as const, label: 'Aylık' },
                   { value: 'Quarterly' as const, label: 'Çeyreklik' },
-                  { value: 'Yearly' as const, label: 'Yıllık' },
+                  { value: 'SemiAnnual' as const, label: '6 Aylık' },
+                  { value: 'Annual' as const, label: 'Yıllık' },
                 ]}
               />
             </div>
