@@ -2943,7 +2943,9 @@ export interface SalesTargetStatisticsDto {
   totalTargets: number;
   activeTargets: number;
   completedTargets: number;
+  achievedCount: number;
   averageAchievement: number;
+  averageProgress: number;
   totalTargetAmount: number;
   totalAchievedAmount: number;
   topPerformerName?: string;
