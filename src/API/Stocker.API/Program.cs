@@ -207,25 +207,37 @@ builder.Services.AddMassTransit(x =>
 // ========================================
 // Register all AutoMapper profiles from all modules in a single call
 // This prevents profile conflicts when multiple modules call AddAutoMapper separately
-var autoMapperProfiles = new List<Type>();
 var enabledModules = builder.Configuration.GetSection("EnabledModules");
 
-if (enabledModules.GetValue<bool>("CRM"))
-    autoMapperProfiles.Add(typeof(Stocker.Modules.CRM.Application.Mappings.CRMProfile));
-if (enabledModules.GetValue<bool>("Sales"))
-    autoMapperProfiles.Add(typeof(Stocker.Modules.Sales.Application.Mappings.SalesProfile));
-if (enabledModules.GetValue<bool>("Finance"))
-    autoMapperProfiles.Add(typeof(Stocker.Modules.Finance.Application.Mappings.FinanceProfile));
-if (enabledModules.GetValue<bool>("Purchase"))
-    autoMapperProfiles.Add(typeof(Stocker.Modules.Purchase.Application.Mappings.PurchaseProfile));
-if (enabledModules.GetValue<bool>("CMS", true))
-    autoMapperProfiles.Add(typeof(Stocker.Modules.CMS.Application.Mappings.CMSMappingProfile));
-
-if (autoMapperProfiles.Count > 0)
+builder.Services.AddAutoMapper(cfg =>
 {
-    builder.Services.AddAutoMapper(autoMapperProfiles.ToArray());
-    Log.Information("AutoMapper registered with {Count} module profiles", autoMapperProfiles.Count);
-}
+    if (enabledModules.GetValue<bool>("CRM"))
+    {
+        cfg.AddProfile<Stocker.Modules.CRM.Application.Mappings.CRMProfile>();
+        Log.Information("AutoMapper: CRMProfile registered");
+    }
+    if (enabledModules.GetValue<bool>("Sales"))
+    {
+        cfg.AddProfile<Stocker.Modules.Sales.Application.Mappings.SalesProfile>();
+        Log.Information("AutoMapper: SalesProfile registered");
+    }
+    if (enabledModules.GetValue<bool>("Finance"))
+    {
+        cfg.AddProfile<Stocker.Modules.Finance.Application.Mappings.FinanceProfile>();
+        Log.Information("AutoMapper: FinanceProfile registered");
+    }
+    if (enabledModules.GetValue<bool>("Purchase"))
+    {
+        cfg.AddProfile<Stocker.Modules.Purchase.Application.Mappings.PurchaseProfile>();
+        Log.Information("AutoMapper: PurchaseProfile registered");
+    }
+    if (enabledModules.GetValue<bool>("CMS", true))
+    {
+        cfg.AddProfile<Stocker.Modules.CMS.Application.Mappings.CMSMappingProfile>();
+        Log.Information("AutoMapper: CMSMappingProfile registered");
+    }
+});
+Log.Information("AutoMapper centralized registration completed");
 
 // ========================================
 // MODULAR ARCHITECTURE - CONDITIONAL LOADING
