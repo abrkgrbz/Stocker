@@ -249,6 +249,7 @@ export const lightComponents: ComponentsConfig = {
   Pagination: {
     itemBg: '#ffffff',
     itemActiveBg: brand.primary[600],
+    itemActiveColor: '#ffffff',
     itemActiveColorDisabled: slate[400],
     itemInputBg: '#ffffff',
     itemLinkBg: '#ffffff',

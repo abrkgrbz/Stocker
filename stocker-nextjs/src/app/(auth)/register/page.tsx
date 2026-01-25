@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
+import LoginShowcase from '@/components/auth/LoginShowcase'
 
 // Dynamic import for GradientMesh to avoid SSR issues with Three.js
 const GradientMesh = dynamic(() => import('@/components/landing/GradientMesh'), {
@@ -12,41 +13,6 @@ const GradientMesh = dynamic(() => import('@/components/landing/GradientMesh'), 
   loading: () => null,
 })
 
-// Testimonials data for Register page
-const TESTIMONIALS = [
-  {
-    id: 1,
-    quote: "Kurulum 5 dakika sürdü. İlk gün tüm ekip kullanmaya başladı. Bu kadar basit olacağını düşünmemiştik.",
-    author: "Elif Kaya",
-    role: "Kurucu Ortak",
-    company: "ModernBiz",
-    initials: "EK",
-  },
-  {
-    id: 2,
-    quote: "Rakiplerden geçiş çok kolay oldu. Tüm verilerimizi sorunsuz aktardık. Harika bir onboarding deneyimi.",
-    author: "Can Özdemir",
-    role: "IT Direktörü",
-    company: "FastGrowth",
-    initials: "CÖ",
-  },
-  {
-    id: 3,
-    quote: "14 günlük deneme süresi yeterli oldu. Ekibimiz ürünü o kadar sevdi ki hemen premium'a geçtik.",
-    author: "Selin Arslan",
-    role: "Finans Müdürü",
-    company: "SmartRetail",
-    initials: "SA",
-  },
-  {
-    id: 4,
-    quote: "Kurulumdan itibaren her adımda destek aldık. Canlı chat ile anında çözüm buluyoruz.",
-    author: "Burak Yıldız",
-    role: "Operasyon Şefi",
-    company: "QuickLogistics",
-    initials: "BY",
-  },
-]
 import { useSignalRValidation } from '@/hooks/useSignalRValidation'
 import { toast } from '@/lib/notifications/use-toast'
 import { showAlert } from '@/lib/sweetalert-config'
@@ -88,24 +54,6 @@ export default function RegisterPage() {
   const [acceptTerms, setAcceptTerms] = useState(false)
   const [acceptPrivacy, setAcceptPrivacy] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-
-  // Testimonial slider state
-  const [currentTestimonial, setCurrentTestimonial] = useState(0)
-  const [isTransitioning, setIsTransitioning] = useState(false)
-
-  // Auto-rotate testimonials
-  const nextTestimonial = useCallback(() => {
-    setIsTransitioning(true)
-    setTimeout(() => {
-      setCurrentTestimonial((prev) => (prev + 1) % TESTIMONIALS.length)
-      setIsTransitioning(false)
-    }, 300)
-  }, [])
-
-  useEffect(() => {
-    const interval = setInterval(nextTestimonial, 6000) // Change every 6 seconds
-    return () => clearInterval(interval)
-  }, [nextTestimonial])
 
   // Validation states
   const [emailValid, setEmailValid] = useState(false)
@@ -358,9 +306,8 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value.toLowerCase())}
                 onKeyDown={(e) => e.key === 'Enter' && handleEmailContinue()}
-                className={`w-full px-4 py-3 bg-white border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
-                  email && !emailValid ? 'border-red-300 focus:ring-red-500' : 'border-slate-200 focus:ring-slate-900'
-                }`}
+                className={`w-full px-4 py-3 bg-white border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${email && !emailValid ? 'border-red-300 focus:ring-red-500' : 'border-slate-200 focus:ring-slate-900'
+                  }`}
                 placeholder="ornek@sirket.com"
                 autoFocus
               />
@@ -424,9 +371,8 @@ export default function RegisterPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handlePasswordContinue()}
-                  className={`w-full px-4 py-3 pr-12 bg-white border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
-                    password && !passwordValid ? 'border-red-300 focus:ring-red-500' : 'border-slate-200 focus:ring-slate-900'
-                  }`}
+                  className={`w-full px-4 py-3 pr-12 bg-white border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${password && !passwordValid ? 'border-red-300 focus:ring-red-500' : 'border-slate-200 focus:ring-slate-900'
+                    }`}
                   placeholder="En az 8 karakter"
                   autoFocus
                 />
@@ -456,11 +402,10 @@ export default function RegisterPage() {
                     {[1, 2, 3, 4, 5].map((level) => (
                       <div
                         key={level}
-                        className={`h-1 flex-1 rounded-full transition-colors ${
-                          passwordStrength >= level
-                            ? passwordStrength >= 4 ? 'bg-emerald-500' : passwordStrength >= 3 ? 'bg-yellow-500' : 'bg-red-500'
-                            : 'bg-slate-200'
-                        }`}
+                        className={`h-1 flex-1 rounded-full transition-colors ${passwordStrength >= level
+                          ? passwordStrength >= 4 ? 'bg-emerald-500' : passwordStrength >= 3 ? 'bg-yellow-500' : 'bg-red-500'
+                          : 'bg-slate-200'
+                          }`}
                       />
                     ))}
                   </div>
@@ -506,9 +451,8 @@ export default function RegisterPage() {
                   value={teamName}
                   onChange={(e) => setTeamName(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                   onKeyDown={(e) => e.key === 'Enter' && handleTeamNameContinue()}
-                  className={`flex-1 px-4 py-3 bg-white border rounded-l-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
-                    teamName && !teamNameValid ? 'border-red-300 focus:ring-red-500' : 'border-slate-200 focus:ring-slate-900'
-                  }`}
+                  className={`flex-1 px-4 py-3 bg-white border rounded-l-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${teamName && !teamNameValid ? 'border-red-300 focus:ring-red-500' : 'border-slate-200 focus:ring-slate-900'
+                    }`}
                   placeholder="sirketiniz"
                   autoFocus
                 />
@@ -686,79 +630,9 @@ export default function RegisterPage() {
           </Suspense>
         </div>
 
-        {/* Subtle overlay for better text readability */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/30 via-transparent to-slate-900/30" />
-
-        {/* Content */}
-        <div className="relative z-10 flex flex-col justify-between p-12 w-full h-full">
-          {/* Testimonial Slider - Vertically Centered */}
-          <div className="flex-1 flex items-center">
-            <div className="max-w-md w-full">
-              {/* Quote Icon */}
-              <svg
-                className="w-12 h-12 text-slate-700 mb-6"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-              </svg>
-
-              {/* Testimonial Content with Fade Animation */}
-              <div className={`transition-all duration-300 ${isTransitioning ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'}`}>
-                <blockquote className="text-2xl font-light text-white leading-relaxed mb-8 min-h-[120px]">
-                  "{TESTIMONIALS[currentTestimonial].quote}"
-                </blockquote>
-
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center text-white font-semibold text-lg">
-                    {TESTIMONIALS[currentTestimonial].initials}
-                  </div>
-                  <div>
-                    <div className="text-white font-medium">{TESTIMONIALS[currentTestimonial].author}</div>
-                    <div className="text-slate-400 text-sm">{TESTIMONIALS[currentTestimonial].role}, {TESTIMONIALS[currentTestimonial].company}</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Slider Dots */}
-              <div className="flex items-center gap-2 mt-8">
-                {TESTIMONIALS.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      setIsTransitioning(true)
-                      setTimeout(() => {
-                        setCurrentTestimonial(index)
-                        setIsTransitioning(false)
-                      }, 300)
-                    }}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      index === currentTestimonial
-                        ? 'w-8 bg-white'
-                        : 'w-1.5 bg-slate-600 hover:bg-slate-500'
-                    }`}
-                    aria-label={`Testimonial ${index + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Stats - Bottom */}
-          <div className="grid grid-cols-3 gap-8 pt-8 border-t border-slate-800 mt-8">
-            <div>
-              <div className="text-3xl font-semibold text-white">5 dk</div>
-              <div className="text-sm text-slate-500 mt-1">Kurulum Süresi</div>
-            </div>
-            <div>
-              <div className="text-3xl font-semibold text-white">14 gün</div>
-              <div className="text-sm text-slate-500 mt-1">Ücretsiz Deneme</div>
-            </div>
-            <div>
-              <div className="text-3xl font-semibold text-white">7/24</div>
-              <div className="text-sm text-slate-500 mt-1">Destek</div>
-            </div>
-          </div>
+        {/* Content with Transparent Showcase */}
+        <div className="relative z-10 w-full h-full flex items-center justify-center">
+          <LoginShowcase transparent={true} theme="light" />
         </div>
       </div>
 
@@ -799,11 +673,10 @@ export default function RegisterPage() {
                   return (
                     <div key={step.id} className="relative flex flex-col items-center">
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
-                          isActive
-                            ? 'bg-slate-900 text-white'
-                            : 'bg-slate-200 text-slate-500'
-                        } ${isCurrent ? 'ring-4 ring-slate-900/20' : ''}`}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${isActive
+                          ? 'bg-slate-900 text-white'
+                          : 'bg-slate-200 text-slate-500'
+                          } ${isCurrent ? 'ring-4 ring-slate-900/20' : ''}`}
                       >
                         {index < getCurrentStepIndex() ? (
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -177,7 +177,7 @@ export default function ApiDocsPage() {
         <section id="quickstart" className="py-16 bg-slate-50">
           <div className="max-w-6xl mx-auto px-6">
             <h2 className="text-2xl font-bold text-slate-900 mb-8">Hızlı Başlangıç</h2>
-            
+
             <div className="grid md:grid-cols-3 gap-6 mb-12">
               {[
                 { step: '1', title: 'API Anahtarı Alın', description: 'Dashboard\'dan API anahtarınızı oluşturun' },
@@ -218,7 +218,7 @@ export default function ApiDocsPage() {
                 </button>
               </div>
               <pre className="p-6 text-sm text-slate-300 overflow-x-auto">
-{`curl -X GET "https://api.stoocker.com/v1/products" \\
+                {`curl -X GET "https://api.stoocker.com/v1/products" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json"
 
@@ -273,25 +273,53 @@ export default function ApiDocsPage() {
         <section id="endpoints" className="py-16 bg-slate-50">
           <div className="max-w-6xl mx-auto px-6">
             <h2 className="text-2xl font-bold text-slate-900 mb-8">API Endpoint&apos;leri</h2>
-            
+
             <div className="flex flex-col lg:flex-row gap-8">
               {/* Sidebar */}
               <div className="lg:w-64 flex-shrink-0">
-                <div className="sticky top-24 space-y-1">
+                {/* Mobile Dropdown */}
+                <div className="block lg:hidden mb-6">
+                  <select
+                    value={activeCategory}
+                    onChange={(e) => setActiveCategory(e.target.value)}
+                    className="w-full p-3 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  >
+                    {apiCategories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.icon} {category.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Desktop Sidebar */}
+                <div className="hidden lg:block sticky top-24 space-y-1">
                   {apiCategories.map((category) => (
                     <button
                       key={category.id}
                       onClick={() => setActiveCategory(category.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors ${
-                        activeCategory === category.id
-                          ? 'bg-slate-900 text-white'
-                          : 'bg-white text-slate-600 hover:bg-slate-100'
-                      }`}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${activeCategory === category.id
+                          ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20'
+                          : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                        }`}
                     >
                       <span className="text-xl">{category.icon}</span>
                       <span className="font-medium">{category.title}</span>
+                      {activeCategory === category.id && (
+                        <motion.div layoutId="activeInd" className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
+                      )}
                     </button>
                   ))}
+
+                  {/* Run in Postman */}
+                  <div className="pt-6 mt-6 border-t border-slate-200">
+                    <a
+                      href="#"
+                      className="flex flex-col items-center justify-center p-4 bg-[#FF6C37]/10 border border-[#FF6C37]/20 rounded-xl hover:bg-[#FF6C37]/20 transition-colors group"
+                    >
+                      <Image src="https://run.pstmn.io/button.svg" alt="Run in Postman" width={128} height={32} className="opacity-80 group-hover:opacity-100 transition-opacity" />
+                    </a>
+                  </div>
                 </div>
               </div>
 
@@ -357,9 +385,8 @@ export default function ApiDocsPage() {
                 >
                   <div className="text-3xl mb-3">{sdk.icon}</div>
                   <h3 className="font-semibold text-slate-900 mb-1">{sdk.name}</h3>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    sdk.status === 'stable' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                  }`}>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${sdk.status === 'stable' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                    }`}>
                     {sdk.status}
                   </span>
                 </motion.div>
@@ -401,7 +428,7 @@ export default function ApiDocsPage() {
       <footer className="border-t border-slate-200">
         <div className="max-w-6xl mx-auto px-6 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between text-sm text-slate-500">
-            <div>&copy; 2024 Stocker. Tüm hakları saklıdır.</div>
+            <div>&copy; 2026 Stocker. Tüm hakları saklıdır.</div>
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
               <Link href="/docs" className="hover:text-slate-900 transition-colors">Dokümantasyon</Link>
               <Link href="/status" className="hover:text-slate-900 transition-colors">Sistem Durumu</Link>

@@ -33,6 +33,7 @@ import { message } from 'antd';
 import GlobalSearch from '@/components/common/GlobalSearch';
 import { MODULE_MENUS, getCurrentModule, type ModuleKey, type MenuItem } from '@/config/module-menus';
 import logger from '@/lib/utils/logger';
+import { SessionExpiryWarning } from '@/components/auth/SessionExpiryWarning';
 
 /**
  * Filter menu items based on user permissions
@@ -1254,6 +1255,9 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
       {/* Global Search Modal */}
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
+
+      {/* Session Expiry Warning Dialog */}
+      <SessionExpiryWarning />
     </>
   );
 }

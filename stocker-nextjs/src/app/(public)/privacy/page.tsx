@@ -1,293 +1,208 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import Image from 'next/image'
-import { motion } from 'framer-motion'
+import React from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { motion } from 'framer-motion';
+import {
+  Shield,
+  Lock,
+  FileText,
+  Eye,
+  Server,
+  Globe,
+  Users
+} from 'lucide-react';
 
 export default function PrivacyPage() {
+  const sections = [
+    {
+      title: '1. Veri Sorumlusu',
+      content: (
+        <p>
+          6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") uyarınca, Stoocker Teknoloji A.Ş. ("Şirket") olarak, veri sorumlusu sıfatıyla, kişisel verilerinizi aşağıda açıklanan amaçlar kapsamında; hukuka ve dürüstlük kurallarına uygun bir şekilde işleyebilecek, kaydedebilecek, saklayabilecek, sınıflandırabilecek, güncelleyebilecek ve mevzuatın izin verdiği hallerde üçüncü kişilere açıklayabilecek/devredebileceğiz.
+        </p>
+      ),
+      icon: Shield
+    },
+    {
+      title: '2. İşlenen Kişisel Verileriniz',
+      content: (
+        <ul className="list-disc list-inside space-y-2 ml-2">
+          <li><strong>Kimlik Bilgileri:</strong> Ad, soyad, T.C. kimlik numarası.</li>
+          <li><strong>İletişim Bilgileri:</strong> E-posta adresi, telefon numarası, adres.</li>
+          <li><strong>Müşteri İşlem Bilgileri:</strong> Sipariş geçmişi, fatura bilgileri, talep ve şikayetler.</li>
+          <li><strong>İşlem Güvenliği Bilgileri:</strong> IP adresi, log kayıtları, cihaz bilgileri, şifre ve parola bilgileri.</li>
+          <li><strong>Pazarlama Bilgileri:</strong> Çerez kayıtları, hedefleme bilgileri, alışkanlıklar ve beğeniler.</li>
+        </ul>
+      ),
+      icon: FileText
+    },
+    {
+      title: '3. Kişisel Verilerin İşlenme Amacı',
+      content: (
+        <p>
+          Kişisel verileriniz şu amaçlarla işlenmektedir:
+          <br /><br />
+          Şirketimiz tarafından sunulan ürün ve hizmetlerden sizleri faydalandırmak için gerekli çalışmaların iş birimlerimiz tarafından yapılması,
+          Şirketimiz ve Şirketimizle iş ilişkisi içerisinde olan ilgili kişilerin hukuki ve ticari güvenliğinin temini,
+          Şirketimizin ticari ve iş stratejilerinin belirlenmesi ve uygulanması,
+          Müşteri memnuniyetinin artırılması,
+          Yasal mevzuattan kaynaklanan yükümlülüklerin yerine getirilmesi.
+        </p>
+      ),
+      icon: Eye
+    },
+    {
+      title: '4. İşlenen Kişisel Verilerin Kimlere ve Hangi Amaçla Aktarılabileceği',
+      content: (
+        <p>
+          Toplanan kişisel verileriniz; yukarıda belirtilen amaçların gerçekleştirilmesi doğrultusunda, iş ortaklarımıza, tedarikçilerimize, kanunen yetkili kamu kurumlarına ve özel kişilere, KVKK’nın 8. ve 9. maddelerinde belirtilen kişisel veri işleme şartları ve amaçları çerçevesinde aktarılabilecektir. Sunucularımızın bir kısmı yedekleme ve güvenlik amacıyla yurt dışında (AB standartlarında güvenli veri merkezlerinde) tutulabilmektedir.
+        </p>
+      ),
+      icon: Globe
+    },
+    {
+      title: '5. Kişisel Verilerin Toplanma Yöntemi ve Hukuki Sebebi',
+      content: (
+        <p>
+          Kişisel verileriniz, internet sitemiz, mobil uygulamamız, çağrı merkezimiz veya e-posta yoluyla elektronik ortamda toplanmaktadır. Bu veriler, KVKK’nın 5. maddesinde belirtilen "sözleşmenin kurulması veya ifası", "hukuki yükümlülüğün yerine getirilmesi" ve "ilgili kişinin temel hak ve özgürlüklerine zarar vermemek kaydıyla veri sorumlusunun meşru menfaatleri" hukuki sebeplerine dayanılarak toplanmaktadır.
+        </p>
+      ),
+      icon: Server
+    },
+    {
+      title: '6. Kişisel Veri Sahibinin Hakları (KVKK Madde 11)',
+      content: (
+        <div className="space-y-4">
+          <p>KVKK’nın 11. maddesi uyarınca veri sahipleri şu haklara sahiptir:</p>
+          <ul className="list-disc list-inside space-y-1 ml-2">
+            <li>Kişisel veri işlenip işlenmediğini öğrenme,</li>
+            <li>Kişisel verileri işlenmişse buna ilişkin bilgi talep etme,</li>
+            <li>Kişisel verilerin işlenme amacını ve bunların amacına uygun kullanılıp kullanılmadığını öğrenme,</li>
+            <li>Yurt içinde veya yurt dışında kişisel verilerin aktarıldığı üçüncü kişileri bilme,</li>
+            <li>Kişisel verilerin eksik veya yanlış işlenmiş olması hâlinde bunların düzeltilmesini isteme,</li>
+            <li>Kişisel verilerin silinmesini veya yok edilmesini isteme,</li>
+            <li>İşlenen verilerin münhasıran otomatik sistemler vasıtasıyla analiz edilmesi suretiyle kişinin kendisi aleyhine bir sonucun ortaya çıkmasına itiraz etme,</li>
+            <li>Kişisel verilerin kanuna aykırı olarak işlenmesi sebebiyle zarara uğraması hâlinde zararın giderilmesini talep etme.</li>
+          </ul>
+        </div>
+      ),
+      icon: Users
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="border-b border-slate-200 bg-white backdrop-blur-sm sticky top-0">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/">
-            <Image
-              src="/stoocker_black.png"
-              alt="Stoocker Logo"
-              width={120}
-              height={40}
-              className="object-contain"
-              priority
-            />
-          </Link>
-          <nav className="flex items-center space-x-6 text-sm">
-            <Link href="/terms" className="text-slate-600 hover:text-slate-900 transition-colors">Kullanim Sartlari</Link>
-            <Link href="/help" className="text-slate-600 hover:text-slate-900 transition-colors">Yardim</Link>
-            <Link href="/login" className="text-slate-900 hover:text-slate-600 font-medium transition-colors">Giris Yap</Link>
-          </nav>
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Link href="/" className="flex items-center gap-3">
+              <Image
+                src="/stoocker_black.png"
+                alt="Stoocker"
+                width={120}
+                height={40}
+                priority
+                className="object-contain"
+              />
+            </Link>
+            <div className="flex items-center gap-4">
+              <Link href="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900">
+                Giriş Yap
+              </Link>
+              <Link
+                href="/register"
+                className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                Ücretsiz Dene
+              </Link>
+            </div>
+          </div>
         </div>
       </header>
 
-      {/* Content */}
-      <main className="max-w-4xl mx-auto px-6 py-12">
-        {/* Hero */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-12"
-        >
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-purple-500/30">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
+      <main>
+        {/* Hero Section */}
+        <section className="py-16 text-center px-4 bg-white border-b border-slate-200">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="max-w-3xl mx-auto"
+          >
+            <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6 text-slate-900">
+              <Lock className="w-8 h-8" />
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+              Gizlilik Politikası ve KVKK Aydınlatma Metni
+            </h1>
+            <p className="text-slate-500">
+              Son Güncelleme: 25 Ocak 2026
+            </p>
+          </motion.div>
+        </section>
+
+        {/* Content */}
+        <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="space-y-8">
+            {sections.map((section, index) => {
+              const Icon = section.icon;
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm"
+                >
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-10 h-10 bg-slate-50 text-slate-700 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <h2 className="text-xl font-bold text-slate-900">
+                      {section.title}
+                    </h2>
+                  </div>
+                  <div className="text-slate-600 leading-relaxed text-sm sm:text-base">
+                    {section.content}
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">Gizlilik Politikasi</h1>
-          <p className="text-slate-500">Son guncelleme: 11 Aralik 2024</p>
-        </motion.div>
 
-        {/* Content Sections */}
-        <div className="space-y-8">
-          {/* Introduction */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="p-6 bg-slate-50 rounded-2xl border border-slate-200"
-          >
-            <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center">
-              <span className="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">1</span>
-              Giris
-            </h2>
-            <p className="text-slate-600 leading-relaxed">
-              Stoocker olarak, kullanicilarimizin gizliligini korumaya buyuk onem veriyoruz. Bu gizlilik politikasi,
-              hizmetlerimizi kullanirken toplamis oldugumuz kisisel verilerin nasil toplandigi, kullanildigi,
-              saklandigi ve korundugunun aciklamaktadir.
+          {/* Contact Box */}
+          <div className="mt-12 bg-indigo-50 rounded-xl p-8 text-center border border-indigo-100">
+            <h3 className="text-xl font-bold text-slate-900 mb-4">KVKK Başvuruları İçin</h3>
+            <p className="text-slate-600 mb-6 max-w-2xl mx-auto">
+              Kanunun 11. maddesindeki haklarınızı kullanmakla ilgili taleplerinizi "Veri Sorumlusuna Başvuru Usul ve Esasları Hakkında Tebliğ"e uygun olarak bize iletebilirsiniz.
             </p>
-          </motion.section>
-
-          {/* Data Collection */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="p-6 bg-slate-50 rounded-2xl border border-slate-200"
-          >
-            <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center">
-              <span className="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">2</span>
-              Toplanan Veriler
-            </h2>
-            <div className="space-y-4 text-slate-600">
-              <div>
-                <h3 className="font-semibold text-slate-900 mb-2">Hesap Bilgileri</h3>
-                <ul className="list-disc list-inside space-y-1 ml-4 text-slate-600">
-                  <li>Ad, soyad ve e-posta adresi</li>
-                  <li>Telefon numarasi</li>
-                  <li>Sirket/Isletme bilgileri</li>
-                  <li>Fatura ve odeme bilgileri</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900 mb-2">Kullanim Verileri</h3>
-                <ul className="list-disc list-inside space-y-1 ml-4 text-slate-600">
-                  <li>IP adresi ve cihaz bilgileri</li>
-                  <li>Tarayici turu ve surumu</li>
-                  <li>Sayfa goruntumeleri ve tiklamalar</li>
-                  <li>Oturum suresi ve kullanim aliskanliklari</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900 mb-2">Is Verileri</h3>
-                <ul className="list-disc list-inside space-y-1 ml-4 text-slate-600">
-                  <li>Stok ve envanter bilgileri</li>
-                  <li>Satis ve satin alma kayitlari</li>
-                  <li>Musteri ve tedarikci verileri</li>
-                  <li>Finansal raporlar</li>
-                </ul>
-              </div>
-            </div>
-          </motion.section>
-
-          {/* Data Usage */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="p-6 bg-slate-50 rounded-2xl border border-slate-200"
-          >
-            <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center">
-              <span className="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">3</span>
-              Verilerin Kullanimi
-            </h2>
-            <p className="text-slate-600 mb-4">Toplamis oldugumuz verileri asagidaki amaclarla kullaniyoruz:</p>
-            <ul className="space-y-3">
-              {[
-                { icon: '🔧', text: 'Hizmetlerimizi sunmak ve gelistirmek' },
-                { icon: '📊', text: 'Kullanici deneyimini kisisellestirmek' },
-                { icon: '🔒', text: 'Hesap guvenligini saglamak' },
-                { icon: '📧', text: 'Onemli guncellemeler ve bildirimler gondermek' },
-                { icon: '📈', text: 'Hizmet analizleri ve iyilestirmeler yapmak' },
-                { icon: '⚖️', text: 'Yasal yukumlulukleri yerine getirmek' },
-              ].map((item, index) => (
-                <li key={index} className="flex items-center text-slate-600">
-                  <span className="mr-3 text-xl">{item.icon}</span>
-                  {item.text}
-                </li>
-              ))}
-            </ul>
-          </motion.section>
-
-          {/* Data Protection */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="p-6 bg-slate-50 rounded-2xl border border-slate-200"
-          >
-            <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center">
-              <span className="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">4</span>
-              Veri Guvenligi
-            </h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              {[
-                { title: '256-bit SSL Sifreleme', desc: 'Tum veri transferleri sifrelidir' },
-                { title: 'Guvenli Veri Merkezleri', desc: 'ISO 27001 sertifikali altyapi' },
-                { title: 'Duzenli Yedekleme', desc: 'Verileriniz gunluk olarak yedeklenir' },
-                { title: 'Erisim Kontrolu', desc: 'Rol tabanli yetkilendirme sistemi' },
-              ].map((item, index) => (
-                <div key={index} className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200">
-                  <div className="font-semibold text-slate-900 mb-1">{item.title}</div>
-                  <div className="text-sm text-slate-600">{item.desc}</div>
-                </div>
-              ))}
-            </div>
-          </motion.section>
-
-          {/* User Rights */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-            className="p-6 bg-slate-50 rounded-2xl border border-slate-200"
-          >
-            <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center">
-              <span className="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">5</span>
-              Kullanici Haklari
-            </h2>
-            <p className="text-slate-600 mb-4">KVKK ve GDPR kapsaminda asagidaki haklara sahipsiniz:</p>
-            <div className="space-y-3">
-              {[
-                'Kisisel verilerinize erisim talep etme',
-                'Yanlis veya eksik verilerin duzeltilmesini isteme',
-                'Verilerinizin silinmesini talep etme (unutulma hakki)',
-                'Veri islemenin kisitlanmasini isteme',
-                'Verilerinizi tasima hakki',
-                'Otomatik karar almaya itiraz etme',
-              ].map((right, index) => (
-                <div key={index} className="flex items-center text-slate-600">
-                  <svg className="w-5 h-5 text-emerald-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  {right}
-                </div>
-              ))}
-            </div>
-          </motion.section>
-
-          {/* Cookies */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-            className="p-6 bg-slate-50 rounded-2xl border border-slate-200"
-          >
-            <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center">
-              <span className="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">6</span>
-              Cerezler (Cookies)
-            </h2>
-            <p className="text-slate-600 mb-4">
-              Hizmetlerimizin duzgun calismasi icin cerezler kullaniyoruz. Cerez turleri:
-            </p>
-            <div className="space-y-3">
-              <div className="p-3 bg-white rounded-lg border border-slate-200">
-                <span className="font-semibold text-slate-900">Zorunlu Cerezler:</span>
-                <span className="text-slate-600 ml-2">Oturum yonetimi ve guvenlik icin gereklidir</span>
-              </div>
-              <div className="p-3 bg-white rounded-lg border border-slate-200">
-                <span className="font-semibold text-slate-900">Performans Cerezleri:</span>
-                <span className="text-slate-600 ml-2">Hizmet iyilestirme icin anonim veriler toplar</span>
-              </div>
-              <div className="p-3 bg-white rounded-lg border border-slate-200">
-                <span className="font-semibold text-slate-900">Tercih Cerezleri:</span>
-                <span className="text-slate-600 ml-2">Kullanici tercihlerini hatirlar</span>
-              </div>
-            </div>
-          </motion.section>
-
-          {/* Contact */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.7 }}
-            className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border border-purple-200"
-          >
-            <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center">
-              <span className="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">7</span>
-              Iletisim
-            </h2>
-            <p className="text-slate-600 mb-4">
-              Gizlilik politikamiz hakkinda sorulariniz icin bizimle iletisime gecebilirsiniz:
-            </p>
-            <div className="space-y-2 text-slate-700">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <span>privacy@stoocker.com</span>
-              </div>
-              <div className="flex items-center">
-                <svg className="w-5 h-5 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                <span>+90 (850) 123 45 67</span>
-              </div>
-            </div>
-          </motion.section>
-        </div>
-
-        {/* Back Link */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.8 }}
-          className="text-center mt-12"
-        >
-          <Link
-            href="/login"
-            className="inline-flex items-center text-slate-900 hover:text-slate-600 font-medium transition-colors"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Girise Don
-          </Link>
-        </motion.div>
+            <a
+              href="mailto:kvkk@stoocker.app"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200"
+            >
+              kvkk@stoocker.app
+            </a>
+          </div>
+        </section>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 mt-12">
-        <div className="max-w-4xl mx-auto px-6 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between text-sm text-slate-600">
-            <div>&copy; 2024 Stoocker. Tum haklari saklidir.</div>
-            <div className="flex items-center space-x-6 mt-4 md:mt-0">
-              <Link href="/privacy" className="text-slate-900">Gizlilik</Link>
-              <Link href="/terms" className="hover:text-slate-900 transition-colors">Sartlar</Link>
-              <Link href="/cookies" className="hover:text-slate-900 transition-colors">Cerezler</Link>
-              <Link href="/help" className="hover:text-slate-900 transition-colors">Yardim</Link>
-            </div>
+      <footer className="bg-white border-t border-slate-200 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-2">
+            <span className="text-slate-500 text-sm">© 2026 Stoocker. Tüm hakları saklıdır.</span>
+          </div>
+          <div className="flex items-center gap-8 text-sm">
+            <Link href="/privacy" className="text-slate-900 font-medium">Gizlilik</Link>
+            <Link href="/terms" className="text-slate-500 hover:text-slate-900">Kullanım Şartları</Link>
+            <Link href="/contact" className="text-slate-500 hover:text-slate-900">İletişim</Link>
           </div>
         </div>
       </footer>
     </div>
-  )
+  );
 }

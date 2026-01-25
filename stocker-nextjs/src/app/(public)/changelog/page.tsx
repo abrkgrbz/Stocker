@@ -21,6 +21,18 @@ interface Release {
 
 const releases: Release[] = [
   {
+    version: '2.6.0',
+    date: '1 Şubat 2026',
+    title: 'Güvenlik ve Destek Merkezi Güncellemesi',
+    description: 'KVKK uyumluluğu ve kullanıcı destek deneyimi için kapsamlı iyileştirmeler.',
+    changes: [
+      { type: 'feature', description: 'Yeni Destek Merkezi (Support Center) yayına alındı' },
+      { type: 'security', description: 'KVKK ve Veri Güvenliği sayfaları güncellendi' },
+      { type: 'improvement', description: 'Kullanıcı sözleşmesi ve yasal metinler yenilendi' },
+      { type: 'feature', description: 'Canlı destek altyapısı entegre edildi' },
+    ],
+  },
+  {
     version: '2.5.0',
     date: '10 Ocak 2025',
     title: 'Yapay Zeka Destekli Stok Tahmini',
@@ -179,7 +191,7 @@ export default function ChangelogPage() {
                   {releaseIndex < releases.length - 1 && (
                     <div className="absolute left-[19px] top-12 bottom-0 w-0.5 bg-slate-200" />
                   )}
-                  
+
                   <div className="flex gap-6">
                     {/* Version badge */}
                     <div className="flex-shrink-0">
@@ -198,7 +210,7 @@ export default function ChangelogPage() {
                       </div>
                       <p className="text-sm text-slate-500 mb-4">{release.date}</p>
                       <p className="text-slate-600 mb-6">{release.description}</p>
-                      
+
                       <div className="space-y-3">
                         {release.changes.map((change, changeIndex) => (
                           <div key={changeIndex} className="flex items-start gap-3">
@@ -245,7 +257,7 @@ export default function ChangelogPage() {
       <footer className="border-t border-slate-200">
         <div className="max-w-6xl mx-auto px-6 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between text-sm text-slate-500">
-            <div>&copy; 2024 Stocker. Tüm hakları saklıdır.</div>
+            <div>&copy; 2026 Stocker. Tüm hakları saklıdır.</div>
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
               <Link href="/privacy" className="hover:text-slate-900 transition-colors">Gizlilik</Link>
               <Link href="/terms" className="hover:text-slate-900 transition-colors">Şartlar</Link>

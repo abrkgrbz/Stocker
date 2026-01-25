@@ -280,39 +280,28 @@ export default function FeaturesPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-24 px-4 bg-slate-50">
+        <section className="py-24 px-4 bg-white border-t border-slate-200">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="bg-slate-900 rounded-3xl p-8 sm:p-12 shadow-2xl overflow-hidden relative isolate">
-              {/* Abstract background shapes */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full overflow-hidden opacity-30 pointer-events-none -z-10">
-                <div className="absolute top-[20%] left-[20%] w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" />
-                <div className="absolute top-[20%] right-[20%] w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000" />
-                <div className="absolute -bottom-8 left-[30%] w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000" />
-              </div>
-
-              <div className="relative z-10">
-                <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6 tracking-tight">
-                  İşletmenizi Büyütmeye Hazır mısınız?
-                </h2>
-                <p className="text-lg text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed">
-                  14 gün boyunca tüm modülleri <span className="text-white font-semibold">ücretsiz deneyin</span>.
-                  Kredi kartı gerekmez, taahhüt yok.
-                </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <Link
-                    href="/register"
-                    className="w-full sm:w-auto px-8 py-4 bg-indigo-600 !text-white font-bold text-base rounded-xl hover:bg-indigo-500 hover:scale-105 transition-all duration-200 shadow-lg shadow-indigo-500/25"
-                  >
-                    Ücretsiz Hesabınızı Oluşturun
-                  </Link>
-                  <Link
-                    href="/demo"
-                    className="w-full sm:w-auto px-8 py-4 bg-transparent border border-white/20 !text-white font-bold text-base rounded-xl hover:bg-white/10 hover:scale-105 backdrop-blur-sm transition-all duration-200"
-                  >
-                    Demo İsteyin
-                  </Link>
-                </div>
-              </div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-6 tracking-tight">
+              İşletmenizi Büyütmeye Hazır mısınız?
+            </h2>
+            <p className="text-lg text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+              14 gün boyunca tüm modülleri <span className="font-semibold text-slate-900">ücretsiz deneyin</span>.
+              Kredi kartı gerekmez, taahhüt yok.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                href="/register"
+                className="w-full sm:w-auto px-8 py-4 bg-slate-900 text-white font-semibold text-base rounded-xl hover:bg-slate-800 hover:-translate-y-1 transition-all duration-200 shadow-lg shadow-slate-900/20"
+              >
+                Ücretsiz Hesabınızı Oluşturun
+              </Link>
+              <Link
+                href="/demo"
+                className="w-full sm:w-auto px-8 py-4 bg-white text-slate-700 font-semibold text-base rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 hover:-translate-y-1 transition-all duration-200"
+              >
+                Demo İsteyin
+              </Link>
             </div>
           </div>
         </section>
@@ -322,7 +311,7 @@ export default function FeaturesPage() {
       <footer className="bg-white border-t border-slate-200 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <span className="text-slate-500 text-sm">© 2024 Stocker. Tüm hakları saklıdır.</span>
+            <span className="text-slate-500 text-sm">© 2026 Stoocker. Tüm hakları saklıdır.</span>
           </div>
           <div className="flex items-center gap-8 text-sm">
             <Link href="/privacy" className="text-slate-500 hover:text-slate-900">Gizlilik</Link>
