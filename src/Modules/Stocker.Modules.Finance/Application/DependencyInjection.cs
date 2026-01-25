@@ -1,7 +1,6 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using Stocker.Modules.Finance.Application.Mappings;
 
 namespace Stocker.Modules.Finance.Application;
 
@@ -20,8 +19,7 @@ public static class DependencyInjection
         // Register FluentValidation validators from this assembly
         services.AddValidatorsFromAssembly(assembly);
 
-        // Register AutoMapper profiles from this assembly
-        services.AddAutoMapper(typeof(FinanceProfile));
+        // Note: AutoMapper is registered centrally in Program.cs to avoid profile conflicts
 
         return services;
     }

@@ -2,7 +2,6 @@ using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
-using Stocker.Modules.Sales.Application.Mappings;
 
 namespace Stocker.Modules.Sales.Application;
 
@@ -24,8 +23,7 @@ public static class DependencyInjection
         // Add FluentValidation
         services.AddValidatorsFromAssembly(assembly);
 
-        // Add AutoMapper
-        services.AddAutoMapper(typeof(SalesProfile));
+        // Note: AutoMapper is registered centrally in Program.cs to avoid profile conflicts
 
         return services;
     }

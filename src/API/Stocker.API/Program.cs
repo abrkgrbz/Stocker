@@ -203,10 +203,34 @@ builder.Services.AddMassTransit(x =>
 });
 
 // ========================================
+// AUTOMAPPER - CENTRALIZED REGISTRATION
+// ========================================
+// Register all AutoMapper profiles from all modules in a single call
+// This prevents profile conflicts when multiple modules call AddAutoMapper separately
+var autoMapperAssemblies = new List<System.Reflection.Assembly>();
+var enabledModules = builder.Configuration.GetSection("EnabledModules");
+
+if (enabledModules.GetValue<bool>("CRM"))
+    autoMapperAssemblies.Add(typeof(Stocker.Modules.CRM.Application.Mappings.CRMProfile).Assembly);
+if (enabledModules.GetValue<bool>("Sales"))
+    autoMapperAssemblies.Add(typeof(Stocker.Modules.Sales.Application.Mappings.SalesProfile).Assembly);
+if (enabledModules.GetValue<bool>("Finance"))
+    autoMapperAssemblies.Add(typeof(Stocker.Modules.Finance.Application.Mappings.FinanceProfile).Assembly);
+if (enabledModules.GetValue<bool>("Purchase"))
+    autoMapperAssemblies.Add(typeof(Stocker.Modules.Purchase.Application.Mappings.PurchaseProfile).Assembly);
+if (enabledModules.GetValue<bool>("CMS", true))
+    autoMapperAssemblies.Add(typeof(Stocker.Modules.CMS.Application.Mappings.CMSMappingProfile).Assembly);
+
+if (autoMapperAssemblies.Count > 0)
+{
+    builder.Services.AddAutoMapper(autoMapperAssemblies.ToArray());
+    Log.Information("AutoMapper registered with {Count} module assemblies", autoMapperAssemblies.Count);
+}
+
+// ========================================
 // MODULAR ARCHITECTURE - CONDITIONAL LOADING
 // ========================================
 // Load modules based on configuration (tenant subscriptions)
-var enabledModules = builder.Configuration.GetSection("EnabledModules");
 
 // CRM Module
 if (enabledModules.GetValue<bool>("CRM"))
