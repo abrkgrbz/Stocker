@@ -256,7 +256,7 @@ function AppContent() {
   }, [modules, searchQuery]);
 
   useEffect(() => {
-    const isAuthBypassed = true; // Local development bypass
+    const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
     if (!isAuthBypassed && !isLoading && !isAuthenticated) {
       router.push('/login');
     }

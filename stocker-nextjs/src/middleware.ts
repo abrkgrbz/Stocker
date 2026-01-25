@@ -6,8 +6,7 @@ const TEMPORARY_BYPASS_SUBDOMAINS = ['awcs0wg4840co8wwsscwwwck']
 
 export function middleware(request: NextRequest) {
   // Check for auth bypass in development
-  // const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true'
-  const isAuthBypassed = true; // Forced for local debugging
+  const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
 
   const hostname = request.headers.get('host') || ''
   const subdomain = hostname.split('.')[0]

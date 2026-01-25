@@ -222,8 +222,7 @@ apiClient.interceptors.response.use(
         // Refresh failed, redirect to login
         if (typeof window !== 'undefined') {
           // Check for auth bypass
-          // const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
-          const isAuthBypassed = true; // Hardcoded for debugging
+          const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
 
           if (!isAuthBypassed) {
             // Clear any localStorage data
