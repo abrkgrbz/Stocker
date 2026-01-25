@@ -17,7 +17,9 @@ import {
   useSalesTargetStatistics,
   useLeaderboard,
 } from '../../hooks';
-import type { SalesTargetQueryParams, SalesTargetType } from '../../types';
+import type { SalesTargetQueryParams } from '../../types';
+
+type TargetPeriodFilter = 'Monthly' | 'Quarterly' | 'Yearly';
 
 interface TargetGridProps {
   params?: SalesTargetQueryParams;
@@ -47,7 +49,7 @@ export function TargetGrid({
   // Get unique departments for filter
   const departments = [...new Set(targets.map((t) => t.department).filter(Boolean))];
 
-  const handleTargetTypeChange = (value: SalesTargetType | undefined) => {
+  const handleTargetTypeChange = (value: TargetPeriodFilter | undefined) => {
     onParamsChange?.({ ...params, targetType: value });
   };
 
@@ -129,7 +131,7 @@ export function TargetGrid({
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-slate-400" />
-              <Select<SalesTargetType>
+              <Select<TargetPeriodFilter>
                 value={params.targetType}
                 onChange={handleTargetTypeChange}
                 style={{ width: 150 }}

@@ -2896,8 +2896,6 @@ export interface SalesTargetDto {
   productTargets: SalesTargetProductDto[];
 }
 
-export type SalesTargetType = 'Monthly' | 'Quarterly' | 'Yearly';
-
 export interface SalesTargetListDto {
   id: string;
   targetCode: string;
