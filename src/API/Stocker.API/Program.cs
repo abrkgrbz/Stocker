@@ -207,24 +207,24 @@ builder.Services.AddMassTransit(x =>
 // ========================================
 // Register all AutoMapper profiles from all modules in a single call
 // This prevents profile conflicts when multiple modules call AddAutoMapper separately
-var autoMapperAssemblies = new List<System.Reflection.Assembly>();
+var autoMapperProfiles = new List<Type>();
 var enabledModules = builder.Configuration.GetSection("EnabledModules");
 
 if (enabledModules.GetValue<bool>("CRM"))
-    autoMapperAssemblies.Add(typeof(Stocker.Modules.CRM.Application.Mappings.CRMProfile).Assembly);
+    autoMapperProfiles.Add(typeof(Stocker.Modules.CRM.Application.Mappings.CRMProfile));
 if (enabledModules.GetValue<bool>("Sales"))
-    autoMapperAssemblies.Add(typeof(Stocker.Modules.Sales.Application.Mappings.SalesProfile).Assembly);
+    autoMapperProfiles.Add(typeof(Stocker.Modules.Sales.Application.Mappings.SalesProfile));
 if (enabledModules.GetValue<bool>("Finance"))
-    autoMapperAssemblies.Add(typeof(Stocker.Modules.Finance.Application.Mappings.FinanceProfile).Assembly);
+    autoMapperProfiles.Add(typeof(Stocker.Modules.Finance.Application.Mappings.FinanceProfile));
 if (enabledModules.GetValue<bool>("Purchase"))
-    autoMapperAssemblies.Add(typeof(Stocker.Modules.Purchase.Application.Mappings.PurchaseProfile).Assembly);
+    autoMapperProfiles.Add(typeof(Stocker.Modules.Purchase.Application.Mappings.PurchaseProfile));
 if (enabledModules.GetValue<bool>("CMS", true))
-    autoMapperAssemblies.Add(typeof(Stocker.Modules.CMS.Application.Mappings.CMSMappingProfile).Assembly);
+    autoMapperProfiles.Add(typeof(Stocker.Modules.CMS.Application.Mappings.CMSMappingProfile));
 
-if (autoMapperAssemblies.Count > 0)
+if (autoMapperProfiles.Count > 0)
 {
-    builder.Services.AddAutoMapper(autoMapperAssemblies.ToArray());
-    Log.Information("AutoMapper registered with {Count} module assemblies", autoMapperAssemblies.Count);
+    builder.Services.AddAutoMapper(autoMapperProfiles.ToArray());
+    Log.Information("AutoMapper registered with {Count} module profiles", autoMapperProfiles.Count);
 }
 
 // ========================================
