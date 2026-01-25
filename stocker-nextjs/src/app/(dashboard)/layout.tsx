@@ -71,8 +71,7 @@ const { Header, Sider, Content } = Layout;
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
   // Check for auth bypass in development
-  // const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
-  const isAuthBypassed = true; // Forced for local debugging
+  const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
 
   const { user, isAuthenticated, isLoading: authLoading, logout, hasAnyPermission } = useAuth();
   const { tenant, isLoading: tenantLoading } = useTenant();
