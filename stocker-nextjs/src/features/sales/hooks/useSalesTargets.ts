@@ -352,7 +352,7 @@ export function useSalesTargetStatistics() {
   return useQuery<SalesTargetStatisticsDto>({
     queryKey: salesKeys.targets.statistics(),
     queryFn: () => targetService.getStatistics(),
-    ...queryOptions.staleShort,
+    ...queryOptions.realtime(),
   });
 }
 
@@ -363,6 +363,6 @@ export function useLeaderboard(period?: string, limit?: number) {
   return useQuery<LeaderboardEntryDto[]>({
     queryKey: [...salesKeys.targets.all(), 'leaderboard', period, limit] as const,
     queryFn: () => targetService.getLeaderboard(period, limit),
-    ...queryOptions.staleShort,
+    ...queryOptions.realtime(),
   });
 }
