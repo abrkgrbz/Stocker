@@ -12,11 +12,11 @@ import {
   Table,
   InputNumber,
   Typography,
-  message,
   Divider,
   Row,
   Col,
 } from 'antd';
+import { showCreateSuccess, showError, showWarning } from '@/lib/utils/sweetalert';
 import {
   ArrowLeftIcon,
   CheckIcon,
@@ -119,7 +119,7 @@ export default function NewQuotationPage() {
 
   const handleSubmit = async (values: any) => {
     if (items.length === 0) {
-      message.error('En az bir kalem eklemelisiniz');
+      showWarning('Uyarı', 'En az bir kalem eklemelisiniz');
       return;
     }
 
@@ -149,10 +149,11 @@ export default function NewQuotationPage() {
 
     try {
       await createMutation.mutateAsync(dto);
-      message.success('Teklif oluşturuldu');
+      await showCreateSuccess('Teklif');
       router.push('/sales/quotations');
-    } catch {
-      message.error('Teklif oluşturulamadı');
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || error?.message || 'Teklif oluşturulamadı';
+      showError(errorMessage);
     }
   };
 
