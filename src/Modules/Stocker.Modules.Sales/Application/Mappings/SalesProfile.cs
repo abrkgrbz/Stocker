@@ -44,13 +44,31 @@ public class SalesProfile : Profile
         // Quotation mappings
         CreateMap<Quotation, QuotationDto>()
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-            .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items));
+            .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items))
+            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+            .ForMember(dest => dest.QuotationNumber, opt => opt.MapFrom(src => src.QuotationNumber))
+            .ForMember(dest => dest.QuotationDate, opt => opt.MapFrom(src => src.QuotationDate))
+            .ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src => src.TotalAmount))
+            .ForMember(dest => dest.Currency, opt => opt.MapFrom(src => src.Currency))
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
 
         CreateMap<Quotation, QuotationListDto>()
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-            .ForMember(dest => dest.ItemCount, opt => opt.MapFrom(src => src.Items.Count));
+            .ForMember(dest => dest.ItemCount, opt => opt.MapFrom(src => src.Items.Count))
+            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+            .ForMember(dest => dest.QuotationNumber, opt => opt.MapFrom(src => src.QuotationNumber))
+            .ForMember(dest => dest.QuotationDate, opt => opt.MapFrom(src => src.QuotationDate))
+            .ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src => src.TotalAmount))
+            .ForMember(dest => dest.Currency, opt => opt.MapFrom(src => src.Currency))
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
 
-        CreateMap<QuotationItem, QuotationItemDto>();
+        CreateMap<QuotationItem, QuotationItemDto>()
+            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+            .ForMember(dest => dest.QuotationId, opt => opt.MapFrom(src => src.QuotationId))
+            .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.ProductName))
+            .ForMember(dest => dest.Quantity, opt => opt.MapFrom(src => src.Quantity))
+            .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice))
+            .ForMember(dest => dest.LineTotal, opt => opt.MapFrom(src => src.LineTotal));
 
         // Discount mappings
         CreateMap<Discount, DiscountDto>()
