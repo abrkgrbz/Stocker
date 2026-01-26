@@ -50,7 +50,7 @@ public static class CorsExtensions
                       );
             });
 
-            // Production policy - Allow stoocker.app subdomains
+            // Production policy - Allow stoocker.app subdomains and localhost for development
             options.AddPolicy("Production", policy =>
             {
                 policy.SetIsOriginAllowed(origin =>
@@ -61,9 +61,17 @@ public static class CorsExtensions
                     try
                     {
                         var uri = new Uri(origin);
-                        return uri.Host.EndsWith(".stoocker.app") ||
-                               uri.Host == "stoocker.app" ||
-                               uri.Host == "www.stoocker.app";
+                        // Allow stoocker.app domains
+                        if (uri.Host.EndsWith(".stoocker.app") ||
+                            uri.Host == "stoocker.app" ||
+                            uri.Host == "www.stoocker.app")
+                            return true;
+
+                        // Allow localhost for local development against production API
+                        if (uri.Host == "localhost" || uri.Host == "127.0.0.1")
+                            return true;
+
+                        return false;
                     }
                     catch
                     {
