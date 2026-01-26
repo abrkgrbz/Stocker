@@ -250,4 +250,116 @@ public class Product : BaseEntity
             deactivatedBy,
             reason));
     }
+
+    #region Variant Stock Integrity / Varyant Stok Bütünlüğü
+
+    /// <summary>
+    /// Checks if this product has variants configured
+    /// </summary>
+    public bool HasVariants => Variants?.Any(v => v.IsActive) == true;
+
+    /// <summary>
+    /// Gets the total stock quantity across all variants for a specific warehouse.
+    /// Returns null if product doesn't have variants.
+    /// </summary>
+    public decimal? GetTotalVariantStock(int warehouseId)
+    {
+        if (!HasVariants)
+            return null;
+
+        return Variants
+            .Where(v => v.IsActive && v.TrackInventory)
+            .SelectMany(v => v.Stocks ?? Enumerable.Empty<Stock>())
+            .Where(s => s.WarehouseId == warehouseId)
+            .Sum(s => s.Quantity);
+    }
+
+    /// <summary>
+    /// Gets the total available stock (excluding reserved) across all variants for a specific warehouse.
+    /// Returns null if product doesn't have variants.
+    /// </summary>
+    public decimal? GetTotalVariantAvailableStock(int warehouseId)
+    {
+        if (!HasVariants)
+            return null;
+
+        return Variants
+            .Where(v => v.IsActive && v.TrackInventory)
+            .SelectMany(v => v.Stocks ?? Enumerable.Empty<Stock>())
+            .Where(s => s.WarehouseId == warehouseId)
+            .Sum(s => s.AvailableQuantity);
+    }
+
+    /// <summary>
+    /// Validates that the product-level stock matches the sum of variant-level stocks.
+    /// This helps ensure stock integrity when products have variants.
+    /// </summary>
+    /// <returns>
+    /// A tuple containing:
+    /// - IsValid: Whether the stock is consistent
+    /// - ProductStock: The product-level stock total
+    /// - VariantStock: The sum of all variant stocks
+    /// - Discrepancy: The difference (positive means product has more, negative means variants have more)
+    /// </returns>
+    public (bool IsValid, decimal ProductStock, decimal VariantStock, decimal Discrepancy) ValidateVariantStockIntegrity(int warehouseId)
+    {
+        if (!HasVariants)
+            return (true, 0, 0, 0);
+
+        // Product-level stock (stock records with no variant)
+        var productStock = Stocks?
+            .Where(s => s.WarehouseId == warehouseId && s.ProductVariantId == null)
+            .Sum(s => s.Quantity) ?? 0;
+
+        // Variant-level stock total
+        var variantStock = GetTotalVariantStock(warehouseId) ?? 0;
+
+        // For products with variants, product-level stock should typically be 0
+        // All stock should be at variant level
+        var discrepancy = productStock - variantStock;
+        var isValid = productStock == 0 || Math.Abs(discrepancy) < 0.0001m;
+
+        return (isValid, productStock, variantStock, discrepancy);
+    }
+
+    /// <summary>
+    /// Gets stock summary for each variant
+    /// </summary>
+    public IEnumerable<VariantStockSummary> GetVariantStockSummaries(int warehouseId)
+    {
+        if (!HasVariants)
+            return Enumerable.Empty<VariantStockSummary>();
+
+        return Variants
+            .Where(v => v.IsActive)
+            .Select(v => new VariantStockSummary
+            {
+                VariantId = v.Id,
+                VariantSku = v.Sku,
+                VariantName = v.VariantName,
+                OptionsDisplay = v.GetOptionsSummary(),
+                TotalQuantity = v.Stocks?.Where(s => s.WarehouseId == warehouseId).Sum(s => s.Quantity) ?? 0,
+                ReservedQuantity = v.Stocks?.Where(s => s.WarehouseId == warehouseId).Sum(s => s.ReservedQuantity) ?? 0,
+                AvailableQuantity = v.Stocks?.Where(s => s.WarehouseId == warehouseId).Sum(s => s.AvailableQuantity) ?? 0,
+                IsLowStock = v.TrackInventory &&
+                    (v.Stocks?.Where(s => s.WarehouseId == warehouseId).Sum(s => s.AvailableQuantity) ?? 0) <= v.LowStockThreshold
+            });
+    }
+
+    #endregion
+}
+
+/// <summary>
+/// Stock summary for a product variant
+/// </summary>
+public record VariantStockSummary
+{
+    public int VariantId { get; init; }
+    public string VariantSku { get; init; } = string.Empty;
+    public string VariantName { get; init; } = string.Empty;
+    public string OptionsDisplay { get; init; } = string.Empty;
+    public decimal TotalQuantity { get; init; }
+    public decimal ReservedQuantity { get; init; }
+    public decimal AvailableQuantity { get; init; }
+    public bool IsLowStock { get; init; }
 }

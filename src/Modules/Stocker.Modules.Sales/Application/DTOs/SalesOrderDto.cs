@@ -75,6 +75,32 @@ public record SalesOrderDto
     public string FulfillmentStatus { get; init; } = "Pending";
     public int CompletedShipmentCount { get; init; }
 
+    // Return Policy - calculated fields for smart return eligibility
+    /// <summary>
+    /// Indicates whether the order is eligible for return based on business rules.
+    /// Considers delivery status, return period, and order state.
+    /// </summary>
+    public bool IsReturnable { get; init; }
+
+    /// <summary>
+    /// The deadline date for initiating a return (delivery date + return period).
+    /// Null if order hasn't been delivered yet.
+    /// </summary>
+    public DateTime? ReturnDeadline { get; init; }
+
+    /// <summary>
+    /// Human-readable reason why the order cannot be returned.
+    /// Null if the order is returnable.
+    /// Examples: "İade süresi doldu", "Sipariş henüz teslim edilmemiş"
+    /// </summary>
+    public string? ReturnIneligibilityReason { get; init; }
+
+    /// <summary>
+    /// Number of days remaining until return deadline (for UI display).
+    /// Null if order is not returnable or hasn't been delivered.
+    /// </summary>
+    public int? DaysUntilReturnDeadline { get; init; }
+
     public static SalesOrderDto FromEntity(SalesOrder entity)
     {
         return new SalesOrderDto
@@ -161,8 +187,35 @@ public record SalesOrderDto
 
             // Fulfillment Status
             FulfillmentStatus = entity.FulfillmentStatus.ToString(),
-            CompletedShipmentCount = entity.CompletedShipmentCount
+            CompletedShipmentCount = entity.CompletedShipmentCount,
+
+            // Return Policy - calculated from domain logic
+            IsReturnable = CalculateReturnEligibility(entity).IsReturnable,
+            ReturnDeadline = CalculateReturnEligibility(entity).ReturnDeadline,
+            ReturnIneligibilityReason = CalculateReturnEligibility(entity).IneligibilityReason,
+            DaysUntilReturnDeadline = CalculateDaysUntilReturnDeadline(entity)
         };
+    }
+
+    /// <summary>
+    /// Calculates return eligibility using domain logic
+    /// </summary>
+    private static (bool IsReturnable, DateTime? ReturnDeadline, string? IneligibilityReason) CalculateReturnEligibility(SalesOrder entity)
+    {
+        return entity.CheckReturnEligibility();
+    }
+
+    /// <summary>
+    /// Calculates days remaining until return deadline
+    /// </summary>
+    private static int? CalculateDaysUntilReturnDeadline(SalesOrder entity)
+    {
+        var returnDeadline = entity.GetReturnDeadline();
+        if (!returnDeadline.HasValue)
+            return null;
+
+        var daysRemaining = (returnDeadline.Value - DateTime.UtcNow).Days;
+        return daysRemaining >= 0 ? daysRemaining : null;
     }
 }
 
@@ -236,8 +289,22 @@ public record SalesOrderListDto
     public string InvoicingStatus { get; init; } = "NotInvoiced";
     public string FulfillmentStatus { get; init; } = "Pending";
 
+    // Return Policy for list view (simplified)
+    /// <summary>
+    /// Quick flag for UI to show/hide return action button
+    /// </summary>
+    public bool IsReturnable { get; init; }
+
+    /// <summary>
+    /// Days remaining for return (null if not applicable)
+    /// </summary>
+    public int? DaysUntilReturnDeadline { get; init; }
+
     public static SalesOrderListDto FromEntity(SalesOrder entity)
     {
+        var returnEligibility = entity.CheckReturnEligibility();
+        var returnDeadline = entity.GetReturnDeadline();
+
         return new SalesOrderListDto
         {
             Id = entity.Id,
@@ -253,7 +320,13 @@ public record SalesOrderListDto
             CreatedAt = entity.CreatedAt,
             QuotationNumber = entity.QuotationNumber,
             InvoicingStatus = entity.InvoicingStatus.ToString(),
-            FulfillmentStatus = entity.FulfillmentStatus.ToString()
+            FulfillmentStatus = entity.FulfillmentStatus.ToString(),
+
+            // Return Policy
+            IsReturnable = returnEligibility.IsReturnable,
+            DaysUntilReturnDeadline = returnDeadline.HasValue
+                ? Math.Max(0, (returnDeadline.Value - DateTime.UtcNow).Days)
+                : null
         };
     }
 }

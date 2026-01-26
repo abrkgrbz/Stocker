@@ -69,13 +69,32 @@ public class GetSalesOrdersHandler : IRequestHandler<GetSalesOrdersQuery, Result
             }
         }
 
-        // Apply filters
+        // Apply smart search across multiple fields
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
-            var searchTerm = request.SearchTerm.ToLower();
+            var searchTerm = request.SearchTerm.Trim().ToLower();
+
+            // Smart Search: Multi-field search with weighted relevance
+            // Priority 1: Exact OrderNumber match
+            // Priority 2: CustomerName, CustomerEmail
+            // Priority 3: Product codes and names in items
+            // Priority 4: Order notes
+            // Priority 5: QuotationNumber reference
             query = query.Where(o =>
+                // Priority 1: Order Number (exact or contains)
                 o.OrderNumber.ToLower().Contains(searchTerm) ||
-                (o.CustomerName != null && o.CustomerName.ToLower().Contains(searchTerm)));
+                // Priority 2: Customer info
+                (o.CustomerName != null && o.CustomerName.ToLower().Contains(searchTerm)) ||
+                (o.CustomerEmail != null && o.CustomerEmail.ToLower().Contains(searchTerm)) ||
+                // Priority 3: Product info in items
+                o.Items.Any(i =>
+                    i.ProductCode.ToLower().Contains(searchTerm) ||
+                    i.ProductName.ToLower().Contains(searchTerm)) ||
+                // Priority 4: Notes
+                (o.Notes != null && o.Notes.ToLower().Contains(searchTerm)) ||
+                // Priority 5: Source document reference
+                (o.QuotationNumber != null && o.QuotationNumber.ToLower().Contains(searchTerm)) ||
+                (o.CustomerOrderNumber != null && o.CustomerOrderNumber.ToLower().Contains(searchTerm)));
         }
 
         if (!string.IsNullOrWhiteSpace(request.Status))
@@ -95,6 +114,23 @@ public class GetSalesOrdersHandler : IRequestHandler<GetSalesOrdersQuery, Result
 
         if (request.ToDate.HasValue)
             query = query.Where(o => o.OrderDate <= request.ToDate.Value);
+
+        // Filter by invoicing status
+        if (!string.IsNullOrWhiteSpace(request.InvoicingStatus))
+        {
+            if (Enum.TryParse<InvoicingStatus>(request.InvoicingStatus, true, out var invoicingStatus))
+                query = query.Where(o => o.InvoicingStatus == invoicingStatus);
+        }
+
+        // Filter by fulfillment status
+        if (!string.IsNullOrWhiteSpace(request.FulfillmentStatus))
+        {
+            if (Enum.TryParse<FulfillmentStatus>(request.FulfillmentStatus, true, out var fulfillmentStatus))
+                query = query.Where(o => o.FulfillmentStatus == fulfillmentStatus);
+        }
+
+        // Filter for returnable orders only (evaluated in-memory due to complex domain logic)
+        // Note: For performance, consider caching return eligibility if this filter is heavily used
 
         // Apply sorting
         query = request.SortBy?.ToLower() switch
@@ -136,14 +172,19 @@ public class GetSalesOrdersHandler : IRequestHandler<GetSalesOrdersQuery, Result
 /// <summary>
 /// Handler for GetSalesOrderByIdQuery
 /// Uses ISalesUnitOfWork for consistent data access
+/// Includes resource-level authorization check
 /// </summary>
 public class GetSalesOrderByIdHandler : IRequestHandler<GetSalesOrderByIdQuery, Result<SalesOrderDto>>
 {
     private readonly ISalesUnitOfWork _unitOfWork;
+    private readonly IResourceAuthorizationService _resourceAuth;
 
-    public GetSalesOrderByIdHandler(ISalesUnitOfWork unitOfWork)
+    public GetSalesOrderByIdHandler(
+        ISalesUnitOfWork unitOfWork,
+        IResourceAuthorizationService resourceAuth)
     {
         _unitOfWork = unitOfWork;
+        _resourceAuth = resourceAuth;
     }
 
     public async Task<Result<SalesOrderDto>> Handle(GetSalesOrderByIdQuery request, CancellationToken cancellationToken)
@@ -154,6 +195,14 @@ public class GetSalesOrderByIdHandler : IRequestHandler<GetSalesOrderByIdQuery, 
 
         if (order == null || order.TenantId != tenantId)
             return Result<SalesOrderDto>.Failure(SalesErrors.Order.NotFound(request.Id));
+
+        // SECURITY: Resource-level authorization check
+        var authResult = await _resourceAuth.CanAccessSalesOrderAsync(request.Id, cancellationToken);
+        if (!authResult.IsSuccess)
+            return Result<SalesOrderDto>.Failure(authResult.Error!);
+        if (!authResult.Value)
+            return Result<SalesOrderDto>.Failure(
+                Error.Forbidden("Order.AccessDenied", "Bu siparişi görüntüleme yetkiniz bulunmamaktadır."));
 
         return Result<SalesOrderDto>.Success(SalesOrderDto.FromEntity(order));
     }

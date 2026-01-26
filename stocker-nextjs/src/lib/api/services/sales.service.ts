@@ -1313,8 +1313,12 @@ export interface SalesOrderStatistics {
   approvedOrders: number;
   completedOrders: number;
   cancelledOrders: number;
-  totalRevenue: number;
+  /** Total amount of all orders (new backend property name) */
+  totalAmount: number;
+  /** @deprecated Use totalAmount instead - kept for backward compatibility */
+  totalRevenue?: number;
   averageOrderValue: number;
+  currency?: string;
 }
 
 export interface PagedResult<T> {

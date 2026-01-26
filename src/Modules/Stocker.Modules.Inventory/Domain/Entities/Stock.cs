@@ -8,6 +8,14 @@ public class Stock : BaseEntity
     public int ProductId { get; private set; }
     public int WarehouseId { get; private set; }
     public int? LocationId { get; private set; }
+
+    /// <summary>
+    /// Product Variant ID for variant-level stock tracking.
+    /// Null indicates stock is tracked at product level (no variants).
+    /// When set, stock is tracked at variant level for better granularity.
+    /// </summary>
+    public int? ProductVariantId { get; private set; }
+
     public decimal Quantity { get; private set; }
     public decimal ReservedQuantity { get; private set; }
     public decimal AvailableQuantity => Quantity - ReservedQuantity;
@@ -22,17 +30,45 @@ public class Stock : BaseEntity
     public virtual Warehouse Warehouse { get; private set; }
     public virtual Location? Location { get; private set; }
     public virtual LotBatch? LotBatch { get; private set; }
+    public virtual ProductVariant? ProductVariant { get; private set; }
 
     protected Stock() { }
 
+    /// <summary>
+    /// Creates a product-level stock record (no variant)
+    /// </summary>
     public Stock(int productId, int warehouseId, decimal quantity = 0)
     {
         ProductId = productId;
         WarehouseId = warehouseId;
+        ProductVariantId = null;
         Quantity = quantity;
         ReservedQuantity = 0;
         LastMovementDate = DateTime.UtcNow;
         LastCountDate = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Creates a variant-level stock record
+    /// </summary>
+    public Stock(int productId, int warehouseId, int productVariantId, decimal quantity = 0)
+    {
+        ProductId = productId;
+        WarehouseId = warehouseId;
+        ProductVariantId = productVariantId;
+        Quantity = quantity;
+        ReservedQuantity = 0;
+        LastMovementDate = DateTime.UtcNow;
+        LastCountDate = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Sets the product variant for this stock record.
+    /// Use this to convert product-level stock to variant-level stock.
+    /// </summary>
+    public void SetProductVariant(int? productVariantId)
+    {
+        ProductVariantId = productVariantId;
     }
 
     public void SetLocation(int? locationId)

@@ -32,6 +32,7 @@ public class SalesDbContext : DbContext
     public DbSet<Discount> Discounts { get; set; } = null!;
     public DbSet<Promotion> Promotions { get; set; } = null!;
     public DbSet<PromotionRule> PromotionRules { get; set; } = null!;
+    public DbSet<PromotionUsage> PromotionUsages { get; set; } = null!;
 
     // Commissions
     public DbSet<CommissionPlan> CommissionPlans { get; set; } = null!;
@@ -90,6 +91,9 @@ public class SalesDbContext : DbContext
     // Customer Segments
     public DbSet<CustomerSegment> CustomerSegments { get; set; } = null!;
 
+    // Idempotency
+    public DbSet<ProcessedRequest> ProcessedRequests { get; set; } = null!;
+
     // Audit Logs
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
 
@@ -111,67 +115,81 @@ public class SalesDbContext : DbContext
         // Set default schema for Sales module
         modelBuilder.HasDefaultSchema("sales");
 
-        // Apply global query filters for multi-tenancy
+        // Apply global query filters for multi-tenancy AND soft delete
+        // Soft deleted records are automatically filtered out from all queries
         var tenantId = _tenantService.GetCurrentTenantId();
         if (tenantId.HasValue)
         {
-            modelBuilder.Entity<SalesOrder>().HasQueryFilter(e => e.TenantId == tenantId.Value);
-            modelBuilder.Entity<SalesOrderItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
-            modelBuilder.Entity<Invoice>().HasQueryFilter(e => e.TenantId == tenantId.Value);
-            modelBuilder.Entity<InvoiceItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
-            modelBuilder.Entity<Payment>().HasQueryFilter(e => e.TenantId == tenantId.Value);
-            modelBuilder.Entity<Quotation>().HasQueryFilter(e => e.TenantId == tenantId.Value);
-            modelBuilder.Entity<QuotationItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
-            modelBuilder.Entity<Discount>().HasQueryFilter(e => e.TenantId == tenantId.Value);
-            modelBuilder.Entity<Promotion>().HasQueryFilter(e => e.TenantId == tenantId.Value);
-            modelBuilder.Entity<CommissionPlan>().HasQueryFilter(e => e.TenantId == tenantId.Value);
-            modelBuilder.Entity<SalesCommission>().HasQueryFilter(e => e.TenantId == tenantId.Value);
-            modelBuilder.Entity<SalesReturn>().HasQueryFilter(e => e.TenantId == tenantId.Value);
-            modelBuilder.Entity<SalesReturnItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            // Sales Orders - with soft delete filter
+            modelBuilder.Entity<SalesOrder>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
+            modelBuilder.Entity<SalesOrderItem>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
 
-            // Advance Payments
-            modelBuilder.Entity<AdvancePayment>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            // Invoices - with soft delete filter
+            modelBuilder.Entity<Invoice>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
+            modelBuilder.Entity<InvoiceItem>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
 
-            // Credit Notes
-            modelBuilder.Entity<CreditNote>().HasQueryFilter(e => e.TenantId == tenantId.Value);
-            modelBuilder.Entity<CreditNoteItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            // Payments - with soft delete filter
+            modelBuilder.Entity<Payment>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
 
-            // Service Orders
-            modelBuilder.Entity<ServiceOrder>().HasQueryFilter(e => e.TenantId == tenantId.Value);
-            modelBuilder.Entity<ServiceOrderItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
-            modelBuilder.Entity<ServiceOrderNote>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            // Quotations - with soft delete filter
+            modelBuilder.Entity<Quotation>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
+            modelBuilder.Entity<QuotationItem>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
 
-            // Warranties
-            modelBuilder.Entity<Warranty>().HasQueryFilter(e => e.TenantId == tenantId.Value);
-            modelBuilder.Entity<WarrantyClaim>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            // Discounts & Promotions - with soft delete filter
+            modelBuilder.Entity<Discount>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
+            modelBuilder.Entity<Promotion>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
 
-            // Price Lists
-            modelBuilder.Entity<PriceList>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            // Commissions - with soft delete filter
+            modelBuilder.Entity<CommissionPlan>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
+            modelBuilder.Entity<SalesCommission>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
 
-            // Delivery Notes
-            modelBuilder.Entity<DeliveryNote>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            // Returns - with soft delete filter
+            modelBuilder.Entity<SalesReturn>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
+            modelBuilder.Entity<SalesReturnItem>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
 
-            // Back Orders
-            modelBuilder.Entity<BackOrder>().HasQueryFilter(e => e.TenantId == tenantId.Value);
-            modelBuilder.Entity<BackOrderItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            // Advance Payments - with soft delete filter
+            modelBuilder.Entity<AdvancePayment>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
 
-            // Inventory Reservations
-            modelBuilder.Entity<InventoryReservation>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            // Credit Notes - with soft delete filter
+            modelBuilder.Entity<CreditNote>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
+            modelBuilder.Entity<CreditNoteItem>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
 
-            // Opportunities
-            modelBuilder.Entity<Opportunity>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            // Service Orders - with soft delete filter
+            modelBuilder.Entity<ServiceOrder>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
+            modelBuilder.Entity<ServiceOrderItem>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
+            modelBuilder.Entity<ServiceOrderNote>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
 
-            // Sales Pipelines
-            modelBuilder.Entity<SalesPipeline>().HasQueryFilter(e => e.TenantId == tenantId.Value);
-            modelBuilder.Entity<PipelineStage>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            // Warranties - with soft delete filter
+            modelBuilder.Entity<Warranty>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
+            modelBuilder.Entity<WarrantyClaim>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
 
-            // Sales Targets
-            modelBuilder.Entity<SalesTarget>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            // Price Lists - with soft delete filter
+            modelBuilder.Entity<PriceList>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
 
-            // Customer Segments
-            modelBuilder.Entity<CustomerSegment>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            // Delivery Notes - with soft delete filter
+            modelBuilder.Entity<DeliveryNote>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
 
-            // Audit Logs
+            // Back Orders - with soft delete filter
+            modelBuilder.Entity<BackOrder>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
+            modelBuilder.Entity<BackOrderItem>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
+
+            // Inventory Reservations - with soft delete filter
+            modelBuilder.Entity<InventoryReservation>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
+
+            // Opportunities - with soft delete filter
+            modelBuilder.Entity<Opportunity>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
+
+            // Sales Pipelines - with soft delete filter
+            modelBuilder.Entity<SalesPipeline>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
+            modelBuilder.Entity<PipelineStage>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
+
+            // Sales Targets - with soft delete filter
+            modelBuilder.Entity<SalesTarget>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
+
+            // Customer Segments - with soft delete filter
+            modelBuilder.Entity<CustomerSegment>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
+
+            // Audit Logs - tenant filter only (audit logs should not be soft deleted)
             modelBuilder.Entity<AuditLog>().HasQueryFilter(e => e.TenantId == tenantId.Value);
         }
 

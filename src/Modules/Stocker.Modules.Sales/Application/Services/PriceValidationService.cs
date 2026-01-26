@@ -95,6 +95,21 @@ public class PriceValidationService : IPriceValidationService
 
             if (product != null && product.UnitPrice > 0)
             {
+                // CRITICAL: Currency mismatch check for product base price
+                // Price lists already filter by currency, but inventory fallback doesn't
+                if (!string.IsNullOrEmpty(product.Currency) &&
+                    !string.Equals(product.Currency, currency, StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogWarning(
+                        "Currency mismatch for product {ProductId}. Order currency: {OrderCurrency}, Product currency: {ProductCurrency}.",
+                        productId, currency, product.Currency);
+
+                    return Result<decimal>.Failure(
+                        Error.Validation("Currency.Mismatch",
+                            $"Sipariş para birimi ({currency}) ile ürün para birimi ({product.Currency}) uyuşmuyor. " +
+                            $"Lütfen doğru para birimini seçin veya uygun bir fiyat listesi tanımlayın."));
+                }
+
                 systemPrice = product.UnitPrice;
                 priceListSource = "Inventory:BasePrice";
             }

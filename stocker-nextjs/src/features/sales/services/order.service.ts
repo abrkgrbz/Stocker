@@ -28,11 +28,16 @@ export const orderService = {
       if (params.page) queryParams.append('page', params.page.toString());
       if (params.pageSize) queryParams.append('pageSize', params.pageSize.toString());
       if (params.searchTerm) queryParams.append('searchTerm', params.searchTerm);
+      if (params.fuzzySearch !== undefined) queryParams.append('fuzzySearch', params.fuzzySearch.toString());
+      if (params.minRelevanceScore !== undefined) queryParams.append('minRelevanceScore', params.minRelevanceScore.toString());
       if (params.status) queryParams.append('status', params.status);
       if (params.customerId) queryParams.append('customerId', params.customerId);
       if (params.salesPersonId) queryParams.append('salesPersonId', params.salesPersonId);
       if (params.fromDate) queryParams.append('fromDate', params.fromDate);
       if (params.toDate) queryParams.append('toDate', params.toDate);
+      if (params.invoicingStatus) queryParams.append('invoicingStatus', params.invoicingStatus);
+      if (params.fulfillmentStatus) queryParams.append('fulfillmentStatus', params.fulfillmentStatus);
+      if (params.isReturnable !== undefined) queryParams.append('isReturnable', params.isReturnable.toString());
       if (params.sortBy) queryParams.append('sortBy', params.sortBy);
       if (params.sortDescending !== undefined) queryParams.append('sortDescending', params.sortDescending.toString());
     }

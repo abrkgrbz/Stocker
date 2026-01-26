@@ -179,11 +179,37 @@ public class Discount : TenantAggregateRoot
         return Result.Success();
     }
 
+    /// <summary>
+    /// Safely increments usage count with limit validation.
+    /// This method should be called within a transaction with optimistic concurrency.
+    /// </summary>
     public Result IncrementUsage()
     {
+        // CRITICAL: Check limit BEFORE incrementing to prevent overselling
+        if (UsageLimit.HasValue && UsageCount >= UsageLimit.Value)
+        {
+            return Result.Failure(
+                Error.Conflict("Discount.UsageLimitReached",
+                    $"Bu indirim kodu kullanım limitine ({UsageLimit.Value}) ulaşmıştır."));
+        }
+
         UsageCount++;
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
+    }
+
+    /// <summary>
+    /// Checks if the discount can be used (considering current usage vs limit).
+    /// </summary>
+    public bool CanBeUsed()
+    {
+        if (!IsValid())
+            return false;
+
+        if (UsageLimit.HasValue && UsageCount >= UsageLimit.Value)
+            return false;
+
+        return true;
     }
 
     public Result<decimal> CalculateDiscount(decimal orderAmount, int quantity = 1)

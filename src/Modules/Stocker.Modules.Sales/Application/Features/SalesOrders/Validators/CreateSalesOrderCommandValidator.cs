@@ -158,8 +158,11 @@ public class CreateSalesOrderItemCommandValidator : AbstractValidator<CreateSale
         RuleFor(x => x.VatRate)
             .InclusiveBetween(0, 100).WithMessage("KDV oranı 0 ile 100 arasında olmalıdır");
 
-        RuleFor(x => x.DiscountRate)
-            .InclusiveBetween(0, 100).WithMessage("İndirim oranı 0 ile 100 arasında olmalıdır");
+        // CouponCode is optional and will be validated server-side
+        RuleFor(x => x.CouponCode)
+            .MaximumLength(50).WithMessage("Kupon kodu 50 karakteri aşmamalıdır")
+            .Matches(@"^[a-zA-Z0-9\-_]+$").WithMessage("Kupon kodu yalnızca harf, rakam, tire ve alt çizgi içerebilir")
+            .When(x => !string.IsNullOrEmpty(x.CouponCode));
     }
 }
 
@@ -277,12 +280,11 @@ public class UpdateSalesOrderCommandValidator : AbstractValidator<UpdateSalesOrd
             .Must(NotContainDangerousContent).WithMessage("Satış temsilcisi adı geçersiz karakterler içermektedir")
             .When(x => !string.IsNullOrEmpty(x.SalesPersonName));
 
-        RuleFor(x => x.DiscountAmount)
-            .GreaterThanOrEqualTo(0).WithMessage("İndirim tutarı negatif olamaz")
-            .LessThanOrEqualTo(MaxDiscountAmount).WithMessage($"İndirim tutarı {MaxDiscountAmount:N0} değerini aşmamalıdır");
-
-        RuleFor(x => x.DiscountRate)
-            .InclusiveBetween(0, 100).WithMessage("İndirim oranı 0 ile 100 arasında olmalıdır");
+        // CouponCode is optional and will be validated server-side
+        RuleFor(x => x.CouponCode)
+            .MaximumLength(50).WithMessage("Kupon kodu 50 karakteri aşmamalıdır")
+            .Matches(@"^[a-zA-Z0-9\-_]+$").WithMessage("Kupon kodu yalnızca harf, rakam, tire ve alt çizgi içerebilir")
+            .When(x => !string.IsNullOrEmpty(x.CouponCode));
     }
 
     private static bool NotContainDangerousContent(string? value)
@@ -328,8 +330,11 @@ public class AddSalesOrderItemCommandValidator : AbstractValidator<AddSalesOrder
         RuleFor(x => x.VatRate)
             .InclusiveBetween(0, 100).WithMessage("KDV oranı 0 ile 100 arasında olmalıdır");
 
-        RuleFor(x => x.DiscountRate)
-            .InclusiveBetween(0, 100).WithMessage("İndirim oranı 0 ile 100 arasında olmalıdır");
+        // CouponCode is optional and will be validated server-side
+        RuleFor(x => x.CouponCode)
+            .MaximumLength(50).WithMessage("Kupon kodu 50 karakteri aşmamalıdır")
+            .Matches(@"^[a-zA-Z0-9\-_]+$").WithMessage("Kupon kodu yalnızca harf, rakam, tire ve alt çizgi içerebilir")
+            .When(x => !string.IsNullOrEmpty(x.CouponCode));
     }
 }
 

@@ -80,6 +80,7 @@ public sealed class SalesUnitOfWork : ISalesUnitOfWork, IAsyncDisposable
     private IQuotationRepository? _quotations;
     private IDiscountRepository? _discounts;
     private IPromotionRepository? _promotions;
+    private IPromotionUsageRepository? _promotionUsages;
     private ICommissionRepository? _commissions;
     private ISalesReturnRepository? _salesReturns;
     private IAdvancePaymentRepository? _advancePayments;
@@ -94,6 +95,7 @@ public sealed class SalesUnitOfWork : ISalesUnitOfWork, IAsyncDisposable
     private ISalesPipelineRepository? _salesPipelines;
     private ISalesTargetRepository? _salesTargets;
     private ICustomerSegmentRepository? _customerSegments;
+    private IProcessedRequestRepository? _processedRequests;
 
     #endregion
 
@@ -161,6 +163,10 @@ public sealed class SalesUnitOfWork : ISalesUnitOfWork, IAsyncDisposable
         _promotions ??= GetOrAddSpecificRepository<IPromotionRepository, PromotionRepository>();
 
     /// <inheritdoc />
+    public IPromotionUsageRepository PromotionUsages =>
+        _promotionUsages ??= GetOrAddSpecificRepository<IPromotionUsageRepository, PromotionUsageRepository>();
+
+    /// <inheritdoc />
     public ICommissionRepository Commissions =>
         _commissions ??= GetOrAddSpecificRepository<ICommissionRepository, CommissionRepository>();
 
@@ -215,6 +221,10 @@ public sealed class SalesUnitOfWork : ISalesUnitOfWork, IAsyncDisposable
     /// <inheritdoc />
     public ICustomerSegmentRepository CustomerSegments =>
         _customerSegments ??= GetOrAddSpecificRepository<ICustomerSegmentRepository, CustomerSegmentRepository>();
+
+    /// <inheritdoc />
+    public IProcessedRequestRepository ProcessedRequests =>
+        _processedRequests ??= GetOrAddSpecificRepository<IProcessedRequestRepository, ProcessedRequestRepository>();
 
     #endregion
 

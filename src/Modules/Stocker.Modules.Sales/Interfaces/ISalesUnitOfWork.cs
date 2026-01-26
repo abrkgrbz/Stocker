@@ -87,6 +87,12 @@ public interface ISalesUnitOfWork : IUnitOfWork
     IPromotionRepository Promotions { get; }
 
     /// <summary>
+    /// Gets the Promotion Usage repository.
+    /// Used for tracking customer-specific promotion usage and enforcing per-customer limits.
+    /// </summary>
+    IPromotionUsageRepository PromotionUsages { get; }
+
+    /// <summary>
     /// Gets the Commission repository.
     /// </summary>
     ICommissionRepository Commissions { get; }
@@ -165,6 +171,16 @@ public interface ISalesUnitOfWork : IUnitOfWork
     /// Gets the Warranty repository.
     /// </summary>
     IWarrantyRepository Warranties { get; }
+
+    #endregion
+
+    #region Idempotency
+
+    /// <summary>
+    /// Gets the Processed Request repository for idempotency checking.
+    /// Used to prevent duplicate command processing.
+    /// </summary>
+    IProcessedRequestRepository ProcessedRequests { get; }
 
     #endregion
 }

@@ -127,6 +127,7 @@ export default function HeroSection() {
   const { t, locale, setLocale } = useTranslations();
   const { isAuthenticated, user, isLoading } = useAuth();
   const [scrolled, setScrolled] = useState(false);
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const [activePage, setActivePage] = useState<keyof typeof mockPageData>('dashboard');
   const { scrollY } = useScroll();
 
@@ -160,59 +161,91 @@ export default function HeroSection() {
 
       {/* STICKY Navigation - Glassmorphism (Dark Theme) */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? 'bg-slate-900/80 backdrop-blur-xl border-b border-slate-700/50 shadow-lg shadow-black/20'
-            : 'bg-transparent'
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled
+          ? 'bg-slate-900/40 backdrop-blur-xl border-b border-white/5 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]'
+          : 'bg-transparent border-b border-transparent'
+          }`}
       >
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5">
-            <Image
-              src="/stoocker_white.png"
-              alt="Stoocker Logo"
-              width={120}
-              height={40}
-              className="object-contain"
-              priority
-            />
+          <Link href="/" className="group flex items-center gap-2.5 relative">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="relative overflow-hidden"
+            >
+              <Image
+                src="/stoocker_white.png"
+                alt="Stoocker Logo"
+                width={120}
+                height={40}
+                className="object-contain transition-all duration-500 group-hover:brightness-125"
+                priority
+              />
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full"
+                whileHover={{ x: '200%' }}
+                transition={{ duration: 0.8, ease: "easeInOut" }}
+              />
+            </motion.div>
           </Link>
 
           {/* Nav Links */}
-          <div className="hidden md:flex items-center gap-8">
-            <Link href="/features" className="text-[13px] text-slate-400 hover:text-white transition-colors">
-              {t('landing.navbar.features')}
-            </Link>
-            <Link href="/pricing" className="text-[13px] text-slate-400 hover:text-white transition-colors">
-              {t('landing.navbar.pricing')}
-            </Link>
-            <Link href="/faq" className="text-[13px] text-slate-400 hover:text-white transition-colors">
-              {t('landing.navbar.faq')}
-            </Link>
+          <div className="hidden md:flex items-center gap-10 relative px-4 py-2 bg-white/5 backdrop-blur-sm rounded-full border border-white/5">
+            {[
+              { name: t('landing.navbar.features'), href: '/features' },
+              { name: t('landing.navbar.pricing'), href: '/pricing' },
+              { name: t('landing.navbar.faq'), href: '/faq' },
+            ].map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onMouseEnter={() => setHoveredLink(link.href)}
+                onMouseLeave={() => setHoveredLink(null)}
+                className="relative text-[13px] font-medium text-slate-400 hover:text-white transition-colors py-1 z-10"
+              >
+                {link.name}
+                {hoveredLink === link.href && (
+                  <motion.div
+                    layoutId="header-liquid"
+                    className="absolute inset-0 bg-white/5 rounded-lg -z-10"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                {hoveredLink === link.href && (
+                  <motion.div
+                    layoutId="header-underline"
+                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent"
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ type: "spring", bounce: 0, duration: 0.5 }}
+                  />
+                )}
+              </Link>
+            ))}
           </div>
 
           {/* Auth & Language */}
           <div className="flex items-center gap-3">
-            {/* Language Switcher */}
-            <div className="flex items-center border border-slate-600 rounded-md overflow-hidden bg-slate-800/50 backdrop-blur-sm">
+            {/* Language Selection */}
+            <div className="flex items-center p-1 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10">
               <button
                 onClick={() => locale !== 'tr' && setLocale('tr')}
-                className={`px-2 py-1 text-[12px] font-medium transition-colors ${
-                  locale === 'tr'
-                    ? 'bg-white text-slate-900'
-                    : 'bg-transparent text-slate-400 hover:text-white'
-                }`}
+                className={`px-2 py-1 text-[10px] font-bold transition-all rounded-md ${locale === 'tr'
+                  ? 'bg-white text-slate-900 shadow-lg'
+                  : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 TR
               </button>
               <button
                 onClick={() => locale !== 'en' && setLocale('en')}
-                className={`px-2 py-1 text-[12px] font-medium transition-colors ${
-                  locale === 'en'
-                    ? 'bg-white text-slate-900'
-                    : 'bg-transparent text-slate-400 hover:text-white'
-                }`}
+                className={`px-2 py-1 text-[10px] font-bold transition-all rounded-md ${locale === 'en'
+                  ? 'bg-white text-slate-900 shadow-lg'
+                  : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 EN
               </button>
@@ -232,14 +265,26 @@ export default function HeroSection() {
               </a>
             ) : (
               <>
-                <Link href="/login" className="text-[13px] text-slate-300 hover:text-white transition-colors">
+                <Link href="/login" className="text-[13px] text-slate-400 hover:text-white transition-colors px-2 py-1">
                   {t('landing.navbar.signIn')}
                 </Link>
                 <Link
                   href="/register"
-                  className="text-[13px] font-medium text-slate-900 bg-white hover:bg-slate-100 px-3.5 py-1.5 rounded-md transition-all hover:shadow-lg hover:shadow-white/20"
+                  className="relative group px-4 py-2 rounded-lg overflow-hidden"
                 >
-                  {t('landing.navbar.getStarted')}
+                  <motion.div
+                    animate={{
+                      boxShadow: ["0 0 0px rgba(99,102,241,0)", "0 0 20px rgba(99,102,241,0.3)", "0 0 0px rgba(99,102,241,0)"]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="absolute inset-0 bg-white"
+                  />
+                  <span className="relative z-10 text-[13px] font-bold text-slate-900">
+                    {t('landing.navbar.getStarted')}
+                  </span>
+                  <motion.div
+                    className="absolute inset-0 bg-indigo-500 opacity-0 group-hover:opacity-10 transition-opacity"
+                  />
                 </Link>
               </>
             )}
@@ -465,11 +510,10 @@ export default function HeroSection() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.8 + i * 0.1 }}
                         onClick={() => setActivePage(item.id as keyof typeof mockPageData)}
-                        className={`w-full h-8 rounded-lg flex items-center px-3 gap-2 transition-all duration-200 cursor-pointer ${
-                          isActive
-                            ? 'bg-slate-900 shadow-lg shadow-slate-900/20'
-                            : 'bg-slate-100/60 hover:bg-slate-200/80'
-                        }`}
+                        className={`w-full h-8 rounded-lg flex items-center px-3 gap-2 transition-all duration-200 cursor-pointer ${isActive
+                          ? 'bg-slate-900 shadow-lg shadow-slate-900/20'
+                          : 'bg-slate-100/60 hover:bg-slate-200/80'
+                          }`}
                       >
                         <svg
                           className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`}
@@ -534,11 +578,10 @@ export default function HeroSection() {
                           >
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-[10px] text-slate-400">{stat.label}</span>
-                              <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full ${
-                                stat.change.startsWith('+')
-                                  ? 'bg-emerald-50 text-emerald-600'
-                                  : 'bg-red-50 text-red-600'
-                              }`}>
+                              <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full ${stat.change.startsWith('+')
+                                ? 'bg-emerald-50 text-emerald-600'
+                                : 'bg-red-50 text-red-600'
+                                }`}>
                                 {stat.change}
                               </span>
                             </div>
@@ -555,9 +598,8 @@ export default function HeroSection() {
                             {['7G', '30G', '90G'].map((period, i) => (
                               <span
                                 key={period}
-                                className={`text-[9px] px-2 py-1 rounded cursor-pointer transition-colors ${
-                                  i === 1 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                                }`}
+                                className={`text-[9px] px-2 py-1 rounded cursor-pointer transition-colors ${i === 1 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                  }`}
                               >
                                 {period}
                               </span>
@@ -571,9 +613,8 @@ export default function HeroSection() {
                               initial={{ height: 0 }}
                               animate={{ height: `${h}%` }}
                               transition={{ duration: 0.4, delay: i * 0.03, ease: [0.16, 1, 0.3, 1] }}
-                              className={`flex-1 rounded-t transition-colors ${
-                                i === currentPageData.chartData.length - 1 ? 'bg-slate-900' : 'bg-slate-200 hover:bg-slate-300'
-                              }`}
+                              className={`flex-1 rounded-t transition-colors ${i === currentPageData.chartData.length - 1 ? 'bg-slate-900' : 'bg-slate-200 hover:bg-slate-300'
+                                }`}
                             />
                           ))}
                         </div>
@@ -598,15 +639,14 @@ export default function HeroSection() {
                                 <div className="text-[11px] text-slate-700 font-medium">{item.product}</div>
                                 <div className="text-[10px] text-slate-400">{item.action}</div>
                               </div>
-                              <div className={`text-[10px] font-medium ${
-                                item.qty.startsWith('+')
-                                  ? 'text-emerald-600'
-                                  : item.qty.startsWith('-')
-                                    ? 'text-red-500'
-                                    : item.qty.startsWith('₺')
-                                      ? 'text-blue-600'
-                                      : 'text-amber-500'
-                              }`}>
+                              <div className={`text-[10px] font-medium ${item.qty.startsWith('+')
+                                ? 'text-emerald-600'
+                                : item.qty.startsWith('-')
+                                  ? 'text-red-500'
+                                  : item.qty.startsWith('₺')
+                                    ? 'text-blue-600'
+                                    : 'text-amber-500'
+                                }`}>
                                 {item.qty}
                               </div>
                               <div className="text-[9px] text-slate-400">{item.time}</div>

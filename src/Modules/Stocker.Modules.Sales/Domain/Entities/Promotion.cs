@@ -238,11 +238,53 @@ public class Promotion : TenantAggregateRoot
         return Result.Success();
     }
 
+    /// <summary>
+    /// Safely increments usage count with limit validation.
+    /// This method should be called within a transaction with optimistic concurrency.
+    /// </summary>
     public Result IncrementUsage()
     {
+        // CRITICAL: Check limit BEFORE incrementing to prevent overselling
+        if (UsageLimit.HasValue && TotalUsageCount >= UsageLimit.Value)
+        {
+            return Result.Failure(
+                Error.Conflict("Promotion.UsageLimitReached",
+                    $"Bu promosyon kullanım limitine ({UsageLimit.Value}) ulaşmıştır."));
+        }
+
         TotalUsageCount++;
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
+    }
+
+    /// <summary>
+    /// Checks if the promotion can be used by a specific customer.
+    /// </summary>
+    /// <param name="customerUsageCount">Number of times this customer has used this promotion</param>
+    public bool CanBeUsedByCustomer(int customerUsageCount)
+    {
+        if (!IsValid())
+            return false;
+
+        // Check customer-specific limit
+        if (UsageLimitPerCustomer.HasValue && customerUsageCount >= UsageLimitPerCustomer.Value)
+            return false;
+
+        return true;
+    }
+
+    /// <summary>
+    /// Checks if the promotion can still be used (considering current usage vs limit).
+    /// </summary>
+    public bool CanBeUsed()
+    {
+        if (!IsValid())
+            return false;
+
+        if (UsageLimit.HasValue && TotalUsageCount >= UsageLimit.Value)
+            return false;
+
+        return true;
     }
 
     public bool IsValid()

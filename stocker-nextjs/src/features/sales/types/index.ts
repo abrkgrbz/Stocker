@@ -157,19 +157,34 @@ export interface SalesOrderStatistics {
   approvedOrders: number;
   completedOrders: number;
   cancelledOrders: number;
-  totalRevenue: number;
+  /** Total amount of all orders (backend property name) */
+  totalAmount: number;
+  /** @deprecated Use totalAmount instead - kept for backward compatibility */
+  totalRevenue?: number;
   averageOrderValue: number;
+  currency: string;
 }
 
 export interface GetSalesOrdersParams {
   page?: number;
   pageSize?: number;
+  /** Smart search - searches across OrderNumber, CustomerName, CustomerEmail, ProductCodes, Notes */
   searchTerm?: string;
+  /** Enable fuzzy matching for typo tolerance */
+  fuzzySearch?: boolean;
+  /** Minimum relevance score (0.0 to 1.0) for smart search results */
+  minRelevanceScore?: number;
   status?: string;
   customerId?: string;
   salesPersonId?: string;
   fromDate?: string;
   toDate?: string;
+  /** Filter by invoicing status: NotInvoiced, PartiallyInvoiced, FullyInvoiced */
+  invoicingStatus?: string;
+  /** Filter by fulfillment status: Pending, PartiallyFulfilled, Fulfilled */
+  fulfillmentStatus?: string;
+  /** Filter for returnable orders only */
+  isReturnable?: boolean;
   sortBy?: string;
   sortDescending?: boolean;
 }

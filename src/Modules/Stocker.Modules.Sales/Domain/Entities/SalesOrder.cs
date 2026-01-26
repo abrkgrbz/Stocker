@@ -782,6 +782,87 @@ public class SalesOrder : TenantAggregateRoot
 
     #endregion
 
+    #region Return Policy / İade Politikası
+
+    /// <summary>
+    /// Default return period in days from delivery date
+    /// </summary>
+    public const int DefaultReturnPeriodDays = 14;
+
+    /// <summary>
+    /// Extended return period for specific customer types or promotions
+    /// </summary>
+    public const int ExtendedReturnPeriodDays = 30;
+
+    /// <summary>
+    /// Checks if the order is eligible for return and provides reason if not.
+    /// Returns (IsReturnable, ReturnDeadline, IneligibilityReason)
+    /// </summary>
+    public (bool IsReturnable, DateTime? ReturnDeadline, string? IneligibilityReason) CheckReturnEligibility(
+        int returnPeriodDays = DefaultReturnPeriodDays)
+    {
+        // Rule 1: Order must be delivered
+        if (Status != SalesOrderStatus.Delivered && Status != SalesOrderStatus.Completed)
+        {
+            var reason = Status switch
+            {
+                SalesOrderStatus.Draft => "Sipariş henüz onaylanmamış.",
+                SalesOrderStatus.Approved => "Sipariş henüz sevk edilmemiş.",
+                SalesOrderStatus.Confirmed => "Sipariş henüz sevk edilmemiş.",
+                SalesOrderStatus.Shipped => "Sipariş henüz teslim edilmemiş.",
+                SalesOrderStatus.Cancelled => "İptal edilmiş siparişler iade edilemez.",
+                _ => "Siparişin durumu iade için uygun değil."
+            };
+            return (false, null, reason);
+        }
+
+        // Rule 2: Check if delivery date exists (required for deadline calculation)
+        if (!DeliveryDate.HasValue)
+        {
+            return (false, null, "Teslimat tarihi belirlenemediği için iade süresi hesaplanamıyor.");
+        }
+
+        // Rule 3: Calculate return deadline and check if it has passed
+        var returnDeadline = DeliveryDate.Value.AddDays(returnPeriodDays);
+        if (DateTime.UtcNow > returnDeadline)
+        {
+            return (false, returnDeadline, $"İade süresi doldu. Son iade tarihi: {returnDeadline:dd.MM.yyyy}");
+        }
+
+        // Rule 4: Check if order is already fully returned (if tracked)
+        // This would be checked against SalesReturn records in the handler
+
+        // Rule 5: Check if order was cancelled after delivery (edge case)
+        if (IsCancelled)
+        {
+            return (false, returnDeadline, "İptal edilmiş siparişler iade edilemez.");
+        }
+
+        // All rules passed - order is returnable
+        return (true, returnDeadline, null);
+    }
+
+    /// <summary>
+    /// Calculates the return deadline based on delivery date
+    /// </summary>
+    public DateTime? GetReturnDeadline(int returnPeriodDays = DefaultReturnPeriodDays)
+    {
+        return DeliveryDate?.AddDays(returnPeriodDays);
+    }
+
+    /// <summary>
+    /// Checks if return period has expired
+    /// </summary>
+    public bool IsReturnPeriodExpired(int returnPeriodDays = DefaultReturnPeriodDays)
+    {
+        if (!DeliveryDate.HasValue)
+            return false; // If not delivered, return period hasn't started yet
+
+        return DateTime.UtcNow > DeliveryDate.Value.AddDays(returnPeriodDays);
+    }
+
+    #endregion
+
     public Result Cancel(string reason)
     {
         if (IsCancelled)

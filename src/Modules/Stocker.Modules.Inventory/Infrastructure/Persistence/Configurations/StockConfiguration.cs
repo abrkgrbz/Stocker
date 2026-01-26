@@ -47,12 +47,26 @@ public class StockConfiguration : IEntityTypeConfiguration<Stock>
             .HasForeignKey(s => s.LocationId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // Variant relationship for variant-level stock tracking
+        builder.HasOne(s => s.ProductVariant)
+            .WithMany(v => v.Stocks)
+            .HasForeignKey(s => s.ProductVariantId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // Indexes
         builder.HasIndex(s => s.TenantId);
-        builder.HasIndex(s => new { s.TenantId, s.ProductId, s.WarehouseId, s.LocationId }).IsUnique();
+
+        // Unique constraint updated to include ProductVariantId
+        // This ensures unique stock records per Product+Warehouse+Location+Variant combination
+        builder.HasIndex(s => new { s.TenantId, s.ProductId, s.WarehouseId, s.LocationId, s.ProductVariantId })
+            .IsUnique()
+            .HasDatabaseName("IX_Stocks_Tenant_Product_Warehouse_Location_Variant");
+
         builder.HasIndex(s => new { s.TenantId, s.ProductId });
         builder.HasIndex(s => new { s.TenantId, s.WarehouseId });
         builder.HasIndex(s => new { s.TenantId, s.LocationId });
+        builder.HasIndex(s => new { s.TenantId, s.ProductVariantId })
+            .HasDatabaseName("IX_Stocks_Tenant_ProductVariant");
         builder.HasIndex(s => new { s.TenantId, s.LotNumber });
         builder.HasIndex(s => new { s.TenantId, s.SerialNumber });
         builder.HasIndex(s => new { s.TenantId, s.ExpiryDate });

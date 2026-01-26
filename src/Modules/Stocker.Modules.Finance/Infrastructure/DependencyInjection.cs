@@ -80,6 +80,7 @@ public static class DependencyInjection
 
         // Register Cross-Module Services (Contract Implementations)
         services.AddScoped<Shared.Contracts.Finance.IFinanceInvoiceService, Application.Services.FinanceInvoiceService>();
+        services.AddScoped<Shared.Contracts.Finance.ICurrencyRateService, Application.Services.CurrencyRateService>();
 
         // Register Domain Services
         services.AddScoped<ITaxCalculationService, TaxCalculationService>();

@@ -178,5 +178,18 @@ public class SalesOrderConfiguration : IEntityTypeConfiguration<SalesOrder>
         builder.HasIndex(o => new { o.TenantId, o.PaymentStatus });
         builder.HasIndex(o => o.PaymentDueDate);
         builder.HasIndex(o => new { o.TenantId, o.IsStockReserved });
+
+        // Soft Delete Configuration
+        builder.Property(o => o.IsDeleted)
+            .HasDefaultValue(false)
+            .IsRequired();
+
+        builder.Property(o => o.DeletedAt);
+
+        builder.Property(o => o.DeletedBy)
+            .HasMaxLength(255);
+
+        // Soft delete index for efficient filtering
+        builder.HasIndex(o => new { o.TenantId, o.IsDeleted });
     }
 }

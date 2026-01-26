@@ -173,7 +173,7 @@ export default function SalesDashboardPage() {
             <span className="text-sm text-slate-500">Toplam Gelir</span>
           </div>
           <div className="text-2xl font-bold text-slate-900">
-            {salesStatsLoading ? '...' : new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(salesStats?.totalRevenue ?? 0)}
+            {salesStatsLoading ? '...' : new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(salesStats?.totalAmount ?? salesStats?.totalRevenue ?? 0)}
           </div>
           <p className="text-xs text-slate-400 mt-1">
             Ort: {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(salesStats?.averageOrderValue ?? 0)}

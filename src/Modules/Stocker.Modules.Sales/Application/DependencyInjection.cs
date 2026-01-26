@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Stocker.Modules.Sales.Application.Behaviors;
 using System.Reflection;
 
 namespace Stocker.Modules.Sales.Application;
@@ -17,8 +18,15 @@ public static class DependencyInjection
     {
         var assembly = Assembly.GetExecutingAssembly();
 
-        // Add MediatR
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(assembly));
+        // Add MediatR with pipeline behaviors
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(assembly);
+
+            // Add Idempotency behavior for duplicate request prevention
+            // This behavior checks if a command with IIdempotentCommand has already been processed
+            cfg.AddOpenBehavior(typeof(IdempotencyBehavior<,>));
+        });
 
         // Add FluentValidation
         services.AddValidatorsFromAssembly(assembly);

@@ -1,89 +1,97 @@
 'use client';
 
-import React from 'react';
+// Premium Redesigned Not Found Page
+// Forced visibility via inline styles to override problematic global CSS
+
+import React, { Suspense } from 'react';
 import Link from 'next/link';
-import { Button } from 'antd';
-import {
-  ArrowLeftIcon,
-  HomeIcon,
-} from '@heroicons/react/24/outline';
+import dynamic from 'next/dynamic';
+import { motion } from 'framer-motion';
+import { Home, ArrowLeft, Search } from 'lucide-react';
+
+const GradientMesh = dynamic(() => import('@/components/landing/GradientMesh'), {
+  ssr: false,
+  loading: () => <div className="absolute inset-0 bg-[#0c0f1a]" />,
+});
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-white p-4">
-      <div className="max-w-2xl w-full text-center">
-        {/* 404 Illustration */}
-        <div className="mb-8">
-          <h1 className="text-9xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-fuchsia-600">
+    <div className="min-h-screen relative overflow-hidden bg-[#0c0f1a] flex flex-col items-center justify-center p-4">
+      {/* Background Atmosphere */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <Suspense fallback={null}>
+          <GradientMesh />
+        </Suspense>
+        <div className="absolute inset-0 bg-black/40" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-2xl text-center">
+        {/* 404 Text */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="mb-8"
+        >
+          <h1
+            style={{
+              backgroundImage: 'linear-gradient(to bottom, rgba(255, 255, 255, 0.15), transparent)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              color: 'transparent'
+            }}
+            className="text-[12rem] sm:text-[16rem] font-bold leading-none select-none pointer-events-none"
+          >
             404
           </h1>
-        </div>
+        </motion.div>
 
-        {/* Error Message */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Sayfa Bulunamadı
-          </h2>
-          <p className="text-lg text-gray-600">
-            Aradığınız sayfa mevcut değil veya taşınmış olabilir.
-          </p>
-        </div>
+        {/* Message */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3, duration: 0.8 }}
+          className="relative -mt-20 sm:-mt-32"
+        >
+          <div className="backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-8 sm:p-12 shadow-2xl w-full max-w-lg mx-auto text-white">
+            <div className="flex flex-col items-center">
+              <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mb-6 border border-white/5">
+                <Search className="w-8 h-8 text-indigo-400" />
+              </div>
 
-        {/* Illustration */}
-        <div className="mb-12">
-          <svg
-            className="w-64 h-64 mx-auto text-gray-300"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={0.5}
-              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        </div>
+              <h2 style={{ color: 'white' }} className="text-3xl font-bold mb-4 tracking-tight">Sayfa Bulunamadı</h2>
+              <p style={{ color: 'rgba(255, 255, 255, 0.4)' }} className="text-lg mb-8 max-w-sm">
+                Aradığınız yol kaybolmuş olabilir veya hiç var olmamış.
+              </p>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/">
-            <Button
-              type="primary"
-              icon={<HomeIcon className="w-4 h-4" />}
-              size="large"
-              className="w-full sm:w-auto"
-            >
-              Ana Sayfaya Dön
-            </Button>
-          </Link>
-          <Button
-            icon={<ArrowLeftIcon className="w-4 h-4" />}
-            size="large"
-            onClick={() => window.history.back()}
-            className="w-full sm:w-auto"
-          >
-            Geri Dön
-          </Button>
-        </div>
-
-        {/* Help Links */}
-        <div className="mt-12 pt-8 border-t border-gray-200">
-          <p className="text-sm text-gray-500 mb-4">
-            Yardıma mı ihtiyacınız var?
-          </p>
-          <div className="flex flex-wrap gap-4 justify-center text-sm">
-            <Link href="/help" className="text-violet-600 hover:text-violet-700 font-medium">
-              Yardım Merkezi
-            </Link>
-            <Link href="/contact" className="text-violet-600 hover:text-violet-700 font-medium">
-              İletişim
-            </Link>
-            <Link href="/docs" className="text-violet-600 hover:text-violet-700 font-medium">
-              Dokümantasyon
-            </Link>
+              <div className="flex flex-col sm:flex-row gap-4 w-full">
+                <Link
+                  href="/"
+                  style={{ backgroundColor: 'white', color: '#0f172a' }}
+                  className="flex-1 flex items-center justify-center gap-2 font-bold py-4 px-4 sm:px-8 rounded-2xl hover:bg-slate-50 transition-all hover:scale-[1.02] active:scale-[0.98] whitespace-nowrap min-w-fit"
+                >
+                  <Home className="w-4 h-4" />
+                  <span>Ana Sayfaya Dön</span>
+                </Link>
+                <button
+                  onClick={() => window.history.back()}
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', color: 'white', border: '1px solid rgba(255, 255, 255, 0.1)' }}
+                  className="flex-1 flex items-center justify-center gap-2 font-semibold py-4 px-4 sm:px-8 rounded-2xl transition-all hover:bg-white/10 whitespace-nowrap min-w-fit"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Geri Git</span>
+                </button>
+              </div>
+            </div>
           </div>
+        </motion.div>
+
+        {/* Branding */}
+        <div
+          style={{ color: 'rgba(255, 255, 255, 0.1)' }}
+          className="mt-16 font-medium tracking-[0.3em] uppercase text-[10px]"
+        >
+          Stoocker Security & Infrastructure
         </div>
       </div>
     </div>

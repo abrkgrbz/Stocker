@@ -31,6 +31,7 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
     private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IInventoryService _inventoryService;
     private readonly IPriceValidationService _priceValidationService;
+    private readonly IDiscountValidationService _discountValidationService;
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly ISalesAuditService _auditService;
     private readonly ILogger<CreateSalesOrderHandler> _logger;
@@ -39,6 +40,7 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
         ISalesUnitOfWork unitOfWork,
         IInventoryService inventoryService,
         IPriceValidationService priceValidationService,
+        IDiscountValidationService discountValidationService,
         IPublishEndpoint publishEndpoint,
         ISalesAuditService auditService,
         ILogger<CreateSalesOrderHandler> logger)
@@ -46,6 +48,7 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
         _unitOfWork = unitOfWork;
         _inventoryService = inventoryService;
         _priceValidationService = priceValidationService;
+        _discountValidationService = discountValidationService;
         _publishEndpoint = publishEndpoint;
         _auditService = auditService;
         _logger = logger;
@@ -87,9 +90,9 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
         // ═══════════════════════════════════════════════════════════════════════════
         if (contract != null && request.ValidateCreditLimit)
         {
-            // Calculate order total for credit check
+            // Calculate order total for credit check (discount not yet applied, will be validated later)
             var orderTotal = request.Items.Sum(i =>
-                i.Quantity * i.UnitPrice * (1 - i.DiscountRate / 100) * (1 + i.VatRate / 100));
+                i.Quantity * i.UnitPrice * (1 + i.VatRate / 100));
 
             // Get outstanding balance
             var outstandingBalance = request.CurrentOutstandingBalance ??
@@ -317,10 +320,11 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
                 }
 
                 // ═══════════════════════════════════════════════════════════════════
-                // STEP 7: Add Order Items
+                // STEP 7: Add Order Items (with secure discount validation)
                 // ═══════════════════════════════════════════════════════════════════
                 var lineNumber = 1;
                 var backOrderItems = new List<(SalesOrderItem Item, decimal ShortQuantity)>();
+                var appliedDiscountIds = new List<Guid>(); // Track for usage increment
 
                 foreach (var itemCmd in request.Items)
                 {
@@ -351,8 +355,35 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
 
                     var item = itemResult.Value!;
 
-                    if (itemCmd.DiscountRate > 0)
-                        item.ApplyDiscount(itemCmd.DiscountRate);
+                    // SECURE DISCOUNT: Validate item-level coupon code server-side
+                    if (!string.IsNullOrWhiteSpace(itemCmd.CouponCode))
+                    {
+                        var itemSubtotal = itemCmd.Quantity * unitPrice;
+                        var itemDiscountResult = await _discountValidationService.ValidateAndCalculateAsync(
+                            itemCmd.CouponCode,
+                            itemSubtotal,
+                            (int)itemCmd.Quantity,
+                            request.CustomerId,
+                            itemCmd.ProductId.HasValue ? new[] { itemCmd.ProductId.Value } : null,
+                            cancellationToken);
+
+                        if (!itemDiscountResult.IsSuccess)
+                        {
+                            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                            _logger.LogWarning(
+                                "Item discount validation failed for coupon {CouponCode}: {Error}",
+                                itemCmd.CouponCode, itemDiscountResult.Error?.Description);
+                            return Result<SalesOrderDto>.Failure(itemDiscountResult.Error!);
+                        }
+
+                        var itemDiscount = itemDiscountResult.Value;
+                        item.ApplyDiscount(itemDiscount.EffectiveDiscountRate);
+                        appliedDiscountIds.Add(itemDiscount.DiscountId);
+
+                        _logger.LogDebug(
+                            "Applied item discount: Code={CouponCode}, Rate={DiscountRate}%, Amount={DiscountAmount}",
+                            itemCmd.CouponCode, itemDiscount.EffectiveDiscountRate, itemDiscount.CalculatedDiscountAmount);
+                    }
 
                     order.AddItem(item);
 
@@ -366,6 +397,77 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
                             backOrderItems.Add((item, shortQuantity));
                         }
                     }
+                }
+
+                // ═══════════════════════════════════════════════════════════════════
+                // STEP 7b: Apply Order-Level Discount (secure validation)
+                // ═══════════════════════════════════════════════════════════════════
+                if (!string.IsNullOrWhiteSpace(request.CouponCode) || request.CouponCodes?.Any() == true)
+                {
+                    var orderSubtotal = order.Items.Sum(i => i.LineTotal);
+                    var productIds = order.Items.Where(i => i.ProductId.HasValue).Select(i => i.ProductId!.Value).ToList();
+                    var totalQuantity = (int)order.Items.Sum(i => i.Quantity);
+
+                    DiscountValidationResult? orderDiscountResult = null;
+
+                    if (request.CouponCodes?.Any() == true)
+                    {
+                        // Multiple coupon codes (stacking)
+                        var multiResult = await _discountValidationService.ValidateAndCalculateMultipleAsync(
+                            request.CouponCodes,
+                            orderSubtotal,
+                            totalQuantity,
+                            request.CustomerId,
+                            productIds,
+                            cancellationToken);
+
+                        if (!multiResult.IsSuccess)
+                        {
+                            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                            return Result<SalesOrderDto>.Failure(multiResult.Error!);
+                        }
+
+                        orderDiscountResult = multiResult.Value;
+                    }
+                    else if (!string.IsNullOrWhiteSpace(request.CouponCode))
+                    {
+                        // Single coupon code
+                        var singleResult = await _discountValidationService.ValidateAndCalculateAsync(
+                            request.CouponCode,
+                            orderSubtotal,
+                            totalQuantity,
+                            request.CustomerId,
+                            productIds,
+                            cancellationToken);
+
+                        if (!singleResult.IsSuccess)
+                        {
+                            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                            return Result<SalesOrderDto>.Failure(singleResult.Error!);
+                        }
+
+                        orderDiscountResult = singleResult.Value;
+                    }
+
+                    if (orderDiscountResult != null)
+                    {
+                        order.ApplyDiscount(
+                            orderDiscountResult.CalculatedDiscountAmount,
+                            orderDiscountResult.EffectiveDiscountRate);
+                        appliedDiscountIds.Add(orderDiscountResult.DiscountId);
+
+                        _logger.LogInformation(
+                            "Applied order discount: Code={CouponCode}, Amount={DiscountAmount}, Rate={DiscountRate}%",
+                            orderDiscountResult.CouponCode,
+                            orderDiscountResult.CalculatedDiscountAmount,
+                            orderDiscountResult.EffectiveDiscountRate);
+                    }
+                }
+
+                // Mark all applied discounts as used (increment usage count)
+                foreach (var discountId in appliedDiscountIds.Distinct())
+                {
+                    await _discountValidationService.MarkDiscountUsedAsync(discountId, cancellationToken);
                 }
 
                 // ═══════════════════════════════════════════════════════════════════

@@ -11,6 +11,8 @@ using Stocker.Modules.Sales.Infrastructure.Services;
 using Stocker.Modules.Sales.Interfaces;
 using Stocker.Modules.Stocker.Modules.Sales.Infrastructure.EventConsumers;
 using Stocker.SharedKernel.Interfaces;
+using Stocker.Shared.Contracts.Inventory;
+using Microsoft.Extensions.Logging;
 
 namespace Stocker.Modules.Sales.Infrastructure;
 
@@ -90,10 +92,26 @@ public static class DependencyInjection
         services.AddScoped<ISalesTargetRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().SalesTargets);
         services.AddScoped<ICustomerSegmentRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().CustomerSegments);
 
+        // Promotion Usage Repository
+        services.AddScoped<IPromotionUsageRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().PromotionUsages);
+
         // Application Services
         services.AddScoped<IPriceValidationService, PriceValidationService>();
+        services.AddScoped<IDiscountValidationService, DiscountValidationService>();
+        services.AddScoped<IPromotionValidationService, PromotionValidationService>();
         services.AddScoped<IResourceAuthorizationService, ResourceAuthorizationService>();
         services.AddScoped<ISalesAuditService, SalesAuditService>();
+
+        // Resilience: Wrap IInventoryService with resilient decorator for cross-module calls
+        // This provides retry, circuit breaker, and timeout protection for Inventory service calls
+        // Uses manual decorator pattern since Scrutor is not available
+        services.AddScoped<IInventoryService>(sp =>
+        {
+            // Get the original service from Inventory module registration
+            var innerService = sp.GetRequiredService<Inventory.Application.Services.InventoryService>();
+            var logger = sp.GetRequiredService<ILogger<ResilientInventoryService>>();
+            return new ResilientInventoryService(innerService, logger);
+        });
 
         // Phase 5: Returns & Credits Repositories
         services.AddScoped<ISalesReturnRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().SalesReturns);
@@ -103,6 +121,9 @@ public static class DependencyInjection
         // Phase 6: Service & Warranty Repositories
         services.AddScoped<IServiceOrderRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().ServiceOrders);
         services.AddScoped<IWarrantyRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().Warranties);
+
+        // Idempotency Repository
+        services.AddScoped<IProcessedRequestRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().ProcessedRequests);
 
         return services;
     }

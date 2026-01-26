@@ -1,11 +1,18 @@
 using MediatR;
+using Stocker.Modules.Sales.Application.Behaviors;
 using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Sales.Application.Features.SalesOrders.Commands;
 
-public record CreateSalesOrderCommand : IRequest<Result<SalesOrderDto>>
+public record CreateSalesOrderCommand : IRequest<Result<SalesOrderDto>>, IIdempotentCommand
 {
+    /// <summary>
+    /// Unique request ID for idempotency. Clients should generate and send this ID
+    /// to prevent duplicate order creation on retries.
+    /// </summary>
+    public Guid RequestId { get; set; }
+
     public DateTime OrderDate { get; init; } = DateTime.UtcNow;
     public Guid? CustomerId { get; init; }
     public string? CustomerName { get; init; }
@@ -30,6 +37,21 @@ public record CreateSalesOrderCommand : IRequest<Result<SalesOrderDto>>
     public string? QuotationNumber { get; init; }
     public Guid? OpportunityId { get; init; }
     public Guid? CustomerContractId { get; init; }
+
+    #region Discount Options
+
+    /// <summary>
+    /// Coupon code for order-level discount. The discount will be validated and calculated server-side.
+    /// Do NOT send DiscountAmount or DiscountRate - they will be ignored for security.
+    /// </summary>
+    public string? CouponCode { get; init; }
+
+    /// <summary>
+    /// Multiple coupon codes if stacking is allowed.
+    /// </summary>
+    public List<string>? CouponCodes { get; init; }
+
+    #endregion
 
     #region Phase 3: Enhanced Order Creation Options
 
@@ -108,7 +130,11 @@ public record CreateSalesOrderItemCommand
     public decimal Quantity { get; init; }
     public decimal UnitPrice { get; init; }
     public decimal VatRate { get; init; } = 20;
-    public decimal DiscountRate { get; init; }
+
+    /// <summary>
+    /// Item-level coupon code. Will be validated and calculated server-side.
+    /// </summary>
+    public string? CouponCode { get; init; }
 }
 
 public record UpdateSalesOrderCommand : IRequest<Result<SalesOrderDto>>
@@ -124,8 +150,17 @@ public record UpdateSalesOrderCommand : IRequest<Result<SalesOrderDto>>
     public string? Notes { get; init; }
     public Guid? SalesPersonId { get; init; }
     public string? SalesPersonName { get; init; }
-    public decimal DiscountAmount { get; init; }
-    public decimal DiscountRate { get; init; }
+
+    /// <summary>
+    /// Coupon code for order-level discount. Will be validated and calculated server-side.
+    /// Note: This replaces any existing discount on the order.
+    /// </summary>
+    public string? CouponCode { get; init; }
+
+    /// <summary>
+    /// Set to true to remove any existing discount from the order.
+    /// </summary>
+    public bool RemoveDiscount { get; init; }
 }
 
 public record AddSalesOrderItemCommand : IRequest<Result<SalesOrderDto>>
@@ -139,7 +174,11 @@ public record AddSalesOrderItemCommand : IRequest<Result<SalesOrderDto>>
     public decimal Quantity { get; init; }
     public decimal UnitPrice { get; init; }
     public decimal VatRate { get; init; } = 20;
-    public decimal DiscountRate { get; init; }
+
+    /// <summary>
+    /// Item-level coupon code. Will be validated and calculated server-side.
+    /// </summary>
+    public string? CouponCode { get; init; }
 }
 
 public record RemoveSalesOrderItemCommand : IRequest<Result<SalesOrderDto>>
