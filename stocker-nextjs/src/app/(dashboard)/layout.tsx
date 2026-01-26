@@ -23,7 +23,7 @@ import { Search, HelpCircle, Plus, ChevronDown, Menu as MenuIcon } from 'lucide-
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
 import { SignalRProvider } from '@/lib/signalr/signalr-context';
-import { NotificationCenter } from '@/features/notifications/components';
+import { AlertBell } from '@/features/alerts';
 import { ChatBadge } from '@/features/chat';
 import { useNotificationHub } from '@/lib/signalr/notification-hub';
 import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
@@ -852,7 +852,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               </Tooltip>
 
               {/* Notifications */}
-              <NotificationCenter />
+              <AlertBell />
 
               {/* Chat Messages */}
               <ChatBadge />

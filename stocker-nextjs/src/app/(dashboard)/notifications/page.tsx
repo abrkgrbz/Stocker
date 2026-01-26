@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button, Empty, Dropdown, Spin } from 'antd';
 import type { MenuProps } from 'antd';
 import {
@@ -9,14 +9,29 @@ import {
   CheckIcon,
   EllipsisVerticalIcon,
   ExclamationCircleIcon,
+  ExclamationTriangleIcon,
   InformationCircleIcon,
+  XCircleIcon,
   TrashIcon,
-  TrophyIcon,
   BellAlertIcon,
+  ShoppingCartIcon,
+  DocumentTextIcon,
+  CubeIcon,
+  UserIcon,
+  CreditCardIcon,
+  TruckIcon,
+  UserGroupIcon,
+  CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
-import { CRMService } from '@/lib/api/services/crm.service';
-import type { NotificationDto } from '@/lib/api/services/crm.types';
-import { showSuccess, showApiError } from '@/lib/utils/notifications';
+import {
+  useAlerts,
+  useUnreadAlertCount,
+  useMarkAlertAsRead,
+  useMarkAllAlertsAsRead,
+  useDismissAlert,
+} from '@/features/alerts';
+import type { Alert, AlertCategory, AlertSeverity } from '@/features/alerts';
+import { alertSeverityConfig, alertCategoryConfig } from '@/features/alerts';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/tr';
@@ -26,131 +41,105 @@ dayjs.locale('tr');
 
 type TabKey = 'all' | 'unread' | 'read';
 
+// Heroicon type
+type HeroIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
+
+// Category icons mapping
+const categoryIcons: Record<AlertCategory, HeroIcon> = {
+  System: BellIcon,
+  Order: ShoppingCartIcon,
+  Quotation: DocumentTextIcon,
+  Invoice: DocumentTextIcon,
+  Contract: DocumentTextIcon,
+  Payment: CreditCardIcon,
+  Shipment: TruckIcon,
+  Return: TruckIcon,
+  Stock: CubeIcon,
+  Warehouse: CubeIcon,
+  Product: CubeIcon,
+  Customer: UserIcon,
+  Lead: UserIcon,
+  Opportunity: UserIcon,
+  Budget: CurrencyDollarIcon,
+  Credit: CreditCardIcon,
+  Employee: UserGroupIcon,
+  Payroll: CurrencyDollarIcon,
+};
+
+// Severity icons mapping
+const severityIcons: Record<AlertSeverity, HeroIcon> = {
+  Info: InformationCircleIcon,
+  Low: BellIcon,
+  Medium: ExclamationTriangleIcon,
+  High: ExclamationCircleIcon,
+  Critical: XCircleIcon,
+};
+
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<NotificationDto[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [activeTab, setActiveTab] = useState<TabKey>('all');
 
-  const loadNotifications = async () => {
-    try {
-      setLoading(true);
-      const unreadOnly = activeTab === 'unread' ? true : activeTab === 'read' ? false : undefined;
+  // Fetch alerts based on active tab
+  const isReadFilter = activeTab === 'unread' ? false : activeTab === 'read' ? true : undefined;
 
-      const response = await CRMService.getNotifications({
-        unreadOnly,
-        skip: 0,
-        take: 50,
-      });
+  const { data: alerts = [], isLoading } = useAlerts({
+    isRead: isReadFilter,
+    limit: 50,
+  });
 
-      setNotifications(response.notifications);
-      setUnreadCount(response.unreadCount);
-    } catch (error) {
-      showApiError(error, 'Bildirimler yüklenemedi');
-    } finally {
-      setLoading(false);
-    }
+  const { data: unreadCount = 0 } = useUnreadAlertCount();
+  const markAsRead = useMarkAlertAsRead();
+  const markAllAsRead = useMarkAllAlertsAsRead();
+  const dismissAlert = useDismissAlert();
+
+  const handleMarkAsRead = (id: number) => {
+    markAsRead.mutate(id);
   };
 
-  useEffect(() => {
-    loadNotifications();
-  }, [activeTab]);
-
-  const handleMarkAsRead = async (id: number) => {
-    try {
-      await CRMService.markNotificationAsRead(id);
-      showSuccess('Bildirim okundu olarak işaretlendi');
-      loadNotifications();
-    } catch (error) {
-      showApiError(error, 'Bildirim güncellenemedi');
-    }
+  const handleMarkAllAsRead = () => {
+    markAllAsRead.mutate();
   };
 
-  const handleMarkAllAsRead = async () => {
-    try {
-      await CRMService.markAllNotificationsAsRead();
-      showSuccess('Tüm bildirimler okundu olarak işaretlendi');
-      loadNotifications();
-    } catch (error) {
-      showApiError(error, 'Bildirimler güncellenemedi');
-    }
+  const handleDismiss = (id: number) => {
+    dismissAlert.mutate(id);
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      await CRMService.deleteNotification(id);
-      showSuccess('Bildirim silindi');
-      loadNotifications();
-    } catch (error) {
-      showApiError(error, 'Bildirim silinemedi');
-    }
+  const getAlertIcon = (alert: Alert) => {
+    const CategoryIcon = categoryIcons[alert.category] ?? BellIcon;
+    const severityConfig = alertSeverityConfig[alert.severity] ?? alertSeverityConfig.Info;
+    return (
+      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${alert.isRead ? 'bg-slate-100' : 'bg-white'}`}>
+        <CategoryIcon className={`w-5 h-5 ${severityConfig.color}`} />
+      </div>
+    );
   };
 
-  const getNotificationIcon = (type: string) => {
-    const iconClasses = 'w-5 h-5';
-    switch (type) {
-      case 'Deal':
-        return <TrophyIcon className={`${iconClasses} text-emerald-600`} />;
-      case 'Task':
-        return <CheckCircleIcon className={`${iconClasses} text-blue-600`} />;
-      case 'Alert':
-        return <ExclamationCircleIcon className={`${iconClasses} text-red-600`} />;
-      case 'Workflow':
-        return <InformationCircleIcon className={`${iconClasses} text-violet-600`} />;
-      default:
-        return <BellIcon className={`${iconClasses} text-slate-500`} />;
-    }
-  };
-
-  const getTypeLabel = (type: string) => {
-    const labels: Record<string, { text: string; color: string }> = {
-      Deal: { text: 'Fırsat', color: 'bg-emerald-100 text-emerald-700' },
-      Task: { text: 'Görev', color: 'bg-blue-100 text-blue-700' },
-      Alert: { text: 'Uyarı', color: 'bg-red-100 text-red-700' },
-      Workflow: { text: 'İş Akışı', color: 'bg-violet-100 text-violet-700' },
-      Customer: { text: 'Müşteri', color: 'bg-cyan-100 text-cyan-700' },
-    };
-    return labels[type] || { text: type, color: 'bg-slate-100 text-slate-700' };
-  };
-
-  const getFilteredNotifications = () => {
-    switch (activeTab) {
-      case 'unread':
-        return notifications.filter((n) => !n.isRead);
-      case 'read':
-        return notifications.filter((n) => n.isRead);
-      default:
-        return notifications;
-    }
-  };
-
-  const filteredNotifications = getFilteredNotifications();
-  const readCount = notifications.filter((n) => n.isRead).length;
+  const readCount = alerts.filter((a) => a.isRead).length;
+  const allCount = alerts.length;
 
   const tabs: { key: TabKey; label: string; count: number }[] = [
-    { key: 'all', label: 'Tümü', count: notifications.length },
+    { key: 'all', label: 'Tümü', count: allCount },
     { key: 'unread', label: 'Okunmamış', count: unreadCount },
     { key: 'read', label: 'Okunmuş', count: readCount },
   ];
 
-  const getDropdownItems = (notification: NotificationDto): MenuProps['items'] => {
+  const getDropdownItems = (alert: Alert): MenuProps['items'] => {
     const items: MenuProps['items'] = [];
 
-    if (!notification.isRead) {
+    if (!alert.isRead) {
       items.push({
         key: 'read',
         icon: <CheckIcon className="w-4 h-4" />,
         label: 'Okundu İşaretle',
-        onClick: () => handleMarkAsRead(notification.id),
+        onClick: () => handleMarkAsRead(alert.id),
       });
     }
 
     items.push({
-      key: 'delete',
+      key: 'dismiss',
       icon: <TrashIcon className="w-4 h-4" />,
-      label: 'Sil',
+      label: 'Kaldır',
       danger: true,
-      onClick: () => handleDelete(notification.id),
+      onClick: () => handleDismiss(alert.id),
     });
 
     return items;
@@ -189,6 +178,7 @@ export default function NotificationsPage() {
               type="primary"
               icon={<CheckIcon className="w-4 h-4" />}
               onClick={handleMarkAllAsRead}
+              loading={markAllAsRead.isPending}
               style={{
                 background: '#1a1a1a',
                 borderColor: '#1a1a1a',
@@ -239,13 +229,13 @@ export default function NotificationsPage() {
             </div>
           </div>
 
-          {/* Notifications List */}
+          {/* Alerts List */}
           <div className="p-6">
-            {loading ? (
+            {isLoading ? (
               <div className="flex items-center justify-center py-16">
                 <Spin size="large" />
               </div>
-            ) : filteredNotifications.length === 0 ? (
+            ) : alerts.length === 0 ? (
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description={
@@ -261,28 +251,23 @@ export default function NotificationsPage() {
               />
             ) : (
               <div className="space-y-3">
-                {filteredNotifications.map((notification) => {
-                  const typeLabel = getTypeLabel(notification.type);
+                {alerts.map((alert) => {
+                  const severityConfig = alertSeverityConfig[alert.severity] ?? alertSeverityConfig.Info;
+                  const categoryConfig = alertCategoryConfig[alert.category] ?? alertCategoryConfig.System;
+
                   return (
                     <div
-                      key={notification.id}
+                      key={alert.id}
                       className={`
                         flex items-start gap-4 p-4 rounded-lg border transition-colors
-                        ${notification.isRead
+                        ${alert.isRead
                           ? 'bg-white border-slate-200 hover:bg-slate-50'
                           : 'bg-blue-50/50 border-blue-100 hover:bg-blue-50'
                         }
                       `}
                     >
                       {/* Icon */}
-                      <div
-                        className={`
-                          w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0
-                          ${notification.isRead ? 'bg-slate-100' : 'bg-white'}
-                        `}
-                      >
-                        {getNotificationIcon(notification.type)}
-                      </div>
+                      {getAlertIcon(alert)}
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
@@ -292,26 +277,41 @@ export default function NotificationsPage() {
                               <h4
                                 className={`
                                   text-sm m-0 truncate
-                                  ${notification.isRead ? 'font-medium text-slate-700' : 'font-semibold text-slate-900'}
+                                  ${alert.isRead ? 'font-medium text-slate-700' : 'font-semibold text-slate-900'}
                                 `}
                               >
-                                {notification.title}
+                                {alert.title}
                               </h4>
                               <span
-                                className={`px-2 py-0.5 text-xs font-medium rounded ${typeLabel.color}`}
+                                className={`px-2 py-0.5 text-xs font-medium rounded ${severityConfig.bgColor} ${severityConfig.color}`}
                               >
-                                {typeLabel.text}
+                                {categoryConfig.label}
                               </span>
                             </div>
-                            <p className="text-sm text-slate-600 m-0 mb-1">{notification.message}</p>
-                            <span className="text-xs text-slate-400">
-                              {dayjs(notification.createdAt).fromNow()}
-                            </span>
+                            <p className="text-sm text-slate-600 m-0 mb-1">{alert.message}</p>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-slate-400">
+                                {dayjs(alert.createdAt).fromNow()}
+                              </span>
+                              {alert.actionUrl && alert.actionLabel && (
+                                <a
+                                  href={alert.actionUrl}
+                                  className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                                  onClick={(e) => {
+                                    if (!alert.isRead) {
+                                      handleMarkAsRead(alert.id);
+                                    }
+                                  }}
+                                >
+                                  {alert.actionLabel} →
+                                </a>
+                              )}
+                            </div>
                           </div>
 
                           {/* Actions */}
                           <Dropdown
-                            menu={{ items: getDropdownItems(notification) }}
+                            menu={{ items: getDropdownItems(alert) }}
                             trigger={['click']}
                             placement="bottomRight"
                           >
@@ -325,7 +325,7 @@ export default function NotificationsPage() {
                       </div>
 
                       {/* Unread Indicator */}
-                      {!notification.isRead && (
+                      {!alert.isRead && (
                         <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-4" />
                       )}
                     </div>
