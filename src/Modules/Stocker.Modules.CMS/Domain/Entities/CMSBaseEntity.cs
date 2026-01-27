@@ -14,6 +14,7 @@ public abstract class CMSBaseEntity : Entity
     public string? UpdatedBy { get; set; }
     public bool IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }
+    public string? DeletedBy { get; set; }
 
     protected CMSBaseEntity()
     {
@@ -38,7 +39,7 @@ public abstract class CMSBaseEntity : Entity
     {
         IsDeleted = true;
         DeletedAt = DateTime.UtcNow;
-        UpdatedBy = deletedBy;
+        DeletedBy = deletedBy;
     }
 
     public void Restore(string restoredBy)
