@@ -161,28 +161,35 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
 
         private static void AddSoftDeleteColumnsToTable(MigrationBuilder migrationBuilder, string tableName)
         {
-            migrationBuilder.AddColumn<bool>(
-                name: "IsDeleted",
-                schema: "inventory",
-                table: tableName,
-                type: "boolean",
-                nullable: false,
-                defaultValue: false);
+            // Use conditional SQL to avoid errors if columns already exist
+            var tableNameLower = tableName.ToLowerInvariant();
 
-            migrationBuilder.AddColumn<DateTime>(
-                name: "DeletedAt",
-                schema: "inventory",
-                table: tableName,
-                type: "timestamp with time zone",
-                nullable: true);
+            migrationBuilder.Sql($@"
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'inventory' AND table_name = '{tableNameLower}' AND column_name = 'IsDeleted') THEN
+                        ALTER TABLE inventory.""{tableName}"" ADD COLUMN ""IsDeleted"" boolean NOT NULL DEFAULT false;
+                    END IF;
+                END $$;
+            ");
 
-            migrationBuilder.AddColumn<string>(
-                name: "DeletedBy",
-                schema: "inventory",
-                table: tableName,
-                type: "character varying(100)",
-                maxLength: 100,
-                nullable: true);
+            migrationBuilder.Sql($@"
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'inventory' AND table_name = '{tableNameLower}' AND column_name = 'DeletedAt') THEN
+                        ALTER TABLE inventory.""{tableName}"" ADD COLUMN ""DeletedAt"" timestamp with time zone NULL;
+                    END IF;
+                END $$;
+            ");
+
+            migrationBuilder.Sql($@"
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'inventory' AND table_name = '{tableNameLower}' AND column_name = 'DeletedBy') THEN
+                        ALTER TABLE inventory.""{tableName}"" ADD COLUMN ""DeletedBy"" character varying(100) NULL;
+                    END IF;
+                END $$;
+            ");
         }
 
         private static void RemoveSoftDeleteColumnsFromTable(MigrationBuilder migrationBuilder, string tableName)

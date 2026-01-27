@@ -85,13 +85,16 @@ namespace Stocker.Modules.CMS.Infrastructure.Persistence.Migrations
 
         private static void AddDeletedByColumnToTable(MigrationBuilder migrationBuilder, string tableName)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "DeletedBy",
-                schema: "cms",
-                table: tableName,
-                type: "character varying(100)",
-                maxLength: 100,
-                nullable: true);
+            // Use conditional SQL to avoid errors if column already exists
+            // CMS uses lowercase table names
+            migrationBuilder.Sql($@"
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'cms' AND table_name = '{tableName}' AND column_name = 'DeletedBy') THEN
+                        ALTER TABLE cms.""{tableName}"" ADD COLUMN ""DeletedBy"" character varying(100) NULL;
+                    END IF;
+                END $$;
+            ");
         }
 
         private static void RemoveDeletedByColumnFromTable(MigrationBuilder migrationBuilder, string tableName)
