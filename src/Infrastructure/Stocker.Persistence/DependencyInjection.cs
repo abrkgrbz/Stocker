@@ -5,7 +5,9 @@ using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Interfaces.Repositories;
 using Stocker.Persistence.Contexts;
 using Stocker.Persistence.Factories;
+using Stocker.Persistence.Analytics;
 using Stocker.Persistence.Monitoring;
+using Stocker.Persistence.Reports;
 using Stocker.Persistence.Repositories;
 using Stocker.Persistence.Services;
 using Stocker.Persistence.UnitOfWork;
@@ -55,6 +57,12 @@ public static class DependencyInjection
 
         // Register system monitoring service
         services.AddScoped<ISystemMonitoringService, SystemMonitoringService>();
+
+        // Register analytics service
+        services.AddScoped<IAnalyticsService, AnalyticsService>();
+
+        // Register reports service
+        services.AddScoped<IReportsService, ReportsService>();
 
         // Register tenant health check service
         services.AddScoped<ITenantHealthCheckService, TenantHealthCheckService>();
