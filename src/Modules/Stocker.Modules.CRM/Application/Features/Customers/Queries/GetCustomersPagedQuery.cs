@@ -19,6 +19,8 @@ public class GetCustomersPagedQuery : PaginationRequest, IRequest<Result<PagedRe
     public string? Industry { get; set; }
     public string? City { get; set; }
     public string? Country { get; set; }
+    public int? CustomerType { get; set; }
+    public int? Status { get; set; }
 }
 
 /// <summary>
@@ -57,6 +59,12 @@ public class GetCustomersPagedQueryHandler : IRequestHandler<GetCustomersPagedQu
         
         if (!string.IsNullOrEmpty(request.Country))
             query = query.Where(c => c.Country == request.Country);
+
+        if (request.CustomerType.HasValue)
+            query = query.Where(c => (int)c.CustomerType == request.CustomerType.Value);
+
+        if (request.Status.HasValue)
+            query = query.Where(c => (int)c.Status == request.Status.Value);
 
         // Apply sorting
         if (!string.IsNullOrEmpty(request.SortBy))

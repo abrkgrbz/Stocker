@@ -556,6 +556,17 @@ export class CRMService {
   static async getCustomers(
     filters?: CustomerFilters
   ): Promise<PaginatedResponse<Customer>> {
+    // Map string enum values to numeric values for backend
+    const customerTypeMap: Record<string, number> = {
+      'Individual': 1,
+      'Corporate': 2,
+    };
+    const statusMap: Record<string, number> = {
+      'Potential': 1,
+      'Active': 2,
+      'Inactive': 3,
+    };
+
     // CRM module uses /paged endpoint for pagination
     const params = {
       pageNumber: filters?.pageNumber || 1,
@@ -564,6 +575,8 @@ export class CRMService {
       sortBy: filters?.sortBy,
       sortDescending: filters?.sortOrder === 'desc',
       includeInactive: filters?.status === 'Inactive',
+      customerType: filters?.customerType ? customerTypeMap[filters.customerType] : undefined,
+      status: filters?.status ? statusMap[filters.status] : undefined,
     };
 
     return ApiService.get<PaginatedResponse<Customer>>(

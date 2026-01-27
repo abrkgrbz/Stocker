@@ -57,7 +57,9 @@ public class CustomersController : ControllerBase
         [FromQuery] bool includeInactive = false,
         [FromQuery] string? industry = null,
         [FromQuery] string? city = null,
-        [FromQuery] string? country = null)
+        [FromQuery] string? country = null,
+        [FromQuery] int? customerType = null,
+        [FromQuery] int? status = null)
     {
         // Set TenantId from TenantResolutionMiddleware context
         var tenantId = HttpContext.Items["TenantId"] as Guid?;
@@ -77,7 +79,9 @@ public class CustomersController : ControllerBase
             IncludeInactive = includeInactive,
             Industry = industry,
             City = city,
-            Country = country
+            Country = country,
+            CustomerType = customerType,
+            Status = status
         };
 
         var result = await _mediator.Send(query);

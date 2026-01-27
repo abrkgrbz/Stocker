@@ -76,26 +76,29 @@ function CustomersPageContent() {
     return () => clearTimeout(timer);
   }, [searchText]);
 
-  // API Hooks
+  // Map filter values to backend enum names
+  const customerTypeMap: Record<string, 'Individual' | 'Corporate'> = {
+    '1': 'Individual',
+    '2': 'Corporate',
+  };
+  const statusMap: Record<string, 'Potential' | 'Active' | 'Inactive'> = {
+    '1': 'Potential',
+    '2': 'Active',
+    '3': 'Inactive',
+  };
+
+  // API Hooks - send filters to backend
   const { data, isLoading, refetch } = useCustomers({
     pageNumber: currentPage,
     pageSize,
     search: debouncedSearch || undefined,
+    customerType: selectedType ? customerTypeMap[selectedType] : undefined,
+    status: selectedStatus ? statusMap[selectedStatus] : undefined,
   });
   const deleteCustomer = useDeleteCustomer();
 
   const customers = data?.items || [];
   const totalCount = data?.totalCount || 0;
-
-  // Filter customers
-  const filteredCustomers = useMemo(() => {
-    return customers.filter((customer) => {
-      // Compare as strings since filter values are strings but backend may send numbers
-      const matchesType = !selectedType || String(customer.customerType) === selectedType;
-      const matchesStatus = !selectedStatus || String(customer.status) === selectedStatus;
-      return matchesType && matchesStatus;
-    });
-  }, [customers, selectedType, selectedStatus]);
 
   // Calculate stats - convert to string for comparison since backend may send numbers or strings
   const stats = useMemo(() => {
@@ -360,7 +363,10 @@ function CustomersPageContent() {
             allowClear
             style={{ width: 160 }}
             value={selectedType}
-            onChange={setSelectedType}
+            onChange={(value) => {
+              setSelectedType(value);
+              setCurrentPage(1);
+            }}
             options={[
               { value: '1', label: 'Bireysel' },
               { value: '2', label: 'Kurumsal' },
@@ -372,7 +378,10 @@ function CustomersPageContent() {
             allowClear
             style={{ width: 160 }}
             value={selectedStatus}
-            onChange={setSelectedStatus}
+            onChange={(value) => {
+              setSelectedStatus(value);
+              setCurrentPage(1);
+            }}
             options={[
               { value: '1', label: 'Potansiyel' },
               { value: '2', label: 'Aktif' },
@@ -390,12 +399,12 @@ function CustomersPageContent() {
       <div className="bg-white border border-slate-200 rounded-xl p-6">
         {/* Results count */}
         <div className="text-sm text-slate-500 mb-4">
-          {filteredCustomers.length} musteri listeleniyor
+          {customers.length} musteri listeleniyor
         </div>
 
         <Table
           columns={columns}
-          dataSource={filteredCustomers}
+          dataSource={customers}
           rowKey="id"
           loading={isLoading}
           scroll={{ x: 1100 }}
