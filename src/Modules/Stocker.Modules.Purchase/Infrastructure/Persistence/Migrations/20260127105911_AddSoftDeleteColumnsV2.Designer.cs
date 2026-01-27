@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Stocker.Modules.Purchase.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using Stocker.Modules.Purchase.Infrastructure.Persistence;
 namespace Stocker.Modules.Purchase.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(PurchaseDbContext))]
-    partial class PurchaseDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260127105911_AddSoftDeleteColumnsV2")]
+    partial class AddSoftDeleteColumnsV2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
