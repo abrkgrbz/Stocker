@@ -139,14 +139,16 @@ namespace Stocker.Modules.Purchase.Infrastructure.Persistence.Migrations
 
         private static void AddSoftDeleteColumnsToTable(MigrationBuilder migrationBuilder, string tableName)
         {
-            // Use conditional SQL to avoid errors if columns already exist
+            // Use conditional SQL to avoid errors if table doesn't exist or columns already exist
             // PostgreSQL stores identifiers in lowercase in information_schema
             var tableNameLower = tableName.ToLowerInvariant();
 
             migrationBuilder.Sql($@"
                 DO $$
                 BEGIN
-                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'purchase' AND lower(table_name) = '{tableNameLower}' AND lower(column_name) = 'isdeleted') THEN
+                    -- Only add column if table exists and column doesn't exist
+                    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'purchase' AND lower(table_name) = '{tableNameLower}')
+                       AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'purchase' AND lower(table_name) = '{tableNameLower}' AND lower(column_name) = 'isdeleted') THEN
                         ALTER TABLE purchase.""{tableName}"" ADD COLUMN ""IsDeleted"" boolean NOT NULL DEFAULT false;
                     END IF;
                 END $$;
@@ -155,7 +157,8 @@ namespace Stocker.Modules.Purchase.Infrastructure.Persistence.Migrations
             migrationBuilder.Sql($@"
                 DO $$
                 BEGIN
-                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'purchase' AND lower(table_name) = '{tableNameLower}' AND lower(column_name) = 'deletedat') THEN
+                    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'purchase' AND lower(table_name) = '{tableNameLower}')
+                       AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'purchase' AND lower(table_name) = '{tableNameLower}' AND lower(column_name) = 'deletedat') THEN
                         ALTER TABLE purchase.""{tableName}"" ADD COLUMN ""DeletedAt"" timestamp with time zone NULL;
                     END IF;
                 END $$;
@@ -164,7 +167,8 @@ namespace Stocker.Modules.Purchase.Infrastructure.Persistence.Migrations
             migrationBuilder.Sql($@"
                 DO $$
                 BEGIN
-                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'purchase' AND lower(table_name) = '{tableNameLower}' AND lower(column_name) = 'deletedby') THEN
+                    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'purchase' AND lower(table_name) = '{tableNameLower}')
+                       AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'purchase' AND lower(table_name) = '{tableNameLower}' AND lower(column_name) = 'deletedby') THEN
                         ALTER TABLE purchase.""{tableName}"" ADD COLUMN ""DeletedBy"" character varying(100) NULL;
                     END IF;
                 END $$;
