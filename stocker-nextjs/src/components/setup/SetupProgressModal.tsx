@@ -1,83 +1,82 @@
-'use client';
+'use client'
 
-import React, { useEffect, useState } from 'react';
-import { Modal, Progress, Steps, Typography, Space, Spin, Result, Button } from 'antd';
+import React, { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
-  ArrowPathIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  CircleStackIcon,
-  TableCellsIcon,
-  CloudArrowUpIcon,
-  Cog6ToothIcon,
-  RocketLaunchIcon,
-  ShieldCheckIcon,
-} from '@heroicons/react/24/outline';
-import { useSetupProgress, SetupStep } from '@/lib/hooks/use-setup-progress';
-
-const { Title, Text, Paragraph } = Typography;
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  Database,
+  TableProperties,
+  HardDriveUpload,
+  Settings,
+  ShieldCheck,
+  Rocket,
+  AlertCircle
+} from 'lucide-react'
+import { useSetupProgress, SetupStep } from '@/lib/hooks/use-setup-progress'
 
 interface SetupProgressModalProps {
-  visible: boolean;
-  tenantId: string;
-  onComplete?: () => void;
-  onError?: (error: string) => void;
-  redirectUrl?: string;
+  visible: boolean
+  tenantId: string
+  onComplete?: () => void
+  onError?: (error: string) => void
+  redirectUrl?: string
 }
 
 interface StepConfig {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
+  title: string
+  description: string
+  icon: React.ReactNode
 }
 
 const stepConfigs: Record<SetupStep, StepConfig> = {
   initializing: {
     title: 'Başlatılıyor',
     description: 'Kurulum hazırlanıyor...',
-    icon: <ArrowPathIcon className="w-5 h-5 animate-spin" />,
+    icon: <Loader2 className="w-5 h-5 animate-spin" />,
   },
   'creating-database': {
     title: 'Veritabanı',
     description: 'Veritabanı oluşturuluyor...',
-    icon: <CircleStackIcon className="w-5 h-5" />,
+    icon: <Database className="w-5 h-5" />,
   },
   'running-migrations': {
     title: 'Tablolar',
     description: 'Tablolar oluşturuluyor...',
-    icon: <TableCellsIcon className="w-5 h-5" />,
+    icon: <TableProperties className="w-5 h-5" />,
   },
   'seeding-data': {
     title: 'Veriler',
     description: 'Temel veriler yükleniyor...',
-    icon: <CloudArrowUpIcon className="w-5 h-5" />,
+    icon: <HardDriveUpload className="w-5 h-5" />,
   },
   'configuring-modules': {
     title: 'Modüller',
     description: 'Modüller yapılandırılıyor...',
-    icon: <Cog6ToothIcon className="w-5 h-5" />,
+    icon: <Settings className="w-5 h-5" />,
   },
   'creating-storage': {
     title: 'Depolama',
     description: 'Depolama alanı hazırlanıyor...',
-    icon: <ShieldCheckIcon className="w-5 h-5" />,
+    icon: <ShieldCheck className="w-5 h-5" />,
   },
   'activating-tenant': {
     title: 'Aktivasyon',
     description: 'Hesap aktifleştiriliyor...',
-    icon: <RocketLaunchIcon className="w-5 h-5" />,
+    icon: <Rocket className="w-5 h-5" />,
   },
   completed: {
     title: 'Tamamlandı',
     description: 'Kurulum başarıyla tamamlandı!',
-    icon: <CheckCircleIcon className="w-5 h-5" />,
+    icon: <CheckCircle2 className="w-5 h-5" />,
   },
   failed: {
     title: 'Hata',
     description: 'Kurulum sırasında bir hata oluştu',
-    icon: <XCircleIcon className="w-5 h-5" />,
+    icon: <XCircle className="w-5 h-5" />,
   },
-};
+}
 
 const stepOrder: SetupStep[] = [
   'initializing',
@@ -87,25 +86,24 @@ const stepOrder: SetupStep[] = [
   'configuring-modules',
   'activating-tenant',
   'completed',
-];
+]
 
-export const SetupProgressModal: React.FC<SetupProgressModalProps> = ({
+export default function SetupProgressModal({
   visible,
   tenantId,
   onComplete,
   onError,
   redirectUrl = '/dashboard',
-}) => {
-  const [hasConnected, setHasConnected] = useState(false);
+}: SetupProgressModalProps) {
+  const [hasConnected, setHasConnected] = useState(false)
 
   const handleComplete = () => {
     if (onComplete) {
-      onComplete();
+      onComplete()
     } else {
-      // Default: redirect to dashboard
-      window.location.href = redirectUrl;
+      window.location.href = redirectUrl
     }
-  };
+  }
 
   const {
     progress,
@@ -120,164 +118,118 @@ export const SetupProgressModal: React.FC<SetupProgressModalProps> = ({
     onComplete: handleComplete,
     onError,
     autoRedirectDelay: 2000,
-  });
+  })
 
-  // Connect when modal becomes visible
   useEffect(() => {
     if (visible && tenantId && !hasConnected) {
       connect()
         .then(() => setHasConnected(true))
         .catch((err) => {
-          console.error('Failed to connect to setup progress:', err);
-        });
+          console.error('Failed to connect to setup progress:', err)
+        })
     }
-  }, [visible, tenantId, hasConnected, connect]);
+  }, [visible, tenantId, hasConnected, connect])
 
   const getCurrentStepIndex = () => {
-    const index = stepOrder.indexOf(currentStep);
-    return index >= 0 ? index : 0;
-  };
+    const index = stepOrder.indexOf(currentStep)
+    return index >= 0 ? index : 0
+  }
 
-  const renderContent = () => {
-    if (hasError) {
-      return (
-        <Result
-          status="error"
-          title="Kurulum Başarısız"
-          subTitle={errorMessage || 'Kurulum sırasında bir hata oluştu. Lütfen daha sonra tekrar deneyin.'}
-          extra={[
-            <Button key="retry" type="primary" onClick={() => window.location.reload()}>
-              Tekrar Dene
-            </Button>,
-            <Button key="support" onClick={() => window.open('mailto:destek@stoocker.app')}>
-              Destek Al
-            </Button>,
-          ]}
-        />
-      );
-    }
-
-    if (isCompleted) {
-      return (
-        <Result
-          status="success"
-          title="Kurulum Tamamlandı!"
-          subTitle="Hesabınız başarıyla oluşturuldu. Yönlendiriliyorsunuz..."
-          icon={<CheckCircleIcon className="w-12 h-12" style={{ color: '#52c41a' }} />}
-        />
-      );
-    }
-
-    const currentConfig = stepConfigs[currentStep];
-    const progressPercent = progress?.progressPercentage || 0;
-
-    return (
-      <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <Spin indicator={<ArrowPathIcon className="w-12 h-12 animate-spin" style={{ color: '#1890ff' }} />} />
-          <Title level={3} style={{ marginTop: 24, marginBottom: 8 }}>
-            Hesabınız Hazırlanıyor
-          </Title>
-          <Text type="secondary">
-            Bu işlem birkaç dakika sürebilir, lütfen bekleyin...
-          </Text>
-        </div>
-
-        {/* Progress Bar */}
-        <Progress
-          percent={progressPercent}
-          status={hasError ? 'exception' : isCompleted ? 'success' : 'active'}
-          strokeColor={{
-            '0%': '#108ee9',
-            '100%': '#87d068',
-          }}
-          style={{ marginBottom: 24 }}
-        />
-
-        {/* Current Step Info */}
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '16px 24px',
-            background: '#f5f5f5',
-            borderRadius: 8,
-          }}
-        >
-          <Space>
-            <span style={{ fontSize: 24, color: '#1890ff' }}>{currentConfig.icon}</span>
-            <div style={{ textAlign: 'left' }}>
-              <Text strong>{currentConfig.title}</Text>
-              <br />
-              <Text type="secondary">{progress?.message || currentConfig.description}</Text>
-            </div>
-          </Space>
-        </div>
-
-        {/* Steps */}
-        <Steps
-          current={getCurrentStepIndex()}
-          size="small"
-          direction="vertical"
-          items={stepOrder.slice(0, -1).map((step, index) => {
-            const config = stepConfigs[step];
-            const currentIndex = getCurrentStepIndex();
-            let status: 'wait' | 'process' | 'finish' | 'error' = 'wait';
-
-            if (index < currentIndex) {
-              status = 'finish';
-            } else if (index === currentIndex) {
-              status = hasError ? 'error' : 'process';
-            }
-
-            return {
-              title: config.title,
-              description: config.description,
-              status,
-              icon:
-                index === currentIndex ? (
-                  <Spin indicator={<ArrowPathIcon className="w-4 h-4 animate-spin" />} />
-                ) : undefined,
-            };
-          })}
-        />
-
-        {/* Connection Status */}
-        <div style={{ textAlign: 'center' }}>
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            {isConnected ? (
-              <Space>
-                <span style={{ color: '#52c41a' }}>●</span>
-                Bağlantı aktif
-              </Space>
-            ) : (
-              <Space>
-                <span style={{ color: '#faad14' }}>●</span>
-                Bağlanıyor...
-              </Space>
-            )}
-          </Text>
-        </div>
-      </Space>
-    );
-  };
+  const currentConfig = stepConfigs[currentStep] || stepConfigs['initializing']
+  const progressPercent = progress?.progressPercentage || 0
 
   return (
-    <Modal
-      open={visible}
-      title={null}
-      footer={null}
-      closable={false}
-      maskClosable={false}
-      width={600}
-      centered
-      styles={{
-        body: { padding: 32 },
-      }}
-    >
-      {renderContent()}
-    </Modal>
-  );
-};
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            className="bg-white w-full max-w-lg shadow-2xl rounded-2xl overflow-hidden ring-1 ring-black/5"
+          >
+            {/* Result Views */}
+            {hasError ? (
+              <div className="p-8 text-center">
+                <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="w-8 h-8" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-900 mb-2">Kurulum Başarısız</h2>
+                <p className="text-slate-500 mb-6">{errorMessage || 'Beklenmedik bir hata oluştu.'}</p>
+                <div className="flex gap-3 justify-center">
+                  <button onClick={() => window.location.reload()} className="px-4 py-2 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors">Tekrar Dene</button>
+                  <button onClick={() => window.open('mailto:destek@stoocker.app')} className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg font-medium hover:bg-slate-50 transition-colors">Destek Al</button>
+                </div>
+              </div>
+            ) : isCompleted ? (
+              <div className="p-8 text-center">
+                <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                  <CheckCircle2 className="w-10 h-10" />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900 mb-2">Hesabınız Hazır!</h2>
+                <p className="text-slate-500 mb-2">Kurulum başarıyla tamamlandı.</p>
+                <p className="text-sm text-slate-400 animate-pulse">Yönlendiriliyorsunuz...</p>
+              </div>
+            ) : (
+              <div className="p-8">
+                {/* Header */}
+                <div className="text-center mb-8">
+                  <div className="relative w-16 h-16 mx-auto mb-4">
+                    <div className="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
+                    <div className="absolute inset-0 border-4 border-slate-900 rounded-full border-t-transparent animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center text-slate-900">
+                      <Rocket className="w-6 h-6" />
+                    </div>
+                  </div>
+                  <h2 className="text-xl font-bold text-slate-900">Hesabınız Hazırlanıyor</h2>
+                  <p className="text-sm text-slate-500 mt-1">Bu işlem birkaç dakika sürebilir, lütfen bekleyin...</p>
+                </div>
 
-export default SetupProgressModal;
+                {/* Progress Bar */}
+                <div className="mb-8">
+                  <div className="flex justify-between text-xs font-medium text-slate-900 mb-2">
+                    <span>{Math.round(progressPercent)}%</span>
+                    <span>{currentConfig.title}</span>
+                  </div>
+                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-slate-900 rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progressPercent}%` }}
+                      transition={{ ease: "linear" }}
+                    />
+                  </div>
+                </div>
+
+                {/* Current Active Step Card */}
+                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center gap-4 mb-8">
+                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-900 shadow-sm border border-slate-100">
+                    {currentConfig.icon}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-slate-900 text-sm">{currentConfig.title}</div>
+                    <div className="text-xs text-slate-500">{progress?.message || currentConfig.description}</div>
+                  </div>
+                </div>
+
+                {/* Connection Status */}
+                <div className="text-center">
+                  <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${isConnected ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                    }`}>
+                    <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`}></div>
+                    {isConnected ? 'Bağlantı Aktif' : 'Bağlanıyor...'}
+                  </div>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
