@@ -11,10 +11,59 @@ namespace Stocker.Modules.Sales.Infrastructure.Persistence.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             // Add soft delete columns to all Sales tables
+            // Core Sales tables
             AddSoftDeleteColumnsToTable(migrationBuilder, "Quotations");
             AddSoftDeleteColumnsToTable(migrationBuilder, "SalesOrders");
             AddSoftDeleteColumnsToTable(migrationBuilder, "QuotationItems");
             AddSoftDeleteColumnsToTable(migrationBuilder, "SalesOrderItems");
+
+            // Customer & Contract tables
+            AddSoftDeleteColumnsToTable(migrationBuilder, "CustomerContracts");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ContractPriceAgreements");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ContractPaymentTerms");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ContractCommitments");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ContractDocuments");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "CustomerSegments");
+
+            // Financial tables
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Invoices");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "InvoiceItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Payments");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "AdvancePayments");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "CreditNotes");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "CreditNoteItems");
+
+            // Fulfillment tables
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Shipments");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "DeliveryNotes");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "BackOrders");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "BackOrderItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "InventoryReservations");
+
+            // Returns & After-sales
+            AddSoftDeleteColumnsToTable(migrationBuilder, "SalesReturns");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "SalesReturnItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ServiceOrders");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ServiceOrderItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ServiceOrderNotes");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Warranties");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "WarrantyClaims");
+
+            // Pricing & Promotions
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PriceLists");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PriceListItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Discounts");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Promotions");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PromotionUsages");
+
+            // Sales Management
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Opportunities");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "SalesPipelines");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PipelineStages");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "SalesTerritories");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "SalesTargets");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "CommissionPlans");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "SalesCommissions");
 
             // Add indexes for soft delete queries (conditional)
             migrationBuilder.Sql(@"
@@ -49,6 +98,56 @@ namespace Stocker.Modules.Sales.Infrastructure.Persistence.Migrations
                 schema: "sales",
                 table: "Quotations");
 
+            // Remove in reverse order
+            // Sales Management
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "SalesCommissions");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "CommissionPlans");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "SalesTargets");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "SalesTerritories");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PipelineStages");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "SalesPipelines");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Opportunities");
+
+            // Pricing & Promotions
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PromotionUsages");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Promotions");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Discounts");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PriceListItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PriceLists");
+
+            // Returns & After-sales
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "WarrantyClaims");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Warranties");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ServiceOrderNotes");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ServiceOrderItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ServiceOrders");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "SalesReturnItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "SalesReturns");
+
+            // Fulfillment tables
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "InventoryReservations");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "BackOrderItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "BackOrders");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "DeliveryNotes");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Shipments");
+
+            // Financial tables
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "CreditNoteItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "CreditNotes");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "AdvancePayments");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Payments");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "InvoiceItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Invoices");
+
+            // Customer & Contract tables
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "CustomerSegments");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ContractDocuments");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ContractCommitments");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ContractPaymentTerms");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ContractPriceAgreements");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "CustomerContracts");
+
+            // Core Sales tables
             RemoveSoftDeleteColumnsFromTable(migrationBuilder, "SalesOrderItems");
             RemoveSoftDeleteColumnsFromTable(migrationBuilder, "QuotationItems");
             RemoveSoftDeleteColumnsFromTable(migrationBuilder, "SalesOrders");
