@@ -18,9 +18,6 @@ public sealed class ChatMessage : TenantEntity
     public DateTime SentAt { get; private set; }
     public bool IsRead { get; private set; }
     public DateTime? ReadAt { get; private set; }
-    public bool IsDeleted { get; private set; }
-    public DateTime? DeletedAt { get; private set; }
-    public string? DeletedBy { get; private set; }
     public ChatMessageType MessageType { get; private set; }
     public string? AttachmentUrl { get; private set; }
     public string? AttachmentName { get; private set; }
@@ -55,7 +52,6 @@ public sealed class ChatMessage : TenantEntity
             IsPrivate = false,
             SentAt = DateTime.UtcNow,
             IsRead = false,
-            IsDeleted = false,
             MessageType = messageType,
             AttachmentUrl = attachmentUrl,
             AttachmentName = attachmentName
@@ -90,7 +86,6 @@ public sealed class ChatMessage : TenantEntity
             IsPrivate = true,
             SentAt = DateTime.UtcNow,
             IsRead = false,
-            IsDeleted = false,
             MessageType = messageType,
             AttachmentUrl = attachmentUrl,
             AttachmentName = attachmentName
@@ -122,9 +117,7 @@ public sealed class ChatMessage : TenantEntity
     {
         if (!IsDeleted)
         {
-            IsDeleted = true;
-            DeletedAt = DateTime.UtcNow;
-            DeletedBy = deletedBy;
+            MarkAsDeleted(deletedBy);
         }
     }
 }
