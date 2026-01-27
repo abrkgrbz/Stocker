@@ -26,13 +26,9 @@ import { SignalRProvider } from '@/lib/signalr/signalr-context';
 import { AlertBell } from '@/features/alerts';
 import { ChatBadge } from '@/features/chat';
 import { useNotificationHub } from '@/lib/signalr/notification-hub';
-import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
-import { useOnboarding, type OnboardingFormData } from '@/lib/hooks/use-onboarding';
 import { useActiveModules } from '@/lib/api/hooks/useUserModules';
-import { message } from 'antd';
 import GlobalSearch from '@/components/common/GlobalSearch';
 import { MODULE_MENUS, getCurrentModule, type ModuleKey, type MenuItem } from '@/config/module-menus';
-import logger from '@/lib/utils/logger';
 import { SessionExpiryWarning } from '@/components/auth/SessionExpiryWarning';
 
 /**
@@ -110,39 +106,6 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   // Initialize SignalR notification hub
   useNotificationHub();
-
-  // Check onboarding status
-  const {
-    wizardData,
-    requiresOnboarding,
-    loading: onboardingLoading,
-    completeOnboarding
-  } = useOnboarding();
-
-  const handleOnboardingComplete = async (data: OnboardingFormData): Promise<{ tenantId?: string; success?: boolean }> => {
-    try {
-      logger.debug('Onboarding data being sent', { component: 'DashboardLayout', metadata: { data } });
-      const result = await completeOnboarding(data);
-      logger.info('Onboarding complete', {
-        component: 'DashboardLayout',
-        metadata: {
-          provisioningStarted: result.provisioningStarted,
-          tenantId: result.tenantId
-        }
-      });
-
-      // Return tenantId for progress tracking if provisioning started
-      const returnValue = {
-        tenantId: result.provisioningStarted ? result.tenantId : undefined,
-        success: true
-      };
-      return returnValue;
-    } catch (error) {
-      logger.error('Onboarding error', error instanceof Error ? error : new Error(String(error)), { component: 'DashboardLayout' });
-      message.error('Kurulum sırasında bir hata oluştu. Lütfen tekrar deneyin.');
-      throw error;
-    }
-  };
 
   useEffect(() => {
     // Skip redirect if auth bypassed
@@ -343,7 +306,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   // Skip loading checks if auth bypassed
-  if (!isAuthBypassed && (authLoading || tenantLoading || onboardingLoading || modulesLoading)) {
+  if (!isAuthBypassed && (authLoading || tenantLoading || modulesLoading)) {
     return (
       <div className="flex items-center justify-center" style={{ minHeight: '100dvh' }}>
         <Spinner size="lg" />
@@ -353,19 +316,6 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   if (!isAuthBypassed && !isAuthenticated) {
     return null;
-  }
-
-  // Block access to dashboard if onboarding is not completed (skip if bypassed)
-  if (!isAuthBypassed && requiresOnboarding) {
-    return (
-      <div className="flex items-center justify-center bg-gray-50" style={{ minHeight: '100dvh' }}>
-        <OnboardingModal
-          visible={true}
-          wizardData={wizardData || { currentStepIndex: 0, totalSteps: 4, progressPercentage: 0 }}
-          onComplete={handleOnboardingComplete}
-        />
-      </div>
-    );
   }
 
   // Check module access - block access to modules user doesn't have

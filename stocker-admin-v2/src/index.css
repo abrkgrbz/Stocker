@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand Colors - Deep & Professional */
+  --color-brand-950: var(--brand-950);
+  --color-brand-900: var(--brand-900);
+  --color-brand-800: var(--brand-800);
+  --color-brand-700: var(--brand-700);
+
+  --color-accent-indigo: #6366f1;
+  --color-accent-rose: #f43f5e;
+  --color-accent-amber: #f59e0b;
+  --color-accent-emerald: #10b981;
+
+  /* Text Colors */
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+
+  /* Borders & Surfaces */
+  --color-border-subtle: var(--border-subtle);
+  --color-bg-surface: var(--bg-surface);
+
+  /* Typography */
+  --font-sans: "Inter", "Outfit", system-ui, sans-serif;
+
+  /* Glassmorphism */
+  --backdrop-blur-glass: blur(12px);
+}
+
+:root {
+  /* Light Mode Defaults */
+  --brand-950: #f8fafc;
+  --brand-900: #f1f5f9;
+  --brand-800: #e2e8f0;
+  --brand-700: #cbd5e1;
+  
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  
+  --border-subtle: rgba(0, 0, 0, 0.05);
+  --bg-surface: rgba(255, 255, 255, 0.8);
+}
+
+.dark {
+  /* Dark Mode Overrides */
+  --brand-950: #0a0b14;
+  --brand-900: #0f111a;
+  --brand-800: #1a1d2e;
+  --brand-700: #2a2f4d;
+  
+  --text-main: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.4);
+  
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --bg-surface: rgba(255, 255, 255, 0.03);
+}
+
+@layer base {
+  html {
+    @apply antialiased scroll-smooth transition-colors duration-300;
+    background-color: var(--brand-950);
+    color: var(--text-main);
+  }
+
+  body {
+    @apply min-h-screen selection:bg-accent-indigo/30;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--text-muted);
+    @apply rounded-full opacity-20 hover:opacity-40 transition-opacity;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply backdrop-blur-glass rounded-[2rem] shadow-xl transition-all duration-300;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .premium-gradient {
+    background: linear-gradient(135deg, var(--brand-900) 0%, var(--brand-950) 100%);
+  }
+
+  .nav-blur {
+    @apply sticky top-0 z-50 backdrop-blur-md transition-all duration-300;
+    background-color: color-mix(in srgb, var(--brand-950) 80%, transparent);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+}
