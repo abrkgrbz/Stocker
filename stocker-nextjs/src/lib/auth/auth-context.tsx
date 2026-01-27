@@ -228,7 +228,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const refreshSession = async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-      const response = await fetch(`${apiUrl}/api/auth/refresh-token`, {
+      // Use /auth/refresh endpoint which reads refresh_token from HttpOnly cookie
+      const response = await fetch(`${apiUrl}/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
