@@ -11,155 +11,155 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             // Product Management tables
-            AddSoftDeleteColumns(migrationBuilder, "Products");
-            AddSoftDeleteColumns(migrationBuilder, "Categories");
-            AddSoftDeleteColumns(migrationBuilder, "Brands");
-            AddSoftDeleteColumns(migrationBuilder, "Units");
-            AddSoftDeleteColumns(migrationBuilder, "ProductImages");
-            AddSoftDeleteColumns(migrationBuilder, "ProductBundles");
-            AddSoftDeleteColumns(migrationBuilder, "ProductBundleItems");
-            AddSoftDeleteColumns(migrationBuilder, "ProductVariants");
-            AddSoftDeleteColumns(migrationBuilder, "ProductVariantOptions");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Products");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Categories");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Brands");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Units");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ProductImages");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ProductBundles");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ProductBundleItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ProductVariants");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ProductVariantOptions");
 
             // Product Attribute tables
-            AddSoftDeleteColumns(migrationBuilder, "ProductAttributes");
-            AddSoftDeleteColumns(migrationBuilder, "ProductAttributeOptions");
-            AddSoftDeleteColumns(migrationBuilder, "ProductAttributeValues");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ProductAttributes");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ProductAttributeOptions");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ProductAttributeValues");
 
             // Warehouse Management tables
-            AddSoftDeleteColumns(migrationBuilder, "Warehouses");
-            AddSoftDeleteColumns(migrationBuilder, "Locations");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Warehouses");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Locations");
 
             // Stock Management tables
-            AddSoftDeleteColumns(migrationBuilder, "Stocks");
-            AddSoftDeleteColumns(migrationBuilder, "StockMovements");
-            AddSoftDeleteColumns(migrationBuilder, "StockReservations");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Stocks");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "StockMovements");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "StockReservations");
 
             // Stock Transfer tables
-            AddSoftDeleteColumns(migrationBuilder, "StockTransfers");
-            AddSoftDeleteColumns(migrationBuilder, "StockTransferItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "StockTransfers");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "StockTransferItems");
 
             // Stock Count tables
-            AddSoftDeleteColumns(migrationBuilder, "StockCounts");
-            AddSoftDeleteColumns(migrationBuilder, "StockCountItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "StockCounts");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "StockCountItems");
 
             // Supplier tables
-            AddSoftDeleteColumns(migrationBuilder, "Suppliers");
-            AddSoftDeleteColumns(migrationBuilder, "SupplierProducts");
-            AddSoftDeleteColumns(migrationBuilder, "SupplierProductPriceTiers");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Suppliers");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "SupplierProducts");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "SupplierProductPriceTiers");
 
             // Price Management tables
-            AddSoftDeleteColumns(migrationBuilder, "PriceLists");
-            AddSoftDeleteColumns(migrationBuilder, "PriceListItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PriceLists");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PriceListItems");
 
             // Lot/Batch and Serial Number tables
-            AddSoftDeleteColumns(migrationBuilder, "LotBatches");
-            AddSoftDeleteColumns(migrationBuilder, "SerialNumbers");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "LotBatches");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "SerialNumbers");
 
             // Auto-Reorder tables
-            AddSoftDeleteColumns(migrationBuilder, "ReorderRules");
-            AddSoftDeleteColumns(migrationBuilder, "ReorderSuggestions");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ReorderRules");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ReorderSuggestions");
 
             // Additional feature tables
-            AddSoftDeleteColumns(migrationBuilder, "BarcodeDefinitions");
-            AddSoftDeleteColumns(migrationBuilder, "PackagingTypes");
-            AddSoftDeleteColumns(migrationBuilder, "WarehouseZones");
-            AddSoftDeleteColumns(migrationBuilder, "ShelfLives");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "BarcodeDefinitions");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PackagingTypes");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "WarehouseZones");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ShelfLives");
 
             // Quality Control tables
-            AddSoftDeleteColumns(migrationBuilder, "QualityControls");
-            AddSoftDeleteColumns(migrationBuilder, "QualityControlItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "QualityControls");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "QualityControlItems");
 
             // Consignment Stock tables
-            AddSoftDeleteColumns(migrationBuilder, "ConsignmentStocks");
-            AddSoftDeleteColumns(migrationBuilder, "ConsignmentStockMovements");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ConsignmentStocks");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ConsignmentStockMovements");
 
             // Cycle Count tables
-            AddSoftDeleteColumns(migrationBuilder, "CycleCounts");
-            AddSoftDeleteColumns(migrationBuilder, "CycleCountItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "CycleCounts");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "CycleCountItems");
 
             // Inventory Adjustment tables
-            AddSoftDeleteColumns(migrationBuilder, "InventoryAdjustments");
-            AddSoftDeleteColumns(migrationBuilder, "InventoryAdjustmentItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "InventoryAdjustments");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "InventoryAdjustmentItems");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             // Product Management tables
-            RemoveSoftDeleteColumns(migrationBuilder, "Products");
-            RemoveSoftDeleteColumns(migrationBuilder, "Categories");
-            RemoveSoftDeleteColumns(migrationBuilder, "Brands");
-            RemoveSoftDeleteColumns(migrationBuilder, "Units");
-            RemoveSoftDeleteColumns(migrationBuilder, "ProductImages");
-            RemoveSoftDeleteColumns(migrationBuilder, "ProductBundles");
-            RemoveSoftDeleteColumns(migrationBuilder, "ProductBundleItems");
-            RemoveSoftDeleteColumns(migrationBuilder, "ProductVariants");
-            RemoveSoftDeleteColumns(migrationBuilder, "ProductVariantOptions");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Products");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Categories");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Brands");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Units");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ProductImages");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ProductBundles");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ProductBundleItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ProductVariants");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ProductVariantOptions");
 
             // Product Attribute tables
-            RemoveSoftDeleteColumns(migrationBuilder, "ProductAttributes");
-            RemoveSoftDeleteColumns(migrationBuilder, "ProductAttributeOptions");
-            RemoveSoftDeleteColumns(migrationBuilder, "ProductAttributeValues");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ProductAttributes");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ProductAttributeOptions");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ProductAttributeValues");
 
             // Warehouse Management tables
-            RemoveSoftDeleteColumns(migrationBuilder, "Warehouses");
-            RemoveSoftDeleteColumns(migrationBuilder, "Locations");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Warehouses");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Locations");
 
             // Stock Management tables
-            RemoveSoftDeleteColumns(migrationBuilder, "Stocks");
-            RemoveSoftDeleteColumns(migrationBuilder, "StockMovements");
-            RemoveSoftDeleteColumns(migrationBuilder, "StockReservations");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Stocks");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "StockMovements");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "StockReservations");
 
             // Stock Transfer tables
-            RemoveSoftDeleteColumns(migrationBuilder, "StockTransfers");
-            RemoveSoftDeleteColumns(migrationBuilder, "StockTransferItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "StockTransfers");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "StockTransferItems");
 
             // Stock Count tables
-            RemoveSoftDeleteColumns(migrationBuilder, "StockCounts");
-            RemoveSoftDeleteColumns(migrationBuilder, "StockCountItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "StockCounts");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "StockCountItems");
 
             // Supplier tables
-            RemoveSoftDeleteColumns(migrationBuilder, "Suppliers");
-            RemoveSoftDeleteColumns(migrationBuilder, "SupplierProducts");
-            RemoveSoftDeleteColumns(migrationBuilder, "SupplierProductPriceTiers");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Suppliers");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "SupplierProducts");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "SupplierProductPriceTiers");
 
             // Price Management tables
-            RemoveSoftDeleteColumns(migrationBuilder, "PriceLists");
-            RemoveSoftDeleteColumns(migrationBuilder, "PriceListItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PriceLists");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PriceListItems");
 
             // Lot/Batch and Serial Number tables
-            RemoveSoftDeleteColumns(migrationBuilder, "LotBatches");
-            RemoveSoftDeleteColumns(migrationBuilder, "SerialNumbers");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "LotBatches");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "SerialNumbers");
 
             // Auto-Reorder tables
-            RemoveSoftDeleteColumns(migrationBuilder, "ReorderRules");
-            RemoveSoftDeleteColumns(migrationBuilder, "ReorderSuggestions");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ReorderRules");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ReorderSuggestions");
 
             // Additional feature tables
-            RemoveSoftDeleteColumns(migrationBuilder, "BarcodeDefinitions");
-            RemoveSoftDeleteColumns(migrationBuilder, "PackagingTypes");
-            RemoveSoftDeleteColumns(migrationBuilder, "WarehouseZones");
-            RemoveSoftDeleteColumns(migrationBuilder, "ShelfLives");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "BarcodeDefinitions");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PackagingTypes");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "WarehouseZones");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ShelfLives");
 
             // Quality Control tables
-            RemoveSoftDeleteColumns(migrationBuilder, "QualityControls");
-            RemoveSoftDeleteColumns(migrationBuilder, "QualityControlItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "QualityControls");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "QualityControlItems");
 
             // Consignment Stock tables
-            RemoveSoftDeleteColumns(migrationBuilder, "ConsignmentStocks");
-            RemoveSoftDeleteColumns(migrationBuilder, "ConsignmentStockMovements");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ConsignmentStocks");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ConsignmentStockMovements");
 
             // Cycle Count tables
-            RemoveSoftDeleteColumns(migrationBuilder, "CycleCounts");
-            RemoveSoftDeleteColumns(migrationBuilder, "CycleCountItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "CycleCounts");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "CycleCountItems");
 
             // Inventory Adjustment tables
-            RemoveSoftDeleteColumns(migrationBuilder, "InventoryAdjustments");
-            RemoveSoftDeleteColumns(migrationBuilder, "InventoryAdjustmentItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "InventoryAdjustments");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "InventoryAdjustmentItems");
         }
 
-        private static void AddSoftDeleteColumns(MigrationBuilder migrationBuilder, string tableName)
+        private static void AddSoftDeleteColumnsToTable(MigrationBuilder migrationBuilder, string tableName)
         {
             migrationBuilder.AddColumn<bool>(
                 name: "IsDeleted",
@@ -185,7 +185,7 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                 nullable: true);
         }
 
-        private static void RemoveSoftDeleteColumns(MigrationBuilder migrationBuilder, string tableName)
+        private static void RemoveSoftDeleteColumnsFromTable(MigrationBuilder migrationBuilder, string tableName)
         {
             migrationBuilder.DropColumn(
                 name: "IsDeleted",

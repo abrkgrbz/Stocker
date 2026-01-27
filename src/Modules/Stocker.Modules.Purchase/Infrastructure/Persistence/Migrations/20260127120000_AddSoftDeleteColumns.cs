@@ -11,133 +11,133 @@ namespace Stocker.Modules.Purchase.Infrastructure.Persistence.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             // Supplier tables
-            AddSoftDeleteColumns(migrationBuilder, "Suppliers");
-            AddSoftDeleteColumns(migrationBuilder, "SupplierContacts");
-            AddSoftDeleteColumns(migrationBuilder, "SupplierProducts");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Suppliers");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "SupplierContacts");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "SupplierProducts");
 
             // Purchase Request tables
-            AddSoftDeleteColumns(migrationBuilder, "PurchaseRequests");
-            AddSoftDeleteColumns(migrationBuilder, "PurchaseRequestItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PurchaseRequests");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PurchaseRequestItems");
 
             // Purchase Order tables
-            AddSoftDeleteColumns(migrationBuilder, "PurchaseOrders");
-            AddSoftDeleteColumns(migrationBuilder, "PurchaseOrderItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PurchaseOrders");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PurchaseOrderItems");
 
             // Goods Receipt tables
-            AddSoftDeleteColumns(migrationBuilder, "GoodsReceipts");
-            AddSoftDeleteColumns(migrationBuilder, "GoodsReceiptItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "GoodsReceipts");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "GoodsReceiptItems");
 
             // Purchase Invoice tables
-            AddSoftDeleteColumns(migrationBuilder, "PurchaseInvoices");
-            AddSoftDeleteColumns(migrationBuilder, "PurchaseInvoiceItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PurchaseInvoices");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PurchaseInvoiceItems");
 
             // Purchase Return tables
-            AddSoftDeleteColumns(migrationBuilder, "PurchaseReturns");
-            AddSoftDeleteColumns(migrationBuilder, "PurchaseReturnItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PurchaseReturns");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PurchaseReturnItems");
 
             // Payment table
-            AddSoftDeleteColumns(migrationBuilder, "SupplierPayments");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "SupplierPayments");
 
             // Quotation tables
-            AddSoftDeleteColumns(migrationBuilder, "Quotations");
-            AddSoftDeleteColumns(migrationBuilder, "QuotationItems");
-            AddSoftDeleteColumns(migrationBuilder, "QuotationSuppliers");
-            AddSoftDeleteColumns(migrationBuilder, "QuotationSupplierItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Quotations");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "QuotationItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "QuotationSuppliers");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "QuotationSupplierItems");
 
             // Contract tables
-            AddSoftDeleteColumns(migrationBuilder, "PurchaseContracts");
-            AddSoftDeleteColumns(migrationBuilder, "PurchaseContractItems");
-            AddSoftDeleteColumns(migrationBuilder, "PurchaseContractPriceBreaks");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PurchaseContracts");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PurchaseContractItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PurchaseContractPriceBreaks");
 
             // Price List tables
-            AddSoftDeleteColumns(migrationBuilder, "PriceLists");
-            AddSoftDeleteColumns(migrationBuilder, "PriceListItems");
-            AddSoftDeleteColumns(migrationBuilder, "PriceListItemTiers");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PriceLists");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PriceListItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PriceListItemTiers");
 
             // Budget tables
-            AddSoftDeleteColumns(migrationBuilder, "PurchaseBudgets");
-            AddSoftDeleteColumns(migrationBuilder, "PurchaseBudgetRevisions");
-            AddSoftDeleteColumns(migrationBuilder, "PurchaseBudgetTransactions");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PurchaseBudgets");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PurchaseBudgetRevisions");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PurchaseBudgetTransactions");
 
             // Supplier Evaluation tables
-            AddSoftDeleteColumns(migrationBuilder, "SupplierEvaluations");
-            AddSoftDeleteColumns(migrationBuilder, "SupplierEvaluationCriteria");
-            AddSoftDeleteColumns(migrationBuilder, "SupplierEvaluationHistory");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "SupplierEvaluations");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "SupplierEvaluationCriteria");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "SupplierEvaluationHistory");
 
             // Approval Workflow tables
-            AddSoftDeleteColumns(migrationBuilder, "ApprovalWorkflowConfigs");
-            AddSoftDeleteColumns(migrationBuilder, "ApprovalWorkflowRules");
-            AddSoftDeleteColumns(migrationBuilder, "ApprovalWorkflowSteps");
-            AddSoftDeleteColumns(migrationBuilder, "ApprovalGroups");
-            AddSoftDeleteColumns(migrationBuilder, "ApprovalGroupMembers");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ApprovalWorkflowConfigs");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ApprovalWorkflowRules");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ApprovalWorkflowSteps");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ApprovalGroups");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ApprovalGroupMembers");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             // Supplier tables
-            RemoveSoftDeleteColumns(migrationBuilder, "Suppliers");
-            RemoveSoftDeleteColumns(migrationBuilder, "SupplierContacts");
-            RemoveSoftDeleteColumns(migrationBuilder, "SupplierProducts");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Suppliers");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "SupplierContacts");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "SupplierProducts");
 
             // Purchase Request tables
-            RemoveSoftDeleteColumns(migrationBuilder, "PurchaseRequests");
-            RemoveSoftDeleteColumns(migrationBuilder, "PurchaseRequestItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PurchaseRequests");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PurchaseRequestItems");
 
             // Purchase Order tables
-            RemoveSoftDeleteColumns(migrationBuilder, "PurchaseOrders");
-            RemoveSoftDeleteColumns(migrationBuilder, "PurchaseOrderItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PurchaseOrders");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PurchaseOrderItems");
 
             // Goods Receipt tables
-            RemoveSoftDeleteColumns(migrationBuilder, "GoodsReceipts");
-            RemoveSoftDeleteColumns(migrationBuilder, "GoodsReceiptItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "GoodsReceipts");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "GoodsReceiptItems");
 
             // Purchase Invoice tables
-            RemoveSoftDeleteColumns(migrationBuilder, "PurchaseInvoices");
-            RemoveSoftDeleteColumns(migrationBuilder, "PurchaseInvoiceItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PurchaseInvoices");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PurchaseInvoiceItems");
 
             // Purchase Return tables
-            RemoveSoftDeleteColumns(migrationBuilder, "PurchaseReturns");
-            RemoveSoftDeleteColumns(migrationBuilder, "PurchaseReturnItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PurchaseReturns");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PurchaseReturnItems");
 
             // Payment table
-            RemoveSoftDeleteColumns(migrationBuilder, "SupplierPayments");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "SupplierPayments");
 
             // Quotation tables
-            RemoveSoftDeleteColumns(migrationBuilder, "Quotations");
-            RemoveSoftDeleteColumns(migrationBuilder, "QuotationItems");
-            RemoveSoftDeleteColumns(migrationBuilder, "QuotationSuppliers");
-            RemoveSoftDeleteColumns(migrationBuilder, "QuotationSupplierItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Quotations");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "QuotationItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "QuotationSuppliers");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "QuotationSupplierItems");
 
             // Contract tables
-            RemoveSoftDeleteColumns(migrationBuilder, "PurchaseContracts");
-            RemoveSoftDeleteColumns(migrationBuilder, "PurchaseContractItems");
-            RemoveSoftDeleteColumns(migrationBuilder, "PurchaseContractPriceBreaks");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PurchaseContracts");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PurchaseContractItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PurchaseContractPriceBreaks");
 
             // Price List tables
-            RemoveSoftDeleteColumns(migrationBuilder, "PriceLists");
-            RemoveSoftDeleteColumns(migrationBuilder, "PriceListItems");
-            RemoveSoftDeleteColumns(migrationBuilder, "PriceListItemTiers");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PriceLists");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PriceListItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PriceListItemTiers");
 
             // Budget tables
-            RemoveSoftDeleteColumns(migrationBuilder, "PurchaseBudgets");
-            RemoveSoftDeleteColumns(migrationBuilder, "PurchaseBudgetRevisions");
-            RemoveSoftDeleteColumns(migrationBuilder, "PurchaseBudgetTransactions");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PurchaseBudgets");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PurchaseBudgetRevisions");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PurchaseBudgetTransactions");
 
             // Supplier Evaluation tables
-            RemoveSoftDeleteColumns(migrationBuilder, "SupplierEvaluations");
-            RemoveSoftDeleteColumns(migrationBuilder, "SupplierEvaluationCriteria");
-            RemoveSoftDeleteColumns(migrationBuilder, "SupplierEvaluationHistory");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "SupplierEvaluations");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "SupplierEvaluationCriteria");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "SupplierEvaluationHistory");
 
             // Approval Workflow tables
-            RemoveSoftDeleteColumns(migrationBuilder, "ApprovalWorkflowConfigs");
-            RemoveSoftDeleteColumns(migrationBuilder, "ApprovalWorkflowRules");
-            RemoveSoftDeleteColumns(migrationBuilder, "ApprovalWorkflowSteps");
-            RemoveSoftDeleteColumns(migrationBuilder, "ApprovalGroups");
-            RemoveSoftDeleteColumns(migrationBuilder, "ApprovalGroupMembers");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ApprovalWorkflowConfigs");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ApprovalWorkflowRules");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ApprovalWorkflowSteps");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ApprovalGroups");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ApprovalGroupMembers");
         }
 
-        private static void AddSoftDeleteColumns(MigrationBuilder migrationBuilder, string tableName)
+        private static void AddSoftDeleteColumnsToTable(MigrationBuilder migrationBuilder, string tableName)
         {
             migrationBuilder.AddColumn<bool>(
                 name: "IsDeleted",
@@ -163,7 +163,7 @@ namespace Stocker.Modules.Purchase.Infrastructure.Persistence.Migrations
                 nullable: true);
         }
 
-        private static void RemoveSoftDeleteColumns(MigrationBuilder migrationBuilder, string tableName)
+        private static void RemoveSoftDeleteColumnsFromTable(MigrationBuilder migrationBuilder, string tableName)
         {
             migrationBuilder.DropColumn(
                 name: "IsDeleted",

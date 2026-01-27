@@ -11,79 +11,79 @@ namespace Stocker.Modules.CMS.Infrastructure.Persistence.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             // Core CMS tables
-            AddDeletedByColumn(migrationBuilder, "pages");
-            AddDeletedByColumn(migrationBuilder, "blog_categories");
-            AddDeletedByColumn(migrationBuilder, "blog_posts");
-            AddDeletedByColumn(migrationBuilder, "faq_categories");
-            AddDeletedByColumn(migrationBuilder, "faq_items");
-            AddDeletedByColumn(migrationBuilder, "media");
-            AddDeletedByColumn(migrationBuilder, "settings");
-            AddDeletedByColumn(migrationBuilder, "updates");
+            AddDeletedByColumnToTable(migrationBuilder, "pages");
+            AddDeletedByColumnToTable(migrationBuilder, "blog_categories");
+            AddDeletedByColumnToTable(migrationBuilder, "blog_posts");
+            AddDeletedByColumnToTable(migrationBuilder, "faq_categories");
+            AddDeletedByColumnToTable(migrationBuilder, "faq_items");
+            AddDeletedByColumnToTable(migrationBuilder, "media");
+            AddDeletedByColumnToTable(migrationBuilder, "settings");
+            AddDeletedByColumnToTable(migrationBuilder, "updates");
 
             // Landing Page tables
-            AddDeletedByColumn(migrationBuilder, "testimonials");
-            AddDeletedByColumn(migrationBuilder, "pricing_plans");
-            AddDeletedByColumn(migrationBuilder, "pricing_features");
-            AddDeletedByColumn(migrationBuilder, "features");
-            AddDeletedByColumn(migrationBuilder, "industries");
-            AddDeletedByColumn(migrationBuilder, "integrations");
-            AddDeletedByColumn(migrationBuilder, "integration_items");
-            AddDeletedByColumn(migrationBuilder, "stats");
-            AddDeletedByColumn(migrationBuilder, "partners");
-            AddDeletedByColumn(migrationBuilder, "achievements");
+            AddDeletedByColumnToTable(migrationBuilder, "testimonials");
+            AddDeletedByColumnToTable(migrationBuilder, "pricing_plans");
+            AddDeletedByColumnToTable(migrationBuilder, "pricing_features");
+            AddDeletedByColumnToTable(migrationBuilder, "features");
+            AddDeletedByColumnToTable(migrationBuilder, "industries");
+            AddDeletedByColumnToTable(migrationBuilder, "integrations");
+            AddDeletedByColumnToTable(migrationBuilder, "integration_items");
+            AddDeletedByColumnToTable(migrationBuilder, "stats");
+            AddDeletedByColumnToTable(migrationBuilder, "partners");
+            AddDeletedByColumnToTable(migrationBuilder, "achievements");
 
             // Company Page tables
-            AddDeletedByColumn(migrationBuilder, "team_members");
-            AddDeletedByColumn(migrationBuilder, "company_values");
-            AddDeletedByColumn(migrationBuilder, "contact_info");
+            AddDeletedByColumnToTable(migrationBuilder, "team_members");
+            AddDeletedByColumnToTable(migrationBuilder, "company_values");
+            AddDeletedByColumnToTable(migrationBuilder, "contact_info");
 
             // Documentation tables
-            AddDeletedByColumn(migrationBuilder, "doc_categories");
-            AddDeletedByColumn(migrationBuilder, "doc_articles");
+            AddDeletedByColumnToTable(migrationBuilder, "doc_categories");
+            AddDeletedByColumnToTable(migrationBuilder, "doc_articles");
 
             // Social tables
-            AddDeletedByColumn(migrationBuilder, "social_links");
+            AddDeletedByColumnToTable(migrationBuilder, "social_links");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             // Core CMS tables
-            RemoveDeletedByColumn(migrationBuilder, "pages");
-            RemoveDeletedByColumn(migrationBuilder, "blog_categories");
-            RemoveDeletedByColumn(migrationBuilder, "blog_posts");
-            RemoveDeletedByColumn(migrationBuilder, "faq_categories");
-            RemoveDeletedByColumn(migrationBuilder, "faq_items");
-            RemoveDeletedByColumn(migrationBuilder, "media");
-            RemoveDeletedByColumn(migrationBuilder, "settings");
-            RemoveDeletedByColumn(migrationBuilder, "updates");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "pages");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "blog_categories");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "blog_posts");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "faq_categories");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "faq_items");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "media");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "settings");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "updates");
 
             // Landing Page tables
-            RemoveDeletedByColumn(migrationBuilder, "testimonials");
-            RemoveDeletedByColumn(migrationBuilder, "pricing_plans");
-            RemoveDeletedByColumn(migrationBuilder, "pricing_features");
-            RemoveDeletedByColumn(migrationBuilder, "features");
-            RemoveDeletedByColumn(migrationBuilder, "industries");
-            RemoveDeletedByColumn(migrationBuilder, "integrations");
-            RemoveDeletedByColumn(migrationBuilder, "integration_items");
-            RemoveDeletedByColumn(migrationBuilder, "stats");
-            RemoveDeletedByColumn(migrationBuilder, "partners");
-            RemoveDeletedByColumn(migrationBuilder, "achievements");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "testimonials");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "pricing_plans");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "pricing_features");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "features");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "industries");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "integrations");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "integration_items");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "stats");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "partners");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "achievements");
 
             // Company Page tables
-            RemoveDeletedByColumn(migrationBuilder, "team_members");
-            RemoveDeletedByColumn(migrationBuilder, "company_values");
-            RemoveDeletedByColumn(migrationBuilder, "contact_info");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "team_members");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "company_values");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "contact_info");
 
             // Documentation tables
-            RemoveDeletedByColumn(migrationBuilder, "doc_categories");
-            RemoveDeletedByColumn(migrationBuilder, "doc_articles");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "doc_categories");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "doc_articles");
 
             // Social tables
-            RemoveDeletedByColumn(migrationBuilder, "social_links");
+            RemoveDeletedByColumnFromTable(migrationBuilder, "social_links");
         }
 
-        private static void AddDeletedByColumn(MigrationBuilder migrationBuilder, string tableName)
+        private static void AddDeletedByColumnToTable(MigrationBuilder migrationBuilder, string tableName)
         {
             migrationBuilder.AddColumn<string>(
                 name: "DeletedBy",
@@ -94,7 +94,7 @@ namespace Stocker.Modules.CMS.Infrastructure.Persistence.Migrations
                 nullable: true);
         }
 
-        private static void RemoveDeletedByColumn(MigrationBuilder migrationBuilder, string tableName)
+        private static void RemoveDeletedByColumnFromTable(MigrationBuilder migrationBuilder, string tableName)
         {
             migrationBuilder.DropColumn(
                 name: "DeletedBy",

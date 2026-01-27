@@ -11,141 +11,141 @@ namespace Stocker.Modules.HR.Infrastructure.Persistence.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             // Core Employee Management
-            AddSoftDeleteColumns(migrationBuilder, "Employees");
-            AddSoftDeleteColumns(migrationBuilder, "Departments");
-            AddSoftDeleteColumns(migrationBuilder, "Positions");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Employees");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Departments");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Positions");
 
             // Work Location and Shift Management
-            AddSoftDeleteColumns(migrationBuilder, "WorkLocations");
-            AddSoftDeleteColumns(migrationBuilder, "Shifts");
-            AddSoftDeleteColumns(migrationBuilder, "WorkSchedules");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "WorkLocations");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Shifts");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "WorkSchedules");
 
             // Time and Attendance
-            AddSoftDeleteColumns(migrationBuilder, "Attendances");
-            AddSoftDeleteColumns(migrationBuilder, "Leaves");
-            AddSoftDeleteColumns(migrationBuilder, "LeaveTypes");
-            AddSoftDeleteColumns(migrationBuilder, "LeaveBalances");
-            AddSoftDeleteColumns(migrationBuilder, "Holidays");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Attendances");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Leaves");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "LeaveTypes");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "LeaveBalances");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Holidays");
 
             // Payroll and Expenses
-            AddSoftDeleteColumns(migrationBuilder, "Payrolls");
-            AddSoftDeleteColumns(migrationBuilder, "PayrollItems");
-            AddSoftDeleteColumns(migrationBuilder, "Expenses");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Payrolls");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PayrollItems");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Expenses");
 
             // Performance Management
-            AddSoftDeleteColumns(migrationBuilder, "PerformanceReviews");
-            AddSoftDeleteColumns(migrationBuilder, "PerformanceGoals");
-            AddSoftDeleteColumns(migrationBuilder, "PerformanceReviewCriterias");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PerformanceReviews");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PerformanceGoals");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PerformanceReviewCriterias");
 
             // Training
-            AddSoftDeleteColumns(migrationBuilder, "Trainings");
-            AddSoftDeleteColumns(migrationBuilder, "EmployeeTrainings");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Trainings");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "EmployeeTrainings");
 
             // Documents
-            AddSoftDeleteColumns(migrationBuilder, "EmployeeDocuments");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "EmployeeDocuments");
 
             // Announcements
-            AddSoftDeleteColumns(migrationBuilder, "Announcements");
-            AddSoftDeleteColumns(migrationBuilder, "AnnouncementAcknowledgments");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Announcements");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "AnnouncementAcknowledgments");
 
             // Career and Development
-            AddSoftDeleteColumns(migrationBuilder, "CareerPaths");
-            AddSoftDeleteColumns(migrationBuilder, "Certifications");
-            AddSoftDeleteColumns(migrationBuilder, "EmployeeSkills");
-            AddSoftDeleteColumns(migrationBuilder, "SuccessionPlans");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "CareerPaths");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Certifications");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "EmployeeSkills");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "SuccessionPlans");
 
             // Disciplinary and Grievance
-            AddSoftDeleteColumns(migrationBuilder, "DisciplinaryActions");
-            AddSoftDeleteColumns(migrationBuilder, "Grievances");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "DisciplinaryActions");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Grievances");
 
             // Assets and Benefits
-            AddSoftDeleteColumns(migrationBuilder, "EmployeeAssets");
-            AddSoftDeleteColumns(migrationBuilder, "EmployeeBenefits");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "EmployeeAssets");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "EmployeeBenefits");
 
             // Recruitment
-            AddSoftDeleteColumns(migrationBuilder, "JobPostings");
-            AddSoftDeleteColumns(migrationBuilder, "JobApplications");
-            AddSoftDeleteColumns(migrationBuilder, "Interviews");
-            AddSoftDeleteColumns(migrationBuilder, "Onboardings");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "JobPostings");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "JobApplications");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Interviews");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Onboardings");
 
             // Time Management
-            AddSoftDeleteColumns(migrationBuilder, "Overtimes");
-            AddSoftDeleteColumns(migrationBuilder, "TimeSheets");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Overtimes");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "TimeSheets");
 
             // Payroll Extended
-            AddSoftDeleteColumns(migrationBuilder, "Payslips");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Payslips");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             // Core Employee Management
-            RemoveSoftDeleteColumns(migrationBuilder, "Employees");
-            RemoveSoftDeleteColumns(migrationBuilder, "Departments");
-            RemoveSoftDeleteColumns(migrationBuilder, "Positions");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Employees");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Departments");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Positions");
 
             // Work Location and Shift Management
-            RemoveSoftDeleteColumns(migrationBuilder, "WorkLocations");
-            RemoveSoftDeleteColumns(migrationBuilder, "Shifts");
-            RemoveSoftDeleteColumns(migrationBuilder, "WorkSchedules");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "WorkLocations");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Shifts");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "WorkSchedules");
 
             // Time and Attendance
-            RemoveSoftDeleteColumns(migrationBuilder, "Attendances");
-            RemoveSoftDeleteColumns(migrationBuilder, "Leaves");
-            RemoveSoftDeleteColumns(migrationBuilder, "LeaveTypes");
-            RemoveSoftDeleteColumns(migrationBuilder, "LeaveBalances");
-            RemoveSoftDeleteColumns(migrationBuilder, "Holidays");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Attendances");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Leaves");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "LeaveTypes");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "LeaveBalances");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Holidays");
 
             // Payroll and Expenses
-            RemoveSoftDeleteColumns(migrationBuilder, "Payrolls");
-            RemoveSoftDeleteColumns(migrationBuilder, "PayrollItems");
-            RemoveSoftDeleteColumns(migrationBuilder, "Expenses");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Payrolls");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PayrollItems");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Expenses");
 
             // Performance Management
-            RemoveSoftDeleteColumns(migrationBuilder, "PerformanceReviews");
-            RemoveSoftDeleteColumns(migrationBuilder, "PerformanceGoals");
-            RemoveSoftDeleteColumns(migrationBuilder, "PerformanceReviewCriterias");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PerformanceReviews");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PerformanceGoals");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PerformanceReviewCriterias");
 
             // Training
-            RemoveSoftDeleteColumns(migrationBuilder, "Trainings");
-            RemoveSoftDeleteColumns(migrationBuilder, "EmployeeTrainings");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Trainings");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "EmployeeTrainings");
 
             // Documents
-            RemoveSoftDeleteColumns(migrationBuilder, "EmployeeDocuments");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "EmployeeDocuments");
 
             // Announcements
-            RemoveSoftDeleteColumns(migrationBuilder, "Announcements");
-            RemoveSoftDeleteColumns(migrationBuilder, "AnnouncementAcknowledgments");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Announcements");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "AnnouncementAcknowledgments");
 
             // Career and Development
-            RemoveSoftDeleteColumns(migrationBuilder, "CareerPaths");
-            RemoveSoftDeleteColumns(migrationBuilder, "Certifications");
-            RemoveSoftDeleteColumns(migrationBuilder, "EmployeeSkills");
-            RemoveSoftDeleteColumns(migrationBuilder, "SuccessionPlans");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "CareerPaths");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Certifications");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "EmployeeSkills");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "SuccessionPlans");
 
             // Disciplinary and Grievance
-            RemoveSoftDeleteColumns(migrationBuilder, "DisciplinaryActions");
-            RemoveSoftDeleteColumns(migrationBuilder, "Grievances");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "DisciplinaryActions");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Grievances");
 
             // Assets and Benefits
-            RemoveSoftDeleteColumns(migrationBuilder, "EmployeeAssets");
-            RemoveSoftDeleteColumns(migrationBuilder, "EmployeeBenefits");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "EmployeeAssets");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "EmployeeBenefits");
 
             // Recruitment
-            RemoveSoftDeleteColumns(migrationBuilder, "JobPostings");
-            RemoveSoftDeleteColumns(migrationBuilder, "JobApplications");
-            RemoveSoftDeleteColumns(migrationBuilder, "Interviews");
-            RemoveSoftDeleteColumns(migrationBuilder, "Onboardings");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "JobPostings");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "JobApplications");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Interviews");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Onboardings");
 
             // Time Management
-            RemoveSoftDeleteColumns(migrationBuilder, "Overtimes");
-            RemoveSoftDeleteColumns(migrationBuilder, "TimeSheets");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Overtimes");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "TimeSheets");
 
             // Payroll Extended
-            RemoveSoftDeleteColumns(migrationBuilder, "Payslips");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Payslips");
         }
 
-        private static void AddSoftDeleteColumns(MigrationBuilder migrationBuilder, string tableName)
+        private static void AddSoftDeleteColumnsToTable(MigrationBuilder migrationBuilder, string tableName)
         {
             migrationBuilder.AddColumn<bool>(
                 name: "IsDeleted",
@@ -171,7 +171,7 @@ namespace Stocker.Modules.HR.Infrastructure.Persistence.Migrations
                 nullable: true);
         }
 
-        private static void RemoveSoftDeleteColumns(MigrationBuilder migrationBuilder, string tableName)
+        private static void RemoveSoftDeleteColumnsFromTable(MigrationBuilder migrationBuilder, string tableName)
         {
             migrationBuilder.DropColumn(
                 name: "IsDeleted",

@@ -11,115 +11,115 @@ namespace Stocker.Modules.Finance.Infrastructure.Persistence.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             // Core Finance tables
-            AddSoftDeleteColumns(migrationBuilder, "CurrentAccounts");
-            AddSoftDeleteColumns(migrationBuilder, "CurrentAccountTransactions");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "CurrentAccounts");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "CurrentAccountTransactions");
 
             // Invoice tables
-            AddSoftDeleteColumns(migrationBuilder, "Invoices");
-            AddSoftDeleteColumns(migrationBuilder, "InvoiceLines");
-            AddSoftDeleteColumns(migrationBuilder, "InvoiceTaxes");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Invoices");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "InvoiceLines");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "InvoiceTaxes");
 
             // Expense tables
-            AddSoftDeleteColumns(migrationBuilder, "Expenses");
-            AddSoftDeleteColumns(migrationBuilder, "CostCenters");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Expenses");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "CostCenters");
 
             // Payment tables
-            AddSoftDeleteColumns(migrationBuilder, "Payments");
-            AddSoftDeleteColumns(migrationBuilder, "PaymentAllocations");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Payments");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PaymentAllocations");
 
             // Banking tables
-            AddSoftDeleteColumns(migrationBuilder, "BankAccounts");
-            AddSoftDeleteColumns(migrationBuilder, "BankTransactions");
-            AddSoftDeleteColumns(migrationBuilder, "BankReconciliations");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "BankAccounts");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "BankTransactions");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "BankReconciliations");
 
             // Cash tables
-            AddSoftDeleteColumns(migrationBuilder, "CashAccounts");
-            AddSoftDeleteColumns(migrationBuilder, "CashTransactions");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "CashAccounts");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "CashTransactions");
 
             // Check and Promissory Note tables
-            AddSoftDeleteColumns(migrationBuilder, "Checks");
-            AddSoftDeleteColumns(migrationBuilder, "PromissoryNotes");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Checks");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "PromissoryNotes");
 
             // Accounting tables
-            AddSoftDeleteColumns(migrationBuilder, "Accounts");
-            AddSoftDeleteColumns(migrationBuilder, "JournalEntries");
-            AddSoftDeleteColumns(migrationBuilder, "Transactions");
-            AddSoftDeleteColumns(migrationBuilder, "AccountingPeriods");
-            AddSoftDeleteColumns(migrationBuilder, "Budgets");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Accounts");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "JournalEntries");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Transactions");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "AccountingPeriods");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Budgets");
 
             // Fixed Asset table
-            AddSoftDeleteColumns(migrationBuilder, "FixedAssets");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "FixedAssets");
 
             // Loan tables
-            AddSoftDeleteColumns(migrationBuilder, "Loans");
-            AddSoftDeleteColumns(migrationBuilder, "InstallmentPlans");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "Loans");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "InstallmentPlans");
 
             // Exchange Rate tables
-            AddSoftDeleteColumns(migrationBuilder, "ExchangeRates");
-            AddSoftDeleteColumns(migrationBuilder, "ExchangeRateAdjustments");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ExchangeRates");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "ExchangeRateAdjustments");
 
             // Tax tables
-            AddSoftDeleteColumns(migrationBuilder, "TaxDeclarations");
-            AddSoftDeleteColumns(migrationBuilder, "BaBsForms");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "TaxDeclarations");
+            AddSoftDeleteColumnsToTable(migrationBuilder, "BaBsForms");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             // Core Finance tables
-            RemoveSoftDeleteColumns(migrationBuilder, "CurrentAccounts");
-            RemoveSoftDeleteColumns(migrationBuilder, "CurrentAccountTransactions");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "CurrentAccounts");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "CurrentAccountTransactions");
 
             // Invoice tables
-            RemoveSoftDeleteColumns(migrationBuilder, "Invoices");
-            RemoveSoftDeleteColumns(migrationBuilder, "InvoiceLines");
-            RemoveSoftDeleteColumns(migrationBuilder, "InvoiceTaxes");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Invoices");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "InvoiceLines");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "InvoiceTaxes");
 
             // Expense tables
-            RemoveSoftDeleteColumns(migrationBuilder, "Expenses");
-            RemoveSoftDeleteColumns(migrationBuilder, "CostCenters");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Expenses");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "CostCenters");
 
             // Payment tables
-            RemoveSoftDeleteColumns(migrationBuilder, "Payments");
-            RemoveSoftDeleteColumns(migrationBuilder, "PaymentAllocations");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Payments");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PaymentAllocations");
 
             // Banking tables
-            RemoveSoftDeleteColumns(migrationBuilder, "BankAccounts");
-            RemoveSoftDeleteColumns(migrationBuilder, "BankTransactions");
-            RemoveSoftDeleteColumns(migrationBuilder, "BankReconciliations");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "BankAccounts");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "BankTransactions");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "BankReconciliations");
 
             // Cash tables
-            RemoveSoftDeleteColumns(migrationBuilder, "CashAccounts");
-            RemoveSoftDeleteColumns(migrationBuilder, "CashTransactions");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "CashAccounts");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "CashTransactions");
 
             // Check and Promissory Note tables
-            RemoveSoftDeleteColumns(migrationBuilder, "Checks");
-            RemoveSoftDeleteColumns(migrationBuilder, "PromissoryNotes");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Checks");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "PromissoryNotes");
 
             // Accounting tables
-            RemoveSoftDeleteColumns(migrationBuilder, "Accounts");
-            RemoveSoftDeleteColumns(migrationBuilder, "JournalEntries");
-            RemoveSoftDeleteColumns(migrationBuilder, "Transactions");
-            RemoveSoftDeleteColumns(migrationBuilder, "AccountingPeriods");
-            RemoveSoftDeleteColumns(migrationBuilder, "Budgets");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Accounts");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "JournalEntries");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Transactions");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "AccountingPeriods");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Budgets");
 
             // Fixed Asset table
-            RemoveSoftDeleteColumns(migrationBuilder, "FixedAssets");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "FixedAssets");
 
             // Loan tables
-            RemoveSoftDeleteColumns(migrationBuilder, "Loans");
-            RemoveSoftDeleteColumns(migrationBuilder, "InstallmentPlans");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "Loans");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "InstallmentPlans");
 
             // Exchange Rate tables
-            RemoveSoftDeleteColumns(migrationBuilder, "ExchangeRates");
-            RemoveSoftDeleteColumns(migrationBuilder, "ExchangeRateAdjustments");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ExchangeRates");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "ExchangeRateAdjustments");
 
             // Tax tables
-            RemoveSoftDeleteColumns(migrationBuilder, "TaxDeclarations");
-            RemoveSoftDeleteColumns(migrationBuilder, "BaBsForms");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "TaxDeclarations");
+            RemoveSoftDeleteColumnsFromTable(migrationBuilder, "BaBsForms");
         }
 
-        private static void AddSoftDeleteColumns(MigrationBuilder migrationBuilder, string tableName)
+        private static void AddSoftDeleteColumnsToTable(MigrationBuilder migrationBuilder, string tableName)
         {
             migrationBuilder.AddColumn<bool>(
                 name: "IsDeleted",
@@ -145,7 +145,7 @@ namespace Stocker.Modules.Finance.Infrastructure.Persistence.Migrations
                 nullable: true);
         }
 
-        private static void RemoveSoftDeleteColumns(MigrationBuilder migrationBuilder, string tableName)
+        private static void RemoveSoftDeleteColumnsFromTable(MigrationBuilder migrationBuilder, string tableName)
         {
             migrationBuilder.DropColumn(
                 name: "IsDeleted",
