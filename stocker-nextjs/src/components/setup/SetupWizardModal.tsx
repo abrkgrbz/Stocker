@@ -919,12 +919,12 @@ export default function SetupWizardModal({ open, onComplete, onCancel }: SetupWi
                       <div className="text-center py-8">
                         <h2 className="text-xl font-bold text-slate-900 mb-6">Kaç kişilik bir ekipsiniz?</h2>
                         <div className="flex items-center justify-center gap-6 mb-8">
-                          <button onClick={() => setUserCount(c => Math.max(1, c - 1))} className="w-12 h-12 rounded-full border-2 border-slate-200 hover:border-slate-900 flex items-center justify-center text-2xl font-bold transition-colors">-</button>
+                          <button onClick={() => setUserCount(c => Math.max(1, c - 1))} className="w-12 h-12 rounded-full border-2 border-slate-200 hover:border-slate-900 bg-white text-slate-900 flex items-center justify-center text-2xl font-bold transition-colors">-</button>
                           <div className="text-center w-32">
                             <div className="text-5xl font-black text-slate-900 tracking-tighter">{userCount}</div>
                             <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">KULLANICI</div>
                           </div>
-                          <button onClick={() => setUserCount(c => c + 1)} className="w-12 h-12 rounded-full border-2 border-slate-200 hover:border-slate-900 flex items-center justify-center text-2xl font-bold transition-colors">+</button>
+                          <button onClick={() => setUserCount(c => c + 1)} className="w-12 h-12 rounded-full border-2 border-slate-200 hover:border-slate-900 bg-white text-slate-900 flex items-center justify-center text-2xl font-bold transition-colors">+</button>
                         </div>
                       </div>
                     )}
@@ -966,6 +966,25 @@ export default function SetupWizardModal({ open, onComplete, onCancel }: SetupWi
                             </div>
                             <p className="text-sm text-slate-500 mb-3">{addon.description}</p>
                             <div className="font-bold text-slate-900">₺{addon.monthlyPrice}/ay</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {currentStep === 'industry' && setupOptions && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {setupOptions.industries.map(industry => (
+                          <div
+                            key={industry.id}
+                            onClick={() => setSelectedIndustryCode(industry.code)}
+                            className={`p-6 rounded-2xl border-2 cursor-pointer transition-all text-center ${selectedIndustryCode === industry.code
+                              ? 'border-slate-900 bg-slate-50 shadow-lg'
+                              : 'border-slate-100 hover:border-slate-300'
+                              }`}
+                          >
+                            <Briefcase className={`w-8 h-8 mx-auto mb-3 ${selectedIndustryCode === industry.code ? 'text-slate-900' : 'text-slate-300'}`} />
+                            <h3 className="font-bold text-slate-900 mb-1">{industry.name}</h3>
+                            <p className="text-xs text-slate-400 line-clamp-2">{industry.description}</p>
                           </div>
                         ))}
                       </div>
