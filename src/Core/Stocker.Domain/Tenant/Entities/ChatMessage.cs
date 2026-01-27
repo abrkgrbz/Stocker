@@ -20,6 +20,7 @@ public sealed class ChatMessage : TenantEntity
     public DateTime? ReadAt { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedAt { get; private set; }
+    public string? DeletedBy { get; private set; }
     public ChatMessageType MessageType { get; private set; }
     public string? AttachmentUrl { get; private set; }
     public string? AttachmentName { get; private set; }
@@ -117,12 +118,13 @@ public sealed class ChatMessage : TenantEntity
         ReadAt = null;
     }
 
-    public void Delete()
+    public void Delete(string? deletedBy = null)
     {
         if (!IsDeleted)
         {
             IsDeleted = true;
             DeletedAt = DateTime.UtcNow;
+            DeletedBy = deletedBy;
         }
     }
 }

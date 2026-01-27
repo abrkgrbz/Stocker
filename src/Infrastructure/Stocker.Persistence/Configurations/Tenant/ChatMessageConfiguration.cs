@@ -54,6 +54,10 @@ public class ChatMessageConfiguration : BaseEntityTypeConfiguration<ChatMessage>
         builder.Property(m => m.DeletedAt)
             .IsRequired(false);
 
+        builder.Property(m => m.DeletedBy)
+            .HasMaxLength(100)
+            .IsRequired(false);
+
         builder.Property(m => m.MessageType)
             .IsRequired()
             .HasConversion<int>();
