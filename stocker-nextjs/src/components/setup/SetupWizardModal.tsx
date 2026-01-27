@@ -608,81 +608,8 @@ export default function SetupWizardModal({ open, onComplete, onCancel }: SetupWi
   const showPriceSummary = packageType === 'custom' &&
     ['custom-package', 'users', 'storage', 'addons', 'industry'].includes(currentStep)
 
-  // Floating Price Summary Panel
-  const PriceSummaryPanel = () => {
-    if (!showPriceSummary) return null
+  // integrated into footer
 
-    return (
-      <motion.div
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 100, opacity: 0 }}
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] w-full max-w-4xl px-4"
-      >
-        <div className="bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-4 flex items-center justify-between ring-1 ring-black/5">
-          <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100/50 rounded-lg">
-              <Box className="w-4 h-4 text-slate-500" />
-              <div>
-                <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Modüller</div>
-                <div className="text-sm font-bold text-slate-900 leading-none">
-                  {selectedModuleCodes.filter(c => !modules.find(m => m.code === c)?.isCore).length}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100/50 rounded-lg">
-              <Users className="w-4 h-4 text-slate-500" />
-              <div>
-                <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Kullanıcı</div>
-                <div className="text-sm font-bold text-slate-900 leading-none">{userCount}</div>
-              </div>
-            </div>
-
-            {selectedStoragePlanCode && setupOptions && (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100/50 rounded-lg">
-                <Database className="w-4 h-4 text-slate-500" />
-                <div>
-                  <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Depolama</div>
-                  <div className="text-sm font-bold text-slate-900 leading-none">
-                    {setupOptions.storagePlans.find(p => p.code === selectedStoragePlanCode)?.storageGB || 0} GB
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-4 pl-6 border-l border-slate-200">
-            {!isPricingConnected && (
-              <div className="flex items-center gap-1.5 text-xs text-amber-600 font-medium bg-amber-50 px-2 py-1 rounded-full">
-                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></div>
-                Bağlanıyor
-              </div>
-            )}
-
-            {loadingPrice ? (
-              <div className="flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
-                <span className="text-sm text-slate-400 font-medium">Hesaplanıyor...</span>
-              </div>
-            ) : customPrice ? (
-              <div className="text-right">
-                <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wide mb-0.5">{getBillingLabel()} Tutar</div>
-                <div className="text-2xl font-bold text-slate-900 leading-none tracking-tight">
-                  ₺{getCurrentPrice().toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                </div>
-              </div>
-            ) : (
-              <div className="text-right opacity-50">
-                <div className="text-[10px] uppercase font-medium">Tutar</div>
-                <div className="text-xl font-bold">₺0,00</div>
-              </div>
-            )}
-          </div>
-        </div>
-      </motion.div>
-    )
-  }
 
   // --- Render ---
 
@@ -774,8 +701,8 @@ export default function SetupWizardModal({ open, onComplete, onCancel }: SetupWi
                       <div
                         onClick={() => setPackageType('ready')}
                         className={`group relative p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${packageType === 'ready'
-                            ? 'border-slate-900 bg-slate-50/50 shadow-xl shadow-slate-200/50'
-                            : 'border-slate-100 hover:border-slate-300 hover:shadow-lg'
+                          ? 'border-slate-900 bg-slate-50/50 shadow-xl shadow-slate-200/50'
+                          : 'border-slate-100 hover:border-slate-300 hover:shadow-lg'
                           }`}
                       >
                         <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-colors ${packageType === 'ready' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
@@ -796,8 +723,8 @@ export default function SetupWizardModal({ open, onComplete, onCancel }: SetupWi
                       <div
                         onClick={() => setPackageType('custom')}
                         className={`group relative p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${packageType === 'custom'
-                            ? 'border-slate-900 bg-slate-50/50 shadow-xl shadow-slate-200/50'
-                            : 'border-slate-100 hover:border-slate-300 hover:shadow-lg'
+                          ? 'border-slate-900 bg-slate-50/50 shadow-xl shadow-slate-200/50'
+                          : 'border-slate-100 hover:border-slate-300 hover:shadow-lg'
                           }`}
                       >
                         <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-colors ${packageType === 'custom' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
@@ -847,8 +774,8 @@ export default function SetupWizardModal({ open, onComplete, onCancel }: SetupWi
                             key={pkg.id}
                             onClick={() => setSelectedPackageId(pkg.id)}
                             className={`relative p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${selectedPackageId === pkg.id
-                                ? 'border-slate-900 bg-slate-50 shadow-xl scale-[1.02]'
-                                : 'border-slate-100 hover:border-slate-300 hover:shadow-lg'
+                              ? 'border-slate-900 bg-slate-50 shadow-xl scale-[1.02]'
+                              : 'border-slate-100 hover:border-slate-300 hover:shadow-lg'
                               }`}
                           >
                             <h3 className="text-lg font-bold text-slate-900">{pkg.name}</h3>
@@ -903,8 +830,8 @@ export default function SetupWizardModal({ open, onComplete, onCancel }: SetupWi
                             key={cycle}
                             onClick={() => setBillingCycle(cycle as BillingCycle)}
                             className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all ${billingCycle === cycle
-                                ? 'bg-white text-slate-900 shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700'
+                              ? 'bg-white text-slate-900 shadow-sm'
+                              : 'text-slate-500 hover:text-slate-700'
                               }`}
                           >
                             {cycle === 'monthly' ? 'Aylık' : 'Yıllık %20 İndirim'}
@@ -928,8 +855,8 @@ export default function SetupWizardModal({ open, onComplete, onCancel }: SetupWi
                                     key={module.id}
                                     onClick={() => !module.isCore && toggleModule(module.code)}
                                     className={`group relative p-4 rounded-xl border transition-all duration-200 cursor-pointer ${isSelected
-                                        ? 'bg-slate-50 border-slate-900 shadow-md'
-                                        : 'bg-white border-slate-100 hover:border-slate-300'
+                                      ? 'bg-slate-50 border-slate-900 shadow-md'
+                                      : 'bg-white border-slate-100 hover:border-slate-300'
                                       } ${module.isCore ? 'opacity-80 pointer-events-none' : ''}`}
                                   >
                                     <div className="flex justify-between items-start">
@@ -942,9 +869,7 @@ export default function SetupWizardModal({ open, onComplete, onCancel }: SetupWi
                                       </div>
                                       <div className="text-right">
                                         <div className="font-bold text-slate-900">₺{module.monthlyPrice}</div>
-                                        {isSelected && (
-                                          <div className="absolute top-4 right-4"><CheckCircle2 className="w-5 h-5 text-emerald-500" /></div>
-                                        )}
+                                        {/* Green circle removed */}
                                       </div>
                                     </div>
                                   </div>
@@ -958,14 +883,25 @@ export default function SetupWizardModal({ open, onComplete, onCancel }: SetupWi
                     <div className="fixed bottom-0 left-0 w-full p-4 pointer-events-none z-0">
                       {/* Spacer for fixed footer */}
                     </div>
-                    <div className="flex justify-between pt-4 mt-auto border-t border-slate-100 bg-white">
+                    <div className="flex justify-between items-center pt-4 mt-auto border-t border-slate-100 bg-white">
                       <button onClick={() => setCurrentStep('package-type')} className="text-slate-500 hover:text-slate-800 font-medium px-4">Geri</button>
-                      <button
-                        onClick={handleCustomPackageNext}
-                        className="flex items-center gap-2 px-8 py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
-                      >
-                        Devam Et <ChevronRight className="w-4 h-4" />
-                      </button>
+
+                      <div className="flex items-center gap-6">
+                        {customPrice && (
+                          <div className="text-right hidden sm:block">
+                            <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wide mb-0.5">{getBillingLabel()} Tutar</div>
+                            <div className="text-xl font-bold text-slate-900 leading-none tracking-tight">
+                              ₺{getCurrentPrice().toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                            </div>
+                          </div>
+                        )}
+                        <button
+                          onClick={handleCustomPackageNext}
+                          className="flex items-center gap-2 px-8 py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
+                        >
+                          Devam Et <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -1000,8 +936,8 @@ export default function SetupWizardModal({ open, onComplete, onCancel }: SetupWi
                             key={plan.id}
                             onClick={() => setSelectedStoragePlanCode(plan.code)}
                             className={`p-6 rounded-2xl border-2 cursor-pointer transition-all text-center ${selectedStoragePlanCode === plan.code
-                                ? 'border-slate-900 bg-slate-50 shadow-lg'
-                                : 'border-slate-100 hover:border-slate-300'
+                              ? 'border-slate-900 bg-slate-50 shadow-lg'
+                              : 'border-slate-100 hover:border-slate-300'
                               }`}
                           >
                             <Database className={`w-8 h-8 mx-auto mb-3 ${selectedStoragePlanCode === plan.code ? 'text-slate-900' : 'text-slate-300'}`} />
@@ -1020,13 +956,13 @@ export default function SetupWizardModal({ open, onComplete, onCancel }: SetupWi
                             key={addon.id}
                             onClick={() => toggleAddOn(addon.code)}
                             className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${selectedAddOnCodes.includes(addon.code)
-                                ? 'border-slate-900 bg-slate-50 shadow-lg'
-                                : 'border-slate-100 hover:border-slate-300'
+                              ? 'border-slate-900 bg-slate-50 shadow-lg'
+                              : 'border-slate-100 hover:border-slate-300'
                               }`}
                           >
                             <div className="flex justify-between items-start mb-2">
                               <div className="font-bold text-slate-900">{addon.name}</div>
-                              {selectedAddOnCodes.includes(addon.code) && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
+                              {/* Green circle removed */}
                             </div>
                             <p className="text-sm text-slate-500 mb-3">{addon.description}</p>
                             <div className="font-bold text-slate-900">₺{addon.monthlyPrice}/ay</div>
@@ -1035,19 +971,30 @@ export default function SetupWizardModal({ open, onComplete, onCancel }: SetupWi
                       </div>
                     )}
 
-                    <div className="flex justify-between pt-6 mt-12 border-t border-slate-100">
+                    <div className="flex justify-between items-center pt-6 mt-12 border-t border-slate-100">
                       <button onClick={() => setCurrentStep(currentStep === 'users' ? 'custom-package' : currentStep === 'storage' ? 'users' : currentStep === 'addons' ? 'storage' : 'addons')} className="text-slate-500 hover:text-slate-800 font-medium px-4">Geri</button>
-                      <button
-                        onClick={() => {
-                          if (currentStep === 'users') handleUsersNext();
-                          else if (currentStep === 'storage') handleStorageNext();
-                          else if (currentStep === 'addons') handleAddOnsNext();
-                          else handleIndustryNext(); // Industry is simplified here or kept as is
-                        }}
-                        className="flex items-center gap-2 px-8 py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-all"
-                      >
-                        {currentStep === 'industry' ? 'Tamamla' : 'Devam Et'} <ChevronRight className="w-4 h-4" />
-                      </button>
+
+                      <div className="flex items-center gap-6">
+                        {customPrice && (
+                          <div className="text-right hidden sm:block">
+                            <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wide mb-0.5">{getBillingLabel()} Tutar</div>
+                            <div className="text-xl font-bold text-slate-900 leading-none tracking-tight">
+                              ₺{getCurrentPrice().toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                            </div>
+                          </div>
+                        )}
+                        <button
+                          onClick={() => {
+                            if (currentStep === 'users') handleUsersNext();
+                            else if (currentStep === 'storage') handleStorageNext();
+                            else if (currentStep === 'addons') handleAddOnsNext();
+                            else handleIndustryNext(); // Industry is simplified here or kept as is
+                          }}
+                          className="flex items-center gap-2 px-8 py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-all"
+                        >
+                          {currentStep === 'industry' ? 'Tamamla' : 'Devam Et'} <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -1074,7 +1021,7 @@ export default function SetupWizardModal({ open, onComplete, onCancel }: SetupWi
               </AnimatePresence>
             </div>
 
-            <PriceSummaryPanel />
+
 
           </motion.div>
         </motion.div>
