@@ -170,19 +170,22 @@ export function OrderForm({ orderId, mode }: OrderFormProps) {
     }
 
     const orderItems: CreateSalesOrderItemCommand[] = items.map((item) => ({
-      productId: item.productId,
+      // productId boş string ise undefined yap, backend Guid? olarak parse edebilsin
+      productId: item.productId && item.productId.trim() !== '' ? item.productId : undefined,
       productCode: item.productCode,
       productName: item.productName,
       unit: item.unit,
       quantity: item.quantity,
       unitPrice: item.unitPrice,
       vatRate: item.vatRate,
-      discountRate: item.discountRate,
+      // Not: Backend discountRate yerine couponCode kullanıyor
+      // Item seviyesinde indirim için couponCode gerekli
     }));
 
     try {
       if (mode === 'create') {
         const command: CreateSalesOrderCommand = {
+          requestId: crypto.randomUUID(), // Idempotency key
           orderDate: values.orderDate?.toISOString() || new Date().toISOString(),
           customerName: values.customerName,
           customerEmail: values.customerEmail,
@@ -190,9 +193,9 @@ export function OrderForm({ orderId, mode }: OrderFormProps) {
           shippingAddress: values.shippingAddress,
           billingAddress: values.billingAddress,
           notes: values.notes,
-          deliveryDate: values.deliveryDate?.toISOString(),
-          discountRate: values.discountRate,
           items: orderItems,
+          // Order-level discount via coupon code (if applicable)
+          couponCode: values.couponCode,
         };
         await createMutation.mutateAsync(command);
         showSuccess('Başarılı', 'Sipariş oluşturuldu');
@@ -202,12 +205,11 @@ export function OrderForm({ orderId, mode }: OrderFormProps) {
           id: orderId,
           customerName: values.customerName,
           customerEmail: values.customerEmail,
-          currency: values.currency,
           shippingAddress: values.shippingAddress,
           billingAddress: values.billingAddress,
           notes: values.notes,
           deliveryDate: values.deliveryDate?.toISOString(),
-          discountRate: values.discountRate,
+          couponCode: values.couponCode,
         };
         await updateMutation.mutateAsync({ id: orderId, data: command });
         showSuccess('Başarılı', 'Sipariş güncellendi');

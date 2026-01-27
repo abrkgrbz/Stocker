@@ -190,20 +190,42 @@ export interface GetSalesOrdersParams {
 }
 
 export interface CreateSalesOrderCommand {
+  /** Unique request ID for idempotency */
+  requestId?: string;
   orderDate: string;
   customerId?: string;
-  customerName: string;
+  customerName?: string;
   customerEmail?: string;
+  branchId?: string;
+  warehouseId?: string;
+  customerOrderNumber?: string;
   currency?: string;
   shippingAddress?: string;
   billingAddress?: string;
   notes?: string;
   salesPersonId?: string;
   salesPersonName?: string;
-  deliveryDate?: string;
-  discountRate?: number;
-  discountAmount?: number;
   items: CreateSalesOrderItemCommand[];
+
+  // Source document relations
+  quotationId?: string;
+  quotationNumber?: string;
+  opportunityId?: string;
+  customerContractId?: string;
+
+  // Discount options - server-side validated
+  couponCode?: string;
+  couponCodes?: string[];
+
+  // Enhanced options
+  territoryId?: string;
+  validateCreditLimit?: boolean;
+  allowGracePeriod?: boolean;
+  reserveStock?: boolean;
+  reservationExpiryHours?: number;
+  allowBackOrders?: boolean;
+  paymentDueDays?: number;
+  currentOutstandingBalance?: number;
 }
 
 export interface CreateSalesOrderItemCommand {
@@ -215,23 +237,26 @@ export interface CreateSalesOrderItemCommand {
   unitPrice: number;
   vatRate: number;
   description?: string;
-  discountRate?: number;
+  /** Item-level coupon code - server-side validated */
+  couponCode?: string;
 }
 
 export interface UpdateSalesOrderCommand {
   id: string;
   customerId?: string;
-  customerName: string;
+  customerName?: string;
   customerEmail?: string;
-  currency?: string;
+  deliveryDate?: string;
+  customerOrderNumber?: string;
   shippingAddress?: string;
   billingAddress?: string;
   notes?: string;
-  deliveryDate?: string;
   salesPersonId?: string;
   salesPersonName?: string;
-  discountAmount?: number;
-  discountRate?: number;
+  /** Coupon code for order-level discount - server-side validated */
+  couponCode?: string;
+  /** Set to true to remove existing discount */
+  removeDiscount?: boolean;
 }
 
 export interface AddSalesOrderItemCommand {
