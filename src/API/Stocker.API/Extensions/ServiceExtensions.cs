@@ -47,9 +47,12 @@ public static class ServiceExtensions
             options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
             options.JsonSerializerOptions.WriteIndented = false;
-            
+
             // Date formatting
             options.JsonSerializerOptions.Converters.Add(new DateTimeConverter());
+
+            // Nullable Guid - empty string'i null olarak işle
+            options.JsonSerializerOptions.Converters.Add(new NullableGuidConverter());
         })
         .ConfigureApiBehaviorOptions(options =>
         {
@@ -257,6 +260,54 @@ public static class ServiceExtensions
             Stocker.Application.Common.Services.BulkOperationService>();
 
         return services;
+    }
+}
+
+/// <summary>
+/// Custom Nullable Guid converter - handles empty string as null
+/// </summary>
+public class NullableGuidConverter : JsonConverter<Guid?>
+{
+    public override Guid? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Null)
+        {
+            return null;
+        }
+
+        if (reader.TokenType == JsonTokenType.String)
+        {
+            var stringValue = reader.GetString();
+
+            // Boş veya whitespace string'i null olarak işle
+            if (string.IsNullOrWhiteSpace(stringValue))
+            {
+                return null;
+            }
+
+            // Geçerli GUID parse et
+            if (Guid.TryParse(stringValue, out var guid))
+            {
+                return guid;
+            }
+
+            // Parse edilemezse null döndür (validation'da yakalanır)
+            return null;
+        }
+
+        throw new JsonException($"Unexpected token type {reader.TokenType} for Guid?");
+    }
+
+    public override void Write(Utf8JsonWriter writer, Guid? value, JsonSerializerOptions options)
+    {
+        if (value.HasValue)
+        {
+            writer.WriteStringValue(value.Value.ToString());
+        }
+        else
+        {
+            writer.WriteNullValue();
+        }
     }
 }
 

@@ -169,18 +169,22 @@ export function OrderForm({ orderId, mode }: OrderFormProps) {
       return;
     }
 
-    const orderItems: CreateSalesOrderItemCommand[] = items.map((item) => ({
-      // productId boş string ise undefined yap, backend Guid? olarak parse edebilsin
-      productId: item.productId && item.productId.trim() !== '' ? item.productId : undefined,
-      productCode: item.productCode,
-      productName: item.productName,
-      unit: item.unit,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      vatRate: item.vatRate,
-      // Not: Backend discountRate yerine couponCode kullanıyor
-      // Item seviyesinde indirim için couponCode gerekli
-    }));
+    // productId boş string ise JSON'a dahil etme - backend Guid? parse hatası önlenir
+    const orderItems: CreateSalesOrderItemCommand[] = items.map((item) => {
+      const orderItem: CreateSalesOrderItemCommand = {
+        productCode: item.productCode,
+        productName: item.productName,
+        unit: item.unit,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        vatRate: item.vatRate,
+      };
+      // Sadece geçerli GUID varsa ekle
+      if (item.productId && item.productId.trim() !== '') {
+        orderItem.productId = item.productId;
+      }
+      return orderItem;
+    });
 
     try {
       if (mode === 'create') {
