@@ -8,8 +8,8 @@ namespace Stocker.Modules.Manufacturing.Domain.Entities;
 public class MachineDowntime : Entity<Guid>
 {
     public Guid TenantId { get; private set; }
-    public Guid MachineId { get; private set; }
-    public Guid? WorkCenterId { get; private set; }
+    public int MachineId { get; private set; }
+    public int? WorkCenterId { get; private set; }
     public string DowntimeNumber { get; private set; } = string.Empty;
 
     // Duruş Türü
@@ -75,7 +75,7 @@ public class MachineDowntime : Entity<Guid>
     public MachineDowntime(
         Guid id,
         Guid tenantId,
-        Guid machineId,
+        int machineId,
         string downtimeNumber,
         string downtimeType,
         string downtimeCategory,
@@ -110,7 +110,7 @@ public class MachineDowntime : Entity<Guid>
         };
     }
 
-    public void SetWorkCenter(Guid workCenterId)
+    public void SetWorkCenter(int workCenterId)
     {
         WorkCenterId = workCenterId;
         ModifiedAt = DateTime.UtcNow;
