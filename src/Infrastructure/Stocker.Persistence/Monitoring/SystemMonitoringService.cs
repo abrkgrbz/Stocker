@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Application.Common.Interfaces;
+using Stocker.Domain.Master.Entities;
+using Stocker.Domain.Master.Enums;
 using Stocker.SharedKernel.DTOs.SystemMonitoring;
 
 namespace Stocker.Persistence.Monitoring;
@@ -12,25 +14,7 @@ public class SystemMonitoringService : ISystemMonitoringService
     private static DateTime _lastCpuCheck = DateTime.UtcNow;
     private static TimeSpan _lastTotalProcessorTime = TimeSpan.Zero;
     private static double _lastCpuUsage = 0.0;
-
-    // In-memory storage for alerts (SystemAlert entity olmadığı için memory'de tutuyoruz)
-    private static readonly List<AlertRecord> _alerts = new();
-    private static readonly object _alertLock = new();
     private static DateTime _lastAlertCheck = DateTime.MinValue;
-
-    private class AlertRecord
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Type { get; set; } = string.Empty;
-        public string Severity { get; set; } = string.Empty;
-        public string Title { get; set; } = string.Empty;
-        public string Message { get; set; } = string.Empty;
-        public string Source { get; set; } = string.Empty;
-        public DateTime Timestamp { get; set; }
-        public bool IsActive { get; set; }
-        public string? AcknowledgedBy { get; set; }
-        public DateTime? AcknowledgedAt { get; set; }
-    }
 
     public SystemMonitoringService(IMasterDbContext masterContext)
     {
@@ -152,9 +136,19 @@ public class SystemMonitoringService : ISystemMonitoringService
                 LastCheck: DateTime.UtcNow
             ));
 
-            // Veritabanı hatası için alert oluştur
-            AddAlert("error", "critical", "Veritabanı Bağlantı Hatası",
-                $"PostgreSQL veritabanına bağlanılamadı: {ex.Message}", "SystemMonitor");
+            // Veritabanı hatası için alert oluştur (fire-and-forget, DB down olduğunda zaten kaydedilemez)
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await AddAlertAsync("error", AlertSeverity.Critical, "Veritabanı Bağlantı Hatası",
+                        $"PostgreSQL veritabanına bağlanılamadı: {ex.Message}", "SystemMonitor", CancellationToken.None);
+                }
+                catch
+                {
+                    // Ignore - DB down olduğunda zaten kaydedilemez
+                }
+            });
         }
 
         // API service health (always healthy since we're responding)
@@ -366,81 +360,77 @@ public class SystemMonitoringService : ISystemMonitoringService
         );
     }
 
-    public Task<List<SystemAlertDto>> GetSystemAlertsAsync(bool activeOnly = true, CancellationToken cancellationToken = default)
+    public async Task<List<SystemAlertDto>> GetSystemAlertsAsync(bool activeOnly = true, CancellationToken cancellationToken = default)
     {
-        List<AlertRecord> alerts;
-        lock (_alertLock)
+        var query = _masterContext.SystemAlerts.AsQueryable();
+
+        if (activeOnly)
         {
-            alerts = activeOnly
-                ? _alerts.Where(a => a.IsActive).ToList()
-                : _alerts.ToList();
+            query = query.Where(a => a.IsActive);
         }
 
-        var result = alerts
+        var alerts = await query
             .OrderByDescending(a => a.Timestamp)
-            .Select(a => new SystemAlertDto(
-                Id: a.Id,
-                Type: a.Type,
-                Severity: a.Severity,
-                Title: a.Title,
-                Message: a.Message,
-                Source: a.Source,
-                Timestamp: a.Timestamp,
-                IsActive: a.IsActive,
-                AcknowledgedBy: a.AcknowledgedBy,
-                AcknowledgedAt: a.AcknowledgedAt
-            ))
-            .ToList();
+            .Take(100)
+            .ToListAsync(cancellationToken);
 
-        return Task.FromResult(result);
+        return alerts.Select(a => new SystemAlertDto(
+            Id: a.Id.ToString(),
+            Type: a.Type,
+            Severity: a.Severity.ToString().ToLower(),
+            Title: a.Title,
+            Message: a.Message,
+            Source: a.Source,
+            Timestamp: a.Timestamp,
+            IsActive: a.IsActive,
+            AcknowledgedBy: a.AcknowledgedBy,
+            AcknowledgedAt: a.AcknowledgedAt
+        )).ToList();
     }
 
-    public Task<SystemAlertDto?> AcknowledgeAlertAsync(string alertId, string acknowledgedBy, CancellationToken cancellationToken = default)
+    public async Task<SystemAlertDto?> AcknowledgeAlertAsync(string alertId, string acknowledgedBy, CancellationToken cancellationToken = default)
     {
-        lock (_alertLock)
-        {
-            var alert = _alerts.FirstOrDefault(a => a.Id == alertId);
-            if (alert == null)
-            {
-                return Task.FromResult<SystemAlertDto?>(null);
-            }
+        if (!Guid.TryParse(alertId, out var id))
+            return null;
 
-            alert.AcknowledgedBy = acknowledgedBy;
-            alert.AcknowledgedAt = DateTime.UtcNow;
+        var alert = await _masterContext.SystemAlerts
+            .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
 
-            var result = new SystemAlertDto(
-                Id: alert.Id,
-                Type: alert.Type,
-                Severity: alert.Severity,
-                Title: alert.Title,
-                Message: alert.Message,
-                Source: alert.Source,
-                Timestamp: alert.Timestamp,
-                IsActive: alert.IsActive,
-                AcknowledgedBy: alert.AcknowledgedBy,
-                AcknowledgedAt: alert.AcknowledgedAt
-            );
+        if (alert == null)
+            return null;
 
-            return Task.FromResult<SystemAlertDto?>(result);
-        }
+        alert.Acknowledge(acknowledgedBy);
+        await _masterContext.SaveChangesAsync(cancellationToken);
+
+        return new SystemAlertDto(
+            Id: alert.Id.ToString(),
+            Type: alert.Type,
+            Severity: alert.Severity.ToString().ToLower(),
+            Title: alert.Title,
+            Message: alert.Message,
+            Source: alert.Source,
+            Timestamp: alert.Timestamp,
+            IsActive: alert.IsActive,
+            AcknowledgedBy: alert.AcknowledgedBy,
+            AcknowledgedAt: alert.AcknowledgedAt
+        );
     }
 
-    public Task<bool> DismissAlertAsync(string alertId, string dismissedBy, CancellationToken cancellationToken = default)
+    public async Task<bool> DismissAlertAsync(string alertId, string dismissedBy, CancellationToken cancellationToken = default)
     {
-        lock (_alertLock)
-        {
-            var alert = _alerts.FirstOrDefault(a => a.Id == alertId);
-            if (alert == null)
-            {
-                return Task.FromResult(false);
-            }
+        if (!Guid.TryParse(alertId, out var id))
+            return false;
 
-            alert.IsActive = false;
-            alert.AcknowledgedBy = dismissedBy;
-            alert.AcknowledgedAt = DateTime.UtcNow;
+        var alert = await _masterContext.SystemAlerts
+            .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
 
-            return Task.FromResult(true);
-        }
+        if (alert == null)
+            return false;
+
+        alert.Dismiss(dismissedBy);
+        await _masterContext.SaveChangesAsync(cancellationToken);
+
+        return true;
     }
 
     #region Private Helper Methods
@@ -493,68 +483,62 @@ public class SystemMonitoringService : ISystemMonitoringService
         return string.Join(" | ", parts);
     }
 
-    private Task CheckAndGenerateAlertsAsync(double memoryUsage, double diskUsage, CancellationToken cancellationToken)
+    private async Task CheckAndGenerateAlertsAsync(double memoryUsage, double diskUsage, CancellationToken cancellationToken)
     {
         // Her 5 dakikada bir kontrol et (sürekli alert spam'i önlemek için)
         if ((DateTime.UtcNow - _lastAlertCheck).TotalMinutes < 5)
-            return Task.CompletedTask;
+            return;
 
         _lastAlertCheck = DateTime.UtcNow;
 
         // Bellek uyarısı
         if (memoryUsage > 80)
         {
-            var severity = memoryUsage > 90 ? "critical" : "medium";
+            var severity = memoryUsage > 90 ? AlertSeverity.Critical : AlertSeverity.Warning;
             var type = memoryUsage > 90 ? "error" : "warning";
-            AddAlert(type, severity, "Yüksek Bellek Kullanımı",
-                $"Bellek kullanımı %{memoryUsage:F1} seviyesine ulaştı", "SystemMonitor");
+            await AddAlertAsync(type, severity, "Yüksek Bellek Kullanımı",
+                $"Bellek kullanımı %{memoryUsage:F1} seviyesine ulaştı", "SystemMonitor", cancellationToken);
         }
 
         // Disk uyarısı
         if (diskUsage > 85)
         {
-            var severity = diskUsage > 95 ? "critical" : "medium";
+            var severity = diskUsage > 95 ? AlertSeverity.Critical : AlertSeverity.Warning;
             var type = diskUsage > 95 ? "error" : "warning";
-            AddAlert(type, severity, "Yüksek Disk Kullanımı",
-                $"Disk kullanımı %{diskUsage:F1} seviyesine ulaştı", "SystemMonitor");
+            await AddAlertAsync(type, severity, "Yüksek Disk Kullanımı",
+                $"Disk kullanımı %{diskUsage:F1} seviyesine ulaştı", "SystemMonitor", cancellationToken);
         }
-
-        return Task.CompletedTask;
     }
 
-    private static void AddAlert(string type, string severity, string title, string message, string source)
+    private async Task AddAlertAsync(string type, AlertSeverity severity, string title, string message, string source, CancellationToken cancellationToken)
     {
-        lock (_alertLock)
+        // Aynı başlıkla aktif alert varsa yeni ekleme
+        var existingAlert = await _masterContext.SystemAlerts
+            .FirstOrDefaultAsync(a => a.IsActive && a.Title == title, cancellationToken);
+
+        if (existingAlert != null)
+            return;
+
+        var alert = SystemAlert.Create(type, severity, title, message, source);
+        _masterContext.SystemAlerts.Add(alert);
+        await _masterContext.SaveChangesAsync(cancellationToken);
+
+        // Eski alert'leri temizle (son 100 aktif alert'i tut)
+        var oldAlerts = await _masterContext.SystemAlerts
+            .Where(a => !a.IsActive)
+            .OrderBy(a => a.Timestamp)
+            .Take(100)
+            .ToListAsync(cancellationToken);
+
+        var totalAlerts = await _masterContext.SystemAlerts.CountAsync(cancellationToken);
+        if (totalAlerts > 500 && oldAlerts.Any())
         {
-            // Aynı başlıkla aktif alert varsa yeni ekleme
-            if (_alerts.Any(a => a.IsActive && a.Title == title))
-                return;
-
-            // Maksimum 100 alert tut
-            if (_alerts.Count >= 100)
+            var toRemove = oldAlerts.Take(Math.Min(50, oldAlerts.Count)).ToList();
+            foreach (var old in toRemove)
             {
-                var oldestInactive = _alerts
-                    .Where(a => !a.IsActive)
-                    .OrderBy(a => a.Timestamp)
-                    .FirstOrDefault();
-
-                if (oldestInactive != null)
-                    _alerts.Remove(oldestInactive);
+                _masterContext.ChangeTracker.TrackGraph(old, e => e.Entry.State = EntityState.Deleted);
             }
-
-            _alerts.Add(new AlertRecord
-            {
-                Id = Guid.NewGuid().ToString(),
-                Type = type,
-                Severity = severity,
-                Title = title,
-                Message = message,
-                Source = source,
-                Timestamp = DateTime.UtcNow,
-                IsActive = true,
-                AcknowledgedBy = null,
-                AcknowledgedAt = null
-            });
+            await _masterContext.SaveChangesAsync(cancellationToken);
         }
     }
 

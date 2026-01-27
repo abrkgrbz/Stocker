@@ -4,9 +4,14 @@ using Stocker.Application.Features.Invoices.Commands.CreateInvoice;
 using Stocker.Application.Features.Invoices.Commands.UpdateInvoiceStatus;
 using Stocker.Application.Features.Invoices.Commands.MarkAsPaid;
 using Stocker.Application.Features.Invoices.Commands.CancelInvoice;
+using Stocker.Application.Features.Invoices.Commands.SendReminder;
+using Stocker.Application.Features.Invoices.Commands.RefundInvoice;
+using Stocker.Application.Features.Invoices.Commands.BulkSendReminders;
 using Stocker.Application.Features.Invoices.Queries.GetInvoiceById;
 using Stocker.Application.Features.Invoices.Queries.GetInvoicesList;
 using Stocker.Application.Features.Invoices.Queries.GetTenantInvoices;
+using Stocker.Application.Features.Invoices.Queries.GetInvoiceLineItems;
+using Stocker.Application.Features.Invoices.Queries.GenerateInvoicePdf;
 using Stocker.Application.DTOs.Invoice;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -192,14 +197,130 @@ public class InvoicesController : MasterControllerBase
     public async Task<IActionResult> SendReminder(Guid id)
     {
         _logger.LogInformation("Sending payment reminder for invoice {InvoiceId}", id);
-        
-        // TODO: Implement email reminder functionality
-        return Ok(new ApiResponse<bool>
+
+        var command = new SendInvoiceReminderCommand { InvoiceId = id };
+        var result = await _mediator.Send(command);
+
+        if (result.IsSuccess)
         {
-            Success = true,
-            Data = true,
-            Message = "Ödeme hatırlatması gönderildi",
-            Timestamp = DateTime.UtcNow
-        });
+            _logger.LogInformation("Payment reminder sent successfully for invoice {InvoiceId}", id);
+        }
+
+        return HandleResult(result);
     }
+
+    /// <summary>
+    /// Get invoice line items
+    /// </summary>
+    [HttpGet("{id}/line-items")]
+    [SwaggerOperation(Summary = "Get invoice line items", Description = "Returns all line items for a specific invoice")]
+    [ProducesResponseType(typeof(ApiResponse<List<InvoiceLineItemDto>>), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetLineItems(Guid id)
+    {
+        _logger.LogInformation("Getting line items for invoice {InvoiceId}", id);
+
+        var query = new GetInvoiceLineItemsQuery { InvoiceId = id };
+        var result = await _mediator.Send(query);
+        return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Download invoice as PDF
+    /// </summary>
+    [HttpGet("{id}/pdf")]
+    [SwaggerOperation(Summary = "Download invoice PDF", Description = "Generates and downloads the invoice as a PDF file")]
+    [ProducesResponseType(typeof(FileContentResult), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> DownloadPdf(Guid id)
+    {
+        _logger.LogInformation("Generating PDF for invoice {InvoiceId}", id);
+
+        var query = new GenerateInvoicePdfQuery { InvoiceId = id };
+        var result = await _mediator.Send(query);
+
+        if (result.IsSuccess)
+        {
+            return File(result.Value.PdfContent, result.Value.ContentType, result.Value.FileName);
+        }
+
+        return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Refund an invoice (create credit note)
+    /// </summary>
+    [HttpPost("{id}/refund")]
+    [SwaggerOperation(Summary = "Refund invoice", Description = "Creates a credit note for full or partial refund")]
+    [ProducesResponseType(typeof(ApiResponse<RefundInvoiceResponse>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> Refund(Guid id, [FromBody] RefundInvoiceRequest request)
+    {
+        _logger.LogWarning("Processing refund for invoice {InvoiceId}. Amount: {Amount}, Reason: {Reason}",
+            id, request.RefundAmount, request.Reason);
+
+        var command = new RefundInvoiceCommand
+        {
+            InvoiceId = id,
+            RefundAmount = request.RefundAmount,
+            Reason = request.Reason,
+            IsFullRefund = request.IsFullRefund,
+            RefundedBy = CurrentUserId
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsSuccess)
+        {
+            _logger.LogInformation("Refund processed successfully for invoice {InvoiceId}. Credit note: {CreditNoteId}",
+                id, result.Value.CreditNoteId);
+        }
+
+        return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Send reminders for multiple invoices
+    /// </summary>
+    [HttpPost("bulk/send-reminders")]
+    [SwaggerOperation(Summary = "Bulk send reminders", Description = "Send payment reminders to multiple overdue invoices")]
+    [ProducesResponseType(typeof(ApiResponse<BulkSendRemindersResponse>), 200)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> BulkSendReminders([FromBody] BulkSendRemindersRequest request)
+    {
+        _logger.LogInformation("Processing bulk reminders. SendToAllOverdue: {SendToAll}, InvoiceCount: {Count}",
+            request.SendToAllOverdue, request.InvoiceIds?.Count ?? 0);
+
+        var command = new BulkSendRemindersCommand
+        {
+            InvoiceIds = request.InvoiceIds,
+            SendToAllOverdue = request.SendToAllOverdue,
+            DaysOverdue = request.DaysOverdue
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsSuccess)
+        {
+            _logger.LogInformation("Bulk reminders completed. Success: {Success}, Failed: {Failed}",
+                result.Value.SuccessCount, result.Value.FailedCount);
+        }
+
+        return HandleResult(result);
+    }
+}
+
+public class RefundInvoiceRequest
+{
+    public decimal RefundAmount { get; set; }
+    public string Reason { get; set; } = string.Empty;
+    public bool IsFullRefund { get; set; }
+}
+
+public class BulkSendRemindersRequest
+{
+    public List<Guid>? InvoiceIds { get; set; }
+    public bool SendToAllOverdue { get; set; }
+    public int? DaysOverdue { get; set; }
 }

@@ -40,6 +40,11 @@ public interface IMasterDbContext
     DbSet<BackupSchedule> BackupSchedules { get; }
     DbSet<LemonSqueezySubscription> LemonSqueezySubscriptions { get; }
 
+    // System Monitoring & Reporting entities
+    DbSet<SystemAlert> SystemAlerts { get; }
+    DbSet<ReportSchedule> ReportSchedules { get; }
+    DbSet<ReportExecution> ReportExecutions { get; }
+
     // Pricing & Setup entities
     DbSet<AddOn> AddOns { get; }
     DbSet<AddOnFeature> AddOnFeatures { get; }
@@ -47,6 +52,10 @@ public interface IMasterDbContext
     DbSet<Industry> Industries { get; }
     DbSet<IndustryRecommendedModule> IndustryRecommendedModules { get; }
     DbSet<UserTier> UserTiers { get; }
+
+    // Subscription & Tenant Management
+    DbSet<SubscriptionUsage> SubscriptionUsages { get; }
+    DbSet<TenantLimits> TenantLimits { get; }
 
     // All entities requiring tenant isolation have been moved to Tenant DB
     // Data Migration entities moved to Tenant DB for proper tenant isolation

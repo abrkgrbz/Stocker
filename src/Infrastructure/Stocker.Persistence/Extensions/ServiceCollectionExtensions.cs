@@ -19,6 +19,8 @@ using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Repositories;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Interfaces.Repositories;
+using Stocker.Persistence.Analytics;
+using Stocker.Persistence.Reports;
 
 namespace Stocker.Persistence.Extensions;
 
@@ -205,6 +207,12 @@ public static class ServiceCollectionExtensions
 
         // Add Tenant Health Check Service
         services.AddScoped<ITenantHealthCheckService, Services.TenantHealthCheckService>();
+
+        // Add Analytics Service
+        services.AddScoped<IAnalyticsService, AnalyticsService>();
+
+        // Add Reports Service
+        services.AddScoped<IReportsService, ReportsService>();
 
         return services;
     }

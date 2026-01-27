@@ -14,13 +14,18 @@ using Stocker.Application.Features.Tenants.Queries.GetTenantsStatistics;
 using Stocker.Application.Features.Tenants.Queries.GetTenantRegistrations;
 using Stocker.Application.DTOs.Tenant;
 using Stocker.Application.DTOs.TenantRegistration;
+using Stocker.Application.DTOs.Tenant.AuditLogs;
+using Stocker.Application.DTOs.Security;
 using Stocker.Application.Features.TenantRegistration.Queries.GetSetupWizard;
 using Stocker.Application.Features.TenantRegistration.Queries.GetSetupChecklist;
 using Stocker.Application.Features.TenantSetupWizard.Commands.UpdateWizardStep;
 using Stocker.Application.Features.TenantSetupChecklist.Commands.UpdateChecklistItem;
 using Stocker.Application.Features.Tenants.Queries.GetTenantSettings;
 using Stocker.Application.Features.Tenants.Commands.UpdateTenantSettings;
+using Stocker.Application.Features.Tenants.Commands.LoginToTenant;
+using Stocker.Application.Features.Tenant.AuditLogs.Queries;
 using Swashbuckle.AspNetCore.Annotations;
+using System.Text;
 
 namespace Stocker.API.Controllers.Master;
 
@@ -294,31 +299,32 @@ public class TenantsController : MasterControllerBase
     }
 
     /// <summary>
-    /// Login to tenant (generate access token)
+    /// Login to tenant (impersonation - generate access token for tenant)
     /// </summary>
     [HttpPost("{id}/login")]
-    [ProducesResponseType(typeof(ApiResponse<TenantLoginResponseDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<LoginToTenantResponse>), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> LoginToTenant(Guid id)
     {
         _logger.LogWarning("Master user {UserEmail} is logging into tenant {TenantId}", CurrentUserEmail, id);
-        
-        // This would typically generate a special access token for the master admin
-        // to access the tenant's system
-        var response = new TenantLoginResponseDto
+
+        var command = new LoginToTenantCommand
         {
             TenantId = id,
-            AccessToken = "mock_token_" + Guid.NewGuid().ToString(),
-            RedirectUrl = $"https://tenant-{id}.stocker.app/admin-login",
-            ExpiresIn = 3600
+            MasterUserId = CurrentUserId,
+            MasterUserEmail = CurrentUserEmail
         };
-        
-        return Ok(new ApiResponse<TenantLoginResponseDto>
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsSuccess)
         {
-            Success = true,
-            Data = response,
-            Message = "Login token generated successfully"
-        });
+            _logger.LogWarning(
+                "Master user {UserEmail} successfully obtained impersonation token for tenant {TenantCode} ({TenantId})",
+                CurrentUserEmail, result.Value!.TenantCode, id);
+        }
+
+        return HandleResult(result);
     }
 
     /// <summary>
@@ -442,7 +448,7 @@ public class TenantsController : MasterControllerBase
     }
 
     /// <summary>
-    /// Get tenant activities
+    /// Get tenant activities (recent audit logs summary)
     /// </summary>
     [HttpGet("{id}/activities")]
     [ProducesResponseType(typeof(ApiResponse<List<TenantActivityDto>>), 200)]
@@ -450,69 +456,78 @@ public class TenantsController : MasterControllerBase
     public async Task<IActionResult> GetActivities(Guid id, [FromQuery] int limit = 10)
     {
         _logger.LogInformation("Getting activities for tenant {TenantId}", id);
-        
-        // Mock data for now - this would typically come from activity logs
-        var activities = new List<TenantActivityDto>
+
+        var query = new GetTenantAuditLogsQuery
         {
-            new TenantActivityDto
-            {
-                Id = Guid.NewGuid().ToString(),
-                Type = "user",
-                Title = "Yeni Kullanıcı",
-                Description = "3 yeni kullanıcı sisteme eklendi",
-                Timestamp = DateTime.UtcNow.AddHours(-2).ToString("dd.MM.yyyy HH:mm"),
-                Icon = "UserAddOutlined",
-                Color = "blue"
-            },
-            new TenantActivityDto
-            {
-                Id = Guid.NewGuid().ToString(),
-                Type = "system",
-                Title = "Modül Güncelleme",
-                Description = "CRM modülü v2.1'e güncellendi",
-                Timestamp = DateTime.UtcNow.AddHours(-5).ToString("dd.MM.yyyy HH:mm"),
-                Icon = "AppstoreOutlined",
-                Color = "green"
-            },
-            new TenantActivityDto
-            {
-                Id = Guid.NewGuid().ToString(),
-                Type = "billing",
-                Title = "Ödeme Alındı",
-                Description = "Aylık abonelik ödemesi işlendi",
-                Timestamp = DateTime.UtcNow.AddDays(-1).ToString("dd.MM.yyyy HH:mm"),
-                Icon = "DollarOutlined",
-                Color = "gold"
-            },
-            new TenantActivityDto
-            {
-                Id = Guid.NewGuid().ToString(),
-                Type = "security",
-                Title = "Güvenlik Ayarları",
-                Description = "2FA tüm kullanıcılar için aktif edildi",
-                Timestamp = DateTime.UtcNow.AddDays(-2).ToString("dd.MM.yyyy HH:mm"),
-                Icon = "SafetyOutlined",
-                Color = "red"
-            },
-            new TenantActivityDto
-            {
-                Id = Guid.NewGuid().ToString(),
-                Type = "system",
-                Title = "Yedekleme Tamamlandı",
-                Description = "Günlük otomatik yedekleme başarılı",
-                Timestamp = DateTime.UtcNow.AddDays(-3).ToString("dd.MM.yyyy HH:mm"),
-                Icon = "CloudUploadOutlined",
-                Color = "cyan"
-            }
+            TenantId = id,
+            PageNumber = 1,
+            PageSize = limit
         };
-        
+
+        var result = await _mediator.Send(query);
+
+        if (!result.IsSuccess)
+            return HandleResult(result);
+
+        // Map SecurityAuditLogListDto to TenantActivityDto
+        var activities = result.Value!.Logs.Select(log => new TenantActivityDto
+        {
+            Id = log.Id.ToString(),
+            Type = GetActivityType(log.Event),
+            Title = GetActivityTitle(log.Event),
+            Description = $"{log.Event} - {log.Email ?? "System"}",
+            Timestamp = log.Timestamp.ToString("dd.MM.yyyy HH:mm"),
+            Icon = GetActivityIcon(log.Event),
+            Color = GetActivityColor(log.RiskLevel)
+        }).ToList();
+
         return Ok(new ApiResponse<List<TenantActivityDto>>
         {
             Success = true,
-            Data = activities.Take(limit).ToList(),
+            Data = activities,
             Message = "Activities retrieved successfully"
         });
     }
+
+    private static string GetActivityType(string eventName) => eventName switch
+    {
+        var e when e.Contains("login", StringComparison.OrdinalIgnoreCase) => "auth",
+        var e when e.Contains("user", StringComparison.OrdinalIgnoreCase) => "user",
+        var e when e.Contains("payment", StringComparison.OrdinalIgnoreCase) || e.Contains("billing", StringComparison.OrdinalIgnoreCase) => "billing",
+        var e when e.Contains("security", StringComparison.OrdinalIgnoreCase) || e.Contains("blocked", StringComparison.OrdinalIgnoreCase) => "security",
+        _ => "system"
+    };
+
+    private static string GetActivityTitle(string eventName) => eventName switch
+    {
+        "login_success" => "Kullanıcı Girişi",
+        "login_failed" => "Başarısız Giriş",
+        "logout" => "Çıkış Yapıldı",
+        "user_created" => "Yeni Kullanıcı",
+        "user_updated" => "Kullanıcı Güncellendi",
+        "password_changed" => "Şifre Değiştirildi",
+        "token_refresh" => "Oturum Yenilendi",
+        _ => eventName
+    };
+
+    private static string GetActivityIcon(string eventName) => eventName switch
+    {
+        var e when e.Contains("login", StringComparison.OrdinalIgnoreCase) => "LoginOutlined",
+        var e when e.Contains("user", StringComparison.OrdinalIgnoreCase) => "UserOutlined",
+        var e when e.Contains("payment", StringComparison.OrdinalIgnoreCase) => "DollarOutlined",
+        var e when e.Contains("security", StringComparison.OrdinalIgnoreCase) => "SafetyOutlined",
+        var e when e.Contains("blocked", StringComparison.OrdinalIgnoreCase) => "StopOutlined",
+        _ => "InfoCircleOutlined"
+    };
+
+    private static string GetActivityColor(string? riskLevel) => riskLevel switch
+    {
+        "Critical" => "red",
+        "High" => "orange",
+        "Medium" => "gold",
+        "Low" => "blue",
+        _ => "green"
+    };
 
     /// <summary>
     /// Get detailed activity logs for a tenant with filtering and pagination
@@ -534,108 +549,51 @@ public class TenantsController : MasterControllerBase
             "Getting activity logs for tenant {TenantId} with filters - Category: {Category}, Severity: {Severity}, Page: {Page}/{Size}",
             id, category, severity, pageNumber, pageSize);
 
-        // Mock data for now - this would typically come from AuditLog table
-        var allLogs = new List<ActivityLogDto>
+        var query = new GetTenantAuditLogsQuery
         {
-            new ActivityLogDto
-            {
-                Id = Guid.NewGuid().ToString(),
-                Timestamp = DateTime.UtcNow.AddHours(-1),
-                Action = "User Login",
-                Category = "auth",
-                Severity = "info",
-                User = new ActivityLogUserDto
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Name = "Admin User",
-                    Email = "admin@example.com",
-                    Role = "Admin"
-                },
-                Target = "System",
-                Description = "Admin user logged in successfully",
-                IpAddress = "192.168.1.100",
-                UserAgent = "Mozilla/5.0",
-                Location = "Istanbul, Turkey"
-            },
-            new ActivityLogDto
-            {
-                Id = Guid.NewGuid().ToString(),
-                Timestamp = DateTime.UtcNow.AddHours(-2),
-                Action = "User Created",
-                Category = "user",
-                Severity = "success",
-                User = new ActivityLogUserDto
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Name = "Admin User",
-                    Email = "admin@example.com",
-                    Role = "Admin"
-                },
-                Target = "New User",
-                Description = "New user account created",
-                IpAddress = "192.168.1.100",
-                UserAgent = "Mozilla/5.0",
-                Location = "Istanbul, Turkey"
-            },
-            new ActivityLogDto
-            {
-                Id = Guid.NewGuid().ToString(),
-                Timestamp = DateTime.UtcNow.AddHours(-3),
-                Action = "Data Export",
-                Category = "data",
-                Severity = "warning",
-                User = new ActivityLogUserDto
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Name = "Manager User",
-                    Email = "manager@example.com",
-                    Role = "Manager"
-                },
-                Target = "Reports",
-                Description = "Large dataset exported",
-                IpAddress = "192.168.1.101",
-                UserAgent = "Mozilla/5.0",
-                Location = "Ankara, Turkey"
-            }
+            TenantId = id,
+            FromDate = startDate,
+            ToDate = endDate,
+            Event = category != "all" ? category : null,
+            Severity = severity != "all" ? severity : null,
+            SearchTerm = searchTerm,
+            PageNumber = pageNumber,
+            PageSize = pageSize
         };
 
-        // Apply filters
-        var filteredLogs = allLogs.AsQueryable();
+        var result = await _mediator.Send(query);
 
-        if (!string.IsNullOrEmpty(category) && category != "all")
-            filteredLogs = filteredLogs.Where(l => l.Category == category);
+        if (!result.IsSuccess)
+            return HandleResult(result);
 
-        if (!string.IsNullOrEmpty(severity) && severity != "all")
-            filteredLogs = filteredLogs.Where(l => l.Severity == severity);
-
-        if (startDate.HasValue)
-            filteredLogs = filteredLogs.Where(l => l.Timestamp >= startDate.Value);
-
-        if (endDate.HasValue)
-            filteredLogs = filteredLogs.Where(l => l.Timestamp <= endDate.Value);
-
-        if (!string.IsNullOrEmpty(searchTerm))
+        // Map to ActivityLogsResponse format
+        var logs = result.Value!.Logs.Select(log => new ActivityLogDto
         {
-            var search = searchTerm.ToLower();
-            filteredLogs = filteredLogs.Where(l =>
-                l.Action.ToLower().Contains(search) ||
-                l.Description.ToLower().Contains(search) ||
-                l.User.Name.ToLower().Contains(search));
-        }
-
-        var totalCount = filteredLogs.Count();
-        var logs = filteredLogs
-            .OrderByDescending(l => l.Timestamp)
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToList();
+            Id = log.Id.ToString(),
+            Timestamp = log.Timestamp,
+            Action = log.Event,
+            Category = GetActivityType(log.Event),
+            Severity = log.RiskLevel?.ToLower() ?? "info",
+            User = new ActivityLogUserDto
+            {
+                Id = Guid.Empty.ToString(),
+                Name = log.Email?.Split('@')[0] ?? "System",
+                Email = log.Email ?? "system@stocker.app",
+                Role = "User"
+            },
+            Target = "System",
+            Description = log.Event,
+            IpAddress = log.IpAddress ?? "",
+            UserAgent = "",
+            Location = null
+        }).ToList();
 
         var response = new ActivityLogsResponse
         {
             Logs = logs,
-            TotalCount = totalCount,
-            PageNumber = pageNumber,
-            PageSize = pageSize
+            TotalCount = result.Value.TotalCount,
+            PageNumber = result.Value.PageNumber,
+            PageSize = result.Value.PageSize
         };
 
         return Ok(new ApiResponse<ActivityLogsResponse>
@@ -647,50 +605,118 @@ public class TenantsController : MasterControllerBase
     }
 
     /// <summary>
-    /// Get security events for a tenant
+    /// Get security events for a tenant (login failures, blocked attempts, etc.)
     /// </summary>
     [HttpGet("{id}/security-events")]
-    [ProducesResponseType(typeof(ApiResponse<List<ActivityLogDto>>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<SecurityEventsResponse>), 200)]
     [ProducesResponseType(404)]
-    public async Task<IActionResult> GetSecurityEvents(Guid id)
+    public async Task<IActionResult> GetSecurityEvents(
+        Guid id,
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] DateTime? endDate = null,
+        [FromQuery] int? minRiskScore = null,
+        [FromQuery] bool? blockedOnly = null,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 50)
     {
         _logger.LogInformation("Getting security events for tenant {TenantId}", id);
 
-        // Mock security events
-        var securityEvents = new List<ActivityLogDto>
+        // Query security-related events (login_failed, blocked, high risk, etc.)
+        var query = new GetTenantAuditLogsQuery
         {
-            new ActivityLogDto
+            TenantId = id,
+            FromDate = startDate,
+            ToDate = endDate,
+            MinRiskScore = minRiskScore ?? 50, // Default: only medium+ risk events
+            Blocked = blockedOnly,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+
+        var result = await _mediator.Send(query);
+
+        if (!result.IsSuccess)
+            return HandleResult(result);
+
+        // Filter and map to security events
+        var securityEvents = result.Value!.Logs
+            .Where(log => IsSecurityEvent(log.Event, log.RiskScore ?? 0))
+            .Select(log => new SecurityEventDto
             {
-                Id = Guid.NewGuid().ToString(),
-                Timestamp = DateTime.UtcNow.AddHours(-1),
-                Action = "Failed Login Attempt",
-                Category = "security",
-                Severity = "warning",
-                User = new ActivityLogUserDto
-                {
-                    Id = "unknown",
-                    Name = "Unknown",
-                    Email = "unknown@example.com",
-                    Role = "Unknown"
-                },
-                Target = "Login System",
-                Description = "Multiple failed login attempts detected",
-                IpAddress = "192.168.1.200",
-                UserAgent = "Mozilla/5.0",
-                Location = "Unknown"
+                Id = log.Id.ToString(),
+                Timestamp = log.Timestamp,
+                EventType = log.Event,
+                Severity = MapRiskToSeverity(log.RiskScore ?? 0),
+                Email = log.Email ?? "Unknown",
+                IpAddress = log.IpAddress ?? "Unknown",
+                RiskScore = log.RiskScore ?? 0,
+                Blocked = log.Blocked,
+                Description = GetSecurityEventDescription(log.Event, log.Email, log.IpAddress),
+                Location = null // SecurityAuditLogListDto does not include location data
+            }).ToList();
+
+        var response = new SecurityEventsResponse
+        {
+            Events = securityEvents,
+            TotalCount = result.Value.TotalCount,
+            PageNumber = result.Value.PageNumber,
+            PageSize = result.Value.PageSize,
+            Summary = new SecurityEventsSummary
+            {
+                TotalEvents = securityEvents.Count,
+                BlockedAttempts = securityEvents.Count(e => e.Blocked),
+                HighRiskEvents = securityEvents.Count(e => e.RiskScore >= 70),
+                FailedLogins = securityEvents.Count(e => e.EventType.Contains("failed", StringComparison.OrdinalIgnoreCase))
             }
         };
 
-        return Ok(new ApiResponse<List<ActivityLogDto>>
+        return Ok(new ApiResponse<SecurityEventsResponse>
         {
             Success = true,
-            Data = securityEvents,
+            Data = response,
             Message = "Security events retrieved successfully"
         });
     }
 
+    private static bool IsSecurityEvent(string eventName, int riskScore)
+    {
+        // High risk events are always security events
+        if (riskScore >= 50) return true;
+
+        // Security-related event names
+        var securityKeywords = new[] { "failed", "blocked", "invalid", "expired", "unauthorized", "suspicious", "attack", "brute" };
+        return securityKeywords.Any(keyword => eventName.Contains(keyword, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string MapRiskToSeverity(int riskScore) => riskScore switch
+    {
+        >= 80 => "critical",
+        >= 60 => "high",
+        >= 40 => "medium",
+        >= 20 => "low",
+        _ => "info"
+    };
+
+    private static string GetSecurityEventDescription(string eventName, string? email, string? ipAddress)
+    {
+        var user = email ?? "Unknown user";
+        var ip = ipAddress ?? "unknown IP";
+
+        return eventName.ToLower() switch
+        {
+            "login_failed" => $"Failed login attempt for {user} from {ip}",
+            "login_blocked" => $"Login blocked for {user} from {ip}",
+            "brute_force_detected" => $"Brute force attack detected from {ip}",
+            "invalid_token" => $"Invalid token used by {user}",
+            "token_expired" => $"Expired token used by {user}",
+            "suspicious_activity" => $"Suspicious activity detected for {user} from {ip}",
+            "unauthorized_access" => $"Unauthorized access attempt by {user}",
+            _ => $"{eventName} - {user} from {ip}"
+        };
+    }
+
     /// <summary>
-    /// Export activity logs to file
+    /// Export activity logs to CSV file
     /// </summary>
     [HttpGet("{id}/activity-logs/export")]
     [ProducesResponseType(typeof(FileResult), 200)]
@@ -700,20 +726,49 @@ public class TenantsController : MasterControllerBase
         [FromQuery] string? category = null,
         [FromQuery] string? severity = null,
         [FromQuery] DateTime? startDate = null,
-        [FromQuery] DateTime? endDate = null)
+        [FromQuery] DateTime? endDate = null,
+        [FromQuery] string format = "csv")
     {
-        _logger.LogInformation("Exporting activity logs for tenant {TenantId}", id);
+        _logger.LogInformation("Exporting activity logs for tenant {TenantId} in {Format} format", id, format);
 
-        // This would typically generate CSV or Excel file
-        // For now, returning a simple text file
-        var content = "Activity Logs Export\n";
-        content += $"Tenant ID: {id}\n";
-        content += $"Export Date: {DateTime.UtcNow}\n";
-        content += "---\n";
-        content += "Mock export data";
+        // Get all activity logs for export (use larger page size)
+        var query = new GetTenantAuditLogsQuery
+        {
+            TenantId = id,
+            FromDate = startDate ?? DateTime.UtcNow.AddMonths(-1),
+            ToDate = endDate ?? DateTime.UtcNow,
+            Event = category != "all" ? category : null,
+            Severity = severity != "all" ? severity : null,
+            PageNumber = 1,
+            PageSize = 10000 // Max export size
+        };
 
-        var bytes = System.Text.Encoding.UTF8.GetBytes(content);
-        return File(bytes, "text/plain", $"activity-logs-{id}-{DateTime.UtcNow:yyyyMMdd}.txt");
+        var result = await _mediator.Send(query);
+
+        if (!result.IsSuccess)
+            return HandleResult(result);
+
+        var logs = result.Value!.Logs;
+
+        // Generate CSV content
+        var csvBuilder = new StringBuilder();
+        csvBuilder.AppendLine("ID,Timestamp,Event,Category,Severity,Email,IP Address,Risk Score,Blocked,Tenant Code");
+
+        foreach (var log in logs)
+        {
+            csvBuilder.AppendLine($"\"{log.Id}\",\"{log.Timestamp:yyyy-MM-dd HH:mm:ss}\",\"{EscapeCsvField(log.Event)}\",\"{GetActivityType(log.Event)}\",\"{log.RiskLevel ?? "info"}\",\"{EscapeCsvField(log.Email ?? "")}\",\"{log.IpAddress ?? ""}\",{log.RiskScore ?? 0},{log.Blocked},\"{EscapeCsvField(log.TenantCode ?? "")}\"");
+        }
+
+        var bytes = Encoding.UTF8.GetBytes(csvBuilder.ToString());
+        var fileName = $"activity_logs_{id}_{DateTime.UtcNow:yyyyMMdd_HHmmss}.csv";
+
+        return File(bytes, "text/csv", fileName);
+    }
+
+    private static string EscapeCsvField(string field)
+    {
+        if (string.IsNullOrEmpty(field)) return "";
+        return field.Replace("\"", "\"\"");
     }
 
     /// <summary>
@@ -845,4 +900,36 @@ public class BackupResponseDto
     public string Status { get; set; } = string.Empty;
     public string? DownloadUrl { get; set; }
     public DateTime CreatedAt { get; set; }
+}
+
+// Security Event DTOs
+public class SecurityEventDto
+{
+    public string Id { get; set; } = string.Empty;
+    public DateTime Timestamp { get; set; }
+    public string EventType { get; set; } = string.Empty;
+    public string Severity { get; set; } = string.Empty; // critical, high, medium, low, info
+    public string Email { get; set; } = string.Empty;
+    public string IpAddress { get; set; } = string.Empty;
+    public int RiskScore { get; set; }
+    public bool Blocked { get; set; }
+    public string Description { get; set; } = string.Empty;
+    public string? Location { get; set; }
+}
+
+public class SecurityEventsResponse
+{
+    public List<SecurityEventDto> Events { get; set; } = new();
+    public int TotalCount { get; set; }
+    public int PageNumber { get; set; }
+    public int PageSize { get; set; }
+    public SecurityEventsSummary Summary { get; set; } = new();
+}
+
+public class SecurityEventsSummary
+{
+    public int TotalEvents { get; set; }
+    public int BlockedAttempts { get; set; }
+    public int HighRiskEvents { get; set; }
+    public int FailedLogins { get; set; }
 }

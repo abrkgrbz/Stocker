@@ -1367,4 +1367,22 @@ export class HRService {
   static async closeJobPosting(id: number): Promise<void> {
     return ApiService.post<void>(this.getPath(`job-postings/${id}/close`), {});
   }
+
+  // ===== Seed Data =====
+
+  /**
+   * Load standard HR seed data (leave types, holidays, shifts)
+   */
+  static async loadStandardData(): Promise<SeedHRDataResult> {
+    return ApiService.post<SeedHRDataResult>(this.getPath('seed-data/load-standard'), {});
+  }
+}
+
+// Seed Data Result
+export interface SeedHRDataResult {
+  leaveTypesSeeded: number;
+  holidaysSeeded: number;
+  shiftsSeeded: number;
+  alreadySeeded: boolean;
+  message: string;
 }

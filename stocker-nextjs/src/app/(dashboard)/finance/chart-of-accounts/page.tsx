@@ -7,8 +7,9 @@
  */
 
 import React, { useState } from 'react';
-import { Button, Input, Tree, Empty, Spin, Tag, Modal, Form, Select, InputNumber } from 'antd';
+import { Button, Input, Tree, Empty, Spin, Tag, Modal, Form, Select, InputNumber, Dropdown, message } from 'antd';
 import type { DataNode } from 'antd/es/tree';
+import type { MenuProps } from 'antd';
 import {
   BookOpenIcon,
   PlusIcon,
@@ -18,7 +19,13 @@ import {
   ArrowPathIcon,
   PencilIcon,
   TrashIcon,
+  CircleStackIcon,
+  EllipsisHorizontalIcon,
+  CurrencyDollarIcon,
+  CalculatorIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline';
+import { FinanceService } from '@/lib/api/services/finance.service';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
 
@@ -287,8 +294,65 @@ export default function ChartOfAccountsPage() {
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>(['1', '3', '5', '6']);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [seedDataLoading, setSeedDataLoading] = useState(false);
   const [form] = Form.useForm();
+
+  // Load standard Finance seed data (Tekdüzen Hesap Planı)
+  const handleLoadSeedData = async () => {
+    setSeedDataLoading(true);
+    try {
+      const result = await FinanceService.loadStandardData();
+      if (result.alreadySeeded) {
+        message.info('Standart finans verileri zaten yüklenmiş durumda.');
+      } else {
+        message.success(
+          `Standart finans verileri yüklendi: ${result.accountsSeeded} hesap, ${result.costCentersSeeded} masraf merkezi`
+        );
+        // TODO: Refresh account list when API is connected
+      }
+    } catch (error: any) {
+      message.error(error?.message || 'Standart finans verileri yüklenirken bir hata oluştu.');
+    } finally {
+      setSeedDataLoading(false);
+    }
+  };
+
+  // Operations menu items
+  const operationsMenuItems: MenuProps['items'] = [
+    {
+      key: 'invoices',
+      label: 'Faturalar',
+      icon: <DocumentTextIcon className="w-4 h-4" />,
+      onClick: () => window.location.href = '/finance/invoices',
+    },
+    {
+      key: 'journal-entries',
+      label: 'Yevmiye Fişleri',
+      icon: <CalculatorIcon className="w-4 h-4" />,
+      onClick: () => window.location.href = '/finance/journal-entries',
+    },
+    {
+      key: 'cost-centers',
+      label: 'Masraf Merkezleri',
+      icon: <ChartBarIcon className="w-4 h-4" />,
+      onClick: () => window.location.href = '/finance/cost-centers',
+    },
+    {
+      key: 'reports',
+      label: 'Raporlar',
+      icon: <CurrencyDollarIcon className="w-4 h-4" />,
+      onClick: () => window.location.href = '/finance/reports',
+    },
+    { type: 'divider' as const },
+    {
+      key: 'seed-data',
+      label: seedDataLoading ? 'Yükleniyor...' : 'Standart Hesap Planını Yükle',
+      icon: <CircleStackIcon className={`w-4 h-4 ${seedDataLoading ? 'animate-spin' : ''}`} />,
+      onClick: handleLoadSeedData,
+      disabled: seedDataLoading,
+    },
+  ];
 
   // Filter tree data based on search term
   const filterTreeData = (data: DataNode[], searchValue: string): DataNode[] => {
@@ -363,6 +427,12 @@ export default function ChartOfAccountsPage() {
               >
                 <ArrowPathIcon className={`w-5 h-5 text-slate-600 ${isLoading ? 'animate-spin' : ''}`} />
               </button>
+              {/* Operations Dropdown */}
+              <Dropdown menu={{ items: operationsMenuItems }} placement="bottomRight">
+                <Button className="!border-slate-300 !text-slate-600">
+                  İşlemler <EllipsisHorizontalIcon className="w-4 h-4 ml-1" />
+                </Button>
+              </Dropdown>
             </div>
           </div>
         </div>

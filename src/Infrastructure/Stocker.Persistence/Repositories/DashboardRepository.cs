@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Stocker.Application.DTOs.Tenant.Dashboard;
 using Stocker.Application.Interfaces.Repositories;
+using Stocker.Domain.Master.Entities;
+using Stocker.Domain.Master.Enums;
 using Stocker.Persistence.Contexts;
 
 namespace Stocker.Persistence.Repositories;
@@ -411,6 +413,246 @@ public class DashboardRepository : IDashboardRepository
             .ToListAsync(cancellationToken);
 
         return users.Cast<object>().ToList();
+    }
+
+    // Master Dashboard - Summary & KPIs
+    public async Task<MasterDashboardSummaryDto> GetMasterDashboardSummaryAsync(CancellationToken cancellationToken = default)
+    {
+        var totalTenants = await _masterContext.Tenants.CountAsync(cancellationToken);
+        var activeTenants = await _masterContext.Tenants.Where(t => t.IsActive).CountAsync(cancellationToken);
+        var totalUsers = await _masterContext.MasterUsers.CountAsync(cancellationToken);
+
+        // Get subscription/invoice data for MRR
+        var currentMonth = DateTime.UtcNow.Month;
+        var currentYear = DateTime.UtcNow.Year;
+        var lastMonthStart = new DateTime(currentYear, currentMonth, 1).AddMonths(-1);
+        var thisMonthStart = new DateTime(currentYear, currentMonth, 1);
+
+        var monthlyRevenue = await _masterContext.Invoices
+            .Where(i => i.IssueDate >= thisMonthStart && i.Status == Domain.Master.Enums.InvoiceStatus.Odendi)
+            .SumAsync(i => i.TotalAmount.Amount, cancellationToken);
+
+        var lastMonthRevenue = await _masterContext.Invoices
+            .Where(i => i.IssueDate >= lastMonthStart && i.IssueDate < thisMonthStart && i.Status == Domain.Master.Enums.InvoiceStatus.Odendi)
+            .SumAsync(i => i.TotalAmount.Amount, cancellationToken);
+
+        var mrrGrowth = lastMonthRevenue > 0
+            ? ((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
+            : 0;
+
+        var newTenantsThisMonth = await _masterContext.Tenants
+            .Where(t => t.CreatedAt >= thisMonthStart)
+            .CountAsync(cancellationToken);
+
+        var pendingInvoices = await _masterContext.Invoices
+            .Where(i => i.Status == Domain.Master.Enums.InvoiceStatus.Gonderildi || i.Status == Domain.Master.Enums.InvoiceStatus.Gecikti)
+            .CountAsync(cancellationToken);
+
+        var activeAlerts = await _masterContext.SystemAlerts
+            .Where(a => a.IsActive)
+            .CountAsync(cancellationToken);
+
+        // System health
+        var systemHealth = new SystemHealthSummaryDto(
+            OverallStatus: activeAlerts > 0 ? "Warning" : "Healthy",
+            CpuUsage: 0, // Will be filled by SystemMonitoringService
+            MemoryUsage: 0,
+            DiskUsage: 0,
+            Uptime: 0
+        );
+
+        // Recent activities from audit logs
+        var recentActivities = await _masterContext.SecurityAuditLogs
+            .OrderByDescending(a => a.Timestamp)
+            .Take(5)
+            .Select(a => new RecentActivitySummaryDto(
+                a.Event,
+                a.Metadata ?? "System event",
+                a.Timestamp,
+                a.TenantCode
+            ))
+            .ToListAsync(cancellationToken);
+
+        return new MasterDashboardSummaryDto(
+            TotalTenants: totalTenants,
+            ActiveTenants: activeTenants,
+            TotalUsers: totalUsers,
+            MonthlyRevenue: monthlyRevenue,
+            MrrGrowth: mrrGrowth,
+            NewTenantsThisMonth: newTenantsThisMonth,
+            PendingInvoices: pendingInvoices,
+            ActiveAlerts: activeAlerts,
+            SystemHealth: systemHealth,
+            RecentActivities: recentActivities
+        );
+    }
+
+    public async Task<MasterKeyMetricsDto> GetMasterKeyMetricsAsync(CancellationToken cancellationToken = default)
+    {
+        var currentMonth = DateTime.UtcNow.Month;
+        var currentYear = DateTime.UtcNow.Year;
+        var thisMonthStart = new DateTime(currentYear, currentMonth, 1);
+        var lastMonthStart = thisMonthStart.AddMonths(-1);
+
+        // MRR calculation
+        var mrr = await _masterContext.Subscriptions
+            .Where(s => s.Status == Domain.Master.Enums.SubscriptionStatus.Aktif)
+            .SumAsync(s => s.Price.Amount, cancellationToken);
+
+        var lastMonthMrr = mrr * 0.95m; // Approximate - could track historical MRR
+        var mrrGrowthPercent = lastMonthMrr > 0 ? ((mrr - lastMonthMrr) / lastMonthMrr) * 100 : 0;
+
+        // ARR = MRR * 12
+        var arr = mrr * 12;
+
+        // Churn rate (tenants cancelled in last 30 days / total at start)
+        var cancelledSubscriptions = await _masterContext.Subscriptions
+            .Where(s => s.Status == Domain.Master.Enums.SubscriptionStatus.IptalEdildi
+                && s.CancelledAt >= DateTime.UtcNow.AddDays(-30))
+            .CountAsync(cancellationToken);
+        var totalActiveSubscriptions = await _masterContext.Subscriptions
+            .Where(s => s.Status == Domain.Master.Enums.SubscriptionStatus.Aktif)
+            .CountAsync(cancellationToken);
+        var churnRate = totalActiveSubscriptions > 0
+            ? (cancelledSubscriptions * 100) / totalActiveSubscriptions
+            : 0;
+
+        // ARPU (Average Revenue Per User)
+        var totalUsers = await _masterContext.MasterUsers.CountAsync(cancellationToken);
+        var arpu = totalUsers > 0 ? mrr / totalUsers : 0;
+
+        // Customer Lifetime Value (simplified: ARPU / Churn Rate)
+        var clv = churnRate > 0 ? (int)(arpu * 12 / (churnRate / 100m)) : (int)(arpu * 24);
+
+        // Net Revenue Retention (assuming no expansion revenue for now)
+        var nrr = 100 - churnRate;
+
+        // Trial Conversion Rate
+        var trialCount = await _masterContext.Subscriptions
+            .Where(s => s.Status == Domain.Master.Enums.SubscriptionStatus.Deneme)
+            .CountAsync(cancellationToken);
+        var convertedTrials = await _masterContext.Subscriptions
+            .Where(s => s.Status == Domain.Master.Enums.SubscriptionStatus.Aktif
+                && s.StartDate >= DateTime.UtcNow.AddDays(-90))
+            .CountAsync(cancellationToken);
+        var totalTrialsInPeriod = trialCount + convertedTrials;
+        var trialConversionRate = totalTrialsInPeriod > 0
+            ? (convertedTrials * 100) / totalTrialsInPeriod
+            : 0;
+
+        return new MasterKeyMetricsDto(
+            Mrr: mrr,
+            Arr: arr,
+            MrrGrowthPercent: mrrGrowthPercent,
+            ChurnRate: churnRate,
+            AverageRevenuePerUser: arpu,
+            CustomerLifetimeValue: clv,
+            NetRevenueRetention: nrr,
+            TrialConversionRate: trialConversionRate
+        );
+    }
+
+    public async Task<List<QuickActionDto>> GetQuickActionsAsync(CancellationToken cancellationToken = default)
+    {
+        var quickActions = new List<QuickActionDto>();
+
+        // Pending tenant registrations
+        var pendingRegistrations = await _masterContext.TenantRegistrations
+            .Where(r => r.Status == RegistrationStatus.Pending)
+            .CountAsync(cancellationToken);
+        if (pendingRegistrations > 0)
+        {
+            quickActions.Add(new QuickActionDto(
+                Id: "pending-registrations",
+                Title: "Bekleyen Kayıtlar",
+                Description: "Onay bekleyen tenant kayıtları",
+                ActionType: "review",
+                Count: pendingRegistrations,
+                Url: "/master/registrations?status=pending"
+            ));
+        }
+
+        // Overdue invoices
+        var overdueInvoices = await _masterContext.Invoices
+            .Where(i => i.Status == Domain.Master.Enums.InvoiceStatus.Gecikti)
+            .CountAsync(cancellationToken);
+        if (overdueInvoices > 0)
+        {
+            quickActions.Add(new QuickActionDto(
+                Id: "overdue-invoices",
+                Title: "Vadesi Geçmiş Faturalar",
+                Description: "Ödenmemiş vadesi geçmiş faturalar",
+                ActionType: "urgent",
+                Count: overdueInvoices,
+                Url: "/master/invoices?status=overdue"
+            ));
+        }
+
+        // Expiring subscriptions (next 30 days)
+        var expiringSubscriptions = await _masterContext.Subscriptions
+            .Where(s => s.Status == Domain.Master.Enums.SubscriptionStatus.Aktif
+                && s.CurrentPeriodEnd <= DateTime.UtcNow.AddDays(30))
+            .CountAsync(cancellationToken);
+        if (expiringSubscriptions > 0)
+        {
+            quickActions.Add(new QuickActionDto(
+                Id: "expiring-subscriptions",
+                Title: "Süresi Dolacak Abonelikler",
+                Description: "30 gün içinde sona erecek abonelikler",
+                ActionType: "warning",
+                Count: expiringSubscriptions,
+                Url: "/master/subscriptions?expiring=true"
+            ));
+        }
+
+        // Active system alerts
+        var activeAlerts = await _masterContext.SystemAlerts
+            .Where(a => a.IsActive)
+            .CountAsync(cancellationToken);
+        if (activeAlerts > 0)
+        {
+            quickActions.Add(new QuickActionDto(
+                Id: "system-alerts",
+                Title: "Sistem Uyarıları",
+                Description: "Dikkat gerektiren sistem uyarıları",
+                ActionType: "alert",
+                Count: activeAlerts,
+                Url: "/master/monitoring/alerts"
+            ));
+        }
+
+        return quickActions;
+    }
+
+    public async Task<AlertsSummaryDto> GetAlertsSummaryAsync(CancellationToken cancellationToken = default)
+    {
+        var activeAlerts = await _masterContext.SystemAlerts
+            .Where(a => a.IsActive)
+            .ToListAsync(cancellationToken);
+
+        var totalActive = activeAlerts.Count;
+        var critical = activeAlerts.Count(a => a.Severity == Domain.Master.Enums.AlertSeverity.Critical);
+        var warning = activeAlerts.Count(a => a.Severity == Domain.Master.Enums.AlertSeverity.Warning);
+        var info = activeAlerts.Count(a => a.Severity == Domain.Master.Enums.AlertSeverity.Info);
+
+        var recentAlerts = activeAlerts
+            .OrderByDescending(a => a.Timestamp)
+            .Take(5)
+            .Select(a => new AlertPreviewDto(
+                Id: a.Id.ToString(),
+                Title: a.Title,
+                Severity: a.Severity.ToString(),
+                Timestamp: a.Timestamp
+            ))
+            .ToList();
+
+        return new AlertsSummaryDto(
+            TotalActive: totalActive,
+            Critical: critical,
+            Warning: warning,
+            Info: info,
+            RecentAlerts: recentAlerts
+        );
     }
 
     // Helper methods

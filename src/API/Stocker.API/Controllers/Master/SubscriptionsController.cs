@@ -5,9 +5,15 @@ using Stocker.Application.Features.Subscriptions.Commands.CreateSubscription;
 using Stocker.Application.Features.Subscriptions.Commands.UpdateSubscription;
 using Stocker.Application.Features.Subscriptions.Commands.CancelSubscription;
 using Stocker.Application.Features.Subscriptions.Commands.RenewSubscription;
+using Stocker.Application.Features.Subscriptions.Commands.SuspendSubscription;
+using Stocker.Application.Features.Subscriptions.Commands.ReactivateSubscription;
 using Stocker.Application.Features.Subscriptions.Commands.ChangePackage;
+using Stocker.Application.Features.Subscriptions.Commands.UpgradeSubscription;
+using Stocker.Application.Features.Subscriptions.Commands.DowngradeSubscription;
 using Stocker.Application.Features.Subscriptions.Queries.GetSubscriptions;
 using Stocker.Application.Features.Subscriptions.Queries.GetSubscriptionById;
+using Stocker.Application.Features.Subscriptions.Queries.GetSubscriptionHistory;
+using Stocker.Application.Features.Subscriptions.Queries.GetSubscriptionUsage;
 using Swashbuckle.AspNetCore.Annotations;
 using Stocker.Application.Common.Exceptions;
 using Stocker.SharedKernel.Exceptions;
@@ -146,8 +152,14 @@ public class SubscriptionsController : MasterControllerBase
     {
         try
         {
-            // TODO: Implement SuspendSubscriptionCommand
-            throw new NotImplementedException();
+            var command = new SuspendSubscriptionCommand
+            {
+                Id = id,
+                Reason = request.Reason ?? "Admin suspended subscription"
+            };
+
+            var result = await _mediator.Send(command);
+            return HandleResult(result);
         }
         catch (BusinessException ex)
         {
@@ -161,8 +173,13 @@ public class SubscriptionsController : MasterControllerBase
     {
         try
         {
-            // TODO: Implement ReactivateSubscriptionCommand
-            throw new NotImplementedException();
+            var command = new ReactivateSubscriptionCommand
+            {
+                Id = id
+            };
+
+            var result = await _mediator.Send(command);
+            return HandleResult(result);
         }
         catch (BusinessException ex)
         {
@@ -194,6 +211,109 @@ public class SubscriptionsController : MasterControllerBase
             return StatusCode(500, "An error occurred while changing the package");
         }
     }
+
+    /// <summary>
+    /// Get subscription change history
+    /// </summary>
+    [HttpGet("{id}/history")]
+    [SwaggerOperation(Summary = "Get subscription history", Description = "Returns the history of changes for a subscription")]
+    public async Task<IActionResult> GetSubscriptionHistory(Guid id, [FromQuery] int? limit = 50)
+    {
+        try
+        {
+            var query = new GetSubscriptionHistoryQuery
+            {
+                SubscriptionId = id,
+                Limit = limit
+            };
+
+            var result = await _mediator.Send(query);
+            return HandleResult(result);
+        }
+        catch (BusinessException ex)
+        {
+            _logger.LogError(ex, "Error getting subscription history for {SubscriptionId}", id);
+            return StatusCode(500, "An error occurred while getting subscription history");
+        }
+    }
+
+    /// <summary>
+    /// Get subscription usage metrics
+    /// </summary>
+    [HttpGet("{id}/usage")]
+    [SwaggerOperation(Summary = "Get subscription usage", Description = "Returns usage metrics and trends for a subscription")]
+    public async Task<IActionResult> GetSubscriptionUsage(Guid id, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
+    {
+        try
+        {
+            var query = new GetSubscriptionUsageQuery
+            {
+                SubscriptionId = id,
+                StartDate = startDate,
+                EndDate = endDate
+            };
+
+            var result = await _mediator.Send(query);
+            return HandleResult(result);
+        }
+        catch (BusinessException ex)
+        {
+            _logger.LogError(ex, "Error getting subscription usage for {SubscriptionId}", id);
+            return StatusCode(500, "An error occurred while getting subscription usage");
+        }
+    }
+
+    /// <summary>
+    /// Upgrade subscription to a higher tier package
+    /// </summary>
+    [HttpPost("{id}/upgrade")]
+    [SwaggerOperation(Summary = "Upgrade subscription", Description = "Upgrades the subscription to a higher tier package with optional prorated billing")]
+    public async Task<IActionResult> UpgradeSubscription(Guid id, [FromBody] UpgradeSubscriptionRequest request)
+    {
+        try
+        {
+            var command = new UpgradeSubscriptionCommand
+            {
+                SubscriptionId = id,
+                NewPackageId = request.NewPackageId,
+                ProrateBilling = request.ProrateBilling
+            };
+
+            var result = await _mediator.Send(command);
+            return HandleResult(result);
+        }
+        catch (BusinessException ex)
+        {
+            _logger.LogError(ex, "Error upgrading subscription {SubscriptionId}", id);
+            return StatusCode(500, "An error occurred while upgrading the subscription");
+        }
+    }
+
+    /// <summary>
+    /// Downgrade subscription to a lower tier package
+    /// </summary>
+    [HttpPost("{id}/downgrade")]
+    [SwaggerOperation(Summary = "Downgrade subscription", Description = "Downgrades the subscription to a lower tier package, optionally at period end")]
+    public async Task<IActionResult> DowngradeSubscription(Guid id, [FromBody] DowngradeSubscriptionRequest request)
+    {
+        try
+        {
+            var command = new DowngradeSubscriptionCommand
+            {
+                SubscriptionId = id,
+                NewPackageId = request.NewPackageId,
+                ApplyAtPeriodEnd = request.ApplyAtPeriodEnd
+            };
+
+            var result = await _mediator.Send(command);
+            return HandleResult(result);
+        }
+        catch (BusinessException ex)
+        {
+            _logger.LogError(ex, "Error downgrading subscription {SubscriptionId}", id);
+            return StatusCode(500, "An error occurred while downgrading the subscription");
+        }
+    }
 }
 
 public class CancelSubscriptionRequest
@@ -214,4 +334,16 @@ public class SuspendSubscriptionRequest
 public class ChangePackageRequest
 {
     public Guid NewPackageId { get; set; }
+}
+
+public class UpgradeSubscriptionRequest
+{
+    public Guid NewPackageId { get; set; }
+    public bool ProrateBilling { get; set; } = true;
+}
+
+public class DowngradeSubscriptionRequest
+{
+    public Guid NewPackageId { get; set; }
+    public bool ApplyAtPeriodEnd { get; set; } = true;
 }

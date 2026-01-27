@@ -1552,6 +1552,23 @@ export class FinanceService {
       { params: { year, month } }
     );
   }
+
+  // ===== Seed Data =====
+
+  /**
+   * Load standard Finance seed data (Tekdüzen Hesap Planı, cost centers)
+   */
+  static async loadStandardData(): Promise<SeedFinanceDataResult> {
+    return ApiService.post<SeedFinanceDataResult>(this.getPath('seed-data/load-standard'), {});
+  }
+}
+
+// Seed Data Result
+export interface SeedFinanceDataResult {
+  accountsSeeded: number;
+  costCentersSeeded: number;
+  alreadySeeded: boolean;
+  message: string;
 }
 
 export default FinanceService;

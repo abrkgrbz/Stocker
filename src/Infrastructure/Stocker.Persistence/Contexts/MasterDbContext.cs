@@ -73,6 +73,11 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
     // Security & Audit
     public DbSet<SecurityAuditLog> SecurityAuditLogs => Set<SecurityAuditLog>();
 
+    // System Monitoring & Reporting
+    public DbSet<SystemAlert> SystemAlerts => Set<SystemAlert>();
+    public DbSet<ReportSchedule> ReportSchedules => Set<ReportSchedule>();
+    public DbSet<ReportExecution> ReportExecutions => Set<ReportExecution>();
+
     // System Settings
     public DbSet<SystemSettings> SystemSettings => Set<SystemSettings>();
 

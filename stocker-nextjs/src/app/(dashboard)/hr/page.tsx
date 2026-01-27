@@ -5,8 +5,9 @@
  * Monochrome design system following inventory page patterns
  */
 
-import React, { useMemo } from 'react';
-import { Table, List, Empty, Spin, Tooltip, Progress } from 'antd';
+import React, { useMemo, useState } from 'react';
+import { Table, List, Empty, Spin, Tooltip, Progress, Dropdown, Button, message } from 'antd';
+import type { MenuProps } from 'antd';
 import {
   ArrowPathIcon,
   BellIcon,
@@ -27,6 +28,8 @@ import {
   DocumentChartBarIcon,
   BanknotesIcon,
   ScaleIcon,
+  CircleStackIcon,
+  EllipsisHorizontalIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import {
@@ -40,6 +43,7 @@ import {
   useAnnouncements,
   useHolidays,
 } from '@/lib/api/hooks/useHR';
+import { HRService } from '@/lib/api/services/hr.service';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import {
@@ -119,6 +123,71 @@ export default function HRDashboardPage() {
   // Active announcements (pinned or recent)
   const activeAnnouncements = announcements.filter((a: any) => a.isActive).length;
   const pinnedAnnouncements = announcements.filter((a: any) => a.isPinned && a.isActive);
+
+  // Seed data loading state
+  const [seedDataLoading, setSeedDataLoading] = useState(false);
+
+  // Load standard HR seed data
+  const handleLoadSeedData = async () => {
+    setSeedDataLoading(true);
+    try {
+      const result = await HRService.loadStandardData();
+      if (result.alreadySeeded) {
+        message.info('Standart IK verileri zaten yüklenmiş durumda.');
+      } else {
+        message.success(
+          `Standart IK verileri yüklendi: ${result.leaveTypesSeeded} izin türü, ${result.holidaysSeeded} resmi tatil, ${result.shiftsSeeded} vardiya`
+        );
+        refetchEmployees();
+      }
+    } catch (error: any) {
+      message.error(error?.message || 'Standart IK verileri yüklenirken bir hata oluştu.');
+    } finally {
+      setSeedDataLoading(false);
+    }
+  };
+
+  // Operations menu items
+  const operationsMenuItems: MenuProps['items'] = [
+    {
+      key: 'employees',
+      label: 'Çalışanlar',
+      icon: <UserGroupIcon className="w-4 h-4" />,
+      onClick: () => window.location.href = '/hr/employees',
+    },
+    {
+      key: 'departments',
+      label: 'Departmanlar',
+      icon: <BuildingLibraryIcon className="w-4 h-4" />,
+      onClick: () => window.location.href = '/hr/departments',
+    },
+    {
+      key: 'leave-types',
+      label: 'İzin Türleri',
+      icon: <CalendarIcon className="w-4 h-4" />,
+      onClick: () => window.location.href = '/hr/leave-types',
+    },
+    {
+      key: 'holidays',
+      label: 'Resmi Tatiller',
+      icon: <GiftIcon className="w-4 h-4" />,
+      onClick: () => window.location.href = '/hr/holidays',
+    },
+    {
+      key: 'shifts',
+      label: 'Vardiyalar',
+      icon: <ClockIcon className="w-4 h-4" />,
+      onClick: () => window.location.href = '/hr/shifts',
+    },
+    { type: 'divider' as const },
+    {
+      key: 'seed-data',
+      label: seedDataLoading ? 'Yükleniyor...' : 'Standart Yapıyı Yükle',
+      icon: <CircleStackIcon className={`w-4 h-4 ${seedDataLoading ? 'animate-spin' : ''}`} />,
+      onClick: handleLoadSeedData,
+      disabled: seedDataLoading,
+    },
+  ];
 
   // Calculate total payroll for current month
   const currentMonth = dayjs().format('YYYY-MM');
@@ -295,6 +364,13 @@ export default function HRDashboardPage() {
               Calisanlar
             </button>
           </Link>
+
+          {/* Operations Dropdown */}
+          <Dropdown menu={{ items: operationsMenuItems }} placement="bottomRight">
+            <Button className="!border-slate-300 !text-slate-600">
+              İşlemler <EllipsisHorizontalIcon className="w-4 h-4 ml-1" />
+            </Button>
+          </Dropdown>
         </div>
       </div>
 
