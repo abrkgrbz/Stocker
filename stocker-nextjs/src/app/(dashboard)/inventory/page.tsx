@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Select, Spin, DatePicker, Drawer, Switch, Dropdown, Table, Tag, List, Progress, Tooltip, Empty } from 'antd';
+import { Button, Select, Spin, DatePicker, Drawer, Switch, Dropdown, Table, Tag, List, Progress, Tooltip, Empty, message } from 'antd';
 import {
   ArrowDownIcon,
   ArrowPathIcon,
@@ -23,6 +23,7 @@ import {
   PrinterIcon,
   Squares2X2Icon,
   TruckIcon,
+  CircleStackIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import {
@@ -39,6 +40,7 @@ import {
   useInventoryKPIs,
 } from '@/lib/api/hooks/useInventory';
 import { TransferStatus, StockCountStatus } from '@/lib/api/services/inventory.types';
+import { InventoryService } from '@/lib/api/services/inventory.service';
 import type { ColumnsType } from 'antd/es/table';
 import type { ProductDto, StockMovementDto, InventoryAlertDto } from '@/lib/api/services/inventory.types';
 import { formatCurrency, formatNumber } from '@/lib/utils/format';
@@ -131,6 +133,7 @@ export default function InventoryDashboardPage() {
     return defaultWidgetVisibility;
   });
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
+  const [seedDataLoading, setSeedDataLoading] = useState(false);
 
   // Toggle widget visibility
   const toggleWidget = (widget: keyof WidgetVisibility) => {
@@ -326,6 +329,27 @@ export default function InventoryDashboardPage() {
     refetchProducts();
   };
 
+  // Load standard seed data
+  const handleLoadSeedData = async () => {
+    setSeedDataLoading(true);
+    try {
+      const result = await InventoryService.loadStandardData();
+      if (result.alreadySeeded) {
+        message.info('Standart veriler zaten yüklenmiş durumda.');
+      } else {
+        message.success(
+          `Standart veriler yüklendi: ${result.unitsSeeded} birim, ${result.packagingTypesSeeded} ambalaj tipi, ${result.categoriesSeeded} kategori, ${result.warehousesSeeded} depo`
+        );
+        // Refresh data after seeding
+        handleRefresh();
+      }
+    } catch (error: any) {
+      message.error(error?.message || 'Standart veriler yüklenirken bir hata oluştu.');
+    } finally {
+      setSeedDataLoading(false);
+    }
+  };
+
   // Low stock table columns
   const lowStockColumns: ColumnsType<any> = [
     {
@@ -450,6 +474,14 @@ export default function InventoryDashboardPage() {
       label: 'Analitik',
       icon: <Squares2X2Icon className="w-4 h-4" />,
       onClick: () => router.push('/inventory/analytics'),
+    },
+    { type: 'divider' as const },
+    {
+      key: 'seed-data',
+      label: seedDataLoading ? 'Yükleniyor...' : 'Standart Yapıyı Yükle',
+      icon: <CircleStackIcon className={`w-4 h-4 ${seedDataLoading ? 'animate-spin' : ''}`} />,
+      onClick: handleLoadSeedData,
+      disabled: seedDataLoading,
     },
   ];
 

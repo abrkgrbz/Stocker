@@ -2624,6 +2624,27 @@ export class InventoryService {
   static async deactivateShelfLife(id: number): Promise<ShelfLifeDto> {
     return ApiService.post<ShelfLifeDto>(this.getPath(`shelf-lives/${id}/deactivate`), {});
   }
+
+  // =====================================
+  // SEED DATA
+  // =====================================
+
+  /**
+   * Load standard inventory seed data (units, packaging types, categories, warehouse)
+   */
+  static async loadStandardData(): Promise<SeedInventoryDataResult> {
+    return ApiService.post<SeedInventoryDataResult>(this.getPath('seed-data/load-standard'), {});
+  }
+}
+
+// Seed Data Result
+export interface SeedInventoryDataResult {
+  unitsSeeded: number;
+  packagingTypesSeeded: number;
+  categoriesSeeded: number;
+  warehousesSeeded: number;
+  alreadySeeded: boolean;
+  message: string;
 }
 
 export default InventoryService;
