@@ -156,7 +156,7 @@ const AuditLogsPage: React.FC = () => {
     ];
 
     const sortedData = React.useMemo(() => {
-        let data = (Array.isArray(logsResponse?.logs || logsResponse?.data) ? (logsResponse?.logs || logsResponse?.data)! : []);
+        let data = (logsResponse?.items || []);
 
         // Basic Filtering
         data = data.filter(log =>

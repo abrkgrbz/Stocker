@@ -6,14 +6,18 @@ export const useTenants = (params?: any) => {
     const queryClient = useQueryClient();
     const toast = useToast();
 
-    const tenantsQuery = useQuery<TenantListDto[]>({
+    const tenantsQuery = useQuery({
         queryKey: ['tenants', params],
         queryFn: () => tenantService.getAll(params),
     });
 
+    const tenantsData = tenantsQuery.data as any;
+    const tenantsList = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.items || []);
+    const totalCount = Array.isArray(tenantsData) ? tenantsData.length : (tenantsData?.totalCount || 0);
+
     const statsQuery = useQuery<TenantsStatisticsDto>({
         queryKey: ['tenants-stats'],
-        queryFn: () => tenantService.getAllStatistics(),
+        queryFn: () => tenantService.getStatistics(),
     });
 
     const toggleStatusMutation = useMutation({
@@ -29,8 +33,8 @@ export const useTenants = (params?: any) => {
     });
 
     const deleteMutation = useMutation({
-        mutationFn: ({ id, hardDelete }: { id: string; hardDelete?: boolean }) =>
-            tenantService.delete(id, hardDelete),
+        mutationFn: ({ id, hardDelete }: { id: string; reason?: string, hardDelete?: boolean }) =>
+            tenantService.delete(id, undefined, hardDelete),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['tenants'] });
             queryClient.invalidateQueries({ queryKey: ['tenants-stats'] });
@@ -42,7 +46,8 @@ export const useTenants = (params?: any) => {
     });
 
     return {
-        tenants: tenantsQuery.data,
+        tenants: tenantsList,
+        totalCount,
         isLoadingTenants: tenantsQuery.isLoading,
         stats: statsQuery.data,
         isLoadingStats: statsQuery.isLoading,

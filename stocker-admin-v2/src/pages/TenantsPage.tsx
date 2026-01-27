@@ -8,11 +8,12 @@ import {
     Search,
     Plus,
     MoreVertical,
-    Globe,
     CheckCircle2,
     XCircle,
-    ExternalLink,
-    Filter
+    Filter,
+    Mail,
+    Phone,
+    TrendingUp
 } from 'lucide-react';
 import type { TenantListDto } from '@/services/tenantService';
 import { useTenants } from '@/hooks/useTenants';
@@ -30,12 +31,13 @@ const TenantsPage: React.FC = () => {
 
     const {
         tenants,
+        totalCount,
         isLoadingTenants,
         stats,
         isLoadingStats,
         toggleStatus,
         deleteTenant
-    } = useTenants({ searchTerm });
+    } = useTenants({ searchTerm, pageNumber: currentPage, pageSize });
 
     const toast = useToast();
 
@@ -45,6 +47,7 @@ const TenantsPage: React.FC = () => {
 
     const handleDeleteTenant = (id: string) => {
         if (confirm('Bu tenantı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')) {
+            // @ts-ignore
             deleteTenant({ id });
         }
     };
@@ -65,12 +68,19 @@ const TenantsPage: React.FC = () => {
             )
         },
         {
-            header: 'Domain',
+            header: 'İletişim',
             accessor: (tenant: TenantListDto) => (
-                <div className="flex items-center gap-2 text-text-muted">
-                    <Globe className="w-3.5 h-3.5" />
-                    <span className="text-xs">{tenant.domain}</span>
-                    <ExternalLink className="w-3 h-3 hover:text-text-main cursor-pointer transition-colors" />
+                <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2 text-text-muted">
+                        <Mail className="w-3.5 h-3.5" />
+                        <span className="text-xs">{tenant.contactEmail}</span>
+                    </div>
+                    {tenant.contactPhone && (
+                        <div className="flex items-center gap-2 text-text-muted">
+                            <Phone className="w-3.5 h-3.5" />
+                            <span className="text-xs">{tenant.contactPhone}</span>
+                        </div>
+                    )}
                 </div>
             )
         },
@@ -81,7 +91,7 @@ const TenantsPage: React.FC = () => {
                     tenant.packageName === 'Professional' ? 'bg-indigo-500/10 text-indigo-400' :
                         'bg-indigo-500/5 text-text-muted'
                     }`}>
-                    {tenant.packageName}
+                    {tenant.packageName || 'Standart'}
                 </span>
             )
         },
@@ -112,6 +122,14 @@ const TenantsPage: React.FC = () => {
                 <div className="flex items-center gap-2 text-text-muted">
                     <Users className="w-3.5 h-3.5" />
                     <span className="text-xs font-bold">{tenant.userCount}</span>
+                </div>
+            )
+        },
+        {
+            header: 'Oluşturulma',
+            accessor: (tenant: TenantListDto) => (
+                <div className="text-xs text-text-muted">
+                    {new Date(tenant.createdAt).toLocaleDateString('tr-TR')}
                 </div>
             )
         },
@@ -166,14 +184,15 @@ const TenantsPage: React.FC = () => {
             >
                 <form className="space-y-6" onSubmit={(e) => {
                     e.preventDefault();
-                    toast.show('Yeni tenant başarıyla oluşturuldu (Demo)', 'success');
+                    // TODO: Implement create logic here using tenantService.create
+                    toast.show('Yeni tenant özelliği henüz yapım aşamasında', 'info');
                     setIsAddModalOpen(false);
                 }}>
                     <div className="grid grid-cols-2 gap-4">
                         <Input label="Organizasyon Adı" placeholder="Örn: ABC Lojistik" required />
                         <Input label="Organizasyon Kodu" placeholder="Örn: ABC-01" required />
                     </div>
-                    <Input label="Domain" placeholder="abc.stocker.app" required />
+                    {/* <Input label="Domain" placeholder="abc.stocker.app" required /> */}
                     <Input label="Yönetici E-posta" type="email" placeholder="admin@abc.com" required />
                     <div className="pt-4 flex justify-end gap-3">
                         <Button variant="ghost" onClick={() => setIsAddModalOpen(false)}>İptal</Button>
@@ -226,12 +245,12 @@ const TenantsPage: React.FC = () => {
                 <Card noPadding className="p-6">
                     <div className="flex items-center gap-4">
                         <div className="p-3 bg-amber-500/10 text-amber-400 rounded-2xl">
-                            <Users className="w-6 h-6" />
+                            <TrendingUp className="w-6 h-6" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted">Toplam Kullanıcı</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted">Bu Ay Yeni</p>
                             <p className="text-2xl font-bold text-text-main mt-0.5">
-                                {isLoadingStats ? '...' : (stats?.totalUsers || 0)}
+                                {isLoadingStats ? '...' : (stats?.newTenantsThisMonth || 0)}
                             </p>
                         </div>
                     </div>
@@ -242,17 +261,14 @@ const TenantsPage: React.FC = () => {
             <Card noPadding className="border-border-subtle overflow-hidden">
                 <Table
                     columns={columns}
-                    data={(Array.isArray(tenants) ? tenants : [])
-                        .map(t => ({ ...t, id: t.id || t.code }))
-                        .slice((currentPage - 1) * pageSize, currentPage * pageSize)
-                    }
+                    data={tenants || []}
                     isLoading={isLoadingTenants}
                     onRowClick={(tenant: TenantListDto) => navigate(`/tenants/${tenant.id}`)}
                     pagination={{
                         currentPage,
                         pageSize,
-                        totalCount: (tenants || []).length,
-                        totalPages: Math.ceil((tenants || []).length / pageSize),
+                        totalCount: totalCount || (tenants || []).length,
+                        totalPages: Math.ceil((totalCount || 0) / pageSize),
                         onPageChange: setCurrentPage
                     }}
                 />

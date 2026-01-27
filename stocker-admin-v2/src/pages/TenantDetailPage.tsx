@@ -21,17 +21,53 @@ import {
     MoreVertical,
     Calendar,
     MapPin,
-    Hash
+    Hash,
+    HeartPulse,
+    AlertTriangle
 } from 'lucide-react';
-import { useTenantDetail } from '@/hooks/useTenantDetail';
+import { useQuery } from '@tanstack/react-query';
+import { tenantService, type TenantDto, type TenantStatisticsDto } from '@/services/tenantService';
+import { tenantHealthService, type TenantHealthDto, type HealthHistoryDto } from '@/services/tenantHealthService';
 
 const TenantDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { data: tenant, isLoading } = useTenantDetail(id);
-    const [activeTab, setActiveTab] = useState<'overview' | 'company' | 'usage' | 'history'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'company' | 'history' | 'health'>('overview');
+    const [health, setHealth] = useState<TenantHealthDto | null>(null);
+    const [healthHistory, setHealthHistory] = useState<HealthHistoryDto[]>([]);
 
-    if (isLoading) {
+    const { data: tenant, isLoading: isLoadingTenant } = useQuery({
+        queryKey: ['tenant', id],
+        queryFn: () => tenantService.getById(id!),
+        enabled: !!id,
+    });
+
+    const { data: stats, isLoading: isLoadingStats } = useQuery({
+        queryKey: ['tenant-stats', id],
+        queryFn: () => tenantService.getByIdStatistics(id!),
+        enabled: !!id,
+    });
+
+    React.useEffect(() => {
+        if (activeTab === 'health' && id) {
+            fetchHealthData(id);
+        }
+    }, [activeTab, id]);
+
+    const fetchHealthData = async (tenantId: string) => {
+        try {
+            const [hData, hHistory] = await Promise.all([
+                tenantHealthService.getLatest(tenantId),
+                tenantHealthService.getHistory(tenantId)
+            ]);
+            setHealth(hData);
+            setHealthHistory(hHistory || []);
+        } catch (error) {
+            console.error('Health data fetch failed', error);
+        }
+    };
+
+    if (isLoadingTenant || isLoadingStats) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="w-12 h-12 rounded-full border-4 border-indigo-500/10 border-t-indigo-500 animate-spin" />
@@ -50,9 +86,9 @@ const TenantDetailPage: React.FC = () => {
 
     const tabs = [
         { id: 'overview', label: 'Genel Bakış', icon: Activity },
-        { id: 'company', label: 'Şirket & Sahip', icon: Building2 },
-        { id: 'usage', label: 'Kullanım & Limitler', icon: Server },
-        { id: 'history', label: 'Aktivite Geçmişi', icon: History }
+        { id: 'company', label: 'Şirket Bilgileri', icon: Building2 },
+        { id: 'history', label: 'Aktivite Geçmişi', icon: History },
+        { id: 'health', label: 'Sağlık & İzleme', icon: HeartPulse }
     ] as const;
 
     return (
@@ -76,8 +112,7 @@ const TenantDetailPage: React.FC = () => {
                         <p className="text-text-muted mt-1 flex items-center gap-2">
                             <Hash className="w-3.5 h-3.5" />
                             <span className="text-xs font-bold uppercase tracking-widest">{tenant.code}</span>
-                            <span className="opacity-20">•</span>
-                            <span className="text-xs font-medium">{tenant.domain}</span>
+                            {/* Domain removed from DTO, using hardcoded pattern or settings? Assuming tenant.name as placeholder for now if no domain field */}
                         </p>
                     </div>
                 </div>
@@ -96,10 +131,9 @@ const TenantDetailPage: React.FC = () => {
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Kullanıcılar</p>
-                            <p className="text-2xl font-bold text-text-main">{tenant.users} / {tenant.maxUsers}</p>
+                            <p className="text-2xl font-bold text-text-main">{stats?.totalUsers || 0} / {stats?.activeUsers ? `(${stats.activeUsers} aktif)` : '-'}</p>
                         </div>
                     </div>
-                    <div className="absolute bottom-0 left-0 h-1 bg-indigo-500 transition-all duration-500 group-hover:opacity-100 opacity-20" style={{ width: `${(tenant.users / tenant.maxUsers) * 100}%` }} />
                 </Card>
 
                 <Card className="bg-emerald-500/5 border-emerald-500/10 relative overflow-hidden group">
@@ -109,10 +143,9 @@ const TenantDetailPage: React.FC = () => {
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Depolama</p>
-                            <p className="text-2xl font-bold text-text-main">{tenant.storage} / {tenant.maxStorage} GB</p>
+                            <p className="text-2xl font-bold text-text-main">{stats?.storageUsedGB ? stats.storageUsedGB.toFixed(2) : '0'} GB</p>
                         </div>
                     </div>
-                    <div className="absolute bottom-0 left-0 h-1 bg-emerald-500 transition-all duration-500 group-hover:opacity-100 opacity-20" style={{ width: `${(tenant.storage / tenant.maxStorage) * 100}%` }} />
                 </Card>
 
                 <Card className="bg-amber-500/5 border-amber-500/10">
@@ -122,7 +155,7 @@ const TenantDetailPage: React.FC = () => {
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Paket</p>
-                            <p className="text-2xl font-bold text-text-main">{tenant.packageName}</p>
+                            <p className="text-2xl font-bold text-text-main">{tenant.subscription?.packageName || 'Standart'}</p>
                         </div>
                     </div>
                 </Card>
@@ -133,9 +166,9 @@ const TenantDetailPage: React.FC = () => {
                             <CreditCard className="w-6 h-6" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Aylık Ücret</p>
-                            <p className="text-2xl font-bold text-indigo-400">
-                                {tenant.billing?.currency || '₺'}{tenant.billing?.amount?.toLocaleString() || '0'}
+                            <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Abonelik Durumu</p>
+                            <p className="text-xl font-bold text-indigo-400 capitalize">
+                                {tenant.subscription?.status || '-'}
                             </p>
                         </div>
                     </div>
@@ -147,7 +180,7 @@ const TenantDetailPage: React.FC = () => {
                 {tabs.map(tab => (
                     <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
+                        onClick={() => setActiveTab(tab.id as any)}
                         className={`
                             flex items-center gap-2.5 px-6 py-3 rounded-2xl text-xs font-bold transition-all
                             ${activeTab === tab.id
@@ -169,20 +202,24 @@ const TenantDetailPage: React.FC = () => {
                             <Card title="Tenant Detayları" subtitle="Temel konfigürasyon ve kimlik bilgileri">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 p-4">
                                     <DetailItem icon={Hash} label="Tenant ID" value={tenant.id} isCode />
-                                    <DetailItem icon={Globe} label="Subdomain" value={`${tenant.subdomain || '-'}.stocker.app`} link={tenant.subdomain ? `https://${tenant.subdomain}.stocker.app` : undefined} />
-                                    <DetailItem icon={ShieldCheck} label="Paket Seviyesi" value={tenant.packageName || '-'} />
-                                    <DetailItem icon={Calendar} label="Oluşturulma Tarihi" value={tenant.createdDate ? new Date(tenant.createdDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'} />
-                                    <DetailItem icon={Database} label="Veritabanı Bölgesi" value={tenant.database?.region || 'Europe-West'} />
-                                    <DetailItem icon={Activity} label="Son Aktivite" value={tenant.lastActive ? new Date(tenant.lastActive).toLocaleString('tr-TR') : 'Yok'} />
+                                    {/* Subdomain not explicitly in DTO but might be derived or in settings? */}
+                                    <DetailItem icon={ShieldCheck} label="Paket Seviyesi" value={tenant.subscription?.packageName || '-'} />
+                                    <DetailItem icon={Calendar} label="Oluşturulma Tarihi" value={tenant.createdAt ? new Date(tenant.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'} />
+                                    <DetailItem icon={Activity} label="Son Aktivite" value={stats?.lastActivityDate ? new Date(stats.lastActivityDate).toLocaleString('tr-TR') : 'Yok'} />
                                 </div>
                             </Card>
 
-                            <Card title="Limit Kullanımı" subtitle="Paket bazlı kaynak tüketimi">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <UsageBar title="API Çağrıları" used={tenant.limits?.apiCalls?.used || 0} max={tenant.limits?.apiCalls?.max || 1} unit="çağrı" />
-                                    <UsageBar title="Bant Genişliği" used={tenant.limits?.bandwidth?.used || 0} max={tenant.limits?.bandwidth?.max || 1} unit="GB" color="bg-emerald-500" />
-                                    <UsageBar title="E-posta Gönderimi" used={tenant.limits?.emailsSent?.used || 0} max={tenant.limits?.emailsSent?.max || 1} unit="adet" color="bg-amber-500" />
-                                    <UsageBar title="Özel Domain" used={tenant.limits?.customDomains?.used || 0} max={tenant.limits?.customDomains?.max || 1} unit="adet" color="bg-rose-500" />
+                            <Card title="Modül Kullanımı" subtitle="Aktif modül sayıları">
+                                <div className="space-y-4">
+                                    {stats?.moduleUsage && Object.entries(stats.moduleUsage).map(([key, value]) => (
+                                        <div key={key} className="flex items-center justify-between">
+                                            <span className="text-sm font-medium text-text-muted capitalize">{key}</span>
+                                            <span className="text-sm font-bold text-text-main">{value}</span>
+                                        </div>
+                                    ))}
+                                    {(!stats?.moduleUsage || Object.keys(stats.moduleUsage).length === 0) && (
+                                        <p className="text-text-muted text-sm italic">Modül kullanım verisi bulunamadı.</p>
+                                    )}
                                 </div>
                             </Card>
                         </>
@@ -190,18 +227,19 @@ const TenantDetailPage: React.FC = () => {
 
                     {activeTab === 'company' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <Card title="Şirket Bilgileri">
+                            <Card title="İletişim Bilgileri">
                                 <div className="space-y-6">
-                                    <DetailItem icon={Building2} label="Resmi Ad" value={tenant.company?.name || '-'} />
-                                    <DetailItem icon={Hash} label="Vergi Numarası" value={tenant.company?.taxNumber || '-'} />
-                                    <DetailItem icon={MapPin} label="Adres" value={tenant.company ? `${tenant.company.address || ''}, ${tenant.company.city || ''}, ${tenant.company.country || ''}` : '-'} />
+                                    <DetailItem icon={Mail} label="E-posta" value={tenant.contactEmail || '-'} />
+                                    <DetailItem icon={Phone} label="Telefon" value={tenant.contactPhone || '-'} />
+                                    <DetailItem icon={MapPin} label="Adres" value={`${tenant.address || ''} ${tenant.city || ''} ${tenant.country || ''}`} />
+                                    <DetailItem icon={Hash} label="Vergi No" value={tenant.taxNumber || '-'} />
                                 </div>
                             </Card>
-                            <Card title="Sahip Bilgileri">
+                            <Card title="Bölgesel Ayarlar">
                                 <div className="space-y-6">
-                                    <DetailItem icon={Users} label="Ad Soyad" value={tenant.owner ? `${tenant.owner.firstName || ''} ${tenant.owner.lastName || ''}` : '-'} />
-                                    <DetailItem icon={Mail} label="E-posta" value={tenant.owner?.email || '-'} />
-                                    <DetailItem icon={Phone} label="Telefon" value={tenant.owner?.phone || '-'} />
+                                    <DetailItem icon={Globe} label="Para Birimi" value={tenant.settings?.currency || '-'} />
+                                    <DetailItem icon={Activity} label="Zaman Dilimi" value={tenant.settings?.timezone || '-'} />
+                                    <DetailItem icon={Calendar} label="Tarih Formatı" value={tenant.settings?.dateFormat || '-'} />
                                 </div>
                             </Card>
                         </div>
@@ -209,30 +247,40 @@ const TenantDetailPage: React.FC = () => {
 
                     {activeTab === 'history' && (
                         <Card title="Aktivite Geçmişi" subtitle="Son işlemleri takip edin">
-                            <div className="space-y-6 py-4">
-                                <TimelineItem
-                                    icon={CheckCircle2}
-                                    title="Paket yükseltildi"
-                                    description="Professional → Enterprise"
-                                    time="2 saat önce"
-                                    color="text-emerald-400"
-                                />
-                                <TimelineItem
-                                    icon={ShieldCheck}
-                                    title="Durum Değiştirildi"
-                                    description="Tenant durumu pasiften aktife çekildi"
-                                    time="5 saat önce"
-                                    color="text-indigo-400"
-                                />
-                                <TimelineItem
-                                    icon={Users}
-                                    title="Kullanıcı Limiti Arttırıldı"
-                                    description="+50 yeni kullanıcı alanı eklendi"
-                                    time="1 gün önce"
-                                    color="text-amber-400"
-                                />
+                            <div className="text-center py-6 text-text-muted">
+                                <p>Aktivite geçmişi entegrasyonu yapım aşamasında.</p>
                             </div>
                         </Card>
+                    )}
+
+                    {activeTab === 'health' && (
+                        <div className="space-y-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <Card className={`border-l-4 ${health?.isHealthy ? 'border-emerald-500 bg-emerald-500/5' : 'border-rose-500 bg-rose-500/5'}`}>
+                                    <div className="flex items-center gap-4">
+                                        <div className={`p-4 rounded-full ${health?.isHealthy ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
+                                            <HeartPulse className="w-8 h-8" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-bold text-text-main">{health?.isHealthy ? 'Sistem Sağlıklı' : 'Sorun Tespit Edildi'}</h3>
+                                            <p className="text-sm text-text-muted mt-1">Son kontrol: {health?.lastCheck ? new Date(health.lastCheck).toLocaleTimeString() : '-'}</p>
+                                        </div>
+                                    </div>
+                                </Card>
+
+                                <Card className="bg-indigo-500/5 border-indigo-500/10">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-4 rounded-full bg-indigo-500/10 text-indigo-400">
+                                            <Activity className="w-8 h-8" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-bold text-text-main">{health?.responseTimeMs || 0} ms</h3>
+                                            <p className="text-sm text-text-muted mt-1">Ortalama Yanıt Süresi</p>
+                                        </div>
+                                    </div>
+                                </Card>
+                            </div>
+                        </div>
                     )}
                 </div>
 
@@ -240,28 +288,24 @@ const TenantDetailPage: React.FC = () => {
                     <Card title="Hızlı İşlemler">
                         <div className="space-y-2">
                             <ActionButton icon={ShieldCheck} label="Durumu Değiştir" />
-                            <ActionButton icon={CreditCard} label="Fatura Oluştur" />
-                            <ActionButton icon={Database} label="Yedek Al" />
-                            <ActionButton icon={History} label="Tüm Logları Gör" />
+                            <ActionButton icon={CreditCard} label="Abonelik Yönetimi" />
+                            {/* <ActionButton icon={Database} label="Yedek Al" /> */}
                             <div className="pt-4 mt-4 border-t border-border-subtle">
                                 <ActionButton icon={XCircle} label="Tenantı Sil" variant="danger" />
                             </div>
                         </div>
                     </Card>
 
-                    <Card title="Abonelik Durumu" className="bg-gradient-to-br from-indigo-500/10 to-transparent border-indigo-500/20">
+                    <Card title="Abonelik Bitiş" className="bg-gradient-to-br from-indigo-500/10 to-transparent border-indigo-500/20">
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-text-muted uppercase tracking-widest">Sonraki Ödeme</span>
+                                <span className="text-xs font-bold text-text-muted uppercase tracking-widest">Bitiş Tarihi</span>
                                 <span className="text-sm font-bold text-white">
-                                    {tenant.billing?.nextBillingDate ? new Date(tenant.billing.nextBillingDate).toLocaleDateString('tr-TR') : '-'}
+                                    {tenant.subscription?.endDate ? new Date(tenant.subscription.endDate).toLocaleDateString('tr-TR') : 'Süresiz'}
                                 </span>
                             </div>
-                            <div className="h-2 w-full bg-indigo-500/10 rounded-full overflow-hidden">
-                                <div className="h-full bg-indigo-500 w-[65%]" />
-                            </div>
                             <p className="text-[10px] text-text-muted font-medium text-center italic">
-                                {tenant.billing?.nextBillingDate ? 'Aboneliğin yenilenmesine az kaldı.' : 'Abonelik bilgisi bulunamadı.'}
+                                {tenant.subscription?.autoRenew ? 'Otomatik yenileme açık.' : 'Otomatik yenileme kapalı.'}
                             </p>
                         </div>
                     </Card>
@@ -289,36 +333,6 @@ const DetailItem = ({ icon: Icon, label, value, isCode, link }: any) => (
     </div>
 );
 
-const UsageBar = ({ title, used, max, unit, color = 'bg-indigo-500' }: any) => {
-    const percentage = Math.round((used / max) * 100);
-    return (
-        <div className="space-y-2">
-            <div className="flex items-center justify-between">
-                <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">{title}</p>
-                <p className="text-[10px] font-bold text-text-main">{used.toLocaleString()} / {max.toLocaleString()} {unit}</p>
-            </div>
-            <div className="h-2 w-full bg-indigo-500/5 rounded-full overflow-hidden border border-border-subtle/30">
-                <div className={`h-full ${color} transition-all duration-1000`} style={{ width: `${percentage}%` }} />
-            </div>
-        </div>
-    );
-};
-
-const TimelineItem = ({ icon: Icon, title, description, time, color }: any) => (
-    <div className="flex gap-4 group">
-        <div className={`flex-shrink-0 w-10 h-10 rounded-full bg-indigo-500/5 flex items-center justify-center border border-border-subtle/50 group-hover:border-indigo-500/30 transition-all ${color}`}>
-            <Icon className="w-4 h-4" />
-        </div>
-        <div className="flex-1 border-b border-border-subtle/30 pb-4 group-last:border-0">
-            <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-text-main">{title}</p>
-                <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest opacity-40">{time}</span>
-            </div>
-            <p className="text-xs text-text-muted/70 mt-1">{description}</p>
-        </div>
-    </div>
-);
-
 const ActionButton = ({ icon: Icon, label, variant = 'default' }: any) => (
     <button className={`
         w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all border
@@ -332,3 +346,4 @@ const ActionButton = ({ icon: Icon, label, variant = 'default' }: any) => (
 );
 
 export default TenantDetailPage;
+

@@ -12,7 +12,6 @@ import {
     Trash2,
     File as FileIcon,
     Folder,
-    MoreVertical,
     Plus,
     RefreshCw,
     ChevronRight,
@@ -404,7 +403,7 @@ const StoragePage: React.FC = () => {
         },
         {
             header: '',
-            accessor: (file: any) => (
+            accessor: () => (
                 <div className="flex justify-end gap-2">
                     <button className="p-2 text-text-muted/20 hover:text-rose-500 transition-colors">
                         <Trash2 className="w-4 h-4" />

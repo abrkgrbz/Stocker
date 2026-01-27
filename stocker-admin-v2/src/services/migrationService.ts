@@ -108,8 +108,8 @@ class MigrationService {
         });
     }
 
-    async cancelScheduledMigration(scheduleId: string): Promise<boolean> {
-        return apiClient.post(`${this.basePath}/scheduled/${scheduleId}/cancel`);
+    async deleteScheduledMigration(scheduleId: string): Promise<boolean> {
+        return apiClient.delete(`${this.basePath}/scheduled/${scheduleId}`);
     }
 
     async getMigrationSettings(): Promise<MigrationSettingsDto> {

@@ -1,6 +1,6 @@
 import { apiClient } from './apiClient';
 
-export interface DashboardStats {
+export interface DashboardStatsDto {
     totalRevenue: number;
     activeTenants: number;
     systemLoad: number;
@@ -17,9 +17,63 @@ export interface DashboardStats {
     }>;
 }
 
+export interface RevenueOverviewDto {
+    total: number;
+    period: string;
+    breakdown: { label: string; value: number }[];
+}
+
+export interface TenantStatsDto {
+    total: number;
+    active: number;
+    suspended: number;
+    trial: number;
+}
+
+export interface SystemHealthDto {
+    status: 'healthy' | 'degraded' | 'critical';
+    uptime: number;
+    cpuUsage: number;
+    memoryUsage: number;
+}
+
 class DashboardService {
-    async getStats(): Promise<DashboardStats> {
-        return apiClient.get('/api/master/dashboard/stats');
+    private readonly baseUrl = '/api/master/dashboard';
+
+    async getStats(): Promise<DashboardStatsDto> {
+        const response = await apiClient.get<DashboardStatsDto>(`${this.baseUrl}/stats`);
+        // @ts-ignore
+        return response;
+    }
+
+    async getRevenueOverview(): Promise<RevenueOverviewDto> {
+        const response = await apiClient.get<RevenueOverviewDto>(`${this.baseUrl}/revenue-overview`);
+        // @ts-ignore
+        return response;
+    }
+
+    async getTenantStats(): Promise<TenantStatsDto> {
+        const response = await apiClient.get<TenantStatsDto>(`${this.baseUrl}/tenant-stats`);
+        // @ts-ignore
+        return response;
+    }
+
+    async getSystemHealth(): Promise<SystemHealthDto> {
+        const response = await apiClient.get<SystemHealthDto>(`${this.baseUrl}/system-health`);
+        // @ts-ignore
+        return response;
+    }
+
+    async getRecentTenants(): Promise<any[]> {
+        const response = await apiClient.get<any[]>(`${this.baseUrl}/recent-tenants`);
+        // @ts-ignore
+        return response;
+    }
+
+    async getRecentUsers(): Promise<any[]> {
+        const response = await apiClient.get<any[]>(`${this.baseUrl}/recent-users`);
+        // @ts-ignore
+        return response;
     }
 }
 

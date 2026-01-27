@@ -36,7 +36,7 @@ const mainNav: NavItem[] = [
             { label: 'Abonelikler', path: '/tenants/subscriptions' },
         ]
     },
-    { label: 'Paket & Abonelik', icon: CreditCard, path: '/billing' },
+    { label: 'Faturalandırma', icon: CreditCard, path: '/billing' },
     {
         label: 'Sistem Operasyonları',
         icon: Activity,
@@ -60,7 +60,7 @@ const mainNav: NavItem[] = [
         badge: 'Yeni',
         children: [
             { label: 'Performans Özeti', path: '/analytics' },
-            { label: 'Finansal Raporlar', path: '/analytics/reports' },
+            { label: 'Raporlar', path: '/analytics/reports' },
         ]
     },
     { label: 'Sistem Ayarları', icon: Settings, path: '/settings' },
@@ -69,7 +69,7 @@ const mainNav: NavItem[] = [
 export const Sidebar: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const [expandedItems, setExpandedItems] = useState<string[]>(['Tenant Yönetimi', 'Sistem Operasyonları']);
+    const [expandedItems, setExpandedItems] = useState<string[]>(['Tenant Yönetimi', 'Sistem Operasyonları', 'Sistem Analitiği']);
 
     const toggleExpand = (label: string) => {
         setExpandedItems(prev =>

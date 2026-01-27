@@ -20,8 +20,35 @@ import {
   X,
   Loader2,
   CheckCircle2,
-  Info
+  Info,
+  ShoppingBag,
+  ShoppingCart,
+  Factory,
+  Package,
+  Stethoscope,
+  HardHat,
+  GraduationCap,
+  Utensils,
+  Truck,
+  Car,
+  HelpCircle
 } from 'lucide-react'
+
+// Industry Icon Mapping
+const industryIcons: Record<string, React.ReactNode> = {
+  'retail': <ShoppingBag className="w-8 h-8 mx-auto mb-3" />,
+  'ecommerce': <ShoppingCart className="w-8 h-8 mx-auto mb-3" />,
+  'production': <Factory className="w-8 h-8 mx-auto mb-3" />,
+  'wholesale': <Package className="w-8 h-8 mx-auto mb-3" />,
+  'service': <Briefcase className="w-8 h-8 mx-auto mb-3" />,
+  'health': <Stethoscope className="w-8 h-8 mx-auto mb-3" />,
+  'construction': <HardHat className="w-8 h-8 mx-auto mb-3" />,
+  'education': <GraduationCap className="w-8 h-8 mx-auto mb-3" />,
+  'food': <Utensils className="w-8 h-8 mx-auto mb-3" />,
+  'logistics': <Truck className="w-8 h-8 mx-auto mb-3" />,
+  'automotive': <Car className="w-8 h-8 mx-auto mb-3" />,
+  'other': <HelpCircle className="w-8 h-8 mx-auto mb-3" />
+}
 
 type SetupStep = 'package-type' | 'package' | 'custom-package' | 'users' | 'storage' | 'addons' | 'industry' | 'complete'
 type PackageType = 'ready' | 'custom'
@@ -982,7 +1009,7 @@ export default function SetupWizardModal({ open, onComplete, onCancel }: SetupWi
                               : 'border-slate-100 hover:border-slate-300'
                               }`}
                           >
-                            <Briefcase className={`w-8 h-8 mx-auto mb-3 ${selectedIndustryCode === industry.code ? 'text-slate-900' : 'text-slate-300'}`} />
+                            {industryIcons[industry.code] || <Briefcase className="w-8 h-8 mx-auto mb-3" />}
                             <h3 className="font-bold text-slate-900 mb-1">{industry.name}</h3>
                             <p className="text-xs text-slate-400 line-clamp-2">{industry.description}</p>
                           </div>

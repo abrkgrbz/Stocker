@@ -12,6 +12,16 @@ export interface ModuleDto {
     sortOrder: number;
 }
 
+export interface CreateModuleDto {
+    name: string;
+    displayName: string;
+    description?: string;
+    category: string;
+    isActive?: boolean;
+}
+
+export interface UpdateModuleDto extends Partial<CreateModuleDto> { }
+
 class ModuleService {
     private readonly baseUrl = '/api/master/modules';
 
@@ -21,8 +31,26 @@ class ModuleService {
         return response;
     }
 
-    async toggleActive(id: string): Promise<boolean> {
-        const response = await apiClient.patch(`${this.baseUrl}/${id}/toggle-active`);
+    async getById(id: string): Promise<ModuleDto> {
+        const response = await apiClient.get<ModuleDto>(`${this.baseUrl}/${id}`);
+        // @ts-ignore
+        return response;
+    }
+
+    async create(data: CreateModuleDto): Promise<ModuleDto> {
+        const response = await apiClient.post<ModuleDto>(this.baseUrl, data);
+        // @ts-ignore
+        return response;
+    }
+
+    async update(id: string, data: UpdateModuleDto): Promise<boolean> {
+        const response = await apiClient.put(`${this.baseUrl}/${id}`, data);
+        // @ts-ignore
+        return response.success;
+    }
+
+    async delete(id: string): Promise<boolean> {
+        const response = await apiClient.delete(`${this.baseUrl}/${id}`);
         // @ts-ignore
         return response.success;
     }

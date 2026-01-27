@@ -29,12 +29,15 @@ import type { SubscriptionDto } from '@/services/subscriptionService';
 import { invoiceService, INVOICE_STATUS } from '@/services/invoiceService';
 import type { InvoiceDto } from '@/services/invoiceService';
 
+import { billingService, type BillingStatisticsDto } from '@/services/billingService';
+
 const BillingPage: React.FC = () => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('overview');
     const [packages, setPackages] = useState<PackageDto[]>([]);
     const [invoices, setInvoices] = useState<InvoiceDto[]>([]);
     const [subscriptions, setSubscriptions] = useState<SubscriptionDto[]>([]);
+    const [stats, setStats] = useState<BillingStatisticsDto | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -44,14 +47,16 @@ const BillingPage: React.FC = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const [pkgs, invs, subs] = await Promise.all([
+            const [pkgs, invs, subs, statsData] = await Promise.all([
                 packageService.getAll(),
                 invoiceService.getAll(),
-                subscriptionService.getAll()
+                subscriptionService.getAll(),
+                billingService.getStatistics()
             ]);
             setPackages(pkgs || []);
             setInvoices(invs || []);
             setSubscriptions(subs || []);
+            setStats(statsData);
         } catch (error) {
             console.error('Billing verisi çekilemedi:', error);
             toast.error('Veriler yüklenirken bir hata oluştu.');
@@ -186,7 +191,7 @@ const BillingPage: React.FC = () => {
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted">Aktif Abonelik</p>
-                                    <p className="text-2xl font-bold text-text-main">{subscriptions.filter(s => s.status === SUBSCRIPTION_STATUS.Aktif).length}</p>
+                                    <p className="text-2xl font-bold text-text-main">{stats?.activeSubscriptions || 0}</p>
                                 </div>
                             </div>
                         </Card>
@@ -196,8 +201,8 @@ const BillingPage: React.FC = () => {
                                     <Users className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted">Toplam Abone</p>
-                                    <p className="text-2xl font-bold text-text-main">{subscriptions.length}</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted">Gecikmiş Ödeme</p>
+                                    <p className="text-2xl font-bold text-text-main">{stats?.overdueInvoices || 0}</p>
                                 </div>
                             </div>
                         </Card>
@@ -209,12 +214,7 @@ const BillingPage: React.FC = () => {
                                 <div>
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted">Aylık Gelir</p>
                                     <p className="text-2xl font-bold text-text-main">
-                                        ₺{subscriptions
-                                            .filter(s => s.status === SUBSCRIPTION_STATUS.Aktif)
-                                            .reduce((acc, sub) => {
-                                                const pkg = packages.find(p => p.id === sub.packageId);
-                                                return acc + (pkg?.basePrice?.amount || 0);
-                                            }, 0).toLocaleString()}
+                                        ₺{stats?.monthlyRevenue?.toLocaleString() || 0}
                                     </p>
                                 </div>
                             </div>

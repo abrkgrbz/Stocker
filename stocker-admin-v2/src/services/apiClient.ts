@@ -48,9 +48,14 @@ apiClient.interceptors.response.use(
             return Promise.reject(new Error(errorMessage));
         }
 
-        // Return only the data portion for easier access
-        // @ts-ignore
-        return response.data.data !== undefined ? response.data.data : response.data;
+        // Return the inner data if it exists, otherwise return the whole response data
+        // This handles cases where endpoints strictly follow ApiResponse<T>
+        if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+            // @ts-ignore
+            return response.data.data;
+        }
+
+        return response.data;
     },
     async (error: AxiosError<ApiResponse>) => {
         // Handle 401 Unauthorized - Redirect to Login
@@ -62,7 +67,7 @@ apiClient.interceptors.response.use(
             }
         }
 
-        const message = error.response?.data?.message || error.message || 'Bir ağ hatası oluştu';
+        const message = error.response?.data?.message || (error.response?.data?.errors ? error.response.data.errors.join(', ') : error.message) || 'Bir ağ hatası oluştu';
 
         // Enhanced logging for dev
         if (import.meta.env.DEV) {

@@ -95,6 +95,12 @@ class EmailTemplateService {
         return response;
     }
 
+    async validate(htmlBody: string): Promise<{ isValid: boolean; errors: string[] }> {
+        const response = await apiClient.post<{ isValid: boolean; errors: string[] }>(`${this.baseUrl}/validate`, { htmlBody });
+        // @ts-ignore
+        return response;
+    }
+
     async getCategories(): Promise<string[]> {
         const response = await apiClient.get<string[]>(`${this.baseUrl}/categories`);
         // @ts-ignore

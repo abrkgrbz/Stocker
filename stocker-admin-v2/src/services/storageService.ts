@@ -142,6 +142,10 @@ class StorageService {
         return apiClient.post(`${this.baseUrl}/delete-multiple`, { bucketNames });
     }
 
+    async deleteMultipleObjects(bucketName: string, objectKeys: string[]): Promise<any> {
+        return apiClient.post(`${this.baseUrl}/${encodeURIComponent(bucketName)}/objects/delete-multiple`, { objectKeys });
+    }
+
     formatBytes(bytes: number, decimals = 2) {
         if (!+bytes) return '0 Bytes';
         const k = 1024;
