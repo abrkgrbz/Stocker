@@ -71,37 +71,15 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// Dev bypass mock user - only used when NEXT_PUBLIC_AUTH_BYPASS=true
-const DEV_MOCK_USER: User = {
-  id: 'dev-user-id',
-  email: 'dev@stocker.local',
-  firstName: 'Dev',
-  lastName: 'User',
-  role: 'SistemYoneticisi',
-  roles: ['Admin', 'FirmaYoneticisi', 'SistemYoneticisi'],
-  tenantId: 'dev-tenant-id',
-  tenantCode: 'dev',
-  permissions: [], // Dev user has no permission restrictions in bypass mode
-};
-
 export function AuthProvider({ children }: AuthProviderProps) {
-  // Check for auth bypass in development
-  const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
-
-  const [user, setUser] = useState<User | null>(isAuthBypassed ? DEV_MOCK_USER : null);
-  const [isLoading, setIsLoading] = useState(!isAuthBypassed);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   const isAuthenticated = !!user;
 
   // Load user from HttpOnly cookie on mount
   useEffect(() => {
-    // Skip auth check if bypassed
-    if (isAuthBypassed) {
-      logger.debug('Auth bypassed - using dev mock user', { component: 'AuthContext' });
-      return;
-    }
-
     const initializeAuth = async () => {
       // ✅ Try to load user from HttpOnly cookie
       // If cookie exists, /auth/me will succeed
@@ -110,7 +88,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
 
     initializeAuth();
-  }, [isAuthBypassed]);
+  }, []);
 
   const login = async (credentials: LoginCredentials) => {
     try {
@@ -407,9 +385,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Permission helper functions
   const hasPermission = (resource: string, permissionType: string): boolean => {
-    // Auth bypass mode - allow everything
-    if (isAuthBypassed) return true;
-
     // Check if user is a system admin (FirmaYoneticisi or SistemYoneticisi has all permissions)
     if (user?.roles?.includes('FirmaYoneticisi') || user?.roles?.includes('SistemYoneticisi')) {
       return true;
@@ -420,9 +395,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const hasAnyPermission = (permissions: string[]): boolean => {
-    // Auth bypass mode - allow everything
-    if (isAuthBypassed) return true;
-
     // Check if user is a system admin
     if (user?.roles?.includes('FirmaYoneticisi') || user?.roles?.includes('SistemYoneticisi')) {
       return true;
@@ -432,9 +404,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const canAccessModule = (moduleName: string): boolean => {
-    // Auth bypass mode - allow everything
-    if (isAuthBypassed) return true;
-
     // Check if user is a system admin
     if (user?.roles?.includes('FirmaYoneticisi') || user?.roles?.includes('SistemYoneticisi')) {
       return true;

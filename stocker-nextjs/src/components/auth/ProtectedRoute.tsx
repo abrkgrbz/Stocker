@@ -57,21 +57,13 @@ export function ProtectedRoute({
   const router = useRouter();
   const { user, isLoading, hasPermission, hasAnyPermission } = useAuth();
 
-  // Check for auth bypass in development
-  const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
-
   // Show loading while auth state is being determined
-  if (isLoading && !isAuthBypassed) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Spinner size="lg" />
       </div>
     );
-  }
-
-  // Auth bypass mode - allow everything
-  if (isAuthBypassed) {
-    return <>{children}</>;
   }
 
   // Check if user is admin (bypass all permission checks)
@@ -187,11 +179,6 @@ export function useRoutePermission(permission: string): {
   isAdmin: boolean;
 } {
   const { user, isLoading, hasPermission } = useAuth();
-  const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
-
-  if (isAuthBypassed) {
-    return { hasAccess: true, isLoading: false, isAdmin: true };
-  }
 
   const isAdmin = user?.roles?.includes('FirmaYoneticisi') || user?.roles?.includes('SistemYoneticisi');
 

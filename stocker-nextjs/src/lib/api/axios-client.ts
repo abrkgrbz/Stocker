@@ -221,17 +221,10 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         // Refresh failed, redirect to login
         if (typeof window !== 'undefined') {
-          // Check for auth bypass
-          const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
-
-          if (!isAuthBypassed) {
-            // Clear any localStorage data
-            localStorage.removeItem('tenantId');
-            localStorage.removeItem('tenantIdentifier');
-            window.location.href = '/login';
-          } else {
-            console.warn('🔓 [Axios] Auth bypass active - suppressing 401 redirect');
-          }
+          // Clear any localStorage data
+          localStorage.removeItem('tenantId');
+          localStorage.removeItem('tenantIdentifier');
+          window.location.href = '/login';
         }
         return Promise.reject(refreshError);
       }

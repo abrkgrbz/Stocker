@@ -26,42 +26,9 @@ interface TenantProviderProps {
   initialTenant?: TenantInfo | null;
 }
 
-// Dev bypass mock tenant - only used when NEXT_PUBLIC_AUTH_BYPASS=true
-const DEV_MOCK_TENANT: TenantInfo = {
-  id: 'dev-tenant-id',
-  identifier: 'dev',
-  name: 'Dev Tenant',
-  domain: 'localhost',
-  isActive: true,
-};
-
-// TODO: Remove this bypass after Coolify migration is complete
-const TEMPORARY_BYPASS_SUBDOMAINS = ['awcs0wg4840co8wwsscwwwck'];
-
-// Check if current subdomain should bypass tenant validation
-const shouldBypassTenantValidation = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  const subdomain = window.location.hostname.split('.')[0];
-  return TEMPORARY_BYPASS_SUBDOMAINS.includes(subdomain);
-};
-
-// Mock tenant for bypassed subdomains
-const createBypassTenant = (subdomain: string): TenantInfo => ({
-  id: `bypass-${subdomain}`,
-  identifier: subdomain,
-  name: `Bypass Tenant (${subdomain})`,
-  domain: window.location.hostname,
-  isActive: true,
-});
-
 export function TenantProvider({ children, initialTenant }: TenantProviderProps) {
-  // Check for auth bypass in development
-  const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
-
-  const [tenant, setTenant] = useState<TenantInfo | null>(
-    isAuthBypassed ? DEV_MOCK_TENANT : (initialTenant || null)
-  );
-  const [isLoading, setIsLoading] = useState(!isAuthBypassed);
+  const [tenant, setTenant] = useState<TenantInfo | null>(initialTenant || null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isValidating, setIsValidating] = useState(false);
   const hasInitialized = useRef(false);
 
@@ -165,23 +132,6 @@ export function TenantProvider({ children, initialTenant }: TenantProviderProps)
       return;
     }
 
-    // Skip tenant validation if auth bypassed
-    if (isAuthBypassed) {
-      console.log('🔓 Tenant bypassed - using dev mock tenant');
-      hasInitialized.current = true;
-      return;
-    }
-
-    // Skip tenant validation for temporarily bypassed subdomains (Coolify preview, etc.)
-    if (shouldBypassTenantValidation()) {
-      const subdomain = window.location.hostname.split('.')[0];
-      console.log('🔓 Temporary subdomain bypass - using mock tenant for:', subdomain);
-      setTenant(createBypassTenant(subdomain));
-      setIsLoading(false);
-      hasInitialized.current = true;
-      return;
-    }
-
     // Skip tenant validation on invalid-tenant page to prevent infinite loop
     if (typeof window !== 'undefined' && window.location.pathname === '/invalid-tenant') {
       console.log('⏭️ Skipping tenant validation on invalid-tenant page');
@@ -198,7 +148,7 @@ export function TenantProvider({ children, initialTenant }: TenantProviderProps)
     };
 
     initializeTenant();
-  }, [isAuthBypassed]);
+  }, []);
 
   const value: TenantContextType = {
     tenant,

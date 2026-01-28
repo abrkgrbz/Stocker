@@ -66,9 +66,6 @@ function filterMenuItemsByPermission(
 const { Header, Sider, Content } = Layout;
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
-  // Check for auth bypass in development
-  const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
-
   const { user, isAuthenticated, isLoading: authLoading, logout, hasAnyPermission } = useAuth();
   const { tenant, isLoading: tenantLoading } = useTenant();
   const router = useRouter();
@@ -108,9 +105,6 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   useNotificationHub();
 
   useEffect(() => {
-    // Skip redirect if auth bypassed
-    if (isAuthBypassed) return;
-
     if (!authLoading && !isAuthenticated) {
       const isProduction = typeof window !== 'undefined' && window.location.hostname.includes('stoocker.app');
       if (isProduction) {
@@ -119,7 +113,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         router.push('/login');
       }
     }
-  }, [authLoading, isAuthenticated, router, isAuthBypassed]);
+  }, [authLoading, isAuthenticated, router]);
 
   // Get current module based on pathname
   const currentModule = useMemo(() => getCurrentModule(pathname), [pathname]);
@@ -305,8 +299,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     return [pathname];
   }, [pathname]);
 
-  // Skip loading checks if auth bypassed
-  if (!isAuthBypassed && (authLoading || tenantLoading || modulesLoading)) {
+  // Show loading spinner while authentication is being checked
+  if (authLoading || tenantLoading || modulesLoading) {
     return (
       <div className="flex items-center justify-center" style={{ minHeight: '100dvh' }}>
         <Spinner size="lg" />
@@ -314,7 +308,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!isAuthBypassed && !isAuthenticated) {
+  if (!isAuthenticated) {
     return null;
   }
 

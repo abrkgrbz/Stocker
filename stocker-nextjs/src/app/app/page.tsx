@@ -261,8 +261,7 @@ function AppContent() {
   }, [modules, searchQuery]);
 
   useEffect(() => {
-    const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
-    if (!isAuthBypassed && !isLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push('/login');
     }
   }, [isLoading, isAuthenticated, router]);

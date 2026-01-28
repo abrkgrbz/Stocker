@@ -1,20 +1,9 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// TODO: Remove this bypass after Coolify migration is complete
-const TEMPORARY_BYPASS_SUBDOMAINS = ['awcs0wg4840co8wwsscwwwck']
-
 export function middleware(request: NextRequest) {
-  // Check for auth bypass in development
-  const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
-
   const hostname = request.headers.get('host') || ''
   const subdomain = hostname.split('.')[0]
-
-  // Temporary bypass for specific subdomains (Coolify preview deployments, etc.)
-  if (TEMPORARY_BYPASS_SUBDOMAINS.includes(subdomain)) {
-    return NextResponse.next()
-  }
   const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || 'localhost:3001'
   const authDomain = process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'http://localhost:3000'
   const isDev = process.env.NODE_ENV === 'development'
@@ -29,7 +18,6 @@ export function middleware(request: NextRequest) {
   // Check if this is auth subdomain
   const isAuthDomain = hostname === authHostname || hostname === `auth.${baseDomain}`
 
-  // subdomain already extracted above for bypass check
   const isTenantDomain = !isRootDomain && !isAuthDomain && subdomain !== 'www'
 
   // Protected routes that require authentication
@@ -55,8 +43,7 @@ export function middleware(request: NextRequest) {
     request.headers.get('Next-Router-Prefetch') === '1'
 
   // Redirect unauthenticated users from protected routes to login
-  // Skip if auth bypassed or RSC prefetch request
-  if (isProtectedRoute && !isAuthenticated && !isRSCPrefetch && !isAuthBypassed) {
+  if (isProtectedRoute && !isAuthenticated && !isRSCPrefetch) {
     const url = request.nextUrl.clone()
     if (isDev) {
       url.pathname = '/login'
