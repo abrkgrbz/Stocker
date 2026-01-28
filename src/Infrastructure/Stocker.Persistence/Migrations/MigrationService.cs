@@ -2530,11 +2530,27 @@ public partial class MigrationService
                 return result;
             }
 
-            var pendingMigrations = await alertDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
-            var appliedMigrations = await alertDbContext.Database.GetAppliedMigrationsAsync(cancellationToken);
+            // Get all migrations from assembly (doesn't require DB connection)
+            var allMigrations = alertDbContext.Database.GetMigrations().ToList();
 
-            result.PendingMigrations = pendingMigrations.ToList();
-            result.AppliedMigrations = appliedMigrations.ToList();
+            try
+            {
+                // Try to get applied migrations - this may fail if schema doesn't exist
+                var appliedMigrations = await alertDbContext.Database.GetAppliedMigrationsAsync(cancellationToken);
+                result.AppliedMigrations = appliedMigrations.ToList();
+
+                // Calculate pending by comparing all vs applied
+                result.PendingMigrations = allMigrations.Except(result.AppliedMigrations).ToList();
+            }
+            catch (Npgsql.PostgresException pgEx) when (pgEx.SqlState == "3F000" || pgEx.SqlState == "42P01")
+            {
+                // 3F000 = invalid_schema_name, 42P01 = undefined_table
+                // Schema or table doesn't exist - all migrations are pending
+                _logger.LogInformation("AlertDbContext: Schema or migration history table doesn't exist yet. All migrations are pending.");
+                result.PendingMigrations = allMigrations;
+                result.AppliedMigrations = new List<string>();
+            }
+
             result.HasPendingMigrations = result.PendingMigrations.Count > 0;
 
             _logger.LogInformation("AlertDbContext: {PendingCount} pending, {AppliedCount} applied migrations",
@@ -2570,8 +2586,22 @@ public partial class MigrationService
                 return result;
             }
 
-            var pendingBefore = await alertDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
-            var pendingCount = pendingBefore.Count();
+            // Get all migrations from assembly
+            var allMigrations = alertDbContext.Database.GetMigrations().ToList();
+            List<string> appliedMigrations;
+
+            try
+            {
+                appliedMigrations = (await alertDbContext.Database.GetAppliedMigrationsAsync(cancellationToken)).ToList();
+            }
+            catch (Npgsql.PostgresException pgEx) when (pgEx.SqlState == "3F000" || pgEx.SqlState == "42P01")
+            {
+                // Schema or table doesn't exist - treat all as pending
+                appliedMigrations = new List<string>();
+            }
+
+            var pendingMigrations = allMigrations.Except(appliedMigrations).ToList();
+            var pendingCount = pendingMigrations.Count;
 
             if (pendingCount == 0)
             {
@@ -2585,7 +2615,7 @@ public partial class MigrationService
             await alertDbContext.Database.MigrateAsync(cancellationToken);
 
             result.Success = true;
-            result.AppliedMigrations = pendingBefore.ToList();
+            result.AppliedMigrations = pendingMigrations;
             result.Message = $"Successfully applied {pendingCount} migration(s) to AlertDbContext";
 
             _logger.LogInformation("AlertDbContext migrations applied successfully");

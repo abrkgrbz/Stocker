@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Stocker.Infrastructure.Alerts.Domain;
 
 namespace Stocker.Infrastructure.Alerts.Persistence;
@@ -11,6 +12,15 @@ public class AlertDbContext : DbContext
 {
     public AlertDbContext(DbContextOptions<AlertDbContext> options) : base(options)
     {
+    }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        base.OnConfiguring(optionsBuilder);
+
+        // Suppress PendingModelChangesWarning - we handle migrations separately
+        optionsBuilder.ConfigureWarnings(warnings =>
+            warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
     }
 
     public DbSet<AlertEntity> Alerts => Set<AlertEntity>();
