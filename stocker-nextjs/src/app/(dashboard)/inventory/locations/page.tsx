@@ -22,6 +22,7 @@ import {
   CheckCircleIcon,
   EllipsisHorizontalIcon,
   ExclamationTriangleIcon,
+  EyeIcon,
   HomeIcon,
   InboxIcon,
   MagnifyingGlassIcon,
@@ -95,17 +96,20 @@ export default function LocationsPage() {
       key: 'name',
       sorter: (a, b) => a.name.localeCompare(b.name),
       render: (name: string, record) => (
-        <div className="flex items-center gap-3">
+        <button
+          onClick={() => router.push(`/inventory/locations/${record.id}`)}
+          className="flex items-center gap-3 text-left hover:bg-slate-50 -m-2 p-2 rounded-lg transition-colors w-full"
+        >
           <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
             <MapPinIcon className="w-5 h-5 text-slate-600" />
           </div>
           <div>
-            <div className="text-sm font-medium text-slate-900">{name}</div>
+            <div className="text-sm font-medium text-slate-900 hover:text-blue-600 transition-colors">{name}</div>
             <div className="text-xs text-slate-500">
               Kod: {record.code}
             </div>
           </div>
-        </div>
+        </button>
       ),
     },
     {
@@ -203,6 +207,12 @@ export default function LocationsPage() {
       fixed: 'right',
       render: (_, record) => {
         const menuItems = [
+          {
+            key: 'view',
+            icon: <EyeIcon className="w-4 h-4" />,
+            label: 'Detay Görüntüle',
+            onClick: () => router.push(`/inventory/locations/${record.id}`),
+          },
           {
             key: 'edit',
             icon: <PencilIcon className="w-4 h-4" />,
