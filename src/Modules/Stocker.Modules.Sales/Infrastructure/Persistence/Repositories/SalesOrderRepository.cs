@@ -50,35 +50,34 @@ public class SalesOrderRepository : BaseRepository<SalesOrder>, ISalesOrderRepos
 
     public async Task<string> GenerateOrderNumberAsync(CancellationToken cancellationToken = default)
     {
-        var strategy = _context.Database.CreateExecutionStrategy();
+        // Bu metot CreateSalesOrderHandler tarafından zaten aktif bir transaction içinde çağrılır.
+        // Bu yüzden CreateExecutionStrategy kullanmıyoruz - NpgsqlRetryingExecutionStrategy
+        // user-initiated transaction'lar ile çakışır.
 
-        return await strategy.ExecuteAsync(async () =>
+        // PostgreSQL transaction-scoped advisory lock
+        // Aynı anda yalnızca bir sipariş numarası üretilebilir, transaction commit/rollback ile serbest bırakılır
+        await _context.Database.ExecuteSqlRawAsync(
+            "SELECT pg_advisory_xact_lock({0})", new object[] { OrderNumberLockKey }, cancellationToken);
+
+        var today = DateTime.UtcNow;
+        var prefix = $"SO-{today:yyyyMMdd}-";
+
+        var lastOrder = await _dbSet
+            .Where(o => o.OrderNumber.StartsWith(prefix))
+            .OrderByDescending(o => o.OrderNumber)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (lastOrder == null)
         {
-            // PostgreSQL transaction-scoped advisory lock
-            // Aynı anda yalnızca bir sipariş numarası üretilebilir, transaction commit/rollback ile serbest bırakılır
-            await _context.Database.ExecuteSqlRawAsync(
-                "SELECT pg_advisory_xact_lock({0})", new object[] { OrderNumberLockKey }, cancellationToken);
-
-            var today = DateTime.UtcNow;
-            var prefix = $"SO-{today:yyyyMMdd}-";
-
-            var lastOrder = await _dbSet
-                .Where(o => o.OrderNumber.StartsWith(prefix))
-                .OrderByDescending(o => o.OrderNumber)
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (lastOrder == null)
-            {
-                return $"{prefix}0001";
-            }
-
-            var lastNumber = lastOrder.OrderNumber.Replace(prefix, "");
-            if (int.TryParse(lastNumber, out var number))
-            {
-                return $"{prefix}{(number + 1):D4}";
-            }
-
             return $"{prefix}0001";
-        });
+        }
+
+        var lastNumber = lastOrder.OrderNumber.Replace(prefix, "");
+        if (int.TryParse(lastNumber, out var number))
+        {
+            return $"{prefix}{(number + 1):D4}";
+        }
+
+        return $"{prefix}0001";
     }
 }
