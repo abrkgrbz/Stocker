@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
 
@@ -6,20 +7,19 @@ namespace Stocker.Identity.Services;
 
 /// <summary>
 /// Service for sending login notifications when new devices or locations are detected.
+/// Uses IServiceScopeFactory to create new DbContext instances for fire-and-forget operations,
+/// avoiding DbContext concurrency issues.
 /// </summary>
 public class LoginNotificationService : ILoginNotificationService
 {
-    private readonly IMasterDbContext _masterContext;
-    private readonly IEmailService _emailService;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<LoginNotificationService> _logger;
 
     public LoginNotificationService(
-        IMasterDbContext masterContext,
-        IEmailService emailService,
+        IServiceScopeFactory serviceScopeFactory,
         ILogger<LoginNotificationService> logger)
     {
-        _masterContext = masterContext;
-        _emailService = emailService;
+        _serviceScopeFactory = serviceScopeFactory;
         _logger = logger;
     }
 
@@ -35,8 +35,15 @@ public class LoginNotificationService : ILoginNotificationService
     {
         try
         {
+            // Create a new scope for fire-and-forget operations to avoid DbContext concurrency issues
+            // This is critical because this method is called with fire-and-forget pattern (_ = CheckAndNotifyAsync(...))
+            // and the parent scope's DbContext might still be in use
+            using var scope = _serviceScopeFactory.CreateScope();
+            var masterContext = scope.ServiceProvider.GetRequiredService<IMasterDbContext>();
+            var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+
             // Check if this device/IP has been seen before for this user
-            var existingSession = await _masterContext.UserSessions
+            var existingSession = await masterContext.UserSessions
                 .Where(s => s.UserId == userId &&
                            s.IsMasterUser == isMasterUser &&
                            !s.IsRevoked)
@@ -52,7 +59,7 @@ public class LoginNotificationService : ILoginNotificationService
             }
 
             // New device or location detected - send notification
-            await SendNewLoginNotificationAsync(email, deviceInfo, ipAddress, location);
+            await SendNewLoginNotificationAsync(emailService, email, deviceInfo, ipAddress, location);
 
             _logger.LogInformation(
                 "New login notification sent to {Email} for user {UserId} from {IpAddress}",
@@ -144,6 +151,7 @@ public class LoginNotificationService : ILoginNotificationService
     }
 
     private async Task SendNewLoginNotificationAsync(
+        IEmailService emailService,
         string email,
         string? deviceInfo,
         string? ipAddress,
@@ -177,7 +185,7 @@ public class LoginNotificationService : ILoginNotificationService
             </p>
         ";
 
-        await _emailService.SendAsync(new Application.Common.Interfaces.EmailMessage
+        await emailService.SendAsync(new Application.Common.Interfaces.EmailMessage
         {
             To = email,
             Subject = subject,
