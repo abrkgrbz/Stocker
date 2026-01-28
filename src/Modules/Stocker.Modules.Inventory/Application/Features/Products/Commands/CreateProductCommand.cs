@@ -219,12 +219,31 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
                 var warehouse = await _unitOfWork.Warehouses.GetByIdAsync(stockEntry.WarehouseId, cancellationToken);
                 if (warehouse == null) continue;
 
+                // Verify location exists and has capacity (if provided)
+                Domain.Entities.Location? location = null;
+                if (stockEntry.LocationId.HasValue)
+                {
+                    location = await _unitOfWork.Locations.GetByIdAsync(stockEntry.LocationId.Value, cancellationToken);
+                    if (location == null) continue;
+
+                    // Check location capacity
+                    if (!location.HasAvailableCapacity(stockEntry.Quantity))
+                    {
+                        return Result<ProductDto>.Failure(
+                            Error.Validation("Location.CapacityExceeded",
+                                $"Lokasyon kapasitesi yetersiz. Kullanılabilir: {location.GetAvailableCapacity()}, İstenen: {stockEntry.Quantity}"));
+                    }
+                }
+
                 // Create stock record
                 var stock = new Domain.Entities.Stock(product.Id, stockEntry.WarehouseId, stockEntry.Quantity);
                 stock.SetTenantId(request.TenantId);
                 if (stockEntry.LocationId.HasValue)
                 {
                     stock.SetLocation(stockEntry.LocationId.Value);
+
+                    // Update location used capacity
+                    location!.IncreaseUsedCapacity(stockEntry.Quantity);
                 }
                 await _unitOfWork.Stocks.AddAsync(stock, cancellationToken);
 

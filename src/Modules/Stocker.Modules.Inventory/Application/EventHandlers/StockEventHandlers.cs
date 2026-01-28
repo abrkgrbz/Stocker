@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Stocker.Modules.Inventory.Application.Contracts;
 using Stocker.Modules.Inventory.Application.Services;
 using Stocker.Modules.Inventory.Domain.Events;
+using Stocker.Modules.Inventory.Domain.Repositories;
 using Stocker.Modules.Inventory.Domain.Services;
 
 namespace Stocker.Modules.Inventory.Application.EventHandlers;
@@ -104,6 +105,65 @@ public class StockAdjustedEventHandler : INotificationHandler<StockAdjustedDomai
             notification.ProductId,
             notification.WarehouseId,
             cancellationToken);
+    }
+}
+
+/// <summary>
+/// Stok lokasyonu değiştiğinde çalışan event handler.
+/// - Eski lokasyonun kapasitesini azaltır
+/// - Yeni lokasyonun kapasitesini artırır
+/// </summary>
+public class StockLocationChangedEventHandler : INotificationHandler<StockLocationChangedDomainEvent>
+{
+    private readonly ILogger<StockLocationChangedEventHandler> _logger;
+    private readonly ILocationRepository _locationRepository;
+
+    public StockLocationChangedEventHandler(
+        ILogger<StockLocationChangedEventHandler> logger,
+        ILocationRepository locationRepository)
+    {
+        _logger = logger;
+        _locationRepository = locationRepository;
+    }
+
+    public async Task Handle(StockLocationChangedDomainEvent notification, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation(
+            "Stock location changed: Stock {StockId}, Product {ProductId}, " +
+            "Location: {PreviousLocationId} → {NewLocationId}, Quantity: {Quantity}",
+            notification.StockId,
+            notification.ProductId,
+            notification.PreviousLocationId,
+            notification.NewLocationId,
+            notification.Quantity);
+
+        // Eski lokasyonun kapasitesini azalt
+        if (notification.PreviousLocationId.HasValue)
+        {
+            var previousLocation = await _locationRepository.GetByIdAsync(notification.PreviousLocationId.Value, cancellationToken);
+            if (previousLocation != null)
+            {
+                previousLocation.DecreaseUsedCapacity(notification.Quantity);
+                _logger.LogDebug(
+                    "Decreased capacity of location {LocationId} by {Quantity}",
+                    notification.PreviousLocationId.Value,
+                    notification.Quantity);
+            }
+        }
+
+        // Yeni lokasyonun kapasitesini artır
+        if (notification.NewLocationId.HasValue)
+        {
+            var newLocation = await _locationRepository.GetByIdAsync(notification.NewLocationId.Value, cancellationToken);
+            if (newLocation != null)
+            {
+                newLocation.IncreaseUsedCapacity(notification.Quantity);
+                _logger.LogDebug(
+                    "Increased capacity of location {LocationId} by {Quantity}",
+                    notification.NewLocationId.Value,
+                    notification.Quantity);
+            }
+        }
     }
 }
 
