@@ -26,15 +26,23 @@ const defaultConfig: PDFConfig = {
 // Turkish character transliteration for PDF (jsPDF default font doesn't support Turkish chars)
 const turkishToAscii = (text: string): string => {
   if (!text) return '';
-  const charMap: Record<string, string> = {
-    'ş': 's', 'Ş': 'S',
-    'ğ': 'g', 'Ğ': 'G',
-    'ü': 'u', 'Ü': 'U',
-    'ö': 'o', 'Ö': 'O',
-    'ı': 'i', 'İ': 'I',
-    'ç': 'c', 'Ç': 'C',
-  };
-  return text.replace(/[şŞğĞüÜöÖıİçÇ]/g, (char) => charMap[char] || char);
+  // Use explicit character codes to ensure proper matching
+  return text
+    .replace(/\u015f/g, 's')  // ş
+    .replace(/\u015e/g, 'S')  // Ş
+    .replace(/\u011f/g, 'g')  // ğ
+    .replace(/\u011e/g, 'G')  // Ğ
+    .replace(/\u00fc/g, 'u')  // ü
+    .replace(/\u00dc/g, 'U')  // Ü
+    .replace(/\u00f6/g, 'o')  // ö
+    .replace(/\u00d6/g, 'O')  // Ö
+    .replace(/\u0131/g, 'i')  // ı (dotless i)
+    .replace(/\u0130/g, 'I')  // İ (dotted I)
+    .replace(/\u00e7/g, 'c')  // ç
+    .replace(/\u00c7/g, 'C')  // Ç
+    .replace(/₺/g, 'TL')      // Turkish Lira symbol
+    .replace(/€/g, 'EUR')     // Euro symbol
+    .replace(/\$/g, 'USD');   // Dollar symbol
 };
 
 // Format currency for PDF (without currency symbol to avoid encoding issues)
@@ -676,8 +684,10 @@ export async function generateQuotationPDF(
     doc.text(formatCurrency(unitPrice, quotation.currency || 'TRY'), colX + 2, y);
 
     colX += colWidths[2];
-    // Line total
-    const lineTotal = safeNumber(item.lineTotal);
+    // Line total (KDV dahil) = (birim fiyat * miktar) - indirim + KDV
+    const itemDiscount = safeNumber(item.discountAmount);
+    const itemVat = safeNumber(item.vatAmount);
+    const lineTotal = (unitPrice * qty) - itemDiscount + itemVat;
     doc.text(formatCurrency(lineTotal, quotation.currency || 'TRY'), colX + 2, y);
 
     y += 6;
@@ -688,36 +698,61 @@ export async function generateQuotationPDF(
   doc.line(tableStartX, y, tableStartX + tableWidth, y);
   y += 8;
 
+  // Calculate totals from items to ensure accuracy
+  // This prevents double-counting issues from backend
+  const currency = quotation.currency || 'TRY';
+
+  // Calculate subtotal (pre-tax) from items: sum of (unitPrice * quantity - discountAmount)
+  let calculatedSubTotal = 0;
+  let calculatedVatTotal = 0;
+
+  items.forEach((item: QuotationItem) => {
+    const qty = safeNumber(item.quantity);
+    const price = safeNumber(item.unitPrice);
+    const itemDiscount = safeNumber(item.discountAmount);
+    const itemVat = safeNumber(item.vatAmount);
+
+    // Item net = (price * qty) - discount
+    const itemNet = (price * qty) - itemDiscount;
+    calculatedSubTotal += itemNet;
+    calculatedVatTotal += itemVat;
+  });
+
+  // Use calculated values, but fallback to quotation values if items are empty
+  const subTotal = items.length > 0 ? calculatedSubTotal : safeNumber(quotation.subTotal);
+  const vatAmount = items.length > 0 ? calculatedVatTotal : (safeNumber(quotation.vatAmount) || safeNumber(quotation.taxAmount) || safeNumber(quotation.taxTotal));
+  const discountAmount = safeNumber(quotation.discountAmount);
+
+  // Grand total = subtotal - discount + VAT
+  const grandTotal = subTotal - discountAmount + vatAmount;
+
   // Totals section - right aligned
   const totalsX = pageWidth - margin - 80;
   doc.setFontSize(9);
 
-  // Subtotal
+  // Subtotal (pre-tax amount)
   doc.setFont('helvetica', 'normal');
-  doc.text('Ara Toplam:', totalsX, y);
-  doc.text(formatCurrency(safeNumber(quotation.subTotal), quotation.currency || 'TRY'), pageWidth - margin, y, { align: 'right' });
+  doc.text('Ara Toplam (KDV Haric):', totalsX, y);
+  doc.text(formatCurrency(subTotal, currency), pageWidth - margin, y, { align: 'right' });
   y += 5;
 
   // Discount if exists
-  const discountAmount = safeNumber(quotation.discountAmount);
   if (discountAmount > 0) {
     doc.text('Indirim:', totalsX, y);
-    doc.text(`-${formatCurrency(discountAmount, quotation.currency || 'TRY')}`, pageWidth - margin, y, { align: 'right' });
+    doc.text(`-${formatCurrency(discountAmount, currency)}`, pageWidth - margin, y, { align: 'right' });
     y += 5;
   }
 
   // VAT
-  const vatAmount = safeNumber(quotation.vatAmount) || safeNumber(quotation.taxAmount) || safeNumber(quotation.taxTotal);
   doc.text('KDV:', totalsX, y);
-  doc.text(formatCurrency(vatAmount, quotation.currency || 'TRY'), pageWidth - margin, y, { align: 'right' });
+  doc.text(formatCurrency(vatAmount, currency), pageWidth - margin, y, { align: 'right' });
   y += 6;
 
   // Grand Total
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
-  const totalAmount = safeNumber(quotation.totalAmount) || safeNumber(quotation.grandTotal);
   doc.text('GENEL TOPLAM:', totalsX, y);
-  doc.text(formatCurrency(totalAmount, quotation.currency || 'TRY'), pageWidth - margin, y, { align: 'right' });
+  doc.text(formatCurrency(grandTotal, currency), pageWidth - margin, y, { align: 'right' });
   y += 10;
 
   // Terms & Conditions
