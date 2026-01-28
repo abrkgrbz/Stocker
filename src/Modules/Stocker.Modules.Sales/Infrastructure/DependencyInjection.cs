@@ -47,10 +47,11 @@ public static class DependencyInjection
                 npgsqlOptions.MigrationsAssembly(typeof(SalesDbContext).Assembly.FullName);
                 npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "sales");
                 npgsqlOptions.CommandTimeout(30);
-                npgsqlOptions.EnableRetryOnFailure(
-                    maxRetryCount: 5,
-                    maxRetryDelay: TimeSpan.FromSeconds(30),
-                    errorCodesToAdd: null);
+                // NOT: EnableRetryOnFailure kaldırıldı çünkü user-initiated transactions
+                // (BeginTransactionAsync) ile çakışıyor. Handler'lar kendi retry
+                // mekanizmasına sahip (CreateSalesOrderHandler maxRetries = 3).
+                // Gelecekte ExecuteInTransactionAsync pattern'ine geçilirse
+                // EnableRetryOnFailure tekrar aktifleştirilebilir.
             });
         }, ServiceLifetime.Scoped);
 
