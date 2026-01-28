@@ -418,6 +418,126 @@ public class MigrationController : ApiController
             data = updatedSettings
         });
     }
+
+    #region Central Migration Management
+
+    /// <summary>
+    /// Get migration status for all databases (Master, Alerts, Tenants)
+    /// </summary>
+    [HttpGet("central/status")]
+    [SwaggerOperation(Summary = "Get central migration status", Description = "Returns migration status for all DbContexts: Master, Alerts, and all Tenants")]
+    public async Task<IActionResult> GetCentralMigrationStatus()
+    {
+        try
+        {
+            var result = await _migrationService.GetCentralMigrationStatusAsync();
+
+            return Ok(new
+            {
+                success = true,
+                data = result
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting central migration status");
+            return StatusCode(503, new
+            {
+                message = "Merkezi migration durumu alınamadı",
+                error = ex.Message
+            });
+        }
+    }
+
+    /// <summary>
+    /// Get pending migrations for Alerts database
+    /// </summary>
+    [HttpGet("alerts/pending")]
+    [SwaggerOperation(Summary = "Get Alerts DB pending migrations", Description = "Returns pending migrations for AlertDbContext")]
+    public async Task<IActionResult> GetAlertsPendingMigrations()
+    {
+        try
+        {
+            var result = await _migrationService.GetAlertsPendingMigrationsAsync();
+
+            return Ok(new
+            {
+                success = true,
+                data = result
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting alerts pending migrations");
+            return StatusCode(503, new
+            {
+                message = "Alerts veritabanı migration bilgisi alınamadı",
+                error = ex.Message
+            });
+        }
+    }
+
+    /// <summary>
+    /// Apply migrations to Alerts database
+    /// </summary>
+    [HttpPost("alerts/apply")]
+    [SwaggerOperation(Summary = "Apply Alerts DB migrations", Description = "Applies all pending migrations to AlertDbContext")]
+    public async Task<IActionResult> ApplyAlertsMigration()
+    {
+        try
+        {
+            _logger.LogInformation("Applying Alerts database migrations...");
+
+            var result = await _migrationService.ApplyAlertsMigrationAsync();
+
+            return Ok(new
+            {
+                success = result.Success,
+                data = result
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error applying alerts migrations");
+            return StatusCode(503, new
+            {
+                message = "Alerts migration uygulanamadı",
+                error = ex.Message
+            });
+        }
+    }
+
+    /// <summary>
+    /// Apply all pending migrations across all databases
+    /// </summary>
+    [HttpPost("central/apply-all")]
+    [SwaggerOperation(Summary = "Apply all migrations", Description = "Applies all pending migrations to Master, Alerts, and all Tenant databases")]
+    public async Task<IActionResult> ApplyAllMigrations()
+    {
+        try
+        {
+            _logger.LogInformation("Applying all migrations across all databases...");
+
+            var result = await _migrationService.ApplyAllMigrationsAsync();
+
+            return Ok(new
+            {
+                success = result.Success,
+                data = result
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error applying all migrations");
+            return StatusCode(503, new
+            {
+                message = "Merkezi migration uygulanamadı",
+                error = ex.Message
+            });
+        }
+    }
+
+    #endregion
 }
 
 public record ScheduleMigrationRequest(

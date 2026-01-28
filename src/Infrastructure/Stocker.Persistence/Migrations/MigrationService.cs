@@ -2452,3 +2452,254 @@ public class MockTenantService : ITenantService
     
     public Task<bool> SetCurrentTenant(string tenantIdentifier) => Task.FromResult(true);
 }
+
+#region Central Migration Management
+
+public partial class MigrationService
+{
+    /// <inheritdoc />
+    public async Task<CentralMigrationStatusDto> GetCentralMigrationStatusAsync(CancellationToken cancellationToken = default)
+    {
+        var result = new CentralMigrationStatusDto();
+
+        try
+        {
+            // Get Master status
+            var masterStatus = await GetMasterPendingMigrationsAsync(cancellationToken);
+            result.Master = new DbContextMigrationStatusDto
+            {
+                ContextName = "MasterDbContext",
+                Schema = "public",
+                PendingMigrations = masterStatus.PendingMigrations,
+                AppliedMigrations = masterStatus.AppliedMigrations,
+                HasPendingMigrations = masterStatus.HasPendingMigrations,
+                Error = masterStatus.Error
+            };
+
+            // Get Alerts status
+            result.Alerts = await GetAlertsPendingMigrationsAsync(cancellationToken);
+
+            // Get Tenants summary
+            var tenantStatuses = await GetPendingMigrationsAsync(cancellationToken);
+            result.Tenants = new TenantMigrationSummaryDto
+            {
+                TotalTenants = tenantStatuses.Count,
+                TenantsWithPendingMigrations = tenantStatuses.Count(t => t.HasPendingMigrations),
+                TenantsUpToDate = tenantStatuses.Count(t => !t.HasPendingMigrations),
+                TotalPendingMigrations = tenantStatuses.Sum(t => t.PendingMigrations.Sum(m => m.Migrations.Count)),
+                TenantsWithPending = tenantStatuses.Where(t => t.HasPendingMigrations).ToList()
+            };
+
+            // Calculate totals
+            result.TotalPendingMigrations =
+                result.Master.PendingMigrations.Count +
+                result.Alerts.PendingMigrations.Count +
+                result.Tenants.TotalPendingMigrations;
+
+            result.HasAnyPendingMigrations =
+                result.Master.HasPendingMigrations ||
+                result.Alerts.HasPendingMigrations ||
+                result.Tenants.TenantsWithPendingMigrations > 0;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting central migration status");
+            throw;
+        }
+
+        return result;
+    }
+
+    /// <inheritdoc />
+    public async Task<DbContextMigrationStatusDto> GetAlertsPendingMigrationsAsync(CancellationToken cancellationToken = default)
+    {
+        var result = new DbContextMigrationStatusDto
+        {
+            ContextName = "AlertDbContext",
+            Schema = "alerts"
+        };
+
+        try
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var alertDbContext = scope.ServiceProvider.GetService<Stocker.Infrastructure.Alerts.Persistence.AlertDbContext>();
+
+            if (alertDbContext == null)
+            {
+                result.Error = "AlertDbContext not registered in DI container";
+                return result;
+            }
+
+            var pendingMigrations = await alertDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+            var appliedMigrations = await alertDbContext.Database.GetAppliedMigrationsAsync(cancellationToken);
+
+            result.PendingMigrations = pendingMigrations.ToList();
+            result.AppliedMigrations = appliedMigrations.ToList();
+            result.HasPendingMigrations = result.PendingMigrations.Count > 0;
+
+            _logger.LogInformation("AlertDbContext: {PendingCount} pending, {AppliedCount} applied migrations",
+                result.PendingMigrations.Count, result.AppliedMigrations.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting AlertDbContext pending migrations");
+            result.Error = ex.Message;
+        }
+
+        return result;
+    }
+
+    /// <inheritdoc />
+    public async Task<ApplyMigrationResultDto> ApplyAlertsMigrationAsync(CancellationToken cancellationToken = default)
+    {
+        var result = new ApplyMigrationResultDto
+        {
+            TenantId = Guid.Empty, // Not tenant-specific
+            TenantName = "Alerts"
+        };
+
+        try
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var alertDbContext = scope.ServiceProvider.GetService<Stocker.Infrastructure.Alerts.Persistence.AlertDbContext>();
+
+            if (alertDbContext == null)
+            {
+                result.Success = false;
+                result.Error = "AlertDbContext not registered in DI container";
+                return result;
+            }
+
+            var pendingBefore = await alertDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+            var pendingCount = pendingBefore.Count();
+
+            if (pendingCount == 0)
+            {
+                result.Success = true;
+                result.Message = "No pending migrations for AlertDbContext";
+                return result;
+            }
+
+            _logger.LogInformation("Applying {Count} migrations to AlertDbContext...", pendingCount);
+
+            await alertDbContext.Database.MigrateAsync(cancellationToken);
+
+            result.Success = true;
+            result.AppliedMigrations = pendingBefore.ToList();
+            result.Message = $"Successfully applied {pendingCount} migration(s) to AlertDbContext";
+
+            _logger.LogInformation("AlertDbContext migrations applied successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error applying AlertDbContext migrations");
+            result.Success = false;
+            result.Error = ex.Message;
+        }
+
+        return result;
+    }
+
+    /// <inheritdoc />
+    public async Task MigrateAlertsDatabaseAsync()
+    {
+        try
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var alertDbContext = scope.ServiceProvider.GetService<Stocker.Infrastructure.Alerts.Persistence.AlertDbContext>();
+
+            if (alertDbContext == null)
+            {
+                _logger.LogWarning("AlertDbContext not registered, skipping Alerts migration");
+                return;
+            }
+
+            _logger.LogInformation("Starting AlertDbContext migration...");
+
+            var pendingMigrations = await alertDbContext.Database.GetPendingMigrationsAsync();
+            _logger.LogInformation("AlertDbContext pending migrations: {Migrations}",
+                string.Join(", ", pendingMigrations));
+
+            await alertDbContext.Database.MigrateAsync();
+
+            _logger.LogInformation("AlertDbContext migration completed successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error migrating AlertDbContext");
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<CentralMigrationResultDto> ApplyAllMigrationsAsync(CancellationToken cancellationToken = default)
+    {
+        var result = new CentralMigrationResultDto();
+        var allSuccess = true;
+        var messages = new List<string>();
+
+        try
+        {
+            // 1. Apply Master migrations
+            _logger.LogInformation("Applying Master database migrations...");
+            result.Master = await ApplyMasterMigrationAsync(cancellationToken);
+            if (!result.Master.Success)
+            {
+                allSuccess = false;
+                messages.Add($"Master: {result.Master.Error}");
+            }
+            else if (result.Master.AppliedMigrations.Count > 0)
+            {
+                messages.Add($"Master: Applied {result.Master.AppliedMigrations.Count} migration(s)");
+            }
+
+            // 2. Apply Alerts migrations
+            _logger.LogInformation("Applying Alerts database migrations...");
+            result.Alerts = await ApplyAlertsMigrationAsync(cancellationToken);
+            if (!result.Alerts.Success)
+            {
+                allSuccess = false;
+                messages.Add($"Alerts: {result.Alerts.Error}");
+            }
+            else if (result.Alerts.AppliedMigrations.Count > 0)
+            {
+                messages.Add($"Alerts: Applied {result.Alerts.AppliedMigrations.Count} migration(s)");
+            }
+
+            // 3. Apply Tenant migrations
+            _logger.LogInformation("Applying Tenant database migrations...");
+            result.Tenants = await ApplyMigrationsToAllTenantsAsync(cancellationToken);
+            var failedTenants = result.Tenants.Count(t => !t.Success);
+            var successTenants = result.Tenants.Count(t => t.Success);
+
+            if (failedTenants > 0)
+            {
+                allSuccess = false;
+                messages.Add($"Tenants: {failedTenants} failed, {successTenants} succeeded");
+            }
+            else if (successTenants > 0)
+            {
+                var totalApplied = result.Tenants.Sum(t => t.AppliedMigrations.Count);
+                messages.Add($"Tenants: Applied {totalApplied} migration(s) across {successTenants} tenant(s)");
+            }
+
+            result.Success = allSuccess;
+            result.Message = messages.Count > 0
+                ? string.Join("; ", messages)
+                : "No pending migrations found";
+
+            _logger.LogInformation("Central migration completed. Success: {Success}, Message: {Message}",
+                result.Success, result.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during central migration");
+            result.Success = false;
+            result.Message = ex.Message;
+        }
+
+        return result;
+    }
+}
+
+#endregion

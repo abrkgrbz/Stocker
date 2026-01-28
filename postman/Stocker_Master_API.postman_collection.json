@@ -1,0 +1,2554 @@
+{
+  "info": {
+    "name": "Stocker Master API",
+    "_postman_id": "stocker-master-api-collection",
+    "description": "Stocker Master Admin Panel API - Tüm endpoint'ler",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://localhost:7001",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.data.token);",
+                  "    console.log('Token saved successfully');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@stocker.com\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/dashboard/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "dashboard", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Get Summary",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/dashboard/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "dashboard", "summary"]
+            }
+          }
+        },
+        {
+          "name": "Get Key Metrics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/dashboard/key-metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "dashboard", "key-metrics"]
+            }
+          }
+        },
+        {
+          "name": "Get Revenue Overview",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/dashboard/revenue-overview",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "dashboard", "revenue-overview"]
+            }
+          }
+        },
+        {
+          "name": "Get Tenant Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/dashboard/tenant-stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "dashboard", "tenant-stats"]
+            }
+          }
+        },
+        {
+          "name": "Get System Health",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/dashboard/system-health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "dashboard", "system-health"]
+            }
+          }
+        },
+        {
+          "name": "Get Recent Tenants",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/dashboard/recent-tenants?count=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "dashboard", "recent-tenants"],
+              "query": [
+                {
+                  "key": "count",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Recent Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/dashboard/recent-users?count=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "dashboard", "recent-users"],
+              "query": [
+                {
+                  "key": "count",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Quick Actions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/dashboard/quick-actions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "dashboard", "quick-actions"]
+            }
+          }
+        },
+        {
+          "name": "Get Alerts Summary",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/dashboard/alerts-summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "dashboard", "alerts-summary"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tenants",
+      "item": [
+        {
+          "name": "Get All Tenants",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/tenants?page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "tenants"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Tenant By Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/tenants/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "tenants", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{tenantId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Tenant",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Test Company\",\n  \"email\": \"test@company.com\",\n  \"phone\": \"+905551234567\",\n  \"taxNumber\": \"1234567890\",\n  \"address\": \"Test Address\",\n  \"packageId\": \"{{packageId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/tenants",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "tenants"]
+            }
+          }
+        },
+        {
+          "name": "Update Tenant",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Updated Company Name\",\n  \"email\": \"updated@company.com\",\n  \"phone\": \"+905559876543\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/tenants/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "tenants", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{tenantId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Tenant",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/tenants/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "tenants", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{tenantId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Tenant Dashboard",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/tenants/:id/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "tenants", ":id", "dashboard"],
+              "variable": [
+                { "key": "id", "value": "{{tenantId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Tenant Health",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/tenants/:id/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "tenants", ":id", "health"],
+              "variable": [
+                { "key": "id", "value": "{{tenantId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Tenant Modules",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/tenants/:id/modules",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "tenants", ":id", "modules"],
+              "variable": [
+                { "key": "id", "value": "{{tenantId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Activate Tenant",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/tenants/:id/activate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "tenants", ":id", "activate"],
+              "variable": [
+                { "key": "id", "value": "{{tenantId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Suspend Tenant",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Payment overdue\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/tenants/:id/suspend",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "tenants", ":id", "suspend"],
+              "variable": [
+                { "key": "id", "value": "{{tenantId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login To Tenant",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/tenants/:id/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "tenants", ":id", "login"],
+              "variable": [
+                { "key": "id", "value": "{{tenantId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Tenant Statistics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/tenants/statistics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "tenants", "statistics"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        {
+          "name": "Get All Subscriptions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/subscriptions?tenantId=&status=&autoRenew=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "subscriptions"],
+              "query": [
+                { "key": "tenantId", "value": "" },
+                { "key": "status", "value": "" },
+                { "key": "autoRenew", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Subscription By Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/subscriptions/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "subscriptions", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{subscriptionId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantId\": \"{{tenantId}}\",\n  \"packageId\": \"{{packageId}}\",\n  \"billingCycle\": \"Monthly\",\n  \"autoRenew\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/subscriptions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "subscriptions"]
+            }
+          }
+        },
+        {
+          "name": "Update Subscription",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"autoRenew\": false,\n  \"billingCycle\": \"Yearly\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/subscriptions/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "subscriptions", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{subscriptionId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancel Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Customer requested cancellation\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/subscriptions/:id/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "subscriptions", ":id", "cancel"],
+              "variable": [
+                { "key": "id", "value": "{{subscriptionId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Renew Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"additionalMonths\": 12\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/subscriptions/:id/renew",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "subscriptions", ":id", "renew"],
+              "variable": [
+                { "key": "id", "value": "{{subscriptionId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Suspend Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Payment failure\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/subscriptions/:id/suspend",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "subscriptions", ":id", "suspend"],
+              "variable": [
+                { "key": "id", "value": "{{subscriptionId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reactivate Subscription",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/subscriptions/:id/reactivate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "subscriptions", ":id", "reactivate"],
+              "variable": [
+                { "key": "id", "value": "{{subscriptionId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upgrade Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newPackageId\": \"{{packageId}}\",\n  \"prorateBilling\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/subscriptions/:id/upgrade",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "subscriptions", ":id", "upgrade"],
+              "variable": [
+                { "key": "id", "value": "{{subscriptionId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Downgrade Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newPackageId\": \"{{packageId}}\",\n  \"applyAtPeriodEnd\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/subscriptions/:id/downgrade",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "subscriptions", ":id", "downgrade"],
+              "variable": [
+                { "key": "id", "value": "{{subscriptionId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Subscription History",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/subscriptions/:id/history?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "subscriptions", ":id", "history"],
+              "query": [
+                { "key": "limit", "value": "50" }
+              ],
+              "variable": [
+                { "key": "id", "value": "{{subscriptionId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Subscription Usage",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/subscriptions/:id/usage?startDate=&endDate=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "subscriptions", ":id", "usage"],
+              "query": [
+                { "key": "startDate", "value": "" },
+                { "key": "endDate", "value": "" }
+              ],
+              "variable": [
+                { "key": "id", "value": "{{subscriptionId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Change Package",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newPackageId\": \"{{packageId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/subscriptions/tenant/:tenantId/change-package",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "subscriptions", "tenant", ":tenantId", "change-package"],
+              "variable": [
+                { "key": "tenantId", "value": "{{tenantId}}" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invoices",
+      "item": [
+        {
+          "name": "Get All Invoices",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/invoices?page=1&pageSize=10&status=&tenantId=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "invoices"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" },
+                { "key": "status", "value": "" },
+                { "key": "tenantId", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Invoice By Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/invoices/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "invoices", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{invoiceId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Tenant Invoices",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/invoices/tenant/:tenantId?status=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "invoices", "tenant", ":tenantId"],
+              "query": [
+                { "key": "status", "value": "" }
+              ],
+              "variable": [
+                { "key": "tenantId", "value": "{{tenantId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantId\": \"{{tenantId}}\",\n  \"subscriptionId\": \"{{subscriptionId}}\",\n  \"dueDate\": \"2025-02-28\",\n  \"lineItems\": [\n    {\n      \"description\": \"Monthly Subscription\",\n      \"quantity\": 1,\n      \"unitPrice\": 99.99\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/invoices",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "invoices"]
+            }
+          }
+        },
+        {
+          "name": "Mark Invoice As Paid",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentMethod\": \"CreditCard\",\n  \"transactionId\": \"TXN-123456\",\n  \"notes\": \"Payment received via credit card\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/invoices/:id/mark-paid",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "invoices", ":id", "mark-paid"],
+              "variable": [
+                { "key": "id", "value": "{{invoiceId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Invoice Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newStatus\": \"Sent\",\n  \"notes\": \"Invoice sent to customer\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/invoices/:id/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "invoices", ":id", "status"],
+              "variable": [
+                { "key": "id", "value": "{{invoiceId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancel Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Customer requested cancellation\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/invoices/:id/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "invoices", ":id", "cancel"],
+              "variable": [
+                { "key": "id", "value": "{{invoiceId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Overdue Invoices",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/invoices/overdue",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "invoices", "overdue"]
+            }
+          }
+        },
+        {
+          "name": "Send Reminder",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/invoices/:id/send-reminder",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "invoices", ":id", "send-reminder"],
+              "variable": [
+                { "key": "id", "value": "{{invoiceId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Line Items",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/invoices/:id/line-items",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "invoices", ":id", "line-items"],
+              "variable": [
+                { "key": "id", "value": "{{invoiceId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Download PDF",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/invoices/:id/pdf",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "invoices", ":id", "pdf"],
+              "variable": [
+                { "key": "id", "value": "{{invoiceId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Refund Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refundAmount\": 50.00,\n  \"reason\": \"Partial service not delivered\",\n  \"isFullRefund\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/invoices/:id/refund",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "invoices", ":id", "refund"],
+              "variable": [
+                { "key": "id", "value": "{{invoiceId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Bulk Send Reminders",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"invoiceIds\": [],\n  \"sendToAllOverdue\": true,\n  \"daysOverdue\": 7\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/invoices/bulk/send-reminders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "invoices", "bulk", "send-reminders"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Packages",
+      "item": [
+        {
+          "name": "Get All Packages",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/packages",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "packages"]
+            }
+          }
+        },
+        {
+          "name": "Get Package By Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/packages/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "packages", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{packageId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Package",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Enterprise\",\n  \"description\": \"Full featured package\",\n  \"monthlyPrice\": 299.99,\n  \"yearlyPrice\": 2999.99,\n  \"maxUsers\": 100,\n  \"maxStorage\": 100,\n  \"features\": [\"All modules\", \"Priority support\", \"Custom integrations\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/packages",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "packages"]
+            }
+          }
+        },
+        {
+          "name": "Update Package",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Enterprise Plus\",\n  \"monthlyPrice\": 399.99\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/packages/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "packages", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{packageId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Package",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/packages/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "packages", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{packageId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Toggle Package Status",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/packages/:id/toggle-status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "packages", ":id", "toggle-status"],
+              "variable": [
+                { "key": "id", "value": "{{packageId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Package Modules",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/packages/:id/modules",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "packages", ":id", "modules"],
+              "variable": [
+                { "key": "id", "value": "{{packageId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Package Modules",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"moduleIds\": [\"{{moduleId1}}\", \"{{moduleId2}}\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/packages/:id/modules",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "packages", ":id", "modules"],
+              "variable": [
+                { "key": "id", "value": "{{packageId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Compare Packages",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/packages/compare",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "packages", "compare"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Modules",
+      "item": [
+        {
+          "name": "Get All Modules",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/modules",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "modules"]
+            }
+          }
+        },
+        {
+          "name": "Get Module By Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/modules/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "modules", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{moduleId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Module",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Advanced Analytics\",\n  \"code\": \"ANALYTICS\",\n  \"description\": \"Advanced reporting and analytics module\",\n  \"basePrice\": 49.99,\n  \"isCore\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/modules",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "modules"]
+            }
+          }
+        },
+        {
+          "name": "Update Module",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Advanced Analytics Pro\",\n  \"basePrice\": 59.99\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/modules/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "modules", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{moduleId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Module",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/modules/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "modules", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{moduleId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Toggle Module Status",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/modules/:id/toggle-status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "modules", ":id", "toggle-status"],
+              "variable": [
+                { "key": "id", "value": "{{moduleId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Core Modules",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/modules/core",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "modules", "core"]
+            }
+          }
+        },
+        {
+          "name": "Get Optional Modules",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/modules/optional",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "modules", "optional"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users (Master)",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/users?page=1&pageSize=10&search=&roleId=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" },
+                { "key": "search", "value": "" },
+                { "key": "roleId", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User By Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "users", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{userId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newadmin@stocker.com\",\n  \"firstName\": \"New\",\n  \"lastName\": \"Admin\",\n  \"password\": \"Admin123!\",\n  \"roleId\": \"{{roleId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "users"]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Name\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "users", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{userId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "users", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{userId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Toggle User Status",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/users/:id/toggle-status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "users", ":id", "toggle-status"],
+              "variable": [
+                { "key": "id", "value": "{{userId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update User Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleId\": \"{{roleId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/users/:id/role",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "users", ":id", "role"],
+              "variable": [
+                { "key": "id", "value": "{{userId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reset User Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newPassword\": \"NewPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/users/:id/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "users", ":id", "reset-password"],
+              "variable": [
+                { "key": "id", "value": "{{userId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User Activity",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/users/:id/activity",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "users", ":id", "activity"],
+              "variable": [
+                { "key": "id", "value": "{{userId}}" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roles",
+      "item": [
+        {
+          "name": "Get All Roles",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "roles"]
+            }
+          }
+        },
+        {
+          "name": "Get Role By Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/roles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "roles", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{roleId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Support Agent\",\n  \"description\": \"Customer support role\",\n  \"permissions\": [\"tenants.view\", \"invoices.view\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "roles"]
+            }
+          }
+        },
+        {
+          "name": "Update Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Senior Support Agent\",\n  \"permissions\": [\"tenants.view\", \"tenants.edit\", \"invoices.view\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/roles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "roles", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{roleId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Role",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/roles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "roles", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{roleId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Permissions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/roles/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "roles", "permissions"]
+            }
+          }
+        },
+        {
+          "name": "Get Role Permissions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/roles/:id/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "roles", ":id", "permissions"],
+              "variable": [
+                { "key": "id", "value": "{{roleId}}" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Get Overview",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/analytics/overview",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "analytics", "overview"]
+            }
+          }
+        },
+        {
+          "name": "Get Revenue Analytics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/analytics/revenue?startDate=2025-01-01&endDate=2025-12-31&groupBy=month",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "analytics", "revenue"],
+              "query": [
+                { "key": "startDate", "value": "2025-01-01" },
+                { "key": "endDate", "value": "2025-12-31" },
+                { "key": "groupBy", "value": "month" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Growth Analytics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/analytics/growth?startDate=2025-01-01&endDate=2025-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "analytics", "growth"],
+              "query": [
+                { "key": "startDate", "value": "2025-01-01" },
+                { "key": "endDate", "value": "2025-12-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Tenant Analytics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/analytics/tenants?startDate=2025-01-01&endDate=2025-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "analytics", "tenants"],
+              "query": [
+                { "key": "startDate", "value": "2025-01-01" },
+                { "key": "endDate", "value": "2025-12-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Usage Analytics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/analytics/usage",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "analytics", "usage"]
+            }
+          }
+        },
+        {
+          "name": "Get Churn Analysis",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/analytics/churn?startDate=2025-01-01&endDate=2025-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "analytics", "churn"],
+              "query": [
+                { "key": "startDate", "value": "2025-01-01" },
+                { "key": "endDate", "value": "2025-12-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Cohort Analysis",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/analytics/cohort?cohortType=monthly&periods=12",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "analytics", "cohort"],
+              "query": [
+                { "key": "cohortType", "value": "monthly" },
+                { "key": "periods", "value": "12" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Monitoring",
+      "item": [
+        {
+          "name": "Get System Health",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/monitoring/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "monitoring", "health"]
+            }
+          }
+        },
+        {
+          "name": "Get System Metrics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/monitoring/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "monitoring", "metrics"]
+            }
+          }
+        },
+        {
+          "name": "Get Logs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/monitoring/logs?level=Error&source=&startDate=&endDate=&page=1&pageSize=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "monitoring", "logs"],
+              "query": [
+                { "key": "level", "value": "Error" },
+                { "key": "source", "value": "" },
+                { "key": "startDate", "value": "" },
+                { "key": "endDate", "value": "" },
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Alerts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/monitoring/alerts?severity=&isResolved=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "monitoring", "alerts"],
+              "query": [
+                { "key": "severity", "value": "" },
+                { "key": "isResolved", "value": "false" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Services Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/monitoring/services",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "monitoring", "services"]
+            }
+          }
+        },
+        {
+          "name": "Get Performance Metrics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/monitoring/performance?startDate=&endDate=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "monitoring", "performance"],
+              "query": [
+                { "key": "startDate", "value": "" },
+                { "key": "endDate", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Database Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/monitoring/database",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "monitoring", "database"]
+            }
+          }
+        },
+        {
+          "name": "Get Active Connections",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/monitoring/connections",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "monitoring", "connections"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Audit Logs",
+      "item": [
+        {
+          "name": "Get Audit Logs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/audit-logs?page=1&pageSize=50&userId=&action=&entityType=&startDate=&endDate=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "audit-logs"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "50" },
+                { "key": "userId", "value": "" },
+                { "key": "action", "value": "" },
+                { "key": "entityType", "value": "" },
+                { "key": "startDate", "value": "" },
+                { "key": "endDate", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Audit Log By Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/audit-logs/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "audit-logs", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{auditLogId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User Audit Logs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/audit-logs/user/:userId?page=1&pageSize=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "audit-logs", "user", ":userId"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "50" }
+              ],
+              "variable": [
+                { "key": "userId", "value": "{{userId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Entity Audit Logs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/audit-logs/entity/:entityType/:entityId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "audit-logs", "entity", ":entityType", ":entityId"],
+              "variable": [
+                { "key": "entityType", "value": "Tenant" },
+                { "key": "entityId", "value": "{{tenantId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export Audit Logs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/audit-logs/export?format=csv&startDate=&endDate=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "audit-logs", "export"],
+              "query": [
+                { "key": "format", "value": "csv" },
+                { "key": "startDate", "value": "" },
+                { "key": "endDate", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Audit Summary",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/audit-logs/summary?startDate=&endDate=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "audit-logs", "summary"],
+              "query": [
+                { "key": "startDate", "value": "" },
+                { "key": "endDate", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Audit Statistics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/audit-logs/statistics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "audit-logs", "statistics"]
+            }
+          }
+        },
+        {
+          "name": "Get Actions List",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/audit-logs/actions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "audit-logs", "actions"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Get Available Reports",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/reports",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "reports"]
+            }
+          }
+        },
+        {
+          "name": "Generate Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportType\": \"revenue\",\n  \"startDate\": \"2025-01-01\",\n  \"endDate\": \"2025-12-31\",\n  \"format\": \"pdf\",\n  \"parameters\": {}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/reports/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "reports", "generate"]
+            }
+          }
+        },
+        {
+          "name": "Get Report History",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/reports/history?page=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "reports", "history"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Download Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/reports/:id/download",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "reports", ":id", "download"],
+              "variable": [
+                { "key": "id", "value": "{{reportId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Schedule Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportType\": \"monthly-summary\",\n  \"frequency\": \"monthly\",\n  \"recipients\": [\"admin@stocker.com\"],\n  \"parameters\": {}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/reports/schedule",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "reports", "schedule"]
+            }
+          }
+        },
+        {
+          "name": "Get Scheduled Reports",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/reports/scheduled",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "reports", "scheduled"]
+            }
+          }
+        },
+        {
+          "name": "Delete Scheduled Report",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/reports/schedule/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "reports", "schedule", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{scheduleId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Report Templates",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/reports/templates",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "reports", "templates"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "item": [
+        {
+          "name": "Get All Settings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "settings"]
+            }
+          }
+        },
+        {
+          "name": "Get Setting By Key",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/settings/:key",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "settings", ":key"],
+              "variable": [
+                { "key": "key", "value": "smtp" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"smtp\": {\n    \"host\": \"smtp.example.com\",\n    \"port\": 587,\n    \"username\": \"noreply@stocker.com\",\n    \"useSsl\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "settings"]
+            }
+          }
+        },
+        {
+          "name": "Get SMTP Settings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/settings/smtp",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "settings", "smtp"]
+            }
+          }
+        },
+        {
+          "name": "Update SMTP Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"host\": \"smtp.example.com\",\n  \"port\": 587,\n  \"username\": \"noreply@stocker.com\",\n  \"password\": \"password\",\n  \"useSsl\": true,\n  \"fromEmail\": \"noreply@stocker.com\",\n  \"fromName\": \"Stocker\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/settings/smtp",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "settings", "smtp"]
+            }
+          }
+        },
+        {
+          "name": "Test SMTP Connection",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"testEmail\": \"test@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/settings/smtp/test",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "settings", "smtp", "test"]
+            }
+          }
+        },
+        {
+          "name": "Get Security Settings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/settings/security",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "settings", "security"]
+            }
+          }
+        },
+        {
+          "name": "Update Security Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passwordMinLength\": 8,\n  \"requireUppercase\": true,\n  \"requireNumber\": true,\n  \"requireSpecialChar\": true,\n  \"sessionTimeout\": 30,\n  \"maxLoginAttempts\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/settings/security",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "settings", "security"]
+            }
+          }
+        },
+        {
+          "name": "Get Branding Settings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/settings/branding",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "settings", "branding"]
+            }
+          }
+        },
+        {
+          "name": "Update Branding Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Stocker ERP\",\n  \"primaryColor\": \"#3B82F6\",\n  \"logoUrl\": \"https://example.com/logo.png\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/settings/branding",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "settings", "branding"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Storage",
+      "item": [
+        {
+          "name": "Get Storage Overview",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/storage/overview",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "storage", "overview"]
+            }
+          }
+        },
+        {
+          "name": "Get Tenant Storage",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/storage/tenant/:tenantId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "storage", "tenant", ":tenantId"],
+              "variable": [
+                { "key": "tenantId", "value": "{{tenantId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Storage Statistics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/storage/statistics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "storage", "statistics"]
+            }
+          }
+        },
+        {
+          "name": "Update Tenant Quota",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quotaInGB\": 100\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/storage/tenant/:tenantId/quota",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "storage", "tenant", ":tenantId", "quota"],
+              "variable": [
+                { "key": "tenantId", "value": "{{tenantId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Tenant Files",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/storage/tenant/:tenantId/files?path=/&page=1&pageSize=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "storage", "tenant", ":tenantId", "files"],
+              "query": [
+                { "key": "path", "value": "/" },
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "50" }
+              ],
+              "variable": [
+                { "key": "tenantId", "value": "{{tenantId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Tenant File",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/storage/tenant/:tenantId/files?path=/example.pdf",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "storage", "tenant", ":tenantId", "files"],
+              "query": [
+                { "key": "path", "value": "/example.pdf" }
+              ],
+              "variable": [
+                { "key": "tenantId", "value": "{{tenantId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cleanup Storage",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantId\": \"{{tenantId}}\",\n  \"deleteOlderThanDays\": 90,\n  \"fileTypes\": [\"temp\", \"log\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/storage/cleanup",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "storage", "cleanup"]
+            }
+          }
+        },
+        {
+          "name": "Get Storage Alerts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/storage/alerts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "storage", "alerts"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Billing Admin",
+      "item": [
+        {
+          "name": "Get Billing Overview",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/billing/overview",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "billing", "overview"]
+            }
+          }
+        },
+        {
+          "name": "Get Revenue Summary",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/billing/revenue?startDate=2025-01-01&endDate=2025-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "billing", "revenue"],
+              "query": [
+                { "key": "startDate", "value": "2025-01-01" },
+                { "key": "endDate", "value": "2025-12-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Payment Methods",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/billing/payment-methods",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "billing", "payment-methods"]
+            }
+          }
+        },
+        {
+          "name": "Get Billing Alerts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/billing/alerts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "billing", "alerts"]
+            }
+          }
+        },
+        {
+          "name": "Get Billing Configuration",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/billing/configuration",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "billing", "configuration"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Migrations",
+      "item": [
+        {
+          "name": "Get Central Migration Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/migrations/central/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "migrations", "central", "status"]
+            },
+            "description": "Returns migration status for all DbContexts: Master, Alerts, and all Tenants"
+          }
+        },
+        {
+          "name": "Apply All Migrations",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/migrations/central/apply-all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "migrations", "central", "apply-all"]
+            },
+            "description": "Applies all pending migrations to Master, Alerts, and all Tenant databases"
+          }
+        },
+        {
+          "name": "Get Alerts Pending Migrations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/migrations/alerts/pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "migrations", "alerts", "pending"]
+            },
+            "description": "Returns pending migrations for AlertDbContext"
+          }
+        },
+        {
+          "name": "Apply Alerts Migration",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/migrations/alerts/apply",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "migrations", "alerts", "apply"]
+            },
+            "description": "Applies all pending migrations to AlertDbContext"
+          }
+        },
+        {
+          "name": "Get Master Pending Migrations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/migrations/master/pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "migrations", "master", "pending"]
+            }
+          }
+        },
+        {
+          "name": "Apply Master Migration",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/migrations/master/apply",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "migrations", "master", "apply"]
+            }
+          }
+        },
+        {
+          "name": "Get All Tenants Pending Migrations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/migrations/pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "migrations", "pending"]
+            }
+          }
+        },
+        {
+          "name": "Apply Migration To Tenant",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/migrations/apply/:tenantId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "migrations", "apply", ":tenantId"],
+              "variable": [
+                { "key": "tenantId", "value": "{{tenantId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Apply Migrations To All Tenants",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/migrations/apply-all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "migrations", "apply-all"]
+            }
+          }
+        },
+        {
+          "name": "Get Tenant Migration History",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/migrations/history/:tenantId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "migrations", "history", ":tenantId"],
+              "variable": [
+                { "key": "tenantId", "value": "{{tenantId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Migration Script Preview",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/migrations/preview/:tenantId/:moduleName/:migrationName",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "migrations", "preview", ":tenantId", ":moduleName", ":migrationName"],
+              "variable": [
+                { "key": "tenantId", "value": "{{tenantId}}" },
+                { "key": "moduleName", "value": "Inventory" },
+                { "key": "migrationName", "value": "InitialCreate" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Rollback Migration",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/migrations/rollback/:tenantId/:moduleName/:migrationName",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "migrations", "rollback", ":tenantId", ":moduleName", ":migrationName"],
+              "variable": [
+                { "key": "tenantId", "value": "{{tenantId}}" },
+                { "key": "moduleName", "value": "Inventory" },
+                { "key": "migrationName", "value": "InitialCreate" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Schedule Migration",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantId\": \"{{tenantId}}\",\n  \"scheduledTime\": \"2025-02-01T03:00:00Z\",\n  \"migrationName\": null,\n  \"moduleName\": null\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/migrations/schedule",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "migrations", "schedule"]
+            }
+          }
+        },
+        {
+          "name": "Get Scheduled Migrations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/migrations/scheduled",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "migrations", "scheduled"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Scheduled Migration",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/migrations/scheduled/:scheduleId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "migrations", "scheduled", ":scheduleId"],
+              "variable": [
+                { "key": "scheduleId", "value": "{{scheduleId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Migration Settings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/migrations/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "migrations", "settings"]
+            }
+          }
+        },
+        {
+          "name": "Update Migration Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"autoApplyMigrations\": false,\n  \"notifyOnMigration\": true,\n  \"backupBeforeMigration\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/migrations/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "migrations", "settings"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Get All Payments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/payments?page=1&pageSize=10&status=&tenantId=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "payments"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" },
+                { "key": "status", "value": "" },
+                { "key": "tenantId", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Payment By Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/payments/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "payments", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{paymentId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Process Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"invoiceId\": \"{{invoiceId}}\",\n  \"amount\": 99.99,\n  \"paymentMethod\": \"CreditCard\",\n  \"transactionId\": \"TXN-123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/payments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "payments"]
+            }
+          }
+        },
+        {
+          "name": "Refund Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 50.00,\n  \"reason\": \"Customer request\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/master/payments/:id/refund",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "payments", ":id", "refund"],
+              "variable": [
+                { "key": "id", "value": "{{paymentId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Tenant Payments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/payments/tenant/:tenantId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "payments", "tenant", ":tenantId"],
+              "variable": [
+                { "key": "tenantId", "value": "{{tenantId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Payment Statistics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/payments/statistics?startDate=&endDate=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "payments", "statistics"],
+              "query": [
+                { "key": "startDate", "value": "" },
+                { "key": "endDate", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Retry Failed Payment",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/payments/:id/retry",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "payments", ":id", "retry"],
+              "variable": [
+                { "key": "id", "value": "{{paymentId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export Payments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/master/payments/export?format=csv&startDate=&endDate=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "master", "payments", "export"],
+              "query": [
+                { "key": "format", "value": "csv" },
+                { "key": "startDate", "value": "" },
+                { "key": "endDate", "value": "" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
