@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { tenantService, type TenantListDto, type TenantsStatisticsDto } from '../services/tenantService';
+import { tenantService, type TenantsStatisticsDto } from '../services/tenantService';
 import { useToast } from './useToast';
 
 export const useTenants = (params?: any) => {

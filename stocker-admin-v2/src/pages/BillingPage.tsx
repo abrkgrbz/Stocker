@@ -18,18 +18,12 @@ import {
     ArrowLeftRight,
     BarChart3,
     Receipt,
-    Users,
-    XCircle,
-    Check
+    Users
 } from 'lucide-react';
 import { packageService } from '@/services/packageService';
 import type { PackageDto } from '@/services/packageService';
-import { subscriptionService, SUBSCRIPTION_STATUS } from '@/services/subscriptionService';
-import type { SubscriptionDto } from '@/services/subscriptionService';
-import { invoiceService, INVOICE_STATUS } from '@/services/invoiceService';
-import type { InvoiceDto } from '@/services/invoiceService';
-
-import { billingService, type BillingStatisticsDto } from '@/services/billingService';
+import { subscriptionService, type SubscriptionDto } from '@/services/subscriptionService';
+import { invoiceService, type InvoiceDto, type InvoiceSummary } from '@/services/invoiceService';
 
 const BillingPage: React.FC = () => {
     const navigate = useNavigate();
@@ -37,7 +31,7 @@ const BillingPage: React.FC = () => {
     const [packages, setPackages] = useState<PackageDto[]>([]);
     const [invoices, setInvoices] = useState<InvoiceDto[]>([]);
     const [subscriptions, setSubscriptions] = useState<SubscriptionDto[]>([]);
-    const [stats, setStats] = useState<BillingStatisticsDto | null>(null);
+    const [invoiceSummary, setInvoiceSummary] = useState<InvoiceSummary | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -47,22 +41,29 @@ const BillingPage: React.FC = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const [pkgs, invs, subs, statsData] = await Promise.all([
+            const [pkgs, invoicesResponse, subs] = await Promise.all([
                 packageService.getAll(),
                 invoiceService.getAll(),
-                subscriptionService.getAll(),
-                billingService.getStatistics()
+                subscriptionService.getAll()
             ]);
             setPackages(pkgs || []);
-            setInvoices(invs || []);
+            setInvoices(invoicesResponse.invoices || []);
+            setInvoiceSummary(invoicesResponse.summary);
             setSubscriptions(subs || []);
-            setStats(statsData);
         } catch (error) {
             console.error('Billing verisi çekilemedi:', error);
             toast.error('Veriler yüklenirken bir hata oluştu.');
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const invoiceStatusMap: Record<string, { label: string; color: string }> = {
+        'Odendi': { label: 'Ödendi', color: 'text-emerald-500 bg-emerald-500/10' },
+        'Gecikti': { label: 'Gecikti', color: 'text-rose-500 bg-rose-500/10' },
+        'Gonderildi': { label: 'Gönderildi', color: 'text-indigo-400 bg-indigo-500/10' },
+        'Taslak': { label: 'Taslak', color: 'text-text-muted bg-text-muted/10' },
+        'IptalEdildi': { label: 'İptal', color: 'text-rose-400 bg-rose-500/10' }
     };
 
     const invoiceColumns = [
@@ -78,7 +79,7 @@ const BillingPage: React.FC = () => {
         },
         {
             header: 'Tarih',
-            accessor: (inv: InvoiceDto) => new Date(inv.invoiceDate).toLocaleDateString('tr-TR'),
+            accessor: (inv: InvoiceDto) => new Date(inv.issueDate).toLocaleDateString('tr-TR'),
         },
         {
             header: 'Tutar',
@@ -91,19 +92,10 @@ const BillingPage: React.FC = () => {
         {
             header: 'Durum',
             accessor: (inv: InvoiceDto) => {
-                const colors: any = {
-                    [INVOICE_STATUS.Odendi]: 'text-emerald-500 bg-emerald-500/10',
-                    [INVOICE_STATUS.Gecikti]: 'text-rose-500 bg-rose-500/10',
-                    [INVOICE_STATUS.Gonderildi]: 'text-indigo-400 bg-indigo-500/10',
-                };
-                const text: any = {
-                    [INVOICE_STATUS.Odendi]: 'Ödendi',
-                    [INVOICE_STATUS.Gecikti]: 'Gecikti',
-                    [INVOICE_STATUS.Gonderildi]: 'Beklemede',
-                };
+                const status = invoiceStatusMap[inv.status] || { label: inv.status, color: 'bg-indigo-500/5 text-text-muted' };
                 return (
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${colors[inv.status] || 'bg-indigo-500/5 text-text-muted'}`}>
-                        {text[inv.status] || 'Bilinmiyor'}
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${status.color}`}>
+                        {status.label}
                     </span>
                 );
             }
@@ -141,16 +133,16 @@ const BillingPage: React.FC = () => {
         { id: 'subscriptions', label: 'Abonelikler', icon: Users },
     ];
 
-    // Helper to calculate revenue for a package
     const getPackageRevenue = (pkgId: string) => {
-        // Simple logic: number of active subscriptions * package price
-        // In a real app, this would come from backend or analyzing invoices.
-        // We'll estimate based on current subscriptions.
-        const subs = subscriptions.filter(s => s.packageId === pkgId && s.status === SUBSCRIPTION_STATUS.Aktif);
+        const subs = subscriptions.filter(s => s.packageId === pkgId && s.status === 'Active');
         const pkg = packages.find(p => p.id === pkgId);
-        if (!pkg) return 0;
+        if (!pkg || !pkg.basePrice) return 0;
         return subs.length * pkg.basePrice.amount;
     };
+
+    const activeSubscriptionsCount = subscriptions.filter(s => s.status === 'Active').length;
+    // In new API invoiceSummary has overdueAmount, pendingAmount, totalAmount
+    const monthlyRevenue = invoiceSummary?.totalAmount || 0;
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -191,7 +183,7 @@ const BillingPage: React.FC = () => {
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted">Aktif Abonelik</p>
-                                    <p className="text-2xl font-bold text-text-main">{stats?.activeSubscriptions || 0}</p>
+                                    <p className="text-2xl font-bold text-text-main">{activeSubscriptionsCount}</p>
                                 </div>
                             </div>
                         </Card>
@@ -201,8 +193,8 @@ const BillingPage: React.FC = () => {
                                     <Users className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted">Gecikmiş Ödeme</p>
-                                    <p className="text-2xl font-bold text-text-main">{stats?.overdueInvoices || 0}</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted">Gecikmiş Tutar</p>
+                                    <p className="text-2xl font-bold text-text-main">₺{(invoiceSummary?.overdueAmount || 0).toLocaleString()}</p>
                                 </div>
                             </div>
                         </Card>
@@ -212,9 +204,9 @@ const BillingPage: React.FC = () => {
                                     <TrendingUp className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted">Aylık Gelir</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted">Toplam Gelir</p>
                                     <p className="text-2xl font-bold text-text-main">
-                                        ₺{stats?.monthlyRevenue?.toLocaleString() || 0}
+                                        ₺{monthlyRevenue.toLocaleString()}
                                     </p>
                                 </div>
                             </div>
@@ -229,18 +221,19 @@ const BillingPage: React.FC = () => {
                                     <Package className="w-12 h-12 text-indigo-400/5 group-hover:text-indigo-500/10 transition-colors" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400">{pkg.type}</p>
+                                    {/* pkg.type not in new DTO, assuming standard or from logic if needed */}
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400">PAKET</p>
                                     <h3 className="text-2xl font-bold text-text-main mt-1">{pkg.name}</h3>
                                     <p className="text-sm text-text-muted mt-2 line-clamp-2">{pkg.description || 'Standart özellikler dahildir.'}</p>
 
                                     <div className="mt-8 flex items-baseline gap-1">
                                         <span className="text-4xl font-bold text-text-main">{pkg.basePrice?.amount?.toLocaleString('tr-TR') || 0}</span>
-                                        <span className="text-sm font-bold text-text-muted/40 uppercase">{pkg.basePrice?.currency || '₺'} / AY</span>
+                                        <span className="text-sm font-bold text-text-muted/40 uppercase">{pkg.basePrice?.currency || pkg.currency || '₺'} / {pkg.billingCycle}</span>
                                     </div>
 
                                     <div className="mt-8 space-y-4">
                                         <div className="flex items-center gap-3 text-sm text-text-muted">
-                                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                            <Users className="w-4 h-4 text-emerald-500" />
                                             <span>{formatLimit(pkg.maxUsers, 'users')} Kullanıcı Limiti</span>
                                         </div>
                                         <div className="flex items-center gap-3 text-sm text-text-muted">
@@ -256,7 +249,10 @@ const BillingPage: React.FC = () => {
                                                 {pkg.isActive ? 'Aktif' : 'Pasif'}
                                             </span>
                                         </div>
-                                        <Button variant="ghost" size="sm">Düzenle</Button>
+                                        <div className="flex gap-2">
+                                            <Button variant="ghost" size="sm" onClick={() => navigate(`/billing/packages/${pkg.id}`)}>İncele</Button>
+                                            <Button variant="ghost" size="sm">Düzenle</Button>
+                                        </div>
                                     </div>
                                 </div>
                             </Card>
@@ -291,7 +287,7 @@ const BillingPage: React.FC = () => {
                                 accessor: (pkg: PackageDto) => (
                                     <div className="flex flex-col">
                                         <span className="text-text-main font-bold">{pkg.name}</span>
-                                        <span className="text-[10px] text-text-muted uppercase tracking-wider">{pkg.type}</span>
+                                        <span className="text-[10px] text-text-muted uppercase tracking-wider">{pkg.billingCycle}</span>
                                     </div>
                                 )
                             },
@@ -324,8 +320,9 @@ const BillingPage: React.FC = () => {
                             },
                             {
                                 header: '',
-                                accessor: () => (
+                                accessor: (pkg: PackageDto) => (
                                     <div className="flex justify-end gap-2">
+                                        <Button size="sm" variant="ghost" onClick={() => navigate(`/billing/packages/${pkg.id}`)}>İncele</Button>
                                         <Button size="sm" variant="ghost">Düzenle</Button>
                                         <Button size="sm" variant="ghost" className="text-rose-400 hover:bg-rose-500/10 hover:text-rose-300">Sil</Button>
                                     </div>
@@ -355,42 +352,18 @@ const BillingPage: React.FC = () => {
                         </thead>
                         <tbody className="divide-y divide-border-subtle">
                             {[
-                                { label: 'Kullanıcı Sayısı', key: 'users' },
-                                { label: 'Depolama', key: 'storage' },
-                                { label: 'API Çağrısı', key: 'apiCalls' },
-                                { label: 'Proje Sayısı', key: 'projects' },
-                                { label: 'Özel Domain', key: 'customDomains' },
-                                { label: 'E-posta Desteği', key: 'emailSupport' },
-                                { label: 'Telefon Desteği', key: 'phoneSupport' },
-                                { label: 'Öncelikli Destek', key: 'prioritySupport' },
-                                { label: 'SLA', key: 'sla' },
+                                { label: 'Kullanıcı Sayısı', key: 'maxUsers' },
+                                { label: 'Depolama (GB)', key: 'maxStorage' },
+                                // Features extraction logic would go here if features structure allows
                             ].map((feature, i) => (
                                 <tr key={i} className="hover:bg-indigo-500/5 transition-colors">
                                     <td className="px-6 py-4 text-sm font-medium text-text-muted sticky left-0 bg-[#0f111a] z-10">{feature.label}</td>
                                     {packages.map(pkg => {
-                                        // Map values from pkg.limits or maxUsers
-                                        let val: any = '-';
-                                        if (feature.key === 'users') val = pkg.maxUsers;
-                                        else if (feature.key === 'storage') val = pkg.maxStorage;
-                                        else if (pkg.limits) {
-                                            // @ts-ignore
-                                            val = pkg.limits[feature.key];
-                                        }
-
-                                        let content;
-                                        if (typeof val === 'boolean') {
-                                            content = val ? <Check className="w-5 h-5 text-emerald-500 mx-auto" /> : <XCircle className="w-5 h-5 text-rose-500/20 mx-auto" />;
-                                        } else if (val === undefined) {
-                                            content = <span className="text-text-muted/20">-</span>;
-                                        } else if (feature.key === 'sla') {
-                                            content = val ? `%${val}` : '-';
-                                        } else {
-                                            content = formatLimit(val, feature.key as any);
-                                        }
-
+                                        // @ts-ignore
+                                        const val = pkg[feature.key];
                                         return (
                                             <td key={pkg.id} className="px-6 py-4 text-sm text-text-main text-center">
-                                                {content}
+                                                {formatLimit(val, feature.key === 'maxStorage' ? 'storage' : 'users')}
                                             </td>
                                         );
                                     })}
@@ -452,53 +425,6 @@ const BillingPage: React.FC = () => {
                             })}
                         </div>
                     </Card>
-
-                    {/* Popular Features (Mocked for Demo as legacy was hardcoded) */}
-                    <Card title="En Popüler Özellik Kullanımı (Tahmini)">
-                        <div className="space-y-6">
-                            {[
-                                { name: 'API Erişimi', val: 78, color: 'bg-indigo-400' },
-                                { name: 'Özel Raporlar', val: 65, color: 'bg-indigo-400' },
-                                { name: 'E-posta Desteği', val: 95, color: 'bg-indigo-400' },
-                            ].map((f, i) => (
-                                <div key={i}>
-                                    <div className="flex justify-between text-sm mb-2">
-                                        <span className="font-bold text-text-main">{f.name}</span>
-                                        <span className="text-text-muted">%{f.val}</span>
-                                    </div>
-                                    <div className="w-full h-2 rounded-full bg-white/5 overflow-hidden">
-                                        <div className={`h-full ${f.color}`} style={{ width: `${f.val}%` }} />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </Card>
-
-                    <Card title="Yükseltme Trendleri (Son 30 Gün)">
-                        <div className="space-y-6">
-                            <div className="flex gap-4 items-start">
-                                <div className="w-2 h-full bg-emerald-500 rounded-full min-h-[40px]" />
-                                <div>
-                                    <p className="text-text-main font-bold">15 kullanıcı Starter → Professional</p>
-                                    <p className="text-xs text-text-muted mt-1">Bu ay içinde gerçekleşen yükseltmeler</p>
-                                </div>
-                            </div>
-                            <div className="flex gap-4 items-start">
-                                <div className="w-2 h-full bg-blue-500 rounded-full min-h-[40px]" />
-                                <div>
-                                    <p className="text-text-main font-bold">8 kullanıcı Professional → Enterprise</p>
-                                    <p className="text-xs text-text-muted mt-1">Yüksek hacimli veri ihtiyacı</p>
-                                </div>
-                            </div>
-                            <div className="flex gap-4 items-start">
-                                <div className="w-2 h-full bg-rose-500 rounded-full min-h-[40px]" />
-                                <div>
-                                    <p className="text-text-main font-bold">3 kullanıcı Professional → Starter</p>
-                                    <p className="text-xs text-text-muted mt-1">Bütçe kısıtlamaları nedeniyle</p>
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
                 </div>
             )}
 
@@ -506,7 +432,6 @@ const BillingPage: React.FC = () => {
             {activeTab === 'invoices' && (
                 <Card noPadding className="overflow-hidden">
                     <Table
-                        // @ts-ignore
                         columns={invoiceColumns}
                         data={invoices}
                         isLoading={isLoading}
@@ -532,13 +457,13 @@ const BillingPage: React.FC = () => {
                             },
                             {
                                 header: 'Bitiş',
-                                accessor: (sub: SubscriptionDto) => new Date(sub.currentPeriodEnd).toLocaleDateString('tr-TR')
+                                accessor: (sub: SubscriptionDto) => sub.endDate ? new Date(sub.endDate).toLocaleDateString('tr-TR') : '-'
                             },
                             {
                                 header: 'Durum',
                                 accessor: (sub: SubscriptionDto) => (
-                                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${sub.status === SUBSCRIPTION_STATUS.Aktif ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
-                                        {sub.status === SUBSCRIPTION_STATUS.Aktif ? 'Aktif' : 'Pasif'}
+                                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${sub.status === 'Active' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
+                                        {sub.status === 'Active' ? 'Aktif' : sub.status}
                                     </span>
                                 )
                             }

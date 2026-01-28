@@ -1,72 +1,55 @@
-import { apiClient } from './apiClient';
+import { tenantService } from './tenantService';
+import { invoiceService } from './invoiceService';
+// import { monitoringService } from './monitoringService'; // Planned for next phase, but we can structure it now
 
-export interface RevenueAnalytics {
+export interface DashboardStatsDto {
     totalRevenue: number;
-    growthRate: number;
-    revenueByPeriod: { period: string; revenue: number }[];
-}
-
-export interface UserAnalytics {
-    totalUsers: number;
     activeUsers: number;
-    userGrowth: { period: string; totalUsers: number }[];
-}
-
-export interface SubscriptionAnalytics {
-    totalSubscriptions: number;
-    churnRate: number;
-    subscriptionsByType: { type: string; count: number }[];
-}
-
-export interface PerformanceMetrics {
-    apiResponseTime: number;
-    errorRate: number;
-    uptime: number;
+    growthRate: number;
+    systemHealth: string;
+    monthlyRevenue: number[]; // Trend
+    packageDistribution: { label: string; value: number; color: string }[];
 }
 
 class AnalyticsService {
-    private readonly baseUrl = '/api/master/analytics';
 
-    async getRevenue(): Promise<RevenueAnalytics> {
-        const response = await apiClient.get<RevenueAnalytics>(`${this.baseUrl}/revenue`);
-        // @ts-ignore
-        return response;
-    }
+    async getDashboardStats(): Promise<DashboardStatsDto> {
+        // Aggregate data from valid endpoints
+        try {
+            const [tenantStats, invoices] = await Promise.all([
+                tenantService.getStatistics(),
+                invoiceService.getAll()
+            ]);
 
-    async getUsers(): Promise<UserAnalytics> {
-        const response = await apiClient.get<UserAnalytics>(`${this.baseUrl}/users`);
-        // @ts-ignore
-        return response;
-    }
+            const estimatedTotalActiveUsers = Math.round((tenantStats.activeTenants || 0) * (tenantStats.averageUsersPerTenant || 0));
 
-    async getSubscriptions(): Promise<SubscriptionAnalytics> {
-        const response = await apiClient.get<SubscriptionAnalytics>(`${this.baseUrl}/subscriptions`);
-        // @ts-ignore
-        return response;
-    }
+            // Calculate Revenue Trend (Mocking trend for now as InvoiceDto specific logic is complex without backend aggregation)
+            const revenue = invoices.invoices.reduce((acc, inv) => acc + inv.totalAmount, 0);
 
-    async getPerformance(): Promise<PerformanceMetrics> {
-        const response = await apiClient.get<PerformanceMetrics>(`${this.baseUrl}/performance`);
-        // @ts-ignore
-        return response;
-    }
-
-    async getUsage(): Promise<any> {
-        const response = await apiClient.get<any>(`${this.baseUrl}/usage`);
-        // @ts-ignore
-        return response;
-    }
-
-    async getGrowth(): Promise<any> {
-        const response = await apiClient.get<any>(`${this.baseUrl}/growth`);
-        // @ts-ignore
-        return response;
-    }
-
-    async customQuery(query: any): Promise<any> {
-        const response = await apiClient.post<any>(`${this.baseUrl}/custom`, query);
-        // @ts-ignore
-        return response;
+            return {
+                totalRevenue: revenue,
+                activeUsers: estimatedTotalActiveUsers,
+                growthRate: tenantStats.churnRate ? -tenantStats.churnRate : 0, // Simplified
+                systemHealth: "Healthy", // Placeholder until Monitoring Phase
+                monthlyRevenue: [45, 60, 75, 80, 55, 90, revenue / 1000], // Mock trend + current
+                packageDistribution: Object.entries(tenantStats.tenantsByPackage || {}).map(([key, value], index) => ({
+                    label: key,
+                    value: value,
+                    color: index === 0 ? 'bg-indigo-500' : index === 1 ? 'bg-emerald-500' : 'bg-amber-500'
+                }))
+            };
+        } catch (error) {
+            console.error("Analytics aggregation failed", error);
+            // Return empty safe data
+            return {
+                totalRevenue: 0,
+                activeUsers: 0,
+                growthRate: 0,
+                systemHealth: "Unknown",
+                monthlyRevenue: [],
+                packageDistribution: []
+            };
+        }
     }
 }
 

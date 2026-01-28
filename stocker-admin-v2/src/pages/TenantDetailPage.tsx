@@ -11,30 +11,26 @@ import {
     CreditCard,
     Mail,
     Phone,
+    HeartPulse,
     Building2,
     Activity,
-    Database,
     History,
-    CheckCircle2,
     XCircle,
     ExternalLink,
     MoreVertical,
     Calendar,
     MapPin,
-    Hash,
-    HeartPulse,
-    AlertTriangle
+    Hash
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { tenantService, type TenantDto, type TenantStatisticsDto } from '@/services/tenantService';
-import { tenantHealthService, type TenantHealthDto, type HealthHistoryDto } from '@/services/tenantHealthService';
+import { tenantService } from '@/services/tenantService';
+import { tenantHealthService, type TenantHealthDto } from '@/services/tenantHealthService';
 
 const TenantDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'overview' | 'company' | 'history' | 'health'>('overview');
     const [health, setHealth] = useState<TenantHealthDto | null>(null);
-    const [healthHistory, setHealthHistory] = useState<HealthHistoryDto[]>([]);
 
     const { data: tenant, isLoading: isLoadingTenant } = useQuery({
         queryKey: ['tenant', id],
@@ -56,12 +52,8 @@ const TenantDetailPage: React.FC = () => {
 
     const fetchHealthData = async (tenantId: string) => {
         try {
-            const [hData, hHistory] = await Promise.all([
-                tenantHealthService.getLatest(tenantId),
-                tenantHealthService.getHistory(tenantId)
-            ]);
+            const hData = await tenantHealthService.getLatest(tenantId);
             setHealth(hData);
-            setHealthHistory(hHistory || []);
         } catch (error) {
             console.error('Health data fetch failed', error);
         }

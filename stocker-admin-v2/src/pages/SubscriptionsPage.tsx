@@ -13,7 +13,7 @@ import {
     MoreVertical,
     Download
 } from 'lucide-react';
-import { subscriptionService, SUBSCRIPTION_STATUS, type SubscriptionDto } from '@/services/subscriptionService';
+import { subscriptionService, type SubscriptionDto } from '@/services/subscriptionService';
 
 const SubscriptionsPage: React.FC = () => {
     const [subscriptions, setSubscriptions] = useState<SubscriptionDto[]>([]);
@@ -36,12 +36,12 @@ const SubscriptionsPage: React.FC = () => {
         }
     };
 
-    const statusMap: Record<number, { label: string; color: string; icon: any }> = {
-        [SUBSCRIPTION_STATUS.Aktif]: { label: 'Aktif', color: 'text-emerald-400 bg-emerald-500/10', icon: CheckCircle2 },
-        [SUBSCRIPTION_STATUS.Askida]: { label: 'Askıda', color: 'text-amber-400 bg-amber-500/10', icon: AlertCircle },
-        [SUBSCRIPTION_STATUS.Iptal]: { label: 'İptal Edildi', color: 'text-rose-400 bg-rose-500/10', icon: XCircle },
-        [SUBSCRIPTION_STATUS.Deneme]: { label: 'Deneme', color: 'text-indigo-400 bg-indigo-500/10', icon: Calendar },
-        [SUBSCRIPTION_STATUS.Suresi_Dolmus]: { label: 'Süresi Dolmuş', color: 'text-text-muted bg-indigo-500/5', icon: AlertCircle },
+    const statusMap: Record<string, { label: string; color: string; icon: any }> = {
+        'Active': { label: 'Aktif', color: 'text-emerald-400 bg-emerald-500/10', icon: CheckCircle2 },
+        'Suspended': { label: 'Askıda', color: 'text-amber-400 bg-amber-500/10', icon: AlertCircle },
+        'Cancelled': { label: 'İptal Edildi', color: 'text-rose-400 bg-rose-500/10', icon: XCircle },
+        'Trial': { label: 'Deneme', color: 'text-indigo-400 bg-indigo-500/10', icon: Calendar },
+        'Expired': { label: 'Süresi Dolmuş', color: 'text-text-muted bg-indigo-500/5', icon: AlertCircle },
     };
 
     const columns = [
@@ -50,7 +50,7 @@ const SubscriptionsPage: React.FC = () => {
             accessor: (sub: SubscriptionDto) => (
                 <div className="flex items-center gap-4 text-text-main">
                     <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold">
-                        {sub.tenantName.substring(0, 2).toUpperCase()}
+                        {sub.tenantName ? sub.tenantName.substring(0, 2).toUpperCase() : '??'}
                     </div>
                     <div>
                         <p className="text-sm font-bold">{sub.tenantName}</p>
@@ -64,14 +64,14 @@ const SubscriptionsPage: React.FC = () => {
             accessor: (sub: SubscriptionDto) => (
                 <div>
                     <span className="text-sm font-bold text-text-main">{sub.packageName}</span>
-                    <p className="text-xs text-text-muted">{sub.price.toLocaleString('tr-TR')} {sub.currency} / Ay</p>
+                    <p className="text-xs text-text-muted">{sub.finalPrice?.toLocaleString('tr-TR')} {sub.currency} / {sub.billingCycle === 'Monthly' ? 'Ay' : 'Yıl'}</p>
                 </div>
             )
         },
         {
             header: 'Durum',
             accessor: (sub: SubscriptionDto) => {
-                const status = statusMap[sub.status] || statusMap[SUBSCRIPTION_STATUS.Suresi_Dolmus];
+                const status = statusMap[sub.status] || { label: sub.status, color: 'text-text-muted', icon: AlertCircle };
                 const Icon = status.icon;
                 return (
                     <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${status.color}`}>
@@ -85,7 +85,9 @@ const SubscriptionsPage: React.FC = () => {
             header: 'Bitiş Tarihi',
             accessor: (sub: SubscriptionDto) => (
                 <div className="flex flex-col">
-                    <span className="text-xs text-text-muted font-medium">{new Date(sub.currentPeriodEnd).toLocaleDateString('tr-TR')}</span>
+                    <span className="text-xs text-text-muted font-medium">
+                        {sub.endDate ? new Date(sub.endDate).toLocaleDateString('tr-TR') : '-'}
+                    </span>
                     {sub.autoRenew && (
                         <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-tighter">Otomatik Yenileme</span>
                     )}
@@ -139,8 +141,8 @@ const SubscriptionsPage: React.FC = () => {
                 <Table
                     columns={columns}
                     data={subscriptions.filter(s =>
-                        s.tenantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        s.packageName.toLowerCase().includes(searchTerm.toLowerCase())
+                        s.tenantName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        s.packageName?.toLowerCase().includes(searchTerm.toLowerCase())
                     )}
                     isLoading={isLoading}
                 />

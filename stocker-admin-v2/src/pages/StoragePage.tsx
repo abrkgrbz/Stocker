@@ -83,6 +83,28 @@ const StoragePage: React.FC = () => {
     const pageSize = 10;
     const [selectedBucketIds, setSelectedBucketIds] = useState<(string | number)[]>([]);
 
+    // Determine buckets data safely
+    const bucketsData = React.useMemo(() => {
+        if (!bucketsResponse) return [];
+        // Handle new API structure: { data: { buckets: [...] } }
+        if (bucketsResponse.data && !Array.isArray(bucketsResponse.data) && Array.isArray((bucketsResponse.data as any).buckets)) {
+            return (bucketsResponse.data as any).buckets;
+        }
+
+        // Fallbacks for other structures
+        if (Array.isArray(bucketsResponse)) return bucketsResponse;
+        // @ts-ignore
+        if (Array.isArray(bucketsResponse.data)) return bucketsResponse.data;
+        // @ts-ignore
+        if (Array.isArray(bucketsResponse.items)) return bucketsResponse.items;
+        // @ts-ignore
+        if (Array.isArray(bucketsResponse.result)) return bucketsResponse.result;
+        // @ts-ignore
+        if (Array.isArray(bucketsResponse.value)) return bucketsResponse.value;
+
+        return [];
+    }, [bucketsResponse]);
+
     // File Browser Component State
     const [objects, setObjects] = useState<any[]>([]);
     const [isLoadingObjects, setIsLoadingObjects] = useState(false);
@@ -104,7 +126,21 @@ const StoragePage: React.FC = () => {
         try {
             const response = await storageService.listObjects(bucket, prefix);
             if (response.success) {
-                setObjects(response.data);
+                let validObjects: any[] = [];
+                // Handle various response structures
+                if (Array.isArray(response.data)) {
+                    validObjects = response.data;
+                } else if (response.data && typeof response.data === 'object') {
+                    // Check likely property names for the array
+                    if (Array.isArray((response.data as any).objects)) {
+                        validObjects = (response.data as any).objects;
+                    } else if (Array.isArray((response.data as any).items)) {
+                        validObjects = (response.data as any).items;
+                    } else if (Array.isArray((response.data as any).files)) {
+                        validObjects = (response.data as any).files;
+                    }
+                }
+                setObjects(validObjects);
             } else {
                 toast.error('Dosya listesi alınamadı.');
             }
@@ -123,11 +159,11 @@ const StoragePage: React.FC = () => {
             try {
                 // Normalize buckets data to handle both array and object responses
                 // @ts-ignore
-                const bucketsData = Array.isArray(bucketsResponse) ? bucketsResponse : (bucketsResponse?.data || []);
+                const currentBuckets = bucketsData;
 
                 // Only proceed if buckets are loaded
-                if (bucketsData.length > 0) {
-                    const exists = bucketsData.some((b: any) => b.name === SYSTEM_ASSETS_BUCKET);
+                if (currentBuckets.length > 0) {
+                    const exists = currentBuckets.some((b: any) => b.name === SYSTEM_ASSETS_BUCKET);
                     if (!exists) {
                         await storageService.createBucket(SYSTEM_ASSETS_BUCKET);
                     }
@@ -144,17 +180,47 @@ const StoragePage: React.FC = () => {
                     'email-banner': {},
                 };
 
-                for (const obj of response.data) {
+                let validObjects: any[] = [];
+                // Handle various response structures
+                if (Array.isArray(response.data)) {
+                    validObjects = response.data;
+                } else if (response.data && typeof response.data === 'object') {
+                    if (Array.isArray((response.data as any).objects)) {
+                        validObjects = (response.data as any).objects;
+                    } else if (Array.isArray((response.data as any).items)) {
+                        validObjects = (response.data as any).items;
+                    } else if (Array.isArray((response.data as any).files)) {
+                        validObjects = (response.data as any).files;
+                    }
+                }
+
+                // Match assets and get URLs
+                for (const obj of validObjects) {
                     if (!obj.isFolder) {
                         for (const assetType of ['logo', 'favicon', 'email-banner'] as SystemAssetType[]) {
-                            if (obj.key.startsWith(`${assetType}.`) || obj.key.startsWith(`${assetType}/`)) {
+                            // Check for exact match or starts with (for different extensions)
+                            if (obj.key === assetType || obj.key.startsWith(`${assetType}.`) || obj.key.startsWith(`${assetType}/`)) {
                                 try {
                                     const urlResponse = await storageService.getPresignedUrl(SYSTEM_ASSETS_BUCKET, obj.key);
-                                    if (urlResponse.success) {
-                                        assets[assetType] = { file: obj.key, url: urlResponse.url };
+
+                                    let url = '';
+                                    // Robust URL extraction
+                                    if (urlResponse) {
+                                        // 1. Direct property (unwrapped)
+                                        if ((urlResponse as any).url) url = (urlResponse as any).url;
+                                        // 2. Nested in data (wrapped response)
+                                        else if ((urlResponse as any).data) {
+                                            const data = (urlResponse as any).data;
+                                            if (typeof data === 'string') url = data; // data IS the url
+                                            else if (data.url) url = data.url; // data contains url
+                                        }
+                                    }
+
+                                    if (url) {
+                                        assets[assetType] = { file: obj.key, url };
                                     }
                                 } catch (e) {
-                                    console.error('Failed to get presigned url', e);
+                                    console.error('Failed to get presigned url for', obj.key, e);
                                 }
                             }
                         }
@@ -168,7 +234,7 @@ const StoragePage: React.FC = () => {
         } finally {
             setIsLoadingAssets(false);
         }
-    }, [bucketsResponse]);
+    }, [bucketsData]);
 
     // Effects
     useEffect(() => {
@@ -501,7 +567,7 @@ const StoragePage: React.FC = () => {
                             {viewMode === 'buckets' ? (
                                 <Table
                                     columns={bucketColumns as any}
-                                    data={(Array.isArray(bucketsResponse) ? bucketsResponse : (bucketsResponse as any)?.data || [])
+                                    data={bucketsData
                                         .filter((f: any) => (f.name || '').toLowerCase().includes(searchTerm.toLowerCase()))
                                         .map((f: any) => ({ ...f, id: f.name }))
                                         .slice((currentPage - 1) * pageSize, currentPage * pageSize)

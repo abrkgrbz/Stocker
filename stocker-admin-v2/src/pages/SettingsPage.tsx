@@ -4,21 +4,18 @@ import { Button } from '@/components/ui/Button';
 import {
     Shield,
     Mail,
-    Bell,
-    Database,
     Globe,
-    Lock,
     RefreshCw,
     HardDrive,
-    Activity,
     Server,
-    Trash2,
-    AlertCircle,
     CheckCircle2,
+    CreditCard,
+    DollarSign,
+    RotateCcw,
     Eye
 } from 'lucide-react';
 import { settingsService, type SettingsDto } from '@/services/settingsService';
-import { systemService, type DockerStats, type SystemError, type ErrorStatistics } from '@/services/systemService';
+import { systemService, type DockerStats, type SystemError } from '@/services/systemService';
 import { toast } from '@/components/ui/Toast';
 import { Modal } from '@/components/ui/Modal';
 import { Table } from '@/components/ui/Table';
@@ -27,15 +24,14 @@ import { TwoFactorSettings } from '@/components/settings/TwoFactorSettings';
 const SettingsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState('general');
     const [settings, setSettings] = useState<SettingsDto | null>(null);
-    const [_isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
 
     // System Management State
     const [dockerStats, setDockerStats] = useState<DockerStats | null>(null);
     const [isDockerLoading, setIsDockerLoading] = useState(false);
-    const [errorStats, setErrorStats] = useState<ErrorStatistics | null>(null);
+
     const [systemErrors, setSystemErrors] = useState<SystemError[]>([]);
     const [isErrorsLoading, setIsErrorsLoading] = useState(false);
-    const [_isCleaning, setIsCleaning] = useState(false);
     const [selectedError, setSelectedError] = useState<SystemError | null>(null);
 
     useEffect(() => {
@@ -61,6 +57,33 @@ const SettingsPage: React.FC = () => {
         }
     };
 
+    const handleSave = async (tab: 'general' | 'security' | 'email' | 'billing') => {
+        if (!settings) return;
+        try {
+            if (tab === 'general') await settingsService.updateGeneral(settings.general);
+            else if (tab === 'security') await settingsService.updateSecurity(settings.security);
+            else if (tab === 'email') await settingsService.updateEmail(settings.email);
+            else if (tab === 'billing') await settingsService.updateBilling(settings.billing);
+            toast.success('Ayarlar başarıyla kaydedildi.');
+        } catch (error) {
+            toast.error('Ayarlar kaydedilemedi.');
+        }
+    };
+
+    const handleRestoreDefaults = async () => {
+        if (confirm('Tüm ayarları varsayılana döndürmek istediğinize emin misiniz?')) {
+            try {
+                const refreshed = await settingsService.restoreDefaults();
+                setSettings(refreshed);
+                toast.success('Varsayılan ayarlar yüklendi.');
+            } catch (error) {
+                toast.error('İşlem başarısız.');
+            }
+        }
+    };
+
+
+
     const fetchDockerStats = async () => {
         setIsDockerLoading(true);
         try {
@@ -72,136 +95,63 @@ const SettingsPage: React.FC = () => {
             setIsDockerLoading(false);
         }
     };
-
     const fetchSystemErrors = async () => {
         setIsErrorsLoading(true);
         try {
-            const [errors, stats] = await Promise.all([
-                systemService.getSystemErrors({ page: 1, pageSize: 20 }),
-                systemService.getErrorStatistics()
-            ]);
+            const errors = await systemService.getSystemErrors({ page: 1, pageSize: 20 });
             setSystemErrors(errors);
-            setErrorStats(stats);
         } catch (error) {
-            toast.error('Hata kayıtları alınamadı');
+            console.warn('Hata kayıtları servisi yanıt vermiyor');
         } finally {
             setIsErrorsLoading(false);
         }
     };
-
-    const handleDockerCleanup = async (type: 'images' | 'containers' | 'volumes' | 'build-cache' | 'all') => {
-        setIsCleaning(true);
+    const handleDockerCleanup = async () => {
+        if (!confirm('Bu işlemi onaylıyor musunuz?')) return;
         try {
-            let result;
-            if (type === 'images') result = await systemService.cleanDockerImages();
-            else if (type === 'containers') result = await systemService.cleanDockerContainers();
-            else if (type === 'volumes') result = await systemService.cleanDockerVolumes();
-            else if (type === 'build-cache') result = await systemService.cleanDockerBuildCache();
-            else result = await systemService.cleanAllDocker();
-
-            if (result.success) {
-                toast.success(result.message);
-                fetchDockerStats();
-            } else {
-                toast.error(result.message);
-            }
-        } catch (error) {
-            toast.error('Temizlik işlemi başarısız');
-        } finally {
-            setIsCleaning(false);
-        }
+            await systemService.cleanAllDocker();
+            toast.success('Temizlik başarılı.');
+            fetchDockerStats();
+        } catch (e) { toast.error('Hata oluştu.'); }
     };
-
-    const handleResolveError = async (id: string, e: React.MouseEvent) => {
+    const handleResolveError = async (id: string, e: any) => {
         e.stopPropagation();
-        try {
-            await systemService.resolveError(id);
-            toast.success('Hata çözüldü olarak işaretlendi');
-            fetchSystemErrors();
-        } catch (error) {
-            toast.error('İşlem başarısız');
-        }
-    };
-
-    const handleDeleteError = async (id: string, e: React.MouseEvent) => {
-        e.stopPropagation();
-        try {
-            await systemService.deleteError(id);
-            toast.success('Hata silindi');
-            fetchSystemErrors();
-        } catch (error) {
-            toast.error('Silme işlemi başarısız');
-        }
+        try { await systemService.resolveError(id); toast.success('Çözüldü.'); fetchSystemErrors(); } catch (e) { toast.error('Hata.'); }
     };
 
     const tabs = [
         { id: 'general', label: 'Genel', icon: Globe },
         { id: 'security', label: 'Güvenlik', icon: Shield },
         { id: 'email', label: 'E-Posta', icon: Mail },
-        { id: 'notifications', label: 'Bildirimler', icon: Bell },
-        { id: 'backup', label: 'Yedekleme', icon: Database },
+        { id: 'billing', label: 'Faturalandırma', icon: DollarSign },
         { id: 'system-management', label: 'Sistem Yönetimi', icon: Server },
     ];
 
     const errorColumns = [
+        { header: 'Seviye', accessor: (e: any) => <span className={`uppercase font-bold text-xs ${e.level === 'error' ? 'text-rose-500' : 'text-amber-500'}`}>{e.level}</span> },
+        { header: 'Mesaj', accessor: (e: any) => <span className="truncate block max-w-xs" title={e.message}>{e.message}</span> },
+        { header: 'Kaynak', accessor: (e: any) => <span className="font-mono text-xs">{e.source}</span> },
+        { header: 'Zaman', accessor: (e: any) => new Date(e.timestamp).toLocaleString() },
         {
-            header: 'Seviye',
-            accessor: (e: any) => (
-                <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${e.level === 'error' ? 'bg-rose-500/10 text-rose-500' :
-                    e.level === 'warning' ? 'bg-amber-500/10 text-amber-500' :
-                        'bg-sky-500/10 text-sky-500'
-                    }`}>
-                    {e.level}
-                </span>
-            )
-        },
-        {
-            header: 'Kaynak',
-            accessor: (e: any) => <span className="text-xs font-mono text-indigo-400">{e.source}</span>
-        },
-        {
-            header: 'Mesaj',
-            accessor: (e: any) => <span className="text-sm truncate max-w-[300px] block" title={e.message}>{e.message}</span>
-        },
-        {
-            header: 'Zaman',
-            accessor: (e: any) => <span className="text-xs text-text-muted">{new Date(e.timestamp).toLocaleString('tr-TR')}</span>
-        },
-        {
-            header: '',
-            accessor: (e: any) => (
+            header: '', accessor: (e: any) => (
                 <div className="flex justify-end gap-2">
-                    <Button
-                        size="sm"
-                        variant="secondary"
-                        icon={Eye}
-                        onClick={() => setSelectedError(e)}
-                    />
-                    {!e.resolved && (
-                        <Button
-                            size="sm"
-                            variant="primary"
-                            icon={CheckCircle2}
-                            onClick={(ev) => handleResolveError(e.id, ev)}
-                        />
-                    )}
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        className='text-rose-500 hover:text-rose-600 hover:bg-rose-500/10'
-                        icon={Trash2}
-                        onClick={(ev) => handleDeleteError(e.id, ev)}
-                    />
+                    <Button size="sm" variant="ghost" icon={Eye} onClick={() => setSelectedError(e)} />
+                    <Button size="sm" variant="ghost" icon={CheckCircle2} onClick={(ev) => handleResolveError(e.id, ev)} className="text-emerald-500" />
                 </div>
             )
         }
     ];
 
+    if (isLoading && !settings) return <div className="p-10 text-center">Yükleniyor...</div>;
+
     return (
-        <div className="space-y-8 text-text-main">
-            <div>
-                <h2 className="text-3xl font-bold tracking-tight text-text-main">Sistem Ayarları</h2>
-                <p className="text-text-muted mt-1">Platformun global parametrelerini ve güvenlik protokollerini yapılandırın.</p>
+        <div className="space-y-8 text-text-main animate-in fade-in duration-500">
+            <div className="flex justify-between items-center">
+                <div>
+                    <h2 className="text-3xl font-bold tracking-tight text-text-main">Sistem Ayarları</h2>
+                    <p className="text-text-muted mt-1">Platformun global parametrelerini ve güvenlik protokollerini yapılandırın.</p>
+                </div>
+                <Button variant="outline" icon={RotateCcw} onClick={handleRestoreDefaults}>Varsayılanları Yükle</Button>
             </div>
 
             <div className="flex flex-col lg:flex-row gap-8">
@@ -225,11 +175,18 @@ const SettingsPage: React.FC = () => {
                         <div className="px-4">
                             <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted">Hızlı İşlemler</p>
                         </div>
-                        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-amber-500 hover:bg-amber-500/5 transition-all">
+                        <button
+                            onClick={async () => {
+                                if (confirm('Önbelleği temizlemek istiyor musunuz?')) {
+                                    try { await settingsService.clearCache(); toast.success('Önbellek temizlendi'); } catch (e) { toast.error('Hata'); }
+                                }
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-amber-500 hover:bg-amber-500/5 transition-all text-left"
+                        >
                             <RefreshCw className="w-4 h-4" />
                             <span className="text-sm font-semibold">Önbelleği Temizle</span>
                         </button>
-                        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-rose-500 hover:bg-rose-500/5 transition-all">
+                        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-rose-500 hover:bg-rose-500/5 transition-all text-left opacity-50 cursor-not-allowed" title="Henüz aktif değil">
                             <HardDrive className="w-4 h-4" />
                             <span className="text-sm font-semibold">Sunucuyu Yeniden Başlat</span>
                         </button>
@@ -239,313 +196,177 @@ const SettingsPage: React.FC = () => {
                 {/* Content Area */}
                 <div className="flex-1 space-y-6">
                     <Card className="p-8">
-                        {activeTab === 'general' && (
+                        {activeTab === 'general' && settings?.general && (
                             <div className="space-y-8">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-2xl">
-                                        <Globe className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-lg font-bold text-text-main">Genel Yapılandırma</h3>
-                                        <p className="text-sm text-text-muted">Site kimliği ve temel erişim ayarları.</p>
-                                    </div>
-                                </div>
+                                <h3 className="text-lg font-bold flex items-center gap-3"><Globe className="w-5 h-5 text-indigo-400" /> Genel Yapılandırma</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-text-muted uppercase tracking-widest px-1">Site Adı</label>
-                                        <input
-                                            type="text"
-                                            defaultValue={settings?.general?.siteName || 'Stocker'}
-                                            className="w-full bg-indigo-500/5 border border-border-subtle rounded-2xl py-3 px-6 text-sm text-text-main focus:outline-none focus:border-indigo-500/30 transition-all placeholder:text-text-muted/40"
-                                        />
+                                        <label className="text-xs font-bold text-text-muted uppercase">Uygulama Adı</label>
+                                        <input type="text" value={settings.general.applicationName} onChange={e => setSettings({ ...settings, general: { ...settings.general, applicationName: e.target.value } })} className="w-full input-primary" />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-text-muted uppercase tracking-widest px-1">Yönetici E-Postası</label>
-                                        <input
-                                            type="email"
-                                            defaultValue={settings?.general?.adminEmail || 'admin@stocker.app'}
-                                            className="w-full bg-indigo-500/5 border border-border-subtle rounded-2xl py-3 px-6 text-sm text-text-main focus:outline-none focus:border-indigo-500/30 transition-all placeholder:text-text-muted/40"
-                                        />
+                                        <label className="text-xs font-bold text-text-muted uppercase">Destek E-Postası</label>
+                                        <input type="email" value={settings.general.supportEmail} onChange={e => setSettings({ ...settings, general: { ...settings.general, supportEmail: e.target.value } })} className="w-full input-primary" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-text-muted uppercase">Varsayılan Dil</label>
+                                        <select value={settings.general.defaultLanguage} onChange={e => setSettings({ ...settings, general: { ...settings.general, defaultLanguage: e.target.value } })} className="w-full input-primary">
+                                            <option value="tr-TR">Türkçe</option>
+                                            <option value="en-US">English</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-text-muted uppercase">Bakım Modu</label>
+                                        <div className="flex items-center gap-3 mt-2">
+                                            <div onClick={() => setSettings({ ...settings, general: { ...settings.general, maintenanceMode: !settings.general.maintenanceMode } })} className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${settings.general.maintenanceMode ? 'bg-rose-500' : 'bg-slate-700'}`}>
+                                                <div className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-all ${settings.general.maintenanceMode ? 'left-7' : 'left-1'}`} />
+                                            </div>
+                                            <span className="text-sm">{settings.general.maintenanceMode ? 'Aktif (Sistem Kapalı)' : 'Pasif (Sistem Açık)'}</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="pt-6 border-t border-border-subtle flex items-center justify-between">
-                                    <Button>Değişiklikleri Kaydet</Button>
-                                </div>
+                                <div className="flex justify-end pt-4"><Button onClick={() => handleSave('general')}>Kaydet</Button></div>
                             </div>
                         )}
 
-                        {activeTab === 'security' && (
+                        {activeTab === 'security' && settings?.security && (
                             <div className="space-y-8">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-2xl">
-                                        <Lock className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-lg font-bold text-text-main">Güvenlik Politikaları</h3>
-                                        <p className="text-sm text-text-muted">Şifre gereksinimleri ve kimlik doğrulama yöntemleri.</p>
-                                    </div>
-                                </div>
-                                <div className="space-y-6">
-                                    <div className="flex items-center justify-between p-4 rounded-2xl bg-indigo-500/5 border border-border-subtle">
-                                        <div>
-                                            <span className="text-sm font-medium text-text-main block">Şifre Politikasını Dayat</span>
-                                            <span className="text-xs text-text-muted">Min 8 karakter, rakam ve sembol zorunluluğu.</span>
+                                <h3 className="text-lg font-bold flex items-center gap-3"><Shield className="w-5 h-5 text-indigo-400" /> Güvenlik Politikaları</h3>
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center p-4 bg-white/5 rounded-xl">
+                                        <span>2FA Zorunluluğu</span>
+                                        <div onClick={() => setSettings({ ...settings, security: { ...settings.security, requireTwoFactor: !settings.security.requireTwoFactor } })} className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${settings.security.requireTwoFactor ? 'bg-emerald-500' : 'bg-slate-700'}`}>
+                                            <div className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-all ${settings.security.requireTwoFactor ? 'left-7' : 'left-1'}`} />
                                         </div>
-                                        <button
-                                            onClick={() => setSettings(prev => prev ? ({ ...prev, security: { ...prev.security, enforcePasswordPolicy: !prev.security.enforcePasswordPolicy } }) : null)}
-                                            className={`w-12 h-6 rounded-full transition-colors relative ${settings?.security.enforcePasswordPolicy ? 'bg-emerald-500' : 'bg-slate-700'}`}
-                                        >
-                                            <div className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-all ${settings?.security.enforcePasswordPolicy ? 'left-7' : 'left-1'}`} />
-                                        </button>
                                     </div>
-
-                                    <div className="flex items-center justify-between p-4 rounded-2xl bg-indigo-500/5 border border-border-subtle">
-                                        <div>
-                                            <span className="text-sm font-medium text-text-main block">İki Adımlı Doğrulamayı Zorunlu Tut</span>
-                                            <span className="text-xs text-text-muted">Yöneticiler için 2FA zorunlu olur.</span>
-                                        </div>
-                                        <button
-                                            onClick={() => setSettings(prev => prev ? ({ ...prev, security: { ...prev.security, enableTwoFactor: !prev.security.enableTwoFactor } }) : null)}
-                                            className={`w-12 h-6 rounded-full transition-colors relative ${settings?.security.enableTwoFactor ? 'bg-emerald-500' : 'bg-slate-700'}`}
-                                        >
-                                            <div className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-all ${settings?.security.enableTwoFactor ? 'left-7' : 'left-1'}`} />
-                                        </button>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="grid grid-cols-2 gap-6">
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-text-muted uppercase tracking-widest px-1">Min. Şifre Uzunluğu</label>
-                                            <input
-                                                type="number"
-                                                value={settings?.security.minPasswordLength || 8}
-                                                onChange={(e) => setSettings(prev => prev ? ({ ...prev, security: { ...prev.security, minPasswordLength: parseInt(e.target.value) } }) : null)}
-                                                className="w-full bg-indigo-500/5 border border-border-subtle rounded-2xl py-3 px-6 text-sm text-text-main focus:outline-none focus:border-indigo-500/30 transition-all placeholder:text-text-muted/40"
-                                            />
+                                            <label className="text-xs font-bold text-text-muted uppercase">Min Şifre Uzunluğu</label>
+                                            <input type="number" value={settings.security.minPasswordLength} onChange={e => setSettings({ ...settings, security: { ...settings.security, minPasswordLength: +e.target.value } })} className="w-full input-primary" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-text-muted uppercase tracking-widest px-1">Oturum Zaman Aşımı (dk)</label>
-                                            <input
-                                                type="number"
-                                                value={settings?.security.sessionTimeout || 30}
-                                                onChange={(e) => setSettings(prev => prev ? ({ ...prev, security: { ...prev.security, sessionTimeout: parseInt(e.target.value) } }) : null)}
-                                                className="w-full bg-indigo-500/5 border border-border-subtle rounded-2xl py-3 px-6 text-sm text-text-main focus:outline-none focus:border-indigo-500/30 transition-all placeholder:text-text-muted/40"
-                                            />
+                                            <label className="text-xs font-bold text-text-muted uppercase">Oturum Süresi (dk)</label>
+                                            <input type="number" value={settings.security.sessionTimeoutMinutes} onChange={e => setSettings({ ...settings, security: { ...settings.security, sessionTimeoutMinutes: +e.target.value } })} className="w-full input-primary" />
                                         </div>
                                     </div>
-
-                                    <div className="pt-6 border-t border-border-subtle flex items-center justify-between">
-                                        <Button onClick={async () => {
-                                            if (!settings) return;
-                                            try {
-                                                await settingsService.updateSecurity(settings.security);
-                                                toast.success('Güvenlik ayarları kaydedildi');
-                                            } catch (error) {
-                                                toast.error('Kaydetme başarısız');
-                                            }
-                                        }}>Değişiklikleri Kaydet</Button>
-                                    </div>
-
-                                    <div className="h-px bg-border-subtle my-8" />
-
-                                    {/* Personal 2FA Settings */}
-                                    <TwoFactorSettings />
                                 </div>
+                                <div className="flex justify-end pt-4"><Button onClick={() => handleSave('security')}>Kaydet</Button></div>
+                                <div className="h-px bg-white/10 my-8" />
+                                <TwoFactorSettings />
+                            </div>
+                        )}
+
+                        {activeTab === 'email' && settings?.email && (
+                            <div className="space-y-8">
+                                <h3 className="text-lg font-bold flex items-center gap-3"><Mail className="w-5 h-5 text-indigo-400" /> SMTP Ayarları</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-text-muted uppercase">SMTP Host</label>
+                                        <input type="text" value={settings.email.smtpHost} onChange={e => setSettings({ ...settings, email: { ...settings.email, smtpHost: e.target.value } })} className="w-full input-primary" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-text-muted uppercase">Port</label>
+                                        <input type="number" value={settings.email.smtpPort} onChange={e => setSettings({ ...settings, email: { ...settings.email, smtpPort: +e.target.value } })} className="w-full input-primary" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-text-muted uppercase">Kullanıcı Adı</label>
+                                        <input type="text" value={settings.email.smtpUsername} onChange={e => setSettings({ ...settings, email: { ...settings.email, smtpUsername: e.target.value } })} className="w-full input-primary" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-text-muted uppercase">Gönderici Adı</label>
+                                        <input type="text" value={settings.email.smtpSenderName} onChange={e => setSettings({ ...settings, email: { ...settings.email, smtpSenderName: e.target.value } })} className="w-full input-primary" />
+                                    </div>
+                                </div>
+                                <div className="flex justify-end pt-4"><Button onClick={() => handleSave('email')}>Kaydet</Button></div>
+                            </div>
+                        )}
+
+                        {activeTab === 'billing' && settings?.billing && (
+                            <div className="space-y-8">
+                                <h3 className="text-lg font-bold flex items-center gap-3"><CreditCard className="w-5 h-5 text-indigo-400" /> Faturalandırma Ayarları</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-text-muted uppercase">Para Birimi</label>
+                                        <select value={settings.billing.currency} onChange={e => setSettings({ ...settings, billing: { ...settings.billing, currency: e.target.value } })} className="w-full input-primary">
+                                            <option value="TRY">Türk Lirası (TRY)</option>
+                                            <option value="USD">Amerikan Doları (USD)</option>
+                                            <option value="EUR">Euro (EUR)</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-text-muted uppercase">KDV Oranı (%)</label>
+                                        <input type="number" value={settings.billing.taxRate} onChange={e => setSettings({ ...settings, billing: { ...settings.billing, taxRate: +e.target.value } })} className="w-full input-primary" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-text-muted uppercase">Fatura Ön Eki</label>
+                                        <input type="text" value={settings.billing.invoicePrefix} onChange={e => setSettings({ ...settings, billing: { ...settings.billing, invoicePrefix: e.target.value } })} className="w-full input-primary" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-text-muted uppercase">Vade Gün Sayısı</label>
+                                        <input type="number" value={settings.billing.dueDays} onChange={e => setSettings({ ...settings, billing: { ...settings.billing, dueDays: +e.target.value } })} className="w-full input-primary" />
+                                    </div>
+                                </div>
+                                <div className="flex justify-end pt-4"><Button onClick={() => handleSave('billing')}>Kaydet</Button></div>
                             </div>
                         )}
 
                         {activeTab === 'system-management' && (
-                            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                                {/* Docker Management Section */}
-                                <div className="space-y-6">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-2xl">
-                                                <Database className="w-6 h-6" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-lg font-bold text-text-main">Docker Yönetimi</h3>
-                                                <p className="text-sm text-text-muted">Container, image ve volume verilerini yönetin.</p>
-                                            </div>
+                            <div className="space-y-8">
+                                <h3 className="text-lg font-bold flex items-center gap-3"><Server className="w-5 h-5 text-indigo-400" /> Sitem Yönetimi</h3>
+                                <div className="p-4 bg-white/5 rounded-xl">
+                                    <h4 className="font-bold mb-4">Docker Durumu</h4>
+                                    {dockerStats ? (
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>Container: {dockerStats.containers.running}/{dockerStats.containers.total}</div>
+                                            <div>Images: {dockerStats.images.total} ({dockerStats.images.size})</div>
+                                            <Button size="sm" variant="outline" onClick={fetchDockerStats} disabled={isDockerLoading}>Yenile</Button>
+                                            <Button size="sm" variant="secondary" onClick={() => handleDockerCleanup()}>Temizle</Button>
                                         </div>
-                                        <Button size="sm" variant="outline" icon={RefreshCw} onClick={fetchDockerStats} disabled={isDockerLoading}>Yenile</Button>
-                                    </div>
-
-                                    {isDockerLoading && !dockerStats ? (
-                                        <div className="text-center py-10 text-text-muted">Yükleniyor...</div>
-                                    ) : dockerStats ? (
-                                        <>
-                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                                <div className="p-4 rounded-2xl bg-indigo-500/5 border border-border-subtle">
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-1">Container</p>
-                                                    <div className="flex items-baseline gap-2">
-                                                        <span className="text-2xl font-bold text-emerald-400">{dockerStats.containers.running}</span>
-                                                        <span className="text-sm font-bold text-text-muted">/ {dockerStats.containers.total}</span>
-                                                    </div>
-                                                </div>
-                                                <div className="p-4 rounded-2xl bg-indigo-500/5 border border-border-subtle">
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-1">Image</p>
-                                                    <div className="flex items-baseline gap-2">
-                                                        <span className="text-2xl font-bold text-text-main">{dockerStats.images.total}</span>
-                                                        <span className="text-xs text-text-muted">({dockerStats.images.size})</span>
-                                                    </div>
-                                                </div>
-                                                <div className="p-4 rounded-2xl bg-indigo-500/5 border border-border-subtle">
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-1">Volume</p>
-                                                    <div className="flex items-baseline gap-2">
-                                                        <span className="text-2xl font-bold text-text-main">{dockerStats.volumes.total}</span>
-                                                        <span className="text-xs text-text-muted">({dockerStats.volumes.size})</span>
-                                                    </div>
-                                                </div>
-                                                <div className="p-4 rounded-2xl bg-indigo-500/5 border border-border-subtle">
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-1">Network</p>
-                                                    <span className="text-2xl font-bold text-text-main">{dockerStats.networks}</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-border-subtle">
-                                                <Button size="sm" variant="secondary" className="hover:text-rose-400" icon={Trash2} onClick={() => handleDockerCleanup('build-cache')}>Cache Temizle</Button>
-                                                <Button size="sm" variant="secondary" className="hover:text-rose-400" icon={Trash2} onClick={() => handleDockerCleanup('images')}>Image Temizle</Button>
-                                                <Button size="sm" variant="secondary" className="hover:text-rose-400" icon={Trash2} onClick={() => handleDockerCleanup('volumes')}>Volume Temizle</Button>
-                                                <Button size="sm" variant="primary" className="bg-rose-500 hover:bg-rose-600 text-white border-none" icon={AlertCircle} onClick={() => handleDockerCleanup('all')}>Tam Temizlik</Button>
-                                            </div>
-                                        </>
                                     ) : (
-                                        <div className="text-center py-4 text-rose-500 bg-rose-500/10 rounded-xl">Bilgiler alınamadı.</div>
+                                        <p>Yükleniyor...</p>
                                     )}
                                 </div>
-
-                                <div className="h-px bg-border-subtle" />
-
-                                {/* Error Monitoring Section */}
-                                <div className="space-y-6">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="p-3 bg-amber-500/10 text-amber-500 rounded-2xl">
-                                                <Activity className="w-6 h-6" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-lg font-bold text-text-main">Hata İzleme</h3>
-                                                <p className="text-sm text-text-muted">Sistem genelindeki hataları ve uyarıları izleyin.</p>
-                                            </div>
-                                        </div>
-                                        <Button size="sm" variant="outline" icon={RefreshCw} onClick={fetchSystemErrors} disabled={isErrorsLoading}>Yenile</Button>
-                                    </div>
-
-                                    {errorStats && (
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <Card noPadding className="p-4 bg-rose-500/5 border-rose-500/20">
-                                                <div className="flex items-center gap-3 text-rose-500">
-                                                    <AlertCircle className="w-5 h-5" />
-                                                    <span className="text-sm font-bold">Kritik Hatalar</span>
-                                                </div>
-                                                <p className="text-2xl font-bold text-rose-500 mt-2">{errorStats.criticalErrors}</p>
-                                            </Card>
-                                            <Card noPadding className="p-4 bg-amber-500/5 border-amber-500/20">
-                                                <div className="flex items-center gap-3 text-amber-500">
-                                                    <Activity className="w-5 h-5" />
-                                                    <span className="text-sm font-bold">Çözülmemiş</span>
-                                                </div>
-                                                <p className="text-2xl font-bold text-amber-500 mt-2">{errorStats.unresolvedErrors}</p>
-                                            </Card>
-                                            <Card noPadding className="p-4 bg-indigo-500/5 border-indigo-500/20">
-                                                <div className="flex items-center gap-3 text-indigo-400">
-                                                    <Server className="w-5 h-5" />
-                                                    <span className="text-sm font-bold">Toplam Kayıt</span>
-                                                </div>
-                                                <p className="text-2xl font-bold text-indigo-400 mt-2">{errorStats.totalErrors}</p>
-                                            </Card>
-                                        </div>
-                                    )}
-
-                                    <Table
-                                        columns={errorColumns as any}
-                                        data={systemErrors}
-                                        isLoading={isErrorsLoading}
-                                        pagination={{
-                                            currentPage: 1,
-                                            pageSize: 20,
-                                            totalCount: systemErrors.length, // Simplified pagination for now
-                                            totalPages: 1,
-                                            onPageChange: () => { }
-                                        }}
-                                    />
+                                <div>
+                                    <h4 className="font-bold mb-4">Sistem Hataları</h4>
+                                    <Table columns={errorColumns as any} data={systemErrors} isLoading={isErrorsLoading} />
                                 </div>
-                            </div>
-                        )}
-
-                        {/* Fallback for empty/unimplemented tabs */}
-                        {['email', 'notifications', 'backup'].includes(activeTab) && (
-                            <div className="text-center py-20 text-text-muted">
-                                <div className="p-4 bg-indigo-500/5 rounded-full w-fit mx-auto mb-4">
-                                    <Globe className="w-8 h-8 text-indigo-400 opacity-50" />
-                                </div>
-                                <h3 className="text-lg font-bold text-text-main">Bu sekme yapım aşamasında</h3>
-                                <p className="text-sm mt-2">Bu özellik yakında eklenecek.</p>
                             </div>
                         )}
                     </Card>
                 </div>
             </div>
 
-            {/* Error Detail Modal */}
-            <Modal
-                isOpen={!!selectedError}
-                onClose={() => setSelectedError(null)}
-                title="Hata Detayı"
-            >
+            <Modal isOpen={!!selectedError} onClose={() => setSelectedError(null)} title="Hata Detayı">
                 {selectedError && (
                     <div className="space-y-4">
-                        <div className="flex items-center gap-2 mb-4">
-                            <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${selectedError.level === 'error' ? 'bg-rose-500/10 text-rose-500' :
-                                selectedError.level === 'warning' ? 'bg-amber-500/10 text-amber-500' :
-                                    'bg-sky-500/10 text-sky-500'
-                                }`}>
-                                {selectedError.level}
-                            </span>
-                            <span className="text-xs text-text-muted">{new Date(selectedError.timestamp).toLocaleString()}</span>
+                        <div className="p-4 bg-gray-900 rounded font-mono text-xs overflow-x-auto">
+                            {selectedError.message}
+                            <hr className="my-2 border-white/10" />
+                            {selectedError.stackTrace}
                         </div>
-
-                        <div>
-                            <label className="text-xs font-bold text-text-muted uppercase tracking-widest">Mesaj</label>
-                            <div className="mt-1 p-3 bg-indigo-500/5 rounded-lg text-sm text-text-main font-mono border border-border-subtle">
-                                {selectedError.message}
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="text-xs font-bold text-text-muted uppercase tracking-widest">Kaynak</label>
-                            <div className="mt-1 text-sm text-text-main font-mono">
-                                {selectedError.source}
-                            </div>
-                        </div>
-
-                        {selectedError.stackTrace && (
-                            <div>
-                                <label className="text-xs font-bold text-text-muted uppercase tracking-widest">Stack Trace</label>
-                                <div className="mt-1 p-3 bg-gray-900 rounded-lg text-xs text-emerald-400 font-mono overflow-x-auto max-h-[300px]">
-                                    <pre>{selectedError.stackTrace}</pre>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="flex justify-end gap-2 pt-4">
+                        <div className="flex justify-end">
                             <Button variant="ghost" onClick={() => setSelectedError(null)}>Kapat</Button>
-                            {!selectedError.resolved && (
-                                <Button
-                                    variant="primary"
-                                    icon={CheckCircle2}
-                                    onClick={(ev) => {
-                                        handleResolveError(selectedError.id, ev);
-                                        setSelectedError(null);
-                                    }}
-                                >
-                                    Çözüldü İşaretle
-                                </Button>
-                            )}
                         </div>
                     </div>
                 )}
             </Modal>
+
+            <style>{`
+                .input-primary {
+                    background-color: rgb(255 255 255 / 0.05);
+                    border: 1px solid rgb(255 255 255 / 0.1);
+                    border-radius: 0.75rem;
+                    padding: 0.75rem 1rem;
+                    font-size: 0.875rem;
+                    color: white;
+                    outline: none;
+                    transition: all 0.2s;
+                }
+                .input-primary:focus {
+                    border-color: rgb(99 102 241 / 0.5);
+                    background-color: rgb(99 102 241 / 0.05);
+                }
+            `}</style>
         </div>
     );
 };

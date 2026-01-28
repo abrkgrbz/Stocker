@@ -16,6 +16,7 @@ import { useDashboard } from '@/hooks/useDashboard';
 
 const Dashboard: React.FC = () => {
     const { data: stats, isLoading } = useDashboard();
+    console.log('Dashboard stats:', stats);
 
     const statCards = [
         { label: 'Toplam Gelir', value: `₺${stats?.totalRevenue?.toLocaleString() || '0'}`, change: stats?.revenueChange || '0%', icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },

@@ -21,6 +21,7 @@ import MigrationsPage from './pages/MigrationsPage';
 import TenantMigrationDetailPage from './pages/TenantMigrationDetailPage';
 import HangfirePage from './pages/HangfirePage';
 import CreatePackagePage from './pages/CreatePackagePage';
+import PackageDetailPage from './pages/PackageDetailPage';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import LoginPage from './pages/LoginPage';
 import { AuthGuard } from './components/auth/AuthGuard';
@@ -56,6 +57,7 @@ function App() {
             {/* Billing */}
             <Route path="/billing" element={<AuthGuard><MainLayout><BillingPage /></MainLayout></AuthGuard>} />
             <Route path="/billing/packages/new" element={<AuthGuard><MainLayout><CreatePackagePage /></MainLayout></AuthGuard>} />
+            <Route path="/billing/packages/:id" element={<AuthGuard><MainLayout><PackageDetailPage /></MainLayout></AuthGuard>} />
 
             {/* System Operations */}
             <Route path="/system" element={<AuthGuard><MainLayout><SystemHub /></MainLayout></AuthGuard>} />

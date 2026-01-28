@@ -59,9 +59,79 @@ export interface MigrationSettingsDto {
     backupBeforeMigration: boolean;
 }
 
+export interface DbContextMigrationStatusDto {
+    contextName: string;
+    schema: string;
+    pendingMigrations: string[];
+    appliedMigrations: string[];
+    hasPendingMigrations: boolean;
+    error?: string;
+    isHealthy: boolean;
+}
+
+export interface TenantPendingMigrationDto {
+    tenantId: string;
+    tenantName: string;
+    hasPendingMigrations: boolean;
+    pendingMigrations: { moduleName: string; migrations: string[] }[];
+    error?: string;
+}
+
+export interface CentralMigrationStatusDto {
+    master: DbContextMigrationStatusDto;
+    alerts: DbContextMigrationStatusDto;
+    tenants: {
+        totalTenants: number;
+        tenantsWithPendingMigrations: number;
+        tenantsUpToDate: number;
+        totalPendingMigrations: number;
+        tenantsWithPending: TenantPendingMigrationDto[];
+    };
+    totalPendingMigrations: number;
+    hasAnyPendingMigrations: boolean;
+    checkedAt: string;
+}
+
+export interface MigrationActionResultDto {
+    tenantId: string;
+    tenantName: string;
+    success: boolean;
+    message: string;
+    appliedMigrations: string[];
+    error?: string;
+}
+
+export interface CentralMigrationResultDto {
+    master: MigrationActionResultDto;
+    alerts: MigrationActionResultDto;
+    tenants: MigrationActionResultDto[];
+    success: boolean;
+    message: string;
+    appliedAt: string;
+}
+
 class MigrationService {
     private readonly basePath = '/api/master/migrations';
 
+    // Central API
+    async getCentralStatus(): Promise<CentralMigrationStatusDto> {
+        return apiClient.get(`${this.basePath}/central/status`);
+    }
+
+    async applyCentralAll(): Promise<CentralMigrationResultDto> {
+        return apiClient.post(`${this.basePath}/central/apply-all`);
+    }
+
+    // Alerts API
+    async getAlertsPending(): Promise<DbContextMigrationStatusDto> {
+        return apiClient.get(`${this.basePath}/alerts/pending`);
+    }
+
+    async applyAlerts(): Promise<MigrationActionResultDto> {
+        return apiClient.post(`${this.basePath}/alerts/apply`);
+    }
+
+    // Legacy / Specific APIs
     async getPendingMigrations(): Promise<TenantMigrationStatusDto[]> {
         return apiClient.get(`${this.basePath}/pending`);
     }

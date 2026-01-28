@@ -16,11 +16,15 @@ export interface BucketInfo {
 
 export interface BucketsResponse {
     success: boolean;
-    data: BucketInfo[];
-    totalCount: number;
-    totalUsedBytes: number;
-    totalUsedGB: number;
-    totalObjects: number;
+    data: {
+        buckets: BucketInfo[];
+        totalCount: number;
+        totalUsedBytes: number;
+        totalUsedGB: number;
+        totalObjects: number;
+    };
+    message?: string;
+    timestamp?: string;
 }
 
 export interface StorageObject {
@@ -36,13 +40,21 @@ export interface StorageObject {
 
 export interface ListObjectsResponse {
     success: boolean;
-    data: StorageObject[];
-    bucketName: string;
-    prefix: string;
-    totalCount: number;
-    totalSize: number;
-    folderCount: number;
-    fileCount: number;
+    data: StorageObject[] | {
+        objects: StorageObject[];
+        bucketName?: string;
+        prefix?: string;
+        totalCount?: number;
+        totalSize?: number;
+        folderCount?: number;
+        fileCount?: number;
+    };
+    bucketName?: string;
+    prefix?: string;
+    totalCount?: number;
+    totalSize?: number;
+    folderCount?: number;
+    fileCount?: number;
 }
 
 export interface DeleteMultipleBucketsResponse {

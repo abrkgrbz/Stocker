@@ -15,14 +15,14 @@ import {
     AlertOctagon
 } from 'lucide-react';
 import { systemService, type DockerStats } from '@/services/systemService';
-import { systemMonitoringService, type SystemMetricsDto, type SystemAlertDto, type SystemServiceStatusDto } from '@/services/systemMonitoringService';
+import { systemMonitoringService, type SystemMetricsDto, type SystemAlertDto, type ServiceStatusDto } from '@/services/systemMonitoringService';
 import { toast } from '@/components/ui/Toast';
 
 const SystemHub: React.FC = () => {
     const [dockerStats, setDockerStats] = useState<DockerStats | null>(null);
     const [metrics, setMetrics] = useState<SystemMetricsDto | null>(null);
     const [alerts, setAlerts] = useState<SystemAlertDto[]>([]);
-    const [services, setServices] = useState<SystemServiceStatusDto[]>([]);
+    const [services, setServices] = useState<ServiceStatusDto[]>([]);
 
     useEffect(() => {
         fetchData();
@@ -32,20 +32,31 @@ const SystemHub: React.FC = () => {
 
     const fetchData = async () => {
         try {
-            const [dockerData, metricsData, alertsData, servicesData] = await Promise.all([
-                systemService.getDockerStats(),
-                systemMonitoringService.getMetrics(),
-                systemMonitoringService.getAlerts(),
-                systemMonitoringService.getServices()
+            // dockerStats might fail if legacy endpoint is removed, so we handle it separately to not block others
+            const metricsProm = systemMonitoringService.getMetrics();
+            const alertsProm = systemMonitoringService.getAlerts();
+            const servicesProm = systemMonitoringService.getServices();
+
+            const [metricsData, alertsData, servicesData] = await Promise.all([
+                metricsProm,
+                alertsProm,
+                servicesProm
             ]);
 
-            setDockerStats(dockerData);
             setMetrics(metricsData);
             setAlerts(alertsData || []);
             setServices(servicesData || []);
+
+            // Try fetching docker stats
+            try {
+                const dockerData = await systemService.getDockerStats();
+                setDockerStats(dockerData);
+            } catch (e) {
+                console.warn('Docker stats API not available');
+            }
+
         } catch (error) {
             console.error('Sistem verileri alınamadı:', error);
-            // Non-blocking error
         }
     };
 
@@ -91,14 +102,16 @@ const SystemHub: React.FC = () => {
                     <div className="flex justify-between items-start">
                         <div>
                             <p className="text-xs font-bold uppercase text-indigo-400">CPU Kullanımı</p>
-                            <h3 className="text-3xl font-bold mt-2 text-text-main">{metrics?.cpu.usage || 0}%</h3>
+                            <h3 className="text-3xl font-bold mt-2 text-text-main">
+                                {typeof metrics?.cpu === 'object' ? (metrics.cpu as any).usage : (metrics?.cpu || 0)}%
+                            </h3>
                         </div>
                         <div className="p-3 bg-indigo-500/20 rounded-xl text-indigo-400">
                             <Cpu className="w-5 h-5" />
                         </div>
                     </div>
                     <div className="mt-4 h-1.5 bg-indigo-500/10 rounded-full overflow-hidden">
-                        <div className="h-full bg-indigo-500 transition-all duration-1000" style={{ width: `${metrics?.cpu.usage || 0}%` }} />
+                        <div className="h-full bg-indigo-500 transition-all duration-1000" style={{ width: `${typeof metrics?.cpu === 'object' ? (metrics.cpu as any).usage : (metrics?.cpu || 0)}%` }} />
                     </div>
                 </Card>
 
@@ -107,7 +120,9 @@ const SystemHub: React.FC = () => {
                     <div className="flex justify-between items-start">
                         <div>
                             <p className="text-xs font-bold uppercase text-emerald-400">RAM Kullanımı</p>
-                            <h3 className="text-3xl font-bold mt-2 text-text-main">{((metrics?.memory.used || 0) / 1024 / 1024 / 1024).toFixed(1)} GB</h3>
+                            <h3 className="text-3xl font-bold mt-2 text-text-main">
+                                {typeof metrics?.memory === 'object' ? (metrics.memory as any).usagePercentage : (metrics?.memory || 0)}%
+                            </h3>
                         </div>
                         <div className="p-3 bg-emerald-500/20 rounded-xl text-emerald-400">
                             <Activity className="w-5 h-5" />
@@ -115,10 +130,10 @@ const SystemHub: React.FC = () => {
                     </div>
                     <div className="mt-4 flex justify-between text-xs text-text-muted/60 mb-1">
                         <span>Used</span>
-                        <span>{((metrics?.memory.total || 0) / 1024 / 1024 / 1024).toFixed(1)} GB Total</span>
+                        <span>% Usage</span>
                     </div>
                     <div className="h-1.5 bg-emerald-500/10 rounded-full overflow-hidden">
-                        <div className="h-full bg-emerald-500 transition-all duration-1000" style={{ width: `${((metrics?.memory.used || 0) / (metrics?.memory.total || 1)) * 100}%` }} />
+                        <div className="h-full bg-emerald-500 transition-all duration-1000" style={{ width: `${typeof metrics?.memory === 'object' ? (metrics.memory as any).usagePercentage : (metrics?.memory || 0)}%` }} />
                     </div>
                 </Card>
 
@@ -127,14 +142,16 @@ const SystemHub: React.FC = () => {
                     <div className="flex justify-between items-start">
                         <div>
                             <p className="text-xs font-bold uppercase text-amber-400">Disk Alanı</p>
-                            <h3 className="text-3xl font-bold mt-2 text-text-main">{((metrics?.disk.used || 0) / 1024 / 1024 / 1024).toFixed(1)} GB</h3>
+                            <h3 className="text-3xl font-bold mt-2 text-text-main">
+                                {typeof metrics?.diskUsage === 'object' ? (metrics.diskUsage as any).usagePercentage : (metrics?.diskUsage || 0)}%
+                            </h3>
                         </div>
                         <div className="p-3 bg-amber-500/20 rounded-xl text-amber-400">
                             <HardDrive className="w-5 h-5" />
                         </div>
                     </div>
                     <div className="mt-4 h-1.5 bg-amber-500/10 rounded-full overflow-hidden">
-                        <div className="h-full bg-amber-500 transition-all duration-1000" style={{ width: `${((metrics?.disk.used || 0) / (metrics?.disk.total || 1)) * 100}%` }} />
+                        <div className="h-full bg-amber-500 transition-all duration-1000" style={{ width: `${typeof metrics?.diskUsage === 'object' ? (metrics.diskUsage as any).usagePercentage : (metrics?.diskUsage || 0)}%` }} />
                     </div>
                 </Card>
 
@@ -155,59 +172,57 @@ const SystemHub: React.FC = () => {
 
             {/* Docker & Services Matrix */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                {/* Docker Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card className="p-6 border-blue-500/20">
-                        <div className="flex items-center gap-4 mb-6">
-                            <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl">
-                                <Box className="w-6 h-6" />
+                {/* Docker Stats - Only show if data exists */}
+                {dockerStats && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Card className="p-6 border-blue-500/20">
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl">
+                                    <Box className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-lg">Konteynerler</h4>
+                                    <p className="text-xs text-blue-400 font-bold uppercase">Docker Status</p>
+                                </div>
                             </div>
-                            <div>
-                                <h4 className="font-bold text-lg">Konteynerler</h4>
-                                <p className="text-xs text-blue-400 font-bold uppercase">Docker Status</p>
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                                    <span className="text-sm font-medium">Çalışan</span>
+                                    <span className="text-lg font-bold text-emerald-400">{dockerStats.containers.running}</span>
+                                </div>
+                                <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                                    <span className="text-sm font-medium">Durdurulmuş</span>
+                                    <span className="text-lg font-bold text-text-muted">{dockerStats.containers.stopped}</span>
+                                </div>
                             </div>
-                        </div>
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
-                                <span className="text-sm font-medium">Çalışan</span>
-                                <span className="text-lg font-bold text-emerald-400">{dockerStats?.containers.running || 0}</span>
-                            </div>
-                            <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
-                                <span className="text-sm font-medium">Durdurulmuş</span>
-                                <span className="text-lg font-bold text-text-muted">{dockerStats?.containers.stopped || 0}</span>
-                            </div>
-                            <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
-                                <span className="text-sm font-medium">Toplam</span>
-                                <span className="text-lg font-bold text-text-main">{dockerStats?.containers.total || 0}</span>
-                            </div>
-                        </div>
-                    </Card>
+                        </Card>
 
-                    <Card className="p-6 border-indigo-500/20">
-                        <div className="flex items-center gap-4 mb-6">
-                            <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-xl">
-                                <Layers className="w-6 h-6" />
+                        <Card className="p-6 border-indigo-500/20">
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-xl">
+                                    <Layers className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-lg">İmajlar</h4>
+                                    <p className="text-xs text-indigo-400 font-bold uppercase">Storage Usage</p>
+                                </div>
                             </div>
-                            <div>
-                                <h4 className="font-bold text-lg">İmajlar</h4>
-                                <p className="text-xs text-indigo-400 font-bold uppercase">Storage Usage</p>
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                                    <span className="text-sm font-medium">Toplam İmaj</span>
+                                    <span className="text-lg font-bold text-text-main">{dockerStats.images.total}</span>
+                                </div>
+                                <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                                    <span className="text-sm font-medium">Boyut</span>
+                                    <span className="text-lg font-bold text-indigo-400">{dockerStats.images.size}</span>
+                                </div>
                             </div>
-                        </div>
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
-                                <span className="text-sm font-medium">Toplam İmaj</span>
-                                <span className="text-lg font-bold text-text-main">{dockerStats?.images.total || 0}</span>
-                            </div>
-                            <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
-                                <span className="text-sm font-medium">Boyut</span>
-                                <span className="text-lg font-bold text-indigo-400">{dockerStats?.images.size || '0 GB'}</span>
-                            </div>
-                        </div>
-                    </Card>
-                </div>
+                        </Card>
+                    </div>
+                )}
 
                 {/* Service Status */}
-                <Card className="p-8">
+                <Card className={`p-8 ${!dockerStats ? 'xl:col-span-2' : ''}`}>
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-xl font-bold flex items-center gap-3">
                             <Server className="w-5 h-5 text-indigo-400" />
@@ -221,12 +236,12 @@ const SystemHub: React.FC = () => {
                         {services.length > 0 ? services.map((service) => (
                             <div key={service.name} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-2 h-2 rounded-full ${service.status === 'running' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-rose-500'}`} />
+                                    <div className={`w-2 h-2 rounded-full ${service.status === 'Running' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-rose-500'}`} />
                                     <span className="font-medium text-text-main">{service.name}</span>
                                 </div>
                                 <div className="flex items-center gap-4">
                                     <span className="text-xs text-text-muted font-mono">{Math.floor(service.uptime / 3600)}h uptime</span>
-                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase ${service.status === 'running' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase ${service.status === 'Running' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
                                         {service.status}
                                     </span>
                                 </div>
@@ -253,17 +268,17 @@ const SystemHub: React.FC = () => {
                     <div className="space-y-3 max-h-80 overflow-y-auto custom-scrollbar pr-2">
                         {alerts.map((alert) => (
                             <div key={alert.id} className="flex items-start gap-4 p-4 rounded-xl bg-rose-500/5 border border-rose-500/10 group hover:border-rose-500/20 transition-colors">
-                                <AlertTriangle className={`w-5 h-5 mt-0.5 flex-shrink-0 ${alert.severity === 'critical' ? 'text-rose-500' : 'text-amber-500'}`} />
+                                <AlertTriangle className={`w-5 h-5 mt-0.5 flex-shrink-0 ${alert.severity === 'Critical' ? 'text-rose-500' : 'text-amber-500'}`} />
                                 <div className="flex-1">
                                     <div className="flex justify-between items-start">
                                         <p className="text-sm font-bold text-text-main">{alert.message}</p>
-                                        <span className="text-[10px] text-text-muted">{new Date(alert.timestamp).toLocaleTimeString()}</span>
+                                        <span className="text-[10px] text-text-muted">{new Date(alert.createdAt).toLocaleTimeString()}</span>
                                     </div>
                                     <div className="flex justify-between items-center mt-2">
-                                        <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${alert.severity === 'critical' ? 'bg-rose-500/10 text-rose-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                                        <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${alert.severity === 'Critical' ? 'bg-rose-500/10 text-rose-400' : 'bg-amber-500/10 text-amber-400'}`}>
                                             {alert.severity}
                                         </span>
-                                        {!alert.acknowledged && (
+                                        {!alert.isAcknowledged && (
                                             <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleAcknowledgeAlert(alert.id)}>
                                                 Onayla (Acknowledge)
                                             </Button>

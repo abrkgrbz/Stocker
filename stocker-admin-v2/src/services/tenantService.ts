@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient';
-import type { ApiResponse, PaginatedResponse } from '../types/api';
+import type { ApiResponse } from '../types/api';
 
 export interface GetTenantsListQuery {
     searchTerm?: string;

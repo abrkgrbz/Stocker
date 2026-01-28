@@ -9,10 +9,13 @@ export interface LoginRequest {
 }
 
 export interface AuthResponse {
-    token: string;
+    accessToken: string;
     refreshToken: string;
     expiresAt: string;
-    requiresTwoFactor?: boolean;
+    requires2FA?: boolean;
+    tokenType?: string;
+    requiresOnboarding?: boolean;
+    requiresSetup?: boolean;
     twoFactorType?: string;
     user: UserProfile;
 }

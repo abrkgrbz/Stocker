@@ -1,84 +1,53 @@
-import { apiClient } from './apiClient';
+import { auditLogService } from './auditLogService';
 
 export interface ReportTypeDto {
     id: string;
     name: string;
     description: string;
     category: string;
-}
-
-export interface ReportHistoryDto {
-    id: string;
-    type: string;
-    generatedAt: string;
-    status: string;
-    downloadUrl?: string;
-}
-
-export interface ScheduledReportDto {
-    id: string;
-    type: string;
-    schedule: string;
-    recipients: string[];
-    isActive: boolean;
+    supportedFormats: ('csv' | 'excel' | 'pdf')[];
 }
 
 class ReportService {
-    private readonly baseUrl = '/api/master/reports';
 
-    async getTypes(): Promise<ReportTypeDto[]> {
-        const response = await apiClient.get<ReportTypeDto[]>(`${this.baseUrl}/types`);
-        // @ts-ignore
-        return response;
+    getAvailableReports(): ReportTypeDto[] {
+        return [
+            {
+                id: 'audit_logs',
+                name: 'Denetim Kayıtları',
+                description: 'Sistem genelindeki tüm işlem kayıtları, güvenlik olayları ve erişim logları.',
+                category: 'Security',
+                supportedFormats: ['csv', 'excel']
+            },
+            {
+                id: 'billing_summary',
+                name: 'Faturalama Özeti',
+                description: 'Dönemsel gelir gider raporları ve fatura dökümleri.',
+                category: 'Finance',
+                supportedFormats: ['csv'] // Assuming CSV export for invoices might be added later or we simulate it
+            },
+            {
+                id: 'tenant_usage',
+                name: 'Tenant Kullanım',
+                description: 'Müşteri bazlı kaynak kullanım istatistikleri.',
+                category: 'Usage',
+                supportedFormats: ['excel']
+            }
+        ];
     }
 
-    async getTypesGrouped(): Promise<Record<string, ReportTypeDto[]>> {
-        const response = await apiClient.get<Record<string, ReportTypeDto[]>>(`${this.baseUrl}/types/grouped`);
-        // @ts-ignore
-        return response;
-    }
+    async exportReport(typeId: string, format: 'csv' | 'excel' | 'pdf', params?: any): Promise<Blob | null> {
+        console.log(`Exporting report: ${typeId} in ${format}`, params);
 
-    async generate(typeId: string, parameters?: any): Promise<{ reportId: string }> {
-        const response = await apiClient.post<{ reportId: string }>(`${this.baseUrl}/generate`, { typeId, parameters });
-        // @ts-ignore
-        return response;
-    }
+        if (typeId === 'audit_logs') {
+            if (format === 'excel') return await auditLogService.exportExcel(params);
+            return await auditLogService.exportCsv(params);
+        }
 
-    async getHistory(): Promise<ReportHistoryDto[]> {
-        const response = await apiClient.get<any>(`${this.baseUrl}/history`) as any;
-        if (Array.isArray(response)) return response;
-        if (response && Array.isArray(response.items)) return response.items;
-        return [];
-    }
+        // Placeholder for other reports until API endpoints are confirmed
+        // if (typeId === 'billing_summary') return await billingService.export(params);
 
-    async download(reportId: string): Promise<Blob> {
-        const response = await apiClient.get(`${this.baseUrl}/download/${reportId}`, { responseType: 'blob' });
-        // @ts-ignore
-        return response;
-    }
-
-    async schedule(data: any): Promise<ScheduledReportDto> {
-        const response = await apiClient.post<ScheduledReportDto>(`${this.baseUrl}/schedule`, data);
-        // @ts-ignore
-        return response;
-    }
-
-    async getScheduled(): Promise<ScheduledReportDto[]> {
-        const response = await apiClient.get<ScheduledReportDto[]>(`${this.baseUrl}/scheduled`);
-        // @ts-ignore
-        return response;
-    }
-
-    async toggleSchedule(id: string): Promise<boolean> {
-        const response = await apiClient.post(`${this.baseUrl}/scheduled/${id}/toggle`);
-        // @ts-ignore
-        return response.success;
-    }
-
-    async deleteScheduled(id: string): Promise<boolean> {
-        const response = await apiClient.delete(`${this.baseUrl}/scheduled/${id}`);
-        // @ts-ignore
-        return response.success;
+        throw new Error(`Report type ${typeId} or format ${format} not supported yet.`);
     }
 }
 

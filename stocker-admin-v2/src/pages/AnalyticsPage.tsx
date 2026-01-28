@@ -12,10 +12,10 @@ import {
     Download,
     Filter
 } from 'lucide-react';
-import { analyticsService, type UserAnalytics } from '@/services/analyticsService';
+import { analyticsService, type DashboardStatsDto } from '@/services/analyticsService';
 
 const AnalyticsPage: React.FC = () => {
-    const [userData, setUserData] = useState<UserAnalytics | null>(null);
+    const [statsData, setStatsData] = useState<DashboardStatsDto | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -25,8 +25,8 @@ const AnalyticsPage: React.FC = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const users = await analyticsService.getUsers();
-            setUserData(users);
+            const data = await analyticsService.getDashboardStats();
+            setStatsData(data);
         } catch (error) {
             console.error('Analitik verileri yüklenemedi:', error);
         } finally {
@@ -35,10 +35,10 @@ const AnalyticsPage: React.FC = () => {
     };
 
     const stats = [
-        { label: 'Yıllık Gelir (ARR)', value: '$124.5k', change: '+12.5%', isUp: true, icon: DollarSign, color: 'text-emerald-400' },
-        { label: 'Aktif Kullanıcı', value: userData?.activeUsers?.toString() || '0', change: '+8.2%', isUp: true, icon: Users, color: 'text-indigo-400' },
-        { label: 'Büyüme Oranı', value: '%24.8', change: '+2.1%', isUp: true, icon: TrendingUp, color: 'text-amber-400' },
-        { label: 'Sistem Sağlığı', value: '99.9%', change: 'Stabil', isUp: true, icon: Activity, color: 'text-blue-400' },
+        { label: 'Yıllık Gelir (ARR)', value: statsData ? `$${statsData.totalRevenue.toLocaleString()}` : '$0', change: '+12.5%', isUp: true, icon: DollarSign, color: 'text-emerald-400' },
+        { label: 'Aktif Kullanıcı', value: statsData?.activeUsers?.toString() || '0', change: '+8.2%', isUp: true, icon: Users, color: 'text-indigo-400' },
+        { label: 'Büyüme Oranı', value: statsData ? `%${statsData.growthRate}` : '%0', change: '+2.1%', isUp: true, icon: TrendingUp, color: 'text-amber-400' },
+        { label: 'Sistem Sağlığı', value: statsData?.systemHealth || 'Unknown', change: 'Stabil', isUp: true, icon: Activity, color: 'text-blue-400' },
     ];
 
     return (
@@ -96,17 +96,17 @@ const AnalyticsPage: React.FC = () => {
                     </div>
 
                     <div className="flex-1 flex items-end justify-between gap-4 h-64 mt-10">
-                        {[45, 60, 35, 80, 55, 95, 70, 85].map((val, i) => (
+                        {statsData?.monthlyRevenue?.map((val, i) => (
                             <div key={i} className="flex-1 group relative">
                                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-indigo-500 text-text-main text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                    ${val}k
+                                    ${val.toFixed(1)}k
                                 </div>
                                 <div
                                     className="w-full bg-gradient-to-t from-indigo-500/20 to-indigo-500 rounded-t-lg transition-all cursor-pointer hover:brightness-125"
-                                    style={{ height: `${val}%` }}
+                                    style={{ height: `${(val / (Math.max(...(statsData.monthlyRevenue || [100])) || 100)) * 100}%` }}
                                 />
                             </div>
-                        ))}
+                        )) || []}
                     </div>
 
                     <div className="flex justify-between text-[10px] font-bold text-text-muted/40 uppercase tracking-widest px-2">
@@ -117,21 +117,17 @@ const AnalyticsPage: React.FC = () => {
                 <Card className="p-8 space-y-8">
                     <h3 className="text-xl font-bold text-text-main">Paket Dağılımı</h3>
                     <div className="space-y-6">
-                        {[
-                            { label: 'Pro Plan', color: 'bg-indigo-500', value: 45 },
-                            { label: 'Enterprise', color: 'bg-emerald-500', value: 30 },
-                            { label: 'Starter', color: 'bg-amber-500', value: 25 },
-                        ].map((item, i) => (
+                        {statsData?.packageDistribution?.map((item, i) => (
                             <div key={i} className="space-y-2">
                                 <div className="flex justify-between items-center text-xs font-bold">
                                     <span className="text-text-muted">{item.label}</span>
-                                    <span className="text-text-main">{item.value}%</span>
+                                    <span className="text-text-main">{item.value}</span>
                                 </div>
                                 <div className="h-2 bg-indigo-500/5 rounded-full overflow-hidden">
-                                    <div className={`h-full ${item.color} rounded-full`} style={{ width: `${item.value}%` }} />
+                                    <div className={`h-full ${item.color} rounded-full`} style={{ width: `${(item.value / (statsData.activeUsers || 1)) * 100}%` }} />
                                 </div>
                             </div>
-                        ))}
+                        )) || []}
                     </div>
 
                     <div className="pt-6 border-t border-border-subtle">

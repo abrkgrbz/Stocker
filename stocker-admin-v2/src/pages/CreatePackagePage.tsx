@@ -12,20 +12,47 @@ import {
     Settings,
     Layout
 } from 'lucide-react';
-import { packageService, type CreatePackageDto } from '@/services/packageService';
+import { packageService, type CreatePackageCommand } from '@/services/packageService';
 import { toast } from '@/components/ui/Toast';
+
+interface PackageFormData {
+    name: string;
+    description: string;
+    type: string;
+    billingCycle: string;
+    basePrice: number;
+    currency: string;
+    maxUsers: number;
+    maxStorage: number;
+    isActive: boolean;
+    displayOrder: number;
+    features: string[];
+    limits: {
+        apiCalls: number;
+        projects: number;
+        customDomains: number;
+        emailSupport: boolean;
+        phoneSupport: boolean;
+        prioritySupport: boolean;
+        sla: number;
+    };
+    trialDays: number;
+    isPopular: boolean;
+    isBestValue: boolean;
+}
 
 const CreatePackagePage: React.FC = () => {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('general');
 
-    const [formData, setFormData] = useState<CreatePackageDto>({
+    const [formData, setFormData] = useState<PackageFormData>({
         name: '',
         description: '',
         type: 'starter',
         billingCycle: 'monthly',
-        basePrice: { amount: 0, currency: 'TRY' },
+        basePrice: 0,
+        currency: 'TRY',
         maxUsers: 5,
         maxStorage: 10,
         isActive: true,
@@ -54,7 +81,7 @@ const CreatePackagePage: React.FC = () => {
     });
 
     const handleInputChange = (field: string, value: any) => {
-        setFormData(prev => {
+        setFormData((prev) => {
             const newData = { ...prev };
             if (field.includes('.')) {
                 const [parent, child] = field.split('.');
@@ -69,17 +96,17 @@ const CreatePackagePage: React.FC = () => {
     };
 
     const handlePriceChange = (amount: number) => {
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
-            basePrice: { ...prev.basePrice, amount }
+            basePrice: amount
         }));
     };
 
     const toggleFeature = (feature: string) => {
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
             features: prev.features.includes(feature)
-                ? prev.features.filter(f => f !== feature)
+                ? prev.features.filter((f) => f !== feature)
                 : [...prev.features, feature]
         }));
     };
@@ -93,12 +120,21 @@ const CreatePackagePage: React.FC = () => {
         setIsLoading(true);
         try {
             // Apply unlimited logic
-            const finalData = { ...formData };
+            const finalData: any = { ...formData };
             if (unlimited.users) finalData.maxUsers = 2147483647;
             if (unlimited.storage) finalData.maxStorage = 2147483647;
             if (unlimited.projects) finalData.limits.projects = 2147483647;
             if (unlimited.apiCalls) finalData.limits.apiCalls = 2147483647;
             if (unlimited.customDomains) finalData.limits.customDomains = 2147483647;
+
+            // Constuct basePrice object
+            finalData.basePrice = {
+                amount: formData.basePrice,
+                currency: formData.currency
+            };
+
+            // Map features to simplistic list if needed, or backend expects codes
+            // formData.features is string[] already
 
             await packageService.create(finalData);
             toast.success('Paket başarıyla oluşturuldu');
@@ -210,7 +246,7 @@ const CreatePackagePage: React.FC = () => {
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">₺</span>
                                             <input
                                                 type="number"
-                                                value={formData.basePrice.amount}
+                                                value={formData.basePrice}
                                                 onChange={(e) => handlePriceChange(Number(e.target.value))}
                                                 className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-3 pl-10 pr-4 text-text-main focus:outline-none focus:border-indigo-500/50 transition-all"
                                             />

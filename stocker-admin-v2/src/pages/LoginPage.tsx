@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Zap, Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
 // import { useToast } from '../hooks/useToast';
 import { tokenStorage } from '../utils/tokenStorage';
-import { apiClient } from '../services/apiClient';
+import { authService } from '../services/authService';
 import { GradientMesh } from '../components/ui/GradientMesh';
 
 const LoginPage: React.FC = () => {
@@ -30,10 +30,10 @@ const LoginPage: React.FC = () => {
         setError(null);
 
         try {
-            const response: any = await apiClient.post('/api/master/auth/login', { email, password });
+            const response = await authService.login({ email, password });
 
             // Check if 2FA is required
-            if (response.requiresTwoFactor) {
+            if (response.requires2FA) {
                 setStep('2fa');
                 setIsLoading(false);
                 return;
@@ -44,9 +44,11 @@ const LoginPage: React.FC = () => {
                 tokenStorage.setToken(response.accessToken);
                 if (response.refreshToken) tokenStorage.setRefreshToken(response.refreshToken);
                 navigate('/');
+            } else {
+                throw new Error('Sunucudan geçersiz yanıt alındı. (Token eksik)');
             }
         } catch (error: any) {
-            console.error(error);
+            console.error('Login error:', error);
             setError(error.message || 'Giriş yapılamadı. Lütfen bilgilerinizi kontrol edin.');
         } finally {
             setIsLoading(false);
@@ -64,24 +66,17 @@ const LoginPage: React.FC = () => {
         setError(null);
 
         try {
-            // Verify 2FA code - assuming this endpoint returns tokens like login usually does in this flow
-            // or we might need to send the temp token from previous step if the backend requires it.
-            // For now, attempting standard verification flow.
-            const response: any = await apiClient.post('/api/auth/2fa/verify', {
-                email, // sometimes needed for context
-                code: twoFactorCode
-            });
+            const response = await authService.verify2Fa(email, twoFactorCode);
 
             if (response.accessToken) {
                 tokenStorage.setToken(response.accessToken);
                 if (response.refreshToken) tokenStorage.setRefreshToken(response.refreshToken);
                 navigate('/');
-            } else if (response.success) {
-                // If it returns just success but tokens were set in cookie or previously
-                navigate('/');
+            } else {
+                throw new Error('Doğrulama başarılı ancak token alınamadı.');
             }
         } catch (error: any) {
-            console.error(error);
+            console.error('2FA error:', error);
             setError(error.message || 'Doğrulama başarısız. Kodu kontrol edin.');
         } finally {
             setIsLoading(false);
