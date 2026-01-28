@@ -138,29 +138,14 @@ public interface IMigrationService
     #region Central Migration Management
 
     /// <summary>
-    /// Gets migration status for all DbContexts in the system (Master, Alerts, Tenants)
+    /// Gets migration status for all DbContexts in the system (Master, Tenants)
     /// </summary>
     Task<CentralMigrationStatusDto> GetCentralMigrationStatusAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets pending migrations for Alert database
-    /// </summary>
-    Task<DbContextMigrationStatusDto> GetAlertsPendingMigrationsAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Applies pending migrations to Alert database
-    /// </summary>
-    Task<ApplyMigrationResultDto> ApplyAlertsMigrationAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Applies all pending migrations across all DbContexts (Master, Alerts, Tenants)
+    /// Applies all pending migrations across all DbContexts (Master, Tenants)
     /// </summary>
     Task<CentralMigrationResultDto> ApplyAllMigrationsAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Migrates Alert database (for startup)
-    /// </summary>
-    Task MigrateAlertsDatabaseAsync();
 
     #endregion
 }

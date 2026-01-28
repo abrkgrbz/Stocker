@@ -2476,9 +2476,6 @@ public partial class MigrationService
                 Error = masterStatus.Error
             };
 
-            // Get Alerts status
-            result.Alerts = await GetAlertsPendingMigrationsAsync(cancellationToken);
-
             // Get Tenants summary
             var tenantStatuses = await GetPendingMigrationsAsync(cancellationToken);
             result.Tenants = new TenantMigrationSummaryDto
@@ -2493,12 +2490,10 @@ public partial class MigrationService
             // Calculate totals
             result.TotalPendingMigrations =
                 result.Master.PendingMigrations.Count +
-                result.Alerts.PendingMigrations.Count +
                 result.Tenants.TotalPendingMigrations;
 
             result.HasAnyPendingMigrations =
                 result.Master.HasPendingMigrations ||
-                result.Alerts.HasPendingMigrations ||
                 result.Tenants.TenantsWithPendingMigrations > 0;
         }
         catch (Exception ex)
@@ -2508,157 +2503,6 @@ public partial class MigrationService
         }
 
         return result;
-    }
-
-    /// <inheritdoc />
-    public async Task<DbContextMigrationStatusDto> GetAlertsPendingMigrationsAsync(CancellationToken cancellationToken = default)
-    {
-        var result = new DbContextMigrationStatusDto
-        {
-            ContextName = "AlertDbContext",
-            Schema = "alerts"
-        };
-
-        try
-        {
-            using var scope = _serviceProvider.CreateScope();
-            var alertDbContext = scope.ServiceProvider.GetService<Stocker.Infrastructure.Alerts.Persistence.AlertDbContext>();
-
-            if (alertDbContext == null)
-            {
-                result.Error = "AlertDbContext not registered in DI container";
-                return result;
-            }
-
-            // Get all migrations from assembly (doesn't require DB connection)
-            var allMigrations = alertDbContext.Database.GetMigrations().ToList();
-
-            try
-            {
-                // Try to get applied migrations - this may fail if schema doesn't exist
-                var appliedMigrations = await alertDbContext.Database.GetAppliedMigrationsAsync(cancellationToken);
-                result.AppliedMigrations = appliedMigrations.ToList();
-
-                // Calculate pending by comparing all vs applied
-                result.PendingMigrations = allMigrations.Except(result.AppliedMigrations).ToList();
-            }
-            catch (Npgsql.PostgresException pgEx) when (pgEx.SqlState == "3F000" || pgEx.SqlState == "42P01")
-            {
-                // 3F000 = invalid_schema_name, 42P01 = undefined_table
-                // Schema or table doesn't exist - all migrations are pending
-                _logger.LogInformation("AlertDbContext: Schema or migration history table doesn't exist yet. All migrations are pending.");
-                result.PendingMigrations = allMigrations;
-                result.AppliedMigrations = new List<string>();
-            }
-
-            result.HasPendingMigrations = result.PendingMigrations.Count > 0;
-
-            _logger.LogInformation("AlertDbContext: {PendingCount} pending, {AppliedCount} applied migrations",
-                result.PendingMigrations.Count, result.AppliedMigrations.Count);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting AlertDbContext pending migrations");
-            result.Error = ex.Message;
-        }
-
-        return result;
-    }
-
-    /// <inheritdoc />
-    public async Task<ApplyMigrationResultDto> ApplyAlertsMigrationAsync(CancellationToken cancellationToken = default)
-    {
-        var result = new ApplyMigrationResultDto
-        {
-            TenantId = Guid.Empty, // Not tenant-specific
-            TenantName = "Alerts"
-        };
-
-        try
-        {
-            using var scope = _serviceProvider.CreateScope();
-            var alertDbContext = scope.ServiceProvider.GetService<Stocker.Infrastructure.Alerts.Persistence.AlertDbContext>();
-
-            if (alertDbContext == null)
-            {
-                result.Success = false;
-                result.Error = "AlertDbContext not registered in DI container";
-                return result;
-            }
-
-            // Get all migrations from assembly
-            var allMigrations = alertDbContext.Database.GetMigrations().ToList();
-            List<string> appliedMigrations;
-
-            try
-            {
-                appliedMigrations = (await alertDbContext.Database.GetAppliedMigrationsAsync(cancellationToken)).ToList();
-            }
-            catch (Npgsql.PostgresException pgEx) when (pgEx.SqlState == "3F000" || pgEx.SqlState == "42P01")
-            {
-                // Schema or table doesn't exist - treat all as pending
-                appliedMigrations = new List<string>();
-            }
-
-            var pendingMigrations = allMigrations.Except(appliedMigrations).ToList();
-            var pendingCount = pendingMigrations.Count;
-
-            if (pendingCount == 0)
-            {
-                result.Success = true;
-                result.Message = "No pending migrations for AlertDbContext";
-                return result;
-            }
-
-            _logger.LogInformation("Applying {Count} migrations to AlertDbContext...", pendingCount);
-
-            await alertDbContext.Database.MigrateAsync(cancellationToken);
-
-            result.Success = true;
-            result.AppliedMigrations = pendingMigrations;
-            result.Message = $"Successfully applied {pendingCount} migration(s) to AlertDbContext";
-
-            _logger.LogInformation("AlertDbContext migrations applied successfully");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error applying AlertDbContext migrations");
-            result.Success = false;
-            result.Error = ex.Message;
-        }
-
-        return result;
-    }
-
-    /// <inheritdoc />
-    public async Task MigrateAlertsDatabaseAsync()
-    {
-        try
-        {
-            using var scope = _serviceProvider.CreateScope();
-            var alertDbContext = scope.ServiceProvider.GetService<Stocker.Infrastructure.Alerts.Persistence.AlertDbContext>();
-
-            if (alertDbContext == null)
-            {
-                _logger.LogWarning("AlertDbContext not registered, skipping Alerts migration");
-                return;
-            }
-
-            _logger.LogInformation("Starting AlertDbContext migration...");
-
-            var pendingMigrations = await alertDbContext.Database.GetPendingMigrationsAsync();
-            _logger.LogInformation("AlertDbContext pending migrations: {Migrations}",
-                string.Join(", ", pendingMigrations));
-
-            await alertDbContext.Database.MigrateAsync();
-
-            _logger.LogInformation("AlertDbContext migration completed successfully");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error migrating AlertDbContext");
-            throw;
-        }
     }
 
     /// <inheritdoc />
@@ -2683,20 +2527,7 @@ public partial class MigrationService
                 messages.Add($"Master: Applied {result.Master.AppliedMigrations.Count} migration(s)");
             }
 
-            // 2. Apply Alerts migrations
-            _logger.LogInformation("Applying Alerts database migrations...");
-            result.Alerts = await ApplyAlertsMigrationAsync(cancellationToken);
-            if (!result.Alerts.Success)
-            {
-                allSuccess = false;
-                messages.Add($"Alerts: {result.Alerts.Error}");
-            }
-            else if (result.Alerts.AppliedMigrations.Count > 0)
-            {
-                messages.Add($"Alerts: Applied {result.Alerts.AppliedMigrations.Count} migration(s)");
-            }
-
-            // 3. Apply Tenant migrations
+            // 2. Apply Tenant migrations
             _logger.LogInformation("Applying Tenant database migrations...");
             result.Tenants = await ApplyMigrationsToAllTenantsAsync(cancellationToken);
             var failedTenants = result.Tenants.Count(t => !t.Success);

@@ -450,68 +450,10 @@ public class MigrationController : ApiController
     }
 
     /// <summary>
-    /// Get pending migrations for Alerts database
-    /// </summary>
-    [HttpGet("alerts/pending")]
-    [SwaggerOperation(Summary = "Get Alerts DB pending migrations", Description = "Returns pending migrations for AlertDbContext")]
-    public async Task<IActionResult> GetAlertsPendingMigrations()
-    {
-        try
-        {
-            var result = await _migrationService.GetAlertsPendingMigrationsAsync();
-
-            return Ok(new
-            {
-                success = true,
-                data = result
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting alerts pending migrations");
-            return StatusCode(503, new
-            {
-                message = "Alerts veritabanı migration bilgisi alınamadı",
-                error = ex.Message
-            });
-        }
-    }
-
-    /// <summary>
-    /// Apply migrations to Alerts database
-    /// </summary>
-    [HttpPost("alerts/apply")]
-    [SwaggerOperation(Summary = "Apply Alerts DB migrations", Description = "Applies all pending migrations to AlertDbContext")]
-    public async Task<IActionResult> ApplyAlertsMigration()
-    {
-        try
-        {
-            _logger.LogInformation("Applying Alerts database migrations...");
-
-            var result = await _migrationService.ApplyAlertsMigrationAsync();
-
-            return Ok(new
-            {
-                success = result.Success,
-                data = result
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error applying alerts migrations");
-            return StatusCode(503, new
-            {
-                message = "Alerts migration uygulanamadı",
-                error = ex.Message
-            });
-        }
-    }
-
-    /// <summary>
     /// Apply all pending migrations across all databases
     /// </summary>
     [HttpPost("central/apply-all")]
-    [SwaggerOperation(Summary = "Apply all migrations", Description = "Applies all pending migrations to Master, Alerts, and all Tenant databases")]
+    [SwaggerOperation(Summary = "Apply all migrations", Description = "Applies all pending migrations to Master and all Tenant databases")]
     public async Task<IActionResult> ApplyAllMigrations()
     {
         try

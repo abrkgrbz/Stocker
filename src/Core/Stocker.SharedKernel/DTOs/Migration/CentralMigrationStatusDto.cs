@@ -11,11 +11,6 @@ public class CentralMigrationStatusDto
     public DbContextMigrationStatusDto Master { get; set; } = new();
 
     /// <summary>
-    /// Alert database migration status
-    /// </summary>
-    public DbContextMigrationStatusDto Alerts { get; set; } = new();
-
-    /// <summary>
     /// Tenant databases migration summary
     /// </summary>
     public TenantMigrationSummaryDto Tenants { get; set; } = new();
@@ -117,11 +112,6 @@ public class CentralMigrationResultDto
     /// Master database migration result
     /// </summary>
     public ApplyMigrationResultDto? Master { get; set; }
-
-    /// <summary>
-    /// Alert database migration result
-    /// </summary>
-    public ApplyMigrationResultDto? Alerts { get; set; }
 
     /// <summary>
     /// Tenant migration results
