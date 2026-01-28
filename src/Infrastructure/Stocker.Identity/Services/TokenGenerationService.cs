@@ -31,15 +31,20 @@ public class TokenGenerationService : ITokenGenerationService
         _logger = logger;
     }
 
-    public async Task<AuthenticationResult> GenerateForMasterUserAsync(MasterUser user, Guid? tenantId = null)
+    public async Task<AuthenticationResult> GenerateForMasterUserAsync(MasterUser user, Guid? tenantId = null, bool rememberMe = false)
     {
         var claims = await BuildMasterUserClaimsAsync(user, tenantId);
-        
+
         var accessToken = _jwtTokenService.GenerateAccessToken(claims);
         var refreshToken = _jwtTokenService.GenerateRefreshToken();
 
+        // Determine refresh token expiration based on rememberMe flag
+        var refreshTokenExpiration = rememberMe
+            ? _jwtTokenService.GetRememberMeRefreshTokenExpiration()
+            : _jwtTokenService.GetRefreshTokenExpiration();
+
         // Save refresh token
-        user.SetRefreshToken(refreshToken, _jwtTokenService.GetRefreshTokenExpiration());
+        user.SetRefreshToken(refreshToken, refreshTokenExpiration);
         await _masterContext.SaveChangesAsync();
 
         var tenantInfo = await GetTenantInfoAsync(tenantId);
@@ -50,7 +55,7 @@ public class TokenGenerationService : ITokenGenerationService
             AccessToken = accessToken,
             RefreshToken = refreshToken,
             AccessTokenExpiration = _jwtTokenService.GetAccessTokenExpiration(),
-            RefreshTokenExpiration = _jwtTokenService.GetRefreshTokenExpiration(),
+            RefreshTokenExpiration = refreshTokenExpiration,
             User = new UserInfo
             {
                 Id = user.Id,
@@ -66,22 +71,35 @@ public class TokenGenerationService : ITokenGenerationService
         };
     }
 
-    public async Task<AuthenticationResult> GenerateForTenantUserAsync(TenantUser tenantUser, MasterUser? masterUser)
+    public async Task<AuthenticationResult> GenerateForTenantUserAsync(TenantUser tenantUser, MasterUser? masterUser, bool rememberMe = false)
     {
         var (claims, roleNames, permissions) = await BuildTenantUserClaimsAsync(tenantUser, masterUser);
 
         var accessToken = _jwtTokenService.GenerateAccessToken(claims);
         var refreshToken = _jwtTokenService.GenerateRefreshToken();
 
-        // Save refresh token on master user (only if exists)
-        // Invited users (MasterUserId = Guid.Empty) don't have a master user record
+        // Determine refresh token expiration based on rememberMe flag
+        var refreshTokenExpiration = rememberMe
+            ? _jwtTokenService.GetRememberMeRefreshTokenExpiration()
+            : _jwtTokenService.GetRefreshTokenExpiration();
+
+        // Save refresh token
         if (masterUser != null)
         {
-            masterUser.SetRefreshToken(refreshToken, _jwtTokenService.GetRefreshTokenExpiration());
+            // Regular users with MasterUser association - save to MasterUser
+            masterUser.SetRefreshToken(refreshToken, refreshTokenExpiration);
             await _masterContext.SaveChangesAsync();
         }
-        // For invited users without MasterUser, refresh token is not persisted
-        // They will need to re-login when access token expires
+        else
+        {
+            // Invited users (MasterUserId = Guid.Empty) - save refresh token to TenantUser
+            // This allows invited users to refresh their tokens without re-login
+            tenantUser.SetRefreshToken(refreshToken, refreshTokenExpiration);
+            await using var tenantContext = await _tenantDbContextFactory.CreateDbContextAsync(tenantUser.TenantId);
+            tenantContext.TenantUsers.Update(tenantUser);
+            await tenantContext.SaveChangesAsync();
+            _logger.LogInformation("Refresh token saved for invited user {UserId} in tenant {TenantId}", tenantUser.Id, tenantUser.TenantId);
+        }
 
         var tenantInfo = await GetTenantInfoAsync(tenantUser.TenantId);
 
@@ -94,7 +112,7 @@ public class TokenGenerationService : ITokenGenerationService
             AccessToken = accessToken,
             RefreshToken = refreshToken,
             AccessTokenExpiration = _jwtTokenService.GetAccessTokenExpiration(),
-            RefreshTokenExpiration = _jwtTokenService.GetRefreshTokenExpiration(),
+            RefreshTokenExpiration = refreshTokenExpiration,
             User = new UserInfo
             {
                 Id = userId,
@@ -287,11 +305,12 @@ public class TokenGenerationService : ITokenGenerationService
 
 public interface ITokenGenerationService
 {
-    Task<AuthenticationResult> GenerateForMasterUserAsync(MasterUser user, Guid? tenantId = null);
+    Task<AuthenticationResult> GenerateForMasterUserAsync(MasterUser user, Guid? tenantId = null, bool rememberMe = false);
     /// <summary>
     /// Generates authentication tokens for a tenant user.
     /// </summary>
     /// <param name="tenantUser">The tenant user to generate tokens for</param>
     /// <param name="masterUser">The associated master user. Can be null for invited users without MasterUser association.</param>
-    Task<AuthenticationResult> GenerateForTenantUserAsync(TenantUser tenantUser, MasterUser? masterUser);
+    /// <param name="rememberMe">When true, extends refresh token lifetime (30 days instead of 7 days)</param>
+    Task<AuthenticationResult> GenerateForTenantUserAsync(TenantUser tenantUser, MasterUser? masterUser, bool rememberMe = false);
 }

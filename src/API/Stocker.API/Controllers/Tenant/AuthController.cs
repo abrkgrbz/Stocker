@@ -18,6 +18,7 @@ using Stocker.Application.Features.Identity.Commands.Disable2FA;
 using Stocker.Application.Features.Identity.Queries.Check2FALockout;
 using Stocker.Application.Features.Identity.Queries.Get2FAStatus;
 using Stocker.Application.Features.Identity.Queries.GetCurrentUser;
+using Stocker.API.Extensions;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Tenant;
@@ -95,28 +96,7 @@ public class AuthController : ControllerBase
 
         if (result.IsSuccess)
         {
-            // Set access_token as HttpOnly cookie
-            Response.Cookies.Append("access_token", result.Value.AccessToken, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
-                Domain = ".stoocker.app",
-                Path = "/",
-                Expires = result.Value.ExpiresAt
-            });
-
-            // Set refresh_token as HttpOnly cookie (7 days expiration)
-            Response.Cookies.Append("refresh_token", result.Value.RefreshToken, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
-                Domain = ".stoocker.app",
-                Path = "/",
-                Expires = DateTimeOffset.UtcNow.AddDays(7)
-            });
-
+            Response.SetAuthCookies(result.Value.AccessToken, result.Value.RefreshToken, result.Value.ExpiresAt);
             _logger.LogInformation("User {Email} logged in successfully", command.Email);
             return Ok(new
             {
@@ -211,51 +191,14 @@ public class AuthController : ControllerBase
         _logger.LogInformation("User {UserId} logged out - clearing auth cookies", userId);
 
         // Clear HttpOnly auth cookies (but keep tenant-code!)
-        ClearAuthCookies();
+        Response.ClearAuthCookies();
+        _logger.LogDebug("Auth cookies cleared (tenant-code preserved)");
 
         return Ok(new
         {
             success = true,
             message = "Logged out successfully"
         });
-    }
-
-    /// <summary>
-    /// Helper method to clear authentication cookies
-    /// </summary>
-    private void ClearAuthCookies()
-    {
-        // Clear access_token cookie (if exists from SecureAuth)
-        Response.Cookies.Delete("access_token", new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.None,
-            Domain = ".stoocker.app",
-            Path = "/"
-        });
-
-        // Clear refresh_token cookie (if exists from SecureAuth)
-        Response.Cookies.Delete("refresh_token", new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.None,
-            Domain = ".stoocker.app",
-            Path = "/"
-        });
-
-        // Clear auth-token cookie (from Next.js login route)
-        Response.Cookies.Delete("auth-token", new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.None,
-            Domain = ".stoocker.app",
-            Path = "/"
-        });
-
-        _logger.LogDebug("Auth cookies cleared (tenant-code preserved)");
     }
 
     /// <summary>
@@ -625,28 +568,7 @@ public class AuthController : ControllerBase
 
         if (result.IsSuccess)
         {
-            // Set access_token as HttpOnly cookie
-            Response.Cookies.Append("access_token", result.Value.AccessToken, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
-                Domain = ".stoocker.app",
-                Path = "/",
-                Expires = result.Value.ExpiresAt
-            });
-
-            // Set refresh_token as HttpOnly cookie (7 days expiration)
-            Response.Cookies.Append("refresh_token", result.Value.RefreshToken, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
-                Domain = ".stoocker.app",
-                Path = "/",
-                Expires = DateTimeOffset.UtcNow.AddDays(7)
-            });
-
+            Response.SetAuthCookies(result.Value.AccessToken, result.Value.RefreshToken, result.Value.ExpiresAt);
             _logger.LogInformation("2FA verification successful for email: {Email}", command.Email);
             return Ok(new
             {

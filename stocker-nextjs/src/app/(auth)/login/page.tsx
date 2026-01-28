@@ -164,10 +164,19 @@ function LoginForm() {
         return
       }
 
-      // Backend returns: { success, data: { exists, tenants } }
+      // Backend returns: { success, data: { exists, tenants, isMasterAdmin } }
       const tenantsList = data.data?.tenants || []
+      const isMasterAdmin = data.data?.isMasterAdmin || false
 
+      // If no tenants available
       if (!tenantsList || tenantsList.length === 0) {
+        // Master admin without tenant assignment - redirect to admin panel
+        if (isMasterAdmin) {
+          console.log('🔑 Master admin without tenant - redirecting to admin panel')
+          const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:5173'
+          setError(`Master admin hesabı için lütfen admin panelini kullanın: ${adminUrl}`)
+          return
+        }
         setError('Bu e-posta adresi için erişilebilir çalışma alanı bulunamadı')
         return
       }
@@ -203,11 +212,25 @@ function LoginForm() {
   }
 
   const handleTenantSelect = (selectedTenant: TenantInfo) => {
-    // Redirect to selected tenant's login page with email pre-filled
     const isProduction = typeof window !== 'undefined' && !window.location.hostname.includes('localhost')
-    const tenantDomain = isProduction
-      ? `https://${selectedTenant.code}.stoocker.app`
-      : `http://localhost:3001` // Development tenant domain
+
+    // In development, stay on same page and proceed to password step
+    if (!isProduction) {
+      console.log('🏢 Tenant selected (dev mode):', selectedTenant.code)
+      setTenant({
+        code: selectedTenant.code,
+        name: selectedTenant.name,
+        id: selectedTenant.id,
+        signature: '',
+        timestamp: Date.now(),
+        domain: 'localhost'
+      })
+      setStep('password')
+      return
+    }
+
+    // In production, redirect to tenant's subdomain
+    const tenantDomain = `https://${selectedTenant.code}.stoocker.app`
 
     // Store email and tenant for the next page
     sessionStorage.setItem('login-email', email)
@@ -331,8 +354,10 @@ function LoginForm() {
       }
 
       // Redirect to tenant dashboard
-      console.log('🎯 Login success! Redirecting to tenant dashboard...')
+      console.log('🎯 Login success! Redirecting...')
       console.log('📋 Tenant code:', tenant.code)
+
+      // All users go to tenant dashboard
       const tenantUrl = getClientTenantUrl(tenant.code)
       console.log('🌐 Tenant URL:', tenantUrl)
       console.log('🚀 Full redirect URL:', `${tenantUrl}/app`)

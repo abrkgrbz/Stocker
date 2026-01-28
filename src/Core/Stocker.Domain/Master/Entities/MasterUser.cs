@@ -1,4 +1,7 @@
+using Stocker.Domain.Common.Helpers;
+using Stocker.Domain.Common.Interfaces;
 using Stocker.Domain.Common.ValueObjects;
+using Stocker.Domain.Constants;
 using Stocker.Domain.Master.Enums;
 using Stocker.Domain.Master.Events;
 using Stocker.Domain.Master.ValueObjects;
@@ -6,12 +9,9 @@ using Stocker.SharedKernel.Primitives;
 
 namespace Stocker.Domain.Master.Entities;
 
-public sealed class MasterUser : AggregateRoot
+public sealed class MasterUser : AggregateRoot, IPasswordResettable
 {
     private readonly List<ValueObjects.RefreshToken> _refreshTokens = new();
-    // UserTenant has been moved to Tenant domain - relationship managed differently
-    // private readonly List<UserTenant> _tenants = new();
-    private readonly List<UserLoginHistory> _loginHistory = new();
 
     public string Username { get; private set; }
     public Email Email { get; private set; }
@@ -40,7 +40,8 @@ public sealed class MasterUser : AggregateRoot
     public string? PasswordResetToken { get; private set; }
     public DateTime? PasswordResetTokenExpiry { get; private set; }
     public IReadOnlyList<ValueObjects.RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
-    public IReadOnlyList<UserLoginHistory> LoginHistory => _loginHistory.AsReadOnly();
+    // LoginHistory has been consolidated into SecurityAuditLog
+    // Use ISecurityAuditService.GetAuditLogsAsync(userId) to retrieve login history
 
     private MasterUser() { } // EF Constructor
 
@@ -193,27 +194,23 @@ public sealed class MasterUser : AggregateRoot
         }
     }
 
+    /// <inheritdoc />
     public void GeneratePasswordResetToken()
     {
-        var bytes = new byte[32];
-        using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
-        {
-            rng.GetBytes(bytes);
-        }
-        PasswordResetToken = Convert.ToBase64String(bytes)
-            .Replace("+", "-")
-            .Replace("/", "_")
-            .TrimEnd('=');
-        // Token expires in 1 hour from now
-        // Using UtcNow ensures consistent behavior regardless of server timezone
-        PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1);
+        GeneratePasswordResetToken(PasswordConstants.DefaultResetTokenExpiryHours);
     }
 
+    /// <inheritdoc />
+    public void GeneratePasswordResetToken(int expiryHours)
+    {
+        PasswordResetToken = PasswordResetTokenGenerator.GenerateToken();
+        PasswordResetTokenExpiry = PasswordResetTokenGenerator.CalculateExpiry(expiryHours);
+    }
+
+    /// <inheritdoc />
     public bool ValidatePasswordResetToken(string token)
     {
-        return PasswordResetToken == token && 
-               PasswordResetTokenExpiry.HasValue && 
-               PasswordResetTokenExpiry.Value > DateTime.UtcNow;
+        return PasswordResetTokenGenerator.ValidateToken(PasswordResetToken, token, PasswordResetTokenExpiry);
     }
 
     public void ResetPassword(string newPassword, string resetToken)
@@ -232,10 +229,7 @@ public sealed class MasterUser : AggregateRoot
         RevokeAllRefreshTokens();
     }
 
-    /// <summary>
-    /// Clears the password reset token without changing the password.
-    /// Used when the password is reset through an external mechanism.
-    /// </summary>
+    /// <inheritdoc />
     public void ClearPasswordResetToken()
     {
         PasswordResetToken = null;
@@ -382,28 +376,16 @@ public sealed class MasterUser : AggregateRoot
         FailedLoginAttempts = 0;
         LockoutEndAt = null;
 
-        _loginHistory.Add(new UserLoginHistory(Id, true, ipAddress, userAgent));
-
-        // Keep only the last 20 login history records
-        if (_loginHistory.Count > 20)
-        {
-            var recordsToRemove = _loginHistory
-                .OrderBy(h => h.LoginAt)
-                .Take(_loginHistory.Count - 20)
-                .ToList();
-
-            foreach (var record in recordsToRemove)
-            {
-                _loginHistory.Remove(record);
-            }
-        }
+        // Login history is now tracked via SecurityAuditLog at handler level
+        // See LoginCommandHandler for SecurityAuditService.LogAuthEventAsync usage
     }
 
     public void RecordFailedLogin(string? ipAddress = null, string? userAgent = null)
     {
         FailedLoginAttempts++;
 
-        _loginHistory.Add(new UserLoginHistory(Id, false, ipAddress, userAgent));
+        // Login history is now tracked via SecurityAuditLog at handler level
+        // See LoginCommandHandler for SecurityAuditService.LogAuthEventAsync usage
 
         // Lock account after 5 failed attempts
         if (FailedLoginAttempts >= 5)
@@ -457,25 +439,12 @@ public sealed class MasterUser : AggregateRoot
 
     public void AssignToTenant(Guid tenantId, UserType userType)
     {
-        // UserTenant management moved to Tenant domain
-        // if (_tenants.Any(t => t.TenantId == tenantId))
-        // {
-        //     throw new InvalidOperationException($"User is already assigned to tenant '{tenantId}'.");
-        // }
-        //
-        // _tenants.Add(new UserTenant(Id, tenantId, userType));
+        // No-op: UserTenant management moved to Tenant domain
     }
 
     public void RemoveFromTenant(Guid tenantId)
     {
-        // UserTenant management moved to Tenant domain
-        // var userTenant = _tenants.FirstOrDefault(t => t.TenantId == tenantId);
-        // if (userTenant == null)
-        // {
-        //     throw new InvalidOperationException($"User is not assigned to tenant '{tenantId}'.");
-        // }
-        //
-        // _tenants.Remove(userTenant);
+        // No-op: UserTenant management moved to Tenant domain
     }
 
     public void UpdateProfile(
@@ -509,9 +478,8 @@ public sealed class MasterUser : AggregateRoot
 
     public bool HasAccessToTenant(Guid tenantId)
     {
-        // UserTenant has been moved to Tenant domain
-        // For system administrators, always return true
-        // For other users, this check should be performed through Tenant database context
+        // System administrators have access to all tenants
+        // Other users' tenant access is managed in Tenant domain
         return UserType == UserType.SistemYoneticisi;
     }
 
@@ -552,16 +520,6 @@ public sealed class MasterUser : AggregateRoot
         _refreshTokens.Clear();
     }
 
-    public void AddTenant(Guid tenantId, bool isActive)
-    {
-        // UserTenant management moved to Tenant domain
-        // if (_tenants.Any(t => t.TenantId == tenantId))
-        // {
-        //     return;
-        // }
-        // _tenants.Add(new UserTenant(Id, tenantId, UserType.Personel));
-    }
-
     /// <summary>
     /// Marks the user account as deleted (soft delete).
     /// Deactivates the account and revokes all tokens.
@@ -588,7 +546,4 @@ public sealed class MasterUser : AggregateRoot
     {
         return Password.Verify(password);
     }
-
-    // UserTenant collection moved to Tenant domain
-    // public IReadOnlyList<UserTenant> UserTenants => _tenants.AsReadOnly();
 }

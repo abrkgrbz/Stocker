@@ -40,6 +40,16 @@ public interface IMasterDbContext
     DbSet<BackupSchedule> BackupSchedules { get; }
     DbSet<LemonSqueezySubscription> LemonSqueezySubscriptions { get; }
 
+    /// <summary>
+    /// Password history for preventing password reuse (linked to MasterUser)
+    /// </summary>
+    DbSet<PasswordHistory> PasswordHistories { get; }
+
+    /// <summary>
+    /// Active user sessions for session management and logout all functionality
+    /// </summary>
+    DbSet<UserSession> UserSessions { get; }
+
     // System Monitoring & Reporting entities
     DbSet<SystemAlert> SystemAlerts { get; }
     DbSet<ReportSchedule> ReportSchedules { get; }

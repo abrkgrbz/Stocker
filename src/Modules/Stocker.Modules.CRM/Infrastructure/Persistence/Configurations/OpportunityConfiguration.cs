@@ -18,6 +18,14 @@ public class OpportunityConfiguration : IEntityTypeConfiguration<Opportunity>
         builder.Property(o => o.TenantId)
             .IsRequired();
 
+        // Link to Sales.Opportunity for synchronization when both modules are active
+        builder.Property(o => o.SalesOpportunityId)
+            .IsRequired(false);
+
+        builder.HasIndex(o => new { o.TenantId, o.SalesOpportunityId })
+            .HasFilter("\"SalesOpportunityId\" IS NOT NULL")
+            .IsUnique();
+
         builder.Property(o => o.Name)
             .IsRequired()
             .HasMaxLength(200);

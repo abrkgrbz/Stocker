@@ -45,6 +45,45 @@ public class TenantUserConfiguration : BaseEntityTypeConfiguration<TenantUser>
         builder.Property(u => u.ProfilePictureUrl)
             .HasMaxLength(500);
 
+        builder.Property(u => u.PasswordHash)
+            .IsRequired()
+            .HasMaxLength(500);
+
+        builder.Property(u => u.PasswordResetToken)
+            .HasMaxLength(200);
+
+        builder.Property(u => u.PasswordResetTokenExpiry);
+
+        // Lockout properties
+        builder.Property(u => u.FailedLoginAttempts)
+            .IsRequired()
+            .HasDefaultValue(0);
+
+        builder.Property(u => u.LockoutEndAt);
+
+        // Refresh token for invited users (no MasterUser association)
+        builder.Property(u => u.RefreshToken)
+            .HasMaxLength(500);
+
+        builder.Property(u => u.RefreshTokenExpiryTime);
+
+        // Two-Factor Authentication
+        builder.Property(u => u.TwoFactorEnabled)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(u => u.TwoFactorSecret)
+            .HasMaxLength(500);
+
+        builder.Property(u => u.BackupCodes)
+            .HasMaxLength(1000);
+
+        builder.Property(u => u.TwoFactorFailedAttempts)
+            .IsRequired()
+            .HasDefaultValue(0);
+
+        builder.Property(u => u.TwoFactorLockoutEndAt);
+
         builder.Property(u => u.CreatedAt)
             .IsRequired();
 

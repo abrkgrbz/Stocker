@@ -2523,6 +2523,9 @@ namespace Stocker.Modules.Sales.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("CrmOpportunityId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Currency")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -2669,6 +2672,10 @@ namespace Stocker.Modules.Sales.Infrastructure.Persistence.Migrations
                     b.HasIndex("Stage");
 
                     b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "CrmOpportunityId")
+                        .IsUnique()
+                        .HasFilter("\"CrmOpportunityId\" IS NOT NULL");
 
                     b.HasIndex("TenantId", "OpportunityNumber")
                         .IsUnique();

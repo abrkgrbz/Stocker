@@ -4,12 +4,27 @@ public class LoginRequest
 {
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Optional: Eğer belirtilmezse TenantResolutionMiddleware'den gelen tenant bilgisi kullanılır.
     /// Sadece özel durumlar için (örn: admin panelinden farklı tenant'a login) kullanılmalıdır.
     /// </summary>
     public Guid? TenantId { get; set; }
+
+    /// <summary>
+    /// When true, extends refresh token lifetime (30 days instead of 7 days)
+    /// </summary>
+    public bool RememberMe { get; set; } = false;
+
+    /// <summary>
+    /// Optional device identifier for session tracking
+    /// </summary>
+    public string? DeviceId { get; set; }
+
+    /// <summary>
+    /// Optional device info (browser/OS) for session display
+    /// </summary>
+    public string? DeviceInfo { get; set; }
 }
 
 public class RefreshTokenRequest

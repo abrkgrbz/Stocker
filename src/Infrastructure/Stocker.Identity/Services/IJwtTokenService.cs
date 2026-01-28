@@ -40,4 +40,11 @@ public interface IJwtTokenService
     /// </summary>
     /// <returns>The DateTime when newly generated refresh tokens will expire.</returns>
     DateTime GetRefreshTokenExpiration();
+
+    /// <summary>
+    /// Gets the expiration time for refresh tokens with "Remember Me" enabled.
+    /// Extended duration (typically 30 days vs 7 days).
+    /// </summary>
+    /// <returns>The DateTime when "Remember Me" refresh tokens will expire.</returns>
+    DateTime GetRememberMeRefreshTokenExpiration();
 }

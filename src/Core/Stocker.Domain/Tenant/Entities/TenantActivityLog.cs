@@ -1,3 +1,4 @@
+using Stocker.Domain.Constants;
 using Stocker.SharedKernel.Primitives;
 using System;
 
@@ -116,7 +117,7 @@ public sealed class TenantActivityLog : Entity
             Action = action,
             Description = description,
             UserId = Guid.Empty,
-            UserName = "System",
+            UserName = DomainConstants.SystemUser,
             UserEmail = "system@stocker.com",
             ActivityAt = DateTime.UtcNow,
             IsSuccess = true,

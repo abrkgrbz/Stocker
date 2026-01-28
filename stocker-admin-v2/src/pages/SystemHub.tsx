@@ -82,6 +82,13 @@ const SystemHub: React.FC = () => {
         }
     };
 
+
+    // Helper to format number
+    const f = (n: any) => {
+        const val = typeof n === 'object' && n !== null ? (n.usagePercentage || n.usage || 0) : (n || 0);
+        return Number(val).toFixed(2);
+    };
+
     return (
         <div className="space-y-10 text-text-main animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -103,7 +110,7 @@ const SystemHub: React.FC = () => {
                         <div>
                             <p className="text-xs font-bold uppercase text-indigo-400">CPU Kullanımı</p>
                             <h3 className="text-3xl font-bold mt-2 text-text-main">
-                                {typeof metrics?.cpu === 'object' ? (metrics.cpu as any).usage : (metrics?.cpu || 0)}%
+                                {f(metrics?.cpu)}%
                             </h3>
                         </div>
                         <div className="p-3 bg-indigo-500/20 rounded-xl text-indigo-400">
@@ -111,7 +118,7 @@ const SystemHub: React.FC = () => {
                         </div>
                     </div>
                     <div className="mt-4 h-1.5 bg-indigo-500/10 rounded-full overflow-hidden">
-                        <div className="h-full bg-indigo-500 transition-all duration-1000" style={{ width: `${typeof metrics?.cpu === 'object' ? (metrics.cpu as any).usage : (metrics?.cpu || 0)}%` }} />
+                        <div className="h-full bg-indigo-500 transition-all duration-1000" style={{ width: `${f(metrics?.cpu)}%` }} />
                     </div>
                 </Card>
 
@@ -121,7 +128,7 @@ const SystemHub: React.FC = () => {
                         <div>
                             <p className="text-xs font-bold uppercase text-emerald-400">RAM Kullanımı</p>
                             <h3 className="text-3xl font-bold mt-2 text-text-main">
-                                {typeof metrics?.memory === 'object' ? (metrics.memory as any).usagePercentage : (metrics?.memory || 0)}%
+                                {f(metrics?.memory)}%
                             </h3>
                         </div>
                         <div className="p-3 bg-emerald-500/20 rounded-xl text-emerald-400">
@@ -133,7 +140,7 @@ const SystemHub: React.FC = () => {
                         <span>% Usage</span>
                     </div>
                     <div className="h-1.5 bg-emerald-500/10 rounded-full overflow-hidden">
-                        <div className="h-full bg-emerald-500 transition-all duration-1000" style={{ width: `${typeof metrics?.memory === 'object' ? (metrics.memory as any).usagePercentage : (metrics?.memory || 0)}%` }} />
+                        <div className="h-full bg-emerald-500 transition-all duration-1000" style={{ width: `${f(metrics?.memory)}%` }} />
                     </div>
                 </Card>
 
@@ -143,7 +150,7 @@ const SystemHub: React.FC = () => {
                         <div>
                             <p className="text-xs font-bold uppercase text-amber-400">Disk Alanı</p>
                             <h3 className="text-3xl font-bold mt-2 text-text-main">
-                                {typeof metrics?.diskUsage === 'object' ? (metrics.diskUsage as any).usagePercentage : (metrics?.diskUsage || 0)}%
+                                {f(metrics?.diskUsage)}%
                             </h3>
                         </div>
                         <div className="p-3 bg-amber-500/20 rounded-xl text-amber-400">
@@ -151,7 +158,7 @@ const SystemHub: React.FC = () => {
                         </div>
                     </div>
                     <div className="mt-4 h-1.5 bg-amber-500/10 rounded-full overflow-hidden">
-                        <div className="h-full bg-amber-500 transition-all duration-1000" style={{ width: `${typeof metrics?.diskUsage === 'object' ? (metrics.diskUsage as any).usagePercentage : (metrics?.diskUsage || 0)}%` }} />
+                        <div className="h-full bg-amber-500 transition-all duration-1000" style={{ width: `${f(metrics?.diskUsage)}%` }} />
                     </div>
                 </Card>
 

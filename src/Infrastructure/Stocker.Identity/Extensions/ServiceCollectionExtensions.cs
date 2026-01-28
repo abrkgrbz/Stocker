@@ -40,6 +40,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped<Identity.Services.IPasswordService>(sp => sp.GetRequiredService<PasswordService>());
         services.AddScoped<Application.Common.Interfaces.IPasswordService>(sp => sp.GetRequiredService<PasswordService>());
 
+        // Password History Service - prevents password reuse
+        services.AddScoped<IPasswordHistoryService, PasswordHistoryService>();
+
+        // Session Management Service - concurrent sessions, logout all devices
+        services.AddScoped<ISessionManagementService, SessionManagementService>();
+
+        // Login Notification Service - new device/location email alerts
+        services.AddScoped<ILoginNotificationService, LoginNotificationService>();
+
         // User Management and Token Services
         services.AddScoped<IUserManagementService, UserManagementService>();
         services.AddScoped<ITokenGenerationService, TokenGenerationService>();

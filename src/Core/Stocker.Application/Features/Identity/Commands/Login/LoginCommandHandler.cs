@@ -1,5 +1,7 @@
 using MediatR;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Stocker.Application.Common.Diagnostics;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Services;
 using Stocker.SharedKernel.Results;
@@ -12,19 +14,28 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
     private readonly ILogger<LoginCommandHandler> _logger;
     private readonly IAuthenticationService _authenticationService;
     private readonly ISecurityAuditService _auditService;
+    private readonly IHostEnvironment _environment;
 
     public LoginCommandHandler(
         ILogger<LoginCommandHandler> logger,
         IAuthenticationService authenticationService,
-        ISecurityAuditService auditService)
+        ISecurityAuditService auditService,
+        IHostEnvironment environment)
     {
         _logger = logger;
         _authenticationService = authenticationService;
         _auditService = auditService;
+        _environment = environment;
     }
 
     public async Task<Result<AuthResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
+        // Distributed tracing için Activity başlat
+        using var activity = StockerActivitySource.Identity.StartActivity("Login")
+            ?.SetRequestInfo(request)
+            ?.SetTag("auth.email", request.Email)
+            ?.SetTag("auth.ip_address", request.IpAddress ?? "unknown");
+
         var stopwatch = Stopwatch.StartNew();
         _logger.LogInformation("Login attempt for email: {Email}", request.Email);
 
@@ -49,6 +60,9 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
 
                 if (masterResult.IsSuccess)
                 {
+                    activity?.SetUserId(masterResult.Value.User.Id, masterResult.Value.User.Username)
+                        ?.SetTag("auth.result", "success")
+                        ?.SetTag("auth.type", "master_admin");
                     _logger.LogInformation("Master admin {Email} logged in successfully", request.Email);
 
                     // Log successful master admin login
@@ -66,6 +80,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
                 }
                 else
                 {
+                    activity?.SetTag("auth.result", "failed")
+                        ?.SetTag("auth.type", "master_admin");
                     // Log failed master admin login
                     await _auditService.LogAuthEventAsync(new SecurityAuditEvent
                     {
@@ -90,6 +106,10 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
 
             if (result.IsSuccess)
             {
+                activity?.SetUserId(result.Value.User.Id, result.Value.User.Username)
+                    ?.SetTenantId(result.Value.User.TenantId)
+                    ?.SetTag("auth.result", "success")
+                    ?.SetTag("auth.type", "tenant_user");
                 _logger.LogInformation("User {Email} logged in successfully", request.Email);
 
                 // Log successful login
@@ -108,6 +128,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
             }
             else
             {
+                activity?.SetTag("auth.result", "failed")
+                    ?.SetTag("auth.type", "tenant_user");
                 _logger.LogWarning("Failed login attempt for email: {Email}", request.Email);
 
                 // Get failed attempt count
@@ -138,6 +160,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
         }
         catch (Exception ex)
         {
+            activity?.SetError(ex);
             _logger.LogError(ex, "Error during login for email: {Email}", request.Email);
 
             // Log login error
@@ -158,9 +181,24 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
 
     private bool IsMasterAdminEmail(string email)
     {
-        // You can implement more sophisticated logic here
-        // For now, checking if email domain is for system admins
-        return email.EndsWith("@stoocker.app", StringComparison.OrdinalIgnoreCase) ||
-               email.EndsWith("@admin.stocker.app", StringComparison.OrdinalIgnoreCase);
+        // Production domains for master admins
+        if (email.EndsWith("@stoocker.app", StringComparison.OrdinalIgnoreCase) ||
+            email.EndsWith("@admin.stocker.app", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        // Development-only domains for local testing
+        if (_environment.IsDevelopment())
+        {
+            if (email.EndsWith("@localhost.com", StringComparison.OrdinalIgnoreCase) ||
+                email.EndsWith("@stocker.com", StringComparison.OrdinalIgnoreCase) ||
+                email.EndsWith("@tenant.local", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -100,7 +100,8 @@ public class TenantRateLimitingMiddleware
     {
         var path = context.Request.Path.Value?.ToLower() ?? "";
 
-        // Skip rate limiting for health checks, static files, auth, etc.
+        // Skip rate limiting for health checks, static files, etc.
+        // NOTE: Auth endpoints are NOT skipped - they have dedicated strict rate limiting
         var skipPaths = new[]
         {
             "/health",
@@ -110,7 +111,6 @@ public class TenantRateLimitingMiddleware
             "/favicon.ico",
             "/api/tenant/securitysettings", // Settings page needs frequent access
             "/hubs/", // SignalR hubs have their own rate limiting (SignalRRateLimiter)
-            "/api/auth", // Auth endpoints handle their own security (lockout, etc.)
             "/api/crm", // CRM endpoints for stress testing
             "/api/inventory", // Inventory endpoints have module-specific rate limiting
             "/api/sales" // Sales endpoints have module-specific rate limiting (SalesRateLimitAttribute)
@@ -125,14 +125,41 @@ public class TenantRateLimitingMiddleware
         return false;
     }
 
+    /// <summary>
+    /// Checks if this is a sensitive auth endpoint that needs strict IP-based rate limiting
+    /// </summary>
+    private bool IsSensitiveAuthEndpoint(string path)
+    {
+        var sensitiveEndpoints = new[]
+        {
+            "/api/auth/login",
+            "/api/auth/check-email",
+            "/api/auth/forgot-password",
+            "/api/auth/reset-password",
+            "/api/auth/verify-2fa",
+            "/api/auth/register"
+        };
+
+        return sensitiveEndpoints.Any(ep => path.Contains(ep, StringComparison.OrdinalIgnoreCase));
+    }
+
     private string GetTenantIdentifier(HttpContext context)
     {
+        var path = context.Request.Path.Value?.ToLower() ?? "";
+
+        // For sensitive auth endpoints, use IP-based rate limiting (not tenant-based)
+        // This prevents brute force attacks before authentication
+        if (IsSensitiveAuthEndpoint(path))
+        {
+            return GetClientIpAddress(context);
+        }
+
         // Try to get tenant ID from various sources
-        
+
         // 1. From authenticated user claims
         if (context.User.Identity?.IsAuthenticated == true)
         {
-            var tenantClaim = context.User.FindFirst("TenantId") 
+            var tenantClaim = context.User.FindFirst("TenantId")
                            ?? context.User.FindFirst("tenant_id");
             if (tenantClaim != null)
                 return $"tenant_{tenantClaim.Value}";
@@ -236,10 +263,86 @@ public class TenantRateLimitingMiddleware
     {
         // Customize rate limits based on tenant, endpoint, or subscription level
         var endpoint = context.Request.Path.Value?.ToLower() ?? "";
-        
-        // Special limits for auth endpoints
-        // Increased to 30 to support 2FA flow (login + check lockout + verify 2FA + retries)
-        if (endpoint.Contains("/auth") || endpoint.Contains("/login"))
+
+        // Strict limits for sensitive auth endpoints (IP-based)
+        // These limits are per-IP to prevent brute force attacks
+        if (IsSensitiveAuthEndpoint(endpoint))
+        {
+            // login: 5 attempts per 15 minutes per IP
+            if (endpoint.Contains("/login"))
+            {
+                return new TenantRateLimitingOptions
+                {
+                    Algorithm = RateLimitAlgorithm.FixedWindow,
+                    PermitLimit = 5,
+                    WindowSeconds = 900, // 15 minutes
+                    QueueLimit = 0
+                };
+            }
+
+            // check-email: 10 attempts per 5 minutes per IP
+            if (endpoint.Contains("/check-email"))
+            {
+                return new TenantRateLimitingOptions
+                {
+                    Algorithm = RateLimitAlgorithm.FixedWindow,
+                    PermitLimit = 10,
+                    WindowSeconds = 300, // 5 minutes
+                    QueueLimit = 0
+                };
+            }
+
+            // forgot-password: 3 attempts per 15 minutes per IP
+            if (endpoint.Contains("/forgot-password"))
+            {
+                return new TenantRateLimitingOptions
+                {
+                    Algorithm = RateLimitAlgorithm.FixedWindow,
+                    PermitLimit = 3,
+                    WindowSeconds = 900, // 15 minutes
+                    QueueLimit = 0
+                };
+            }
+
+            // reset-password: 5 attempts per 15 minutes per IP
+            if (endpoint.Contains("/reset-password"))
+            {
+                return new TenantRateLimitingOptions
+                {
+                    Algorithm = RateLimitAlgorithm.FixedWindow,
+                    PermitLimit = 5,
+                    WindowSeconds = 900, // 15 minutes
+                    QueueLimit = 0
+                };
+            }
+
+            // verify-2fa: 5 attempts per 5 minutes per IP (supports retries)
+            if (endpoint.Contains("/verify-2fa"))
+            {
+                return new TenantRateLimitingOptions
+                {
+                    Algorithm = RateLimitAlgorithm.FixedWindow,
+                    PermitLimit = 5,
+                    WindowSeconds = 300, // 5 minutes
+                    QueueLimit = 0
+                };
+            }
+
+            // register: 3 attempts per 15 minutes per IP
+            if (endpoint.Contains("/register"))
+            {
+                return new TenantRateLimitingOptions
+                {
+                    Algorithm = RateLimitAlgorithm.FixedWindow,
+                    PermitLimit = 3,
+                    WindowSeconds = 900, // 15 minutes
+                    QueueLimit = 0
+                };
+            }
+        }
+
+        // General auth endpoints (non-sensitive): 30 requests per minute
+        if (endpoint.Contains("/auth"))
         {
             return new TenantRateLimitingOptions
             {
@@ -249,13 +352,13 @@ public class TenantRateLimitingMiddleware
                 QueueLimit = 0
             };
         }
-        
+
         // Special limits for API endpoints
         if (endpoint.StartsWith("/api/"))
         {
             // Check if this is a premium tenant (you would implement this check)
             var isPremiumTenant = CheckIfPremiumTenant(tenantId);
-            
+
             if (isPremiumTenant)
             {
                 return new TenantRateLimitingOptions
@@ -268,7 +371,7 @@ public class TenantRateLimitingMiddleware
                 };
             }
         }
-        
+
         // Default options
         return _options;
     }

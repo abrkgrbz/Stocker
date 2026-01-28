@@ -429,28 +429,31 @@ public class AccountController : ApiController
 
             if (isMasterAdmin)
             {
-                var loginHistory = await _masterContext.UserLoginHistories
+                // UserLoginHistory has been consolidated into SecurityAuditLogs
+                var loginHistory = await _masterContext.SecurityAuditLogs
                     .AsNoTracking()
-                    .Where(h => h.UserId == Guid.Parse(userId))
-                    .OrderByDescending(h => h.LoginAt)
+                    .Where(h => h.UserId == Guid.Parse(userId) &&
+                           (h.Event == "login_success" || h.Event == "login_failed"))
+                    .OrderByDescending(h => h.Timestamp)
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
                     .Select(h => new ActivityLogItem
                     {
                         Id = h.Id,
                         Action = "Login",
-                        Description = h.IsSuccessful ? "Basarili giris" : "Basarisiz giris denemesi",
+                        Description = h.Event == "login_success" ? "Basarili giris" : "Basarisiz giris denemesi",
                         IpAddress = h.IpAddress,
                         Device = h.UserAgent,
-                        Timestamp = h.LoginAt,
-                        Status = h.IsSuccessful ? "Success" : "Failed"
+                        Timestamp = h.Timestamp,
+                        Status = h.Event == "login_success" ? "Success" : "Failed"
                     })
                     .ToListAsync();
 
                 activities.AddRange(loginHistory);
 
-                totalItems = await _masterContext.UserLoginHistories
-                    .Where(h => h.UserId == Guid.Parse(userId))
+                totalItems = await _masterContext.SecurityAuditLogs
+                    .Where(h => h.UserId == Guid.Parse(userId) &&
+                           (h.Event == "login_success" || h.Event == "login_failed"))
                     .CountAsync();
             }
             else if (!string.IsNullOrEmpty(tenantId))
@@ -1018,16 +1021,16 @@ public class AccountController : ApiController
                     overview.PasswordLastChanged = masterUser.PasswordChangedAt;
                 }
 
-                // Get active sessions count from login history
-                var recentLogins = await _masterContext.UserLoginHistories
-                    .Where(h => h.UserId == Guid.Parse(userId) && h.IsSuccessful)
-                    .OrderByDescending(h => h.LoginAt)
+                // Get active sessions count from SecurityAuditLogs (UserLoginHistory consolidated)
+                var recentLogins = await _masterContext.SecurityAuditLogs
+                    .Where(h => h.UserId == Guid.Parse(userId) && h.Event == "login_success")
+                    .OrderByDescending(h => h.Timestamp)
                     .Take(30)
                     .ToListAsync();
 
                 // Simple session count estimate based on recent unique IPs
                 overview.ActiveSessions = recentLogins
-                    .Where(l => l.LoginAt > DateTime.UtcNow.AddDays(-7))
+                    .Where(l => l.Timestamp > DateTime.UtcNow.AddDays(-7))
                     .Select(l => l.IpAddress)
                     .Distinct()
                     .Count();
@@ -1116,10 +1119,11 @@ public class AccountController : ApiController
 
             if (isMasterAdmin)
             {
-                var loginHistory = await _masterContext.UserLoginHistories
+                // UserLoginHistory has been consolidated into SecurityAuditLogs
+                var loginHistory = await _masterContext.SecurityAuditLogs
                     .AsNoTracking()
-                    .Where(h => h.UserId == Guid.Parse(userId) && h.IsSuccessful)
-                    .OrderByDescending(h => h.LoginAt)
+                    .Where(h => h.UserId == Guid.Parse(userId) && h.Event == "login_success")
+                    .OrderByDescending(h => h.Timestamp)
                     .Take(10)
                     .ToListAsync();
 
@@ -1133,9 +1137,9 @@ public class AccountController : ApiController
                         Browser = ParseBrowser(h.UserAgent),
                         Location = "Bilinmiyor",
                         IpAddress = h.IpAddress,
-                        LastActive = h.LoginAt,
+                        LastActive = h.Timestamp,
                         IsCurrent = h.IpAddress == currentIp,
-                        CreatedAt = h.LoginAt
+                        CreatedAt = h.Timestamp
                     })
                     .ToList();
             }
@@ -1212,14 +1216,16 @@ public class AccountController : ApiController
 
             if (isMasterAdmin)
             {
-                var query = _masterContext.UserLoginHistories
+                // UserLoginHistory has been consolidated into SecurityAuditLogs
+                var query = _masterContext.SecurityAuditLogs
                     .AsNoTracking()
-                    .Where(h => h.UserId == Guid.Parse(userId));
+                    .Where(h => h.UserId == Guid.Parse(userId) &&
+                           (h.Event == "login_success" || h.Event == "login_failed"));
 
                 totalItems = await query.CountAsync();
 
                 var loginHistory = await query
-                    .OrderByDescending(h => h.LoginAt)
+                    .OrderByDescending(h => h.Timestamp)
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
                     .ToListAsync();
@@ -1227,12 +1233,12 @@ public class AccountController : ApiController
                 events = loginHistory.Select(h => new SecurityEventDto
                 {
                     Id = h.Id.ToString(),
-                    Action = h.IsSuccessful ? "Basarili giris" : "Basarisiz giris denemesi",
-                    Description = h.IsSuccessful ? "Hesaba basariyla giris yapildi" : h.FailureReason ?? "Giris basarisiz",
+                    Action = h.Event == "login_success" ? "Basarili giris" : "Basarisiz giris denemesi",
+                    Description = h.Event == "login_success" ? "Hesaba basariyla giris yapildi" : "Giris basarisiz",
                     IpAddress = h.IpAddress,
                     Device = ParseUserAgent(h.UserAgent),
-                    Timestamp = h.LoginAt,
-                    Success = h.IsSuccessful
+                    Timestamp = h.Timestamp,
+                    Success = h.Event == "login_success"
                 }).ToList();
             }
             else

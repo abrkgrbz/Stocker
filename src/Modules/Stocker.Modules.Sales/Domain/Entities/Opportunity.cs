@@ -13,6 +13,12 @@ public class Opportunity : TenantAggregateRoot
 {
     #region Properties
 
+    /// <summary>
+    /// CRM modülündeki karşılık gelen Opportunity'nin ID'si.
+    /// CRM'den satışa dönüştürüldüğünde senkronize edilir.
+    /// </summary>
+    public Guid? CrmOpportunityId { get; private set; }
+
     public string OpportunityNumber { get; private set; } = string.Empty;
     public string Title { get; private set; } = string.Empty;
     public string? Description { get; private set; }
@@ -434,6 +440,29 @@ public class Opportunity : TenantAggregateRoot
     /// Checks if opportunity is using dynamic pipeline
     /// </summary>
     public bool UsesDynamicPipeline => PipelineId.HasValue && PipelineStageId.HasValue;
+
+    #endregion
+
+    #region CRM Integration
+
+    /// <summary>
+    /// Sales Opportunity'yi CRM Opportunity ile ilişkilendirir.
+    /// CRM'den dönüştürüldüğünde kullanılır.
+    /// </summary>
+    public void LinkToCrmOpportunity(Guid crmOpportunityId)
+    {
+        CrmOpportunityId = crmOpportunityId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// CRM Opportunity ilişkisini kaldırır.
+    /// </summary>
+    public void UnlinkFromCrmOpportunity()
+    {
+        CrmOpportunityId = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
 
     #endregion
 }

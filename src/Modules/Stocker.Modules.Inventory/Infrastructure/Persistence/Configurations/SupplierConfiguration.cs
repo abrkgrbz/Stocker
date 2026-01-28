@@ -18,6 +18,14 @@ public class SupplierConfiguration : IEntityTypeConfiguration<Supplier>
         builder.Property(s => s.TenantId)
             .IsRequired();
 
+        // Link to Purchase.Supplier for synchronization when both modules are active
+        builder.Property(s => s.PurchaseSupplierId)
+            .IsRequired(false);
+
+        builder.HasIndex(s => new { s.TenantId, s.PurchaseSupplierId })
+            .HasFilter("\"PurchaseSupplierId\" IS NOT NULL")
+            .IsUnique();
+
         builder.Property(s => s.Code)
             .IsRequired()
             .HasMaxLength(50);

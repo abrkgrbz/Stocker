@@ -35,7 +35,7 @@ public class UserManagementService : IUserManagementService
         var user = await _masterContext.MasterUsers
             // UserTenants moved to Tenant domain
             .Include(u => u.RefreshTokens)
-            .Include(x => x.LoginHistory)
+            // LoginHistory has been consolidated into SecurityAuditLog
             .Where(u => u.Username == usernameOrEmail)
             .FirstOrDefaultAsync();
 
@@ -45,7 +45,7 @@ public class UserManagementService : IUserManagementService
             var users = await _masterContext.MasterUsers
                 // UserTenants moved to Tenant domain
                 .Include(u => u.RefreshTokens)
-                .Include(x => x.LoginHistory)
+                // LoginHistory has been consolidated into SecurityAuditLog
                 .ToListAsync();
             
             user = users.FirstOrDefault(u => u.Email.Value == usernameOrEmail);

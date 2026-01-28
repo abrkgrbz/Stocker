@@ -12,6 +12,14 @@ public class OpportunityConfiguration : IEntityTypeConfiguration<Opportunity>
 
         builder.HasKey(o => o.Id);
 
+        // Link to CRM.Opportunity for synchronization when both modules are active
+        builder.Property(o => o.CrmOpportunityId)
+            .IsRequired(false);
+
+        builder.HasIndex(o => new { o.TenantId, o.CrmOpportunityId })
+            .HasFilter("\"CrmOpportunityId\" IS NOT NULL")
+            .IsUnique();
+
         builder.Property(o => o.OpportunityNumber)
             .IsRequired()
             .HasMaxLength(50);

@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using Stocker.Application.Common.Validators;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
@@ -18,51 +19,65 @@ public record CreateEmployeeCommand : IRequest<Result<EmployeeDto>>
 }
 
 /// <summary>
-/// Validator for CreateEmployeeCommand
+/// Validator for CreateEmployeeCommand - Türkçe doğrulama kuralları
 /// </summary>
 public class CreateEmployeeCommandValidator : AbstractValidator<CreateEmployeeCommand>
 {
     public CreateEmployeeCommandValidator()
     {
         RuleFor(x => x.EmployeeData)
-            .NotNull().WithMessage("Employee data is required");
+            .NotNull().WithMessage("Çalışan bilgileri zorunludur.");
 
         When(x => x.EmployeeData != null, () =>
         {
             RuleFor(x => x.EmployeeData.EmployeeCode)
-                .NotEmpty().WithMessage("Employee code is required")
-                .MaximumLength(50).WithMessage("Employee code must not exceed 50 characters");
+                .NotEmpty().WithMessage("Çalışan kodu zorunludur.")
+                .ValidCode(2, 50);
 
             RuleFor(x => x.EmployeeData.FirstName)
-                .NotEmpty().WithMessage("First name is required")
-                .MaximumLength(100).WithMessage("First name must not exceed 100 characters");
+                .NotEmpty().WithMessage("Ad zorunludur.")
+                .MaximumLength(100).WithMessage("Ad en fazla 100 karakter olabilir.");
 
             RuleFor(x => x.EmployeeData.LastName)
-                .NotEmpty().WithMessage("Last name is required")
-                .MaximumLength(100).WithMessage("Last name must not exceed 100 characters");
+                .NotEmpty().WithMessage("Soyad zorunludur.")
+                .MaximumLength(100).WithMessage("Soyad en fazla 100 karakter olabilir.");
 
+            // TC Kimlik Numarası doğrulaması (Türkiye'ye özgü)
             RuleFor(x => x.EmployeeData.NationalId)
-                .NotEmpty().WithMessage("National ID is required")
-                .MaximumLength(20).WithMessage("National ID must not exceed 20 characters");
+                .NotEmpty().WithMessage("TC Kimlik numarası zorunludur.")
+                .TurkishNationalId();
 
             RuleFor(x => x.EmployeeData.Email)
-                .NotEmpty().WithMessage("Email is required")
-                .EmailAddress().WithMessage("Invalid email format");
+                .NotEmpty().WithMessage("E-posta adresi zorunludur.")
+                .EmailAddress().WithMessage("Geçersiz e-posta formatı.");
 
+            // Telefon numarası doğrulaması (Türkiye formatı)
             RuleFor(x => x.EmployeeData.Phone)
-                .NotEmpty().WithMessage("Phone is required");
+                .NotEmpty().WithMessage("Telefon numarası zorunludur.")
+                .TurkishPhoneNumber();
 
             RuleFor(x => x.EmployeeData.DepartmentId)
-                .GreaterThan(0).WithMessage("Department ID is required");
+                .GreaterThan(0).WithMessage("Departman seçimi zorunludur.");
 
             RuleFor(x => x.EmployeeData.PositionId)
-                .GreaterThan(0).WithMessage("Position ID is required");
+                .GreaterThan(0).WithMessage("Pozisyon seçimi zorunludur.");
 
             RuleFor(x => x.EmployeeData.HireDate)
-                .NotEmpty().WithMessage("Hire date is required");
+                .NotEmpty().WithMessage("İşe başlama tarihi zorunludur.");
 
+            // Maaş doğrulaması
             RuleFor(x => x.EmployeeData.BaseSalary)
-                .GreaterThanOrEqualTo(0).WithMessage("Base salary must be a positive value");
+                .ValidMoney();
+
+            // IBAN doğrulaması (opsiyonel ama girilirse Türk IBAN formatı)
+            RuleFor(x => x.EmployeeData.IBAN)
+                .TurkishIban()
+                .When(x => !string.IsNullOrEmpty(x.EmployeeData.IBAN));
+
+            // Vergi numarası doğrulaması (opsiyonel)
+            RuleFor(x => x.EmployeeData.TaxNumber)
+                .TurkishTaxNumber()
+                .When(x => !string.IsNullOrEmpty(x.EmployeeData.TaxNumber));
         });
     }
 }

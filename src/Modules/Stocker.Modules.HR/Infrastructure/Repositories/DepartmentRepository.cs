@@ -117,4 +117,36 @@ public class DepartmentRepository : BaseRepository<Department>, IDepartmentRepos
 
         return await query.AnyAsync(cancellationToken);
     }
+
+    /// <summary>
+    /// Tenant.Department ile eşleştirilmiş HR.Department'ı getirir
+    /// </summary>
+    public async Task<Department?> GetByTenantDepartmentIdAsync(Guid tenantDepartmentId, CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Where(d => !d.IsDeleted && d.TenantDepartmentId == tenantDepartmentId)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Tenant.Department ile eşleştirilmiş tüm HR.Department'ları getirir
+    /// </summary>
+    public async Task<IReadOnlyList<Department>> GetLinkedDepartmentsAsync(CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Where(d => !d.IsDeleted && d.TenantDepartmentId != null)
+            .OrderBy(d => d.Name)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Tenant.Department ile eşleştirilmemiş HR.Department'ları getirir
+    /// </summary>
+    public async Task<IReadOnlyList<Department>> GetUnlinkedDepartmentsAsync(CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Where(d => !d.IsDeleted && d.TenantDepartmentId == null)
+            .OrderBy(d => d.Name)
+            .ToListAsync(cancellationToken);
+    }
 }

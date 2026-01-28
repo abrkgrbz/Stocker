@@ -46,4 +46,19 @@ public interface IDepartmentRepository : IHRRepository<Department>
     /// Gets the count of employees in a department
     /// </summary>
     Task<int> GetEmployeeCountAsync(int departmentId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a department by its linked TenantDepartmentId
+    /// </summary>
+    Task<Department?> GetByTenantDepartmentIdAsync(Guid tenantDepartmentId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all departments that are linked to Tenant departments
+    /// </summary>
+    Task<IReadOnlyList<Department>> GetLinkedDepartmentsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all departments that are NOT linked to any Tenant department
+    /// </summary>
+    Task<IReadOnlyList<Department>> GetUnlinkedDepartmentsAsync(CancellationToken cancellationToken = default);
 }

@@ -1,0 +1,16 @@
+src/pages/AnalyticsPage.tsx(15,33): error TS2305: Module '"@/services/analyticsService"' has no exported member 'UserAnalytics'.
+src/pages/AnalyticsPage.tsx(28,50): error TS2339: Property 'getUsers' does not exist on type 'AnalyticsService'.
+src/pages/CreatePackagePage.tsx(15,31): error TS2305: Module '"@/services/packageService"' has no exported member 'CreatePackageDto'.
+src/pages/CreatePackagePage.tsx(57,21): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+src/pages/CreatePackagePage.tsx(72,21): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+src/pages/CreatePackagePage.tsx(79,21): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+src/pages/CreatePackagePage.tsx(82,40): error TS7006: Parameter 'f' implicitly has an 'any' type.
+src/pages/SettingsPage.tsx(8,5): error TS6133: 'Lock' is declared but its value is never read.
+src/pages/SettingsPage.tsx(11,5): error TS6133: 'Activity' is declared but its value is never read.
+src/pages/SettingsPage.tsx(13,5): error TS6133: 'Trash2' is declared but its value is never read.
+src/pages/SettingsPage.tsx(14,5): error TS6133: 'AlertCircle' is declared but its value is never read.
+src/pages/SettingsPage.tsx(36,12): error TS6133: 'errorStats' is declared but its value is never read.
+src/pages/SettingsPage.tsx(117,40): error TS6133: 'type' is declared but its value is never read.
+src/pages/SettingsPage.tsx(129,11): error TS6133: 'handleDeleteError' is declared but its value is never read.
+src/pages/TenantDetailPage.tsx(26,30): error TS6133: 'TenantDto' is declared but its value is never read.
+src/pages/TenantDetailPage.tsx(26,46): error TS6133: 'TenantStatisticsDto' is declared but its value is never read.

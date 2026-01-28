@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.DTOs.Package;
 using Stocker.Application.DTOs.Tenant;
@@ -35,6 +36,7 @@ public class PublicController : ControllerBase
     private readonly MasterDbContext _masterContext;
     private readonly ISecurityAuditService _auditService;
     private readonly IConfiguration _configuration;
+    private readonly IHostEnvironment _environment;
 
     public PublicController(
         IMediator mediator,
@@ -42,7 +44,8 @@ public class PublicController : ControllerBase
         IEmailService emailService,
         MasterDbContext masterContext,
         ISecurityAuditService auditService,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
         _mediator = mediator;
         _logger = logger;
@@ -50,6 +53,7 @@ public class PublicController : ControllerBase
         _masterContext = masterContext;
         _auditService = auditService;
         _configuration = configuration;
+        _environment = environment;
     }
 
     /// <summary>
@@ -375,6 +379,9 @@ public class PublicController : ControllerBase
 
             _logger.LogInformation("User {Email} found with {TenantCount} available tenants", request.Email, tenantsData.Count);
 
+            // Check if this is a master admin email in development mode
+            var isMasterAdmin = IsMasterAdminEmail(normalizedEmail);
+
             // Log successful email check
             await _auditService.LogAuthEventAsync(new SecurityAuditEvent
             {
@@ -393,7 +400,8 @@ public class PublicController : ControllerBase
                 data = new
                 {
                     exists = true,
-                    tenants = tenantsData
+                    tenants = tenantsData,
+                    isMasterAdmin = isMasterAdmin
                 }
             });
         }
@@ -476,6 +484,29 @@ public class PublicController : ControllerBase
                 message = "An error occurred while checking tenant"
             });
         }
+    }
+
+    private bool IsMasterAdminEmail(string email)
+    {
+        // Production domains for master admins
+        if (email.EndsWith("@stoocker.app", StringComparison.OrdinalIgnoreCase) ||
+            email.EndsWith("@admin.stocker.app", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        // Development-only domains for local testing
+        if (_environment.IsDevelopment())
+        {
+            if (email.EndsWith("@localhost.com", StringComparison.OrdinalIgnoreCase) ||
+                email.EndsWith("@stocker.com", StringComparison.OrdinalIgnoreCase) ||
+                email.EndsWith("@tenant.local", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 

@@ -117,22 +117,8 @@ public static class SwaggerExtensions
 
                     foreach (var arg in genericArgs)
                     {
-                        if (arg.IsGenericType)
-                        {
-                            var nestedName = arg.GetGenericTypeDefinition().Name;
-                            if (nestedName.Contains('`'))
-                            {
-                                nestedName = nestedName.Substring(0, nestedName.IndexOf('`'));
-                            }
-                            var nestedArgs = arg.GetGenericArguments();
-                            var nestedArgNames = nestedArgs.Select(a => a.Name.Replace("Dto", ""));
-                            genericArgNames.Add($"{nestedName}Of{string.Join("And", nestedArgNames)}");
-                        }
-                        else
-                        {
-                            var argName = arg.Name.Replace("Dto", "").Replace("ViewModel", "VM");
-                            genericArgNames.Add(argName);
-                        }
+                        // Recursively handle nested generic types with full type names
+                        genericArgNames.Add(GetFullGenericTypeName(arg));
                     }
 
                     typeName = $"{genericTypeName}Of{string.Join("_", genericArgNames)}";
@@ -244,5 +230,46 @@ public static class SwaggerExtensions
         });
 
         return services;
+    }
+
+    /// <summary>
+    /// Recursively generates a unique type name for generic types including nested generics
+    /// </summary>
+    private static string GetFullGenericTypeName(Type type)
+    {
+        if (!type.IsGenericType)
+        {
+            // For non-generic types, use full name to ensure uniqueness
+            var name = type.Name.Replace("Dto", "").Replace("ViewModel", "VM");
+
+            // Add namespace context for types that might conflict
+            if (type.Namespace != null && type.Namespace.Contains("Stocker"))
+            {
+                var parts = type.Namespace.Split('.');
+                if (parts.Length >= 2)
+                {
+                    var context = parts[^1];
+                    // Avoid duplication if name already starts with context
+                    if (!name.StartsWith(context, StringComparison.OrdinalIgnoreCase) &&
+                        context != "Controllers" && context != "DTOs" && context != "Master")
+                    {
+                        return $"{context}{name}";
+                    }
+                }
+            }
+            return name;
+        }
+
+        // Handle generic types recursively
+        var genericTypeName = type.GetGenericTypeDefinition().Name;
+        if (genericTypeName.Contains('`'))
+        {
+            genericTypeName = genericTypeName.Substring(0, genericTypeName.IndexOf('`'));
+        }
+
+        var genericArgs = type.GetGenericArguments();
+        var argNames = genericArgs.Select(GetFullGenericTypeName);
+
+        return $"{genericTypeName}Of{string.Join("And", argNames)}";
     }
 }

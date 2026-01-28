@@ -56,14 +56,18 @@ public static class DependencyInjection
             // Execution order (reverse of registration):
             // 1. Logging (outermost - logs the entire request/response)
             // 2. Performance monitoring
-            // 3. Tenant validation (validates tenant authorization)
-            // 4. Tenant enrichment (sets TenantId from current user) - MUST RUN BEFORE VALIDATION
-            // 5. Validation (innermost - validates before handler execution)
+            // 3. Caching (checks cache before proceeding)
+            // 4. Tenant validation (validates tenant authorization)
+            // 5. Tenant enrichment (sets TenantId from current user) - MUST RUN BEFORE VALIDATION
+            // 6. Validation (innermost - validates before handler execution)
+            // 7. Cache invalidation (after handler - invalidates cache on mutations)
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
+            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(TenantEnrichmentBehavior<,>));
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(TenantValidationBehavior<,>));
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(CacheInvalidationBehavior<,>));
         });
 
         // Add Application Services

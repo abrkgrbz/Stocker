@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Stocker.Domain.Constants;
 using Stocker.SharedKernel.Primitives;
 
 namespace Stocker.Domain.Tenant.Entities;
@@ -134,7 +135,7 @@ public class TenantWebhook : AggregateRoot<Guid>
         }
         
         ModifiedAt = DateTime.UtcNow;
-        ModifiedBy = modifiedBy ?? "System";
+        ModifiedBy = modifiedBy ?? DomainConstants.SystemUser;
     }
     
     public void SetAuthentication(
@@ -186,7 +187,7 @@ public class TenantWebhook : AggregateRoot<Guid>
         }
         
         ModifiedAt = DateTime.UtcNow;
-        ModifiedBy = modifiedBy ?? "System";
+        ModifiedBy = modifiedBy ?? DomainConstants.SystemUser;
     }
     
     public void SetFilters(string? eventFilters, string? payloadTemplate, bool onlyOnSuccess, bool includePayload, string modifiedBy)

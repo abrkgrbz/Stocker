@@ -12,8 +12,8 @@ using Stocker.Persistence.Contexts;
 namespace Stocker.Persistence.Migrations.Master
 {
     [DbContext(typeof(MasterDbContext))]
-    [Migration("20260127173306_AddSystemMonitoringAndReportEntities")]
-    partial class AddSystemMonitoringAndReportEntities
+    [Migration("20260128173917_RemoveUserLoginHistoryConsolidation")]
+    partial class RemoveUserLoginHistoryConsolidation
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -3643,40 +3643,6 @@ namespace Stocker.Persistence.Migrations.Master
                     b.ToTable("TenantUserEmails", "master");
                 });
 
-            modelBuilder.Entity("Stocker.Domain.Master.Entities.UserLoginHistory", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("FailureReason")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<bool>("IsSuccessful")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime>("LoginAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UserAgent")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserLoginHistories", "master");
-                });
-
             modelBuilder.Entity("Stocker.Domain.Master.Entities.UserTier", b =>
                 {
                     b.Property<Guid>("Id")
@@ -5066,15 +5032,6 @@ namespace Stocker.Persistence.Migrations.Master
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("Stocker.Domain.Master.Entities.UserLoginHistory", b =>
-                {
-                    b.HasOne("Stocker.Domain.Master.Entities.MasterUser", null)
-                        .WithMany("LoginHistory")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Stocker.Domain.Master.Entities.UserTier", b =>
                 {
                     b.OwnsOne("Stocker.Domain.Common.ValueObjects.Money", "BasePrice", b1 =>
@@ -5190,11 +5147,6 @@ namespace Stocker.Persistence.Migrations.Master
                     b.Navigation("Items");
 
                     b.Navigation("Payments");
-                });
-
-            modelBuilder.Entity("Stocker.Domain.Master.Entities.MasterUser", b =>
-                {
-                    b.Navigation("LoginHistory");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.ModuleDefinition", b =>

@@ -3409,6 +3409,9 @@ namespace Stocker.Modules.Purchase.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<int?>("InventorySupplierId")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -3489,6 +3492,10 @@ namespace Stocker.Modules.Purchase.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId", "Code")
                         .IsUnique();
+
+                    b.HasIndex("TenantId", "InventorySupplierId")
+                        .IsUnique()
+                        .HasFilter("\"InventorySupplierId\" IS NOT NULL");
 
                     b.HasIndex("TenantId", "IsActive");
 

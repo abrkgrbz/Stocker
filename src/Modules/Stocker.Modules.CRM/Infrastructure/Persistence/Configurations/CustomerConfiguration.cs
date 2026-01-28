@@ -21,6 +21,14 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(c => c.TenantId)
             .IsRequired();
 
+        // Link to Tenant.Customer for synchronization when CRM module is active
+        builder.Property(c => c.TenantCustomerId)
+            .IsRequired(false);
+
+        builder.HasIndex(c => new { c.TenantId, c.TenantCustomerId })
+            .HasFilter("\"TenantCustomerId\" IS NOT NULL")
+            .IsUnique();
+
         builder.Property(c => c.CompanyName)
             .IsRequired()
             .HasMaxLength(200);

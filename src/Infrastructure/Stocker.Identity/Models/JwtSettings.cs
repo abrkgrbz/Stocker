@@ -7,4 +7,9 @@ public class JwtSettings
     public string Audience { get; set; } = string.Empty;
     public int AccessTokenExpirationMinutes { get; set; } = 60;
     public int RefreshTokenExpirationDays { get; set; } = 7;
+
+    /// <summary>
+    /// Refresh token expiration when "Remember Me" is checked (default: 30 days)
+    /// </summary>
+    public int RememberMeRefreshTokenExpirationDays { get; set; } = 30;
 }

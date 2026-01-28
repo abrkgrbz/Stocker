@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Stocker.Domain.Common.Entities;
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Master.Entities.GeoLocation;
 using Stocker.Domain.Entities.Settings;
@@ -63,7 +64,7 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
 
     // User Management
     public DbSet<MasterUser> MasterUsers => Set<MasterUser>();
-    public DbSet<UserLoginHistory> UserLoginHistories => Set<UserLoginHistory>();
+    // UserLoginHistory has been consolidated into SecurityAuditLog
     // UserTenant has been moved to Tenant DB
 
     // Mobile Push Notifications
@@ -72,6 +73,12 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
 
     // Security & Audit
     public DbSet<SecurityAuditLog> SecurityAuditLogs => Set<SecurityAuditLog>();
+
+    // Password History (for preventing password reuse - linked to MasterUser)
+    public DbSet<PasswordHistory> PasswordHistories => Set<PasswordHistory>();
+
+    // User Sessions (for session management and logout all functionality)
+    public DbSet<UserSession> UserSessions => Set<UserSession>();
 
     // System Monitoring & Reporting
     public DbSet<SystemAlert> SystemAlerts => Set<SystemAlert>();
@@ -98,6 +105,9 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
     public DbSet<Country> Countries => Set<Country>();
     public DbSet<City> Cities => Set<City>();
     public DbSet<District> Districts => Set<District>();
+
+    // Outbox Pattern (for reliable domain event delivery)
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

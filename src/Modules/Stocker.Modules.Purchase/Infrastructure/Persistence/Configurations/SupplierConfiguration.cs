@@ -12,6 +12,14 @@ public class SupplierConfiguration : IEntityTypeConfiguration<Supplier>
 
         builder.HasKey(s => s.Id);
 
+        // Link to Inventory.Supplier for synchronization when both modules are active
+        builder.Property(s => s.InventorySupplierId)
+            .IsRequired(false);
+
+        builder.HasIndex(s => new { s.TenantId, s.InventorySupplierId })
+            .HasFilter("\"InventorySupplierId\" IS NOT NULL")
+            .IsUnique();
+
         builder.Property(s => s.Code)
             .IsRequired()
             .HasMaxLength(50);

@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using Stocker.Application.Common.Validators;
 using Stocker.Modules.Finance.Application.DTOs;
 using Stocker.Modules.Finance.Domain.Entities;
 using Stocker.Modules.Finance.Domain.Enums;
@@ -20,56 +21,64 @@ public class CreateCurrentAccountCommand : IRequest<Result<CurrentAccountDto>>, 
 }
 
 /// <summary>
-/// Validator for CreateCurrentAccountCommand
+/// Validator for CreateCurrentAccountCommand - Türkçe doğrulama kuralları
 /// </summary>
 public class CreateCurrentAccountCommandValidator : AbstractValidator<CreateCurrentAccountCommand>
 {
     public CreateCurrentAccountCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID gereklidir");
+            .NotEmptyGuid();
 
         RuleFor(x => x.Data)
-            .NotNull().WithMessage("Cari hesap bilgileri gereklidir");
+            .NotNull().WithMessage("Cari hesap bilgileri zorunludur.");
 
         When(x => x.Data != null, () =>
         {
             RuleFor(x => x.Data.Code)
-                .NotEmpty().WithMessage("Cari hesap kodu gereklidir")
-                .MaximumLength(50).WithMessage("Cari hesap kodu 50 karakteri aşamaz");
+                .NotEmpty().WithMessage("Cari hesap kodu zorunludur.")
+                .ValidCode(2, 50);
 
             RuleFor(x => x.Data.Name)
-                .NotEmpty().WithMessage("Cari hesap adı gereklidir")
-                .MaximumLength(200).WithMessage("Cari hesap adı 200 karakteri aşamaz");
+                .NotEmpty().WithMessage("Cari hesap adı zorunludur.")
+                .MaximumLength(200).WithMessage("Cari hesap adı en fazla 200 karakter olabilir.");
 
             RuleFor(x => x.Data.Email)
-                .EmailAddress().When(x => !string.IsNullOrEmpty(x.Data.Email))
-                .WithMessage("Geçerli bir e-posta adresi giriniz");
+                .EmailAddress().WithMessage("Geçersiz e-posta formatı.")
+                .When(x => !string.IsNullOrEmpty(x.Data.Email));
 
+            // Türk Vergi Numarası doğrulaması (10 haneli + algoritma kontrolü)
             RuleFor(x => x.Data.TaxNumber)
-                .Length(10).When(x => !string.IsNullOrEmpty(x.Data.TaxNumber))
-                .WithMessage("Vergi numarası 10 karakter olmalıdır");
+                .TurkishTaxNumber()
+                .When(x => !string.IsNullOrEmpty(x.Data.TaxNumber));
 
+            // TC Kimlik Numarası doğrulaması (11 haneli + algoritma kontrolü)
             RuleFor(x => x.Data.IdentityNumber)
-                .Length(11).When(x => !string.IsNullOrEmpty(x.Data.IdentityNumber))
-                .WithMessage("TC Kimlik numarası 11 karakter olmalıdır");
+                .TurkishNationalId()
+                .When(x => !string.IsNullOrEmpty(x.Data.IdentityNumber));
+
+            // Telefon numarası doğrulaması
+            RuleFor(x => x.Data.Phone)
+                .TurkishPhoneNumber()
+                .When(x => !string.IsNullOrEmpty(x.Data.Phone));
 
             RuleFor(x => x.Data.Currency)
-                .NotEmpty().WithMessage("Para birimi gereklidir")
+                .NotEmpty().WithMessage("Para birimi zorunludur.")
                 .Must(c => c == "TRY" || c == "USD" || c == "EUR" || c == "GBP")
-                .WithMessage("Geçerli bir para birimi seçiniz (TRY, USD, EUR, GBP)");
+                .WithMessage("Geçerli bir para birimi seçiniz (TRY, USD, EUR, GBP).");
 
+            // Kredi limiti doğrulaması
             RuleFor(x => x.Data.CreditLimit)
-                .GreaterThanOrEqualTo(0).When(x => x.Data.CreditLimit.HasValue)
-                .WithMessage("Kredi limiti negatif olamaz");
+                .GreaterThanOrEqualTo(0).WithMessage("Kredi limiti negatif olamaz.")
+                .When(x => x.Data.CreditLimit.HasValue);
 
+            // İskonto oranı doğrulaması
             RuleFor(x => x.Data.DiscountRate)
-                .InclusiveBetween(0, 100)
-                .WithMessage("İskonto oranı 0-100 arasında olmalıdır");
+                .ValidPercentage();
 
+            // Ödeme vadesi doğrulaması
             RuleFor(x => x.Data.PaymentDays)
-                .GreaterThanOrEqualTo(0)
-                .WithMessage("Ödeme vadesi negatif olamaz");
+                .InclusiveBetween(0, 365).WithMessage("Ödeme vadesi 0 ile 365 gün arasında olmalıdır.");
         });
     }
 }

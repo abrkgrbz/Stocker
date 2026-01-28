@@ -476,7 +476,7 @@ public class UserRepository : IUserRepository
         }
 
         var user = await _masterContext.MasterUsers
-            .Include(u => u.LoginHistory)
+            // LoginHistory has been consolidated into SecurityAuditLog
             .Where(u => u.Id == guidUserId)
             .Select(u => new
             {
@@ -508,17 +508,9 @@ public class UserRepository : IUserRepository
                         assignedDate = (DateTime?)null
                     })
                     .ToList(),
-                loginHistory = u.LoginHistory
-                    .OrderByDescending(ulh => ulh.LoginAt)
-                    .Take(10)
-                    .Select(ulh => new
-                    {
-                        loginTime = ulh.LoginAt,
-                        ipAddress = ulh.IpAddress,
-                        userAgent = ulh.UserAgent,
-                        isSuccessful = ulh.IsSuccessful
-                    })
-                    .ToList()
+                // LoginHistory has been consolidated into SecurityAuditLog
+                // Use ISecurityAuditService.GetAuditLogsAsync(userId) to retrieve login history
+                loginHistory = new List<object>()
             })
             .FirstOrDefaultAsync(cancellationToken);
 

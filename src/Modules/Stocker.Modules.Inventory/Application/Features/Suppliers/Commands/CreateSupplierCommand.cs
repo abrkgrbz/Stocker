@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using Stocker.Application.Common.Validators;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
@@ -18,18 +19,52 @@ public class CreateSupplierCommand : IRequest<Result<SupplierDto>>
 }
 
 /// <summary>
-/// Validator for CreateSupplierCommand
+/// Validator for CreateSupplierCommand - Türkçe doğrulama kuralları
 /// </summary>
 public class CreateSupplierCommandValidator : AbstractValidator<CreateSupplierCommand>
 {
     public CreateSupplierCommandValidator()
     {
-        RuleFor(x => x.TenantId).NotEmpty().WithMessage("Kiracı kimliği gereklidir");
-        RuleFor(x => x.SupplierData).NotNull().WithMessage("Tedarikçi bilgileri gereklidir");
-        RuleFor(x => x.SupplierData.Code).NotEmpty().WithMessage("Tedarikçi kodu gereklidir").MaximumLength(50).WithMessage("Tedarikçi kodu en fazla 50 karakter olabilir");
-        RuleFor(x => x.SupplierData.Name).NotEmpty().WithMessage("Tedarikçi adı gereklidir").MaximumLength(200).WithMessage("Tedarikçi adı en fazla 200 karakter olabilir");
-        RuleFor(x => x.SupplierData.TaxNumber).MaximumLength(50).WithMessage("Vergi numarası en fazla 50 karakter olabilir");
-        RuleFor(x => x.SupplierData.Email).EmailAddress().WithMessage("Geçerli bir e-posta adresi giriniz").When(x => !string.IsNullOrEmpty(x.SupplierData.Email));
+        RuleFor(x => x.TenantId)
+            .NotEmptyGuid();
+
+        RuleFor(x => x.SupplierData)
+            .NotNull().WithMessage("Tedarikçi bilgileri zorunludur.");
+
+        When(x => x.SupplierData != null, () =>
+        {
+            RuleFor(x => x.SupplierData.Code)
+                .NotEmpty().WithMessage("Tedarikçi kodu zorunludur.")
+                .ValidCode(2, 50);
+
+            RuleFor(x => x.SupplierData.Name)
+                .NotEmpty().WithMessage("Tedarikçi adı zorunludur.")
+                .MaximumLength(200).WithMessage("Tedarikçi adı en fazla 200 karakter olabilir.");
+
+            // Vergi numarası doğrulaması (Türkiye formatı - 10 haneli)
+            RuleFor(x => x.SupplierData.TaxNumber)
+                .TurkishTaxNumber()
+                .When(x => !string.IsNullOrEmpty(x.SupplierData.TaxNumber));
+
+            RuleFor(x => x.SupplierData.Email)
+                .EmailAddress().WithMessage("Geçersiz e-posta formatı.")
+                .MaximumLength(256).WithMessage("E-posta adresi en fazla 256 karakter olabilir.")
+                .When(x => !string.IsNullOrEmpty(x.SupplierData.Email));
+
+            // Telefon numarası doğrulaması (Türkiye formatı)
+            RuleFor(x => x.SupplierData.Phone)
+                .TurkishPhoneNumber()
+                .When(x => !string.IsNullOrEmpty(x.SupplierData.Phone));
+
+            // Kredi limiti doğrulaması
+            RuleFor(x => x.SupplierData.CreditLimit)
+                .ValidMoney();
+
+            // Ödeme vadesi doğrulaması
+            RuleFor(x => x.SupplierData.PaymentTermDays)
+                .InclusiveBetween(0, 365).WithMessage("Ödeme vadesi 0 ile 365 gün arasında olmalıdır.")
+                .When(x => x.SupplierData.PaymentTermDays.HasValue);
+        });
     }
 }
 

@@ -1,4 +1,5 @@
 using MediatR;
+using Stocker.Application.Common.Interfaces;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Repositories;
 using Stocker.SharedKernel.Results;
@@ -6,12 +7,17 @@ using Stocker.SharedKernel.Results;
 namespace Stocker.Modules.Inventory.Application.Features.Categories.Queries;
 
 /// <summary>
-/// Query to get a category by ID
+/// Query to get a category by ID - Cache destekli
 /// </summary>
-public class GetCategoryByIdQuery : IRequest<Result<CategoryDto>>
+public class GetCategoryByIdQuery : IRequest<Result<CategoryDto>>, ICacheableQuery
 {
     public Guid TenantId { get; set; }
     public int CategoryId { get; set; }
+
+    // ICacheableQuery implementation
+    public string CacheKey => $"inventory:category:{TenantId}:{CategoryId}";
+    public int CacheDurationMinutes => 15; // Kategoriler sık değişmez, 15 dakika cache'le
+    public bool BypassCache { get; set; } = false;
 }
 
 /// <summary>

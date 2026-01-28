@@ -9,7 +9,13 @@ public class Opportunity : TenantAggregateRoot
     private readonly List<Activity> _activities = new();
     private readonly List<Note> _notes = new();
     private readonly List<OpportunityProduct> _products = new();
-    
+
+    /// <summary>
+    /// Sales modülündeki karşılık gelen Opportunity'nin ID'si.
+    /// CRM opportunity'si satışa dönüştürüldüğünde senkronize edilir.
+    /// </summary>
+    public Guid? SalesOpportunityId { get; private set; }
+
     public string Name { get; private set; }
     public string? Description { get; private set; }
     public Guid? CustomerId { get; private set; }
@@ -205,5 +211,24 @@ public class Opportunity : TenantAggregateRoot
     public int GetDaysUntilExpectedClose()
     {
         return (int)(ExpectedCloseDate - DateTime.UtcNow).TotalDays;
+    }
+
+    /// <summary>
+    /// CRM Opportunity'yi Sales Opportunity ile ilişkilendirir.
+    /// Satışa dönüştürüldüğünde kullanılır.
+    /// </summary>
+    public void LinkToSalesOpportunity(Guid salesOpportunityId)
+    {
+        SalesOpportunityId = salesOpportunityId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Sales Opportunity ilişkisini kaldırır.
+    /// </summary>
+    public void UnlinkFromSalesOpportunity()
+    {
+        SalesOpportunityId = null;
+        UpdatedAt = DateTime.UtcNow;
     }
 }

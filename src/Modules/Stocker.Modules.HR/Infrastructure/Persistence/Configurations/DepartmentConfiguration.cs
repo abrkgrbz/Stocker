@@ -18,6 +18,14 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
         builder.Property(d => d.TenantId)
             .IsRequired();
 
+        // Link to Tenant.Department for synchronization when HR module is active
+        builder.Property(d => d.TenantDepartmentId)
+            .IsRequired(false);
+
+        builder.HasIndex(d => new { d.TenantId, d.TenantDepartmentId })
+            .HasFilter("\"TenantDepartmentId\" IS NOT NULL")
+            .IsUnique();
+
         builder.Property(d => d.Code)
             .IsRequired()
             .HasMaxLength(50);

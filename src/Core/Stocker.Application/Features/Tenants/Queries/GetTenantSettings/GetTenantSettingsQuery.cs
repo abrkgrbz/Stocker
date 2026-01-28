@@ -1,11 +1,17 @@
 using MediatR;
+using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.Tenants.Queries.GetTenantSettings;
 
-public record GetTenantSettingsQuery : IRequest<Result<GetTenantSettingsResponse>>
+public record GetTenantSettingsQuery : IRequest<Result<GetTenantSettingsResponse>>, ICacheableQuery
 {
     public Guid TenantId { get; init; }
+
+    // ICacheableQuery implementation
+    public string CacheKey => $"tenant-settings:{TenantId}";
+    public int CacheDurationMinutes => 30; // Ayarlar sık değişmez
+    public bool BypassCache { get; init; } = false;
 }
 
 public class GetTenantSettingsResponse

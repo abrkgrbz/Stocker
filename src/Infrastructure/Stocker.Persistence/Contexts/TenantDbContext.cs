@@ -67,9 +67,7 @@ public class TenantDbContext : BaseDbContext, ITenantDbContext
     // Settings & Configuration
     public DbSet<TenantSettings> TenantSettings => Set<TenantSettings>();
     public DbSet<TenantModules> TenantModules => Set<TenantModules>();
-    // public DbSet<TenantModule> TenantModule => Set<TenantModule>(); // TODO: Add entity or remove
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
-    // public DbSet<UserSession> UserSessions => Set<UserSession>(); // TODO: Add entity or remove
     
     // Setup & Onboarding (Moved from Master to Tenant for better isolation)
     public DbSet<SetupWizard> SetupWizards => Set<SetupWizard>();
@@ -116,25 +114,10 @@ public class TenantDbContext : BaseDbContext, ITenantDbContext
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Product> Products => Set<Product>();
 
-    // Data Migration (ERP/CRM Import) - Tenant-specific migration data
+    // Data Migration (ERP/CRM Import)
     public DbSet<MigrationSession> MigrationSessions => Set<MigrationSession>();
     public DbSet<MigrationChunk> MigrationChunks => Set<MigrationChunk>();
     public DbSet<MigrationValidationResult> MigrationValidationResults => Set<MigrationValidationResult>();
-
-    // Inventory - Moved to Stocker.Modules.Inventory
-    // public DbSet<Product> Products => Set<Product>();
-    // public DbSet<Stock> Stocks => Set<Stock>();
-    // public DbSet<StockMovement> StockMovements => Set<StockMovement>();
-    // public DbSet<Warehouse> Warehouses => Set<Warehouse>();
-
-    // CRM Module - TODO: Move to separate CRM DbContext to avoid circular reference
-    // public DbSet<Customer> Customers => Set<Customer>();
-    // public DbSet<Contact> Contacts => Set<Contact>();
-    // public DbSet<Lead> Leads => Set<Lead>();
-    // public DbSet<Opportunity> Opportunities => Set<Opportunity>();
-    // public DbSet<Activity> Activities => Set<Activity>();
-    // public DbSet<Note> Notes => Set<Note>();
-    // public DbSet<OpportunityProduct> OpportunityProducts => Set<OpportunityProduct>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -176,8 +159,6 @@ public class TenantDbContext : BaseDbContext, ITenantDbContext
             
         configurations.AddRange(tenantConfigurations);
 
-        // CRM configurations are now handled in the separate CRMDbContext
-
         foreach (var configurationType in configurations)
         {
             dynamic? configurationInstance = Activator.CreateInstance(configurationType);
@@ -204,14 +185,7 @@ public class TenantDbContext : BaseDbContext, ITenantDbContext
             modelBuilder.Entity<Domain.Tenant.Entities.InvoiceItem>().HasQueryFilter(e => e.TenantId == currentTenantId);
             modelBuilder.Entity<Domain.Tenant.Entities.Payment>().HasQueryFilter(e => e.TenantId == currentTenantId);
             
-            // Phase 3 Entities - No query filters needed (database-per-tenant approach)
-            // Each tenant has its own database, so no need for TenantId filtering
         }
-        // Inventory entities moved to Stocker.Modules.Inventory
-        // modelBuilder.Entity<Product>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
-        // modelBuilder.Entity<Stock>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
-        // modelBuilder.Entity<StockMovement>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
-        // modelBuilder.Entity<Warehouse>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

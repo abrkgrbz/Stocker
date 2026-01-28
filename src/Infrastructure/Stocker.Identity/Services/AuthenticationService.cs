@@ -19,6 +19,9 @@ public class AuthenticationService : IAuthenticationService
     private readonly IUserManagementService _userManagementService;
     private readonly ITokenGenerationService _tokenGenerationService;
     private readonly IPasswordService _passwordService;
+    private readonly IPasswordHistoryService _passwordHistoryService;
+    private readonly ISessionManagementService _sessionManagementService;
+    private readonly ILoginNotificationService _loginNotificationService;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly ITenantService _tenantService;
     private readonly IMasterDbContext _masterContext;
@@ -29,6 +32,9 @@ public class AuthenticationService : IAuthenticationService
         IUserManagementService userManagementService,
         ITokenGenerationService tokenGenerationService,
         IPasswordService passwordService,
+        IPasswordHistoryService passwordHistoryService,
+        ISessionManagementService sessionManagementService,
+        ILoginNotificationService loginNotificationService,
         IJwtTokenService jwtTokenService,
         ITenantService tenantService,
         IMasterDbContext masterContext,
@@ -38,6 +44,9 @@ public class AuthenticationService : IAuthenticationService
         _userManagementService = userManagementService;
         _tokenGenerationService = tokenGenerationService;
         _passwordService = passwordService;
+        _passwordHistoryService = passwordHistoryService;
+        _sessionManagementService = sessionManagementService;
+        _loginNotificationService = loginNotificationService;
         _jwtTokenService = jwtTokenService;
         _tenantService = tenantService;
         _masterContext = masterContext;
@@ -94,9 +103,29 @@ public class AuthenticationService : IAuthenticationService
                 // Update last login
                 await _userManagementService.UpdateLastLoginAsync(masterUser);
 
-                // Generate token
-                var result = await _tokenGenerationService.GenerateForMasterUserAsync(masterUser, tenantId);
-                
+                // Generate token with rememberMe support
+                var result = await _tokenGenerationService.GenerateForMasterUserAsync(masterUser, tenantId, request.RememberMe);
+
+                // Create session for tracking
+                await _sessionManagementService.CreateSessionAsync(
+                    masterUser.Id,
+                    isMasterUser: true,
+                    tenantId: tenantId,
+                    refreshToken: result.RefreshToken,
+                    expiresAt: result.RefreshTokenExpiration ?? DateTime.UtcNow.AddDays(7),
+                    deviceId: request.DeviceId,
+                    deviceInfo: request.DeviceInfo);
+
+                // Send login notification if new device/location (fire and forget)
+                _ = _loginNotificationService.CheckAndNotifyAsync(
+                    masterUser.Id,
+                    masterUser.Email.Value,
+                    isMasterUser: true,
+                    request.DeviceId,
+                    request.DeviceInfo,
+                    ipAddress: null,
+                    location: null);
+
                 _logger.LogInformation("Master user {Username} logged in successfully", request.Username);
                 return result;
             }
@@ -140,8 +169,28 @@ public class AuthenticationService : IAuthenticationService
                         // Update last login
                         await _userManagementService.UpdateLastLoginAsync(tenantUser);
 
-                        // Generate token for invited user (pass null for masterUser)
-                        var invitedResult = await _tokenGenerationService.GenerateForTenantUserAsync(tenantUser, null);
+                        // Generate token for invited user with rememberMe support
+                        var invitedResult = await _tokenGenerationService.GenerateForTenantUserAsync(tenantUser, null, request.RememberMe);
+
+                        // Create session for tracking
+                        await _sessionManagementService.CreateSessionAsync(
+                            tenantUser.Id,
+                            isMasterUser: false,
+                            tenantId: tenantUser.TenantId,
+                            refreshToken: invitedResult.RefreshToken,
+                            expiresAt: invitedResult.RefreshTokenExpiration ?? DateTime.UtcNow.AddDays(7),
+                            deviceId: request.DeviceId,
+                            deviceInfo: request.DeviceInfo);
+
+                        // Send login notification if new device/location
+                        _ = _loginNotificationService.CheckAndNotifyAsync(
+                            tenantUser.Id,
+                            tenantUser.Email.Value,
+                            isMasterUser: false,
+                            request.DeviceId,
+                            request.DeviceInfo,
+                            ipAddress: null,
+                            location: null);
 
                         _logger.LogInformation("Invited tenant user {Username} logged in successfully", request.Username);
                         return invitedResult;
@@ -176,8 +225,28 @@ public class AuthenticationService : IAuthenticationService
                     // Update last login
                     await _userManagementService.UpdateLastLoginAsync(tenantUser);
 
-                    // Generate token
-                    var result = await _tokenGenerationService.GenerateForTenantUserAsync(tenantUser, masterUserForTenant);
+                    // Generate token with rememberMe support
+                    var result = await _tokenGenerationService.GenerateForTenantUserAsync(tenantUser, masterUserForTenant, request.RememberMe);
+
+                    // Create session for tracking
+                    await _sessionManagementService.CreateSessionAsync(
+                        masterUserForTenant.Id,
+                        isMasterUser: false,
+                        tenantId: tenantUser.TenantId,
+                        refreshToken: result.RefreshToken,
+                        expiresAt: result.RefreshTokenExpiration ?? DateTime.UtcNow.AddDays(7),
+                        deviceId: request.DeviceId,
+                        deviceInfo: request.DeviceInfo);
+
+                    // Send login notification if new device/location
+                    _ = _loginNotificationService.CheckAndNotifyAsync(
+                        masterUserForTenant.Id,
+                        tenantUser.Email.Value,
+                        isMasterUser: false,
+                        request.DeviceId,
+                        request.DeviceInfo,
+                        ipAddress: null,
+                        location: null);
 
                     _logger.LogInformation("Tenant user {Username} logged in successfully", request.Username);
                     return result;
@@ -244,9 +313,18 @@ public class AuthenticationService : IAuthenticationService
             }
 
             // Validate refresh token
-            if (masterUser.RefreshToken != request.RefreshToken || 
+            if (masterUser.RefreshToken != request.RefreshToken ||
                 masterUser.RefreshTokenExpiryTime <= DateTime.UtcNow)
             {
+                // TOKEN ROTATION SECURITY: If token doesn't match, could be reuse attack
+                // Revoke all tokens for this user as a precaution
+                if (masterUser.RefreshToken != request.RefreshToken && !string.IsNullOrEmpty(request.RefreshToken))
+                {
+                    _logger.LogWarning("Potential token reuse attack detected for user {UserId}. Revoking all tokens.", userId);
+                    masterUser.RevokeAllRefreshTokens();
+                    await _masterContext.SaveChangesAsync();
+                }
+
                 return new AuthenticationResult
                 {
                     Success = false,
@@ -262,8 +340,17 @@ public class AuthenticationService : IAuthenticationService
                 tenantId = tid;
             }
 
+            // TOKEN ROTATION: Revoke old token before generating new one
+            masterUser.RevokeRefreshToken();
+
             // Generate new tokens
-            return await _tokenGenerationService.GenerateForMasterUserAsync(masterUser, tenantId);
+            var result = await _tokenGenerationService.GenerateForMasterUserAsync(masterUser, tenantId);
+
+            // Save the rotation
+            await _masterContext.SaveChangesAsync();
+
+            _logger.LogInformation("Token refreshed with rotation for user {UserId}", userId);
+            return result;
         }
         catch (Exception ex)
         {
@@ -382,16 +469,26 @@ public class AuthenticationService : IAuthenticationService
                 return false;
             }
 
+            // Check if new password was used before (password history check)
+            if (await _passwordHistoryService.IsPasswordInHistoryAsync(userId, request.NewPassword))
+            {
+                _logger.LogWarning("User {UserId} attempted to reuse a previous password", userId);
+                return false;
+            }
+
+            // Save current password to history before changing
+            await _passwordHistoryService.AddPasswordToHistoryAsync(userId, masterUser.PasswordHash);
+
             // Create new hashed password
             var newHashedPassword = _passwordService.CreateHashedPassword(request.NewPassword);
-            
+
             // Update password - UpdatePassword expects a string hash
             var combinedHash = _passwordService.GetCombinedHash(newHashedPassword);
             masterUser.UpdatePassword(combinedHash);
-            
+
             await _masterContext.SaveChangesAsync();
             _logger.LogInformation("Password changed for user {UserId}", userId);
-            
+
             return true;
         }
         catch (Exception ex)
@@ -414,7 +511,10 @@ public class AuthenticationService : IAuthenticationService
             masterUser.RevokeRefreshToken();
             await _masterContext.SaveChangesAsync();
 
-            _logger.LogInformation("Refresh token revoked for user {UserId}", userId);
+            // Revoke all sessions for this user
+            await _sessionManagementService.RevokeAllSessionsAsync(userId, isMasterUser: true);
+
+            _logger.LogInformation("Refresh token and all sessions revoked for user {UserId}", userId);
             return true;
         }
         catch (Exception ex)
@@ -591,49 +691,27 @@ public class AuthenticationService : IAuthenticationService
     {
         try
         {
-            // Find user by refresh token
+            // First, try to find MasterUser by refresh token
             var masterUser = await _masterContext.MasterUsers
                 .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken, cancellationToken);
 
-            if (masterUser == null)
+            if (masterUser != null)
             {
-                return Stocker.SharedKernel.Results.Result.Failure<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>(
-                    Stocker.SharedKernel.Results.Error.Validation("Auth.InvalidToken", "Geçersiz yenileme token'ı"));
+                // MasterUser found - handle refresh
+                return await RefreshMasterUserTokenAsync(masterUser, ipAddress, cancellationToken);
             }
 
-            // Validate refresh token expiry
-            if (masterUser.RefreshTokenExpiryTime <= DateTime.UtcNow)
+            // If not found in MasterUsers, search in TenantUsers (for invited users)
+            var invitedUserResult = await RefreshInvitedUserTokenAsync(refreshToken, ipAddress, cancellationToken);
+            if (invitedUserResult != null)
             {
-                return Stocker.SharedKernel.Results.Result.Failure<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>(
-                    Stocker.SharedKernel.Results.Error.Validation("Auth.TokenExpired", "Yenileme token'ı süresi dolmuş"));
+                return invitedUserResult;
             }
 
-            // Generate new tokens
-            var authResult = await _tokenGenerationService.GenerateForMasterUserAsync(masterUser, null);
-
-            var authResponse = new Stocker.Application.Features.Identity.Commands.Login.AuthResponse
-            {
-                AccessToken = authResult.AccessToken ?? string.Empty,
-                RefreshToken = authResult.RefreshToken ?? string.Empty,
-                ExpiresAt = authResult.AccessTokenExpiration ?? DateTime.UtcNow.AddMinutes(60),
-                TokenType = "Bearer",
-                User = new Stocker.Application.Features.Identity.Commands.Login.UserInfo
-                {
-                    Id = authResult.User.Id,
-                    Username = authResult.User.Username,
-                    Email = authResult.User.Email,
-                    FullName = authResult.User.FullName,
-                    TenantId = authResult.User.TenantId,
-                    TenantName = authResult.User.TenantName,
-                    TenantCode = authResult.User.TenantCode,
-                    Roles = authResult.User.Roles ?? new List<string>()
-                },
-                Requires2FA = false,
-                TempToken = null
-            };
-
-            _logger.LogInformation("Token refreshed for user {UserId} from IP {IpAddress}", masterUser.Id, ipAddress ?? "unknown");
-            return Stocker.SharedKernel.Results.Result.Success(authResponse);
+            // Token not found anywhere - potential token reuse attack
+            _logger.LogWarning("Refresh token not found in any user - possible token reuse attack. IP: {IpAddress}", ipAddress ?? "unknown");
+            return Stocker.SharedKernel.Results.Result.Failure<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>(
+                Stocker.SharedKernel.Results.Error.Validation("Auth.InvalidToken", "Geçersiz yenileme token'ı"));
         }
         catch (Exception ex)
         {
@@ -641,6 +719,140 @@ public class AuthenticationService : IAuthenticationService
             return Stocker.SharedKernel.Results.Result.Failure<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>(
                 Stocker.SharedKernel.Results.Error.Failure("Auth.RefreshError", "Token yenileme sırasında bir hata oluştu"));
         }
+    }
+
+    /// <summary>
+    /// Helper method to refresh token for MasterUser with rotation
+    /// </summary>
+    private async Task<Stocker.SharedKernel.Results.Result<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>> RefreshMasterUserTokenAsync(
+        Domain.Master.Entities.MasterUser masterUser,
+        string? ipAddress,
+        CancellationToken cancellationToken)
+    {
+        // Validate refresh token expiry
+        if (masterUser.RefreshTokenExpiryTime <= DateTime.UtcNow)
+        {
+            // Expired token - revoke for security
+            masterUser.RevokeRefreshToken();
+            await _masterContext.SaveChangesAsync(cancellationToken);
+
+            _logger.LogWarning("Expired refresh token used for user {UserId}", masterUser.Id);
+            return Stocker.SharedKernel.Results.Result.Failure<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>(
+                Stocker.SharedKernel.Results.Error.Validation("Auth.TokenExpired", "Yenileme token'ı süresi dolmuş"));
+        }
+
+        // TOKEN ROTATION: Revoke the old refresh token BEFORE generating new one
+        masterUser.RevokeRefreshToken();
+
+        // Generate new tokens
+        var authResult = await _tokenGenerationService.GenerateForMasterUserAsync(masterUser, null);
+
+        // Save the changes
+        await _masterContext.SaveChangesAsync(cancellationToken);
+
+        var authResponse = new Stocker.Application.Features.Identity.Commands.Login.AuthResponse
+        {
+            AccessToken = authResult.AccessToken ?? string.Empty,
+            RefreshToken = authResult.RefreshToken ?? string.Empty,
+            ExpiresAt = authResult.AccessTokenExpiration ?? DateTime.UtcNow.AddMinutes(60),
+            TokenType = "Bearer",
+            User = new Stocker.Application.Features.Identity.Commands.Login.UserInfo
+            {
+                Id = authResult.User.Id,
+                Username = authResult.User.Username,
+                Email = authResult.User.Email,
+                FullName = authResult.User.FullName,
+                TenantId = authResult.User.TenantId,
+                TenantName = authResult.User.TenantName,
+                TenantCode = authResult.User.TenantCode,
+                Roles = authResult.User.Roles ?? new List<string>()
+            },
+            Requires2FA = false,
+            TempToken = null
+        };
+
+        _logger.LogInformation("Token refreshed with rotation for MasterUser {UserId} from IP {IpAddress}", masterUser.Id, ipAddress ?? "unknown");
+        return Stocker.SharedKernel.Results.Result.Success(authResponse);
+    }
+
+    /// <summary>
+    /// Helper method to refresh token for invited TenantUser with rotation
+    /// Searches all active tenants for the refresh token
+    /// </summary>
+    private async Task<Stocker.SharedKernel.Results.Result<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>?> RefreshInvitedUserTokenAsync(
+        string refreshToken,
+        string? ipAddress,
+        CancellationToken cancellationToken)
+    {
+        // Get all active tenants
+        var tenants = await _masterContext.Tenants
+            .Where(t => t.IsActive)
+            .ToListAsync(cancellationToken);
+
+        foreach (var tenant in tenants)
+        {
+            try
+            {
+                await using var tenantContext = await _tenantDbContextFactory.CreateDbContextAsync(tenant.Id);
+
+                // Find invited user (MasterUserId == Guid.Empty) with this refresh token
+                var tenantUser = await tenantContext.TenantUsers
+                    .FirstOrDefaultAsync(u => u.MasterUserId == Guid.Empty && u.RefreshToken == refreshToken, cancellationToken);
+
+                if (tenantUser != null)
+                {
+                    // Validate refresh token expiry
+                    if (tenantUser.RefreshTokenExpiryTime <= DateTime.UtcNow)
+                    {
+                        // Expired token - revoke for security
+                        tenantUser.RevokeRefreshToken();
+                        await tenantContext.SaveChangesAsync(cancellationToken);
+
+                        _logger.LogWarning("Expired refresh token used for invited user {UserId} in tenant {TenantId}", tenantUser.Id, tenant.Id);
+                        return Stocker.SharedKernel.Results.Result.Failure<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>(
+                            Stocker.SharedKernel.Results.Error.Validation("Auth.TokenExpired", "Yenileme token'ı süresi dolmuş"));
+                    }
+
+                    // TOKEN ROTATION: Revoke the old refresh token
+                    tenantUser.RevokeRefreshToken();
+
+                    // Generate new tokens for invited user
+                    var authResult = await _tokenGenerationService.GenerateForTenantUserAsync(tenantUser, null);
+
+                    var authResponse = new Stocker.Application.Features.Identity.Commands.Login.AuthResponse
+                    {
+                        AccessToken = authResult.AccessToken ?? string.Empty,
+                        RefreshToken = authResult.RefreshToken ?? string.Empty,
+                        ExpiresAt = authResult.AccessTokenExpiration ?? DateTime.UtcNow.AddMinutes(60),
+                        TokenType = "Bearer",
+                        User = new Stocker.Application.Features.Identity.Commands.Login.UserInfo
+                        {
+                            Id = authResult.User.Id,
+                            Username = authResult.User.Username,
+                            Email = authResult.User.Email,
+                            FullName = authResult.User.FullName,
+                            TenantId = authResult.User.TenantId,
+                            TenantName = authResult.User.TenantName,
+                            TenantCode = authResult.User.TenantCode,
+                            Roles = authResult.User.Roles ?? new List<string>()
+                        },
+                        Requires2FA = false,
+                        TempToken = null
+                    };
+
+                    _logger.LogInformation("Token refreshed with rotation for invited user {UserId} in tenant {TenantId} from IP {IpAddress}",
+                        tenantUser.Id, tenant.Id, ipAddress ?? "unknown");
+                    return Stocker.SharedKernel.Results.Result.Success(authResponse);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error searching for invited user in tenant {TenantId}", tenant.Id);
+            }
+        }
+
+        // Not found in any tenant
+        return null;
     }
 
     public async Task<Stocker.SharedKernel.Results.Result> RevokeRefreshTokenAsync(string userId, CancellationToken cancellationToken = default)
@@ -663,7 +875,10 @@ public class AuthenticationService : IAuthenticationService
             masterUser.RevokeRefreshToken();
             await _masterContext.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Refresh token revoked for user {UserId}", userId);
+            // Revoke all sessions for this user
+            await _sessionManagementService.RevokeAllSessionsAsync(userGuid, isMasterUser: true);
+
+            _logger.LogInformation("Refresh token and all sessions revoked for user {UserId}", userId);
             return Stocker.SharedKernel.Results.Result.Success();
         }
         catch (Exception ex)
@@ -698,12 +913,23 @@ public class AuthenticationService : IAuthenticationService
                     Stocker.SharedKernel.Results.Error.Validation("Auth.InvalidPassword", "Mevcut şifre yanlış"));
             }
 
+            // Check if new password was used before (password history check)
+            if (await _passwordHistoryService.IsPasswordInHistoryAsync(userGuid, newPassword))
+            {
+                _logger.LogWarning("User {UserId} attempted to reuse a previous password", userId);
+                return Stocker.SharedKernel.Results.Result.Failure(
+                    Stocker.SharedKernel.Results.Error.Validation("Auth.PasswordReused", "Bu şifre daha önce kullanılmış. Lütfen farklı bir şifre seçin."));
+            }
+
             // Validate and create new password
             var validationResult = _passwordService.ValidatePassword(newPassword, masterUser.Username, masterUser.Email.Value);
             if (validationResult.IsFailure)
             {
                 return Stocker.SharedKernel.Results.Result.Failure(validationResult.Errors.First());
             }
+
+            // Save current password to history before changing
+            await _passwordHistoryService.AddPasswordToHistoryAsync(userGuid, masterUser.PasswordHash);
 
             // Create new hashed password
             var newHashedPassword = _passwordService.CreateHashedPassword(newPassword, masterUser.Username, masterUser.Email.Value);

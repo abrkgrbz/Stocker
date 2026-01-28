@@ -4066,6 +4066,9 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                     b.Property<int>("PaymentTerm")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("PurchaseSupplierId")
+                        .HasColumnType("uuid");
+
                     b.Property<long>("RowVersion")
                         .HasColumnType("bigint");
 
@@ -4100,6 +4103,10 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId", "IsActive");
 
                     b.HasIndex("TenantId", "Name");
+
+                    b.HasIndex("TenantId", "PurchaseSupplierId")
+                        .IsUnique()
+                        .HasFilter("\"PurchaseSupplierId\" IS NOT NULL");
 
                     b.ToTable("Suppliers", "inventory");
                 });

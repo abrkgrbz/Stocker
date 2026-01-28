@@ -24,6 +24,35 @@ public interface IPasswordValidator
     PasswordStrength CalculateStrength(string plainPassword);
 }
 
+/// <summary>
+/// Service for managing password history to prevent password reuse
+/// </summary>
+public interface IPasswordHistoryService
+{
+    /// <summary>
+    /// Checks if the password was used recently (within the last N passwords)
+    /// </summary>
+    /// <param name="userId">The MasterUser ID</param>
+    /// <param name="plainPassword">The new password to check</param>
+    /// <param name="historyCount">Number of previous passwords to check (default: 5)</param>
+    /// <returns>True if password was used recently, false otherwise</returns>
+    Task<bool> IsPasswordInHistoryAsync(Guid userId, string plainPassword, int historyCount = 5);
+
+    /// <summary>
+    /// Adds the current password to history before changing it
+    /// </summary>
+    /// <param name="userId">The MasterUser ID</param>
+    /// <param name="passwordHash">The hashed password to store</param>
+    Task AddPasswordToHistoryAsync(Guid userId, string passwordHash);
+
+    /// <summary>
+    /// Cleans up old password history entries beyond the retention limit
+    /// </summary>
+    /// <param name="userId">The MasterUser ID</param>
+    /// <param name="retentionCount">Number of entries to retain (default: 10)</param>
+    Task CleanupOldHistoryAsync(Guid userId, int retentionCount = 10);
+}
+
 public enum PasswordStrength
 {
     VeryWeak = 0,

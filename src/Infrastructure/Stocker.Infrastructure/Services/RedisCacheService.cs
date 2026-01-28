@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using Stocker.Application.Common.Diagnostics;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.DTOs;
 using System.Text.Json;
@@ -11,16 +12,20 @@ namespace Stocker.Infrastructure.Services;
 public class RedisCacheService : ICacheService, ITenantSettingsCacheService
 {
     private readonly IDistributedCache _cache;
+    private readonly IConnectionMultiplexer? _redisConnection;
     private readonly ILogger<RedisCacheService> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly DistributedCacheEntryOptions _defaultOptions;
+    private const string CachePrefix = "Stocker:";
 
     public RedisCacheService(
         IDistributedCache cache,
-        ILogger<RedisCacheService> logger)
+        ILogger<RedisCacheService> logger,
+        IConnectionMultiplexer? redisConnection = null)
     {
         _cache = cache;
         _logger = logger;
+        _redisConnection = redisConnection;
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
@@ -210,20 +215,26 @@ public class RedisCacheService : ICacheService, ITenantSettingsCacheService
 
     public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
     {
+        using var activity = StockerActivitySource.Cache.StartActivity("CacheGet")
+            ?.SetCacheOperation("GET", key, false);
+
         try
         {
             var cachedData = await _cache.GetStringAsync(key, cancellationToken);
             if (cachedData != null)
             {
+                activity?.SetTag("cache.hit", true);
                 _logger.LogDebug("Cache hit for key: {CacheKey}", key);
                 return JsonSerializer.Deserialize<T>(cachedData, _jsonOptions);
             }
-            
+
+            activity?.SetTag("cache.hit", false);
             _logger.LogDebug("Cache miss for key: {CacheKey}", key);
             return default;
         }
         catch (System.Exception ex)
         {
+            activity?.SetError(ex);
             _logger.LogError(ex, "Error getting value from cache for key: {Key}", key);
             return default;
         }
@@ -244,6 +255,10 @@ public class RedisCacheService : ICacheService, ITenantSettingsCacheService
 
     public async Task SetAsync<T>(string key, T value, TimeSpan? expiry = null, CancellationToken cancellationToken = default)
     {
+        using var activity = StockerActivitySource.Cache.StartActivity("CacheSet")
+            ?.SetCacheOperation("SET", key, false)
+            ?.SetTag("cache.expiry_minutes", expiry?.TotalMinutes ?? 15);
+
         try
         {
             var options = new DistributedCacheEntryOptions();
@@ -259,11 +274,12 @@ public class RedisCacheService : ICacheService, ITenantSettingsCacheService
 
             var serializedData = JsonSerializer.Serialize(value, _jsonOptions);
             await _cache.SetStringAsync(key, serializedData, options, cancellationToken);
-            
+
             _logger.LogDebug("Cached value for key: {Key}", key);
         }
         catch (System.Exception ex)
         {
+            activity?.SetError(ex);
             _logger.LogError(ex, "Error setting value in cache for key: {Key}", key);
         }
     }
@@ -307,10 +323,52 @@ public class RedisCacheService : ICacheService, ITenantSettingsCacheService
 
     public async Task RemoveByPatternAsync(string pattern, CancellationToken cancellationToken = default)
     {
-        // Note: IDistributedCache doesn't support pattern-based removal
-        // This would require direct Redis access through IConnectionMultiplexer
-        _logger.LogWarning("Pattern-based removal not implemented for IDistributedCache");
-        await Task.CompletedTask;
+        using var activity = StockerActivitySource.Cache.StartActivity("CacheRemoveByPattern")
+            ?.SetCacheOperation("DELETE_PATTERN", pattern, false);
+
+        if (_redisConnection == null || !_redisConnection.IsConnected)
+        {
+            _logger.LogWarning("Redis connection not available for pattern-based removal. Pattern: {Pattern}", pattern);
+            return;
+        }
+
+        try
+        {
+            var server = _redisConnection.GetServer(_redisConnection.GetEndPoints().First());
+            var database = _redisConnection.GetDatabase();
+
+            // Add cache prefix to pattern if not already present
+            var searchPattern = pattern.StartsWith(CachePrefix)
+                ? pattern
+                : $"{CachePrefix}{pattern}";
+
+            var keysToDelete = new List<RedisKey>();
+
+            // Use SCAN to find keys matching pattern (non-blocking)
+            await foreach (var key in server.KeysAsync(pattern: searchPattern))
+            {
+                keysToDelete.Add(key);
+            }
+
+            activity?.SetTag("cache.keys_found", keysToDelete.Count);
+
+            if (keysToDelete.Count > 0)
+            {
+                // Delete all matching keys in batch
+                await database.KeyDeleteAsync(keysToDelete.ToArray());
+                _logger.LogInformation("Removed {Count} cache entries matching pattern: {Pattern}",
+                    keysToDelete.Count, pattern);
+            }
+            else
+            {
+                _logger.LogDebug("No cache entries found matching pattern: {Pattern}", pattern);
+            }
+        }
+        catch (Exception ex)
+        {
+            activity?.SetError(ex);
+            _logger.LogError(ex, "Error removing cache entries by pattern: {Pattern}", pattern);
+        }
     }
 
     public async Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)

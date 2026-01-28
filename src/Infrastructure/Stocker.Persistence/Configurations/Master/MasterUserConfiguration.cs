@@ -150,14 +150,7 @@ public class MasterUserConfiguration : BaseEntityTypeConfiguration<MasterUser>
 
         // Relationships - Use backing fields for collections
         // UserTenants moved to Tenant domain
-        
-        builder.HasMany(u => u.LoginHistory)
-            .WithOne()
-            .HasForeignKey(h => h.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        // Configure navigation property to use backing fields
-        builder.Navigation(u => u.LoginHistory).HasField("_loginHistory");
+        // LoginHistory has been consolidated into SecurityAuditLog
 
         // Indexes
         builder.HasIndex(u => u.Username)

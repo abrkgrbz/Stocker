@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Stocker.Domain.Constants;
 using Stocker.SharedKernel.Primitives;
 
 namespace Stocker.Domain.Tenant.Entities;
@@ -188,7 +189,7 @@ public class TenantOnboarding : AggregateRoot<Guid>
         }
         
         ModifiedAt = DateTime.UtcNow;
-        ModifiedBy = startedBy ?? "System";
+        ModifiedBy = startedBy ?? DomainConstants.SystemUser;
     }
     
     public void CompleteStep(Guid stepId, string? completedBy = null)
@@ -203,7 +204,7 @@ public class TenantOnboarding : AggregateRoot<Guid>
         
         LastActivityAt = DateTime.UtcNow;
         ModifiedAt = DateTime.UtcNow;
-        ModifiedBy = completedBy ?? "System";
+        ModifiedBy = completedBy ?? DomainConstants.SystemUser;
         
         // Check if all required steps are completed
         if (AreAllRequiredStepsCompleted())
@@ -227,7 +228,7 @@ public class TenantOnboarding : AggregateRoot<Guid>
         
         LastActivityAt = DateTime.UtcNow;
         ModifiedAt = DateTime.UtcNow;
-        ModifiedBy = skippedBy ?? "System";
+        ModifiedBy = skippedBy ?? DomainConstants.SystemUser;
     }
     
     public void Pause(string? pausedBy = null)
@@ -239,7 +240,7 @@ public class TenantOnboarding : AggregateRoot<Guid>
         PausedAt = DateTime.UtcNow;
         
         ModifiedAt = DateTime.UtcNow;
-        ModifiedBy = pausedBy ?? "System";
+        ModifiedBy = pausedBy ?? DomainConstants.SystemUser;
     }
     
     public void Resume(string? resumedBy = null)
@@ -253,7 +254,7 @@ public class TenantOnboarding : AggregateRoot<Guid>
         LastActivityAt = DateTime.UtcNow;
         
         ModifiedAt = DateTime.UtcNow;
-        ModifiedBy = resumedBy ?? "System";
+        ModifiedBy = resumedBy ?? DomainConstants.SystemUser;
     }
     
     public void Cancel(string reason, string? cancelledBy = null)
@@ -265,7 +266,7 @@ public class TenantOnboarding : AggregateRoot<Guid>
         CompletionFeedback = $"Cancelled: {reason}";
         
         ModifiedAt = DateTime.UtcNow;
-        ModifiedBy = cancelledBy ?? "System";
+        ModifiedBy = cancelledBy ?? DomainConstants.SystemUser;
     }
     
     public void Complete(string? completedBy = null)
@@ -284,7 +285,7 @@ public class TenantOnboarding : AggregateRoot<Guid>
         ProgressPercentage = 100;
         
         ModifiedAt = DateTime.UtcNow;
-        ModifiedBy = completedBy ?? "System";
+        ModifiedBy = completedBy ?? DomainConstants.SystemUser;
     }
     
     public void SetTargetDetails(
@@ -339,7 +340,7 @@ public class TenantOnboarding : AggregateRoot<Guid>
             // Auto-start onboarding on first login if not started
             if (Status == OnboardingStatus.NotStarted)
             {
-                Start("System");
+                Start(DomainConstants.SystemUser);
             }
         }
     }

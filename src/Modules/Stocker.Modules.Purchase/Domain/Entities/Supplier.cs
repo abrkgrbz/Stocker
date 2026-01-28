@@ -4,6 +4,12 @@ namespace Stocker.Modules.Purchase.Domain.Entities;
 
 public class Supplier : TenantAggregateRoot
 {
+    /// <summary>
+    /// Inventory modülündeki karşılık gelen Supplier'ın ID'si.
+    /// Her iki modül aktif olduğunda senkronize edilir.
+    /// </summary>
+    public int? InventorySupplierId { get; private set; }
+
     public string Code { get; private set; } = string.Empty;
     public string Name { get; private set; } = string.Empty;
     public string? TaxNumber { get; private set; }
@@ -194,6 +200,25 @@ public class Supplier : TenantAggregateRoot
         var product = _products.FirstOrDefault(p => p.Id == productId);
         if (product != null)
             _products.Remove(product);
+    }
+
+    /// <summary>
+    /// Purchase Supplier'ı Inventory Supplier ile ilişkilendirir.
+    /// Her iki modül aktifken senkronize kalır.
+    /// </summary>
+    public void LinkToInventorySupplier(int inventorySupplierId)
+    {
+        InventorySupplierId = inventorySupplierId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Inventory Supplier ilişkisini kaldırır.
+    /// </summary>
+    public void UnlinkFromInventorySupplier()
+    {
+        InventorySupplierId = null;
+        UpdatedAt = DateTime.UtcNow;
     }
 }
 

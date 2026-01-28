@@ -5,13 +5,20 @@ using Stocker.SharedKernel.Results;
 namespace Stocker.Modules.CRM.Domain.Entities;
 
 /// <summary>
-/// Represents a customer in the CRM system
+/// Represents a customer in the CRM system.
+/// TenantCustomerId ile Tenant.Customer'a bağlanabilir.
 /// </summary>
 public class Customer : TenantAggregateRoot
 {
     private readonly List<Contact> _contacts = new();
     private readonly List<CustomerSegmentMember> _segmentMemberships = new();
     private readonly List<CustomerTag> _tags = new();
+
+    /// <summary>
+    /// Tenant domain'deki karşılık gelen Customer'ın ID'si.
+    /// CRM modülü aktif olduğunda, Tenant.Customer ile senkronize edilir.
+    /// </summary>
+    public Guid? TenantCustomerId { get; private set; }
 
     /// <summary>
     /// Gets the customer's company name
@@ -465,5 +472,24 @@ public class Customer : TenantAggregateRoot
         {
             return false;
         }
+    }
+
+    /// <summary>
+    /// CRM Customer'ı Tenant Customer ile ilişkilendirir.
+    /// Bu sayede CRM modülü aktifken Tenant.Customer ve CRM.Customer senkronize kalır.
+    /// </summary>
+    public void LinkToTenantCustomer(Guid tenantCustomerId)
+    {
+        TenantCustomerId = tenantCustomerId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Tenant Customer ilişkisini kaldırır.
+    /// </summary>
+    public void UnlinkFromTenantCustomer()
+    {
+        TenantCustomerId = null;
+        UpdatedAt = DateTime.UtcNow;
     }
 }

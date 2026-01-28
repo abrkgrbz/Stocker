@@ -68,4 +68,35 @@ public class CustomerRepository : BaseRepository<Customer>, ICustomerRepository
 
         return await query.AnyAsync(cancellationToken);
     }
+
+    /// <summary>
+    /// Tenant.Customer ile eşleştirilmiş CRM.Customer'ı getirir
+    /// </summary>
+    public async Task<Customer?> GetByTenantCustomerIdAsync(Guid tenantCustomerId, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .FirstOrDefaultAsync(c => c.TenantCustomerId == tenantCustomerId, cancellationToken);
+    }
+
+    /// <summary>
+    /// Tenant.Customer ile eşleştirilmiş tüm CRM.Customer'ları getirir
+    /// </summary>
+    public async Task<IReadOnlyList<Customer>> GetLinkedCustomersAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Where(c => c.TenantCustomerId != null)
+            .OrderBy(c => c.CompanyName)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Tenant.Customer ile eşleştirilmemiş CRM.Customer'ları getirir
+    /// </summary>
+    public async Task<IReadOnlyList<Customer>> GetUnlinkedCustomersAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Where(c => c.TenantCustomerId == null)
+            .OrderBy(c => c.CompanyName)
+            .ToListAsync(cancellationToken);
+    }
 }

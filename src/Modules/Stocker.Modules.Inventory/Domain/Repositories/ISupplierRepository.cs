@@ -31,4 +31,19 @@ public interface ISupplierRepository : IInventoryRepository<Supplier>
     /// Checks if a supplier with the given code exists
     /// </summary>
     Task<bool> ExistsWithCodeAsync(string code, int? excludeSupplierId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets an Inventory supplier by its linked PurchaseSupplierId
+    /// </summary>
+    Task<Supplier?> GetByPurchaseSupplierIdAsync(Guid purchaseSupplierId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all Inventory suppliers that are linked to Purchase suppliers
+    /// </summary>
+    Task<IReadOnlyList<Supplier>> GetLinkedSuppliersAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all Inventory suppliers that are NOT linked to any Purchase supplier
+    /// </summary>
+    Task<IReadOnlyList<Supplier>> GetUnlinkedSuppliersAsync(CancellationToken cancellationToken = default);
 }

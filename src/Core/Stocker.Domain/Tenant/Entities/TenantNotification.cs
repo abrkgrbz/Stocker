@@ -1,3 +1,4 @@
+using Stocker.Domain.Constants;
 using Stocker.SharedKernel.Primitives;
 using System;
 using System.Collections.Generic;
@@ -189,7 +190,7 @@ public sealed class TenantNotification : Entity
             $"{productName} ürününün stok seviyesi kritik seviyenin altına düştü. Mevcut: {currentStock}, Kritik Seviye: {criticalLevel}",
             NotificationType.Warning,
             NotificationCategory.Inventory,
-            "System")
+            DomainConstants.SystemUser)
         {
             TargetType = NotificationTarget.Role,
             TargetRole = targetRole,
@@ -219,7 +220,7 @@ public sealed class TenantNotification : Entity
             $"{productName} ürününün stoğu tamamen tükendi. Acil sipariş gerekli.",
             NotificationType.Error,
             NotificationCategory.Inventory,
-            "System")
+            DomainConstants.SystemUser)
         {
             TargetType = NotificationTarget.Role,
             TargetRole = targetRole,
@@ -253,7 +254,7 @@ public sealed class TenantNotification : Entity
             $"Hedefinize %{percentageAchieved:F1} ulaştınız. Mevcut: {currentAmount:C}, Hedef: {targetAmount:C}",
             percentageAchieved >= 100 ? NotificationType.Success : NotificationType.Information,
             NotificationCategory.Sales,
-            "System")
+            DomainConstants.SystemUser)
         {
             TargetType = userId.HasValue ? NotificationTarget.User : NotificationTarget.Role,
             TargetUserId = userId,

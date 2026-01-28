@@ -99,8 +99,13 @@ export function isTest(): boolean {
 
 // Get tenant URL (server-side or client-side safe)
 export function getTenantUrl(tenantCode: string): string {
-  const protocol = isDevelopment() ? 'http' : 'https'
-  const baseDomain = isDevelopment() ? 'localhost:3001' : env.NEXT_PUBLIC_BASE_DOMAIN
+  // In development, stay on same origin (no subdomain routing)
+  if (isDevelopment()) {
+    return 'http://localhost:3000'
+  }
+
+  const protocol = 'https'
+  const baseDomain = env.NEXT_PUBLIC_BASE_DOMAIN
   return `${protocol}://${tenantCode}.${baseDomain}`
 }
 
@@ -113,10 +118,14 @@ export function getClientTenantUrl(tenantCode: string): string {
 
   // Client-side: use only NEXT_PUBLIC_ vars
   const isDev = process.env.NODE_ENV === 'development'
-  const protocol = isDev ? 'http' : 'https'
-  const baseDomain = isDev
-    ? 'localhost:3001'
-    : process.env.NEXT_PUBLIC_BASE_DOMAIN
+
+  // In development, stay on same origin (no subdomain routing)
+  if (isDev) {
+    return window.location.origin
+  }
+
+  const protocol = 'https'
+  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN
 
   if (!baseDomain) {
     throw new Error('NEXT_PUBLIC_BASE_DOMAIN is required in production')

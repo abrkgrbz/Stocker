@@ -6,6 +6,12 @@ namespace Stocker.Modules.Inventory.Domain.Entities;
 
 public class Supplier : BaseEntity
 {
+    /// <summary>
+    /// Purchase modülündeki karşılık gelen Supplier'ın ID'si.
+    /// Her iki modül aktif olduğunda senkronize edilir.
+    /// </summary>
+    public Guid? PurchaseSupplierId { get; private set; }
+
     public string Code { get; private set; }
     public string Name { get; private set; }
     public string? TaxNumber { get; private set; }
@@ -114,5 +120,22 @@ public class Supplier : BaseEntity
             TenantId,
             Code,
             Name));
+    }
+
+    /// <summary>
+    /// Inventory Supplier'ı Purchase Supplier ile ilişkilendirir.
+    /// Her iki modül aktifken senkronize kalır.
+    /// </summary>
+    public void LinkToPurchaseSupplier(Guid purchaseSupplierId)
+    {
+        PurchaseSupplierId = purchaseSupplierId;
+    }
+
+    /// <summary>
+    /// Purchase Supplier ilişkisini kaldırır.
+    /// </summary>
+    public void UnlinkFromPurchaseSupplier()
+    {
+        PurchaseSupplierId = null;
     }
 }

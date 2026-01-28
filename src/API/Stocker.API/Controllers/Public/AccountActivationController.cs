@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.API.Controllers.Base;
+using Stocker.API.Extensions;
 using Stocker.Application.DTOs.Tenant.Users;
 using Stocker.Application.Features.Tenant.Users.Commands;
 using Stocker.Application.Common.Exceptions;
@@ -102,32 +103,7 @@ public class AccountActivationController : ControllerBase
     /// </summary>
     private void SetAuthCookies(string accessToken, string refreshToken)
     {
-        var isProduction = !string.Equals(
-            Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
-            "Development",
-            StringComparison.OrdinalIgnoreCase);
-
-        var baseDomain = _configuration.GetValue<string>("CookieBaseDomain") ?? ".stoocker.app";
-
-        // Set access token cookie (short-lived)
-        Response.Cookies.Append("access_token", accessToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = isProduction,
-            SameSite = isProduction ? SameSiteMode.None : SameSiteMode.Lax,
-            Domain = isProduction ? baseDomain : null,
-            Expires = DateTime.UtcNow.AddHours(1)
-        });
-
-        // Set refresh token cookie (long-lived)
-        Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = isProduction,
-            SameSite = isProduction ? SameSiteMode.None : SameSiteMode.Lax,
-            Domain = isProduction ? baseDomain : null,
-            Expires = DateTime.UtcNow.AddDays(7)
-        });
+        Response.SetAuthCookies(accessToken, refreshToken, DateTimeOffset.UtcNow.AddHours(1));
     }
 }
 

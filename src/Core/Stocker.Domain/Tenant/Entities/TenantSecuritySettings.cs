@@ -1,3 +1,4 @@
+using Stocker.Domain.Constants;
 using Stocker.SharedKernel.Primitives;
 using System;
 using System.Collections.Generic;
@@ -139,7 +140,7 @@ public sealed class TenantSecuritySettings : Entity
         Id = Guid.NewGuid();
         CreatedAt = DateTime.UtcNow;
         CreatedBy = createdBy;
-        ProfileName = profileName ?? "Default";
+        ProfileName = profileName ?? DomainConstants.DefaultProfile;
         InitializeDefaults();
     }
     

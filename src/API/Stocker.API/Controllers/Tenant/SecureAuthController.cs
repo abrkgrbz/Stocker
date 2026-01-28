@@ -6,6 +6,7 @@ using Stocker.Application.Features.Identity.Commands.RefreshToken;
 using Stocker.Application.Features.Identity.Commands.Logout;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Identity.Services;
+using Stocker.API.Extensions;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Security.Claims;
 
@@ -104,7 +105,7 @@ public class SecureAuthController : ControllerBase
             var authData = result.Value;
             
             // Set httpOnly cookies
-            SetAuthCookies(authData.AccessToken, authData.RefreshToken);
+            SetAuthCookiesInternal(authData.AccessToken, authData.RefreshToken);
             
             _logger.LogInformation("User {Email} logged in successfully with secure cookies", command.Email);
             
@@ -155,7 +156,7 @@ public class SecureAuthController : ControllerBase
             var authData = result.Value;
             
             // Update cookies
-            SetAuthCookies(authData.AccessToken, authData.RefreshToken);
+            SetAuthCookiesInternal(authData.AccessToken, authData.RefreshToken);
             
             return Ok(new RefreshResponse
             {
@@ -196,7 +197,7 @@ public class SecureAuthController : ControllerBase
         }
         
         // Clear cookies
-        ClearAuthCookies();
+        ClearAuthCookiesInternal();
         
         return Ok(new
         {
@@ -219,52 +220,14 @@ public class SecureAuthController : ControllerBase
 
     #region Helper Methods
 
-    private void SetAuthCookies(string accessToken, string refreshToken)
+    private void SetAuthCookiesInternal(string accessToken, string refreshToken)
     {
-        // Get base domain from configuration (e.g., ".stoocker.app")
-        var baseDomain = _configuration.GetValue<string>("CookieBaseDomain") ?? ".stoocker.app";
-        var isProduction = !_configuration.GetValue<bool>("Development:UseHttp");
-
-        var cookieOptions = new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = isProduction, // HTTPS in production
-            SameSite = SameSiteMode.None, // Allow cross-subdomain (auth → tenant)
-            Domain = isProduction ? baseDomain : null, // Only set domain in production
-            Expires = DateTime.UtcNow.AddDays(7)
-        };
-
-        // Set access token cookie
-        Response.Cookies.Append("access_token", accessToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = cookieOptions.Secure,
-            SameSite = cookieOptions.SameSite,
-            Domain = cookieOptions.Domain,
-            Expires = DateTime.UtcNow.AddHours(1) // Short-lived
-        });
-
-        // Set refresh token cookie
-        Response.Cookies.Append("refresh_token", refreshToken, cookieOptions);
+        Response.SetAuthCookies(accessToken, refreshToken, DateTimeOffset.UtcNow.AddHours(1));
     }
 
-    private void ClearAuthCookies()
+    private void ClearAuthCookiesInternal()
     {
-        // Get base domain from configuration
-        var baseDomain = _configuration.GetValue<string>("CookieBaseDomain") ?? ".stoocker.app";
-        var isProduction = !_configuration.GetValue<bool>("Development:UseHttp");
-
-        var cookieOptions = new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = isProduction,
-            SameSite = SameSiteMode.None, // Match set behavior
-            Domain = isProduction ? baseDomain : null,
-            Expires = DateTime.UtcNow.AddDays(-1)
-        };
-
-        Response.Cookies.Delete("access_token", cookieOptions);
-        Response.Cookies.Delete("refresh_token", cookieOptions);
+        Response.ClearAuthCookies();
     }
 
     private SecureUserInfo GetUserFromPrincipal(ClaimsPrincipal principal)

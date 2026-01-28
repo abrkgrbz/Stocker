@@ -1305,6 +1305,9 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     b.Property<string>("TaxId")
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("TenantCustomerId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
 
@@ -1331,6 +1334,10 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.HasIndex("TenantId", "IsActive");
+
+                    b.HasIndex("TenantId", "TenantCustomerId")
+                        .IsUnique()
+                        .HasFilter("\"TenantCustomerId\" IS NOT NULL");
 
                     b.ToTable("Customers", "crm");
                 });
@@ -2979,6 +2986,9 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     b.Property<decimal>("Probability")
                         .HasColumnType("numeric");
 
+                    b.Property<Guid?>("SalesOpportunityId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Source")
                         .HasColumnType("integer");
 
@@ -3024,6 +3034,10 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId", "LeadId");
 
                     b.HasIndex("TenantId", "PipelineId");
+
+                    b.HasIndex("TenantId", "SalesOpportunityId")
+                        .IsUnique()
+                        .HasFilter("\"SalesOpportunityId\" IS NOT NULL");
 
                     b.HasIndex("TenantId", "StageId");
 

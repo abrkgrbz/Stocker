@@ -54,6 +54,7 @@ export const CheckEmailResponseSchema = z.object({
   data: z.object({
     exists: z.boolean(),
     tenants: z.array(TenantInfoSchema).optional(),
+    isMasterAdmin: z.boolean().optional(),
   }).optional(),
   message: z.string().optional(),
 })

@@ -70,4 +70,35 @@ public class OpportunityRepository : BaseRepository<Opportunity>, IOpportunityRe
 
         return $"OPP-{DateTime.UtcNow:yyyyMMddHHmmss}";
     }
+
+    /// <summary>
+    /// CRM.Opportunity ile eşleştirilmiş Sales.Opportunity'yi getirir
+    /// </summary>
+    public async Task<Opportunity?> GetByCrmOpportunityIdAsync(Guid crmOpportunityId, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .FirstOrDefaultAsync(o => o.CrmOpportunityId == crmOpportunityId, cancellationToken);
+    }
+
+    /// <summary>
+    /// CRM ile eşleştirilmiş tüm Sales.Opportunity'leri getirir
+    /// </summary>
+    public async Task<IReadOnlyList<Opportunity>> GetLinkedToCrmAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Where(o => o.CrmOpportunityId != null)
+            .OrderByDescending(o => o.CreatedDate)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// CRM ile eşleştirilmemiş Sales.Opportunity'leri getirir
+    /// </summary>
+    public async Task<IReadOnlyList<Opportunity>> GetUnlinkedFromCrmAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Where(o => o.CrmOpportunityId == null)
+            .OrderByDescending(o => o.CreatedDate)
+            .ToListAsync(cancellationToken);
+    }
 }

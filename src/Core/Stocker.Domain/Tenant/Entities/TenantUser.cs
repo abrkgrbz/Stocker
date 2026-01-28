@@ -1,10 +1,13 @@
+using Stocker.Domain.Common.Helpers;
+using Stocker.Domain.Common.Interfaces;
 using Stocker.Domain.Common.ValueObjects;
+using Stocker.Domain.Constants;
 using Stocker.Domain.Tenant.Enums;
 using Stocker.SharedKernel.MultiTenancy;
 
 namespace Stocker.Domain.Tenant.Entities;
 
-public sealed class TenantUser : TenantAggregateRoot
+public sealed class TenantUser : TenantAggregateRoot, IPasswordResettable
 {
     private readonly List<UserRole> _userRoles = new();
     private readonly List<UserPermission> _userPermissions = new();
@@ -29,8 +32,21 @@ public sealed class TenantUser : TenantAggregateRoot
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
     public DateTime? LastLoginAt { get; private set; }
+    public int FailedLoginAttempts { get; private set; }
+    public DateTime? LockoutEndAt { get; private set; }
     public string? PasswordResetToken { get; private set; }
     public DateTime? PasswordResetTokenExpiry { get; private set; }
+    // Refresh token for invited users (no MasterUser association)
+    public string? RefreshToken { get; private set; }
+    public DateTime? RefreshTokenExpiryTime { get; private set; }
+
+    // Two-Factor Authentication
+    public bool TwoFactorEnabled { get; private set; }
+    public string? TwoFactorSecret { get; private set; }
+    public string? BackupCodes { get; private set; }
+    public int TwoFactorFailedAttempts { get; private set; }
+    public DateTime? TwoFactorLockoutEndAt { get; private set; }
+
     public IReadOnlyList<UserRole> UserRoles => _userRoles.AsReadOnly();
     public IReadOnlyList<UserPermission> UserPermissions => _userPermissions.AsReadOnly();
 
@@ -67,6 +83,7 @@ public sealed class TenantUser : TenantAggregateRoot
         Status = TenantUserStatus.Active;
         HireDate = hireDate;
         CreatedAt = DateTime.UtcNow;
+        FailedLoginAttempts = 0;
     }
 
     public static TenantUser Create(
@@ -160,7 +177,7 @@ public sealed class TenantUser : TenantAggregateRoot
             tenantId,
             Guid.Empty, // No master user association for invited users
             username,
-            "PENDING_ACTIVATION", // Placeholder - cannot be used for login
+            DomainConstants.PendingActivationPasswordPlaceholder, // Placeholder - cannot be used for login
             email,
             firstName,
             lastName,
@@ -177,8 +194,8 @@ public sealed class TenantUser : TenantAggregateRoot
 
         // Generate activation token immediately
         user.GeneratePasswordResetToken();
-        // Extend token validity to 7 days for invitation flow
-        user.PasswordResetTokenExpiry = DateTime.UtcNow.AddDays(7);
+        // Extend token validity for invitation flow
+        user.PasswordResetTokenExpiry = DateTime.UtcNow.AddDays(PasswordConstants.InvitationTokenExpiryDays);
 
         return user;
     }
@@ -300,6 +317,60 @@ public sealed class TenantUser : TenantAggregateRoot
         LastLoginAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// Records a successful login and resets lockout counters
+    /// </summary>
+    public void RecordSuccessfulLogin()
+    {
+        LastLoginAt = DateTime.UtcNow;
+        FailedLoginAttempts = 0;
+        LockoutEndAt = null;
+    }
+
+    /// <summary>
+    /// Records a failed login attempt and applies lockout if threshold exceeded
+    /// </summary>
+    public void RecordFailedLogin()
+    {
+        FailedLoginAttempts++;
+        UpdatedAt = DateTime.UtcNow;
+
+        // Lock account after 5 failed attempts for 30 minutes
+        if (FailedLoginAttempts >= 5)
+        {
+            LockoutEndAt = DateTime.UtcNow.AddMinutes(30);
+        }
+    }
+
+    /// <summary>
+    /// Checks if the user account is currently locked out
+    /// </summary>
+    public bool IsLockedOut()
+    {
+        return LockoutEndAt.HasValue && LockoutEndAt.Value > DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Gets the remaining lockout time, or null if not locked out
+    /// </summary>
+    public TimeSpan? GetLockoutTimeRemaining()
+    {
+        if (!IsLockedOut())
+            return null;
+
+        return LockoutEndAt!.Value - DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Manually unlocks the user account (admin action)
+    /// </summary>
+    public void Unlock()
+    {
+        FailedLoginAttempts = 0;
+        LockoutEndAt = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void AssignRole(Guid roleId)
     {
         if (_userRoles.Any(ur => ur.RoleId == roleId))
@@ -360,28 +431,24 @@ public sealed class TenantUser : TenantAggregateRoot
 
     public bool IsActive() => Status == TenantUserStatus.Active;
 
+    /// <inheritdoc />
     public void GeneratePasswordResetToken()
     {
-        var bytes = new byte[32];
-        using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
-        {
-            rng.GetBytes(bytes);
-        }
-        PasswordResetToken = Convert.ToBase64String(bytes)
-            .Replace("+", "-")
-            .Replace("/", "_")
-            .TrimEnd('=');
-        // Token expires in 1 hour from now
-        // Using UtcNow ensures consistent behavior regardless of server timezone
-        PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1);
+        GeneratePasswordResetToken(PasswordConstants.DefaultResetTokenExpiryHours);
+    }
+
+    /// <inheritdoc />
+    public void GeneratePasswordResetToken(int expiryHours)
+    {
+        PasswordResetToken = PasswordResetTokenGenerator.GenerateToken();
+        PasswordResetTokenExpiry = PasswordResetTokenGenerator.CalculateExpiry(expiryHours);
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <inheritdoc />
     public bool ValidatePasswordResetToken(string token)
     {
-        return PasswordResetToken == token &&
-               PasswordResetTokenExpiry.HasValue &&
-               PasswordResetTokenExpiry.Value > DateTime.UtcNow;
+        return PasswordResetTokenGenerator.ValidateToken(PasswordResetToken, token, PasswordResetTokenExpiry);
     }
 
     public void ResetPassword(string newPasswordHash, string resetToken)
@@ -397,10 +464,7 @@ public sealed class TenantUser : TenantAggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
-    /// <summary>
-    /// Clears the password reset token without changing the password.
-    /// Used when the password is reset through an external mechanism.
-    /// </summary>
+    /// <inheritdoc />
     public void ClearPasswordResetToken()
     {
         PasswordResetToken = null;
@@ -413,6 +477,202 @@ public sealed class TenantUser : TenantAggregateRoot
         PasswordHash = newPasswordHash;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    #region Refresh Token Management (for Invited Users)
+
+    /// <summary>
+    /// Sets the refresh token for invited users (users without MasterUser association).
+    /// Only applicable when MasterUserId == Guid.Empty.
+    /// </summary>
+    public void SetRefreshToken(string token, DateTime expiryTime)
+    {
+        RefreshToken = token;
+        RefreshTokenExpiryTime = expiryTime;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Validates the refresh token for invited users.
+    /// </summary>
+    public bool ValidateRefreshToken(string token)
+    {
+        return RefreshToken == token &&
+               RefreshTokenExpiryTime.HasValue &&
+               RefreshTokenExpiryTime.Value > DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Revokes the refresh token for invited users.
+    /// </summary>
+    public void RevokeRefreshToken()
+    {
+        RefreshToken = null;
+        RefreshTokenExpiryTime = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Checks if this user is an invited user (no MasterUser association).
+    /// Invited users have their refresh token stored directly in TenantUser.
+    /// </summary>
+    public bool IsInvitedUser() => MasterUserId == Guid.Empty;
+
+    #endregion
+
+    #region Two-Factor Authentication
+
+    /// <summary>
+    /// Sets up two-factor authentication with a secret and backup codes
+    /// </summary>
+    public void SetupTwoFactor(string secret, string backupCodes)
+    {
+        if (string.IsNullOrWhiteSpace(secret))
+            throw new ArgumentException("Secret cannot be empty.", nameof(secret));
+
+        if (string.IsNullOrWhiteSpace(backupCodes))
+            throw new ArgumentException("Backup codes cannot be empty.", nameof(backupCodes));
+
+        TwoFactorSecret = secret;
+        BackupCodes = backupCodes;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Enables two-factor authentication
+    /// </summary>
+    public void EnableTwoFactor(string secret)
+    {
+        if (TwoFactorEnabled)
+            throw new InvalidOperationException("Two-factor authentication is already enabled.");
+
+        TwoFactorEnabled = true;
+        TwoFactorSecret = secret;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Disables two-factor authentication
+    /// </summary>
+    public void DisableTwoFactor()
+    {
+        if (!TwoFactorEnabled)
+            throw new InvalidOperationException("Two-factor authentication is not enabled.");
+
+        TwoFactorEnabled = false;
+        TwoFactorSecret = null;
+        BackupCodes = null;
+        TwoFactorFailedAttempts = 0;
+        TwoFactorLockoutEndAt = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Uses a backup code for authentication. Returns true if the code was valid.
+    /// </summary>
+    public bool UseBackupCode(string code)
+    {
+        if (string.IsNullOrEmpty(BackupCodes))
+            return false;
+
+        var codes = BackupCodes.Split(',')
+            .Select(c => c.Trim())
+            .Where(c => !string.IsNullOrEmpty(c))
+            .ToList();
+
+        // Find and remove the used code (case-insensitive)
+        var normalizedCode = code.Replace(" ", "").Replace("-", "").ToUpperInvariant();
+        var matchingCode = codes.FirstOrDefault(c =>
+            c.Replace(" ", "").Replace("-", "").Equals(normalizedCode, StringComparison.OrdinalIgnoreCase));
+
+        if (matchingCode == null)
+            return false;
+
+        // Remove the used code
+        var updatedCodes = codes.Where(c => c != matchingCode).ToList();
+        BackupCodes = string.Join(",", updatedCodes);
+        UpdatedAt = DateTime.UtcNow;
+
+        return true;
+    }
+
+    /// <summary>
+    /// Records a failed 2FA attempt and applies lockout if threshold exceeded
+    /// </summary>
+    public void RecordFailedTwoFactorAttempt()
+    {
+        TwoFactorFailedAttempts++;
+        UpdatedAt = DateTime.UtcNow;
+
+        // Progressive lockout: 1 min after 3, 5 min after 6, 15 min after 9
+        if (TwoFactorFailedAttempts >= 9)
+        {
+            TwoFactorLockoutEndAt = DateTime.UtcNow.AddMinutes(15);
+        }
+        else if (TwoFactorFailedAttempts >= 6)
+        {
+            TwoFactorLockoutEndAt = DateTime.UtcNow.AddMinutes(5);
+        }
+        else if (TwoFactorFailedAttempts >= 3)
+        {
+            TwoFactorLockoutEndAt = DateTime.UtcNow.AddMinutes(1);
+        }
+    }
+
+    /// <summary>
+    /// Records a successful 2FA verification and resets lockout counters
+    /// </summary>
+    public void RecordSuccessfulTwoFactorVerification()
+    {
+        TwoFactorFailedAttempts = 0;
+        TwoFactorLockoutEndAt = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Checks if the user is locked out from 2FA attempts
+    /// </summary>
+    public bool IsTwoFactorLockedOut()
+    {
+        return TwoFactorLockoutEndAt.HasValue && TwoFactorLockoutEndAt.Value > DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Gets the remaining 2FA lockout time, or null if not locked out
+    /// </summary>
+    public TimeSpan? GetTwoFactorLockoutTimeRemaining()
+    {
+        if (!IsTwoFactorLockedOut())
+            return null;
+
+        return TwoFactorLockoutEndAt!.Value - DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Gets the count of remaining backup codes
+    /// </summary>
+    public int GetRemainingBackupCodesCount()
+    {
+        if (string.IsNullOrEmpty(BackupCodes))
+            return 0;
+
+        return BackupCodes.Split(',')
+            .Select(c => c.Trim())
+            .Count(c => !string.IsNullOrEmpty(c));
+    }
+
+    /// <summary>
+    /// Regenerates backup codes (replaces existing ones)
+    /// </summary>
+    public void RegenerateBackupCodes(string newBackupCodes)
+    {
+        if (string.IsNullOrWhiteSpace(newBackupCodes))
+            throw new ArgumentException("Backup codes cannot be empty.", nameof(newBackupCodes));
+
+        BackupCodes = newBackupCodes;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    #endregion
 
     /// <summary>
     /// Marks the user account as deleted (soft delete).

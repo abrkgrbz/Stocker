@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Stocker.Domain.Constants;
 using Stocker.SharedKernel.Primitives;
 
 namespace Stocker.Domain.Tenant.Entities;
@@ -145,7 +146,7 @@ public class TenantFeature : AggregateRoot<Guid>
         IsEnabled = true;
         Status = FeatureStatus.Active;
         ActivatedAt = DateTime.UtcNow;
-        ActivatedBy = enabledBy ?? "System";
+        ActivatedBy = enabledBy ?? DomainConstants.SystemUser;
         ActivationCount++;
         
         if (IsTrialAvailable && !TrialUsed)
@@ -154,7 +155,7 @@ public class TenantFeature : AggregateRoot<Guid>
         }
         
         ModifiedAt = DateTime.UtcNow;
-        ModifiedBy = enabledBy ?? "System";
+        ModifiedBy = enabledBy ?? DomainConstants.SystemUser;
         Version++;
     }
     
@@ -169,12 +170,12 @@ public class TenantFeature : AggregateRoot<Guid>
         IsEnabled = false;
         Status = FeatureStatus.Disabled;
         DeactivatedAt = DateTime.UtcNow;
-        DeactivatedBy = disabledBy ?? "System";
+        DeactivatedBy = disabledBy ?? DomainConstants.SystemUser;
         DeactivationReason = reason;
         DeactivationCount++;
         
         ModifiedAt = DateTime.UtcNow;
-        ModifiedBy = disabledBy ?? "System";
+        ModifiedBy = disabledBy ?? DomainConstants.SystemUser;
         Version++;
     }
     
@@ -248,7 +249,7 @@ public class TenantFeature : AggregateRoot<Guid>
         UsageResetDate = CalculateNextResetDate(UsagePeriod ?? Tenant.Entities.UsagePeriod.Monthly);
         
         ModifiedAt = DateTime.UtcNow;
-        ModifiedBy = resetBy ?? "System";
+        ModifiedBy = resetBy ?? DomainConstants.SystemUser;
     }
     
     public void SetTrial(
@@ -280,7 +281,7 @@ public class TenantFeature : AggregateRoot<Guid>
         TrialEndDate = DateTime.UtcNow.AddDays(TrialDays ?? 30);
         
         ModifiedAt = DateTime.UtcNow;
-        ModifiedBy = startedBy ?? "System";
+        ModifiedBy = startedBy ?? DomainConstants.SystemUser;
     }
     
     public void EndTrial(string? endedBy = null)
@@ -297,7 +298,7 @@ public class TenantFeature : AggregateRoot<Guid>
         }
         
         ModifiedAt = DateTime.UtcNow;
-        ModifiedBy = endedBy ?? "System";
+        ModifiedBy = endedBy ?? DomainConstants.SystemUser;
     }
     
     public void SetPricing(
@@ -319,7 +320,7 @@ public class TenantFeature : AggregateRoot<Guid>
         Currency = currency;
         
         ModifiedAt = DateTime.UtcNow;
-        ModifiedBy = modifiedBy ?? "System";
+        ModifiedBy = modifiedBy ?? DomainConstants.SystemUser;
         Version++;
     }
     
@@ -343,7 +344,7 @@ public class TenantFeature : AggregateRoot<Guid>
         }
         
         ModifiedAt = DateTime.UtcNow;
-        ModifiedBy = modifiedBy ?? "System";
+        ModifiedBy = modifiedBy ?? DomainConstants.SystemUser;
         Version++;
     }
     
@@ -369,7 +370,7 @@ public class TenantFeature : AggregateRoot<Guid>
         }
         
         ModifiedAt = DateTime.UtcNow;
-        ModifiedBy = renewedBy ?? "System";
+        ModifiedBy = renewedBy ?? DomainConstants.SystemUser;
         Version++;
     }
     

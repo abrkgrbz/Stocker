@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Stocker.Domain.Constants;
 using Stocker.SharedKernel.Primitives;
 
 namespace Stocker.Domain.Tenant.Entities;
@@ -146,7 +147,7 @@ public class TenantCompliance : AggregateRoot<Guid>
         Status = ComplianceStatus.Certified;
         
         ModifiedAt = DateTime.UtcNow;
-        ModifiedBy = modifiedBy ?? "System";
+        ModifiedBy = modifiedBy ?? DomainConstants.SystemUser;
     }
     
     public void UpdateRequirements(

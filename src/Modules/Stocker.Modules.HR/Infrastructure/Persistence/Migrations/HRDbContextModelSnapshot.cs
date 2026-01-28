@@ -831,6 +831,9 @@ namespace Stocker.Modules.HR.Infrastructure.Persistence.Migrations
                     b.Property<long>("RowVersion")
                         .HasColumnType("bigint");
 
+                    b.Property<Guid?>("TenantDepartmentId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
 
@@ -854,6 +857,10 @@ namespace Stocker.Modules.HR.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId", "IsActive");
 
                     b.HasIndex("TenantId", "ParentDepartmentId");
+
+                    b.HasIndex("TenantId", "TenantDepartmentId")
+                        .IsUnique()
+                        .HasFilter("\"TenantDepartmentId\" IS NOT NULL");
 
                     b.ToTable("Departments", "hr");
                 });

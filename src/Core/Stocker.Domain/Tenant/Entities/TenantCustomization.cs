@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Stocker.Domain.Constants;
 using Stocker.SharedKernel.Primitives;
 
 namespace Stocker.Domain.Tenant.Entities;
@@ -48,7 +49,7 @@ public class TenantCustomization : AggregateRoot<Guid>
     
     // Theme
     public string? ThemeMode { get; private set; } = "light"; // light, dark, auto
-    public string? ThemePreset { get; private set; } = "default";
+    public string? ThemePreset { get; private set; } = DomainConstants.DefaultTheme;
     public string? CustomCss { get; private set; }
     public string? CustomJavaScript { get; private set; }
     public string? CustomHtml { get; private set; } // For header/footer injection
@@ -400,7 +401,7 @@ public class TenantCustomization : AggregateRoot<Guid>
     {
         // Reset all customizations to default values
         ThemeMode = "light";
-        ThemePreset = "default";
+        ThemePreset = DomainConstants.DefaultTheme;
         LayoutMode = "fluid";
         MenuStyle = "vertical";
         SidebarPosition = "left";

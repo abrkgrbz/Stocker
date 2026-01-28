@@ -80,4 +80,9 @@ public class JwtTokenService : IJwtTokenService
     {
         return DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays);
     }
+
+    public DateTime GetRememberMeRefreshTokenExpiration()
+    {
+        return DateTime.UtcNow.AddDays(_jwtSettings.RememberMeRefreshTokenExpirationDays);
+    }
 }

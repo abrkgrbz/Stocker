@@ -286,26 +286,6 @@ public sealed class Tenant : AggregateRoot
         }
     }
 
-    public void EnableFeature(string featureCode, DateTime? expiresAt = null)
-    {
-        // TenantFeature has been moved to Tenant domain
-        // Feature management should now be handled through the Tenant database context
-        throw new NotSupportedException("Feature management has been moved to Tenant domain. Use ITenantDbContext for feature operations.");
-    }
-
-    public void DisableFeature(string featureCode)
-    {
-        // TenantFeature has been moved to Tenant domain
-        // Feature management should now be handled through the Tenant database context
-        throw new NotSupportedException("Feature management has been moved to Tenant domain. Use ITenantDbContext for feature operations.");
-    }
-
-    public bool HasFeature(string featureCode)
-    {
-        // TenantFeature has been moved to Tenant domain
-        // Feature checking should now be handled through the Tenant database context
-        throw new NotSupportedException("Feature management has been moved to Tenant domain. Use ITenantDbContext for feature operations.");
-    }
     
     // New Methods for Registration Process
     public void SetRegistration(TenantRegistration registration)
@@ -351,12 +331,6 @@ public sealed class Tenant : AggregateRoot
         RaiseDomainEvent(new TenantOnboardingCompletedDomainEvent(Id));
     }
     
-    public bool IsOnboardingComplete()
-    {
-        // TenantOnboarding has been moved to Tenant domain
-        // Onboarding status should be checked through the Tenant database context
-        throw new NotSupportedException("Onboarding management has been moved to Tenant domain. Use ITenantDbContext for onboarding operations.");
-    }
     
     public bool HasActiveContract()
     {

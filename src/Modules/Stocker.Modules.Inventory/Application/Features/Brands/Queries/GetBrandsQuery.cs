@@ -1,4 +1,5 @@
 using MediatR;
+using Stocker.Application.Common.Interfaces;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Repositories;
 using Stocker.SharedKernel.Results;
@@ -6,12 +7,17 @@ using Stocker.SharedKernel.Results;
 namespace Stocker.Modules.Inventory.Application.Features.Brands.Queries;
 
 /// <summary>
-/// Query to get all brands
+/// Query to get all brands - Cache destekli
 /// </summary>
-public class GetBrandsQuery : IRequest<Result<List<BrandDto>>>
+public class GetBrandsQuery : IRequest<Result<List<BrandDto>>>, ICacheableQuery
 {
     public Guid TenantId { get; set; }
     public bool IncludeInactive { get; set; }
+
+    // ICacheableQuery implementation
+    public string CacheKey => $"inventory:brands:{TenantId}:{IncludeInactive}";
+    public int CacheDurationMinutes => 10; // Markalar orta sıklıkta değişir
+    public bool BypassCache { get; set; } = false;
 }
 
 /// <summary>

@@ -61,4 +61,36 @@ public class SupplierRepository : BaseRepository<Supplier>, ISupplierRepository
 
         return await query.AnyAsync(cancellationToken);
     }
+
+    /// <summary>
+    /// Purchase.Supplier ile eşleştirilmiş Inventory.Supplier'ı getirir
+    /// </summary>
+    public async Task<Supplier?> GetByPurchaseSupplierIdAsync(Guid purchaseSupplierId, CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Where(s => !s.IsDeleted && s.PurchaseSupplierId == purchaseSupplierId)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Purchase.Supplier ile eşleştirilmiş tüm Inventory.Supplier'ları getirir
+    /// </summary>
+    public async Task<IReadOnlyList<Supplier>> GetLinkedSuppliersAsync(CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Where(s => !s.IsDeleted && s.PurchaseSupplierId != null)
+            .OrderBy(s => s.Name)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Purchase.Supplier ile eşleştirilmemiş Inventory.Supplier'ları getirir
+    /// </summary>
+    public async Task<IReadOnlyList<Supplier>> GetUnlinkedSuppliersAsync(CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Where(s => !s.IsDeleted && s.PurchaseSupplierId == null)
+            .OrderBy(s => s.Name)
+            .ToListAsync(cancellationToken);
+    }
 }

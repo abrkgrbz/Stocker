@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using Stocker.Application.Common.Interfaces;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
@@ -7,13 +8,21 @@ using Stocker.SharedKernel.Results;
 namespace Stocker.Modules.Inventory.Application.Features.Categories.Commands;
 
 /// <summary>
-/// Command to update an existing category
+/// Command to update an existing category - Cache invalidation destekli
 /// </summary>
-public class UpdateCategoryCommand : IRequest<Result<CategoryDto>>
+public class UpdateCategoryCommand : IRequest<Result<CategoryDto>>, ICacheInvalidatingCommand
 {
     public Guid TenantId { get; set; }
     public int CategoryId { get; set; }
     public UpdateCategoryDto CategoryData { get; set; } = null!;
+
+    // ICacheInvalidatingCommand implementation
+    public string[] CacheKeysToInvalidate => new[]
+    {
+        $"inventory:category:{TenantId}:{CategoryId}",  // Spesifik kategori
+        $"inventory:categories:{TenantId}:*",           // Kategori listeleri
+        $"inventory:category-tree:{TenantId}"           // Kategori ağacı
+    };
 }
 
 /// <summary>

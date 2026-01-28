@@ -1,10 +1,11 @@
 using MediatR;
+using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Features.Tenants.Queries.GetTenantSettings;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.Tenants.Commands.UpdateTenantSettings;
 
-public record UpdateTenantSettingsCommand : IRequest<Result>
+public record UpdateTenantSettingsCommand : IRequest<Result>, ICacheInvalidatingCommand
 {
     public Guid TenantId { get; init; }
     public GeneralSettings? General { get; init; }
@@ -15,4 +16,11 @@ public record UpdateTenantSettingsCommand : IRequest<Result>
     public ApiSettings? Api { get; init; }
     public StorageSettings? Storage { get; init; }
     public AdvancedSettings? Advanced { get; init; }
+
+    // ICacheInvalidatingCommand implementation
+    public string[] CacheKeysToInvalidate => new[]
+    {
+        $"tenant-settings:{TenantId}",
+        $"tenant:{TenantId}:settings:*" // Pattern-based invalidation
+    };
 }

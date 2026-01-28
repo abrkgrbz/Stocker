@@ -1,3 +1,4 @@
+using Stocker.Domain.Constants;
 using Stocker.SharedKernel.Primitives;
 using System;
 
@@ -311,7 +312,7 @@ public sealed class UserTenant : AggregateRoot<Guid>
         ModifiedAt = DateTime.UtcNow;
     }
     
-    public void Lock(string reason, DateTime? until = null, string lockedBy = "System")
+    public void Lock(string reason, DateTime? until = null, string lockedBy = DomainConstants.SystemUser)
     {
         IsLocked = true;
         LockReason = reason;
