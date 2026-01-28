@@ -53,7 +53,7 @@ public class SalesOrderRepository : BaseRepository<SalesOrder>, ISalesOrderRepos
         // PostgreSQL transaction-scoped advisory lock
         // Aynı anda yalnızca bir sipariş numarası üretilebilir, transaction commit/rollback ile serbest bırakılır
         await _context.Database.ExecuteSqlRawAsync(
-            "SELECT pg_advisory_xact_lock({0})", OrderNumberLockKey, cancellationToken);
+            "SELECT pg_advisory_xact_lock({0})", new object[] { OrderNumberLockKey }, cancellationToken);
 
         var today = DateTime.UtcNow;
         var prefix = $"SO-{today:yyyyMMdd}-";
