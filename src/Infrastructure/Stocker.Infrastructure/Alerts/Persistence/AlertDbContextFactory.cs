@@ -38,8 +38,9 @@ public class AlertDbContextFactory : IDesignTimeDbContextFactory<AlertDbContext>
             .AddJsonFile("appsettings.Development.json", optional: true)
             .Build();
 
-        var connectionString = configuration.GetConnectionString("DefaultConnection")
-            ?? throw new InvalidOperationException("DefaultConnection not found in configuration");
+        // Use MasterConnection (same database as MasterDbContext)
+        var connectionString = configuration.GetConnectionString("MasterConnection")
+            ?? throw new InvalidOperationException("MasterConnection not found in configuration");
 
         var optionsBuilder = new DbContextOptionsBuilder<AlertDbContext>();
         optionsBuilder.UseNpgsql(connectionString, npgsqlOptions =>

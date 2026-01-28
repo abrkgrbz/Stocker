@@ -12,7 +12,7 @@ using Stocker.Infrastructure.Alerts.Persistence;
 namespace Stocker.Infrastructure.Alerts.Migrations
 {
     [DbContext(typeof(AlertDbContext))]
-    [Migration("20260128073930_InitialAlertSchema")]
+    [Migration("20260128090801_InitialAlertSchema")]
     partial class InitialAlertSchema
     {
         /// <inheritdoc />

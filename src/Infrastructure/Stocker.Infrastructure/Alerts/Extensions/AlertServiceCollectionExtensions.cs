@@ -17,9 +17,9 @@ public static class AlertServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddAlertServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Register DbContext
-        var connectionString = configuration.GetConnectionString("DefaultConnection")
-            ?? throw new InvalidOperationException("DefaultConnection connection string not found");
+        // Register DbContext - use MasterConnection (same as MasterDbContext)
+        var connectionString = configuration.GetConnectionString("MasterConnection")
+            ?? throw new InvalidOperationException("MasterConnection connection string not found");
 
         services.AddDbContext<AlertDbContext>(options =>
         {
