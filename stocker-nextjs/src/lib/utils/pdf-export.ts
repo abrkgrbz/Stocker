@@ -23,9 +23,27 @@ const defaultConfig: PDFConfig = {
   companyTaxNumber: '',
 };
 
-// Format currency for Turkish locale
+// Turkish character transliteration for PDF (jsPDF default font doesn't support Turkish chars)
+const turkishToAscii = (text: string): string => {
+  if (!text) return '';
+  const charMap: Record<string, string> = {
+    'ş': 's', 'Ş': 'S',
+    'ğ': 'g', 'Ğ': 'G',
+    'ü': 'u', 'Ü': 'U',
+    'ö': 'o', 'Ö': 'O',
+    'ı': 'i', 'İ': 'I',
+    'ç': 'c', 'Ç': 'C',
+  };
+  return text.replace(/[şŞğĞüÜöÖıİçÇ]/g, (char) => charMap[char] || char);
+};
+
+// Format currency for PDF (without currency symbol to avoid encoding issues)
 const formatCurrency = (amount: number, currency: string = 'TRY'): string => {
-  return new Intl.NumberFormat('tr-TR', { style: 'currency', currency }).format(amount);
+  const formatted = new Intl.NumberFormat('tr-TR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(amount);
+  return `${formatted} ${currency}`;
 };
 
 // Format date for Turkish locale
@@ -46,16 +64,19 @@ export async function generateInvoicePDF(
   const margin = 20;
   let y = 20;
 
+  // Helper to safely add text with Turkish char conversion
+  const t = turkishToAscii;
+
   // Header - Company Info
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.text(config.companyName || 'Stocker', margin, y);
+  doc.text(t(config.companyName || 'Stocker'), margin, y);
   y += 10;
 
   if (config.companyAddress) {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(config.companyAddress, margin, y);
+    doc.text(t(config.companyAddress), margin, y);
     y += 5;
   }
 
@@ -78,14 +99,14 @@ export async function generateInvoicePDF(
   doc.text('Musteri Bilgileri:', margin, y);
   doc.setFont('helvetica', 'normal');
   y += 6;
-  doc.text(invoice.customerName || '', margin, y);
+  doc.text(t(invoice.customerName || ''), margin, y);
   y += 5;
   if (invoice.customerTaxNumber) {
     doc.text(`VKN: ${invoice.customerTaxNumber}`, margin, y);
     y += 5;
   }
   if (invoice.customerAddress) {
-    const addressLines = doc.splitTextToSize(invoice.customerAddress, 80);
+    const addressLines = doc.splitTextToSize(t(invoice.customerAddress), 80);
     doc.text(addressLines, margin, y);
     y += addressLines.length * 5;
   }
@@ -157,12 +178,12 @@ export async function generateInvoicePDF(
     }
 
     colX = margin;
-    const productText = doc.splitTextToSize(`${item.productCode} - ${item.productName}`, colWidths[0] - 4);
+    const productText = doc.splitTextToSize(t(`${item.productCode} - ${item.productName}`), colWidths[0] - 4);
     doc.text(productText, colX + 2, y);
     const rowHeight = productText.length > 1 ? productText.length * 4 : 5;
 
     colX += colWidths[0];
-    doc.text(item.unit, colX, y);
+    doc.text(t(item.unit), colX, y);
     colX += colWidths[1];
     doc.text(item.quantity.toString(), colX, y);
     colX += colWidths[2];
@@ -225,7 +246,7 @@ export async function generateInvoicePDF(
     doc.text('Notlar:', margin, y);
     y += 6;
     doc.setFont('helvetica', 'normal');
-    const notesLines = doc.splitTextToSize(invoice.notes, pageWidth - margin * 2);
+    const notesLines = doc.splitTextToSize(t(invoice.notes), pageWidth - margin * 2);
     doc.text(notesLines, margin, y);
   }
 
@@ -254,16 +275,19 @@ export async function generateSalesOrderPDF(
   const margin = 20;
   let y = 20;
 
+  // Helper to safely add text with Turkish char conversion
+  const t = turkishToAscii;
+
   // Header - Company Info
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.text(config.companyName || 'Stocker', margin, y);
+  doc.text(t(config.companyName || 'Stocker'), margin, y);
   y += 10;
 
   if (config.companyAddress) {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(config.companyAddress, margin, y);
+    doc.text(t(config.companyAddress), margin, y);
     y += 5;
   }
 
@@ -283,7 +307,7 @@ export async function generateSalesOrderPDF(
   doc.text('Musteri Bilgileri:', margin, y);
   doc.setFont('helvetica', 'normal');
   y += 6;
-  doc.text(order.customerName || '', margin, y);
+  doc.text(t(order.customerName || ''), margin, y);
   y += 5;
   if (order.customerEmail) {
     doc.text(`E-posta: ${order.customerEmail}`, margin, y);
@@ -292,7 +316,7 @@ export async function generateSalesOrderPDF(
   if (order.shippingAddress) {
     doc.text('Teslimat Adresi:', margin, y);
     y += 5;
-    const addressLines = doc.splitTextToSize(order.shippingAddress, 80);
+    const addressLines = doc.splitTextToSize(t(order.shippingAddress), 80);
     doc.text(addressLines, margin, y);
     y += addressLines.length * 5;
   }
@@ -331,7 +355,7 @@ export async function generateSalesOrderPDF(
     doc.setFont('helvetica', 'bold');
     doc.text('Satis Temsilcisi:', rightX, rightY);
     doc.setFont('helvetica', 'normal');
-    doc.text(order.salesPersonName, rightX + 35, rightY);
+    doc.text(t(order.salesPersonName), rightX + 35, rightY);
   }
 
   // Items Table
@@ -371,12 +395,12 @@ export async function generateSalesOrderPDF(
     }
 
     colX = margin;
-    const productText = doc.splitTextToSize(`${item.productCode} - ${item.productName}`, colWidths[0] - 4);
+    const productText = doc.splitTextToSize(t(`${item.productCode} - ${item.productName}`), colWidths[0] - 4);
     doc.text(productText, colX + 2, y);
     const rowHeight = productText.length > 1 ? productText.length * 4 : 5;
 
     colX += colWidths[0];
-    doc.text(item.unit, colX, y);
+    doc.text(t(item.unit), colX, y);
     colX += colWidths[1];
     doc.text(item.quantity.toString(), colX, y);
     colX += colWidths[2];
@@ -427,7 +451,7 @@ export async function generateSalesOrderPDF(
     doc.text('Notlar:', margin, y);
     y += 6;
     doc.setFont('helvetica', 'normal');
-    const notesLines = doc.splitTextToSize(order.notes, pageWidth - margin * 2);
+    const notesLines = doc.splitTextToSize(t(order.notes), pageWidth - margin * 2);
     doc.text(notesLines, margin, y);
   }
 
@@ -500,16 +524,19 @@ export async function generateQuotationPDF(
   const margin = 20;
   let y = 20;
 
+  // Helper to safely add text with Turkish char conversion
+  const t = turkishToAscii;
+
   // Header - Company Info
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.text(config.companyName || 'Stocker', margin, y);
+  doc.text(t(config.companyName || 'Stocker'), margin, y);
   y += 10;
 
   if (config.companyAddress) {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(config.companyAddress, margin, y);
+    doc.text(t(config.companyAddress), margin, y);
     y += 5;
   }
 
@@ -529,20 +556,20 @@ export async function generateQuotationPDF(
   doc.text('Musteri Bilgileri:', margin, y);
   doc.setFont('helvetica', 'normal');
   y += 6;
-  doc.text(quotation.customerName || '', margin, y);
+  doc.text(t(quotation.customerName || ''), margin, y);
   y += 5;
   if (quotation.customerEmail) {
     doc.text(`E-posta: ${quotation.customerEmail}`, margin, y);
     y += 5;
   }
   if (quotation.contactName) {
-    doc.text(`Ilgili Kisi: ${quotation.contactName}`, margin, y);
+    doc.text(`Ilgili Kisi: ${t(quotation.contactName)}`, margin, y);
     y += 5;
   }
   if (quotation.shippingAddress) {
     doc.text('Adres:', margin, y);
     y += 5;
-    const addressLines = doc.splitTextToSize(quotation.shippingAddress, 80);
+    const addressLines = doc.splitTextToSize(t(quotation.shippingAddress), 80);
     doc.text(addressLines, margin, y);
     y += addressLines.length * 5;
   }
@@ -581,7 +608,7 @@ export async function generateQuotationPDF(
     doc.setFont('helvetica', 'bold');
     doc.text('Satis Temsilcisi:', rightX, rightY);
     doc.setFont('helvetica', 'normal');
-    doc.text(quotation.salesPersonName, rightX + 35, rightY);
+    doc.text(t(quotation.salesPersonName), rightX + 35, rightY);
   }
 
   // Items Table
@@ -622,14 +649,14 @@ export async function generateQuotationPDF(
 
     colX = margin;
     const productText = doc.splitTextToSize(
-      `${item.productCode ? item.productCode + ' - ' : ''}${item.productName}`,
+      t(`${item.productCode ? item.productCode + ' - ' : ''}${item.productName}`),
       colWidths[0] - 4
     );
     doc.text(productText, colX + 2, y);
     const rowHeight = productText.length > 1 ? productText.length * 4 : 5;
 
     colX += colWidths[0];
-    doc.text(item.unit || '', colX, y);
+    doc.text(t(item.unit || ''), colX, y);
     colX += colWidths[1];
     doc.text(item.quantity.toString(), colX, y);
     colX += colWidths[2];
@@ -681,11 +708,11 @@ export async function generateQuotationPDF(
     y += 6;
     doc.setFont('helvetica', 'normal');
     if (quotation.paymentTerms) {
-      doc.text(`Odeme: ${quotation.paymentTerms}`, margin, y);
+      doc.text(`Odeme: ${t(quotation.paymentTerms)}`, margin, y);
       y += 5;
     }
     if (quotation.deliveryTerms) {
-      doc.text(`Teslimat: ${quotation.deliveryTerms}`, margin, y);
+      doc.text(`Teslimat: ${t(quotation.deliveryTerms)}`, margin, y);
       y += 5;
     }
   }
@@ -698,7 +725,7 @@ export async function generateQuotationPDF(
     doc.text('Notlar:', margin, y);
     y += 6;
     doc.setFont('helvetica', 'normal');
-    const notesLines = doc.splitTextToSize(quotation.notes, pageWidth - margin * 2);
+    const notesLines = doc.splitTextToSize(t(quotation.notes), pageWidth - margin * 2);
     doc.text(notesLines, margin, y);
   }
 
