@@ -23,6 +23,52 @@ namespace Stocker.Persistence.Migrations.Master
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Stocker.Domain.Common.Entities.OutboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime>("OccurredOnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ProcessedOnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("RetryCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OccurredOnUtc")
+                        .HasDatabaseName("IX_OutboxMessages_OccurredOnUtc");
+
+                    b.HasIndex("ProcessedOnUtc")
+                        .HasDatabaseName("IX_OutboxMessages_ProcessedOnUtc");
+
+                    b.HasIndex("ProcessedOnUtc", "OccurredOnUtc")
+                        .HasDatabaseName("IX_OutboxMessages_Unprocessed")
+                        .HasFilter("\"ProcessedOnUtc\" IS NULL");
+
+                    b.ToTable("OutboxMessages", "master");
+                });
+
             modelBuilder.Entity("Stocker.Domain.Entities.Migration.ScheduledMigration", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1568,6 +1614,35 @@ namespace Stocker.Persistence.Migrations.Master
                         .HasDatabaseName("IX_PackageModules_PackageId_ModuleCode");
 
                     b.ToTable("PackageModules", "master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.PasswordHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MasterUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MasterUserId")
+                        .HasDatabaseName("IX_PasswordHistories_MasterUserId");
+
+                    b.HasIndex("MasterUserId", "CreatedAt")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("IX_PasswordHistories_MasterUserId_CreatedAt");
+
+                    b.ToTable("PasswordHistories", "master");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.Payment", b =>
@@ -3640,6 +3715,86 @@ namespace Stocker.Persistence.Migrations.Master
                     b.ToTable("TenantUserEmails", "master");
                 });
 
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.UserSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeviceId")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("DeviceInfo")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("IsMasterUser")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsRevoked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime>("LastActivityAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("RefreshTokenHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RevokedReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("IX_UserSessions_ExpiresAt");
+
+                    b.HasIndex("RefreshTokenHash")
+                        .HasDatabaseName("IX_UserSessions_RefreshTokenHash");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_UserSessions_TenantId");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_UserSessions_UserId");
+
+                    b.HasIndex("UserId", "IsMasterUser")
+                        .HasDatabaseName("IX_UserSessions_UserId_IsMasterUser");
+
+                    b.HasIndex("UserId", "IsRevoked", "ExpiresAt")
+                        .HasDatabaseName("IX_UserSessions_UserId_IsRevoked_ExpiresAt");
+
+                    b.ToTable("UserSessions", "master");
+                });
+
             modelBuilder.Entity("Stocker.Domain.Master.Entities.UserTier", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4612,6 +4767,15 @@ namespace Stocker.Persistence.Migrations.Master
                     b.HasOne("Stocker.Domain.Master.Entities.Package", null)
                         .WithMany("Modules")
                         .HasForeignKey("PackageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.PasswordHistory", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.MasterUser", null)
+                        .WithMany()
+                        .HasForeignKey("MasterUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
