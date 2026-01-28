@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import type { Invoice, InvoiceItem } from '../api/services/invoice.service';
-import type { SalesOrder, SalesOrderItem } from '../api/services/sales.service';
+import type { SalesOrder, SalesOrderItem, Quotation, QuotationItem } from '../api/services/sales.service';
 
 // =====================================
 // PDF EXPORT UTILITIES
@@ -470,6 +470,247 @@ function getOrderStatusText(status: string): string {
     Cancelled: 'Iptal',
   };
   return statusMap[status] || status;
+}
+
+function getQuotationStatusText(status: string): string {
+  const statusMap: Record<string, string> = {
+    Draft: 'Taslak',
+    PendingApproval: 'Onay Bekliyor',
+    Approved: 'Onayli',
+    Sent: 'Gonderildi',
+    Accepted: 'Kabul Edildi',
+    Rejected: 'Reddedildi',
+    Expired: 'Suresi Doldu',
+    Cancelled: 'Iptal',
+    ConvertedToOrder: 'Siparise Donusturuldu',
+  };
+  return statusMap[status] || status;
+}
+
+// =====================================
+// QUOTATION PDF EXPORT
+// =====================================
+
+export async function generateQuotationPDF(
+  quotation: Quotation,
+  config: PDFConfig = defaultConfig
+): Promise<void> {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 20;
+  let y = 20;
+
+  // Header - Company Info
+  doc.setFontSize(20);
+  doc.setFont('helvetica', 'bold');
+  doc.text(config.companyName || 'Stocker', margin, y);
+  y += 10;
+
+  if (config.companyAddress) {
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(config.companyAddress, margin, y);
+    y += 5;
+  }
+
+  // Quotation Title
+  y += 10;
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text('FIYAT TEKLIFI', pageWidth - margin, y, { align: 'right' });
+
+  // Quotation Details Box
+  y += 15;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+
+  // Left side - Customer Info
+  doc.setFont('helvetica', 'bold');
+  doc.text('Musteri Bilgileri:', margin, y);
+  doc.setFont('helvetica', 'normal');
+  y += 6;
+  doc.text(quotation.customerName || '', margin, y);
+  y += 5;
+  if (quotation.customerEmail) {
+    doc.text(`E-posta: ${quotation.customerEmail}`, margin, y);
+    y += 5;
+  }
+  if (quotation.contactName) {
+    doc.text(`Ilgili Kisi: ${quotation.contactName}`, margin, y);
+    y += 5;
+  }
+  if (quotation.shippingAddress) {
+    doc.text('Adres:', margin, y);
+    y += 5;
+    const addressLines = doc.splitTextToSize(quotation.shippingAddress, 80);
+    doc.text(addressLines, margin, y);
+    y += addressLines.length * 5;
+  }
+
+  // Right side - Quotation Info
+  const rightX = pageWidth - margin - 60;
+  let rightY = y - 30;
+  doc.setFont('helvetica', 'bold');
+  doc.text('Teklif No:', rightX, rightY);
+  doc.setFont('helvetica', 'normal');
+  doc.text(quotation.quotationNumber, rightX + 35, rightY);
+  rightY += 6;
+
+  doc.setFont('helvetica', 'bold');
+  doc.text('Teklif Tarihi:', rightX, rightY);
+  doc.setFont('helvetica', 'normal');
+  doc.text(formatDate(quotation.quotationDate), rightX + 35, rightY);
+  rightY += 6;
+
+  if (quotation.expirationDate) {
+    doc.setFont('helvetica', 'bold');
+    doc.text('Gecerlilik:', rightX, rightY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formatDate(quotation.expirationDate), rightX + 35, rightY);
+    rightY += 6;
+  }
+
+  doc.setFont('helvetica', 'bold');
+  doc.text('Durum:', rightX, rightY);
+  doc.setFont('helvetica', 'normal');
+  const statusText = getQuotationStatusText(quotation.status);
+  doc.text(statusText, rightX + 35, rightY);
+
+  if (quotation.salesPersonName) {
+    rightY += 6;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Satis Temsilcisi:', rightX, rightY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(quotation.salesPersonName, rightX + 35, rightY);
+  }
+
+  // Items Table
+  y = Math.max(y, rightY) + 20;
+
+  // Table Header
+  doc.setFillColor(240, 240, 240);
+  doc.rect(margin, y - 5, pageWidth - margin * 2, 8, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+
+  const colWidths = [60, 15, 20, 25, 15, 20, 20];
+  let colX = margin;
+
+  doc.text('Urun', colX + 2, y);
+  colX += colWidths[0];
+  doc.text('Birim', colX, y);
+  colX += colWidths[1];
+  doc.text('Miktar', colX, y);
+  colX += colWidths[2];
+  doc.text('Birim Fiyat', colX, y);
+  colX += colWidths[3];
+  doc.text('Isk%', colX, y);
+  colX += colWidths[4];
+  doc.text('KDV', colX, y);
+  colX += colWidths[5];
+  doc.text('Toplam', colX, y);
+
+  y += 8;
+
+  // Table Rows
+  doc.setFont('helvetica', 'normal');
+  quotation.items.forEach((item: QuotationItem) => {
+    if (y > 260) {
+      doc.addPage();
+      y = 20;
+    }
+
+    colX = margin;
+    const productText = doc.splitTextToSize(
+      `${item.productCode ? item.productCode + ' - ' : ''}${item.productName}`,
+      colWidths[0] - 4
+    );
+    doc.text(productText, colX + 2, y);
+    const rowHeight = productText.length > 1 ? productText.length * 4 : 5;
+
+    colX += colWidths[0];
+    doc.text(item.unit || '', colX, y);
+    colX += colWidths[1];
+    doc.text(item.quantity.toString(), colX, y);
+    colX += colWidths[2];
+    doc.text(formatCurrency(item.unitPrice, quotation.currency), colX, y);
+    colX += colWidths[3];
+    doc.text(`%${item.discountRate || 0}`, colX, y);
+    colX += colWidths[4];
+    doc.text(formatCurrency(item.vatAmount || 0, quotation.currency), colX, y);
+    colX += colWidths[5];
+    doc.text(formatCurrency(item.lineTotal, quotation.currency), colX, y);
+
+    y += rowHeight + 3;
+  });
+
+  // Totals
+  y += 10;
+  doc.setDrawColor(200, 200, 200);
+  doc.line(pageWidth - margin - 70, y, pageWidth - margin, y);
+  y += 8;
+
+  const totalsX = pageWidth - margin - 70;
+
+  doc.setFont('helvetica', 'normal');
+  doc.text('Ara Toplam:', totalsX, y);
+  doc.text(formatCurrency(quotation.subTotal, quotation.currency), pageWidth - margin, y, { align: 'right' });
+  y += 6;
+
+  if (quotation.discountAmount > 0) {
+    doc.text('Indirim:', totalsX, y);
+    doc.text(`-${formatCurrency(quotation.discountAmount, quotation.currency)}`, pageWidth - margin, y, { align: 'right' });
+    y += 6;
+  }
+
+  doc.text('KDV Toplami:', totalsX, y);
+  doc.text(formatCurrency(quotation.vatAmount, quotation.currency), pageWidth - margin, y, { align: 'right' });
+  y += 6;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('Genel Toplam:', totalsX, y);
+  doc.text(formatCurrency(quotation.totalAmount, quotation.currency), pageWidth - margin, y, { align: 'right' });
+
+  // Terms & Conditions
+  if (quotation.paymentTerms || quotation.deliveryTerms) {
+    y += 15;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('Sartlar:', margin, y);
+    y += 6;
+    doc.setFont('helvetica', 'normal');
+    if (quotation.paymentTerms) {
+      doc.text(`Odeme: ${quotation.paymentTerms}`, margin, y);
+      y += 5;
+    }
+    if (quotation.deliveryTerms) {
+      doc.text(`Teslimat: ${quotation.deliveryTerms}`, margin, y);
+      y += 5;
+    }
+  }
+
+  // Notes
+  if (quotation.notes) {
+    y += 10;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('Notlar:', margin, y);
+    y += 6;
+    doc.setFont('helvetica', 'normal');
+    const notesLines = doc.splitTextToSize(quotation.notes, pageWidth - margin * 2);
+    doc.text(notesLines, margin, y);
+  }
+
+  // Footer
+  const footerY = doc.internal.pageSize.getHeight() - 15;
+  doc.setFontSize(8);
+  doc.setTextColor(128, 128, 128);
+  doc.text(`Olusturulma: ${new Date().toLocaleString('tr-TR')}`, margin, footerY);
+  doc.text('Stocker - Stok ve Satis Yonetim Sistemi', pageWidth - margin, footerY, { align: 'right' });
+
+  // Save
+  doc.save(`Teklif_${quotation.quotationNumber}.pdf`);
 }
 
 export { type PDFConfig };

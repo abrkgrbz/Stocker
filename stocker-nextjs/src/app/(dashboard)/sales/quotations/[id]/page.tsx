@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   Descriptions,
@@ -18,9 +18,9 @@ import {
 import {
   ArrowLeftIcon,
   CheckIcon,
+  DocumentIcon,
   PaperAirplaneIcon,
   PencilIcon,
-  PrinterIcon,
   ShoppingCartIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
@@ -34,6 +34,7 @@ import {
 } from '@/lib/api/hooks/useSales';
 import type { QuotationStatus } from '@/lib/api/services/sales.service';
 import dayjs from 'dayjs';
+import { generateQuotationPDF } from '@/lib/utils/pdf-export';
 
 const { Title, Text } = Typography;
 
@@ -117,6 +118,22 @@ export default function QuotationDetailPage() {
     });
   };
 
+  const [pdfLoading, setPdfLoading] = useState(false);
+
+  const handleExportPDF = async () => {
+    if (!quotation) return;
+    setPdfLoading(true);
+    try {
+      await generateQuotationPDF(quotation);
+      message.success('PDF başarıyla oluşturuldu');
+    } catch (error) {
+      console.error('PDF export error:', error);
+      message.error('PDF oluşturulurken hata oluştu');
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: 100 }}>
@@ -191,7 +208,9 @@ export default function QuotationDetailPage() {
           </Tag>
         </Space>
         <Space>
-          <Button icon={<PrinterIcon className="w-4 h-4" />}>Yazdır</Button>
+          <Button icon={<DocumentIcon className="w-4 h-4" />} onClick={handleExportPDF} loading={pdfLoading}>
+            PDF İndir
+          </Button>
           {quotation.status === 'Draft' && (
             <>
               <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/sales/quotations/${id}/edit`)}>
