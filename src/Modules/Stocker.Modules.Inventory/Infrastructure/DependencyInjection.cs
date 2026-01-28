@@ -11,6 +11,7 @@ using Stocker.Modules.Inventory.Infrastructure.Configuration;
 using Stocker.Modules.Inventory.Infrastructure.EventConsumers;
 using Stocker.Modules.Inventory.Infrastructure.Persistence;
 using Stocker.Modules.Inventory.Infrastructure.Repositories;
+using Stocker.Modules.Inventory.Infrastructure.BackgroundJobs;
 using Stocker.Modules.Inventory.Infrastructure.BackgroundServices;
 using Stocker.Modules.Inventory.Infrastructure.Services;
 using Stocker.Modules.Inventory.Interfaces;
@@ -221,6 +222,9 @@ public static class DependencyInjection
             .AddCheck<Health.InventoryHealthCheck>("inventory_services", tags: new[] { "inventory", "background-services" })
             .AddCheck<Health.InventoryInfrastructureHealthCheck>("inventory_infrastructure", tags: new[] { "inventory", "infrastructure" });
 
+        // Register Hangfire Background Jobs
+        services.AddScoped<StockReorderAlertJob>();
+
         return services;
     }
 
@@ -233,5 +237,16 @@ public static class DependencyInjection
         // Register event consumers
         configurator.AddConsumer<DealWonEventConsumer>();
         configurator.AddConsumer<SalesOrderCreatedEventConsumer>();
+    }
+
+    /// <summary>
+    /// Schedules Inventory module recurring Hangfire jobs.
+    /// Called from HangfireConfiguration after Hangfire is initialized.
+    /// </summary>
+    public static void ScheduleInventoryJobs()
+    {
+        // Stock reorder alert - runs every 4 hours
+        // NOTE: Email notification disabled until IEmailService.SendStockAlertSummaryAsync is implemented
+        StockReorderAlertJob.Schedule();
     }
 }

@@ -16,7 +16,8 @@ public class NotificationService :
     ITenantNotificationService,
     IBroadcastNotificationService,
     IGroupNotificationService,
-    IRoleNotificationService
+    IRoleNotificationService,
+    ITenantRoleNotificationService
 {
     private readonly IHubContext<NotificationHub> _hubContext;
     private readonly IConnectionManager _connectionManager;
@@ -228,6 +229,49 @@ public class NotificationService :
         {
             _logger.LogError(ex, "Error sending custom notification to role: Role={Role}, Event={Event}", role, eventName);
             throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task SendToTenantRoleAsync(
+        Guid tenantId,
+        string role,
+        string title,
+        string message,
+        string notificationType,
+        Dictionary<string, object>? metadata = null)
+    {
+        try
+        {
+            // Create a structured notification payload for background job notifications
+            var notification = new
+            {
+                Title = title,
+                Message = message,
+                Type = notificationType,
+                TenantId = tenantId,
+                Role = role,
+                Timestamp = DateTime.UtcNow,
+                Metadata = metadata ?? new Dictionary<string, object>()
+            };
+
+            // Send to combined tenant-role group
+            var groupName = SignalRGroups.ForTenantRole(tenantId.ToString(), role);
+
+            await _hubContext.Clients
+                .Group(groupName)
+                .SendAsync(SignalREvents.ReceiveNotification, notification);
+
+            _logger.LogInformation(
+                "Notification sent to tenant role: TenantId={TenantId}, Role={Role}, Type={Type}",
+                tenantId, role, notificationType);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error sending notification to tenant role: TenantId={TenantId}, Role={Role}, Type={Type}",
+                tenantId, role, notificationType);
+            // Don't throw - notifications are non-critical for background jobs
         }
     }
 

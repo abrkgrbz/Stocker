@@ -1,0 +1,329 @@
+using Hangfire;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Stocker.Application.Common.Interfaces;
+using Stocker.Domain.Master.Enums;
+
+namespace Stocker.Infrastructure.BackgroundJobs;
+
+/// <summary>
+/// Hangfire background job for checking paid subscription renewals.
+/// Sends reminders at 30, 15, 7, 3, and 1 days before expiration.
+/// Handles auto-renewal notifications and past-due grace periods.
+/// </summary>
+public class SubscriptionRenewalCheckJob
+{
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<SubscriptionRenewalCheckJob> _logger;
+
+    // Reminder days before subscription ends
+    private static readonly int[] ReminderDays = { 30, 15, 7, 3, 1 };
+
+    // Grace period for past-due subscriptions before suspension
+    private const int GracePeriodDays = 7;
+
+    public SubscriptionRenewalCheckJob(
+        IServiceProvider serviceProvider,
+        ILogger<SubscriptionRenewalCheckJob> logger)
+    {
+        _serviceProvider = serviceProvider;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Checks all paid subscriptions and sends renewal reminders.
+    /// Scheduled to run every day at 08:00 UTC
+    /// </summary>
+    [AutomaticRetry(Attempts = 3, DelaysInSeconds = new[] { 60, 300, 900 })]
+    [Queue("critical")]
+    public async Task ExecuteAsync()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var masterContext = scope.ServiceProvider.GetRequiredService<IMasterDbContext>();
+        var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+
+        _logger.LogInformation("Starting subscription renewal check job");
+
+        try
+        {
+            var now = DateTime.UtcNow;
+
+            // Get all active paid subscriptions
+            var paidSubscriptions = await masterContext.Subscriptions
+                .Include(s => s.Tenant)
+                .Include(s => s.Plan)
+                .Where(s => s.Status == SubscriptionStatus.Aktif && s.EndDate.HasValue)
+                .ToListAsync();
+
+            _logger.LogInformation("Found {Count} paid subscriptions to check", paidSubscriptions.Count);
+
+            var remindersSent = 0;
+            var autoRenewalNotified = 0;
+            var pastDueCount = 0;
+            var suspendedCount = 0;
+
+            foreach (var subscription in paidSubscriptions)
+            {
+                var endDate = subscription.EndDate!.Value;
+                var daysRemaining = (endDate - now).TotalDays;
+
+                // Past due - check grace period
+                if (daysRemaining < 0)
+                {
+                    var daysPastDue = Math.Abs(daysRemaining);
+
+                    if (daysPastDue >= GracePeriodDays)
+                    {
+                        // Grace period expired - suspend subscription
+                        subscription.Suspend("Subscription renewal grace period expired");
+                        suspendedCount++;
+
+                        _logger.LogWarning(
+                            "Subscription suspended for Tenant {TenantId} after {Days} days past due",
+                            subscription.TenantId, daysPastDue);
+
+                        // Send suspension notice
+                        if (subscription.Tenant?.ContactEmail != null)
+                        {
+                            await SendSubscriptionSuspendedEmailAsync(
+                                emailService,
+                                subscription.Tenant.ContactEmail.Value,
+                                subscription.Tenant.Name,
+                                subscription.Plan?.Name ?? "Unknown Plan");
+                        }
+                    }
+                    else
+                    {
+                        pastDueCount++;
+
+                        // Send past due reminder
+                        if (subscription.Tenant?.ContactEmail != null && daysPastDue == 1 || daysPastDue == 3)
+                        {
+                            await SendPastDueReminderAsync(
+                                emailService,
+                                subscription.Tenant.ContactEmail.Value,
+                                subscription.Tenant.Name,
+                                subscription.Plan?.Name ?? "Unknown Plan",
+                                GracePeriodDays - (int)daysPastDue);
+                        }
+                    }
+                }
+                // Check if we should send a reminder
+                else if (ShouldSendReminder((int)daysRemaining))
+                {
+                    if (subscription.Tenant?.ContactEmail != null)
+                    {
+                        if (subscription.AutoRenew)
+                        {
+                            // Auto-renewal notification
+                            await SendAutoRenewalNotificationAsync(
+                                emailService,
+                                subscription.Tenant.ContactEmail.Value,
+                                subscription.Tenant.Name,
+                                subscription.Plan?.Name ?? "Unknown Plan",
+                                (int)daysRemaining,
+                                subscription.Plan?.Price ?? 0);
+
+                            autoRenewalNotified++;
+                        }
+                        else
+                        {
+                            // Manual renewal reminder
+                            await SendRenewalReminderAsync(
+                                emailService,
+                                subscription.Tenant.ContactEmail.Value,
+                                subscription.Tenant.Name,
+                                subscription.Plan?.Name ?? "Unknown Plan",
+                                (int)daysRemaining);
+
+                            remindersSent++;
+                        }
+                    }
+                }
+            }
+
+            await masterContext.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Subscription renewal check completed. Reminders: {Reminders}, AutoRenewal: {AutoRenewal}, PastDue: {PastDue}, Suspended: {Suspended}",
+                remindersSent, autoRenewalNotified, pastDueCount, suspendedCount);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error in subscription renewal check job");
+            throw;
+        }
+    }
+
+    private bool ShouldSendReminder(int daysRemaining)
+    {
+        return ReminderDays.Contains(daysRemaining);
+    }
+
+    private async Task SendRenewalReminderAsync(
+        IEmailService emailService,
+        string email,
+        string tenantName,
+        string planName,
+        int daysRemaining)
+    {
+        try
+        {
+            var subject = daysRemaining <= 3
+                ? $"⚠️ Kritik: Stocker Aboneliğiniz {daysRemaining} Gün İçinde Sona Eriyor"
+                : $"Hatırlatma: Stocker Aboneliğiniz {daysRemaining} Gün İçinde Sona Eriyor";
+
+            var message = $@"
+Sayın {tenantName} Yetkilisi,
+
+{planName} aboneliğinizin süresi {daysRemaining} gün içinde sona erecektir.
+
+Hizmet kesintisi yaşamamak için lütfen aboneliğinizi yenileyin.
+
+Abonelik Yenileme:
+- Stocker kontrol panelinden abonelik bölümüne gidin
+- Yenileme işlemini tamamlayın
+
+Sorularınız için destek@stocker.app adresinden bize ulaşabilirsiniz.
+
+Saygılarımızla,
+Stocker Ekibi
+";
+
+            await emailService.SendEmailAsync(email, subject, message);
+
+            _logger.LogDebug("Renewal reminder sent to {Email} for tenant {Tenant}, {Days} days remaining",
+                email, tenantName, daysRemaining);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send renewal reminder to {Email}", email);
+        }
+    }
+
+    private async Task SendAutoRenewalNotificationAsync(
+        IEmailService emailService,
+        string email,
+        string tenantName,
+        string planName,
+        int daysRemaining,
+        decimal renewalAmount)
+    {
+        try
+        {
+            var subject = $"Bilgilendirme: Stocker Aboneliğiniz {daysRemaining} Gün İçinde Otomatik Yenilenecek";
+
+            var message = $@"
+Sayın {tenantName} Yetkilisi,
+
+{planName} aboneliğiniz {daysRemaining} gün içinde otomatik olarak yenilenecektir.
+
+Yenileme Detayları:
+- Plan: {planName}
+- Tutar: {renewalAmount:N2} TL
+- Yenileme Tarihi: {DateTime.UtcNow.AddDays(daysRemaining):dd.MM.yyyy}
+
+Otomatik yenilemeyi iptal etmek isterseniz, Stocker kontrol panelinden abonelik ayarlarına giderek değişiklik yapabilirsiniz.
+
+Saygılarımızla,
+Stocker Ekibi
+";
+
+            await emailService.SendEmailAsync(email, subject, message);
+
+            _logger.LogDebug("Auto-renewal notification sent to {Email} for tenant {Tenant}",
+                email, tenantName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send auto-renewal notification to {Email}", email);
+        }
+    }
+
+    private async Task SendPastDueReminderAsync(
+        IEmailService emailService,
+        string email,
+        string tenantName,
+        string planName,
+        int daysUntilSuspension)
+    {
+        try
+        {
+            var subject = $"🚨 ACİL: Stocker Aboneliğiniz Gecikti - {daysUntilSuspension} Gün İçinde Askıya Alınacak";
+
+            var message = $@"
+Sayın {tenantName} Yetkilisi,
+
+{planName} aboneliğinizin süresi dolmuştur ve ödeme henüz gerçekleşmemiştir.
+
+⚠️ Dikkat: Aboneliğiniz {daysUntilSuspension} gün içinde askıya alınacaktır.
+
+Hizmet kesintisi yaşamamak için lütfen en kısa sürede ödemenizi tamamlayın.
+
+Saygılarımızla,
+Stocker Ekibi
+";
+
+            await emailService.SendEmailAsync(email, subject, message);
+
+            _logger.LogWarning("Past due reminder sent to {Email} for tenant {Tenant}, {Days} days until suspension",
+                email, tenantName, daysUntilSuspension);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send past due reminder to {Email}", email);
+        }
+    }
+
+    private async Task SendSubscriptionSuspendedEmailAsync(
+        IEmailService emailService,
+        string email,
+        string tenantName,
+        string planName)
+    {
+        try
+        {
+            var subject = "❌ Stocker Aboneliğiniz Askıya Alındı";
+
+            var message = $@"
+Sayın {tenantName} Yetkilisi,
+
+{planName} aboneliğiniz ödeme yapılmadığı için askıya alınmıştır.
+
+Hesabınıza erişim sağlamak için lütfen ödemenizi tamamlayın.
+
+Verileriniz 30 gün boyunca saklanacaktır. Bu süre sonunda silinebilir.
+
+Ödeme yapmak için destek@stocker.app adresinden bize ulaşabilirsiniz.
+
+Saygılarımızla,
+Stocker Ekibi
+";
+
+            await emailService.SendEmailAsync(email, subject, message);
+
+            _logger.LogWarning("Subscription suspended email sent to {Email} for tenant {Tenant}",
+                email, tenantName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send subscription suspended email to {Email}", email);
+        }
+    }
+
+    /// <summary>
+    /// Schedules the recurring subscription renewal check job
+    /// </summary>
+    public static void Schedule()
+    {
+        RecurringJob.AddOrUpdate<SubscriptionRenewalCheckJob>(
+            "subscription-renewal-check",
+            job => job.ExecuteAsync(),
+            "0 8 * * *", // Every day at 08:00 UTC
+            new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.Utc
+            });
+    }
+}

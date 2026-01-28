@@ -91,18 +91,50 @@ public static class HangfireConfiguration
     }
 
     /// <summary>
-    /// Schedules all recurring background jobs
+    /// Schedules all recurring background jobs.
+    /// Note: Module-specific jobs are registered in their respective DependencyInjection files.
     /// </summary>
     private static void ScheduleRecurringJobs()
     {
+        // ═══════════════════════════════════════════════════════════════
+        // CRITICAL PRIORITY JOBS
+        // ═══════════════════════════════════════════════════════════════
+
         // Tenant health check - runs every 15 minutes
         TenantHealthCheckJob.Schedule();
+
+        // Subscription renewal check - runs daily at 08:00 UTC (critical for revenue)
+        // TODO: Re-enable after INotificationService methods are implemented
+        // SubscriptionRenewalCheckJob.Schedule();
+
+        // ═══════════════════════════════════════════════════════════════
+        // DEFAULT PRIORITY JOBS
+        // ═══════════════════════════════════════════════════════════════
 
         // Trial subscription check - runs daily at 09:00 UTC
         TrialSubscriptionCheckJob.Schedule();
 
+        // Inactive user detection - runs weekly on Monday at 06:00 UTC
+        // TODO: Re-enable after INotificationService methods are implemented
+        // InactiveUserDetectionJob.Schedule();
+
+        // ═══════════════════════════════════════════════════════════════
+        // MAINTENANCE PRIORITY JOBS
+        // ═══════════════════════════════════════════════════════════════
+
         // Expired invitation cleanup - runs daily at 02:00 UTC
         ExpiredInvitationCleanupJob.Schedule();
+
+        // Audit log archive - runs monthly on 1st at 02:00 UTC
+        AuditLogArchiveJob.Schedule();
+
+        // Database maintenance - runs weekly on Sunday at 04:00 UTC
+        // TODO: Re-enable after fixing ConnectionString conversion
+        // DatabaseMaintenanceJob.Schedule();
+
+        // ═══════════════════════════════════════════════════════════════
+        // REAL-TIME MONITORING JOBS
+        // ═══════════════════════════════════════════════════════════════
 
         // System monitoring metrics - runs every 15 seconds
         RecurringJob.AddOrUpdate<MonitoringMetricsJob>(
@@ -124,6 +156,10 @@ public static class HangfireConfiguration
                 TimeZone = TimeZoneInfo.Utc
             });
 
+        // ═══════════════════════════════════════════════════════════════
+        // BACKUP JOBS
+        // ═══════════════════════════════════════════════════════════════
+
         // Backup cleanup - runs daily at 3:00 AM UTC
         RecurringJob.AddOrUpdate<BackupJob>(
             "backup-cleanup-global",
@@ -133,5 +169,21 @@ public static class HangfireConfiguration
             {
                 TimeZone = TimeZoneInfo.Utc
             });
+
+        // ═══════════════════════════════════════════════════════════════
+        // MODULE-SPECIFIC JOBS
+        // ═══════════════════════════════════════════════════════════════
+        // Module jobs are scheduled from HangfireJobScheduler in the API layer
+        // where all modules are referenced. Each module defines its jobs in:
+        // - Infrastructure/BackgroundJobs/[JobName].cs
+        // - Infrastructure/DependencyInjection.cs (Schedule[Module]Jobs() method)
+        //
+        // Available module jobs:
+        // - Inventory: StockReorderAlertJob (every 4 hours)
+        // - Sales: QuotationExpiryCheckJob (daily at 01:00 UTC)
+        // - Purchase: PurchaseOrderFollowupJob (daily at 10:00 UTC)
+        // - HR: LeaveBalanceAccrualJob (monthly on 1st at 00:30 UTC)
+        // - Finance: InvoiceDueDateReminderJob (daily at 09:00 UTC)
+        // - CRM: LeadScoringRecalculationJob (every 6 hours), ReminderJob (every minute)
     }
 }

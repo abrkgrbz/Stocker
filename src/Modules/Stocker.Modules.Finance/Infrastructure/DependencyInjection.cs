@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Stocker.Modules.Finance.Domain.Repositories;
 using Stocker.Modules.Finance.Domain.Services;
 using Stocker.Modules.Finance.Infrastructure.EventConsumers;
+using Stocker.Modules.Finance.Infrastructure.BackgroundJobs;
 using Stocker.Modules.Finance.Infrastructure.Persistence;
 using Stocker.Modules.Finance.Infrastructure.Persistence.Repositories;
 using Stocker.Modules.Finance.Infrastructure.Services;
@@ -87,6 +88,9 @@ public static class DependencyInjection
         services.AddScoped<IInvoiceNumberGenerator, InvoiceNumberGenerator>();
         services.AddScoped<ICurrentAccountTransactionService, CurrentAccountTransactionService>();
 
+        // Register Hangfire Background Jobs
+        services.AddScoped<InvoiceDueDateReminderJob>();
+
         return services;
     }
 
@@ -99,5 +103,15 @@ public static class DependencyInjection
         // Register CRM event consumers for Finance module integration
         configurator.AddConsumer<CustomerCreatedEventConsumer>();
         configurator.AddConsumer<DealWonEventConsumer>();
+    }
+
+    /// <summary>
+    /// Schedules Finance module recurring Hangfire jobs.
+    /// Called from HangfireConfiguration after Hangfire is initialized.
+    /// </summary>
+    public static void ScheduleFinanceJobs()
+    {
+        // Invoice due date reminder - runs daily at 09:00 UTC
+        InvoiceDueDateReminderJob.Schedule();
     }
 }

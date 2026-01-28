@@ -1,0 +1,403 @@
+using Hangfire;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Stocker.Application.Common.Interfaces;
+using Stocker.Modules.Purchase.Domain.Entities;
+using Stocker.Modules.Purchase.Infrastructure.Persistence;
+using Stocker.SharedKernel.Interfaces;
+using Stocker.SharedKernel.MultiTenancy;
+
+namespace Stocker.Modules.Purchase.Infrastructure.BackgroundJobs;
+
+/// <summary>
+/// Hangfire background job for following up on purchase orders.
+/// Checks for overdue deliveries, upcoming deliveries, and partially received orders.
+/// Sends notifications to purchasing department for follow-up action.
+/// </summary>
+public class PurchaseOrderFollowupJob
+{
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<PurchaseOrderFollowupJob> _logger;
+
+    // Days to warn before expected delivery
+    private static readonly int[] DeliveryWarningDays = { 3, 1 };
+
+    // Days overdue thresholds for escalation
+    private static readonly int[] OverdueThresholds = { 1, 3, 7, 14, 30 };
+
+    public PurchaseOrderFollowupJob(
+        IServiceProvider serviceProvider,
+        ILogger<PurchaseOrderFollowupJob> logger)
+    {
+        _serviceProvider = serviceProvider;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Processes all pending purchase orders across all tenants.
+    /// Identifies overdue, upcoming, and partially received orders.
+    /// Scheduled to run every day at 10:00 UTC
+    /// </summary>
+    [AutomaticRetry(Attempts = 3, DelaysInSeconds = new[] { 60, 300, 900 })]
+    [Queue("default")]
+    public async Task ExecuteAsync()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var masterContext = scope.ServiceProvider.GetRequiredService<IMasterDbContext>();
+        var tenantDbContextFactory = scope.ServiceProvider.GetRequiredService<ITenantDbContextFactory>();
+
+        _logger.LogInformation("Starting purchase order follow-up job");
+
+        try
+        {
+            var totalOverdue = 0;
+            var totalUpcoming = 0;
+            var totalPartial = 0;
+            var tenantsProcessed = 0;
+
+            // Get all active tenants
+            var tenants = await masterContext.Tenants
+                .Where(t => t.IsActive)
+                .Select(t => new { t.Id, t.Name })
+                .ToListAsync();
+
+            _logger.LogInformation("Found {TenantCount} tenants to process for PO follow-up", tenants.Count);
+
+            foreach (var tenant in tenants)
+            {
+                try
+                {
+                    var (overdue, upcoming, partial) = await ProcessTenantPurchaseOrdersAsync(
+                        tenant.Id, tenant.Name, tenantDbContextFactory);
+
+                    totalOverdue += overdue;
+                    totalUpcoming += upcoming;
+                    totalPartial += partial;
+                    tenantsProcessed++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Error processing PO follow-up for tenant {TenantId} ({TenantName})",
+                        tenant.Id, tenant.Name);
+                }
+            }
+
+            _logger.LogInformation(
+                "PO follow-up job completed. Tenants: {Tenants}, Overdue: {Overdue}, Upcoming: {Upcoming}, Partial: {Partial}",
+                tenantsProcessed, totalOverdue, totalUpcoming, totalPartial);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error in purchase order follow-up job");
+            throw;
+        }
+    }
+
+    private async Task<(int overdue, int upcoming, int partial)> ProcessTenantPurchaseOrdersAsync(
+        Guid tenantId,
+        string tenantName,
+        ITenantDbContextFactory contextFactory)
+    {
+        var overdueCount = 0;
+        var upcomingCount = 0;
+        var partialCount = 0;
+
+        using var tenantScope = _serviceProvider.CreateScope();
+        var backgroundTenantService = tenantScope.ServiceProvider.GetRequiredService<IBackgroundTenantService>();
+        var emailService = tenantScope.ServiceProvider.GetService<IEmailService>();
+        var notificationService = tenantScope.ServiceProvider.GetService<INotificationService>();
+
+        // Create tenant context
+        var tenantContext = await contextFactory.CreateDbContextAsync(tenantId);
+        if (tenantContext == null)
+        {
+            _logger.LogWarning("Could not create context for tenant {TenantId}", tenantId);
+            return (0, 0, 0);
+        }
+
+        // Get Purchase module context
+        var purchaseContext = tenantScope.ServiceProvider.GetService<PurchaseDbContext>();
+        if (purchaseContext == null)
+        {
+            _logger.LogDebug("Purchase module not available for tenant {TenantId}", tenantId);
+            return (0, 0, 0);
+        }
+
+        var today = DateTime.UtcNow.Date;
+
+        // Get active purchase orders (confirmed, sent, partially received)
+        var activeStatuses = new[]
+        {
+            PurchaseOrderStatus.Confirmed,
+            PurchaseOrderStatus.Sent,
+            PurchaseOrderStatus.PartiallyReceived
+        };
+
+        var activeOrders = await purchaseContext.PurchaseOrders
+            .Include(po => po.Items)
+            .Where(po => activeStatuses.Contains(po.Status))
+            .ToListAsync();
+
+        _logger.LogDebug(
+            "Found {Count} active purchase orders for tenant {TenantName}",
+            activeOrders.Count, tenantName);
+
+        var overdueOrders = new List<PurchaseOrderFollowupInfo>();
+        var upcomingDeliveries = new List<PurchaseOrderFollowupInfo>();
+        var partialOrders = new List<PurchaseOrderFollowupInfo>();
+
+        foreach (var order in activeOrders)
+        {
+            // Check for expected delivery date
+            if (order.ExpectedDeliveryDate.HasValue)
+            {
+                var deliveryDate = order.ExpectedDeliveryDate.Value.Date;
+                var daysUntilDelivery = (deliveryDate - today).Days;
+
+                // Overdue delivery
+                if (daysUntilDelivery < 0 && !order.IsFullyReceived)
+                {
+                    var daysOverdue = Math.Abs(daysUntilDelivery);
+
+                    // Check if this threshold should trigger notification
+                    if (OverdueThresholds.Contains(daysOverdue))
+                    {
+                        overdueOrders.Add(CreateFollowupInfo(order, daysOverdue, "overdue"));
+                        overdueCount++;
+                    }
+                }
+                // Upcoming delivery warning
+                else if (daysUntilDelivery > 0)
+                {
+                    if (DeliveryWarningDays.Contains(daysUntilDelivery))
+                    {
+                        upcomingDeliveries.Add(CreateFollowupInfo(order, daysUntilDelivery, "upcoming"));
+                        upcomingCount++;
+                    }
+                }
+            }
+
+            // Check for partially received orders older than 7 days
+            if (order.Status == PurchaseOrderStatus.PartiallyReceived && order.LastReceivedDate.HasValue)
+            {
+                var daysSinceLastReceipt = (today - order.LastReceivedDate.Value.Date).Days;
+                if (daysSinceLastReceipt >= 7)
+                {
+                    partialOrders.Add(CreateFollowupInfo(order, daysSinceLastReceipt, "partial"));
+                    partialCount++;
+                }
+            }
+        }
+
+        // Send notifications
+        if (overdueOrders.Any())
+        {
+            await SendOverdueNotificationAsync(tenantId, overdueOrders, emailService, notificationService);
+        }
+
+        if (upcomingDeliveries.Any())
+        {
+            await SendUpcomingDeliveryNotificationAsync(tenantId, upcomingDeliveries, notificationService);
+        }
+
+        if (partialOrders.Any())
+        {
+            await SendPartialOrderNotificationAsync(tenantId, partialOrders, notificationService);
+        }
+
+        return (overdueCount, upcomingCount, partialCount);
+    }
+
+    private PurchaseOrderFollowupInfo CreateFollowupInfo(PurchaseOrder order, int days, string type)
+    {
+        var totalItems = order.Items?.Count ?? 0;
+        var receivedItems = order.Items?.Count(i => i.ReceivedQuantity >= i.Quantity) ?? 0;
+
+        return new PurchaseOrderFollowupInfo
+        {
+            OrderId = order.Id,
+            OrderNumber = order.OrderNumber,
+            SupplierName = order.SupplierName ?? "Bilinmiyor",
+            SupplierId = order.SupplierId,
+            ExpectedDeliveryDate = order.ExpectedDeliveryDate,
+            TotalAmount = order.TotalAmount,
+            Currency = order.Currency,
+            Status = order.Status.ToString(),
+            Days = days,
+            Type = type,
+            TotalItems = totalItems,
+            ReceivedItems = receivedItems,
+            PurchaserId = order.PurchaserId,
+            PurchaserName = order.PurchaserName
+        };
+    }
+
+    private async Task SendOverdueNotificationAsync(
+        Guid tenantId,
+        List<PurchaseOrderFollowupInfo> overdueOrders,
+        IEmailService? emailService,
+        INotificationService? notificationService)
+    {
+        if (notificationService == null) return;
+
+        try
+        {
+            var criticalOrders = overdueOrders.Where(o => o.Days >= 7).ToList();
+            var warningOrders = overdueOrders.Where(o => o.Days < 7).ToList();
+
+            if (criticalOrders.Any())
+            {
+                var message = $"🚨 KRİTİK: {criticalOrders.Count} satınalma siparişi teslimat tarihini geçti!\n" +
+                    string.Join("\n", criticalOrders.Take(5).Select(o =>
+                        $"• {o.OrderNumber} ({o.SupplierName}): {o.Days} gün gecikme"));
+
+                if (criticalOrders.Count > 5)
+                    message += $"\n... ve {criticalOrders.Count - 5} sipariş daha";
+
+                await notificationService.SendToTenantRoleAsync(
+                    tenantId,
+                    "Purchase",
+                    "KRİTİK: Geciken Siparişler",
+                    message,
+                    "po_overdue_critical",
+                    new Dictionary<string, object>
+                    {
+                        { "overdueCount", criticalOrders.Count },
+                        { "orders", criticalOrders.Select(o => new { o.OrderId, o.OrderNumber, o.SupplierName, o.Days }) }
+                    });
+            }
+
+            if (warningOrders.Any())
+            {
+                var message = $"⚠️ {warningOrders.Count} satınalma siparişi teslimat tarihini geçti:\n" +
+                    string.Join("\n", warningOrders.Take(5).Select(o =>
+                        $"• {o.OrderNumber} ({o.SupplierName}): {o.Days} gün gecikme"));
+
+                await notificationService.SendToTenantRoleAsync(
+                    tenantId,
+                    "Purchase",
+                    "Geciken Siparişler",
+                    message,
+                    "po_overdue_warning",
+                    new Dictionary<string, object>
+                    {
+                        { "overdueCount", warningOrders.Count },
+                        { "orders", warningOrders.Select(o => new { o.OrderId, o.OrderNumber, o.SupplierName, o.Days }) }
+                    });
+            }
+
+            _logger.LogWarning(
+                "Sent overdue PO notifications. Critical: {Critical}, Warning: {Warning}",
+                criticalOrders.Count, warningOrders.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send overdue PO notification");
+        }
+    }
+
+    private async Task SendUpcomingDeliveryNotificationAsync(
+        Guid tenantId,
+        List<PurchaseOrderFollowupInfo> upcomingOrders,
+        INotificationService? notificationService)
+    {
+        if (notificationService == null) return;
+
+        try
+        {
+            var message = $"📦 {upcomingOrders.Count} sipariş yakında teslim edilecek:\n" +
+                string.Join("\n", upcomingOrders.Take(5).Select(o =>
+                    $"• {o.OrderNumber} ({o.SupplierName}): {o.Days} gün sonra - {o.ExpectedDeliveryDate:dd.MM.yyyy}"));
+
+            await notificationService.SendToTenantRoleAsync(
+                tenantId,
+                "Warehouse",
+                "Yaklaşan Teslimatlar",
+                message,
+                "po_delivery_upcoming",
+                new Dictionary<string, object>
+                {
+                    { "upcomingCount", upcomingOrders.Count },
+                    { "orders", upcomingOrders.Select(o => new { o.OrderId, o.OrderNumber, o.SupplierName, o.ExpectedDeliveryDate, o.Days }) }
+                });
+
+            _logger.LogInformation("Sent upcoming delivery notification for {Count} orders", upcomingOrders.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send upcoming delivery notification");
+        }
+    }
+
+    private async Task SendPartialOrderNotificationAsync(
+        Guid tenantId,
+        List<PurchaseOrderFollowupInfo> partialOrders,
+        INotificationService? notificationService)
+    {
+        if (notificationService == null) return;
+
+        try
+        {
+            var message = $"📋 {partialOrders.Count} kısmi teslim alınmış sipariş takip bekliyor:\n" +
+                string.Join("\n", partialOrders.Take(5).Select(o =>
+                    $"• {o.OrderNumber} ({o.SupplierName}): {o.ReceivedItems}/{o.TotalItems} kalem teslim alındı, {o.Days} gün bekleniyor"));
+
+            await notificationService.SendToTenantRoleAsync(
+                tenantId,
+                "Purchase",
+                "Kısmi Teslim Bekleyen Siparişler",
+                message,
+                "po_partial_followup",
+                new Dictionary<string, object>
+                {
+                    { "partialCount", partialOrders.Count },
+                    { "orders", partialOrders.Select(o => new {
+                        o.OrderId, o.OrderNumber, o.SupplierName, o.TotalItems, o.ReceivedItems, o.Days }) }
+                });
+
+            _logger.LogInformation("Sent partial order notification for {Count} orders", partialOrders.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send partial order notification");
+        }
+    }
+
+    /// <summary>
+    /// Schedules the recurring purchase order follow-up job
+    /// </summary>
+    public static void Schedule()
+    {
+        RecurringJob.AddOrUpdate<PurchaseOrderFollowupJob>(
+            "purchase-order-followup",
+            job => job.ExecuteAsync(),
+            "0 10 * * *", // Every day at 10:00 UTC
+            new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.Utc
+            });
+    }
+}
+
+/// <summary>
+/// DTO for purchase order follow-up information
+/// </summary>
+public class PurchaseOrderFollowupInfo
+{
+    public Guid OrderId { get; set; }
+    public string OrderNumber { get; set; } = string.Empty;
+    public string SupplierName { get; set; } = string.Empty;
+    public Guid SupplierId { get; set; }
+    public DateTime? ExpectedDeliveryDate { get; set; }
+    public decimal TotalAmount { get; set; }
+    public string Currency { get; set; } = "TRY";
+    public string Status { get; set; } = string.Empty;
+    public int Days { get; set; }
+    public string Type { get; set; } = string.Empty; // overdue, upcoming, partial
+    public int TotalItems { get; set; }
+    public int ReceivedItems { get; set; }
+    public Guid? PurchaserId { get; set; }
+    public string? PurchaserName { get; set; }
+}

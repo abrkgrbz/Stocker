@@ -93,6 +93,7 @@ public static class SignalRGroups
     #region Role Groups
 
     private const string RolePrefix = "role-";
+    private const string TenantRolePrefix = "tenant-role-";
 
     /// <summary>
     /// Generates a role-specific group name
@@ -100,6 +101,22 @@ public static class SignalRGroups
     /// <param name="role">The role name</param>
     /// <returns>Group name in format: role-{role}</returns>
     public static string ForRole(string role) => $"{RolePrefix}{role}";
+
+    /// <summary>
+    /// Generates a tenant and role specific group name for targeting users with a specific role in a tenant
+    /// </summary>
+    /// <param name="tenantId">The tenant identifier</param>
+    /// <param name="role">The role name</param>
+    /// <returns>Group name in format: tenant-role-{tenantId}-{role}</returns>
+    public static string ForTenantRole(string tenantId, string role) => $"{TenantRolePrefix}{tenantId}-{role}";
+
+    /// <summary>
+    /// Generates a tenant and role specific group name for targeting users with a specific role in a tenant
+    /// </summary>
+    /// <param name="tenantId">The tenant identifier</param>
+    /// <param name="role">The role name</param>
+    /// <returns>Group name in format: tenant-role-{tenantId}-{role}</returns>
+    public static string ForTenantRole(Guid tenantId, string role) => ForTenantRole(tenantId.ToString(), role);
 
     #endregion
 

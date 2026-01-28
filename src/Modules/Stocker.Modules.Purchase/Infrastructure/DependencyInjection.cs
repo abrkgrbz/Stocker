@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Stocker.Modules.Purchase.Infrastructure.BackgroundJobs;
 using Stocker.Modules.Purchase.Infrastructure.Persistence;
 using Stocker.Modules.Purchase.Interfaces;
 using Stocker.SharedKernel.Interfaces;
@@ -54,6 +55,19 @@ public static class DependencyInjection
         // NOTE: Domain-specific repository registrations will be added here as they are created.
         // Currently the Purchase module uses generic Repository<T>() access from IUnitOfWork base.
 
+        // Register Hangfire Background Jobs
+        services.AddScoped<PurchaseOrderFollowupJob>();
+
         return services;
+    }
+
+    /// <summary>
+    /// Schedules Purchase module recurring Hangfire jobs.
+    /// Called from HangfireConfiguration after Hangfire is initialized.
+    /// </summary>
+    public static void SchedulePurchaseJobs()
+    {
+        // Purchase order followup - runs daily at 10:00 UTC
+        PurchaseOrderFollowupJob.Schedule();
     }
 }

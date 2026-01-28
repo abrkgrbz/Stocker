@@ -1,0 +1,341 @@
+using Hangfire;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Stocker.Application.Common.Interfaces;
+using Stocker.Modules.Inventory.Infrastructure.Persistence;
+using Stocker.SharedKernel.Interfaces;
+using Stocker.SharedKernel.MultiTenancy;
+using Stocker.SignalR.Services.Interfaces;
+using INotificationService = Stocker.SignalR.Services.Interfaces.ITenantRoleNotificationService;
+
+namespace Stocker.Modules.Inventory.Infrastructure.BackgroundJobs;
+
+/// <summary>
+/// Hangfire background job for checking stock levels and sending reorder alerts.
+/// Identifies products below reorder point or minimum stock level and notifies
+/// relevant personnel to initiate purchase orders.
+/// </summary>
+public class StockReorderAlertJob
+{
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<StockReorderAlertJob> _logger;
+
+    public StockReorderAlertJob(
+        IServiceProvider serviceProvider,
+        ILogger<StockReorderAlertJob> logger)
+    {
+        _serviceProvider = serviceProvider;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Checks stock levels across all tenants and sends reorder alerts.
+    /// Scheduled to run every 4 hours
+    /// </summary>
+    [AutomaticRetry(Attempts = 3, DelaysInSeconds = new[] { 60, 300, 900 })]
+    [Queue("default")]
+    public async Task ExecuteAsync()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var masterContext = scope.ServiceProvider.GetRequiredService<IMasterDbContext>();
+        var tenantDbContextFactory = scope.ServiceProvider.GetRequiredService<ITenantDbContextFactory>();
+
+        _logger.LogInformation("Starting stock reorder alert job");
+
+        try
+        {
+            var totalAlerts = 0;
+            var totalCritical = 0;
+            var tenantsProcessed = 0;
+
+            // Get all active tenants
+            var tenants = await masterContext.Tenants
+                .Where(t => t.IsActive)
+                .Select(t => new { t.Id, t.Name })
+                .ToListAsync();
+
+            _logger.LogInformation("Found {TenantCount} tenants to process for stock alerts", tenants.Count);
+
+            foreach (var tenant in tenants)
+            {
+                try
+                {
+                    var (alerts, critical) = await ProcessTenantStockLevelsAsync(
+                        tenant.Id, tenant.Name, tenantDbContextFactory);
+
+                    totalAlerts += alerts;
+                    totalCritical += critical;
+                    tenantsProcessed++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Error processing stock alerts for tenant {TenantId} ({TenantName})",
+                        tenant.Id, tenant.Name);
+                }
+            }
+
+            _logger.LogInformation(
+                "Stock reorder alert job completed. Tenants: {Tenants}, Total Alerts: {Alerts}, Critical: {Critical}",
+                tenantsProcessed, totalAlerts, totalCritical);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error in stock reorder alert job");
+            throw;
+        }
+    }
+
+    private async Task<(int alerts, int critical)> ProcessTenantStockLevelsAsync(
+        Guid tenantId,
+        string tenantName,
+        ITenantDbContextFactory contextFactory)
+    {
+        var alertCount = 0;
+        var criticalCount = 0;
+
+        using var tenantScope = _serviceProvider.CreateScope();
+        var backgroundTenantService = tenantScope.ServiceProvider.GetRequiredService<IBackgroundTenantService>();
+        var emailService = tenantScope.ServiceProvider.GetService<IEmailService>();
+        var notificationService = tenantScope.ServiceProvider.GetService<INotificationService>();
+
+        // Create tenant context
+        var tenantContext = await contextFactory.CreateDbContextAsync(tenantId);
+        if (tenantContext == null)
+        {
+            _logger.LogWarning("Could not create context for tenant {TenantId}", tenantId);
+            return (0, 0);
+        }
+
+        // Get Inventory module context
+        var inventoryContext = tenantScope.ServiceProvider.GetService<InventoryDbContext>();
+        if (inventoryContext == null)
+        {
+            _logger.LogDebug("Inventory module not available for tenant {TenantId}", tenantId);
+            return (0, 0);
+        }
+
+        // Get products with stock tracking enabled and reorder point set
+        var productsToCheck = await inventoryContext.Products
+            .Include(p => p.Category)
+            .Include(p => p.Supplier)
+            .Include(p => p.Stocks)
+            .Where(p => p.IsActive
+                && p.IsStockTracked
+                && (p.ReorderPoint > 0 || p.MinimumStock > 0))
+            .ToListAsync();
+
+        _logger.LogDebug(
+            "Found {Count} products with reorder settings for tenant {TenantName}",
+            productsToCheck.Count, tenantName);
+
+        var lowStockProducts = new List<LowStockProductInfo>();
+        var criticalStockProducts = new List<LowStockProductInfo>();
+
+        foreach (var product in productsToCheck)
+        {
+            // Calculate total available stock across all warehouses
+            var totalStock = product.Stocks?.Sum(s => s.Quantity) ?? 0;
+            var totalAvailable = product.Stocks?.Sum(s => s.AvailableQuantity) ?? 0;
+
+            // Check if below reorder point
+            var belowReorderPoint = product.ReorderPoint > 0 && totalAvailable <= product.ReorderPoint;
+
+            // Check if below minimum stock (critical)
+            var belowMinimum = product.MinimumStock > 0 && totalAvailable <= product.MinimumStock;
+
+            if (belowReorderPoint || belowMinimum)
+            {
+                var info = new LowStockProductInfo
+                {
+                    ProductId = product.Id,
+                    ProductCode = product.Code,
+                    ProductName = product.Name,
+                    CategoryName = product.Category?.Name ?? "Kategorisiz",
+                    SupplierName = product.Supplier?.Name,
+                    Unit = product.Unit,
+                    CurrentStock = totalStock,
+                    AvailableStock = totalAvailable,
+                    ReorderPoint = product.ReorderPoint,
+                    MinimumStock = product.MinimumStock,
+                    ReorderQuantity = product.ReorderQuantity,
+                    LeadTimeDays = product.LeadTimeDays,
+                    IsCritical = belowMinimum,
+                    SuggestedOrderQuantity = CalculateSuggestedOrderQuantity(product, totalAvailable)
+                };
+
+                if (belowMinimum)
+                {
+                    criticalStockProducts.Add(info);
+                    criticalCount++;
+                }
+                else
+                {
+                    lowStockProducts.Add(info);
+                }
+                alertCount++;
+            }
+        }
+
+        // Send notifications if there are any alerts
+        if (criticalStockProducts.Any() || lowStockProducts.Any())
+        {
+            await SendStockAlertsAsync(
+                tenantId, tenantName,
+                criticalStockProducts, lowStockProducts,
+                emailService, notificationService);
+        }
+
+        return (alertCount, criticalCount);
+    }
+
+    private decimal CalculateSuggestedOrderQuantity(Domain.Entities.Product product, decimal currentAvailable)
+    {
+        // If reorder quantity is set, use it
+        if (product.ReorderQuantity > 0)
+            return product.ReorderQuantity;
+
+        // Otherwise calculate based on max stock or a reasonable default
+        if (product.MaximumStock > 0)
+        {
+            var deficit = product.MaximumStock - currentAvailable;
+            return deficit > 0 ? deficit : product.ReorderPoint;
+        }
+
+        // Default: order enough to reach 2x the reorder point
+        return Math.Max(product.ReorderPoint * 2 - currentAvailable, product.ReorderPoint);
+    }
+
+    private async Task SendStockAlertsAsync(
+        Guid tenantId,
+        string tenantName,
+        List<LowStockProductInfo> criticalProducts,
+        List<LowStockProductInfo> lowStockProducts,
+        IEmailService? emailService,
+        INotificationService? notificationService)
+    {
+        // Send critical alerts first
+        if (criticalProducts.Any() && notificationService != null)
+        {
+            try
+            {
+                var criticalMessage = $"⚠️ KRİTİK: {criticalProducts.Count} ürün minimum stok seviyesinin altında!\n" +
+                    string.Join("\n", criticalProducts.Take(5).Select(p =>
+                        $"• {p.ProductCode} - {p.ProductName}: {p.AvailableStock:N0} {p.Unit} (Min: {p.MinimumStock:N0})"));
+
+                if (criticalProducts.Count > 5)
+                    criticalMessage += $"\n... ve {criticalProducts.Count - 5} ürün daha";
+
+                await notificationService.SendToTenantRoleAsync(
+                    tenantId,
+                    "Inventory", // Send to inventory/purchase role
+                    "KRİTİK Stok Uyarısı",
+                    criticalMessage,
+                    "stock_critical",
+                    new Dictionary<string, object>
+                    {
+                        { "criticalCount", criticalProducts.Count },
+                        { "products", criticalProducts.Select(p => new { p.ProductId, p.ProductCode, p.ProductName, p.AvailableStock, p.MinimumStock }) }
+                    });
+
+                _logger.LogWarning(
+                    "Sent critical stock alert for tenant {TenantName}. {Count} products below minimum",
+                    tenantName, criticalProducts.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send critical stock notification for tenant {TenantId}", tenantId);
+            }
+        }
+
+        // Send low stock alerts
+        if (lowStockProducts.Any() && notificationService != null)
+        {
+            try
+            {
+                var lowStockMessage = $"📦 {lowStockProducts.Count} ürün yeniden sipariş noktasının altında:\n" +
+                    string.Join("\n", lowStockProducts.Take(5).Select(p =>
+                        $"• {p.ProductCode} - {p.ProductName}: {p.AvailableStock:N0} {p.Unit} (Sipariş Noktası: {p.ReorderPoint:N0})"));
+
+                if (lowStockProducts.Count > 5)
+                    lowStockMessage += $"\n... ve {lowStockProducts.Count - 5} ürün daha";
+
+                await notificationService.SendToTenantRoleAsync(
+                    tenantId,
+                    "Purchase", // Send to purchase role
+                    "Stok Yenileme Uyarısı",
+                    lowStockMessage,
+                    "stock_reorder",
+                    new Dictionary<string, object>
+                    {
+                        { "lowStockCount", lowStockProducts.Count },
+                        { "products", lowStockProducts.Select(p => new {
+                            p.ProductId, p.ProductCode, p.ProductName, p.AvailableStock,
+                            p.ReorderPoint, p.SuggestedOrderQuantity, p.SupplierName }) }
+                    });
+
+                _logger.LogInformation(
+                    "Sent low stock alert for tenant {TenantName}. {Count} products below reorder point",
+                    tenantName, lowStockProducts.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send low stock notification for tenant {TenantId}", tenantId);
+            }
+        }
+
+        // Send consolidated email to purchasing department
+        if (emailService != null && (criticalProducts.Any() || lowStockProducts.Any()))
+        {
+            try
+            {
+                await emailService.SendStockAlertSummaryAsync(
+                    tenantId,
+                    tenantName,
+                    criticalProducts,
+                    lowStockProducts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send stock alert email for tenant {TenantId}", tenantId);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Schedules the recurring stock reorder alert job
+    /// </summary>
+    public static void Schedule()
+    {
+        RecurringJob.AddOrUpdate<StockReorderAlertJob>(
+            "stock-reorder-alert",
+            job => job.ExecuteAsync(),
+            "0 */4 * * *", // Every 4 hours
+            new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.Utc
+            });
+    }
+}
+
+/// <summary>
+/// DTO for low stock product information
+/// </summary>
+public class LowStockProductInfo
+{
+    public int ProductId { get; set; }
+    public string ProductCode { get; set; } = string.Empty;
+    public string ProductName { get; set; } = string.Empty;
+    public string CategoryName { get; set; } = string.Empty;
+    public string? SupplierName { get; set; }
+    public string Unit { get; set; } = string.Empty;
+    public decimal CurrentStock { get; set; }
+    public decimal AvailableStock { get; set; }
+    public decimal ReorderPoint { get; set; }
+    public decimal MinimumStock { get; set; }
+    public decimal ReorderQuantity { get; set; }
+    public int LeadTimeDays { get; set; }
+    public bool IsCritical { get; set; }
+    public decimal SuggestedOrderQuantity { get; set; }
+}

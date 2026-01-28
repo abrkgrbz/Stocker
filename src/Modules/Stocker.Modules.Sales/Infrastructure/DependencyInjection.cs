@@ -7,6 +7,7 @@ using Stocker.Modules.Sales.Domain.Repositories;
 using Stocker.Modules.Sales.Infrastructure.EventConsumers;
 using Stocker.Modules.Sales.Infrastructure.Persistence;
 using Stocker.Modules.Sales.Infrastructure.Persistence.Repositories;
+using Stocker.Modules.Sales.Infrastructure.BackgroundJobs;
 using Stocker.Modules.Sales.Infrastructure.Services;
 using Stocker.Modules.Sales.Interfaces;
 using Stocker.Modules.Stocker.Modules.Sales.Infrastructure.EventConsumers;
@@ -126,6 +127,9 @@ public static class DependencyInjection
         // Idempotency Repository
         services.AddScoped<IProcessedRequestRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().ProcessedRequests);
 
+        // Register Hangfire Background Jobs
+        services.AddScoped<QuotationExpiryCheckJob>();
+
         return services;
     }
 
@@ -139,5 +143,15 @@ public static class DependencyInjection
         configurator.AddConsumer<CustomerCreatedEventConsumer>();
         configurator.AddConsumer<DealWonEventConsumer>();
         configurator.AddConsumer<LeadConvertedEventConsumer>();
+    }
+
+    /// <summary>
+    /// Schedules Sales module recurring Hangfire jobs.
+    /// Called from HangfireConfiguration after Hangfire is initialized.
+    /// </summary>
+    public static void ScheduleSalesJobs()
+    {
+        // Quotation expiry check - runs daily at 01:00 UTC
+        QuotationExpiryCheckJob.Schedule();
     }
 }

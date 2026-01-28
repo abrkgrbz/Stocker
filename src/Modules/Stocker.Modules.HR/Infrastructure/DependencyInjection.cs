@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Stocker.Modules.HR.Domain.Repositories;
 using Stocker.Modules.HR.Domain.Services;
+using Stocker.Modules.HR.Infrastructure.BackgroundJobs;
 using Stocker.Modules.HR.Infrastructure.Persistence;
 using Stocker.Modules.HR.Infrastructure.Repositories;
 using Stocker.Modules.HR.Infrastructure.Services;
@@ -130,6 +131,19 @@ public static class DependencyInjection
         // Notification Service
         services.AddScoped<IHrNotificationService, HrNotificationService>();
 
+        // Register Hangfire Background Jobs
+        services.AddScoped<LeaveBalanceAccrualJob>();
+
         return services;
+    }
+
+    /// <summary>
+    /// Schedules HR module recurring Hangfire jobs.
+    /// Called from HangfireConfiguration after Hangfire is initialized.
+    /// </summary>
+    public static void ScheduleHRJobs()
+    {
+        // Leave balance accrual - runs monthly on 1st at 00:30 UTC
+        LeaveBalanceAccrualJob.Schedule();
     }
 }

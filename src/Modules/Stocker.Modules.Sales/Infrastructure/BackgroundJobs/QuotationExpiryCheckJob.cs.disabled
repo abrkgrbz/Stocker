@@ -1,0 +1,341 @@
+using Hangfire;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Stocker.Application.Common.Interfaces;
+using Stocker.Modules.Sales.Domain.Entities;
+using Stocker.Modules.Sales.Infrastructure.Persistence;
+using Stocker.SharedKernel.Interfaces;
+using Stocker.SharedKernel.MultiTenancy;
+
+namespace Stocker.Modules.Sales.Infrastructure.BackgroundJobs;
+
+/// <summary>
+/// Hangfire background job for checking quotation expiration dates.
+/// Automatically expires quotations that have passed their validity period
+/// and sends notifications for soon-to-expire quotations.
+/// </summary>
+public class QuotationExpiryCheckJob
+{
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<QuotationExpiryCheckJob> _logger;
+
+    // Days before expiration to send reminder
+    private static readonly int[] ExpiryWarningDays = { 7, 3, 1 };
+
+    public QuotationExpiryCheckJob(
+        IServiceProvider serviceProvider,
+        ILogger<QuotationExpiryCheckJob> logger)
+    {
+        _serviceProvider = serviceProvider;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Checks all quotations across all tenants for expiration.
+    /// Automatically marks expired quotations and sends warnings.
+    /// Scheduled to run every day at 01:00 UTC
+    /// </summary>
+    [AutomaticRetry(Attempts = 3, DelaysInSeconds = new[] { 60, 300, 900 })]
+    [Queue("maintenance")]
+    public async Task ExecuteAsync()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var masterContext = scope.ServiceProvider.GetRequiredService<IMasterDbContext>();
+        var tenantDbContextFactory = scope.ServiceProvider.GetRequiredService<ITenantDbContextFactory>();
+
+        _logger.LogInformation("Starting quotation expiry check job");
+
+        try
+        {
+            var totalExpired = 0;
+            var totalWarnings = 0;
+            var tenantsProcessed = 0;
+
+            // Get all active tenants
+            var tenants = await masterContext.Tenants
+                .Where(t => t.IsActive)
+                .Select(t => new { t.Id, t.Name })
+                .ToListAsync();
+
+            _logger.LogInformation("Found {TenantCount} tenants to process for quotation expiry", tenants.Count);
+
+            foreach (var tenant in tenants)
+            {
+                try
+                {
+                    var (expired, warnings) = await ProcessTenantQuotationsAsync(
+                        tenant.Id, tenant.Name, tenantDbContextFactory);
+
+                    totalExpired += expired;
+                    totalWarnings += warnings;
+                    tenantsProcessed++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Error processing quotation expiry for tenant {TenantId} ({TenantName})",
+                        tenant.Id, tenant.Name);
+                }
+            }
+
+            _logger.LogInformation(
+                "Quotation expiry check completed. Tenants: {Tenants}, Expired: {Expired}, Warnings: {Warnings}",
+                tenantsProcessed, totalExpired, totalWarnings);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error in quotation expiry check job");
+            throw;
+        }
+    }
+
+    private async Task<(int expired, int warnings)> ProcessTenantQuotationsAsync(
+        Guid tenantId,
+        string tenantName,
+        ITenantDbContextFactory contextFactory)
+    {
+        var expiredCount = 0;
+        var warningCount = 0;
+
+        using var tenantScope = _serviceProvider.CreateScope();
+        var backgroundTenantService = tenantScope.ServiceProvider.GetRequiredService<IBackgroundTenantService>();
+        var emailService = tenantScope.ServiceProvider.GetService<IEmailService>();
+        var notificationService = tenantScope.ServiceProvider.GetService<INotificationService>();
+
+        // Create tenant context
+        var tenantContext = await contextFactory.CreateDbContextAsync(tenantId);
+        if (tenantContext == null)
+        {
+            _logger.LogWarning("Could not create context for tenant {TenantId}", tenantId);
+            return (0, 0);
+        }
+
+        // Get Sales module context
+        var salesContext = tenantScope.ServiceProvider.GetService<SalesDbContext>();
+        if (salesContext == null)
+        {
+            _logger.LogDebug("Sales module not available for tenant {TenantId}", tenantId);
+            return (0, 0);
+        }
+
+        var today = DateTime.UtcNow.Date;
+
+        // Get quotations that can expire (Sent, PendingApproval, Approved, Draft statuses)
+        var expirableStatuses = new[]
+        {
+            QuotationStatus.Draft,
+            QuotationStatus.PendingApproval,
+            QuotationStatus.Approved,
+            QuotationStatus.Sent
+        };
+
+        var quotationsWithExpiry = await salesContext.Quotations
+            .Where(q => expirableStatuses.Contains(q.Status)
+                && q.ExpirationDate.HasValue)
+            .ToListAsync();
+
+        _logger.LogDebug(
+            "Found {Count} quotations with expiration dates for tenant {TenantName}",
+            quotationsWithExpiry.Count, tenantName);
+
+        foreach (var quotation in quotationsWithExpiry)
+        {
+            var expirationDate = quotation.ExpirationDate!.Value.Date;
+            var daysUntilExpiry = (expirationDate - today).Days;
+
+            // Already expired - mark as expired
+            if (daysUntilExpiry < 0)
+            {
+                var result = quotation.Expire();
+                if (result.IsSuccess)
+                {
+                    expiredCount++;
+                    _logger.LogInformation(
+                        "Quotation {QuotationNumber} expired for tenant {TenantName}",
+                        quotation.QuotationNumber, tenantName);
+
+                    // Notify sales person and admins
+                    await SendQuotationExpiredNotificationAsync(
+                        tenantId, quotation, emailService, notificationService);
+                }
+            }
+            // Send expiry warning
+            else
+            {
+                foreach (var threshold in ExpiryWarningDays)
+                {
+                    if (daysUntilExpiry == threshold)
+                    {
+                        await SendExpiryWarningNotificationAsync(
+                            tenantId, quotation, threshold, emailService, notificationService);
+                        warningCount++;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Save changes for expired quotations
+        if (expiredCount > 0)
+        {
+            await salesContext.SaveChangesAsync();
+        }
+
+        return (expiredCount, warningCount);
+    }
+
+    private async Task SendQuotationExpiredNotificationAsync(
+        Guid tenantId,
+        Quotation quotation,
+        IEmailService? emailService,
+        INotificationService? notificationService)
+    {
+        var customerName = quotation.CustomerName ?? "Müşteri";
+        var salesPersonId = quotation.SalesPersonId;
+        var salesPersonName = quotation.SalesPersonName ?? "Satış Temsilcisi";
+
+        // Send in-app notification to sales person
+        if (notificationService != null && salesPersonId.HasValue)
+        {
+            try
+            {
+                await notificationService.SendToUserAsync(
+                    salesPersonId.Value,
+                    "Teklif Süresi Doldu",
+                    $"📋 Teklif #{quotation.QuotationNumber} ({customerName}) geçerlilik süresi doldu. " +
+                    $"Toplam: {quotation.TotalAmount:N2} {quotation.Currency}",
+                    "quotation_expired",
+                    new Dictionary<string, object>
+                    {
+                        { "quotationId", quotation.Id },
+                        { "quotationNumber", quotation.QuotationNumber },
+                        { "customerId", quotation.CustomerId ?? Guid.Empty },
+                        { "customerName", customerName },
+                        { "totalAmount", quotation.TotalAmount },
+                        { "currency", quotation.Currency }
+                    });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "Failed to send expired quotation notification for {QuotationNumber}",
+                    quotation.QuotationNumber);
+            }
+        }
+
+        // Send notification to sales managers
+        if (notificationService != null)
+        {
+            try
+            {
+                await notificationService.SendToTenantRoleAsync(
+                    tenantId,
+                    "SalesManager",
+                    "Teklif Süresi Doldu",
+                    $"Teklif #{quotation.QuotationNumber} süresi doldu. Müşteri: {customerName}, " +
+                    $"Temsilci: {salesPersonName}, Tutar: {quotation.TotalAmount:N2} {quotation.Currency}",
+                    "quotation_expired_manager",
+                    new Dictionary<string, object>
+                    {
+                        { "quotationId", quotation.Id },
+                        { "quotationNumber", quotation.QuotationNumber },
+                        { "salesPersonId", salesPersonId ?? Guid.Empty },
+                        { "salesPersonName", salesPersonName }
+                    });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send manager notification for expired quotation");
+            }
+        }
+    }
+
+    private async Task SendExpiryWarningNotificationAsync(
+        Guid tenantId,
+        Quotation quotation,
+        int daysUntilExpiry,
+        IEmailService? emailService,
+        INotificationService? notificationService)
+    {
+        var customerName = quotation.CustomerName ?? "Müşteri";
+        var salesPersonId = quotation.SalesPersonId;
+        var urgency = daysUntilExpiry <= 1 ? "urgent" : "normal";
+
+        _logger.LogInformation(
+            "Sending expiry warning for Quotation {QuotationNumber}. Days until expiry: {Days}",
+            quotation.QuotationNumber, daysUntilExpiry);
+
+        // Notify sales person
+        if (notificationService != null && salesPersonId.HasValue)
+        {
+            try
+            {
+                var emoji = daysUntilExpiry <= 1 ? "⚠️" : "⏰";
+                await notificationService.SendToUserAsync(
+                    salesPersonId.Value,
+                    "Teklif Süresi Uyarısı",
+                    $"{emoji} Teklif #{quotation.QuotationNumber} ({customerName}) için " +
+                    $"{daysUntilExpiry} gün kaldı! Tutar: {quotation.TotalAmount:N2} {quotation.Currency}",
+                    "quotation_expiry_warning",
+                    new Dictionary<string, object>
+                    {
+                        { "quotationId", quotation.Id },
+                        { "quotationNumber", quotation.QuotationNumber },
+                        { "customerId", quotation.CustomerId ?? Guid.Empty },
+                        { "customerName", customerName },
+                        { "daysUntilExpiry", daysUntilExpiry },
+                        { "expirationDate", quotation.ExpirationDate!.Value },
+                        { "totalAmount", quotation.TotalAmount },
+                        { "currency", quotation.Currency },
+                        { "urgency", urgency }
+                    });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "Failed to send expiry warning notification for {QuotationNumber}",
+                    quotation.QuotationNumber);
+            }
+        }
+
+        // Send email to customer if quotation was sent
+        if (emailService != null
+            && quotation.Status == QuotationStatus.Sent
+            && !string.IsNullOrEmpty(quotation.CustomerEmail))
+        {
+            try
+            {
+                await emailService.SendQuotationExpiryReminderAsync(
+                    quotation.CustomerEmail,
+                    customerName,
+                    quotation.QuotationNumber,
+                    quotation.ExpirationDate!.Value,
+                    quotation.TotalAmount,
+                    quotation.Currency,
+                    daysUntilExpiry);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "Failed to send expiry reminder email for quotation {QuotationNumber}",
+                    quotation.QuotationNumber);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Schedules the recurring quotation expiry check job
+    /// </summary>
+    public static void Schedule()
+    {
+        RecurringJob.AddOrUpdate<QuotationExpiryCheckJob>(
+            "quotation-expiry-check",
+            job => job.ExecuteAsync(),
+            "0 1 * * *", // Every day at 01:00 UTC
+            new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.Utc
+            });
+    }
+}

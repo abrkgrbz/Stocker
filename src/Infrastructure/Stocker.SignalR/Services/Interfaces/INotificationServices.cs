@@ -116,6 +116,30 @@ public interface IRoleNotificationService
 }
 
 /// <summary>
+/// Interface for sending notifications to users with a specific role in a tenant.
+/// Combines tenant and role targeting for background job notifications.
+/// </summary>
+public interface ITenantRoleNotificationService
+{
+    /// <summary>
+    /// Sends a notification to all users with a specific role in a tenant
+    /// </summary>
+    /// <param name="tenantId">The tenant identifier</param>
+    /// <param name="role">The role name</param>
+    /// <param name="title">The notification title</param>
+    /// <param name="message">The notification message</param>
+    /// <param name="notificationType">The type of notification for categorization</param>
+    /// <param name="metadata">Additional metadata for the notification</param>
+    Task SendToTenantRoleAsync(
+        Guid tenantId,
+        string role,
+        string title,
+        string message,
+        string notificationType,
+        Dictionary<string, object>? metadata = null);
+}
+
+/// <summary>
 /// Combined interface for all notification operations.
 /// Use this when you need access to all notification capabilities.
 /// Prefer using the specific interfaces when possible for better dependency management.
@@ -125,6 +149,7 @@ public interface INotificationService :
     ITenantNotificationService,
     IBroadcastNotificationService,
     IGroupNotificationService,
-    IRoleNotificationService
+    IRoleNotificationService,
+    ITenantRoleNotificationService
 {
 }

@@ -1,0 +1,377 @@
+using Hangfire;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Stocker.Application.Common.Interfaces;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
+using Stocker.SharedKernel.Interfaces;
+using Stocker.SharedKernel.MultiTenancy;
+using Stocker.SignalR.Services.Interfaces;
+using Task = System.Threading.Tasks.Task;
+
+namespace Stocker.Modules.CRM.Infrastructure.BackgroundJobs;
+
+/// <summary>
+/// Hangfire background job for recalculating lead scores based on scoring rules.
+/// Processes all active leads and applies tenant-specific scoring rules to update scores.
+/// Also identifies leads with significant score changes for sales team attention.
+/// </summary>
+public class LeadScoringRecalculationJob
+{
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<LeadScoringRecalculationJob> _logger;
+
+    // Threshold for significant score change notification (points)
+    private const int SignificantScoreChange = 15;
+
+    // Minimum score for hot lead notification
+    private const int HotLeadThreshold = 75;
+
+    public LeadScoringRecalculationJob(
+        IServiceProvider serviceProvider,
+        ILogger<LeadScoringRecalculationJob> logger)
+    {
+        _serviceProvider = serviceProvider;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Recalculates lead scores for all active tenants.
+    /// Scheduled to run every 6 hours
+    /// </summary>
+    [AutomaticRetry(Attempts = 3, DelaysInSeconds = new[] { 60, 300, 900 })]
+    [Queue("default")]
+    public async Task ExecuteAsync()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var masterContext = scope.ServiceProvider.GetRequiredService<IMasterDbContext>();
+        var tenantDbContextFactory = scope.ServiceProvider.GetRequiredService<ITenantDbContextFactory>();
+
+        _logger.LogInformation("Starting lead scoring recalculation job");
+
+        try
+        {
+            var totalLeadsProcessed = 0;
+            var totalScoreUpdates = 0;
+            var totalHotLeads = 0;
+            var tenantsProcessed = 0;
+
+            // Get all active tenants with CRM module enabled
+            var tenants = await masterContext.Tenants
+                .Where(t => t.IsActive)
+                .Select(t => new { t.Id, t.Name })
+                .ToListAsync();
+
+            _logger.LogInformation("Processing lead scores for {TenantCount} tenants", tenants.Count);
+
+            foreach (var tenant in tenants)
+            {
+                try
+                {
+                    var (processed, updated, hot) = await ProcessTenantLeadScoresAsync(
+                        tenant.Id, tenant.Name, tenantDbContextFactory);
+
+                    totalLeadsProcessed += processed;
+                    totalScoreUpdates += updated;
+                    totalHotLeads += hot;
+                    tenantsProcessed++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Error processing lead scores for tenant {TenantId} ({TenantName})",
+                        tenant.Id, tenant.Name);
+                }
+            }
+
+            _logger.LogInformation(
+                "Lead scoring completed. Tenants: {Tenants}, Leads: {Leads}, Updates: {Updates}, Hot: {Hot}",
+                tenantsProcessed, totalLeadsProcessed, totalScoreUpdates, totalHotLeads);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error in lead scoring recalculation job");
+            throw;
+        }
+    }
+
+    private async Task<(int processed, int updated, int hotLeads)> ProcessTenantLeadScoresAsync(
+        Guid tenantId,
+        string tenantName,
+        ITenantDbContextFactory contextFactory)
+    {
+        var processedCount = 0;
+        var updatedCount = 0;
+        var hotLeadCount = 0;
+
+        using var tenantScope = _serviceProvider.CreateScope();
+        var backgroundTenantService = tenantScope.ServiceProvider.GetRequiredService<IBackgroundTenantService>();
+        var notificationService = tenantScope.ServiceProvider.GetService<INotificationService>();
+
+        // Create tenant context
+        var tenantContext = await contextFactory.CreateDbContextAsync(tenantId);
+        if (tenantContext == null)
+        {
+            _logger.LogWarning("Could not create context for tenant {TenantId}", tenantId);
+            return (0, 0, 0);
+        }
+
+        // Get CRM module context
+        var crmContext = tenantScope.ServiceProvider.GetService<CrmDbContext>();
+        if (crmContext == null)
+        {
+            _logger.LogDebug("CRM module not available for tenant {TenantId}", tenantId);
+            return (0, 0, 0);
+        }
+
+        try
+        {
+            // Get active scoring rules for this tenant
+            var scoringRules = await crmContext.Set<LeadScoringRule>()
+                .Where(r => r.TenantId == tenantId && r.IsActive)
+                .OrderBy(r => r.Priority)
+                .ToListAsync();
+
+            if (!scoringRules.Any())
+            {
+                _logger.LogDebug("No scoring rules defined for tenant {TenantName}", tenantName);
+                return (0, 0, 0);
+            }
+
+            // Get all non-converted leads
+            var leads = await crmContext.Set<Lead>()
+                .Where(l => l.TenantId == tenantId && l.ConvertedToCustomerId == null)
+                .ToListAsync();
+
+            _logger.LogDebug(
+                "Processing {LeadCount} leads with {RuleCount} rules for tenant {TenantName}",
+                leads.Count, scoringRules.Count, tenantName);
+
+            var significantChanges = new List<LeadScoreChangeInfo>();
+            var newHotLeads = new List<LeadScoreChangeInfo>();
+
+            foreach (var lead in leads)
+            {
+                processedCount++;
+                var previousScore = lead.Score;
+                var newScore = CalculateLeadScore(lead, scoringRules);
+
+                // Only update if score changed
+                if (newScore != previousScore)
+                {
+                    lead.SetScore(newScore);
+                    updatedCount++;
+
+                    // Record significant changes
+                    var scoreChange = newScore - previousScore;
+                    if (Math.Abs(scoreChange) >= SignificantScoreChange)
+                    {
+                        significantChanges.Add(new LeadScoreChangeInfo
+                        {
+                            LeadId = lead.Id,
+                            LeadName = lead.FullName,
+                            CompanyName = lead.CompanyName,
+                            PreviousScore = previousScore,
+                            NewScore = newScore,
+                            Change = scoreChange
+                        });
+                    }
+
+                    // Track new hot leads (crossed threshold)
+                    if (previousScore < HotLeadThreshold && newScore >= HotLeadThreshold)
+                    {
+                        newHotLeads.Add(new LeadScoreChangeInfo
+                        {
+                            LeadId = lead.Id,
+                            LeadName = lead.FullName,
+                            CompanyName = lead.CompanyName,
+                            PreviousScore = previousScore,
+                            NewScore = newScore,
+                            Change = scoreChange
+                        });
+                        hotLeadCount++;
+                    }
+
+                    // Create scoring history record
+                    var history = new LeadScoringHistory(
+                        tenantId,
+                        lead.Id,
+                        previousScore,
+                        newScore,
+                        "Batch Recalculation",
+                        $"Applied {scoringRules.Count} scoring rules");
+
+                    crmContext.Set<LeadScoringHistory>().Add(history);
+                }
+            }
+
+            await crmContext.SaveChangesAsync();
+
+            // Send notifications for significant changes
+            if (notificationService != null)
+            {
+                if (newHotLeads.Any())
+                {
+                    await SendHotLeadNotificationAsync(tenantId, newHotLeads, notificationService);
+                }
+
+                if (significantChanges.Any())
+                {
+                    await SendScoreChangeNotificationAsync(tenantId, significantChanges, notificationService);
+                }
+            }
+
+            _logger.LogDebug(
+                "Processed {Processed} leads for tenant {TenantName}. Updates: {Updates}, New Hot: {Hot}",
+                processedCount, tenantName, updatedCount, hotLeadCount);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error processing lead scores for tenant {TenantName}", tenantName);
+        }
+
+        return (processedCount, updatedCount, hotLeadCount);
+    }
+
+    private int CalculateLeadScore(Lead lead, List<LeadScoringRule> rules)
+    {
+        var totalScore = 0;
+
+        foreach (var rule in rules)
+        {
+            try
+            {
+                if (rule.EvaluateRule(lead))
+                {
+                    totalScore += rule.Score;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "Error evaluating rule {RuleName} for lead {LeadId}",
+                    rule.Name, lead.Id);
+            }
+        }
+
+        // Clamp score between 0 and 100
+        return Math.Max(0, Math.Min(100, totalScore));
+    }
+
+    private async Task SendHotLeadNotificationAsync(
+        Guid tenantId,
+        List<LeadScoreChangeInfo> hotLeads,
+        INotificationService notificationService)
+    {
+        try
+        {
+            var message = $"🔥 {hotLeads.Count} lead sıcak lead seviyesine ulaştı!\\n" +
+                string.Join("\\n", hotLeads.Take(5).Select(l =>
+                    $"• {l.LeadName} ({l.CompanyName ?? "Bireysel"}): {l.PreviousScore} → {l.NewScore} puan"));
+
+            if (hotLeads.Count > 5)
+                message += $"\\n... ve {hotLeads.Count - 5} lead daha";
+
+            await notificationService.SendToTenantRoleAsync(
+                tenantId,
+                "Sales",
+                "Yeni Sıcak Lead'ler",
+                message,
+                "crm_hot_leads",
+                new Dictionary<string, object>
+                {
+                    { "hotLeadCount", hotLeads.Count },
+                    { "leads", hotLeads.Select(l => new { l.LeadId, l.LeadName, l.CompanyName, l.NewScore }) }
+                });
+
+            _logger.LogInformation("Sent hot lead notification for {Count} leads", hotLeads.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send hot lead notification");
+        }
+    }
+
+    private async Task SendScoreChangeNotificationAsync(
+        Guid tenantId,
+        List<LeadScoreChangeInfo> changes,
+        INotificationService notificationService)
+    {
+        try
+        {
+            var increases = changes.Where(c => c.Change > 0).ToList();
+            var decreases = changes.Where(c => c.Change < 0).ToList();
+
+            if (increases.Any())
+            {
+                var message = $"📈 {increases.Count} lead'in puanı önemli ölçüde arttı:\\n" +
+                    string.Join("\\n", increases.Take(5).Select(l =>
+                        $"• {l.LeadName}: +{l.Change} puan ({l.NewScore})"));
+
+                await notificationService.SendToTenantRoleAsync(
+                    tenantId,
+                    "Sales",
+                    "Lead Puanı Artışları",
+                    message,
+                    "crm_score_increase",
+                    new Dictionary<string, object>
+                    {
+                        { "increaseCount", increases.Count },
+                        { "leads", increases.Select(l => new { l.LeadId, l.LeadName, l.Change, l.NewScore }) }
+                    });
+            }
+
+            if (decreases.Any())
+            {
+                var message = $"📉 {decreases.Count} lead'in puanı önemli ölçüde düştü:\\n" +
+                    string.Join("\\n", decreases.Take(5).Select(l =>
+                        $"• {l.LeadName}: {l.Change} puan ({l.NewScore})"));
+
+                await notificationService.SendToTenantRoleAsync(
+                    tenantId,
+                    "Sales",
+                    "Lead Puanı Düşüşleri",
+                    message,
+                    "crm_score_decrease",
+                    new Dictionary<string, object>
+                    {
+                        { "decreaseCount", decreases.Count },
+                        { "leads", decreases.Select(l => new { l.LeadId, l.LeadName, l.Change, l.NewScore }) }
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send score change notification");
+        }
+    }
+
+    /// <summary>
+    /// Schedules the recurring lead scoring recalculation job
+    /// </summary>
+    public static void Schedule()
+    {
+        RecurringJob.AddOrUpdate<LeadScoringRecalculationJob>(
+            "crm-lead-scoring-recalculation",
+            job => job.ExecuteAsync(),
+            "0 */6 * * *", // Every 6 hours
+            new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.Utc
+            });
+    }
+}
+
+/// <summary>
+/// DTO for lead score change information
+/// </summary>
+internal class LeadScoreChangeInfo
+{
+    public Guid LeadId { get; set; }
+    public string LeadName { get; set; } = string.Empty;
+    public string? CompanyName { get; set; }
+    public int PreviousScore { get; set; }
+    public int NewScore { get; set; }
+    public int Change { get; set; }
+}

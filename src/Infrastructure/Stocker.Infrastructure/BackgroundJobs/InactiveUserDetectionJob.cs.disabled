@@ -1,0 +1,236 @@
+using Hangfire;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Stocker.Application.Common.Interfaces;
+using Stocker.Domain.Tenant.Enums;
+using Stocker.SignalR.Services.Interfaces;
+
+namespace Stocker.Infrastructure.BackgroundJobs;
+
+/// <summary>
+/// Hangfire background job for detecting and reporting inactive users.
+/// Identifies users who haven't logged in for extended periods and
+/// sends security alerts to tenant administrators.
+/// </summary>
+public class InactiveUserDetectionJob
+{
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<InactiveUserDetectionJob> _logger;
+
+    // Days without login to consider user inactive
+    private const int InactiveDaysThreshold = 90;
+
+    // Days to trigger security review
+    private const int SecurityReviewDaysThreshold = 180;
+
+    public InactiveUserDetectionJob(
+        IServiceProvider serviceProvider,
+        ILogger<InactiveUserDetectionJob> logger)
+    {
+        _serviceProvider = serviceProvider;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Checks for inactive users across all tenants.
+    /// Scheduled to run every Monday at 06:00 UTC
+    /// </summary>
+    [AutomaticRetry(Attempts = 3, DelaysInSeconds = new[] { 60, 300, 900 })]
+    [Queue("low")]
+    public async Task ExecuteAsync()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var masterContext = scope.ServiceProvider.GetRequiredService<IMasterDbContext>();
+        var tenantDbContextFactory = scope.ServiceProvider.GetRequiredService<ITenantDbContextFactory>();
+
+        _logger.LogInformation("Starting inactive user detection job");
+
+        try
+        {
+            var totalInactive = 0;
+            var totalSecurityReview = 0;
+            var tenantsProcessed = 0;
+
+            // Get all active tenants
+            var tenants = await masterContext.Tenants
+                .Where(t => t.IsActive)
+                .Select(t => new { t.Id, t.Name })
+                .ToListAsync();
+
+            _logger.LogInformation("Found {TenantCount} tenants to check for inactive users", tenants.Count);
+
+            foreach (var tenant in tenants)
+            {
+                try
+                {
+                    var (inactive, security) = await ProcessTenantUsersAsync(
+                        tenant.Id, tenant.Name, tenantDbContextFactory);
+
+                    totalInactive += inactive;
+                    totalSecurityReview += security;
+                    tenantsProcessed++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Error checking inactive users for tenant {TenantId} ({TenantName})",
+                        tenant.Id, tenant.Name);
+                }
+            }
+
+            _logger.LogInformation(
+                "Inactive user detection completed. Tenants: {Tenants}, Inactive (90d+): {Inactive}, Security Review (180d+): {SecurityReview}",
+                tenantsProcessed, totalInactive, totalSecurityReview);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error in inactive user detection job");
+            throw;
+        }
+    }
+
+    private async Task<(int inactive, int securityReview)> ProcessTenantUsersAsync(
+        Guid tenantId,
+        string tenantName,
+        ITenantDbContextFactory contextFactory)
+    {
+        using var tenantScope = _serviceProvider.CreateScope();
+        var notificationService = tenantScope.ServiceProvider.GetService<INotificationService>();
+
+        var tenantContext = await contextFactory.CreateDbContextAsync(tenantId);
+        if (tenantContext == null)
+        {
+            _logger.LogWarning("Could not create context for tenant {TenantId}", tenantId);
+            return (0, 0);
+        }
+
+        var today = DateTime.UtcNow;
+        var inactiveThreshold = today.AddDays(-InactiveDaysThreshold);
+        var securityThreshold = today.AddDays(-SecurityReviewDaysThreshold);
+
+        // Get inactive users (active status but no recent login)
+        var inactiveUsers = await tenantContext.TenantUsers
+            .Where(u => u.Status == TenantUserStatus.Active
+                && (u.LastLoginAt == null || u.LastLoginAt < inactiveThreshold))
+            .Select(u => new InactiveUserInfo
+            {
+                UserId = u.Id,
+                Email = u.Email,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                LastLoginAt = u.LastLoginAt,
+                DaysSinceLastLogin = u.LastLoginAt.HasValue
+                    ? (int)(today - u.LastLoginAt.Value).TotalDays
+                    : (int)(today - u.CreatedAt).TotalDays,
+                NeedsSecurityReview = u.LastLoginAt == null || u.LastLoginAt < securityThreshold
+            })
+            .ToListAsync();
+
+        var inactiveCount = inactiveUsers.Count(u => !u.NeedsSecurityReview);
+        var securityReviewCount = inactiveUsers.Count(u => u.NeedsSecurityReview);
+
+        if (inactiveUsers.Any() && notificationService != null)
+        {
+            await SendInactiveUserReportAsync(tenantId, tenantName, inactiveUsers, notificationService);
+        }
+
+        return (inactiveCount, securityReviewCount);
+    }
+
+    private async Task SendInactiveUserReportAsync(
+        Guid tenantId,
+        string tenantName,
+        List<InactiveUserInfo> inactiveUsers,
+        INotificationService notificationService)
+    {
+        try
+        {
+            var securityReviewUsers = inactiveUsers.Where(u => u.NeedsSecurityReview).ToList();
+            var regularInactiveUsers = inactiveUsers.Where(u => !u.NeedsSecurityReview).ToList();
+
+            // Send critical security alert for users inactive 180+ days
+            if (securityReviewUsers.Any())
+            {
+                var message = $"🔐 GÜVENLİK UYARISI: {securityReviewUsers.Count} kullanıcı 180+ gündür giriş yapmadı.\n\n" +
+                    "Bu hesapların güvenlik açısından gözden geçirilmesi önerilir:\n" +
+                    string.Join("\n", securityReviewUsers.Take(10).Select(u =>
+                        $"• {u.FirstName} {u.LastName} ({u.Email}): {u.DaysSinceLastLogin} gün"));
+
+                if (securityReviewUsers.Count > 10)
+                    message += $"\n... ve {securityReviewUsers.Count - 10} kullanıcı daha";
+
+                await notificationService.SendToTenantRoleAsync(
+                    tenantId,
+                    "Admin",
+                    "GÜVENLİK: Uzun Süredir İnaktif Kullanıcılar",
+                    message,
+                    "security_inactive_users",
+                    new Dictionary<string, object>
+                    {
+                        { "securityReviewCount", securityReviewUsers.Count },
+                        { "threshold", SecurityReviewDaysThreshold },
+                        { "users", securityReviewUsers.Select(u => new {
+                            u.UserId, u.Email, Name = $"{u.FirstName} {u.LastName}", u.DaysSinceLastLogin }) }
+                    });
+
+                _logger.LogWarning(
+                    "Tenant {TenantName} has {Count} users requiring security review (180+ days inactive)",
+                    tenantName, securityReviewUsers.Count);
+            }
+
+            // Send weekly summary for regular inactive users
+            if (regularInactiveUsers.Any())
+            {
+                var message = $"📊 Haftalık İnaktif Kullanıcı Raporu\n\n" +
+                    $"{regularInactiveUsers.Count} kullanıcı 90-180 gündür giriş yapmadı:\n" +
+                    string.Join("\n", regularInactiveUsers.Take(10).Select(u =>
+                        $"• {u.FirstName} {u.LastName}: {u.DaysSinceLastLogin} gün"));
+
+                await notificationService.SendToTenantRoleAsync(
+                    tenantId,
+                    "Admin",
+                    "Haftalık İnaktif Kullanıcı Raporu",
+                    message,
+                    "inactive_users_report",
+                    new Dictionary<string, object>
+                    {
+                        { "inactiveCount", regularInactiveUsers.Count },
+                        { "threshold", InactiveDaysThreshold },
+                        { "users", regularInactiveUsers.Select(u => new {
+                            u.UserId, u.Email, Name = $"{u.FirstName} {u.LastName}", u.DaysSinceLastLogin }) }
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send inactive user report for tenant {TenantId}", tenantId);
+        }
+    }
+
+    /// <summary>
+    /// Schedules the recurring inactive user detection job
+    /// </summary>
+    public static void Schedule()
+    {
+        RecurringJob.AddOrUpdate<InactiveUserDetectionJob>(
+            "inactive-user-detection",
+            job => job.ExecuteAsync(),
+            "0 6 * * 1", // Every Monday at 06:00 UTC
+            new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.Utc
+            });
+    }
+}
+
+internal class InactiveUserInfo
+{
+    public int UserId { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public DateTime? LastLoginAt { get; set; }
+    public int DaysSinceLastLogin { get; set; }
+    public bool NeedsSecurityReview { get; set; }
+}

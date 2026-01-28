@@ -1,0 +1,150 @@
+using Hangfire;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Npgsql;
+using Stocker.Application.Common.Interfaces;
+
+namespace Stocker.Infrastructure.BackgroundJobs;
+
+/// <summary>
+/// Hangfire background job for PostgreSQL database maintenance.
+/// Runs ANALYZE and VACUUM commands to optimize query performance
+/// and reclaim disk space on master and tenant databases.
+/// </summary>
+public class DatabaseMaintenanceJob
+{
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<DatabaseMaintenanceJob> _logger;
+
+    public DatabaseMaintenanceJob(
+        IServiceProvider serviceProvider,
+        ILogger<DatabaseMaintenanceJob> logger)
+    {
+        _serviceProvider = serviceProvider;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Runs database maintenance on all databases.
+    /// Scheduled to run every Sunday at 04:00 UTC
+    /// </summary>
+    [AutomaticRetry(Attempts = 2, DelaysInSeconds = new[] { 300, 900 })]
+    [Queue("maintenance")]
+    public async Task ExecuteAsync()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var masterContext = scope.ServiceProvider.GetRequiredService<IMasterDbContext>();
+        var tenantDbContextFactory = scope.ServiceProvider.GetRequiredService<ITenantDbContextFactory>();
+
+        _logger.LogInformation("Starting database maintenance job");
+
+        try
+        {
+            var tenantsProcessed = 0;
+            var errors = 0;
+
+            // Run maintenance on master database
+            await RunMaintenanceOnMasterAsync(masterContext);
+
+            // Get all active tenants
+            var tenants = await masterContext.Tenants
+                .Where(t => t.IsActive)
+                .Select(t => new { t.Id, t.Name, t.ConnectionString })
+                .ToListAsync();
+
+            _logger.LogInformation("Running maintenance on {TenantCount} tenant databases", tenants.Count);
+
+            foreach (var tenant in tenants)
+            {
+                try
+                {
+                    if (!string.IsNullOrEmpty(tenant.ConnectionString))
+                    {
+                        await RunMaintenanceOnTenantAsync(tenant.Id, tenant.Name, tenant.ConnectionString);
+                        tenantsProcessed++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    errors++;
+                    _logger.LogWarning(ex,
+                        "Error running maintenance on tenant {TenantId} ({TenantName})",
+                        tenant.Id, tenant.Name);
+                }
+            }
+
+            _logger.LogInformation(
+                "Database maintenance completed. Tenants: {Tenants}, Errors: {Errors}",
+                tenantsProcessed, errors);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error in database maintenance job");
+            throw;
+        }
+    }
+
+    private async Task RunMaintenanceOnMasterAsync(IMasterDbContext masterContext)
+    {
+        try
+        {
+            _logger.LogDebug("Running maintenance on Master database");
+
+            // Get database from context
+            var database = masterContext.Database;
+
+            // Run ANALYZE to update statistics
+            await database.ExecuteSqlRawAsync("ANALYZE");
+
+            _logger.LogInformation("Master database maintenance completed");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error running maintenance on Master database");
+        }
+    }
+
+    private async Task RunMaintenanceOnTenantAsync(Guid tenantId, string tenantName, string connectionString)
+    {
+        try
+        {
+            _logger.LogDebug("Running maintenance on tenant {TenantName}", tenantName);
+
+            await using var connection = new NpgsqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            // Run ANALYZE to update statistics
+            await using var analyzeCmd = new NpgsqlCommand("ANALYZE", connection);
+            analyzeCmd.CommandTimeout = 300; // 5 minutes timeout
+            await analyzeCmd.ExecuteNonQueryAsync();
+
+            // Run VACUUM for routine maintenance (non-blocking)
+            // Note: VACUUM FULL would lock the table, so we use regular VACUUM
+            await using var vacuumCmd = new NpgsqlCommand("VACUUM", connection);
+            vacuumCmd.CommandTimeout = 600; // 10 minutes timeout
+            await vacuumCmd.ExecuteNonQueryAsync();
+
+            _logger.LogDebug("Maintenance completed for tenant {TenantName}", tenantName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error running maintenance on tenant {TenantName}", tenantName);
+        }
+    }
+
+    /// <summary>
+    /// Schedules the recurring database maintenance job
+    /// </summary>
+    public static void Schedule()
+    {
+        RecurringJob.AddOrUpdate<DatabaseMaintenanceJob>(
+            "database-maintenance",
+            job => job.ExecuteAsync(),
+            "0 4 * * 0", // Every Sunday at 04:00 UTC
+            new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.Utc
+            });
+    }
+}

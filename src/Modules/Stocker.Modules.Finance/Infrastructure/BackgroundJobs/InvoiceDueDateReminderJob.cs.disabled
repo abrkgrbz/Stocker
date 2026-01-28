@@ -1,0 +1,354 @@
+using Hangfire;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Stocker.Application.Common.Interfaces;
+using Stocker.Modules.Finance.Domain.Enums;
+using Stocker.Modules.Finance.Infrastructure.Persistence;
+using Stocker.SharedKernel.Interfaces;
+using Stocker.SharedKernel.MultiTenancy;
+using Stocker.SignalR.Services.Interfaces;
+
+namespace Stocker.Modules.Finance.Infrastructure.BackgroundJobs;
+
+/// <summary>
+/// Hangfire background job for checking invoice due dates and sending reminders.
+/// Sends notifications for invoices approaching due date (7, 3, 1 days) and overdue invoices.
+/// </summary>
+public class InvoiceDueDateReminderJob
+{
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<InvoiceDueDateReminderJob> _logger;
+
+    // Reminder thresholds in days before due date
+    private static readonly int[] UpcomingReminderDays = { 7, 3, 1 };
+
+    // Overdue thresholds for escalating reminders
+    private static readonly int[] OverdueReminderDays = { 1, 7, 14, 30 };
+
+    public InvoiceDueDateReminderJob(
+        IServiceProvider serviceProvider,
+        ILogger<InvoiceDueDateReminderJob> logger)
+    {
+        _serviceProvider = serviceProvider;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Processes all invoices across all tenants and sends due date reminders.
+    /// Scheduled to run every day at 09:00 UTC
+    /// </summary>
+    [AutomaticRetry(Attempts = 3, DelaysInSeconds = new[] { 60, 300, 900 })]
+    [Queue("default")]
+    public async Task ExecuteAsync()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var masterContext = scope.ServiceProvider.GetRequiredService<IMasterDbContext>();
+        var tenantDbContextFactory = scope.ServiceProvider.GetRequiredService<ITenantDbContextFactory>();
+
+        _logger.LogInformation("Starting invoice due date reminder job");
+
+        try
+        {
+            var now = DateTime.UtcNow.Date;
+            var totalReminders = 0;
+            var totalOverdue = 0;
+            var tenantsProcessed = 0;
+
+            // Get all active tenants
+            var tenants = await masterContext.Tenants
+                .Where(t => t.IsActive)
+                .Select(t => new { t.Id, t.Name })
+                .ToListAsync();
+
+            _logger.LogInformation("Found {TenantCount} tenants to process for invoice reminders", tenants.Count);
+
+            foreach (var tenant in tenants)
+            {
+                try
+                {
+                    var (reminders, overdue) = await ProcessTenantInvoicesAsync(
+                        tenant.Id, tenant.Name, tenantDbContextFactory, now);
+
+                    totalReminders += reminders;
+                    totalOverdue += overdue;
+                    tenantsProcessed++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Error processing invoice reminders for tenant {TenantId} ({TenantName})",
+                        tenant.Id, tenant.Name);
+                    // Continue with other tenants
+                }
+            }
+
+            _logger.LogInformation(
+                "Invoice due date reminder job completed. Tenants: {Tenants}, Reminders: {Reminders}, Overdue: {Overdue}",
+                tenantsProcessed, totalReminders, totalOverdue);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error in invoice due date reminder job");
+            throw;
+        }
+    }
+
+    private async Task<(int reminders, int overdue)> ProcessTenantInvoicesAsync(
+        Guid tenantId,
+        string tenantName,
+        ITenantDbContextFactory contextFactory,
+        DateTime today)
+    {
+        var reminders = 0;
+        var overdue = 0;
+
+        using var tenantScope = _serviceProvider.CreateScope();
+        var backgroundTenantService = tenantScope.ServiceProvider.GetRequiredService<IBackgroundTenantService>();
+        var emailService = tenantScope.ServiceProvider.GetService<IEmailService>();
+        var notificationService = tenantScope.ServiceProvider.GetService<INotificationService>();
+
+        // Set tenant context
+        var tenantContext = await contextFactory.CreateDbContextAsync(tenantId);
+        if (tenantContext == null)
+        {
+            _logger.LogWarning("Could not create context for tenant {TenantId}", tenantId);
+            return (0, 0);
+        }
+
+        // Get Finance module context
+        var financeContext = tenantScope.ServiceProvider.GetService<FinanceDbContext>();
+        if (financeContext == null)
+        {
+            _logger.LogDebug("Finance module not available for tenant {TenantId}", tenantId);
+            return (0, 0);
+        }
+
+        // Get unpaid/partially paid invoices with due dates
+        var activeInvoiceStatuses = new[]
+        {
+            InvoiceStatus.Approved,
+            InvoiceStatus.SentToTaxAuthority,
+            InvoiceStatus.AcceptedByTaxAuthority,
+            InvoiceStatus.AcceptedByRecipient,
+            InvoiceStatus.PartiallyPaid
+        };
+
+        var invoicesWithDueDate = await financeContext.Invoices
+            .Include(i => i.CurrentAccount)
+            .Where(i => activeInvoiceStatuses.Contains(i.Status)
+                && i.DueDate.HasValue
+                && i.RemainingAmount.Amount > 0
+                && (i.InvoiceType == InvoiceType.Sales || i.InvoiceType == InvoiceType.SalesReturn))
+            .ToListAsync();
+
+        _logger.LogDebug(
+            "Found {Count} invoices with due dates for tenant {TenantName}",
+            invoicesWithDueDate.Count, tenantName);
+
+        foreach (var invoice in invoicesWithDueDate)
+        {
+            var dueDate = invoice.DueDate!.Value.Date;
+            var daysUntilDue = (dueDate - today).Days;
+
+            // Check for upcoming reminders
+            foreach (var threshold in UpcomingReminderDays)
+            {
+                if (daysUntilDue == threshold)
+                {
+                    await SendUpcomingDueReminderAsync(
+                        tenantId, tenantName, invoice, threshold,
+                        emailService, notificationService);
+                    reminders++;
+                    break;
+                }
+            }
+
+            // Check for overdue reminders
+            if (daysUntilDue < 0)
+            {
+                var daysOverdue = Math.Abs(daysUntilDue);
+
+                foreach (var threshold in OverdueReminderDays)
+                {
+                    if (daysOverdue == threshold)
+                    {
+                        await SendOverdueReminderAsync(
+                            tenantId, tenantName, invoice, daysOverdue,
+                            emailService, notificationService);
+                        overdue++;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return (reminders, overdue);
+    }
+
+    private async Task SendUpcomingDueReminderAsync(
+        Guid tenantId,
+        string tenantName,
+        Domain.Entities.Invoice invoice,
+        int daysUntilDue,
+        IEmailService? emailService,
+        INotificationService? notificationService)
+    {
+        var customerEmail = invoice.CurrentAccount?.Email;
+        var customerName = invoice.CurrentAccountName;
+
+        _logger.LogInformation(
+            "Sending upcoming due reminder for Invoice {InvoiceNumber} to {CustomerName}. Days until due: {Days}",
+            invoice.InvoiceNumber, customerName, daysUntilDue);
+
+        // Send email to customer
+        if (emailService != null && !string.IsNullOrEmpty(customerEmail))
+        {
+            try
+            {
+                await emailService.SendInvoiceDueReminderAsync(
+                    customerEmail,
+                    customerName,
+                    invoice.InvoiceNumber,
+                    invoice.DueDate!.Value,
+                    invoice.RemainingAmount.Amount,
+                    invoice.Currency,
+                    daysUntilDue);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "Failed to send due date reminder email for invoice {InvoiceNumber}",
+                    invoice.InvoiceNumber);
+            }
+        }
+
+        // Send in-app notification to tenant users
+        if (notificationService != null)
+        {
+            try
+            {
+                var urgency = daysUntilDue <= 1 ? "urgent" : "normal";
+                await notificationService.SendToTenantAsync(
+                    tenantId,
+                    "Fatura Vade Hatırlatması",
+                    $"Fatura #{invoice.InvoiceNumber} ({customerName}) için vadeye {daysUntilDue} gün kaldı. " +
+                    $"Kalan tutar: {invoice.RemainingAmount.Amount:N2} {invoice.Currency}",
+                    "invoice_due_reminder",
+                    new Dictionary<string, object>
+                    {
+                        { "invoiceId", invoice.Id },
+                        { "invoiceNumber", invoice.InvoiceNumber },
+                        { "customerId", invoice.CurrentAccountId },
+                        { "customerName", customerName },
+                        { "dueDate", invoice.DueDate!.Value },
+                        { "remainingAmount", invoice.RemainingAmount.Amount },
+                        { "currency", invoice.Currency },
+                        { "daysUntilDue", daysUntilDue },
+                        { "urgency", urgency }
+                    });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "Failed to send due date notification for invoice {InvoiceNumber}",
+                    invoice.InvoiceNumber);
+            }
+        }
+    }
+
+    private async Task SendOverdueReminderAsync(
+        Guid tenantId,
+        string tenantName,
+        Domain.Entities.Invoice invoice,
+        int daysOverdue,
+        IEmailService? emailService,
+        INotificationService? notificationService)
+    {
+        var customerEmail = invoice.CurrentAccount?.Email;
+        var customerName = invoice.CurrentAccountName;
+
+        _logger.LogWarning(
+            "Invoice {InvoiceNumber} is overdue by {Days} days. Customer: {CustomerName}, Amount: {Amount} {Currency}",
+            invoice.InvoiceNumber, daysOverdue, customerName, invoice.RemainingAmount.Amount, invoice.Currency);
+
+        // Determine severity based on days overdue
+        var severity = daysOverdue switch
+        {
+            <= 7 => "warning",
+            <= 14 => "high",
+            <= 30 => "critical",
+            _ => "escalated"
+        };
+
+        // Send email to customer
+        if (emailService != null && !string.IsNullOrEmpty(customerEmail))
+        {
+            try
+            {
+                await emailService.SendInvoiceOverdueNotificationAsync(
+                    customerEmail,
+                    customerName,
+                    invoice.InvoiceNumber,
+                    invoice.DueDate!.Value,
+                    invoice.RemainingAmount.Amount,
+                    invoice.Currency,
+                    daysOverdue);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "Failed to send overdue notification email for invoice {InvoiceNumber}",
+                    invoice.InvoiceNumber);
+            }
+        }
+
+        // Send in-app notification to tenant finance team
+        if (notificationService != null)
+        {
+            try
+            {
+                await notificationService.SendToTenantRoleAsync(
+                    tenantId,
+                    "Finance", // Send to finance role
+                    "Vadesi Geçmiş Fatura",
+                    $"⚠️ Fatura #{invoice.InvoiceNumber} ({customerName}) vadesi {daysOverdue} gün geçti! " +
+                    $"Tahsil edilecek tutar: {invoice.RemainingAmount.Amount:N2} {invoice.Currency}",
+                    "invoice_overdue",
+                    new Dictionary<string, object>
+                    {
+                        { "invoiceId", invoice.Id },
+                        { "invoiceNumber", invoice.InvoiceNumber },
+                        { "customerId", invoice.CurrentAccountId },
+                        { "customerName", customerName },
+                        { "dueDate", invoice.DueDate!.Value },
+                        { "remainingAmount", invoice.RemainingAmount.Amount },
+                        { "currency", invoice.Currency },
+                        { "daysOverdue", daysOverdue },
+                        { "severity", severity }
+                    });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "Failed to send overdue notification for invoice {InvoiceNumber}",
+                    invoice.InvoiceNumber);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Schedules the recurring invoice due date reminder job
+    /// </summary>
+    public static void Schedule()
+    {
+        RecurringJob.AddOrUpdate<InvoiceDueDateReminderJob>(
+            "invoice-due-date-reminder",
+            job => job.ExecuteAsync(),
+            "0 9 * * *", // Every day at 09:00 UTC
+            new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.Utc
+            });
+    }
+}

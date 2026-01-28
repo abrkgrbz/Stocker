@@ -168,6 +168,7 @@ public static class DependencyInjection
 
         // Register Hangfire Background Jobs
         services.AddScoped<WorkflowExecutionJob>();
+        services.AddScoped<LeadScoringRecalculationJob>();
 
         // Register CRM Notification Service (SignalR-based)
         services.AddScoped<ICrmNotificationService, CrmNotificationService>();
@@ -189,5 +190,18 @@ public static class DependencyInjection
         configurator.AddConsumer<CustomerCreatedEventConsumer>();
         configurator.AddConsumer<CustomerUpdatedEventConsumer>();
         configurator.AddConsumer<DealWonEventConsumer>();
+    }
+
+    /// <summary>
+    /// Schedules CRM module recurring Hangfire jobs.
+    /// Called from HangfireConfiguration after Hangfire is initialized.
+    /// </summary>
+    public static void ScheduleCRMJobs()
+    {
+        // Lead scoring recalculation - runs every 6 hours
+        LeadScoringRecalculationJob.Schedule();
+
+        // Reminder job - runs every minute
+        ReminderJob.RegisterRecurringJob();
     }
 }

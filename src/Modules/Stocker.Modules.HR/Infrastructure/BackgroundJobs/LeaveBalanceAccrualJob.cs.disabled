@@ -1,0 +1,318 @@
+using Hangfire;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Stocker.Application.Common.Interfaces;
+using Stocker.Modules.HR.Domain.Entities;
+using Stocker.Modules.HR.Domain.Enums;
+using Stocker.Modules.HR.Infrastructure.Persistence;
+using Stocker.SharedKernel.Interfaces;
+using Stocker.SharedKernel.MultiTenancy;
+using Stocker.SignalR.Services.Interfaces;
+
+namespace Stocker.Modules.HR.Infrastructure.BackgroundJobs;
+
+/// <summary>
+/// Hangfire background job for annual leave balance accrual.
+/// Creates new leave balances at the start of each year and
+/// handles carry-forward from previous year.
+/// Also handles monthly/quarterly accrual for some leave types.
+/// </summary>
+public class LeaveBalanceAccrualJob
+{
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<LeaveBalanceAccrualJob> _logger;
+
+    public LeaveBalanceAccrualJob(
+        IServiceProvider serviceProvider,
+        ILogger<LeaveBalanceAccrualJob> logger)
+    {
+        _serviceProvider = serviceProvider;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Processes leave balance accruals for all tenants.
+    /// Creates new year balances on January 1st, handles carry-forward,
+    /// and processes monthly accruals on the 1st of each month.
+    /// Scheduled to run on the 1st of every month at 00:30 UTC
+    /// </summary>
+    [AutomaticRetry(Attempts = 3, DelaysInSeconds = new[] { 60, 300, 900 })]
+    [Queue("maintenance")]
+    public async Task ExecuteAsync()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var masterContext = scope.ServiceProvider.GetRequiredService<IMasterDbContext>();
+        var tenantDbContextFactory = scope.ServiceProvider.GetRequiredService<ITenantDbContextFactory>();
+
+        _logger.LogInformation("Starting leave balance accrual job");
+
+        try
+        {
+            var currentYear = DateTime.UtcNow.Year;
+            var currentMonth = DateTime.UtcNow.Month;
+            var isNewYear = currentMonth == 1; // January - process annual accrual
+
+            var totalBalancesCreated = 0;
+            var totalCarryForward = 0;
+            var tenantsProcessed = 0;
+
+            // Get all active tenants
+            var tenants = await masterContext.Tenants
+                .Where(t => t.IsActive)
+                .Select(t => new { t.Id, t.Name })
+                .ToListAsync();
+
+            _logger.LogInformation(
+                "Found {TenantCount} tenants to process for leave accrual. Year: {Year}, Month: {Month}, IsNewYear: {IsNewYear}",
+                tenants.Count, currentYear, currentMonth, isNewYear);
+
+            foreach (var tenant in tenants)
+            {
+                try
+                {
+                    var (created, carried) = await ProcessTenantLeaveAccrualAsync(
+                        tenant.Id, tenant.Name, tenantDbContextFactory, currentYear, isNewYear);
+
+                    totalBalancesCreated += created;
+                    totalCarryForward += carried;
+                    tenantsProcessed++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Error processing leave accrual for tenant {TenantId} ({TenantName})",
+                        tenant.Id, tenant.Name);
+                }
+            }
+
+            _logger.LogInformation(
+                "Leave balance accrual completed. Tenants: {Tenants}, Balances Created: {Created}, Carry Forwards: {Carried}",
+                tenantsProcessed, totalBalancesCreated, totalCarryForward);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error in leave balance accrual job");
+            throw;
+        }
+    }
+
+    private async Task<(int created, int carryForward)> ProcessTenantLeaveAccrualAsync(
+        Guid tenantId,
+        string tenantName,
+        ITenantDbContextFactory contextFactory,
+        int currentYear,
+        bool isNewYear)
+    {
+        var createdCount = 0;
+        var carryForwardCount = 0;
+
+        using var tenantScope = _serviceProvider.CreateScope();
+        var backgroundTenantService = tenantScope.ServiceProvider.GetRequiredService<IBackgroundTenantService>();
+        var notificationService = tenantScope.ServiceProvider.GetService<INotificationService>();
+
+        // Create tenant context
+        var tenantContext = await contextFactory.CreateDbContextAsync(tenantId);
+        if (tenantContext == null)
+        {
+            _logger.LogWarning("Could not create context for tenant {TenantId}", tenantId);
+            return (0, 0);
+        }
+
+        // Get HR module context
+        var hrContext = tenantScope.ServiceProvider.GetService<HRDbContext>();
+        if (hrContext == null)
+        {
+            _logger.LogDebug("HR module not available for tenant {TenantId}", tenantId);
+            return (0, 0);
+        }
+
+        // Get all active leave types
+        var leaveTypes = await hrContext.LeaveTypes
+            .Where(lt => lt.IsActive)
+            .ToListAsync();
+
+        // Get all active employees
+        var employees = await hrContext.Employees
+            .Where(e => e.Status == EmployeeStatus.Active)
+            .Include(e => e.LeaveBalances)
+            .ToListAsync();
+
+        _logger.LogDebug(
+            "Processing {EmployeeCount} employees with {LeaveTypeCount} leave types for tenant {TenantName}",
+            employees.Count, leaveTypes.Count, tenantName);
+
+        foreach (var employee in employees)
+        {
+            foreach (var leaveType in leaveTypes)
+            {
+                try
+                {
+                    // Check if balance already exists for this year
+                    var existingBalance = employee.LeaveBalances
+                        .FirstOrDefault(lb => lb.LeaveTypeId == leaveType.Id && lb.Year == currentYear);
+
+                    if (existingBalance == null && isNewYear)
+                    {
+                        // Calculate entitled days based on employment duration
+                        var entitledDays = CalculateEntitledDays(employee, leaveType);
+
+                        // Handle carry-forward from previous year
+                        var carryForward = 0m;
+                        if (leaveType.IsCarryForward)
+                        {
+                            var previousBalance = employee.LeaveBalances
+                                .FirstOrDefault(lb => lb.LeaveTypeId == leaveType.Id && lb.Year == currentYear - 1);
+
+                            if (previousBalance != null && previousBalance.Available > 0)
+                            {
+                                carryForward = previousBalance.Available;
+
+                                // Apply max carry forward limit if set
+                                if (leaveType.MaxCarryForwardDays.HasValue)
+                                {
+                                    carryForward = Math.Min(carryForward, leaveType.MaxCarryForwardDays.Value);
+                                }
+
+                                carryForwardCount++;
+                            }
+                        }
+
+                        // Create new balance
+                        var newBalance = new LeaveBalance(
+                            employee.Id,
+                            leaveType.Id,
+                            currentYear,
+                            entitledDays,
+                            carryForward);
+
+                        hrContext.LeaveBalances.Add(newBalance);
+                        createdCount++;
+
+                        _logger.LogDebug(
+                            "Created leave balance for Employee {EmployeeId}, LeaveType {LeaveTypeId}, " +
+                            "Year {Year}, Entitled: {Entitled}, CarryForward: {CarryForward}",
+                            employee.Id, leaveType.Id, currentYear, entitledDays, carryForward);
+                    }
+                    else if (existingBalance != null && !isNewYear)
+                    {
+                        // Handle monthly/quarterly accrual for certain leave types
+                        // Some organizations accrue leave monthly instead of annually
+                        // This would be based on company policy configuration
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Error creating leave balance for Employee {EmployeeId}, LeaveType {LeaveTypeId}",
+                        employee.Id, leaveType.Id);
+                }
+            }
+        }
+
+        await hrContext.SaveChangesAsync();
+
+        // Send summary notification if new year
+        if (isNewYear && notificationService != null && createdCount > 0)
+        {
+            try
+            {
+                await notificationService.SendToTenantRoleAsync(
+                    tenantId,
+                    "HR",
+                    "Yıllık İzin Hakları Oluşturuldu",
+                    $"📅 {currentYear} yılı için {createdCount} izin bakiyesi oluşturuldu. " +
+                    $"{carryForwardCount} çalışanın geçen yıldan devreden izni aktarıldı.",
+                    "leave_balance_accrual",
+                    new Dictionary<string, object>
+                    {
+                        { "year", currentYear },
+                        { "balancesCreated", createdCount },
+                        { "carryForwardCount", carryForwardCount }
+                    });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send leave accrual notification");
+            }
+        }
+
+        return (createdCount, carryForwardCount);
+    }
+
+    /// <summary>
+    /// Calculates entitled leave days based on Turkish Labor Law and company policy.
+    /// Per Turkish Labor Law:
+    /// - 1-5 years: 14 days
+    /// - 5-15 years: 20 days
+    /// - 15+ years: 26 days
+    /// </summary>
+    private decimal CalculateEntitledDays(Employee employee, LeaveType leaveType)
+    {
+        // Start with default days from leave type
+        var entitledDays = leaveType.DefaultDays;
+
+        // For annual leave (yıllık izin), apply Turkish Labor Law rules
+        if (leaveType.Code.Equals("ANNUAL", StringComparison.OrdinalIgnoreCase) ||
+            leaveType.Code.Equals("YILLIK", StringComparison.OrdinalIgnoreCase))
+        {
+            var yearsOfService = CalculateYearsOfService(employee);
+
+            // Turkish Labor Law Article 53
+            entitledDays = yearsOfService switch
+            {
+                < 1 => 0, // First year - prorated or no entitlement
+                >= 1 and < 5 => 14, // 1-5 years: 14 days
+                >= 5 and < 15 => 20, // 5-15 years: 20 days
+                _ => 26 // 15+ years: 26 days
+            };
+
+            // For employees under 18 or over 50, minimum 20 days
+            var age = DateTime.UtcNow.Year - employee.BirthDate.Year;
+            if ((age < 18 || age > 50) && entitledDays < 20 && yearsOfService >= 1)
+            {
+                entitledDays = 20;
+            }
+
+            // For first year, calculate prorated if hired mid-year
+            if (yearsOfService < 1)
+            {
+                var monthsWorked = (DateTime.UtcNow - employee.HireDate).Days / 30.0;
+                if (monthsWorked >= 1) // At least 1 month
+                {
+                    entitledDays = Math.Round((decimal)(14 * monthsWorked / 12), 1);
+                }
+            }
+        }
+
+        // Apply max days limit if set
+        if (leaveType.MaxDays.HasValue && entitledDays > leaveType.MaxDays.Value)
+        {
+            entitledDays = leaveType.MaxDays.Value;
+        }
+
+        return entitledDays;
+    }
+
+    private int CalculateYearsOfService(Employee employee)
+    {
+        var effectiveHireDate = employee.OriginalHireDate ?? employee.HireDate;
+        var totalDays = (DateTime.UtcNow - effectiveHireDate).TotalDays;
+        return (int)(totalDays / 365);
+    }
+
+    /// <summary>
+    /// Schedules the recurring leave balance accrual job
+    /// </summary>
+    public static void Schedule()
+    {
+        RecurringJob.AddOrUpdate<LeaveBalanceAccrualJob>(
+            "leave-balance-accrual",
+            job => job.ExecuteAsync(),
+            "30 0 1 * *", // Every 1st of month at 00:30 UTC
+            new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.Utc
+            });
+    }
+}

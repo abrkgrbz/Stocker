@@ -190,6 +190,9 @@ public static class MiddlewareExtensions
 
             app.UseMiddleware<HangfireAuthMiddleware>(jwtSecret, jwtIssuer, jwtAudience);
             app.UseHangfireDashboard(configuration);
+
+            // Schedule module-specific recurring Hangfire jobs
+            HangfireModuleJobsExtension.ScheduleModuleHangfireJobs();
         }
 
         // 19. Map Controllers and Endpoints
