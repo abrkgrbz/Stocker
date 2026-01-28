@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Minio;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Services;
+using Stocker.Infrastructure.Alerts.Extensions;
 using Stocker.Infrastructure.BackgroundJobs;
 using Stocker.Infrastructure.BackgroundJobs.Jobs;
 using Stocker.Infrastructure.Configuration;
@@ -139,6 +140,9 @@ public static class ServiceCollectionExtensions
 
         // Add Migration Services (Excel Template Generator - available in all environments)
         services.AddScoped<IExcelTemplateGenerator, ExcelTemplateGenerator>();
+
+        // Add Alert Services
+        services.AddAlertServices(configuration);
 
         // Add other infrastructure services here as needed
 
