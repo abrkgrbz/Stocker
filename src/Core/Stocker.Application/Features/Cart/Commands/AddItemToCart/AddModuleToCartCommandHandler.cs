@@ -71,6 +71,8 @@ public class AddModuleToCartCommandHandler : IRequestHandler<AddModuleToCartComm
         {
             cart = SubscriptionCart.Create(tenantId, null, BillingCycle.Aylik);
             _context.SubscriptionCarts.Add(cart);
+            // Save cart first before adding items to avoid concurrency issues
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
         return cart;
@@ -139,6 +141,8 @@ public class AddBundleToCartCommandHandler : IRequestHandler<AddBundleToCartComm
         {
             cart = SubscriptionCart.Create(tenantId, null, BillingCycle.Aylik);
             _context.SubscriptionCarts.Add(cart);
+            // Save cart first before adding items to avoid concurrency issues
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
         return cart;
@@ -205,6 +209,8 @@ public class AddAddOnToCartCommandHandler : IRequestHandler<AddAddOnToCartComman
         {
             cart = SubscriptionCart.Create(tenantId, null, BillingCycle.Aylik);
             _context.SubscriptionCarts.Add(cart);
+            // Save cart first before adding items to avoid concurrency issues
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
         return cart;
@@ -268,6 +274,8 @@ public class AddStoragePlanToCartCommandHandler : IRequestHandler<AddStoragePlan
         {
             cart = SubscriptionCart.Create(tenantId, null, BillingCycle.Aylik);
             _context.SubscriptionCarts.Add(cart);
+            // Save cart first before adding items to avoid concurrency issues
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
         return cart;
@@ -337,6 +345,8 @@ public class AddUsersToCartCommandHandler : IRequestHandler<AddUsersToCartComman
         {
             cart = SubscriptionCart.Create(tenantId, null, BillingCycle.Aylik);
             _context.SubscriptionCarts.Add(cart);
+            // Save cart first before adding items to avoid concurrency issues
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
         return cart;
