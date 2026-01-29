@@ -7,5 +7,7 @@ public enum PaymentMethod
     BankaTransferi = 2,
     PayPal = 3,
     Stripe = 4,
-    Diger = 5
+    Iyzico = 5,
+    LemonSqueezy = 6,
+    Diger = 99
 }

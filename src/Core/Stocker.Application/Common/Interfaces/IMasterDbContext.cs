@@ -64,7 +64,15 @@ public interface IMasterDbContext
     DbSet<UserTier> UserTiers { get; }
     DbSet<ModulePricing> ModulePricing { get; }
     DbSet<ModuleBundle> ModuleBundles { get; }
+    DbSet<ModuleBundleItem> ModuleBundleItems { get; }
+    DbSet<SubscriptionAddOn> SubscriptionAddOns { get; }
     DbSet<IyzicoSubscription> IyzicoSubscriptions { get; }
+
+    // Shopping Cart & Checkout entities
+    DbSet<SubscriptionCart> SubscriptionCarts { get; }
+    DbSet<SubscriptionCartItem> SubscriptionCartItems { get; }
+    DbSet<SubscriptionOrder> SubscriptionOrders { get; }
+    DbSet<SubscriptionOrderItem> SubscriptionOrderItems { get; }
 
     // Subscription & Tenant Management
     DbSet<SubscriptionUsage> SubscriptionUsages { get; }

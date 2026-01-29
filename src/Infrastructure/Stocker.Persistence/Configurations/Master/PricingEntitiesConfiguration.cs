@@ -504,6 +504,15 @@ public class SubscriptionAddOnConfiguration : IEntityTypeConfiguration<Subscript
         builder.Property(x => x.AddOnId)
             .IsRequired();
 
+        // AddOn denormalized fields for historical tracking
+        builder.Property(x => x.AddOnCode)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        builder.Property(x => x.AddOnName)
+            .IsRequired()
+            .HasMaxLength(100);
+
         // Money value object - Price
         builder.OwnsOne(x => x.Price, price =>
         {
@@ -531,6 +540,11 @@ public class SubscriptionAddOnConfiguration : IEntityTypeConfiguration<Subscript
         builder.Property(x => x.IsActive)
             .HasDefaultValue(true);
 
+        builder.Property(x => x.CancellationReason)
+            .HasMaxLength(500);
+
+        builder.Property(x => x.CancelledAt);
+
         builder.HasIndex(x => x.SubscriptionId)
             .HasDatabaseName("IX_SubscriptionAddOns_SubscriptionId");
 
@@ -543,10 +557,19 @@ public class SubscriptionAddOnConfiguration : IEntityTypeConfiguration<Subscript
         builder.HasIndex(x => x.IsActive)
             .HasDatabaseName("IX_SubscriptionAddOns_IsActive");
 
+        builder.HasIndex(x => x.AddOnCode)
+            .HasDatabaseName("IX_SubscriptionAddOns_AddOnCode");
+
         // Relationship with AddOn
         builder.HasOne(x => x.AddOn)
             .WithMany()
             .HasForeignKey(x => x.AddOnId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Relationship with Subscription
+        builder.HasOne(x => x.Subscription)
+            .WithMany()
+            .HasForeignKey(x => x.SubscriptionId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

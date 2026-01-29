@@ -107,6 +107,12 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
     // Subscription Add-ons (add-ons attached to subscriptions)
     public DbSet<SubscriptionAddOn> SubscriptionAddOns => Set<SubscriptionAddOn>();
 
+    // Shopping Cart & Checkout
+    public DbSet<SubscriptionCart> SubscriptionCarts => Set<SubscriptionCart>();
+    public DbSet<SubscriptionCartItem> SubscriptionCartItems => Set<SubscriptionCartItem>();
+    public DbSet<SubscriptionOrder> SubscriptionOrders => Set<SubscriptionOrder>();
+    public DbSet<SubscriptionOrderItem> SubscriptionOrderItems => Set<SubscriptionOrderItem>();
+
     // Migration Management
     public DbSet<ScheduledMigration> ScheduledMigrations => Set<ScheduledMigration>();
 
