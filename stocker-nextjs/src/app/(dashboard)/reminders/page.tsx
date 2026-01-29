@@ -413,36 +413,54 @@ export default function RemindersPage() {
   const completedCount = activeTab === 'completed' ? filteredReminders.length : filteredReminders.filter((r) => r.status === 3).length;
 
   return (
-    <div style={{ padding: 24 }}>
-      <Card>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
-          <Title level={2} style={{ margin: 0 }}>
-            <BellIcon className="w-6 h-6 inline-block mr-2" /> Hatırlatıcılar
-          </Title>
-          <Space>
-            <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={loadReminders} loading={loading}>
-              Yenile
-            </Button>
-            <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={handleCreate}>
-              Yeni Hatırlatıcı
-            </Button>
-          </Space>
+    <div className="max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
+            <BellIcon className="w-5 h-5 text-orange-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold text-slate-900 m-0">Hatırlatıcılar</h1>
+            <p className="text-sm text-slate-500 m-0">Görevlerinizi ve randevularınızı takip edin</p>
+          </div>
         </div>
+        <Space>
+          <Button
+            icon={<ArrowPathIcon className="w-4 h-4" />}
+            onClick={loadReminders}
+            loading={loading}
+            className="bg-white"
+          >
+            Yenile
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusIcon className="w-4 h-4" />}
+            onClick={handleCreate}
+            className="bg-slate-900 border-slate-900 hover:bg-slate-800 hover:border-slate-800"
+          >
+            Yeni Hatırlatıcı
+          </Button>
+        </Space>
+      </div>
 
-        <Space style={{ marginBottom: 16, width: '100%', flexWrap: 'wrap' }} size="middle">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+        <Space style={{ marginBottom: 24, width: '100%', flexWrap: 'wrap' }} size="middle">
           <Input
             placeholder="Hatırlatıcı ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 300 }}
             allowClear
+            className="hover:border-slate-400 focus:border-slate-600"
           />
           <Select
             value={filterType}
             onChange={setFilterType}
             style={{ width: 200 }}
-            suffixIcon={<FunnelIcon className="w-4 h-4" />}
+            suffixIcon={<FunnelIcon className="w-4 h-4 text-slate-400" />}
           >
             <Select.Option value="all">Tüm Tipler</Select.Option>
             <Select.Option value={0}>Genel</Select.Option>
@@ -458,84 +476,94 @@ export default function RemindersPage() {
         <Tabs
           activeKey={activeTab}
           onChange={(key) => setActiveTab(key as 'all' | 'pending' | 'completed')}
-        >
-          <Tabs.TabPane
-            tab={
-              <span>
-                Tümü <Badge count={allCount} showZero style={{ marginLeft: 8 }} />
-              </span>
+          type="card"
+          className="reminder-tabs"
+          items={[
+            {
+              key: 'all',
+              label: (
+                <span>
+                  Tümü <Badge count={allCount} showZero style={{ marginLeft: 8, backgroundColor: activeTab === 'all' ? '#1a1a1a' : '#d9d9d9' }} />
+                </span>
+              ),
+              children: (
+                <>
+                  {loading ? (
+                    <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                      <ArrowPathIcon className="w-8 h-8 animate-spin text-slate-400 mx-auto" />
+                    </div>
+                  ) : filteredReminders.length === 0 ? (
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description="Henüz hatırlatıcı yok"
+                    >
+                      <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={handleCreate} className="bg-slate-900 border-slate-900">
+                        İlk Hatırlatıcıyı Oluştur
+                      </Button>
+                    </Empty>
+                  ) : (
+                    <Row gutter={[16, 16]}>
+                      {filteredReminders.map(renderReminderCard)}
+                    </Row>
+                  )}
+                </>
+              )
+            },
+            {
+              key: 'pending',
+              label: (
+                <span>
+                  Bekleyenler <Badge count={pendingCount} showZero style={{ marginLeft: 8, backgroundColor: activeTab === 'pending' ? '#1a1a1a' : '#d9d9d9' }} />
+                </span>
+              ),
+              children: (
+                <>
+                  {loading ? (
+                    <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                      <ArrowPathIcon className="w-8 h-8 animate-spin text-slate-400 mx-auto" />
+                    </div>
+                  ) : filteredReminders.length === 0 ? (
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description="Bekleyen hatırlatıcı yok"
+                    />
+                  ) : (
+                    <Row gutter={[16, 16]}>
+                      {filteredReminders.map(renderReminderCard)}
+                    </Row>
+                  )}
+                </>
+              )
+            },
+            {
+              key: 'completed',
+              label: (
+                <span>
+                  Tamamlananlar <Badge count={completedCount} showZero style={{ marginLeft: 8, backgroundColor: activeTab === 'completed' ? '#1a1a1a' : '#d9d9d9' }} />
+                </span>
+              ),
+              children: (
+                <>
+                  {loading ? (
+                    <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                      <ArrowPathIcon className="w-8 h-8 animate-spin text-slate-400 mx-auto" />
+                    </div>
+                  ) : filteredReminders.length === 0 ? (
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description="Tamamlanan hatırlatıcı yok"
+                    />
+                  ) : (
+                    <Row gutter={[16, 16]}>
+                      {filteredReminders.map(renderReminderCard)}
+                    </Row>
+                  )}
+                </>
+              )
             }
-            key="all"
-          >
-            {loading ? (
-              <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <ArrowPathIcon className="w-8 h-8 animate-spin" />
-              </div>
-            ) : filteredReminders.length === 0 ? (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="Henüz hatırlatıcı yok"
-              >
-                <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={handleCreate}>
-                  İlk Hatırlatıcıyı Oluştur
-                </Button>
-              </Empty>
-            ) : (
-              <Row gutter={[16, 0]}>
-                {filteredReminders.map(renderReminderCard)}
-              </Row>
-            )}
-          </Tabs.TabPane>
-
-          <Tabs.TabPane
-            tab={
-              <span>
-                Bekleyenler <Badge count={pendingCount} showZero style={{ marginLeft: 8 }} />
-              </span>
-            }
-            key="pending"
-          >
-            {loading ? (
-              <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <ArrowPathIcon className="w-8 h-8 animate-spin" />
-              </div>
-            ) : filteredReminders.length === 0 ? (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="Bekleyen hatırlatıcı yok"
-              />
-            ) : (
-              <Row gutter={[16, 0]}>
-                {filteredReminders.map(renderReminderCard)}
-              </Row>
-            )}
-          </Tabs.TabPane>
-
-          <Tabs.TabPane
-            tab={
-              <span>
-                Tamamlananlar <Badge count={completedCount} showZero style={{ marginLeft: 8 }} />
-              </span>
-            }
-            key="completed"
-          >
-            {loading ? (
-              <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <ArrowPathIcon className="w-8 h-8 animate-spin" />
-              </div>
-            ) : filteredReminders.length === 0 ? (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="Tamamlanan hatırlatıcı yok"
-              />
-            ) : (
-              <Row gutter={[16, 0]}>
-                {filteredReminders.map(renderReminderCard)}
-              </Row>
-            )}
-          </Tabs.TabPane>
-        </Tabs>
-      </Card>
+          ]}
+        />
+      </div>
 
       <ReminderDrawer
         open={drawerOpen}

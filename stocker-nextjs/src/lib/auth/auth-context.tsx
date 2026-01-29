@@ -206,15 +206,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const refreshSession = async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-      // Use /auth/refresh endpoint which reads refresh_token from HttpOnly cookie
-      const response = await fetch(`${apiUrl}/auth/refresh`, {
+      // Use /api/secure-auth/refresh endpoint which reads refresh_token from HttpOnly cookie
+      const response = await fetch(`${apiUrl}/api/secure-auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
       });
 
       if (!response.ok) {
-        throw new Error('Session refresh failed');
+        const errorData = await response.json().catch(() => ({}));
+        logger.error('Session refresh failed', new Error(errorData.message || `HTTP ${response.status}`), { component: 'AuthContext' });
+        throw new Error(errorData.message || 'Session refresh failed');
       }
 
       // Refresh user data after token renewal
