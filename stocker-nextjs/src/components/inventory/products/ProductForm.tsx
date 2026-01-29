@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Form,
   Input,
@@ -265,6 +265,36 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
 
   // Track if initial values have been loaded to prevent re-running
   const [initialValuesLoaded, setInitialValuesLoaded] = useState(false);
+
+  // Sync local state when form values change (e.g., when draft is loaded)
+  const syncLocalStateFromForm = useCallback(() => {
+    const formValues = form.getFieldsValue(true);
+    if (formValues.isActive !== undefined) {
+      setIsActive(formValues.isActive);
+    }
+    if (formValues.productType !== undefined) {
+      setProductType(formValues.productType);
+    }
+  }, [form]);
+
+  // Watch for form value changes (triggered by setFieldsValue from draft load)
+  useEffect(() => {
+    // Listen for form value updates
+    const unsubscribe = form.getInternalHooks?.('RC_FORM_INTERNAL_HOOKS')?.registerWatch?.((values: any) => {
+      if (values.isActive !== undefined && values.isActive !== isActive) {
+        setIsActive(values.isActive);
+      }
+      if (values.productType !== undefined && values.productType !== productType) {
+        setProductType(values.productType);
+      }
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, [form, isActive, productType]);
 
   useEffect(() => {
     // Only run once when initialValues first becomes available
