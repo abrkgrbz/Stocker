@@ -38,10 +38,25 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Gets the real client IP address, checking X-Forwarded-For header for reverse proxy scenarios
+    /// Gets the real client IP address, checking various proxy headers
+    /// Priority: CF-Connecting-IP (Cloudflare) > X-Forwarded-For > X-Real-IP > RemoteIpAddress
     /// </summary>
     private string? GetClientIpAddress()
     {
+        // Check CF-Connecting-IP header (set by Cloudflare)
+        var cfConnectingIp = Request.Headers["CF-Connecting-IP"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(cfConnectingIp))
+        {
+            return cfConnectingIp.Trim();
+        }
+
+        // Check True-Client-IP header (alternative Cloudflare header)
+        var trueClientIp = Request.Headers["True-Client-IP"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(trueClientIp))
+        {
+            return trueClientIp.Trim();
+        }
+
         // Check X-Forwarded-For header (set by reverse proxies like nginx, traefik)
         var forwardedFor = Request.Headers["X-Forwarded-For"].FirstOrDefault();
         if (!string.IsNullOrEmpty(forwardedFor))
@@ -110,11 +125,22 @@ public class AuthController : ControllerBase
         _logger.LogInformation("🔍 HttpContext.Items - TenantId: {TenantId}",
             HttpContext.Items.ContainsKey("TenantId") ? HttpContext.Items["TenantId"] : "NOT SET");
 
+        // Debug: Log IP detection details
+        var clientIp = GetClientIpAddress();
+        var userAgent = Request.Headers["User-Agent"].ToString();
+        _logger.LogInformation("🔍 Login IP Detection - CF-Connecting-IP: {CFIP}, X-Forwarded-For: {XFF}, X-Real-IP: {XRI}, RemoteIP: {RemoteIP}, Final: {FinalIP}",
+            Request.Headers["CF-Connecting-IP"].ToString(),
+            Request.Headers["X-Forwarded-For"].ToString(),
+            Request.Headers["X-Real-IP"].ToString(),
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            clientIp);
+        _logger.LogInformation("🔍 Login User-Agent: {UserAgent}", userAgent);
+
         // Add IP address and User-Agent for audit logging
         var enrichedCommand = command with
         {
-            IpAddress = GetClientIpAddress(),
-            UserAgent = Request.Headers["User-Agent"].ToString()
+            IpAddress = clientIp,
+            UserAgent = userAgent
         };
 
         var result = await _mediator.Send(enrichedCommand);

@@ -183,6 +183,10 @@ services:
       - "traefik.http.routers.api-secure.tls.domains[0].sans=*.stoocker.app"
       - "traefik.http.routers.api-secure.service=api"
       - "traefik.http.routers.api-secure.priority=100"
+      - "traefik.http.routers.api-secure.middlewares=api-headers"
+
+      # Headers middleware - ensure real client IP is forwarded
+      - "traefik.http.middlewares.api-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
 
       # Service configuration
       - "traefik.http.services.api.loadbalancer.server.port=5000"
