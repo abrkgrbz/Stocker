@@ -145,7 +145,8 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nfix\\(sales\\): add missing averageProgress and achievedCount to SalesTargetStatisticsDto\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nfix\\(sales\\): replace non-existent staleShort with realtime\\(\\) in query options\n\nqueryOptions.staleShort does not exist - use queryOptions.realtime\\(\\) instead\nwhich provides 30 second stale time for statistics and leaderboard data.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat\\(cors\\): allow localhost origins in production CORS policy\n\nAdded localhost and 127.0.0.1 to production CORS policy to enable\nlocal frontend development against production API.\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n\\)\")",
-      "mcp__serena__get_current_config"
+      "mcp__serena__get_current_config",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix\\(auth\\): resolve DbContext concurrency issue in LoginNotificationService\n\nThe LoginNotificationService was using the same DbContext instance as the\nparent AuthenticationService scope. When called with fire-and-forget pattern\n\\(_ = CheckAndNotifyAsync\\(...\\)\\), this caused concurrent DbContext access\nresulting in \"A second operation was started on this context instance\"\nexception.\n\nSolution: Use IServiceScopeFactory to create a new scope for each async\noperation, ensuring each fire-and-forget call has its own DbContext instance.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ],
     "deny": [],
     "ask": []

@@ -1,13 +1,13 @@
 'use client';
 
 /**
- * Modules Page - Module Management & Marketplace
- * Clean, minimal design following project patterns
+ * Modules Page - Marketplace
+ * Updated to support new Pricing System (Modules, Bundles, Addons)
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Input, Switch, Tag, message } from 'antd';
+import { Input, Switch, Tag, message, Tabs, Button, Card } from 'antd';
 import {
   Search,
   Users,
@@ -16,176 +16,123 @@ import {
   Briefcase,
   Package,
   BarChart3,
-  Settings,
-  Check,
-  ArrowRight,
-  Loader2,
-  Sparkles,
   Wallet,
   Factory,
+  Check,
+  ArrowRight,
+  Sparkles,
+  Zap,
+  Plus,
+  Info
 } from 'lucide-react';
 import { useActiveModules } from '@/lib/api/hooks/useUserModules';
 import { useToggleModule } from '@/lib/api/hooks/useTenantModules';
+import { marketplaceService, type ModulePricing, type BundlePricing, type AddOnPricing } from '@/lib/api/services/marketplaceService';
 import ModuleActivationModal from '@/components/modules/ModuleActivationModal';
 
-// Module tier configuration
-const TIER_CONFIG = {
-  standard: {
-    label: 'Standard',
-    color: 'default',
-  },
-  premium: {
-    label: 'Premium',
-    color: 'default',
-  },
-  enterprise: {
-    label: 'Enterprise',
-    color: 'default',
-  },
-} as const;
-
-// Module definitions - neutral color scheme
-const MODULE_DEFINITIONS = [
-  {
-    id: 'crm',
-    code: 'CRM',
-    name: 'CRM',
-    description: 'Müşteri ilişkileri yönetimi ve satış fırsatları',
-    icon: Users,
-    path: '/crm',
-    tier: 'premium' as const,
-    features: ['Müşteri Yönetimi', 'Satış Pipeline', 'Aktivite Takibi', 'Raporlama'],
-  },
-  {
-    id: 'inventory',
-    code: 'INVENTORY',
-    name: 'Stok Yönetimi',
-    description: 'Envanter takibi ve depo operasyonları',
-    icon: Boxes,
-    path: '/inventory',
-    tier: 'standard' as const,
-    features: ['Ürün Kataloğu', 'Depo Takibi', 'Barkod Sistemi', 'Stok Uyarıları'],
-  },
-  {
-    id: 'sales',
-    code: 'SALES',
-    name: 'Satış',
-    description: 'Sipariş, fatura ve ödeme yönetimi',
-    icon: ShoppingCart,
-    path: '/sales',
-    tier: 'standard' as const,
-    features: ['Sipariş Yönetimi', 'Faturalama', 'Ödeme Takibi', 'Raporlar'],
-  },
-  {
-    id: 'hr',
-    code: 'HR',
-    name: 'İnsan Kaynakları',
-    description: 'Personel yönetimi ve bordro işlemleri',
-    icon: Briefcase,
-    path: '/hr',
-    tier: 'standard' as const,
-    features: ['Personel Kartları', 'İzin Takibi', 'Bordro', 'Performans'],
-  },
-  {
-    id: 'purchase',
-    code: 'PURCHASE',
-    name: 'Satın Alma',
-    description: 'Tedarik zinciri ve satın alma süreçleri',
-    icon: Package,
-    path: '/purchase',
-    tier: 'standard' as const,
-    features: ['Tedarikçiler', 'Satın Alma Siparişleri', 'Mal Kabul', 'Ödemeler'],
-  },
-  {
-    id: 'finance',
-    code: 'FINANCE',
-    name: 'Finans',
-    description: 'Muhasebe, nakit akışı ve finansal yönetim',
-    icon: Wallet,
-    path: '/finance',
-    tier: 'premium' as const,
-    features: ['Hesap Planı', 'Fatura Yönetimi', 'Nakit Akışı', 'Banka İşlemleri'],
-  },
-  {
-    id: 'analytics',
-    code: 'REPORTS',
-    name: 'Raporlama',
-    description: 'İş zekası ve gelişmiş analitik',
-    icon: BarChart3,
-    path: '/analytics',
-    tier: 'enterprise' as const,
-    features: ['Dashboard Builder', 'KPI Takibi', 'Veri Görselleştirme', 'Export'],
-  },
-  {
-    id: 'manufacturing',
-    code: 'MANUFACTURING',
-    name: 'Üretim Yönetimi',
-    description: 'Üretim planlama, iş emirleri, MRP ve kalite kontrol',
-    icon: Factory,
-    path: '/manufacturing',
-    tier: 'enterprise' as const,
-    features: ['Üretim Planlama', 'İş Emirleri', 'Reçete/BOM', 'Kalite Kontrol'],
-  },
-];
+// Icon mapping helper
+const getIcon = (iconName: string) => {
+  const map: Record<string, any> = {
+    '📦': Boxes,
+    '💰': ShoppingCart,
+    '🛒': Package,
+    '💵': Wallet,
+    '👥': Users,
+    '🤝': Users,
+    '🏭': Factory,
+    '🚚': Package,
+    '✅': Check,
+    '📊': BarChart3,
+  };
+  return map[iconName] || Zap;
+};
 
 export default function ModulesPage() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState('modules');
   const [searchQuery, setSearchQuery] = useState('');
-  const [togglingModule, setTogglingModule] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Data
+  const [modules, setModules] = useState<ModulePricing[]>([]);
+  const [bundles, setBundles] = useState<BundlePricing[]>([]);
+  const [addOns, setAddOns] = useState<AddOnPricing[]>([]);
+
   const [activationModal, setActivationModal] = useState<{
     isOpen: boolean;
     moduleCode: string;
     moduleName: string;
   }>({ isOpen: false, moduleCode: '', moduleName: '' });
 
-  const { data: modulesData, isLoading, refetch } = useActiveModules();
+  // User state
+  const { data: activeModulesData, refetch: refetchActive } = useActiveModules();
   const toggleModuleMutation = useToggleModule();
 
-  // Create a Set of active module codes
-  const activeModuleCodes = useMemo(() => {
-    const codes = new Set<string>();
-    modulesData?.modules?.forEach(m => {
-      if (m.isActive) {
-        codes.add(m.code.toUpperCase());
-      }
-    });
-    return codes;
-  }, [modulesData]);
+  useEffect(() => {
+    loadMarketplace();
+  }, []);
 
-  // Build modules with active status
-  const modules = useMemo(() => {
-    return MODULE_DEFINITIONS.map(mod => ({
-      ...mod,
-      isActive: activeModuleCodes.has(mod.code.toUpperCase()),
-    }));
-  }, [activeModuleCodes]);
-
-  // Filter modules
-  const filteredModules = useMemo(() => {
-    if (!searchQuery.trim()) return modules;
-    const query = searchQuery.toLowerCase();
-    return modules.filter(
-      m => m.name.toLowerCase().includes(query) || m.description.toLowerCase().includes(query)
-    );
-  }, [modules, searchQuery]);
-
-  // Stats
-  const activeCount = modules.filter(m => m.isActive).length;
-
-  // Handlers
-  const handleModuleOpen = (module: typeof modules[0]) => {
-    if (module.isActive) {
-      router.push(module.path);
+  const loadMarketplace = async () => {
+    setIsLoading(true);
+    try {
+      const [m, b, a] = await Promise.all([
+        marketplaceService.getModules(),
+        marketplaceService.getBundles(),
+        marketplaceService.getAddOns()
+      ]);
+      setModules(m);
+      setBundles(b);
+      setAddOns(a);
+    } catch (error) {
+      console.error(error);
+      message.error('Market verileri yüklenemedi.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Open activation modal with pricing info
-  const openActivationModal = (moduleCode: string, moduleName: string) => {
-    setActivationModal({
-      isOpen: true,
-      moduleCode,
-      moduleName,
-    });
+  // Check if a module is active for the current tenant
+  const isModuleActive = (code: string) => {
+    return activeModulesData?.modules?.some(m => m.code === code && m.isActive) || false;
+  };
+
+  // Filtered Lists
+  const filteredModules = useMemo(() => {
+    let list = modules;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(m => m.moduleName.toLowerCase().includes(q) || m.description.toLowerCase().includes(q));
+    }
+    return list;
+  }, [modules, searchQuery]);
+
+  const filteredBundles = useMemo(() => {
+    let list = bundles;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(b => b.bundleName.toLowerCase().includes(q) || b.description.toLowerCase().includes(q));
+    }
+    return list;
+  }, [bundles, searchQuery]);
+
+
+  // Actions
+  const handleToggleModule = async (moduleCode: string, checked: boolean) => {
+    try {
+      await toggleModuleMutation.mutateAsync({ moduleCode, enable: checked });
+      message.success(checked ? 'Modül etkinleştirildi' : 'Modül devre dışı bırakıldı');
+      refetchActive();
+    } catch (error) {
+      message.error('İşlem başarısız.');
+    }
+  };
+
+  const handleBuyBundle = (bundle: BundlePricing) => {
+    message.info(`${bundle.bundleName} satın alma akışı başlatılıyor... (Demo)`);
+  };
+
+  const handleBuyAddOn = (addOn: AddOnPricing) => {
+    message.info(`${addOn.name} ekleme akışı başlatılıyor... (Demo)`);
   };
 
   // Close activation modal
@@ -195,165 +142,151 @@ export default function ModulesPage() {
 
   // Handle successful activation from modal
   const handleActivationSuccess = () => {
-    refetch();
-  };
-
-  const handleToggleModule = async (moduleCode: string, checked: boolean) => {
-    setTogglingModule(moduleCode);
-    try {
-      await toggleModuleMutation.mutateAsync({ moduleCode, enable: checked });
-      const action = checked ? 'etkinleştirildi' : 'devre dışı bırakıldı';
-      message.success(`Modül başarıyla ${action}`);
-      refetch();
-    } catch (error) {
-      console.error('Module toggle error:', error);
-      message.error('İşlem başarısız oldu. Lütfen tekrar deneyin.');
-    } finally {
-      setTogglingModule(null);
-    }
+    refetchActive();
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
-          <span className="text-sm text-slate-500">Yükleniyor...</span>
-        </div>
+      <div className="flex justify-center py-20">
+        <div className="animate-spin w-8 h-8 border-2 border-slate-900 border-t-transparent rounded-full" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-7xl mx-auto space-y-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-slate-900 mb-2">
-          Modül Yönetimi
-        </h1>
-        <p className="text-slate-500">
-          İşletmeniz için ihtiyaç duyduğunuz modülleri yönetin ve yapılandırın
-        </p>
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Modül Marketi</h1>
+        <p className="text-slate-500">İşletmenizi büyütmek için ihtiyacınız olan tüm araçlar.</p>
       </div>
 
-      {/* Stats & Search Row */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div className="flex items-center gap-2 text-sm text-slate-600">
-          <span className="font-medium text-slate-900">{activeCount}</span>
-          <span>/ {modules.length} modül aktif</span>
-        </div>
-
+      {/* Tabs & Search */}
+      <div className="flex flex-col sm:flex-row justify-between gap-4">
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={[
+            { key: 'modules', label: 'Modüller' },
+            { key: 'bundles', label: 'Paketler (Bundles)' },
+            { key: 'addons', label: 'Eklentiler' },
+          ]}
+          className="w-full sm:w-auto"
+        />
         <Input
           prefix={<Search className="w-4 h-4 text-slate-400" />}
-          placeholder="Modül ara..."
+          placeholder="Ara..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          allowClear
+          onChange={e => setSearchQuery(e.target.value)}
           className="max-w-xs"
         />
       </div>
 
-      {/* Modules Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filteredModules.map((module) => {
-          const Icon = module.icon;
-          const tier = TIER_CONFIG[module.tier];
-          const isToggling = togglingModule === module.code;
+      {/* Content */}
+      <div className="min-h-[400px]">
+        {/* MODULES */}
+        {activeTab === 'modules' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredModules.map(module => {
+              const Icon = getIcon(module.icon);
+              const active = isModuleActive(module.moduleCode);
 
-          return (
-            <div
-              key={module.id}
-              className={`
-                bg-white rounded-xl border p-5 transition-all duration-200
-                ${module.isActive
-                  ? 'border-slate-900 shadow-sm'
-                  : 'border-slate-200 hover:border-slate-300'
-                }
-                ${isToggling ? 'opacity-70' : ''}
-              `}
-            >
-              {/* Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                    <Icon className="w-5 h-5 text-slate-600" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-slate-900">{module.name}</h3>
-                      <Tag color={tier.color} className="text-xs">
-                        {tier.label}
-                      </Tag>
+              return (
+                <div key={module.id} className={`bg-white rounded-xl border p-6 transition-all ${active ? 'border-slate-900 shadow-md' : 'border-slate-200 hover:border-slate-300'}`}>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center">
+                        <Icon className="w-6 h-6 text-slate-700" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900">{module.moduleName}</h3>
+                        <p className="text-sm text-slate-500 line-clamp-1">{module.description}</p>
+                      </div>
                     </div>
-                    <p className="text-sm text-slate-500 mt-0.5">{module.description}</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex flex-col gap-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Aylık</span>
+                        <span className="font-semibold">₺{module.monthlyPrice}</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Switch size="small" checked={active} onChange={(c) => handleToggleModule(module.moduleCode, c)} />
+                        <span className="text-xs font-medium text-slate-600">{active ? 'Aktif' : 'Pasif'}</span>
+                      </div>
+                      {active && (
+                        <Button size="small" type="text" onClick={() => router.push(`/${module.moduleCode.toLowerCase()}`)}>
+                          Git <ArrowRight className="w-3 h-3 ml-1" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Features */}
-              <div className="mb-4">
-                <div className="grid grid-cols-2 gap-1.5">
-                  {module.features.map((feature, idx) => (
-                    <div key={idx} className="flex items-center gap-1.5 text-sm text-slate-600">
-                      <Check className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                      <span className="truncate">{feature}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={module.isActive}
-                    onChange={(checked) => handleToggleModule(module.code, checked)}
-                    size="small"
-                    disabled={isToggling}
-                    loading={isToggling}
-                  />
-                  <span className={`text-sm ${module.isActive ? 'text-slate-900 font-medium' : 'text-slate-500'}`}>
-                    {module.isActive ? 'Aktif' : 'Pasif'}
-                  </span>
-                </div>
-
-                {module.isActive ? (
-                  <button
-                    onClick={() => handleModuleOpen(module)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
-                  >
-                    Aç
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => openActivationModal(module.code, module.name)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Aktifleştir
-                  </button>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Empty State */}
-      {filteredModules.length === 0 && (
-        <div className="text-center py-16">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Search className="w-8 h-8 text-slate-400" />
+              );
+            })}
           </div>
-          <h3 className="text-lg font-medium text-slate-900 mb-2">
-            Modül bulunamadı
-          </h3>
-          <p className="text-slate-500">
-            &ldquo;{searchQuery}&rdquo; için sonuç yok
-          </p>
-        </div>
-      )}
+        )}
+
+        {/* BUNDLES */}
+        {activeTab === 'bundles' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredBundles.map(bundle => (
+              <div key={bundle.id} className="bg-white rounded-xl border border-slate-200 p-6 relative overflow-hidden group hover:shadow-lg transition-all">
+                {bundle.discountPercent > 0 && (
+                  <div className="absolute top-4 right-4 bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-full">
+                    %{bundle.discountPercent} İndirim
+                  </div>
+                )}
+                <h3 className="text-xl font-bold text-slate-900 mb-2">{bundle.bundleName}</h3>
+                <p className="text-slate-500 text-sm mb-6">{bundle.description}</p>
+
+                <div className="mb-6 space-y-2">
+                  <p className="text-xs font-bold uppercase text-slate-400">İçerik</p>
+                  <div className="flex flex-wrap gap-2">
+                    {bundle.moduleCodes.map(code => (
+                      <span key={code} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">
+                        {modules.find(m => m.moduleCode === code)?.moduleName || code}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
+                  <div>
+                    <p className="text-2xl font-bold text-slate-900">₺{bundle.monthlyPrice}<span className="text-sm font-normal text-slate-500">/ay</span></p>
+                  </div>
+                  <Button type="primary" className="bg-slate-900" onClick={() => handleBuyBundle(bundle)}>
+                    Satın Al
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ADDONS */}
+        {activeTab === 'addons' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {addOns.map(addon => (
+              <div key={addon.id} className="bg-white rounded-xl border border-slate-200 p-6 flex flex-col">
+                <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 mb-4">
+                  <Plus className="w-5 h-5" />
+                </div>
+                <h3 className="font-bold text-slate-900">{addon.name}</h3>
+                <p className="text-sm text-slate-500 mb-4 flex-1">{addon.description}</p>
+                <div className="flex items-center justify-between mt-4">
+                  <span className="font-bold">₺{addon.monthlyPrice}/ay</span>
+                  <Button size="small" onClick={() => handleBuyAddOn(addon)}>Ekle</Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Module Activation Modal */}
       <ModuleActivationModal

@@ -12,7 +12,8 @@ import {
     Mail,
     CreditCard,
     Activity,
-    Zap
+    Zap,
+    Tags
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -36,7 +37,15 @@ const mainNav: NavItem[] = [
             { label: 'Abonelikler', path: '/tenants/subscriptions' },
         ]
     },
-    { label: 'Faturalandırma', icon: CreditCard, path: '/billing' },
+    {
+        label: 'Faturalandırma',
+        icon: CreditCard,
+        path: '/billing',
+        children: [
+            { label: 'Genel Bakış', path: '/billing' },
+            { label: 'Fiyatlandırma Ayarları', path: '/billing/pricing' }
+        ]
+    },
     {
         label: 'Sistem Operasyonları',
         icon: Activity,
