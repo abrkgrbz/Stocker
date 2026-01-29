@@ -18,7 +18,8 @@ import {
     ArrowLeftRight,
     BarChart3,
     Receipt,
-    Users
+    Users,
+    Settings
 } from 'lucide-react';
 import { packageService } from '@/services/packageService';
 import type { PackageDto } from '@/services/packageService';
@@ -154,6 +155,7 @@ const BillingPage: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-3">
                     <Button variant="outline" icon={History}>İşlem Günlüğü</Button>
+                    <Button variant="secondary" icon={Settings} onClick={() => navigate('/billing/pricing')}>Fiyatlandırma</Button>
                     <Button icon={Plus} onClick={() => navigate('/billing/packages/new')}>Yeni Paket Oluştur</Button>
                 </div>
             </div>

@@ -81,6 +81,18 @@ public class TenantConfiguration : BaseEntityTypeConfiguration<Domain.Master.Ent
 
         builder.Property(t => t.CredentialsRotateAfter);
 
+        // Module and user management properties
+        builder.Property(t => t.EnabledModuleCodes)
+            .HasMaxLength(2000); // Comma-separated module codes
+
+        builder.Property(t => t.MaxUsers)
+            .IsRequired()
+            .HasDefaultValue(1);
+
+        builder.Property(t => t.CurrentUserCount)
+            .IsRequired()
+            .HasDefaultValue(0);
+
         // Relationships
         builder.HasMany(t => t.Domains)
             .WithOne()

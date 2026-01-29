@@ -62,6 +62,9 @@ public interface IMasterDbContext
     DbSet<Industry> Industries { get; }
     DbSet<IndustryRecommendedModule> IndustryRecommendedModules { get; }
     DbSet<UserTier> UserTiers { get; }
+    DbSet<ModulePricing> ModulePricing { get; }
+    DbSet<ModuleBundle> ModuleBundles { get; }
+    DbSet<IyzicoSubscription> IyzicoSubscriptions { get; }
 
     // Subscription & Tenant Management
     DbSet<SubscriptionUsage> SubscriptionUsages { get; }

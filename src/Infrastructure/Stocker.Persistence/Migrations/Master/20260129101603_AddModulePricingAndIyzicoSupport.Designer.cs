@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Stocker.Persistence.Contexts;
@@ -11,9 +12,11 @@ using Stocker.Persistence.Contexts;
 namespace Stocker.Persistence.Migrations.Master
 {
     [DbContext(typeof(MasterDbContext))]
-    partial class MasterDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260129101603_AddModulePricingAndIyzicoSupport")]
+    partial class AddModulePricingAndIyzicoSupport
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2704,11 +2707,6 @@ namespace Stocker.Persistence.Migrations.Master
                     b.Property<DateTime?>("CredentialsRotateAfter")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("CurrentUserCount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
-
                     b.Property<string>("DatabaseName")
                         .IsRequired()
                         .HasMaxLength(128)
@@ -2722,10 +2720,6 @@ namespace Stocker.Persistence.Migrations.Master
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<string>("EnabledModuleCodes")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
                     b.Property<string>("EncryptedConnectionString")
                         .HasMaxLength(2048)
                         .HasColumnType("character varying(2048)");
@@ -2736,11 +2730,6 @@ namespace Stocker.Persistence.Migrations.Master
                     b.Property<string>("LogoUrl")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
-
-                    b.Property<int>("MaxUsers")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
 
                     b.Property<string>("Name")
                         .IsRequired()

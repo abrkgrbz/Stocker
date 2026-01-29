@@ -20,9 +20,19 @@ public sealed class Package : AggregateRoot
     public int TrialDays { get; private set; }
     public int DisplayOrder { get; private set; }
 
+    // Per-User Pricing
+    public Money? PricePerUser { get; private set; }     // Kullanıcı başı ek ücret
+    public int IncludedUsers { get; private set; }       // Pakete dahil kullanıcı sayısı
+    public int? MaxUsers { get; private set; }           // Maksimum kullanıcı limiti (null = sınırsız)
+
     // LemonSqueezy integration
     public string? LemonSqueezyProductId { get; private set; }
     public string? LemonSqueezyVariantId { get; private set; }
+
+    // Iyzico integration
+    public string? IyzicoProductId { get; private set; }
+    public string? IyzicoPlanId { get; private set; }
+
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
     public IReadOnlyList<PackageFeature> Features => _features.AsReadOnly();

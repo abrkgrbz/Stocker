@@ -29,7 +29,14 @@ public class AddOnConfiguration : IEntityTypeConfiguration<AddOn>
         builder.Property(x => x.Icon)
             .HasMaxLength(100);
 
-        // Money value object
+        // Add-on type
+        builder.Property(x => x.Type)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasDefaultValue(Domain.Master.Enums.AddOnType.Feature);
+
+        // Money value object - MonthlyPrice
         builder.OwnsOne(x => x.MonthlyPrice, price =>
         {
             price.Property(p => p.Amount)
@@ -44,6 +51,19 @@ public class AddOnConfiguration : IEntityTypeConfiguration<AddOn>
                 .IsRequired();
         });
 
+        // Money value object - YearlyPrice (optional)
+        builder.OwnsOne(x => x.YearlyPrice, price =>
+        {
+            price.Property(p => p.Amount)
+                .HasColumnName("YearlyPriceAmount")
+                .HasPrecision(18, 2);
+
+            price.Property(p => p.Currency)
+                .HasColumnName("YearlyPriceCurrency")
+                .HasMaxLength(3)
+                .HasDefaultValue("TRY");
+        });
+
         builder.Property(x => x.IsActive)
             .HasDefaultValue(true);
 
@@ -53,8 +73,23 @@ public class AddOnConfiguration : IEntityTypeConfiguration<AddOn>
         builder.Property(x => x.Category)
             .HasMaxLength(50);
 
+        // New fields for module-specific add-ons
+        builder.Property(x => x.RequiredModuleCode)
+            .HasMaxLength(50);
+
+        builder.Property(x => x.Quantity);
+
+        builder.Property(x => x.QuantityUnit)
+            .HasMaxLength(20);
+
         builder.HasIndex(x => x.Code)
             .IsUnique();
+
+        builder.HasIndex(x => x.Type)
+            .HasDatabaseName("IX_AddOns_Type");
+
+        builder.HasIndex(x => x.RequiredModuleCode)
+            .HasDatabaseName("IX_AddOns_RequiredModuleCode");
 
         // Navigation property for features
         builder.HasMany(x => x.Features)
@@ -266,5 +301,252 @@ public class UserTierConfiguration : IEntityTypeConfiguration<UserTier>
 
         builder.HasIndex(x => x.Code)
             .IsUnique();
+    }
+}
+
+/// <summary>
+/// ModulePricing entity configuration
+/// </summary>
+public class ModulePricingConfiguration : IEntityTypeConfiguration<ModulePricing>
+{
+    public void Configure(EntityTypeBuilder<ModulePricing> builder)
+    {
+        builder.ToTable("ModulePricing", "master");
+
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.ModuleCode)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        builder.Property(x => x.ModuleName)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        builder.Property(x => x.Description)
+            .HasMaxLength(500);
+
+        builder.Property(x => x.Icon)
+            .HasMaxLength(100);
+
+        // Money value object - MonthlyPrice
+        builder.OwnsOne(x => x.MonthlyPrice, price =>
+        {
+            price.Property(p => p.Amount)
+                .HasColumnName("MonthlyPriceAmount")
+                .HasPrecision(18, 2)
+                .IsRequired();
+
+            price.Property(p => p.Currency)
+                .HasColumnName("MonthlyPriceCurrency")
+                .HasMaxLength(3)
+                .HasDefaultValue("TRY")
+                .IsRequired();
+        });
+
+        // Money value object - YearlyPrice
+        builder.OwnsOne(x => x.YearlyPrice, price =>
+        {
+            price.Property(p => p.Amount)
+                .HasColumnName("YearlyPriceAmount")
+                .HasPrecision(18, 2)
+                .IsRequired();
+
+            price.Property(p => p.Currency)
+                .HasColumnName("YearlyPriceCurrency")
+                .HasMaxLength(3)
+                .HasDefaultValue("TRY")
+                .IsRequired();
+        });
+
+        builder.Property(x => x.DisplayOrder)
+            .HasDefaultValue(0);
+
+        builder.Property(x => x.IsActive)
+            .HasDefaultValue(true);
+
+        builder.Property(x => x.IsCore)
+            .HasDefaultValue(false);
+
+        builder.Property(x => x.TrialDays);
+
+        builder.Property(x => x.CreatedAt)
+            .IsRequired();
+
+        builder.Property(x => x.UpdatedAt);
+
+        builder.HasIndex(x => x.ModuleCode)
+            .IsUnique()
+            .HasDatabaseName("IX_ModulePricing_ModuleCode");
+
+        builder.HasIndex(x => x.IsActive)
+            .HasDatabaseName("IX_ModulePricing_IsActive");
+    }
+}
+
+/// <summary>
+/// ModuleBundle entity configuration
+/// </summary>
+public class ModuleBundleConfiguration : IEntityTypeConfiguration<ModuleBundle>
+{
+    public void Configure(EntityTypeBuilder<ModuleBundle> builder)
+    {
+        builder.ToTable("ModuleBundles", "master");
+
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.BundleCode)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        builder.Property(x => x.BundleName)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        builder.Property(x => x.Description)
+            .HasMaxLength(500);
+
+        // Money value object - MonthlyPrice
+        builder.OwnsOne(x => x.MonthlyPrice, price =>
+        {
+            price.Property(p => p.Amount)
+                .HasColumnName("MonthlyPriceAmount")
+                .HasPrecision(18, 2)
+                .IsRequired();
+
+            price.Property(p => p.Currency)
+                .HasColumnName("MonthlyPriceCurrency")
+                .HasMaxLength(3)
+                .HasDefaultValue("TRY")
+                .IsRequired();
+        });
+
+        // Money value object - YearlyPrice
+        builder.OwnsOne(x => x.YearlyPrice, price =>
+        {
+            price.Property(p => p.Amount)
+                .HasColumnName("YearlyPriceAmount")
+                .HasPrecision(18, 2)
+                .IsRequired();
+
+            price.Property(p => p.Currency)
+                .HasColumnName("YearlyPriceCurrency")
+                .HasMaxLength(3)
+                .HasDefaultValue("TRY")
+                .IsRequired();
+        });
+
+        builder.Property(x => x.DisplayOrder)
+            .HasDefaultValue(0);
+
+        builder.Property(x => x.IsActive)
+            .HasDefaultValue(true);
+
+        builder.Property(x => x.DiscountPercent)
+            .HasPrecision(5, 2)
+            .HasDefaultValue(0m);
+
+        builder.Property(x => x.CreatedAt)
+            .IsRequired();
+
+        builder.Property(x => x.UpdatedAt);
+
+        builder.HasIndex(x => x.BundleCode)
+            .IsUnique()
+            .HasDatabaseName("IX_ModuleBundles_BundleCode");
+
+        builder.HasIndex(x => x.IsActive)
+            .HasDatabaseName("IX_ModuleBundles_IsActive");
+
+        // Navigation property for modules
+        builder.HasMany(x => x.Modules)
+            .WithOne()
+            .HasForeignKey(x => x.ModuleBundleId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+/// <summary>
+/// ModuleBundleItem entity configuration
+/// </summary>
+public class ModuleBundleItemConfiguration : IEntityTypeConfiguration<ModuleBundleItem>
+{
+    public void Configure(EntityTypeBuilder<ModuleBundleItem> builder)
+    {
+        builder.ToTable("ModuleBundleItems", "master");
+
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.ModuleCode)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        builder.HasIndex(x => new { x.ModuleBundleId, x.ModuleCode })
+            .IsUnique()
+            .HasDatabaseName("IX_ModuleBundleItems_BundleId_ModuleCode");
+    }
+}
+
+/// <summary>
+/// SubscriptionAddOn entity configuration
+/// </summary>
+public class SubscriptionAddOnConfiguration : IEntityTypeConfiguration<SubscriptionAddOn>
+{
+    public void Configure(EntityTypeBuilder<SubscriptionAddOn> builder)
+    {
+        builder.ToTable("SubscriptionAddOns", "master");
+
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.SubscriptionId)
+            .IsRequired();
+
+        builder.Property(x => x.AddOnId)
+            .IsRequired();
+
+        // Money value object - Price
+        builder.OwnsOne(x => x.Price, price =>
+        {
+            price.Property(p => p.Amount)
+                .HasColumnName("PriceAmount")
+                .HasPrecision(18, 2)
+                .IsRequired();
+
+            price.Property(p => p.Currency)
+                .HasColumnName("PriceCurrency")
+                .HasMaxLength(3)
+                .HasDefaultValue("TRY")
+                .IsRequired();
+        });
+
+        builder.Property(x => x.Quantity)
+            .IsRequired()
+            .HasDefaultValue(1);
+
+        builder.Property(x => x.AddedAt)
+            .IsRequired();
+
+        builder.Property(x => x.ExpiresAt);
+
+        builder.Property(x => x.IsActive)
+            .HasDefaultValue(true);
+
+        builder.HasIndex(x => x.SubscriptionId)
+            .HasDatabaseName("IX_SubscriptionAddOns_SubscriptionId");
+
+        builder.HasIndex(x => x.AddOnId)
+            .HasDatabaseName("IX_SubscriptionAddOns_AddOnId");
+
+        builder.HasIndex(x => new { x.SubscriptionId, x.AddOnId })
+            .HasDatabaseName("IX_SubscriptionAddOns_SubscriptionId_AddOnId");
+
+        builder.HasIndex(x => x.IsActive)
+            .HasDatabaseName("IX_SubscriptionAddOns_IsActive");
+
+        // Relationship with AddOn
+        builder.HasOne(x => x.AddOn)
+            .WithMany()
+            .HasForeignKey(x => x.AddOnId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -180,7 +180,7 @@ public class CalculateCustomPackagePriceQueryHandler
             }
 
             // ==================== ADD-ONS PRICING ====================
-            var addOnPricing = new List<AddOnPricingDto>();
+            var addOnPricing = new List<DTOs.Module.AddOnPricingDto>();
             decimal addOnsTotal = 0m;
 
             if (request.SelectedAddOnCodes?.Any() == true)
@@ -194,7 +194,7 @@ public class CalculateCustomPackagePriceQueryHandler
                 foreach (var addOn in addOns.Where(a => selectedAddOnCodes.Contains(a.Code)))
                 {
                     addOnsTotal += addOn.MonthlyPrice.Amount;
-                    addOnPricing.Add(new AddOnPricingDto
+                    addOnPricing.Add(new DTOs.Module.AddOnPricingDto
                     {
                         Code = addOn.Code,
                         Name = addOn.Name,

@@ -69,6 +69,22 @@ public sealed class Tenant : AggregateRoot
     public ICollection<TenantHealthCheck> HealthChecks { get; private set; } = new List<TenantHealthCheck>();
     public ICollection<TenantBackup> Backups { get; private set; } = new List<TenantBackup>();
 
+    /// <summary>
+    /// Comma-separated list of enabled module codes for this tenant.
+    /// Managed by subscription activation/cancellation handlers.
+    /// </summary>
+    public string? EnabledModuleCodes { get; private set; }
+
+    /// <summary>
+    /// Maximum number of users allowed for this tenant based on subscription.
+    /// </summary>
+    public int MaxUsers { get; private set; } = 1;
+
+    /// <summary>
+    /// Current number of active users for this tenant.
+    /// </summary>
+    public int CurrentUserCount { get; private set; } = 0;
+
     private Tenant() { } // EF Constructor
 
     private Tenant(
@@ -343,4 +359,115 @@ public sealed class Tenant : AggregateRoot
     {
         return Limits?.IsLimitExceeded(usageType) == false;
     }
+
+    #region Module Management
+
+    /// <summary>
+    /// Updates the list of enabled modules for this tenant.
+    /// Called by subscription activation/cancellation handlers.
+    /// </summary>
+    public void UpdateEnabledModules(IEnumerable<string> moduleCodes)
+    {
+        var codes = moduleCodes?.Distinct().ToList() ?? new List<string>();
+        EnabledModuleCodes = codes.Any() ? string.Join(",", codes) : null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Gets the list of enabled module codes for this tenant.
+    /// </summary>
+    public List<string> GetEnabledModuleCodes()
+    {
+        if (string.IsNullOrEmpty(EnabledModuleCodes))
+            return new List<string>();
+
+        return EnabledModuleCodes.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+    }
+
+    /// <summary>
+    /// Checks if a specific module is enabled for this tenant.
+    /// </summary>
+    public bool IsModuleEnabled(string moduleCode)
+    {
+        if (string.IsNullOrEmpty(EnabledModuleCodes))
+            return false;
+
+        return GetEnabledModuleCodes().Contains(moduleCode, StringComparer.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Adds a module to the enabled modules list.
+    /// </summary>
+    public void EnableModule(string moduleCode)
+    {
+        if (string.IsNullOrWhiteSpace(moduleCode))
+            throw new ArgumentException("Module code cannot be empty.", nameof(moduleCode));
+
+        var codes = GetEnabledModuleCodes();
+        if (!codes.Contains(moduleCode, StringComparer.OrdinalIgnoreCase))
+        {
+            codes.Add(moduleCode);
+            UpdateEnabledModules(codes);
+        }
+    }
+
+    /// <summary>
+    /// Removes a module from the enabled modules list.
+    /// </summary>
+    public void DisableModule(string moduleCode)
+    {
+        if (string.IsNullOrWhiteSpace(moduleCode))
+            throw new ArgumentException("Module code cannot be empty.", nameof(moduleCode));
+
+        var codes = GetEnabledModuleCodes();
+        codes.RemoveAll(c => c.Equals(moduleCode, StringComparison.OrdinalIgnoreCase));
+        UpdateEnabledModules(codes);
+    }
+
+    #endregion
+
+    #region User Management
+
+    /// <summary>
+    /// Updates the maximum number of users allowed for this tenant.
+    /// Called by subscription activation handlers.
+    /// </summary>
+    public void UpdateMaxUsers(int maxUsers)
+    {
+        if (maxUsers <= 0)
+            throw new ArgumentException("Max users must be greater than zero.", nameof(maxUsers));
+
+        MaxUsers = maxUsers;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Updates the current user count for this tenant.
+    /// </summary>
+    public void UpdateCurrentUserCount(int count)
+    {
+        if (count < 0)
+            throw new ArgumentException("User count cannot be negative.", nameof(count));
+
+        CurrentUserCount = count;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Checks if the tenant can add more users.
+    /// </summary>
+    public bool CanAddMoreUsers()
+    {
+        return CurrentUserCount < MaxUsers;
+    }
+
+    /// <summary>
+    /// Gets the number of additional users that can be added.
+    /// </summary>
+    public int GetRemainingUserSlots()
+    {
+        return Math.Max(0, MaxUsers - CurrentUserCount);
+    }
+
+    #endregion
 }

@@ -12,6 +12,8 @@ using Stocker.Infrastructure.Configuration;
 using Stocker.Infrastructure.Middleware;
 using Stocker.Infrastructure.Services;
 using Stocker.Infrastructure.Services.Migration;
+using Stocker.Infrastructure.Services.Payment;
+using Stocker.Infrastructure.Services.Pricing;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Settings;
 
@@ -98,6 +100,24 @@ public static class ServiceCollectionExtensions
             client.DefaultRequestHeaders.Add("Accept", "application/vnd.api+json");
         });
         services.AddScoped<ILemonSqueezyService, LemonSqueezyService>();
+
+        // Add Iyzico Payment Service (Turkish payment gateway)
+        services.Configure<IyzicoOptions>(configuration.GetSection("Iyzico"));
+        services.AddHttpClient("Iyzico", (sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<IyzicoOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl);
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+        });
+        services.AddScoped<IIyzicoService, IyzicoService>();
+
+        // Add Payment Gateway Factory and adapters
+        services.AddScoped<IyzicoPaymentGateway>();
+        services.AddScoped<LemonSqueezyPaymentGateway>();
+        services.AddScoped<IPaymentGatewayFactory, PaymentGatewayFactory>();
+
+        // Add Pricing Service
+        services.AddScoped<IPricingService, PricingService>();
 
         // Add Docker Management Service
         services.AddScoped<IDockerManagementService, DockerManagementService>();

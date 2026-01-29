@@ -38,6 +38,8 @@ public class MasterDataSeeder
         await SeedUserTiersAsync();
         await SeedStoragePlansAsync();
         await SeedAddOnsAsync();
+        await SeedModulePricingAsync();
+        await SeedModuleBundlesAsync();
         await SeedIndustriesAsync();
         await SeedSystemAdminAsync();
         await SeedEmailTemplatesAsync();
@@ -666,6 +668,7 @@ public class MasterDataSeeder
         var apiAccess = AddOn.Create(
             code: "API_ACCESS",
             name: "API Erişimi",
+            type: Domain.Master.Enums.AddOnType.Api,
             monthlyPrice: Money.Create(199m, "TRY"),
             description: "REST API ve webhook entegrasyonları",
             icon: "🔌",
@@ -681,6 +684,7 @@ public class MasterDataSeeder
         var prioritySupport = AddOn.Create(
             code: "PRIORITY_SUPPORT",
             name: "Öncelikli Destek",
+            type: Domain.Master.Enums.AddOnType.Support,
             monthlyPrice: Money.Create(299m, "TRY"),
             description: "7/24 öncelikli teknik destek",
             icon: "🎧",
@@ -696,6 +700,7 @@ public class MasterDataSeeder
         var advancedSecurity = AddOn.Create(
             code: "ADVANCED_SECURITY",
             name: "İleri Güvenlik",
+            type: Domain.Master.Enums.AddOnType.Feature,
             monthlyPrice: Money.Create(249m, "TRY"),
             description: "Gelişmiş güvenlik özellikleri",
             icon: "🛡️",
@@ -712,6 +717,7 @@ public class MasterDataSeeder
         var customDomain = AddOn.Create(
             code: "CUSTOM_DOMAIN",
             name: "Özel Alan Adı",
+            type: Domain.Master.Enums.AddOnType.Feature,
             monthlyPrice: Money.Create(99m, "TRY"),
             description: "Kendi alan adınızla erişim",
             icon: "🌐",
@@ -726,6 +732,7 @@ public class MasterDataSeeder
         var whiteLabel = AddOn.Create(
             code: "WHITE_LABEL",
             name: "Beyaz Etiket",
+            type: Domain.Master.Enums.AddOnType.Feature,
             monthlyPrice: Money.Create(499m, "TRY"),
             description: "Kendi markanızla sunun",
             icon: "🏷️",
@@ -741,6 +748,7 @@ public class MasterDataSeeder
         var autoBackup = AddOn.Create(
             code: "AUTO_BACKUP",
             name: "Otomatik Yedekleme",
+            type: Domain.Master.Enums.AddOnType.Feature,
             monthlyPrice: Money.Create(149m, "TRY"),
             description: "Gelişmiş yedekleme ve kurtarma",
             icon: "☁️",
@@ -756,6 +764,7 @@ public class MasterDataSeeder
         var eInvoice = AddOn.Create(
             code: "E_INVOICE",
             name: "e-Fatura Entegrasyonu",
+            type: Domain.Master.Enums.AddOnType.Integration,
             monthlyPrice: Money.Create(199m, "TRY"),
             description: "GİB entegrasyonu ile e-fatura",
             icon: "📄",
@@ -771,6 +780,7 @@ public class MasterDataSeeder
         var multiLanguage = AddOn.Create(
             code: "MULTI_LANGUAGE",
             name: "Çoklu Dil Desteği",
+            type: Domain.Master.Enums.AddOnType.Feature,
             monthlyPrice: Money.Create(79m, "TRY"),
             description: "10+ dilde kullanım imkanı",
             icon: "🌍",
@@ -783,6 +793,298 @@ public class MasterDataSeeder
 
         await _context.AddOns.AddRangeAsync(addOns);
         _logger.LogInformation("Seeded {Count} add-ons.", addOns.Count);
+    }
+
+    private async Task SeedModulePricingAsync()
+    {
+        if (await _context.ModulePricing.AnyAsync())
+        {
+            _logger.LogInformation("Module pricing already seeded.");
+            return;
+        }
+
+        var pricings = new List<ModulePricing>();
+
+        // Core Modül (Ücretsiz - Her pakette dahil)
+        var corePricing = ModulePricing.Create(
+            moduleCode: "Core",
+            moduleName: "Temel Sistem",
+            monthlyPrice: Money.Create(0m, "TRY"),
+            yearlyPrice: Money.Create(0m, "TRY"),
+            description: "Kullanıcı yönetimi, ayarlar ve temel sistem özellikleri",
+            icon: "cog",
+            isCore: true,
+            trialDays: null,
+            displayOrder: 0);
+        corePricing.SetIncludedFeatures(new[] { "Kullanıcı Yönetimi", "Rol ve İzin Yönetimi", "Sistem Ayarları", "Dashboard" });
+        pricings.Add(corePricing);
+
+        // CRM Modülü
+        var crmPricing = ModulePricing.Create(
+            moduleCode: "CRM",
+            moduleName: "CRM",
+            monthlyPrice: Money.Create(199m, "TRY"),
+            yearlyPrice: Money.Create(1990m, "TRY"), // %17 indirim
+            description: "Müşteri ilişkileri yönetimi, potansiyel müşteriler ve fırsatlar",
+            icon: "users",
+            isCore: false,
+            trialDays: 14,
+            displayOrder: 10);
+        crmPricing.SetIncludedFeatures(new[] { "Müşteri Kartları", "Potansiyel Müşteri Takibi", "Fırsat Yönetimi", "Aktivite Takibi" });
+        pricings.Add(crmPricing);
+
+        // Sales Modülü
+        var salesPricing = ModulePricing.Create(
+            moduleCode: "Sales",
+            moduleName: "Satış Yönetimi",
+            monthlyPrice: Money.Create(249m, "TRY"),
+            yearlyPrice: Money.Create(2490m, "TRY"),
+            description: "Satış siparişleri, teklifler, faturalar ve satış raporları",
+            icon: "shopping-cart",
+            isCore: false,
+            trialDays: 14,
+            displayOrder: 11);
+        salesPricing.SetIncludedFeatures(new[] { "Teklif Oluşturma", "Sipariş Yönetimi", "Fatura Kesimi", "Satış Raporları", "Fiyat Listeleri" });
+        pricings.Add(salesPricing);
+
+        // Inventory Modülü
+        var inventoryPricing = ModulePricing.Create(
+            moduleCode: "Inventory",
+            moduleName: "Stok Yönetimi",
+            monthlyPrice: Money.Create(299m, "TRY"),
+            yearlyPrice: Money.Create(2990m, "TRY"),
+            description: "Depo, ürün, stok hareketleri ve envanter yönetimi",
+            icon: "cube",
+            isCore: false,
+            trialDays: 14,
+            displayOrder: 20);
+        inventoryPricing.SetIncludedFeatures(new[] { "Ürün Kataloğu", "Depo Yönetimi", "Stok Hareketleri", "Barkod Sistemi", "Sayım İşlemleri" });
+        pricings.Add(inventoryPricing);
+
+        // Purchase Modülü
+        var purchasePricing = ModulePricing.Create(
+            moduleCode: "Purchase",
+            moduleName: "Satın Alma",
+            monthlyPrice: Money.Create(199m, "TRY"),
+            yearlyPrice: Money.Create(1990m, "TRY"),
+            description: "Tedarikçi yönetimi, satın alma siparişleri ve maliyet takibi",
+            icon: "building-storefront",
+            isCore: false,
+            trialDays: 14,
+            displayOrder: 30);
+        purchasePricing.SetIncludedFeatures(new[] { "Tedarikçi Kartları", "Satın Alma Siparişi", "Teklif Toplama", "Mal Kabul" });
+        pricings.Add(purchasePricing);
+
+        // Finance Modülü
+        var financePricing = ModulePricing.Create(
+            moduleCode: "Finance",
+            moduleName: "Finans",
+            monthlyPrice: Money.Create(349m, "TRY"),
+            yearlyPrice: Money.Create(3490m, "TRY"),
+            description: "Nakit akışı, banka hesapları ve finansal raporlama",
+            icon: "banknotes",
+            isCore: false,
+            trialDays: 14,
+            displayOrder: 40);
+        financePricing.SetIncludedFeatures(new[] { "Kasa Yönetimi", "Banka Hesapları", "Çek/Senet Takibi", "Nakit Akışı", "Döviz İşlemleri" });
+        pricings.Add(financePricing);
+
+        // Accounting Modülü
+        var accountingPricing = ModulePricing.Create(
+            moduleCode: "Accounting",
+            moduleName: "Muhasebe",
+            monthlyPrice: Money.Create(399m, "TRY"),
+            yearlyPrice: Money.Create(3990m, "TRY"),
+            description: "Genel muhasebe, hesap planı ve mali raporlar",
+            icon: "calculator",
+            isCore: false,
+            trialDays: 14,
+            displayOrder: 41);
+        accountingPricing.SetIncludedFeatures(new[] { "Hesap Planı", "Fişler", "Mizan", "Bilanço", "Gelir Tablosu", "KDV Beyanname" });
+        pricings.Add(accountingPricing);
+
+        // HR Modülü
+        var hrPricing = ModulePricing.Create(
+            moduleCode: "HR",
+            moduleName: "İnsan Kaynakları",
+            monthlyPrice: Money.Create(299m, "TRY"),
+            yearlyPrice: Money.Create(2990m, "TRY"),
+            description: "Personel yönetimi, izin takibi, vardiya ve organizasyon",
+            icon: "user-group",
+            isCore: false,
+            trialDays: 14,
+            displayOrder: 50);
+        hrPricing.SetIncludedFeatures(new[] { "Personel Kartları", "Organizasyon Şeması", "İzin Yönetimi", "Vardiya Planlama" });
+        pricings.Add(hrPricing);
+
+        // Payroll Modülü
+        var payrollPricing = ModulePricing.Create(
+            moduleCode: "Payroll",
+            moduleName: "Bordro",
+            monthlyPrice: Money.Create(249m, "TRY"),
+            yearlyPrice: Money.Create(2490m, "TRY"),
+            description: "Maaş hesaplama, SGK bildirgeleri ve yasal kesintiler",
+            icon: "currency-dollar",
+            isCore: false,
+            trialDays: 14,
+            displayOrder: 51);
+        payrollPricing.SetIncludedFeatures(new[] { "Maaş Hesaplama", "SGK Bildirgeleri", "Vergi Hesaplama", "Banka Listesi" });
+        pricings.Add(payrollPricing);
+
+        // Projects Modülü
+        var projectsPricing = ModulePricing.Create(
+            moduleCode: "Projects",
+            moduleName: "Proje Yönetimi",
+            monthlyPrice: Money.Create(199m, "TRY"),
+            yearlyPrice: Money.Create(1990m, "TRY"),
+            description: "Proje planlama, görev yönetimi ve zaman takibi",
+            icon: "clipboard-document-list",
+            isCore: false,
+            trialDays: 14,
+            displayOrder: 60);
+        projectsPricing.SetIncludedFeatures(new[] { "Proje Oluşturma", "Görev Yönetimi", "Gantt Chart", "Zaman Takibi" });
+        pricings.Add(projectsPricing);
+
+        // Manufacturing Modülü
+        var manufacturingPricing = ModulePricing.Create(
+            moduleCode: "MANUFACTURING",
+            moduleName: "Üretim Yönetimi",
+            monthlyPrice: Money.Create(299m, "TRY"),
+            yearlyPrice: Money.Create(2990m, "TRY"),
+            description: "Üretim planlama, iş emirleri ve kalite kontrol",
+            icon: "cog-6-tooth",
+            isCore: false,
+            trialDays: 14,
+            displayOrder: 65);
+        manufacturingPricing.SetIncludedFeatures(new[] { "Üretim Planlama", "İş Emri Yönetimi", "Reçete Yönetimi", "Kalite Kontrol" });
+        pricings.Add(manufacturingPricing);
+
+        // Reports Modülü
+        var reportsPricing = ModulePricing.Create(
+            moduleCode: "Reports",
+            moduleName: "Gelişmiş Raporlama",
+            monthlyPrice: Money.Create(149m, "TRY"),
+            yearlyPrice: Money.Create(1490m, "TRY"),
+            description: "Özel rapor tasarlama, dashboard oluşturma ve veri analizi",
+            icon: "chart-bar",
+            isCore: false,
+            trialDays: 14,
+            displayOrder: 70);
+        reportsPricing.SetIncludedFeatures(new[] { "Rapor Tasarımcı", "Dashboard Builder", "Excel Export", "Zamanlanmış Raporlar" });
+        pricings.Add(reportsPricing);
+
+        await _context.ModulePricing.AddRangeAsync(pricings);
+        _logger.LogInformation("Seeded {Count} module pricings.", pricings.Count);
+    }
+
+    private async Task SeedModuleBundlesAsync()
+    {
+        if (await _context.ModuleBundles.AnyAsync())
+        {
+            _logger.LogInformation("Module bundles already seeded.");
+            return;
+        }
+
+        var bundles = new List<ModuleBundle>();
+
+        // Satış Paketi: Sales + CRM + Finance
+        var salesBundle = ModuleBundle.Create(
+            bundleCode: "SALES_BUNDLE",
+            bundleName: "Satış Paketi",
+            monthlyPrice: Money.Create(549m, "TRY"),    // Normal: 199+249+349 = 797 TRY
+            yearlyPrice: Money.Create(5490m, "TRY"),
+            discountPercent: 31,
+            description: "Satış, CRM ve finans modüllerini içeren kapsamlı satış çözümü",
+            icon: "shopping-bag",
+            displayOrder: 0);
+        salesBundle.AddModule("Sales");
+        salesBundle.AddModule("CRM");
+        salesBundle.AddModule("Finance");
+        bundles.Add(salesBundle);
+
+        // Üretim Paketi: Inventory + Purchase + Manufacturing
+        var manufacturingBundle = ModuleBundle.Create(
+            bundleCode: "MANUFACTURING_BUNDLE",
+            bundleName: "Üretim Paketi",
+            monthlyPrice: Money.Create(599m, "TRY"),    // Normal: 299+199+299 = 797 TRY
+            yearlyPrice: Money.Create(5990m, "TRY"),
+            discountPercent: 25,
+            description: "Stok, satın alma ve üretim yönetimi modüllerini içerir",
+            icon: "cog",
+            displayOrder: 1);
+        manufacturingBundle.AddModule("Inventory");
+        manufacturingBundle.AddModule("Purchase");
+        manufacturingBundle.AddModule("MANUFACTURING");
+        bundles.Add(manufacturingBundle);
+
+        // İK Paketi: HR + Payroll
+        var hrBundle = ModuleBundle.Create(
+            bundleCode: "HR_BUNDLE",
+            bundleName: "İK Paketi",
+            monthlyPrice: Money.Create(449m, "TRY"),    // Normal: 299+249 = 548 TRY
+            yearlyPrice: Money.Create(4490m, "TRY"),
+            discountPercent: 18,
+            description: "İnsan kaynakları ve bordro modüllerini içerir",
+            icon: "user-group",
+            displayOrder: 2);
+        hrBundle.AddModule("HR");
+        hrBundle.AddModule("Payroll");
+        bundles.Add(hrBundle);
+
+        // Finans Paketi: Finance + Accounting
+        var financeBundle = ModuleBundle.Create(
+            bundleCode: "FINANCE_BUNDLE",
+            bundleName: "Finans Paketi",
+            monthlyPrice: Money.Create(599m, "TRY"),    // Normal: 349+399 = 748 TRY
+            yearlyPrice: Money.Create(5990m, "TRY"),
+            discountPercent: 20,
+            description: "Finans ve muhasebe modüllerini içeren tam finansal çözüm",
+            icon: "banknotes",
+            displayOrder: 3);
+        financeBundle.AddModule("Finance");
+        financeBundle.AddModule("Accounting");
+        bundles.Add(financeBundle);
+
+        // Tam ERP Paketi: Tüm modüller
+        var fullErpBundle = ModuleBundle.Create(
+            bundleCode: "FULL_ERP_BUNDLE",
+            bundleName: "Tam ERP Paketi",
+            monthlyPrice: Money.Create(1499m, "TRY"),   // Normal: 2439 TRY (tüm modüller)
+            yearlyPrice: Money.Create(14990m, "TRY"),
+            discountPercent: 39,
+            description: "Tüm modülleri içeren kapsamlı ERP çözümü - en yüksek tasarruf",
+            icon: "building-office",
+            displayOrder: 10);
+        fullErpBundle.AddModule("CRM");
+        fullErpBundle.AddModule("Sales");
+        fullErpBundle.AddModule("Inventory");
+        fullErpBundle.AddModule("Purchase");
+        fullErpBundle.AddModule("Finance");
+        fullErpBundle.AddModule("Accounting");
+        fullErpBundle.AddModule("HR");
+        fullErpBundle.AddModule("Payroll");
+        fullErpBundle.AddModule("Projects");
+        fullErpBundle.AddModule("MANUFACTURING");
+        fullErpBundle.AddModule("Reports");
+        bundles.Add(fullErpBundle);
+
+        // Ticaret Paketi: CRM + Sales + Inventory
+        var commerceBundle = ModuleBundle.Create(
+            bundleCode: "COMMERCE_BUNDLE",
+            bundleName: "Ticaret Paketi",
+            monthlyPrice: Money.Create(599m, "TRY"),    // Normal: 199+249+299 = 747 TRY
+            yearlyPrice: Money.Create(5990m, "TRY"),
+            discountPercent: 20,
+            description: "CRM, satış ve stok yönetimi - ticaret odaklı işletmeler için",
+            icon: "building-storefront",
+            displayOrder: 4);
+        commerceBundle.AddModule("CRM");
+        commerceBundle.AddModule("Sales");
+        commerceBundle.AddModule("Inventory");
+        bundles.Add(commerceBundle);
+
+        await _context.ModuleBundles.AddRangeAsync(bundles);
+        _logger.LogInformation("Seeded {Count} module bundles.", bundles.Count);
     }
 
     private async Task SeedIndustriesAsync()

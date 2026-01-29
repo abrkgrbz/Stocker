@@ -29,8 +29,9 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { billingService, type SubscriptionDto, type PlanDto } from '@/lib/api/services/billing.service';
+import { billingService, type SubscriptionDto, type PlanDto, type PaymentGateway } from '@/lib/api/services/billing.service';
 import { showAlert } from '@/lib/utils/alerts';
+import { IyzicoCheckoutModal } from '@/components/billing';
 
 // Plan features based on subscription
 const getPlanFeatures = (planName: string) => {
@@ -135,6 +136,11 @@ export default function BillingPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string>('');
+  const [paymentGateway, setPaymentGateway] = useState<PaymentGateway>('lemonsqueezy');
+  const [iyzicoModalOpen, setIyzicoModalOpen] = useState(false);
+  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
+  const [selectedPackageName, setSelectedPackageName] = useState<string>('');
+  const [selectedPackagePrice, setSelectedPackagePrice] = useState<number>(0);
 
   // Fetch subscription data
   const fetchData = useCallback(async () => {
@@ -142,9 +148,10 @@ export default function BillingPage() {
       setLoading(true);
       setError(null);
 
-      const [subscriptionRes, plansRes] = await Promise.all([
+      const [subscriptionRes, plansRes, gatewayRes] = await Promise.all([
         billingService.getSubscription(),
         billingService.getPlans(),
+        billingService.getPaymentGateway('TRY'), // Default to TRY for Turkish users
       ]);
 
       // Handle subscription response - API returns { success, subscription } directly
@@ -157,6 +164,12 @@ export default function BillingPage() {
       const plansData = plansRes as any;
       if (plansData.success && (plansData.plans || plansData.data?.plans)) {
         setPlans(plansData.plans || plansData.data?.plans);
+      }
+
+      // Handle gateway response
+      const gwData = gatewayRes as any;
+      if (gwData.gateway || gwData.data?.gateway) {
+        setPaymentGateway((gwData.gateway || gwData.data?.gateway) as PaymentGateway);
       }
     } catch (err) {
       console.error('Failed to fetch billing data:', err);
@@ -369,6 +382,16 @@ export default function BillingPage() {
                 </p>
                 <button
                   onClick={async () => {
+                    // Use Iyzico for TRY payments
+                    if (paymentGateway === 'iyzico') {
+                      setSelectedPackageId(plan.productId);
+                      setSelectedPackageName(`${plan.productName} - ${plan.variantName}`);
+                      setSelectedPackagePrice(plan.price / 100); // Convert from cents
+                      setIyzicoModalOpen(true);
+                      return;
+                    }
+
+                    // Use LemonSqueezy for other currencies
                     try {
                       setActionLoading(`checkout-${plan.variantId}`);
                       const response = await billingService.createCheckout({
@@ -380,11 +403,11 @@ export default function BillingPage() {
                       if (response.success && response.data?.checkoutUrl) {
                         window.location.href = response.data.checkoutUrl;
                       } else {
-                        await showAlert.error('Hata', 'Ödeme sayfası açılamadı.');
+                        await showAlert.error('Hata', 'Odeme sayfasi acilamadi.');
                       }
                     } catch (err) {
                       console.error('Checkout error:', err);
-                      await showAlert.error('Hata', 'Bir hata oluştu.');
+                      await showAlert.error('Hata', 'Bir hata olustu.');
                     } finally {
                       setActionLoading(null);
                     }
@@ -395,13 +418,30 @@ export default function BillingPage() {
                   {actionLoading === `checkout-${plan.variantId}` ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    'Planı Seç'
+                    'Plani Sec'
                   )}
                 </button>
               </div>
             ))}
           </div>
         </div>
+
+        {/* Iyzico Checkout Modal for No Subscription State */}
+        <IyzicoCheckoutModal
+          isOpen={iyzicoModalOpen}
+          onClose={() => {
+            setIyzicoModalOpen(false);
+            setSelectedPackageId(null);
+          }}
+          packageId={selectedPackageId || ''}
+          packageName={selectedPackageName}
+          price={selectedPackagePrice}
+          currency="TRY"
+          onSuccess={() => {
+            setIyzicoModalOpen(false);
+            fetchData();
+          }}
+        />
       </div>
     );
   }
@@ -773,11 +813,20 @@ export default function BillingPage() {
                           // Trial users need to go through checkout, not change-plan
                           if (isTrialUser) {
                             const confirmed = await showAlert.confirm(
-                              'Abonelik Başlat',
-                              `${plan.productName} - ${plan.variantName} planına abone olmak istediğinizden emin misiniz?`
+                              'Abonelik Baslat',
+                              `${plan.productName} - ${plan.variantName} planina abone olmak istediginizden emin misiniz?`
                             );
 
                             if (!confirmed) return;
+
+                            // Use Iyzico for TRY payments
+                            if (paymentGateway === 'iyzico') {
+                              setSelectedPackageId(plan.productId);
+                              setSelectedPackageName(`${plan.productName} - ${plan.variantName}`);
+                              setSelectedPackagePrice(plan.price / 100);
+                              setIyzicoModalOpen(true);
+                              return;
+                            }
 
                             try {
                               setActionLoading(`checkout-${plan.variantId}`);
@@ -792,11 +841,11 @@ export default function BillingPage() {
                               if (checkoutData.success && (checkoutData.checkoutUrl || checkoutData.data?.checkoutUrl)) {
                                 window.location.href = checkoutData.checkoutUrl || checkoutData.data?.checkoutUrl;
                               } else {
-                                await showAlert.error('Hata', 'Ödeme sayfası açılamadı.');
+                                await showAlert.error('Hata', 'Odeme sayfasi acilamadi.');
                               }
                             } catch (err) {
                               console.error('Checkout error:', err);
-                              await showAlert.error('Hata', 'Bir hata oluştu.');
+                              await showAlert.error('Hata', 'Bir hata olustu.');
                             } finally {
                               setActionLoading(null);
                             }
@@ -847,6 +896,23 @@ export default function BillingPage() {
           </div>
         </div>
       )}
+
+      {/* Iyzico Checkout Modal */}
+      <IyzicoCheckoutModal
+        isOpen={iyzicoModalOpen}
+        onClose={() => {
+          setIyzicoModalOpen(false);
+          setSelectedPackageId(null);
+        }}
+        packageId={selectedPackageId || ''}
+        packageName={selectedPackageName}
+        price={selectedPackagePrice}
+        currency="TRY"
+        onSuccess={() => {
+          setIyzicoModalOpen(false);
+          fetchData();
+        }}
+      />
     </div>
   );
 }

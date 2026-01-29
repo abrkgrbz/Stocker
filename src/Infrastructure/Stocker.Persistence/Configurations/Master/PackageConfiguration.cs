@@ -37,6 +37,26 @@ public class PackageConfiguration : BaseEntityTypeConfiguration<Package>
         builder.Property(p => p.DisplayOrder)
             .IsRequired();
 
+        // Per-User Pricing
+        builder.Property(p => p.IncludedUsers)
+            .HasDefaultValue(0);
+
+        builder.Property(p => p.MaxUsers);
+
+        // LemonSqueezy integration
+        builder.Property(p => p.LemonSqueezyProductId)
+            .HasMaxLength(50);
+
+        builder.Property(p => p.LemonSqueezyVariantId)
+            .HasMaxLength(50);
+
+        // Iyzico integration
+        builder.Property(p => p.IyzicoProductId)
+            .HasMaxLength(100);
+
+        builder.Property(p => p.IyzicoPlanId)
+            .HasMaxLength(100);
+
         builder.Property(p => p.CreatedAt)
             .IsRequired();
 
@@ -52,6 +72,18 @@ public class PackageConfiguration : BaseEntityTypeConfiguration<Package>
                 .IsRequired()
                 .HasMaxLength(3)
                 .HasColumnName("BasePriceCurrency");
+        });
+
+        // Per-User Price (optional)
+        builder.OwnsOne(p => p.PricePerUser, price =>
+        {
+            price.Property(m => m.Amount)
+                .HasPrecision(18, 2)
+                .HasColumnName("PricePerUserAmount");
+
+            price.Property(m => m.Currency)
+                .HasMaxLength(3)
+                .HasColumnName("PricePerUserCurrency");
         });
 
         builder.OwnsOne(p => p.Limits, limits =>

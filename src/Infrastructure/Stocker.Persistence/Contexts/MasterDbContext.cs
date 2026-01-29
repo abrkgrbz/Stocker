@@ -61,6 +61,7 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
     public DbSet<InvoiceItem> InvoiceItems => Set<InvoiceItem>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<LemonSqueezySubscription> LemonSqueezySubscriptions => Set<LemonSqueezySubscription>();
+    public DbSet<IyzicoSubscription> IyzicoSubscriptions => Set<IyzicoSubscription>();
 
     // User Management
     public DbSet<MasterUser> MasterUsers => Set<MasterUser>();
@@ -95,6 +96,16 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
     public DbSet<Industry> Industries => Set<Industry>();
     public DbSet<IndustryRecommendedModule> IndustryRecommendedModules => Set<IndustryRecommendedModule>();
     public DbSet<UserTier> UserTiers => Set<UserTier>();
+
+    // Module Pricing (à la carte module sales)
+    public DbSet<ModulePricing> ModulePricing => Set<ModulePricing>();
+
+    // Module Bundles (discounted module packages)
+    public DbSet<ModuleBundle> ModuleBundles => Set<ModuleBundle>();
+    public DbSet<ModuleBundleItem> ModuleBundleItems => Set<ModuleBundleItem>();
+
+    // Subscription Add-ons (add-ons attached to subscriptions)
+    public DbSet<SubscriptionAddOn> SubscriptionAddOns => Set<SubscriptionAddOn>();
 
     // Migration Management
     public DbSet<ScheduledMigration> ScheduledMigrations => Set<ScheduledMigration>();
