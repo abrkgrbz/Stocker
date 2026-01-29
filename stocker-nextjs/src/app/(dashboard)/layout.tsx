@@ -128,8 +128,20 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       return hasAnyPermission([permission]);
     };
 
-    return filterMenuItemsByPermission(moduleConfig.items, checkPermission);
-  }, [moduleConfig, hasAnyPermission]);
+    let items = moduleConfig.items;
+
+    // BUSINESS RULE: Hide Sales Management if CRM or Inventory is active
+    if (currentModule === 'sales') {
+      const hasCrm = activeModuleCodes.has('crm');
+      const hasInventory = activeModuleCodes.has('inventory');
+
+      if (hasCrm || hasInventory) {
+        items = items.filter(item => item.key !== 'sales-management');
+      }
+    }
+
+    return filterMenuItemsByPermission(items, checkPermission);
+  }, [moduleConfig, hasAnyPermission, currentModule, activeModuleCodes]);
 
   // Hide sidebar for modules page (it's a hub page, doesn't need sidebar)
   const hideSidebar = currentModule === 'modules' || pathname === '/app';
