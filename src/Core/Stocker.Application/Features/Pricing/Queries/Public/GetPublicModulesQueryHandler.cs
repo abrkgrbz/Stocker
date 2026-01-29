@@ -38,7 +38,7 @@ public class GetPublicModulesQueryHandler : IRequestHandler<GetPublicModulesQuer
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving public module pricings");
-            return Result<GetPublicModulesResponse>.Failure("Failed to retrieve module pricings");
+            return Result<GetPublicModulesResponse>.Failure(Error.Failure("Pricing.ModuleRetrievalFailed", "Modül fiyatları alınamadı."));
         }
     }
 }
