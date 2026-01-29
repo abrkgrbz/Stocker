@@ -3,11 +3,12 @@
 /**
  * Modules Page - Marketplace
  * Updated to support new Pricing System (Modules, Bundles, Addons)
+ * Now with Shopping Cart integration!
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Input, Switch, Tag, message, Tabs, Button, Card } from 'antd';
+import { Input, Switch, Tag, message, Tabs, Button, Card, Badge } from 'antd';
 import {
   Search,
   Users,
@@ -29,6 +30,8 @@ import { useActiveModules } from '@/lib/api/hooks/useUserModules';
 import { useToggleModule } from '@/lib/api/hooks/useTenantModules';
 import { marketplaceService, type ModulePricing, type BundlePricing, type AddOnPricing } from '@/lib/api/services/marketplaceService';
 import ModuleActivationModal from '@/components/modules/ModuleActivationModal';
+import { useCartStore } from '@/lib/store/cartStore';
+import { CartDrawer } from '@/components/marketplace/CartDrawer';
 
 // Icon mapping helper
 const getIcon = (iconName: string) => {
@@ -68,8 +71,12 @@ export default function ModulesPage() {
   const { data: activeModulesData, refetch: refetchActive } = useActiveModules();
   const toggleModuleMutation = useToggleModule();
 
+  // Cart Store - Server Sync
+  const { cart, addModule, addBundle, addAddOn, toggleCart, fetchCart } = useCartStore();
+
   useEffect(() => {
     loadMarketplace();
+    fetchCart();
   }, []);
 
   const loadMarketplace = async () => {
@@ -94,6 +101,12 @@ export default function ModulesPage() {
   // Check if a module is active for the current tenant
   const isModuleActive = (code: string) => {
     return activeModulesData?.modules?.some(m => m.code === code && m.isActive) || false;
+  };
+
+  // Check if item is in cart (using itemCode from server cart)
+  const isInCart = (code: string) => {
+    // API returns itemCode for modules/bundles/addons
+    return cart?.items?.some(i => i.itemCode === code) || false;
   };
 
   // Filtered Lists
@@ -127,12 +140,17 @@ export default function ModulesPage() {
     }
   };
 
-  const handleBuyBundle = (bundle: BundlePricing) => {
-    message.info(`${bundle.bundleName} satın alma akışı başlatılıyor... (Demo)`);
+  // Cart Actions
+  const handleAddModuleToCart = (module: ModulePricing) => {
+    addModule(module.moduleCode);
   };
 
-  const handleBuyAddOn = (addOn: AddOnPricing) => {
-    message.info(`${addOn.name} ekleme akışı başlatılıyor... (Demo)`);
+  const handleAddBundleToCart = (bundle: BundlePricing) => {
+    addBundle(bundle.bundleCode);
+  };
+
+  const handleAddAddonToCart = (addOn: AddOnPricing) => {
+    addAddOn(addOn.code);
   };
 
   // Close activation modal
@@ -154,7 +172,25 @@ export default function ModulesPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto space-y-8 relative">
+      <CartDrawer />
+
+      {/* Floating Cart Button */}
+      {cart && cart.itemCount > 0 && (
+        <div className="fixed top-24 right-8 z-10 transition-all animate-bounce">
+          <Badge count={cart.itemCount} showZero={false} offset={[-5, 5]}>
+            <Button
+              type="primary"
+              shape="circle"
+              size="large"
+              icon={<ShoppingCart />}
+              className="w-12 h-12 bg-indigo-600 hover:bg-indigo-500 shadow-lg flex items-center justify-center border-none"
+              onClick={() => toggleCart(true)}
+            />
+          </Badge>
+        </div>
+      )}
+
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Modül Marketi</h1>
@@ -190,13 +226,14 @@ export default function ModulesPage() {
             {filteredModules.map(module => {
               const Icon = getIcon(module.icon);
               const active = isModuleActive(module.moduleCode);
+              const inCart = isInCart(module.moduleCode);
 
               return (
-                <div key={module.id} className={`bg-white rounded-xl border p-6 transition-all ${active ? 'border-slate-900 shadow-md' : 'border-slate-200 hover:border-slate-300'}`}>
+                <div key={module.id} className={`bg-white rounded-xl border p-6 transition-all ${active ? 'border-indigo-200 shadow-sm ring-1 ring-indigo-500/10' : 'border-slate-200 hover:border-slate-300'}`}>
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center">
-                        <Icon className="w-6 h-6 text-slate-700" />
+                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${active ? 'bg-indigo-50' : 'bg-slate-50'}`}>
+                        <Icon className={`w-6 h-6 ${active ? 'text-indigo-600' : 'text-slate-700'}`} />
                       </div>
                       <div>
                         <h3 className="font-bold text-slate-900">{module.moduleName}</h3>
@@ -218,6 +255,19 @@ export default function ModulesPage() {
                         <Switch size="small" checked={active} onChange={(c) => handleToggleModule(module.moduleCode, c)} />
                         <span className="text-xs font-medium text-slate-600">{active ? 'Aktif' : 'Pasif'}</span>
                       </div>
+
+                      {!active && (
+                        <Button
+                          size="small"
+                          type={inCart ? 'default' : 'primary'}
+                          className={inCart ? 'text-green-600 border-green-200 bg-green-50' : 'bg-slate-900'}
+                          icon={inCart ? <Check className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                          onClick={() => inCart ? toggleCart(true) : handleAddModuleToCart(module)}
+                        >
+                          {inCart ? 'Sepette' : 'Ekle'}
+                        </Button>
+                      )}
+
                       {active && (
                         <Button size="small" type="text" onClick={() => router.push(`/${module.moduleCode.toLowerCase()}`)}>
                           Git <ArrowRight className="w-3 h-3 ml-1" />
@@ -234,56 +284,73 @@ export default function ModulesPage() {
         {/* BUNDLES */}
         {activeTab === 'bundles' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredBundles.map(bundle => (
-              <div key={bundle.id} className="bg-white rounded-xl border border-slate-200 p-6 relative overflow-hidden group hover:shadow-lg transition-all">
-                {bundle.discountPercent > 0 && (
-                  <div className="absolute top-4 right-4 bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-full">
-                    %{bundle.discountPercent} İndirim
-                  </div>
-                )}
-                <h3 className="text-xl font-bold text-slate-900 mb-2">{bundle.bundleName}</h3>
-                <p className="text-slate-500 text-sm mb-6">{bundle.description}</p>
+            {filteredBundles.map(bundle => {
+              const inCart = isInCart(bundle.bundleCode);
+              return (
+                <div key={bundle.id} className="bg-white rounded-xl border border-slate-200 p-6 relative overflow-hidden group hover:shadow-lg transition-all flex flex-col">
+                  {bundle.discountPercent > 0 && (
+                    <div className="absolute top-4 right-4 bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-full">
+                      %{bundle.discountPercent} İndirim
+                    </div>
+                  )}
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">{bundle.bundleName}</h3>
+                  <p className="text-slate-500 text-sm mb-6 flex-1">{bundle.description}</p>
 
-                <div className="mb-6 space-y-2">
-                  <p className="text-xs font-bold uppercase text-slate-400">İçerik</p>
-                  <div className="flex flex-wrap gap-2">
-                    {bundle.moduleCodes.map(code => (
-                      <span key={code} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">
-                        {modules.find(m => m.moduleCode === code)?.moduleName || code}
-                      </span>
-                    ))}
+                  <div className="mb-6 space-y-2">
+                    <p className="text-xs font-bold uppercase text-slate-400">İçerik</p>
+                    <div className="flex flex-wrap gap-2">
+                      {bundle.moduleCodes.map(code => (
+                        <span key={code} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">
+                          {modules.find(m => m.moduleCode === code)?.moduleName || code}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900">₺{bundle.monthlyPrice}<span className="text-sm font-normal text-slate-500">/ay</span></p>
+                    </div>
+                    <Button
+                      type={inCart ? 'default' : 'primary'}
+                      className={inCart ? 'text-green-600 border-green-200 bg-green-50' : 'bg-slate-900'}
+                      onClick={() => inCart ? toggleCart(true) : handleAddBundleToCart(bundle)}
+                    >
+                      {inCart ? 'Sepette' : 'Sepete Ekle'}
+                    </Button>
                   </div>
                 </div>
-
-                <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
-                  <div>
-                    <p className="text-2xl font-bold text-slate-900">₺{bundle.monthlyPrice}<span className="text-sm font-normal text-slate-500">/ay</span></p>
-                  </div>
-                  <Button type="primary" className="bg-slate-900" onClick={() => handleBuyBundle(bundle)}>
-                    Satın Al
-                  </Button>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
 
         {/* ADDONS */}
         {activeTab === 'addons' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {addOns.map(addon => (
-              <div key={addon.id} className="bg-white rounded-xl border border-slate-200 p-6 flex flex-col">
-                <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 mb-4">
-                  <Plus className="w-5 h-5" />
+            {addOns.map(addon => {
+              const inCart = isInCart(addon.code);
+              return (
+                <div key={addon.id} className="bg-white rounded-xl border border-slate-200 p-6 flex flex-col">
+                  <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 mb-4">
+                    <Plus className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-bold text-slate-900">{addon.name}</h3>
+                  <p className="text-sm text-slate-500 mb-4 flex-1">{addon.description}</p>
+                  <div className="flex items-center justify-between mt-4">
+                    <span className="font-bold">₺{addon.monthlyPrice}/ay</span>
+                    <Button
+                      size="small"
+                      type={inCart ? 'default' : 'primary'}
+                      className={inCart ? 'text-green-600 border-green-200 bg-green-50' : ''}
+                      onClick={() => inCart ? toggleCart(true) : handleAddAddonToCart(addon)}
+                    >
+                      {inCart ? 'Sepette' : 'Ekle'}
+                    </Button>
+                  </div>
                 </div>
-                <h3 className="font-bold text-slate-900">{addon.name}</h3>
-                <p className="text-sm text-slate-500 mb-4 flex-1">{addon.description}</p>
-                <div className="flex items-center justify-between mt-4">
-                  <span className="font-bold">₺{addon.monthlyPrice}/ay</span>
-                  <Button size="small" onClick={() => handleBuyAddOn(addon)}>Ekle</Button>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

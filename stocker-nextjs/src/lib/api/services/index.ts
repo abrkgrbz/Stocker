@@ -109,3 +109,28 @@ export type {
   SecurityEvent,
   AuditLogFilters,
 } from './audit-logs.service';
+
+// Public Pricing Module (No Auth Required)
+export { PublicPricingService } from './public-pricing.service';
+export type {
+  PublicModulePricing,
+  PublicBundlePricing,
+  PublicAddOnPricing,
+  FullPricingResponse,
+  CalculatePriceRequest,
+  CalculatePriceResponse,
+  PriceLineItem,
+} from './public-pricing.service';
+
+// Module Pricing Service (Legacy)
+export { ModulePricingService } from './module-pricing.service';
+export type {
+  ModuleDefinitionDto,
+  ModuleFeatureDto,
+  CustomPackagePriceRequest,
+  CustomPackagePriceResponse,
+  ModulePriceBreakdown,
+  UserPricing,
+  StoragePricing,
+  AddOnPricing,
+} from './module-pricing.service';

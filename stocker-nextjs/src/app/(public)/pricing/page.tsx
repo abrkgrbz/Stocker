@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -8,81 +8,34 @@ import {
   Check,
   X,
   HelpCircle,
-  ArrowRight,
-  ShieldCheck,
+  Boxes,
+  ShoppingCart,
+  Package,
+  Wallet,
+  Users,
+  Factory,
+  BarChart3,
   Zap,
-  Globe
+  Sparkles,
 } from 'lucide-react';
+import { marketplaceService, type ModulePricing, type BundlePricing } from '@/lib/api/services/marketplaceService';
 
-const PLANS = [
-  {
-    id: 'starter',
-    name: 'Başlangıç',
-    price: '₺99',
-    period: '/ay',
-    description: 'Küçük işletmeler ve yeni başlayanlar için ideal.',
-    features: [
-      '10 Kullanıcı',
-      '1000 Ürün Kapasitesi',
-      'Temel Stok Takibi',
-      'Standart Raporlar',
-      'E-posta Desteği',
-    ],
-    notIncluded: [
-      'API Erişimi',
-      'Gelişmiş Entegrasyonlar',
-      'Özel Alan Adı',
-    ],
-    highlight: false,
-    buttonText: 'Hemen Başla',
-    buttonVariant: 'outline',
-  },
-  {
-    id: 'pro',
-    name: 'Profesyonel',
-    price: '₺299',
-    period: '/ay',
-    description: 'Büyüyen işletmeler için kapsamlı çözümler.',
-    features: [
-      '50 Kullanıcı',
-      'Sınırsız Ürün',
-      'Çoklu Depo Yönetimi',
-      'Gelişmiş Raporlama',
-      'Öncelikli Destek',
-      'API Erişimi (Basic)',
-      'Pazaryeri Entegrasyonu',
-    ],
-    notIncluded: [
-      'Özel Sunucu',
-      'SLA Garantisi',
-    ],
-    highlight: true,
-    highlightText: 'En Popüler',
-    buttonText: 'Ücretsiz Dene',
-    buttonVariant: 'primary',
-  },
-  {
-    id: 'enterprise',
-    name: 'Kurumsal',
-    price: 'Özel Fiyat',
-    period: '',
-    description: 'Büyük ölçekli operasyonlar için terzi işi çözüm.',
-    features: [
-      'Sınırsız Kullanıcı',
-      'Sınırsız Depo & Ürün',
-      'Özel Raporlar & Dashboard',
-      '7/24 Telefon Desteği',
-      'Full API Erişimi',
-      'Özel Entegrasyonlar',
-      'SLA & Yedekleme Garantisi',
-      'Yerinde Kurulum Desteği',
-    ],
-    notIncluded: [],
-    highlight: false,
-    buttonText: 'Teklif İste',
-    buttonVariant: 'outline',
-  },
-];
+// Icon mapping helper
+const getIcon = (iconName: string) => {
+  const map: Record<string, any> = {
+    '📦': Boxes,
+    '💰': ShoppingCart,
+    '🛒': Package,
+    '💵': Wallet,
+    '👥': Users,
+    '🤝': Users,
+    '🏭': Factory,
+    '🚚': Package,
+    '✅': Check,
+    '📊': BarChart3,
+  };
+  return map[iconName] || Zap;
+};
 
 const FAQS = [
   {
@@ -105,6 +58,42 @@ const FAQS = [
 
 export default function PricingPage() {
   const [billingInterval, setBillingInterval] = useState<'monthly' | 'yearly'>('monthly');
+  const [modules, setModules] = useState<ModulePricing[]>([]);
+  const [bundles, setBundles] = useState<BundlePricing[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'modules' | 'bundles'>('bundles');
+
+  useEffect(() => {
+    loadPricing();
+  }, []);
+
+  const loadPricing = async () => {
+    try {
+      const [modulesData, bundlesData] = await Promise.all([
+        marketplaceService.getModules(),
+        marketplaceService.getBundles(),
+      ]);
+      setModules(modulesData);
+      setBundles(bundlesData);
+    } catch (error) {
+      console.error('Failed to load pricing:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('tr-TR', {
+      style: 'currency',
+      currency: 'TRY',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const getPrice = (item: ModulePricing | BundlePricing) => {
+    return billingInterval === 'yearly' ? item.yearlyPrice : item.monthlyPrice;
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -154,7 +143,7 @@ export default function PricingPage() {
             </p>
 
             {/* Billing Toggle */}
-            <div className="flex items-center justify-center gap-4 mb-12">
+            <div className="flex items-center justify-center gap-4 mb-8">
               <button
                 onClick={() => setBillingInterval('monthly')}
                 className={`text-sm font-medium transition-colors ${billingInterval === 'monthly' ? 'text-slate-900' : 'text-slate-500'}`}
@@ -180,78 +169,186 @@ export default function PricingPage() {
                 </span>
               </button>
             </div>
+
+            {/* Tab Toggle */}
+            <div className="flex items-center justify-center gap-2 mb-12">
+              <button
+                onClick={() => setActiveTab('bundles')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'bundles'
+                    ? 'bg-slate-900 text-white'
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                }`}
+              >
+                <Sparkles className="w-4 h-4 inline-block mr-2" />
+                Paketler
+              </button>
+              <button
+                onClick={() => setActiveTab('modules')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'modules'
+                    ? 'bg-slate-900 text-white'
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                }`}
+              >
+                <Boxes className="w-4 h-4 inline-block mr-2" />
+                Tekil Modüller
+              </button>
+            </div>
           </motion.div>
         </section>
 
-        {/* Pricing Cards */}
-        <section className="px-4 sm:px-6 lg:px-8 pb-24">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-              {PLANS.map((plan, index) => (
-                <motion.div
-                  key={plan.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  className={`
-                    relative rounded-2xl bg-white p-8 shadow-lg border transition-all duration-200
-                    ${plan.highlight
-                      ? 'border-indigo-600 ring-1 ring-indigo-600 shadow-indigo-100'
-                      : 'border-slate-200 hover:border-slate-300'
-                    }
-                  `}
-                >
-                  {plan.highlight && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-indigo-600 px-4 py-1 text-xs font-semibold text-white shadow-sm">
-                      {plan.highlightText}
-                    </div>
-                  )}
-
-                  <div className="mb-6">
-                    <h3 className="text-xl font-bold text-slate-900">{plan.name}</h3>
-                    <p className="mt-2 text-sm text-slate-500 min-h-[40px]">{plan.description}</p>
-                  </div>
-
-                  <div className="mb-6 flex items-baseline">
-                    <span className="text-4xl font-bold tracking-tight text-slate-900">{plan.price}</span>
-                    <span className="text-sm font-semibold text-slate-500 ml-1">{plan.period}</span>
-                  </div>
-
-                  <div className="mb-8">
-                    <Link
-                      href="/register"
-                      className={`
-                        block w-full rounded-xl px-4 py-3 text-center text-sm font-semibold transition-all
-                        ${plan.buttonVariant === 'primary'
-                          ? 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-md shadow-indigo-500/20'
-                          : 'bg-white text-slate-900 border border-slate-200 hover:bg-slate-50 hover:border-slate-300'
-                        }
-                      `}
-                    >
-                      {plan.buttonText}
-                    </Link>
-                  </div>
-
-                  <ul className="space-y-4 text-sm text-slate-600">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-3">
-                        <Check className="h-5 w-5 flex-shrink-0 text-emerald-500" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                    {plan.notIncluded.map((feature) => (
-                      <li key={feature} className="flex items-start gap-3 text-slate-400">
-                        <X className="h-5 w-5 flex-shrink-0 text-slate-300" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </motion.div>
-              ))}
-            </div>
+        {/* Loading */}
+        {isLoading && (
+          <div className="flex justify-center py-20">
+            <div className="animate-spin w-8 h-8 border-2 border-slate-900 border-t-transparent rounded-full" />
           </div>
-        </section>
+        )}
+
+        {/* Bundles Section */}
+        {!isLoading && activeTab === 'bundles' && (
+          <section className="px-4 sm:px-6 lg:px-8 pb-24">
+            <div className="max-w-7xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+                {bundles.map((bundle, index) => (
+                  <motion.div
+                    key={bundle.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
+                    className={`
+                      relative rounded-2xl bg-white p-8 shadow-lg border transition-all duration-200
+                      ${index === 1
+                        ? 'border-indigo-600 ring-1 ring-indigo-600 shadow-indigo-100'
+                        : 'border-slate-200 hover:border-slate-300'
+                      }
+                    `}
+                  >
+                    {index === 1 && (
+                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-indigo-600 px-4 py-1 text-xs font-semibold text-white shadow-sm">
+                        En Popüler
+                      </div>
+                    )}
+
+                    {bundle.discountPercent > 0 && (
+                      <div className="absolute top-4 right-4 bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-full">
+                        %{bundle.discountPercent} Tasarruf
+                      </div>
+                    )}
+
+                    <div className="mb-6">
+                      <h3 className="text-xl font-bold text-slate-900">{bundle.bundleName}</h3>
+                      <p className="mt-2 text-sm text-slate-500 min-h-[40px]">{bundle.description}</p>
+                    </div>
+
+                    <div className="mb-6 flex items-baseline">
+                      <span className="text-4xl font-bold tracking-tight text-slate-900">
+                        {formatPrice(getPrice(bundle))}
+                      </span>
+                      <span className="text-sm font-semibold text-slate-500 ml-1">
+                        /{billingInterval === 'yearly' ? 'yıl' : 'ay'}
+                      </span>
+                    </div>
+
+                    <div className="mb-8">
+                      <Link
+                        href="/register"
+                        className={`
+                          block w-full rounded-xl px-4 py-3 text-center text-sm font-semibold transition-all
+                          ${index === 1
+                            ? 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-md shadow-indigo-500/20'
+                            : 'bg-white text-slate-900 border border-slate-200 hover:bg-slate-50 hover:border-slate-300'
+                          }
+                        `}
+                      >
+                        Ücretsiz Dene
+                      </Link>
+                    </div>
+
+                    <div className="space-y-3">
+                      <p className="text-xs font-bold uppercase text-slate-400">Dahil Modüller</p>
+                      <ul className="space-y-3 text-sm text-slate-600">
+                        {bundle.moduleCodes.map((code) => {
+                          const module = modules.find(m => m.moduleCode === code);
+                          return (
+                            <li key={code} className="flex items-start gap-3">
+                              <Check className="h-5 w-5 flex-shrink-0 text-emerald-500" />
+                              <span>{module?.moduleName || code}</span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Modules Section */}
+        {!isLoading && activeTab === 'modules' && (
+          <section className="px-4 sm:px-6 lg:px-8 pb-24">
+            <div className="max-w-7xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {modules.map((module, index) => {
+                  const Icon = getIcon(module.icon);
+                  return (
+                    <motion.div
+                      key={module.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.05 }}
+                      className="rounded-xl bg-white p-6 shadow-md border border-slate-200 hover:border-slate-300 transition-all"
+                    >
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center">
+                          <Icon className="w-6 h-6 text-slate-700" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-slate-900">{module.moduleName}</h3>
+                          {module.isCore && (
+                            <span className="text-xs text-indigo-600 font-medium">Temel Modül</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <p className="text-sm text-slate-500 mb-4 min-h-[40px]">{module.description}</p>
+
+                      <div className="flex items-baseline mb-4">
+                        <span className="text-2xl font-bold text-slate-900">
+                          {formatPrice(getPrice(module))}
+                        </span>
+                        <span className="text-sm text-slate-500 ml-1">
+                          /{billingInterval === 'yearly' ? 'yıl' : 'ay'}
+                        </span>
+                      </div>
+
+                      {module.includedFeatures && module.includedFeatures.length > 0 && (
+                        <ul className="space-y-2 text-sm text-slate-600">
+                          {module.includedFeatures.slice(0, 3).map((feature, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <Check className="h-4 w-4 flex-shrink-0 text-emerald-500 mt-0.5" />
+                              <span>{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                      {module.trialDays && module.trialDays > 0 && (
+                        <p className="mt-4 text-xs text-indigo-600 font-medium">
+                          {module.trialDays} gün ücretsiz deneme
+                        </p>
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* FAQ Section */}
         <section className="bg-white py-24 border-t border-slate-200">
