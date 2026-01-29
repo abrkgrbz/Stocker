@@ -266,35 +266,16 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
   // Track if initial values have been loaded to prevent re-running
   const [initialValuesLoaded, setInitialValuesLoaded] = useState(false);
 
-  // Sync local state when form values change (e.g., when draft is loaded)
-  const syncLocalStateFromForm = useCallback(() => {
-    const formValues = form.getFieldsValue(true);
-    if (formValues.isActive !== undefined) {
-      setIsActive(formValues.isActive);
+  // Handle form value changes (triggered by user input or setFieldsValue from draft load)
+  const handleValuesChange = useCallback((changedValues: any, allValues: any) => {
+    // Sync local state when form values change
+    if (changedValues.isActive !== undefined) {
+      setIsActive(changedValues.isActive);
     }
-    if (formValues.productType !== undefined) {
-      setProductType(formValues.productType);
+    if (changedValues.productType !== undefined) {
+      setProductType(changedValues.productType);
     }
-  }, [form]);
-
-  // Watch for form value changes (triggered by setFieldsValue from draft load)
-  useEffect(() => {
-    // Listen for form value updates
-    const unsubscribe = form.getInternalHooks?.('RC_FORM_INTERNAL_HOOKS')?.registerWatch?.((values: any) => {
-      if (values.isActive !== undefined && values.isActive !== isActive) {
-        setIsActive(values.isActive);
-      }
-      if (values.productType !== undefined && values.productType !== productType) {
-        setProductType(values.productType);
-      }
-    });
-
-    return () => {
-      if (typeof unsubscribe === 'function') {
-        unsubscribe();
-      }
-    };
-  }, [form, isActive, productType]);
+  }, []);
 
   useEffect(() => {
     // Only run once when initialValues first becomes available
@@ -343,6 +324,7 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
       form={form}
       layout="vertical"
       onFinish={handleFinish}
+      onValuesChange={handleValuesChange}
       disabled={loading}
       className="w-full"
       scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
