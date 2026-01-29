@@ -56,6 +56,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
                 var masterResult = await _authenticationService.AuthenticateMasterUserAsync(
                     request.Email,
                     request.Password,
+                    request.IpAddress,
+                    request.UserAgent,
                     cancellationToken);
 
                 if (masterResult.IsSuccess)
@@ -102,6 +104,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
             var result = await _authenticationService.AuthenticateAsync(
                 request.Email,
                 request.Password,
+                request.IpAddress,
+                request.UserAgent,
                 cancellationToken);
 
             if (result.IsSuccess)

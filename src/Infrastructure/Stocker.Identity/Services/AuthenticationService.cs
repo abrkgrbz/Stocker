@@ -117,14 +117,18 @@ public class AuthenticationService : IAuthenticationService
                     deviceInfo: request.DeviceInfo);
 
                 // Send login notification if new device/location (fire and forget)
+                var deviceInfo1 = !string.IsNullOrEmpty(request.DeviceInfo)
+                    ? request.DeviceInfo
+                    : _loginNotificationService.ParseUserAgent(request.UserAgent ?? string.Empty);
+                var location1 = await _loginNotificationService.GetLocationFromIpAsync(request.IpAddress ?? string.Empty);
                 _ = _loginNotificationService.CheckAndNotifyAsync(
                     masterUser.Id,
                     masterUser.Email.Value,
                     isMasterUser: true,
                     request.DeviceId,
-                    request.DeviceInfo,
-                    ipAddress: null,
-                    location: null);
+                    deviceInfo1,
+                    ipAddress: request.IpAddress,
+                    location: location1);
 
                 _logger.LogInformation("Master user {Username} logged in successfully", request.Username);
                 return result;
@@ -183,14 +187,18 @@ public class AuthenticationService : IAuthenticationService
                             deviceInfo: request.DeviceInfo);
 
                         // Send login notification if new device/location
+                        var deviceInfo2 = !string.IsNullOrEmpty(request.DeviceInfo)
+                            ? request.DeviceInfo
+                            : _loginNotificationService.ParseUserAgent(request.UserAgent ?? string.Empty);
+                        var location2 = await _loginNotificationService.GetLocationFromIpAsync(request.IpAddress ?? string.Empty);
                         _ = _loginNotificationService.CheckAndNotifyAsync(
                             tenantUser.Id,
                             tenantUser.Email.Value,
                             isMasterUser: false,
                             request.DeviceId,
-                            request.DeviceInfo,
-                            ipAddress: null,
-                            location: null);
+                            deviceInfo2,
+                            ipAddress: request.IpAddress,
+                            location: location2);
 
                         _logger.LogInformation("Invited tenant user {Username} logged in successfully", request.Username);
                         return invitedResult;
@@ -239,14 +247,18 @@ public class AuthenticationService : IAuthenticationService
                         deviceInfo: request.DeviceInfo);
 
                     // Send login notification if new device/location
+                    var deviceInfo3 = !string.IsNullOrEmpty(request.DeviceInfo)
+                        ? request.DeviceInfo
+                        : _loginNotificationService.ParseUserAgent(request.UserAgent ?? string.Empty);
+                    var location3 = await _loginNotificationService.GetLocationFromIpAsync(request.IpAddress ?? string.Empty);
                     _ = _loginNotificationService.CheckAndNotifyAsync(
                         masterUserForTenant.Id,
                         tenantUser.Email.Value,
                         isMasterUser: false,
                         request.DeviceId,
-                        request.DeviceInfo,
-                        ipAddress: null,
-                        location: null);
+                        deviceInfo3,
+                        ipAddress: request.IpAddress,
+                        location: location3);
 
                     _logger.LogInformation("Tenant user {Username} logged in successfully", request.Username);
                     return result;
@@ -570,7 +582,7 @@ public class AuthenticationService : IAuthenticationService
         }
     }
 
-    public async Task<Stocker.SharedKernel.Results.Result<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>> AuthenticateAsync(string email, string password, CancellationToken cancellationToken = default)
+    public async Task<Stocker.SharedKernel.Results.Result<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>> AuthenticateAsync(string email, string password, string? ipAddress = null, string? userAgent = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -585,7 +597,9 @@ public class AuthenticationService : IAuthenticationService
             {
                 Username = email,
                 Password = password,
-                TenantId = tenantId
+                TenantId = tenantId,
+                IpAddress = ipAddress,
+                UserAgent = userAgent
             };
 
             var authResult = await LoginAsync(loginRequest);
@@ -628,7 +642,7 @@ public class AuthenticationService : IAuthenticationService
         }
     }
 
-    public async Task<Stocker.SharedKernel.Results.Result<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>> AuthenticateMasterUserAsync(string email, string password, CancellationToken cancellationToken = default)
+    public async Task<Stocker.SharedKernel.Results.Result<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>> AuthenticateMasterUserAsync(string email, string password, string? ipAddress = null, string? userAgent = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -644,7 +658,9 @@ public class AuthenticationService : IAuthenticationService
             {
                 Username = email,
                 Password = password,
-                TenantId = tenantId  // Pass tenant context for token generation
+                TenantId = tenantId,  // Pass tenant context for token generation
+                IpAddress = ipAddress,
+                UserAgent = userAgent
             };
 
             var authResult = await LoginAsync(loginRequest);

@@ -1,3 +1,5 @@
+using System.Net.Http.Json;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -13,13 +15,16 @@ namespace Stocker.Identity.Services;
 public class LoginNotificationService : ILoginNotificationService
 {
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<LoginNotificationService> _logger;
 
     public LoginNotificationService(
         IServiceScopeFactory serviceScopeFactory,
+        IHttpClientFactory httpClientFactory,
         ILogger<LoginNotificationService> logger)
     {
         _serviceScopeFactory = serviceScopeFactory;
+        _httpClientFactory = httpClientFactory;
         _logger = logger;
     }
 
@@ -80,21 +85,44 @@ public class LoginNotificationService : ILoginNotificationService
     {
         try
         {
+            // Skip for empty or null IPs
+            if (string.IsNullOrEmpty(ipAddress))
+            {
+                return null;
+            }
+
             // Skip for local/private IPs
             if (IsPrivateOrLocalIp(ipAddress))
             {
-                return "Local Network";
+                return "Yerel Ağ";
             }
 
-            // TODO: Integrate with a geolocation service like ip-api.com, ipstack, or MaxMind
-            // For now, return null and let the caller handle it
-            // Example implementation:
-            // using var client = new HttpClient();
-            // var response = await client.GetStringAsync($"http://ip-api.com/json/{ipAddress}");
-            // var data = JsonSerializer.Deserialize<IpApiResponse>(response);
-            // return $"{data.City}, {data.Country}";
+            // Use ip-api.com free service (rate limit: 45 requests per minute)
+            var client = _httpClientFactory.CreateClient();
+            client.Timeout = TimeSpan.FromSeconds(5); // Quick timeout for non-blocking operation
 
-            await Task.CompletedTask;
+            var response = await client.GetFromJsonAsync<IpApiResponse>(
+                $"http://ip-api.com/json/{ipAddress}?fields=status,city,regionName,country");
+
+            if (response?.Status == "success" && !string.IsNullOrEmpty(response.City))
+            {
+                // Format: "İstanbul, Turkey" or "City, Country"
+                var location = !string.IsNullOrEmpty(response.RegionName)
+                    ? $"{response.City}, {response.RegionName}, {response.Country}"
+                    : $"{response.City}, {response.Country}";
+
+                _logger.LogDebug("IP {IpAddress} resolved to location: {Location}", ipAddress, location);
+                return location;
+            }
+
+            _logger.LogDebug("Could not resolve location for IP {IpAddress}: {Status}",
+                ipAddress, response?.Status ?? "no response");
+            return null;
+        }
+        catch (TaskCanceledException)
+        {
+            // Timeout - don't block login for geolocation
+            _logger.LogDebug("Geolocation request timed out for IP {IpAddress}", ipAddress);
             return null;
         }
         catch (Exception ex)
@@ -102,6 +130,24 @@ public class LoginNotificationService : ILoginNotificationService
             _logger.LogWarning(ex, "Failed to get location for IP {IpAddress}", ipAddress);
             return null;
         }
+    }
+
+    /// <summary>
+    /// Response model for ip-api.com
+    /// </summary>
+    private class IpApiResponse
+    {
+        [JsonPropertyName("status")]
+        public string? Status { get; set; }
+
+        [JsonPropertyName("city")]
+        public string? City { get; set; }
+
+        [JsonPropertyName("regionName")]
+        public string? RegionName { get; set; }
+
+        [JsonPropertyName("country")]
+        public string? Country { get; set; }
     }
 
     /// <inheritdoc />

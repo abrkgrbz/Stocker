@@ -34,7 +34,7 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
         _tenantDbContextFactory = tenantDbContextFactory;
     }
 
-    public async Task<Result<AuthResponse>> AuthenticateAsync(string email, string password, CancellationToken cancellationToken = default)
+    public async Task<Result<AuthResponse>> AuthenticateAsync(string email, string password, string? ipAddress = null, string? userAgent = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -51,7 +51,9 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
             {
                 Username = email, // Using email as username for now
                 Password = password,
-                TenantId = tenantId // Include tenant ID in login request
+                TenantId = tenantId, // Include tenant ID in login request
+                IpAddress = ipAddress,
+                UserAgent = userAgent
             };
 
             var result = await _authenticationService.LoginAsync(loginRequest);
@@ -138,7 +140,7 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
         }
     }
 
-    public async Task<Result<AuthResponse>> AuthenticateMasterUserAsync(string email, string password, CancellationToken cancellationToken = default)
+    public async Task<Result<AuthResponse>> AuthenticateMasterUserAsync(string email, string password, string? ipAddress = null, string? userAgent = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -196,7 +198,9 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
             {
                 Username = email,
                 Password = password,
-                TenantId = null // No tenant for master admin
+                TenantId = null, // No tenant for master admin
+                IpAddress = ipAddress,
+                UserAgent = userAgent
             };
 
             var result = await _authenticationService.LoginAsync(loginRequest);

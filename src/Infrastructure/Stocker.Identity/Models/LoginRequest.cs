@@ -25,6 +25,16 @@ public class LoginRequest
     /// Optional device info (browser/OS) for session display
     /// </summary>
     public string? DeviceInfo { get; set; }
+
+    /// <summary>
+    /// Client IP address for security audit and login notifications
+    /// </summary>
+    public string? IpAddress { get; set; }
+
+    /// <summary>
+    /// User-Agent header for device detection
+    /// </summary>
+    public string? UserAgent { get; set; }
 }
 
 public class RefreshTokenRequest
