@@ -26,7 +26,7 @@ import type {
 // =====================================
 
 interface CreditNoteFormProps {
-  form: ReturnType<typeof Form.useForm>[0];
+  form: ReturnType<typeof Form.useForm<CreditNoteFormValues>>[0];
   initialData?: CreditNoteDto | null;
   onSubmit: (values: CreateCreditNoteCommand) => Promise<void>;
   isSubmitting?: boolean;
@@ -52,21 +52,19 @@ interface ItemRow extends CreateCreditNoteItemCommand {
 // =====================================
 
 const creditNoteTypes: { value: CreditNoteType; label: string }[] = [
-  { value: 'Return', label: 'İade' },
-  { value: 'Discount', label: 'İskonto' },
-  { value: 'Correction', label: 'Düzeltme' },
-  { value: 'Cancellation', label: 'İptal' },
-  { value: 'Other', label: 'Diğer' },
+  { value: 'Full', label: 'Tam İade' },
+  { value: 'Partial', label: 'Kısmi İade' },
+  { value: 'Adjustment', label: 'Düzeltme' },
+  { value: 'Goodwill', label: 'İyi Niyet' },
 ];
 
 const creditNoteReasons: { value: CreditNoteReason; label: string }[] = [
-  { value: 'ProductReturn', label: 'Ürün İadesi' },
-  { value: 'Damaged', label: 'Hasarlı Ürün' },
-  { value: 'WrongProduct', label: 'Yanlış Ürün' },
-  { value: 'PriceCorrection', label: 'Fiyat Düzeltme' },
-  { value: 'QuantityCorrection', label: 'Miktar Düzeltme' },
+  { value: 'Return', label: 'İade' },
+  { value: 'Defective', label: 'Arızalı Ürün' },
+  { value: 'PricingError', label: 'Fiyat Hatası' },
   { value: 'Discount', label: 'İskonto' },
-  { value: 'Cancellation', label: 'Fatura İptali' },
+  { value: 'Cancellation', label: 'İptal' },
+  { value: 'Goodwill', label: 'İyi Niyet' },
   { value: 'Other', label: 'Diğer' },
 ];
 

@@ -27,7 +27,7 @@ import type {
 // =====================================
 
 interface PriceListFormProps {
-  form: ReturnType<typeof Form.useForm>[0];
+  form: ReturnType<typeof Form.useForm<PriceListFormValues>>[0];
   initialData?: PriceListDto | null;
   onSubmit: (values: CreatePriceListDto) => Promise<void>;
   onAddItem?: (item: AddPriceListItemDto) => Promise<void>;
@@ -142,7 +142,7 @@ export function PriceListForm({
       description: values.description,
       type: values.type,
       currencyCode: values.currencyCode,
-      validFrom: values.validFrom?.toISOString(),
+      validFrom: values.validFrom?.toISOString() || dayjs().toISOString(),
       validTo: values.validTo?.toISOString(),
       isTaxIncluded: values.isTaxIncluded,
       priority: values.priority,
@@ -224,7 +224,7 @@ export function PriceListForm({
               }
             }}
           >
-            {value.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {record.currency}
+            {value.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
           </span>
         );
       },

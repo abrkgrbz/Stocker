@@ -36,8 +36,18 @@ interface ReturnItem {
   description?: string;
 }
 
+interface SalesReturnFormValues {
+  salesOrderId: string;
+  returnDate: dayjs.Dayjs;
+  type: string;
+  reason: string;
+  refundMethod: string;
+  currency: string;
+  notes?: string;
+}
+
 interface SalesReturnFormProps {
-  form: ReturnType<typeof Form.useForm>[0];
+  form: ReturnType<typeof Form.useForm<SalesReturnFormValues>>[0];
   initialValues?: SalesReturn;
   onFinish: (values: any) => void;
   loading?: boolean;
@@ -111,14 +121,11 @@ export default function SalesReturnForm({
       form.setFieldsValue({
         salesOrderId: initialValues.salesOrderId,
         returnDate: initialValues.returnDate ? dayjs(initialValues.returnDate) : dayjs(),
-        returnType: initialValues.returnType || 'Partial',
+        type: initialValues.type || 'Partial',
         reason: initialValues.reason,
         refundMethod: initialValues.refundMethod || 'Original',
         currency: initialValues.currency || 'TRY',
-        shippingCost: initialValues.shippingCost || 0,
-        restockingFee: initialValues.restockingFee || 0,
         notes: initialValues.notes,
-        internalNotes: initialValues.internalNotes,
       });
       setSelectedCurrency(initialValues.currency || 'TRY');
       setSelectedOrderId(initialValues.salesOrderId || undefined);
@@ -130,22 +137,20 @@ export default function SalesReturnForm({
           productCode: item.productCode || '',
           productName: item.productName,
           unit: item.unit,
-          originalQuantity: item.originalQuantity,
-          returnQuantity: item.returnQuantity,
+          originalQuantity: item.quantityOrdered,
+          returnQuantity: item.quantityReturned,
           unitPrice: item.unitPrice,
-          reason: item.reason,
+          reason: 'Defective' as SalesReturnReason,
           condition: item.condition || 'Good',
-          description: item.description || undefined,
+          description: item.conditionNotes || undefined,
         })));
       }
     } else {
       form.setFieldsValue({
         returnDate: dayjs(),
-        returnType: 'Partial',
+        type: 'Partial',
         refundMethod: 'Original',
         currency: 'TRY',
-        shippingCost: 0,
-        restockingFee: 0,
       });
       if (preselectedOrderId) {
         form.setFieldValue('salesOrderId', preselectedOrderId);
@@ -160,22 +165,9 @@ export default function SalesReturnForm({
       setSelectedOrderId(orderId);
       setSelectedCurrency(order.currency);
       form.setFieldValue('currency', order.currency);
-
-      // Load order items for return selection
-      if (order.items) {
-        setItems(order.items.map((item, index) => ({
-          key: `item-${index}`,
-          salesOrderItemId: item.id,
-          productCode: item.productCode,
-          productName: item.productName,
-          unit: item.unit,
-          originalQuantity: item.quantity,
-          returnQuantity: 0,
-          unitPrice: item.unitPrice,
-          reason: 'Defective' as SalesReturnReason,
-          condition: 'Good',
-        })));
-      }
+      // Note: SalesOrderListItem doesn't include items - they need to be fetched separately
+      // For now, user can add items manually
+      setItems([]);
     }
   };
 

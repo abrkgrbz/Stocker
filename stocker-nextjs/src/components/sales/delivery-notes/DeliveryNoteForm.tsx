@@ -19,7 +19,6 @@ import type {
   CreateDeliveryNoteDto,
   CreateDeliveryNoteItemDto,
   DeliveryNoteType,
-  TransportMode,
 } from '@/features/sales/types';
 
 // =====================================
@@ -27,7 +26,7 @@ import type {
 // =====================================
 
 interface DeliveryNoteFormProps {
-  form: ReturnType<typeof Form.useForm>[0];
+  form: ReturnType<typeof Form.useForm<DeliveryNoteFormValues>>[0];
   initialData?: DeliveryNoteDto | null;
   onSubmit: (values: CreateDeliveryNoteDto) => Promise<void>;
   isSubmitting?: boolean;
@@ -44,19 +43,25 @@ interface DeliveryNoteFormValues {
   receiverTaxId: string;
   receiverName: string;
   receiverAddress: string;
-  transportMode: TransportMode;
   carrierName?: string;
-  carrierTaxId?: string;
   vehiclePlate?: string;
   driverName?: string;
-  driverIdNumber?: string;
   salesOrderId?: string;
   warehouseId?: string;
   description?: string;
 }
 
-interface ItemRow extends CreateDeliveryNoteItemDto {
+interface ItemRow {
   key: string;
+  productId: string;
+  productCode: string;
+  productName: string;
+  quantity: number;
+  unit: string;
+  lotNumber?: string;
+  serialNumber?: string;
+  grossWeight?: number;
+  netWeight?: number;
 }
 
 // =====================================
@@ -71,13 +76,7 @@ const deliveryNoteTypes: { value: DeliveryNoteType; label: string }[] = [
   { value: 'Other', label: 'Diğer' },
 ];
 
-const transportModes: { value: TransportMode; label: string }[] = [
-  { value: 'Road', label: 'Karayolu' },
-  { value: 'Sea', label: 'Deniz' },
-  { value: 'Air', label: 'Havayolu' },
-  { value: 'Rail', label: 'Demiryolu' },
-  { value: 'Multimodal', label: 'Karma' },
-];
+// TransportMode is only used for dispatch, not create
 
 // =====================================
 // COMPONENT
@@ -113,12 +112,9 @@ export function DeliveryNoteForm({
         receiverTaxId: initialData.receiverTaxId,
         receiverName: initialData.receiverName,
         receiverAddress: initialData.receiverAddress,
-        transportMode: initialData.transportMode as TransportMode,
         carrierName: initialData.carrierName,
-        carrierTaxId: initialData.carrierTaxId,
         vehiclePlate: initialData.vehiclePlate,
         driverName: initialData.driverName,
-        driverIdNumber: initialData.driverIdNumber,
         salesOrderId: initialData.salesOrderId,
         warehouseId: initialData.warehouseId,
         description: initialData.description,
@@ -131,7 +127,7 @@ export function DeliveryNoteForm({
         productName: item.productName,
         quantity: item.quantity,
         unit: item.unit,
-        batchNumber: item.batchNumber,
+        lotNumber: item.lotNumber,
         serialNumber: item.serialNumber,
         grossWeight: item.grossWeight,
         netWeight: item.netWeight,
@@ -160,7 +156,7 @@ export function DeliveryNoteForm({
       productName: item.productName,
       quantity: item.quantity,
       unit: item.unit,
-      batchNumber: item.batchNumber,
+      lotNumber: item.lotNumber,
       serialNumber: item.serialNumber,
       grossWeight: item.grossWeight,
       netWeight: item.netWeight,
@@ -176,12 +172,6 @@ export function DeliveryNoteForm({
       receiverTaxId: values.receiverTaxId,
       receiverName: values.receiverName,
       receiverAddress: values.receiverAddress,
-      transportMode: values.transportMode,
-      carrierName: values.carrierName,
-      carrierTaxId: values.carrierTaxId,
-      vehiclePlate: values.vehiclePlate,
-      driverName: values.driverName,
-      driverIdNumber: values.driverIdNumber,
       salesOrderId: values.salesOrderId,
       warehouseId: values.warehouseId,
       description: values.description,
@@ -275,13 +265,13 @@ export function DeliveryNoteForm({
     },
     {
       title: 'Parti No',
-      dataIndex: 'batchNumber',
-      key: 'batchNumber',
+      dataIndex: 'lotNumber',
+      key: 'lotNumber',
       width: 120,
       render: (value: string, record) => isViewMode ? (value || '-') : (
         <Input
           value={value}
-          onChange={(e) => updateItem(record.key, 'batchNumber', e.target.value)}
+          onChange={(e) => updateItem(record.key, 'lotNumber', e.target.value)}
           placeholder="Parti"
           className="!bg-slate-50 !border-slate-300"
         />
@@ -375,7 +365,6 @@ export function DeliveryNoteForm({
           series: 'A',
           deliveryNoteDate: dayjs(),
           deliveryNoteType: 'Sales',
-          transportMode: 'Road',
         }}
         className="p-6"
       >
@@ -534,21 +523,9 @@ export function DeliveryNoteForm({
           </h3>
           <div className="grid grid-cols-12 gap-4">
             <Form.Item
-              name="transportMode"
-              label="Taşıma Modu"
-              rules={[{ required: true, message: 'Taşıma modu zorunludur' }]}
-              className="col-span-3"
-            >
-              <Select
-                options={transportModes}
-                className="[&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300"
-              />
-            </Form.Item>
-
-            <Form.Item
               name="carrierName"
               label="Taşıyıcı Firma"
-              className="col-span-3"
+              className="col-span-4"
             >
               <Input
                 placeholder="Nakliye firması"
@@ -557,20 +534,9 @@ export function DeliveryNoteForm({
             </Form.Item>
 
             <Form.Item
-              name="carrierTaxId"
-              label="Taşıyıcı VKN"
-              className="col-span-3"
-            >
-              <Input
-                placeholder="Taşıyıcı vergi no"
-                className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900"
-              />
-            </Form.Item>
-
-            <Form.Item
               name="vehiclePlate"
               label="Araç Plakası"
-              className="col-span-3"
+              className="col-span-4"
             >
               <Input
                 placeholder="34 ABC 123"
@@ -585,17 +551,6 @@ export function DeliveryNoteForm({
             >
               <Input
                 placeholder="Sürücü adı soyadı"
-                className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900"
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="driverIdNumber"
-              label="Sürücü TC"
-              className="col-span-4"
-            >
-              <Input
-                placeholder="Sürücü kimlik no"
                 className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900"
               />
             </Form.Item>

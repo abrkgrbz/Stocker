@@ -22,7 +22,7 @@ import type {
 // =====================================
 
 interface AdvancePaymentFormProps {
-  form: ReturnType<typeof Form.useForm>[0];
+  form: ReturnType<typeof Form.useForm<AdvancePaymentFormValues>>[0];
   initialData?: AdvancePaymentDto | null;
   onSubmit: (values: CreateAdvancePaymentCommand | UpdateAdvancePaymentCommand) => Promise<void>;
   isSubmitting?: boolean;
@@ -56,7 +56,7 @@ const paymentMethods: { value: PaymentMethod; label: string }[] = [
   { value: 'DebitCard', label: 'Banka Kartı' },
   { value: 'BankTransfer', label: 'Banka Havalesi' },
   { value: 'Check', label: 'Çek' },
-  { value: 'DigitalWallet', label: 'Dijital Cüzdan' },
+  { value: 'OnlinePayment', label: 'Online Ödeme' },
 ];
 
 const currencies = [
@@ -148,7 +148,6 @@ export function AdvancePaymentForm({
         currency: values.currency,
         paymentMethod: values.paymentMethod,
         paymentReference: values.paymentReference,
-        paymentDate: values.paymentDate.toISOString(),
         bankName: values.bankName,
         bankAccountNumber: values.bankAccountNumber,
         checkNumber: values.checkNumber,
