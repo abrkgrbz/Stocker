@@ -211,18 +211,12 @@ export default function SalesReturnForm({
       }
     });
 
-    const shippingCost = form.getFieldValue('shippingCost') || 0;
-    const restockingFee = form.getFieldValue('restockingFee') || 0;
-    const refundAmount = subTotal - shippingCost - restockingFee;
-
     return {
       subTotal,
       totalItems,
-      shippingCost,
-      restockingFee,
-      refundAmount: Math.max(0, refundAmount),
+      refundAmount: Math.max(0, subTotal),
     };
-  }, [items, form]);
+  }, [items]);
 
   const handleSubmit = () => {
     form.validateFields().then((values: any) => {
