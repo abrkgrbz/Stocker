@@ -474,8 +474,11 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
     description: 'Bildirim ve hatırlatıcılar',
     items: [
       { key: '/notifications', icon: <BellIcon className="w-4 h-4" />, label: 'Bildirimler' },
-      { key: '/chat', icon: <ChatBubbleLeftRightIcon className="w-4 h-4" />, label: 'Mesajlar' },
+      { key: '/notifications?filter=unread', icon: <ExclamationCircleIcon className="w-4 h-4" />, label: 'Okunmamışlar' },
       { key: '/reminders', icon: <ClockIcon className="w-4 h-4" />, label: 'Hatırlatıcılar' },
+      { key: '/reminders?filter=tasks', icon: <ClipboardDocumentCheckIcon className="w-4 h-4" />, label: 'Görevlerim' },
+      { key: '/reminders?view=calendar', icon: <CalendarIcon className="w-4 h-4" />, label: 'Takvim' },
+      { key: '/hr/announcements', icon: <FlagIcon className="w-4 h-4" />, label: 'Duyurular' },
     ],
   },
   hr: {

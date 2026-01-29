@@ -35,6 +35,9 @@ import {
   FunnelIcon,
   UserIcon,
   LinkIcon,
+  CalendarIcon,
+  ExclamationCircleIcon,
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -412,6 +415,50 @@ export default function RemindersPage() {
   const pendingCount = activeTab === 'pending' ? filteredReminders.length : filteredReminders.filter((r) => r.status === 0 || r.status === 1).length;
   const completedCount = activeTab === 'completed' ? filteredReminders.length : filteredReminders.filter((r) => r.status === 3).length;
 
+  const dueTodayCount = reminders.filter(r => r.dueDate && dayjs(r.dueDate).isSame(dayjs(), 'day') && r.status !== 3).length;
+  const overdueCount = reminders.filter(r => r.dueDate && dayjs(r.dueDate).isBefore(dayjs(), 'day') && r.status !== 3).length;
+
+  const renderStats = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+        <div className="w-12 h-12 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600">
+          <BellIcon className="w-6 h-6" />
+        </div>
+        <div>
+          <p className="text-sm text-slate-500 font-medium m-0">Bekleyen</p>
+          <h3 className="text-2xl font-bold text-slate-900 m-0">{reminders.filter(r => r.status === 0 || r.status === 1).length}</h3>
+        </div>
+      </div>
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+        <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+          <CalendarIcon className="w-6 h-6" />
+        </div>
+        <div>
+          <p className="text-sm text-slate-500 font-medium m-0">Bugün</p>
+          <h3 className="text-2xl font-bold text-slate-900 m-0">{dueTodayCount}</h3>
+        </div>
+      </div>
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+        <div className="w-12 h-12 rounded-lg bg-red-50 flex items-center justify-center text-red-600">
+          <ExclamationCircleIcon className="w-6 h-6" />
+        </div>
+        <div>
+          <p className="text-sm text-slate-500 font-medium m-0">Gecikmiş</p>
+          <h3 className="text-2xl font-bold text-slate-900 m-0">{overdueCount}</h3>
+        </div>
+      </div>
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+        <div className="w-12 h-12 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+          <CheckCircleIcon className="w-6 h-6" />
+        </div>
+        <div>
+          <p className="text-sm text-slate-500 font-medium m-0">Tamamlanan</p>
+          <h3 className="text-2xl font-bold text-slate-900 m-0">{reminders.filter(r => r.status === 3).length}</h3>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
@@ -444,6 +491,8 @@ export default function RemindersPage() {
           </Button>
         </Space>
       </div>
+
+      {renderStats()}
 
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
         <Space style={{ marginBottom: 24, width: '100%', flexWrap: 'wrap' }} size="middle">

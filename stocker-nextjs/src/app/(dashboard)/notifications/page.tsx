@@ -147,6 +147,41 @@ export default function NotificationsPage() {
     return items;
   };
 
+  const highPriorityCount = alerts.filter(a => a.severity === 'High' || a.severity === 'Critical').length;
+  const todayCount = alerts.filter(a => dayjs(a.createdAt).isSame(dayjs(), 'day')).length;
+
+  const renderStats = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+        <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+          <BellIcon className="w-6 h-6" />
+        </div>
+        <div>
+          <p className="text-sm text-slate-500 font-medium m-0">Okunmamış</p>
+          <h3 className="text-2xl font-bold text-slate-900 m-0">{unreadCount}</h3>
+        </div>
+      </div>
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+        <div className="w-12 h-12 rounded-lg bg-red-50 flex items-center justify-center text-red-600">
+          <ExclamationCircleIcon className="w-6 h-6" />
+        </div>
+        <div>
+          <p className="text-sm text-slate-500 font-medium m-0">Yüksek Öncelikli</p>
+          <h3 className="text-2xl font-bold text-slate-900 m-0">{highPriorityCount}</h3>
+        </div>
+      </div>
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+        <div className="w-12 h-12 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+          <ClockIcon className="w-6 h-6" />
+        </div>
+        <div>
+          <p className="text-sm text-slate-500 font-medium m-0">Bugün Gelen</p>
+          <h3 className="text-2xl font-bold text-slate-900 m-0">{todayCount}</h3>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
@@ -179,6 +214,8 @@ export default function NotificationsPage() {
           </Button>
         )}
       </div>
+
+      {renderStats()}
 
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
         {/* Tabs */}
