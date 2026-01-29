@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSignalRHub } from './use-signalr';
 import { toast } from 'sonner';
 import logger from '../utils/logger';
+import { useChat } from '@/features/chat/hooks/useChat';
 
 // Types
 export interface ChatMessage {
@@ -35,6 +36,12 @@ export interface TypingInfo {
   userId: string;
   userName: string;
   roomName?: string;
+}
+
+// Response type for PrivateMessageHistory from backend
+export interface PrivateMessageHistoryResponse {
+  otherUserId: string;
+  messages: ChatMessage[];
 }
 
 export interface UseChatHubOptions {
@@ -70,7 +77,10 @@ export function useChatHub(options: UseChatHubOptions = {}) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [currentRoom, setCurrentRoom] = useState<string | null>(null);
 
-  // Ref to track which user's private messages we're loading
+  // Store action for decrementing unread count
+  const decrementUnreadCount = useChat((state) => state.decrementUnreadCount);
+
+  // Fallback ref for backward compatibility (will be removed after backend update is deployed)
   const pendingPrivateMessageUserIdRef = useRef<string | null>(null);
 
   const events = useMemo(() => ({
@@ -122,22 +132,35 @@ export function useChatHub(options: UseChatHubOptions = {}) {
       setMessages(history);
     },
 
-    // Private message history
-    PrivateMessageHistory: (history: ChatMessage[]) => {
-      // Use the pending userId ref which was set when loadPrivateMessages was called
+    // Private message history - now with otherUserId from backend response
+    PrivateMessageHistory: (response: PrivateMessageHistoryResponse | ChatMessage[]) => {
+      // Handle new format with otherUserId from backend
+      if (response && typeof response === 'object' && 'otherUserId' in response) {
+        const { otherUserId, messages: history } = response;
+        logger.info(`Private message history received: ${history.length} messages for user ${otherUserId}`);
+        
+        setPrivateMessages((prev) => ({
+          ...prev,
+          [otherUserId]: history,
+        }));
+        // Clear fallback ref if it was set
+        pendingPrivateMessageUserIdRef.current = null;
+        return;
+      }
+
+      // Fallback for old format (backward compatibility during transition)
+      const history = response as ChatMessage[];
       const otherUserId = pendingPrivateMessageUserIdRef.current;
-      logger.info(`Private message history received: ${history.length} messages for user ${otherUserId}`);
+      logger.info(`Private message history received (legacy format): ${history.length} messages for user ${otherUserId}`);
 
       if (otherUserId) {
         setPrivateMessages((prev) => ({
           ...prev,
           [otherUserId]: history,
         }));
-        // Clear the pending ref after use
         pendingPrivateMessageUserIdRef.current = null;
       } else if (history.length > 0) {
         // Fallback: try to determine from message content
-        // For private messages, one of userId or targetUserId is the other person
         logger.warn('No pending userId ref, attempting to determine from message content');
       }
     },
@@ -302,14 +325,30 @@ export function useChatHub(options: UseChatHubOptions = {}) {
 
   const markAsRead = useCallback(
     async (messageIds: string[]) => {
-      if (!isConnected) return;
+      if (!isConnected || messageIds.length === 0) return;
       try {
+        // Optimistically update local state
+        setPrivateMessages((prev) => {
+          const updated = { ...prev };
+          Object.keys(updated).forEach((key) => {
+            updated[key] = updated[key].map((msg) =>
+              messageIds.includes(msg.id) ? { ...msg, isRead: true, readAt: new Date().toISOString() } : msg
+            );
+          });
+          return updated;
+        });
+
+        // Decrement global unread count in store
+        decrementUnreadCount(messageIds.length);
+
+        // Send to server
         await invoke('MarkMessagesAsRead', messageIds);
+        logger.info(`Marked ${messageIds.length} messages as read`);
       } catch (error) {
         logger.error('Failed to mark messages as read', error instanceof Error ? error : new Error(String(error)));
       }
     },
-    [isConnected, invoke]
+    [isConnected, invoke, decrementUnreadCount]
   );
 
   const getOnlineUsers = useCallback(async () => {

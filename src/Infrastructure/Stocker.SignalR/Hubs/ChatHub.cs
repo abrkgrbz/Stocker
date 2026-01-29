@@ -403,8 +403,14 @@ public class ChatHub : Hub
             })
             .ToList();
 
-        _logger.LogInformation("Sending PrivateMessageHistory with {Count} messages to client", messageList.Count);
-        await Clients.Caller.SendAsync(SignalREvents.PrivateMessageHistory, messageList);
+        _logger.LogInformation("Sending PrivateMessageHistory with {Count} messages to client for otherUserId={OtherUserId}", messageList.Count, otherUserId);
+        
+        // Send with otherUserId to help frontend identify which conversation these messages belong to
+        await Clients.Caller.SendAsync(SignalREvents.PrivateMessageHistory, new
+        {
+            otherUserId,
+            messages = messageList
+        });
     }
 
     public async Task MarkMessagesAsRead(IEnumerable<Guid> messageIds)

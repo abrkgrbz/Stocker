@@ -5,6 +5,7 @@ import { HubConnectionState } from '@microsoft/signalr';
 import { notificationHub, chatHub, SignalRClient } from './signalr-client';
 import { toast } from 'sonner';
 import logger from '../utils/logger';
+import { useChat } from '@/features/chat/hooks/useChat';
 
 interface SignalRContextValue {
   // Notification Hub
@@ -56,6 +57,10 @@ export function SignalRProvider({ children }: { children: React.ReactNode }) {
   const [isChatConnected, setIsChatConnected] = useState(false);
   const [isMessageNotificationsEnabled, setMessageNotificationsEnabled] = useState(true);
   const globalHandlersRegisteredRef = useRef(false);
+  const stateSubscriptionsRef = useRef<(() => void)[]>([]);
+
+  // Get store actions for syncing unread count
+  const incrementUnreadCount = useChat((state) => state.incrementUnreadCount);
 
   // Chat popup state
   const [chatPopupState, setChatPopupState] = useState<{
@@ -105,6 +110,32 @@ export function SignalRProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Subscribe to connection state changes (event-based instead of polling)
+  useEffect(() => {
+    // Subscribe to notification hub state changes
+    const unsubNotification = notificationHub.onStateChange((state) => {
+      const isConnected = state === HubConnectionState.Connected;
+      setIsNotificationConnected(isConnected);
+      logger.info('Notification hub state changed', { metadata: { state: HubConnectionState[state], isConnected } });
+    });
+
+    // Subscribe to chat hub state changes
+    const unsubChat = chatHub.onStateChange((state) => {
+      const isConnected = state === HubConnectionState.Connected;
+      setIsChatConnected(isConnected);
+      logger.info('Chat hub state changed', { metadata: { state: HubConnectionState[state], isConnected } });
+    });
+
+    // Store unsubscribe functions
+    stateSubscriptionsRef.current = [unsubNotification, unsubChat];
+
+    return () => {
+      // Unsubscribe from all state changes
+      stateSubscriptionsRef.current.forEach((unsub) => unsub());
+      stateSubscriptionsRef.current = [];
+    };
+  }, []);
+
   // Auto-connect on mount
   useEffect(() => {
     connectAll();
@@ -115,23 +146,16 @@ export function SignalRProvider({ children }: { children: React.ReactNode }) {
     };
   }, [connectAll, disconnectAll]);
 
-  // Monitor connection state - reduced frequency to avoid performance impact
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIsNotificationConnected(notificationHub.state === HubConnectionState.Connected);
-      setIsChatConnected(chatHub.state === HubConnectionState.Connected);
-    }, 5000); // Check every 5 seconds
-
-    return () => clearInterval(interval);
-  }, []);
-
   // Register global message handlers for toast notifications
   useEffect(() => {
     if (!isChatConnected || globalHandlersRegisteredRef.current) return;
 
-    // Handler for private messages - show toast globally
+    // Handler for private messages - show toast globally and sync unread count
     const handleReceivePrivateMessage = (message: IncomingChatMessage) => {
       logger.info('Global: Private message received', { metadata: { from: message.userName } });
+
+      // Increment unread count in store (for global badge display)
+      incrementUnreadCount();
 
       // Show toast notification if enabled
       if (isMessageNotificationsEnabled) {
@@ -184,7 +208,7 @@ export function SignalRProvider({ children }: { children: React.ReactNode }) {
       globalHandlersRegisteredRef.current = false;
       logger.info('Global chat message handlers unregistered');
     };
-  }, [isChatConnected, isMessageNotificationsEnabled, openChatPopup]);
+  }, [isChatConnected, isMessageNotificationsEnabled, openChatPopup, incrementUnreadCount]);
 
   const value: SignalRContextValue = {
     notificationHub,

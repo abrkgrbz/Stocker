@@ -3,13 +3,38 @@ import * as signalR from '@microsoft/signalr';
 import logger from '../utils/logger';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5249';
 
+// Connection state change callback type
+export type ConnectionStateCallback = (state: signalR.HubConnectionState) => void;
+
 export class SignalRClient {
   private connection: signalR.HubConnection | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 5000; // 5 seconds
+  private stateChangeCallbacks: Set<ConnectionStateCallback> = new Set();
 
   constructor(private hubUrl: string) {}
+
+  /**
+   * Subscribe to connection state changes
+   */
+  onStateChange(callback: ConnectionStateCallback): () => void {
+    this.stateChangeCallbacks.add(callback);
+    // Return unsubscribe function
+    return () => {
+      this.stateChangeCallbacks.delete(callback);
+    };
+  }
+
+  private notifyStateChange(state: signalR.HubConnectionState): void {
+    this.stateChangeCallbacks.forEach((callback) => {
+      try {
+        callback(state);
+      } catch (error) {
+        logger.error('State change callback error:', error instanceof Error ? error : new Error(String(error)));
+      }
+    });
+  }
 
   async start(accessToken?: string): Promise<void> {
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
@@ -50,11 +75,13 @@ export class SignalRClient {
     this.connection.onreconnecting((error) => {
       logger.warn('SignalR reconnecting...', { metadata: { error: error?.message || 'Unknown error' } });
       this.reconnectAttempts++;
+      this.notifyStateChange(signalR.HubConnectionState.Reconnecting);
     });
 
     this.connection.onreconnected((connectionId) => {
       logger.info('SignalR reconnected', { metadata: { connectionId } });
       this.reconnectAttempts = 0;
+      this.notifyStateChange(signalR.HubConnectionState.Connected);
     });
 
     this.connection.onclose(async (error) => {
@@ -64,6 +91,8 @@ export class SignalRClient {
       } else {
         logger.info('SignalR disconnected gracefully');
       }
+
+      this.notifyStateChange(signalR.HubConnectionState.Disconnected);
 
       // Attempt manual reconnection with backoff
       if (error && this.reconnectAttempts < this.maxReconnectAttempts) {
@@ -82,8 +111,10 @@ export class SignalRClient {
       await this.connection.start();
       logger.info('SignalR connected successfully');
       this.reconnectAttempts = 0;
+      this.notifyStateChange(signalR.HubConnectionState.Connected);
     } catch (error: any) {
       this.reconnectAttempts++;
+      this.notifyStateChange(signalR.HubConnectionState.Disconnected);
 
       // More graceful error handling based on error type
       if (error?.message?.includes('429')) {
@@ -105,6 +136,7 @@ export class SignalRClient {
     if (this.connection) {
       await this.connection.stop();
       logger.info('SignalR disconnected');
+      this.notifyStateChange(signalR.HubConnectionState.Disconnected);
     }
   }
 

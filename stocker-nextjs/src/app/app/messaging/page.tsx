@@ -1,24 +1,21 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChatBubbleLeftRightIcon,
   PaperAirplaneIcon,
   UserGroupIcon,
-  UserIcon,
   MagnifyingGlassIcon,
   PlusIcon,
   EllipsisHorizontalIcon,
   FaceSmileIcon,
   PaperClipIcon,
   CheckIcon,
-  CheckCircleIcon,
   ArrowLeftIcon,
   TrashIcon,
   ArchiveBoxIcon,
   BellSlashIcon,
-  InformationCircleIcon,
   HomeIcon,
 } from '@heroicons/react/24/outline';
 import { ChatBubbleLeftRightIcon as ChatBubbleLeftRightIconSolid } from '@heroicons/react/24/solid';
@@ -37,12 +34,17 @@ dayjs.locale('tr');
 // Tab type for segmented control
 type TabType = 'conversations' | 'online';
 
+// Extended conversation type with real-time updates
+interface ConversationWithRealtime extends ChatConversation {
+  lastMessageTime?: string;
+}
+
 export default function MessagingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const [messageInput, setMessageInput] = useState('');
-  const [selectedConversation, setSelectedConversation] = useState<ChatConversation | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<ConversationWithRealtime | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<TabType>('conversations');
   const [isMobileListVisible, setIsMobileListVisible] = useState(true);
@@ -51,10 +53,10 @@ export default function MessagingPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const chatMenuRef = useRef<HTMLDivElement>(null);
 
-  const { conversations, fetchConversations, isLoading: storeLoading, markMessagesAsRead: storeMarkAsRead } = useChat();
-  // Local state for conversation unread counts (updated when messages are read)
-  const [localConversations, setLocalConversations] = useState<ChatConversation[]>([]);
+  // Store for initial conversations fetch
+  const { conversations: apiConversations, fetchConversations, isLoading: storeLoading } = useChat();
 
+  // SignalR hook - primary data source for real-time
   const {
     isConnected,
     messages,
@@ -73,20 +75,101 @@ export default function MessagingPage() {
     stopTyping,
     getOnlineUsers,
   } = useChatHub({
-    showToasts: true,
+    showToasts: false, // Disable toasts on messaging page to avoid duplicates
     onMessage: () => scrollToBottom(),
-    onPrivateMessage: () => scrollToBottom(),
+    onPrivateMessage: (msg) => {
+      scrollToBottom();
+      // Update conversations when a new private message arrives
+      updateConversationFromMessage(msg);
+    },
   });
 
+  // Merge API conversations with real-time private messages
+  const conversations = useMemo((): ConversationWithRealtime[] => {
+    // Start with API conversations
+    const convMap = new Map<string, ConversationWithRealtime>();
+
+    apiConversations.forEach((conv) => {
+      const key = conv.userId || conv.roomName || '';
+      if (key) {
+        convMap.set(key, {
+          ...conv,
+          lastMessageTime: conv.lastMessage?.sentAt,
+        });
+      }
+    });
+
+    // Update with real-time private messages
+    Object.entries(privateMessages).forEach(([oderId, msgs]) => {
+      if (msgs.length > 0) {
+        const lastMsg = msgs[msgs.length - 1];
+        const existing = convMap.get(oderId);
+
+        // Count unread messages for this conversation
+        const unreadMsgs = msgs.filter(
+          (m) => m.targetUserId === user?.id && !m.isRead
+        ).length;
+
+        if (existing) {
+          // Update existing conversation with latest message
+          convMap.set(oderId, {
+            ...existing,
+            lastMessage: {
+              id: lastMsg.id,
+              senderId: lastMsg.userId,
+              senderName: lastMsg.userName,
+              content: lastMsg.message,
+              isPrivate: true,
+              sentAt: lastMsg.timestamp,
+              isRead: lastMsg.isRead || false,
+              messageType: 0,
+            },
+            lastMessageTime: lastMsg.timestamp,
+            unreadCount: selectedConversation?.userId === oderId ? 0 : unreadMsgs,
+          });
+        } else {
+          // Create new conversation from private messages
+          convMap.set(oderId, {
+            userId: oderId,
+            userName: lastMsg.userId === user?.id ? (lastMsg.targetUserId || 'Kullanıcı') : lastMsg.userName,
+            isPrivate: true,
+            lastMessage: {
+              id: lastMsg.id,
+              senderId: lastMsg.userId,
+              senderName: lastMsg.userName,
+              content: lastMsg.message,
+              isPrivate: true,
+              sentAt: lastMsg.timestamp,
+              isRead: lastMsg.isRead || false,
+              messageType: 0,
+            },
+            lastMessageTime: lastMsg.timestamp,
+            unreadCount: selectedConversation?.userId === oderId ? 0 : unreadMsgs,
+          });
+        }
+      }
+    });
+
+    // Sort by last message time (newest first)
+    return Array.from(convMap.values()).sort((a, b) => {
+      const timeA = a.lastMessageTime || a.lastMessage?.sentAt || '';
+      const timeB = b.lastMessageTime || b.lastMessage?.sentAt || '';
+      return new Date(timeB).getTime() - new Date(timeA).getTime();
+    });
+  }, [apiConversations, privateMessages, user?.id, selectedConversation?.userId]);
+
+  // Update conversation when a new message arrives
+  const updateConversationFromMessage = useCallback((msg: SignalRMessage) => {
+    // This is handled via the useMemo above by re-computing conversations
+    // when privateMessages changes
+  }, []);
+
+  // Fetch initial conversations
   useEffect(() => {
     fetchConversations();
   }, [fetchConversations]);
 
-  // Sync conversations to local state
-  useEffect(() => {
-    setLocalConversations(conversations);
-  }, [conversations]);
-
+  // Fetch online users when connected
   useEffect(() => {
     if (isConnected) {
       getOnlineUsers();
@@ -99,20 +182,16 @@ export default function MessagingPage() {
     const userName = searchParams.get('userName');
 
     if (userId && isConnected && !selectedConversation) {
-      // Create a conversation object for the user from URL params
-      const conv: ChatConversation = {
+      const conv: ConversationWithRealtime = {
         userId: userId,
         userName: userName || 'Kullanıcı',
         isPrivate: true,
         unreadCount: 0,
       };
 
-      // Select the conversation and load messages
       setSelectedConversation(conv);
       setIsMobileListVisible(false);
       loadPrivateMessages(userId);
-
-      // Clear URL params after handling (optional - keeps URL clean)
       router.replace('/app/messaging', { scroll: false });
     }
   }, [searchParams, isConnected, selectedConversation, loadPrivateMessages, router]);
@@ -132,7 +211,6 @@ export default function MessagingPage() {
     if (!selectedConversation?.isPrivate || !selectedConversation.userId || !isConnected) return;
 
     const conversationMessages = privateMessages[selectedConversation.userId] || [];
-    // Find unread messages that were sent TO me (not FROM me)
     const unreadMessageIds = conversationMessages
       .filter((msg) => msg.targetUserId === user?.id && !msg.isRead)
       .map((msg) => msg.id);
@@ -147,16 +225,10 @@ export default function MessagingPage() {
 
     try {
       if (selectedConversation?.isPrivate && selectedConversation.userId) {
-        // Private message
-        console.log('Sending private message to:', selectedConversation.userId);
         await sendPrivateMessage(selectedConversation.userId, messageInput);
       } else if (currentRoom) {
-        // Room message
-        console.log('Sending room message to:', currentRoom);
         await sendMessage(messageInput, currentRoom);
       } else {
-        // No conversation selected - send to global or default room
-        console.log('No room selected, sending to global');
         await sendMessage(messageInput);
       }
 
@@ -184,7 +256,7 @@ export default function MessagingPage() {
     }
   };
 
-  const handleSelectConversation = async (conversation: ChatConversation) => {
+  const handleSelectConversation = async (conversation: ConversationWithRealtime) => {
     setSelectedConversation(conversation);
     setIsMobileListVisible(false);
 
@@ -193,18 +265,8 @@ export default function MessagingPage() {
     }
 
     if (conversation.isPrivate && conversation.userId) {
-      // Load private message history for this user
       if (isConnected) {
         await loadPrivateMessages(conversation.userId);
-      }
-
-      // Mark conversation as read locally (reset unread count to 0)
-      if (conversation.unreadCount && conversation.unreadCount > 0) {
-        setLocalConversations((prev) =>
-          prev.map((conv) =>
-            conv.userId === conversation.userId ? { ...conv, unreadCount: 0 } : conv
-          )
-        );
       }
     } else if (conversation.roomName) {
       await joinRoom(conversation.roomName);
@@ -212,7 +274,7 @@ export default function MessagingPage() {
   };
 
   const handleSelectUser = async (chatUser: ChatUser) => {
-    const conv: ChatConversation = {
+    const conv: ConversationWithRealtime = {
       userId: chatUser.userId,
       userName: chatUser.userName,
       isPrivate: true,
@@ -221,7 +283,6 @@ export default function MessagingPage() {
     setSelectedConversation(conv);
     setIsMobileListVisible(false);
 
-    // Load private message history for this user
     if (isConnected) {
       await loadPrivateMessages(chatUser.userId);
     }
@@ -240,18 +301,15 @@ export default function MessagingPage() {
   };
 
   const handleDeleteConversation = () => {
-    // TODO: Implement delete conversation
     setShowChatMenu(false);
     setSelectedConversation(null);
   };
 
   const handleMuteConversation = () => {
-    // TODO: Implement mute conversation
     setShowChatMenu(false);
   };
 
   const handleArchiveConversation = () => {
-    // TODO: Implement archive conversation
     setShowChatMenu(false);
   };
 
@@ -272,22 +330,31 @@ export default function MessagingPage() {
     };
   }, [showChatMenu]);
 
-  const filteredOnlineUsers = onlineUsers.filter(
-    (chatUser) =>
-      chatUser.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      chatUser.userId.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredOnlineUsers = useMemo(() =>
+    onlineUsers.filter(
+      (chatUser) =>
+        chatUser.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        chatUser.userId.toLowerCase().includes(searchTerm.toLowerCase())
+    ),
+    [onlineUsers, searchTerm]
   );
 
-  const filteredConversations = localConversations.filter(
-    (conv) =>
-      (conv.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        conv.roomName?.toLowerCase().includes(searchTerm.toLowerCase())) ?? true
+  const filteredConversations = useMemo(() =>
+    conversations.filter(
+      (conv) =>
+        (conv.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          conv.roomName?.toLowerCase().includes(searchTerm.toLowerCase())) ?? true
+    ),
+    [conversations, searchTerm]
   );
 
   // Get current messages based on conversation type
-  const currentMessages = selectedConversation?.isPrivate && selectedConversation.userId
-    ? privateMessages[selectedConversation.userId] || []
-    : messages;
+  const currentMessages = useMemo(() =>
+    selectedConversation?.isPrivate && selectedConversation.userId
+      ? privateMessages[selectedConversation.userId] || []
+      : messages,
+    [selectedConversation, privateMessages, messages]
+  );
 
   // Get initials from name
   const getInitials = (name: string) => {
@@ -421,7 +488,7 @@ export default function MessagingPage() {
           {activeTab === 'conversations' ? (
             // Conversations List
             <div className="py-2">
-              {storeLoading ? (
+              {storeLoading && conversations.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <div className="w-8 h-8 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
                   <p className="mt-3 text-sm text-slate-500">Yükleniyor...</p>
@@ -692,7 +759,9 @@ export default function MessagingPage() {
                             <span className={`text-xs ${isOwn ? 'text-indigo-200' : 'text-slate-400'}`}>
                               {dayjs(msg.timestamp).format('HH:mm')}
                             </span>
-                            {isOwn && <CheckIcon className="w-3.5 h-3.5 text-indigo-200" />}
+                            {isOwn && msg.isRead && (
+                              <CheckIcon className="w-3.5 h-3.5 text-indigo-200" />
+                            )}
                           </div>
                         </div>
                       </div>
