@@ -582,18 +582,6 @@ export default function SalesReturnForm({
                     <span className="text-slate-600">Ürün Toplamı:</span>
                     <span className="font-medium text-slate-900">{formatCurrency(calculations.subTotal)}</span>
                   </div>
-                  {calculations.shippingCost > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-600">Kargo:</span>
-                      <span className="text-red-600">-{formatCurrency(calculations.shippingCost)}</span>
-                    </div>
-                  )}
-                  {calculations.restockingFee > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-600">Stoklama Ücreti:</span>
-                      <span className="text-red-600">-{formatCurrency(calculations.restockingFee)}</span>
-                    </div>
-                  )}
                   <div className="border-t border-slate-200 pt-3">
                     <div className="flex justify-between text-lg">
                       <span className="font-semibold text-slate-900">İade Tutarı:</span>
