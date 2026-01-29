@@ -6,7 +6,7 @@
 import { ApiService } from '@/lib/api/api-service';
 import type { Alert, AlertFilterParams, UnreadCountResponse } from '../types';
 
-const BASE_URL = '/alerts';
+const BASE_URL = '/notifications';
 
 export const alertService = {
   /**
@@ -33,7 +33,8 @@ export const alertService = {
    * Get unread alert count
    */
   async getUnreadCount(): Promise<UnreadCountResponse> {
-    return ApiService.get<UnreadCountResponse>(`${BASE_URL}/unread-count`);
+    const response = await ApiService.get<{ success: boolean; data: { UnreadCount: number } }>(`${BASE_URL}/unread-count`);
+    return { count: response.data.UnreadCount };
   },
 
   /**
