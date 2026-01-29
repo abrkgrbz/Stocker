@@ -32,6 +32,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         {
             var result = await _authenticationService.RefreshTokenAsync(
                 request.RefreshToken,
+                request.AccessToken,
                 request.IpAddress,
                 request.UserAgent,
                 cancellationToken);

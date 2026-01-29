@@ -172,6 +172,7 @@ public class SecureAuthController : ControllerBase
     public async Task<IActionResult> RefreshToken()
     {
         var refreshToken = Request.Cookies["refresh_token"];
+        var accessToken = Request.Cookies["access_token"];
 
         if (string.IsNullOrEmpty(refreshToken))
         {
@@ -179,11 +180,12 @@ public class SecureAuthController : ControllerBase
             return Unauthorized(new { message = "No refresh token found" });
         }
 
-        _logger.LogDebug("Attempting to refresh token");
+        _logger.LogDebug("Attempting to refresh token. AccessToken present: {HasAccessToken}", !string.IsNullOrEmpty(accessToken));
 
         var command = new RefreshTokenCommand
         {
             RefreshToken = refreshToken,
+            AccessToken = accessToken,
             IpAddress = GetClientIpAddress(),
             UserAgent = Request.Headers["User-Agent"].ToString()
         };
