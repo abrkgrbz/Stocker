@@ -41,16 +41,30 @@ public class AddModuleToCartCommandHandler : IRequestHandler<AddModuleToCartComm
 
         try
         {
-            cart.AddModule(
+            // Check if module already in cart
+            if (cart.Items.Any(i => i.ItemType == CartItemType.Module && i.ItemCode == modulePricing.ModuleCode))
+            {
+                return Result<CartDto>.Failure(Error.Failure("Sepet.ModulZatenVar", $"'{modulePricing.ModuleCode}' modülü zaten sepette."));
+            }
+
+            // Create cart item and add to DbSet directly for proper EF tracking
+            var cartItem = SubscriptionCartItem.CreateModule(
+                cart.Id,
                 modulePricing.Id,
                 modulePricing.ModuleCode,
                 modulePricing.ModuleName,
                 price,
                 modulePricing.TrialDays);
 
+            _context.SubscriptionCartItems.Add(cartItem);
             await _context.SaveChangesAsync(cancellationToken);
 
-            return Result<CartDto>.Success(CartMapper.MapToDto(cart));
+            // Reload cart with items for response
+            var updatedCart = await _context.SubscriptionCarts
+                .Include(c => c.Items)
+                .FirstAsync(c => c.Id == cart.Id, cancellationToken);
+
+            return Result<CartDto>.Success(CartMapper.MapToDto(updatedCart));
         }
         catch (InvalidOperationException ex)
         {
@@ -110,7 +124,25 @@ public class AddBundleToCartCommandHandler : IRequestHandler<AddBundleToCartComm
 
         try
         {
-            cart.AddBundle(
+            // Check if bundle already in cart
+            if (cart.Items.Any(i => i.ItemType == CartItemType.Bundle && i.ItemCode == bundle.BundleCode))
+            {
+                return Result<CartDto>.Failure(Error.Failure("Sepet.PaketZatenVar", $"'{bundle.BundleCode}' paketi zaten sepette."));
+            }
+
+            // Remove individual modules that are part of this bundle
+            var modulesToRemove = cart.Items
+                .Where(i => i.ItemType == CartItemType.Module && includedModuleCodes.Contains(i.ItemCode))
+                .ToList();
+
+            foreach (var module in modulesToRemove)
+            {
+                _context.SubscriptionCartItems.Remove(module);
+            }
+
+            // Create cart item and add to DbSet directly for proper EF tracking
+            var cartItem = SubscriptionCartItem.CreateBundle(
+                cart.Id,
                 bundle.Id,
                 bundle.BundleCode,
                 bundle.BundleName,
@@ -118,9 +150,15 @@ public class AddBundleToCartCommandHandler : IRequestHandler<AddBundleToCartComm
                 bundle.DiscountPercent,
                 includedModuleCodes);
 
+            _context.SubscriptionCartItems.Add(cartItem);
             await _context.SaveChangesAsync(cancellationToken);
 
-            return Result<CartDto>.Success(CartMapper.MapToDto(cart));
+            // Reload cart with items for response
+            var updatedCart = await _context.SubscriptionCarts
+                .Include(c => c.Items)
+                .FirstAsync(c => c.Id == cart.Id, cancellationToken);
+
+            return Result<CartDto>.Success(CartMapper.MapToDto(updatedCart));
         }
         catch (InvalidOperationException ex)
         {
@@ -178,17 +216,35 @@ public class AddAddOnToCartCommandHandler : IRequestHandler<AddAddOnToCartComman
 
         try
         {
-            cart.AddAddOn(
-                addOn.Id,
-                addOn.Code,
-                addOn.Name,
-                price,
-                request.Quantity,
-                addOn.RequiredModuleCode);
+            // Check if add-on already exists - update quantity if so
+            var existingAddOn = cart.Items.FirstOrDefault(i => i.ItemType == CartItemType.AddOn && i.ItemCode == addOn.Code);
+            if (existingAddOn != null)
+            {
+                existingAddOn.UpdateQuantity(existingAddOn.Quantity + request.Quantity);
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                // Create cart item and add to DbSet directly for proper EF tracking
+                var cartItem = SubscriptionCartItem.CreateAddOn(
+                    cart.Id,
+                    addOn.Id,
+                    addOn.Code,
+                    addOn.Name,
+                    price,
+                    request.Quantity,
+                    addOn.RequiredModuleCode);
 
-            await _context.SaveChangesAsync(cancellationToken);
+                _context.SubscriptionCartItems.Add(cartItem);
+                await _context.SaveChangesAsync(cancellationToken);
+            }
 
-            return Result<CartDto>.Success(CartMapper.MapToDto(cart));
+            // Reload cart with items for response
+            var updatedCart = await _context.SubscriptionCarts
+                .Include(c => c.Items)
+                .FirstAsync(c => c.Id == cart.Id, cancellationToken);
+
+            return Result<CartDto>.Success(CartMapper.MapToDto(updatedCart));
         }
         catch (InvalidOperationException ex)
         {
@@ -244,16 +300,31 @@ public class AddStoragePlanToCartCommandHandler : IRequestHandler<AddStoragePlan
 
         try
         {
-            cart.AddStoragePlan(
+            // Remove any existing storage plan (only one can be active)
+            var existingPlan = cart.Items.FirstOrDefault(i => i.ItemType == CartItemType.StoragePlan);
+            if (existingPlan != null)
+            {
+                _context.SubscriptionCartItems.Remove(existingPlan);
+            }
+
+            // Create cart item and add to DbSet directly for proper EF tracking
+            var cartItem = SubscriptionCartItem.CreateStoragePlan(
+                cart.Id,
                 storagePlan.Id,
                 storagePlan.Code,
                 storagePlan.Name,
                 storagePlan.MonthlyPrice,
                 storagePlan.StorageGB);
 
+            _context.SubscriptionCartItems.Add(cartItem);
             await _context.SaveChangesAsync(cancellationToken);
 
-            return Result<CartDto>.Success(CartMapper.MapToDto(cart));
+            // Reload cart with items for response
+            var updatedCart = await _context.SubscriptionCarts
+                .Include(c => c.Items)
+                .FirstAsync(c => c.Id == cart.Id, cancellationToken);
+
+            return Result<CartDto>.Success(CartMapper.MapToDto(updatedCart));
         }
         catch (InvalidOperationException ex)
         {
@@ -315,16 +386,31 @@ public class AddUsersToCartCommandHandler : IRequestHandler<AddUsersToCartComman
 
         try
         {
-            cart.AddUsers(
+            // Remove any existing user tier (replace with new selection)
+            var existingUsers = cart.Items.FirstOrDefault(i => i.ItemType == CartItemType.Users);
+            if (existingUsers != null)
+            {
+                _context.SubscriptionCartItems.Remove(existingUsers);
+            }
+
+            // Create cart item and add to DbSet directly for proper EF tracking
+            var cartItem = SubscriptionCartItem.CreateUsers(
+                cart.Id,
                 userTier.Id,
                 userTier.Code,
                 userTier.Name,
                 userTier.PricePerUser,
                 request.UserCount);
 
+            _context.SubscriptionCartItems.Add(cartItem);
             await _context.SaveChangesAsync(cancellationToken);
 
-            return Result<CartDto>.Success(CartMapper.MapToDto(cart));
+            // Reload cart with items for response
+            var updatedCart = await _context.SubscriptionCarts
+                .Include(c => c.Items)
+                .FirstAsync(c => c.Id == cart.Id, cancellationToken);
+
+            return Result<CartDto>.Success(CartMapper.MapToDto(updatedCart));
         }
         catch (InvalidOperationException ex)
         {
