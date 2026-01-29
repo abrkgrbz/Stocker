@@ -8,10 +8,10 @@ namespace Stocker.Modules.Sales.Domain.Events;
 /// Teklif oluşturulduğunda tetiklenen event
 /// </summary>
 public sealed record SalesQuotationCreatedDomainEvent(
-    int QuotationId,
+    Guid QuotationId,
     Guid TenantId,
     string QuotationNumber,
-    int CustomerId,
+    Guid? CustomerId,
     string CustomerName,
     decimal TotalAmount,
     string Currency,
@@ -21,7 +21,7 @@ public sealed record SalesQuotationCreatedDomainEvent(
 /// Teklif gönderildiğinde tetiklenen event
 /// </summary>
 public sealed record SalesQuotationSentDomainEvent(
-    int QuotationId,
+    Guid QuotationId,
     Guid TenantId,
     string QuotationNumber,
     string CustomerEmail,
@@ -31,21 +31,21 @@ public sealed record SalesQuotationSentDomainEvent(
 /// Teklif kabul edildiğinde tetiklenen event
 /// </summary>
 public sealed record SalesQuotationAcceptedDomainEvent(
-    int QuotationId,
+    Guid QuotationId,
     Guid TenantId,
     string QuotationNumber,
-    int CustomerId,
-    int SalesOrderId,
+    Guid? CustomerId,
+    Guid SalesOrderId,
     DateTime AcceptedAt) : DomainEvent;
 
 /// <summary>
 /// Teklif reddedildiğinde tetiklenen event
 /// </summary>
 public sealed record SalesQuotationRejectedDomainEvent(
-    int QuotationId,
+    Guid QuotationId,
     Guid TenantId,
     string QuotationNumber,
-    int CustomerId,
+    Guid? CustomerId,
     string RejectionReason,
     DateTime RejectedAt) : DomainEvent;
 
@@ -53,7 +53,7 @@ public sealed record SalesQuotationRejectedDomainEvent(
 /// Teklif süresi dolduğunda tetiklenen event
 /// </summary>
 public sealed record SalesQuotationExpiredDomainEvent(
-    int QuotationId,
+    Guid QuotationId,
     Guid TenantId,
     string QuotationNumber,
     DateTime ExpiredAt) : DomainEvent;

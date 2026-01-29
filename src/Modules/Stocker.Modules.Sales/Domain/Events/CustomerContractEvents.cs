@@ -8,10 +8,10 @@ namespace Stocker.Modules.Sales.Domain.Events;
 /// Müşteri sözleşmesi oluşturulduğunda tetiklenen event
 /// </summary>
 public sealed record CustomerContractCreatedDomainEvent(
-    int CustomerContractId,
+    Guid CustomerContractId,
     Guid TenantId,
     string ContractNumber,
-    int CustomerId,
+    Guid? CustomerId,
     string CustomerName,
     decimal ContractValue,
     DateTime StartDate,
@@ -21,7 +21,7 @@ public sealed record CustomerContractCreatedDomainEvent(
 /// Müşteri sözleşmesi aktifleştirildiğinde tetiklenen event
 /// </summary>
 public sealed record CustomerContractActivatedDomainEvent(
-    int CustomerContractId,
+    Guid CustomerContractId,
     Guid TenantId,
     string ContractNumber,
     DateTime ActivatedAt) : DomainEvent;
@@ -30,7 +30,7 @@ public sealed record CustomerContractActivatedDomainEvent(
 /// Müşteri sözleşmesi yenilendiğinde tetiklenen event
 /// </summary>
 public sealed record CustomerContractRenewedDomainEvent(
-    int CustomerContractId,
+    Guid CustomerContractId,
     Guid TenantId,
     string ContractNumber,
     DateTime OldEndDate,
@@ -41,7 +41,7 @@ public sealed record CustomerContractRenewedDomainEvent(
 /// Müşteri sözleşmesi sona erdiğinde tetiklenen event
 /// </summary>
 public sealed record CustomerContractExpiredDomainEvent(
-    int CustomerContractId,
+    Guid CustomerContractId,
     Guid TenantId,
     string ContractNumber,
     DateTime ExpiredAt) : DomainEvent;
@@ -50,7 +50,7 @@ public sealed record CustomerContractExpiredDomainEvent(
 /// Müşteri sözleşmesi feshedildiğinde tetiklenen event
 /// </summary>
 public sealed record CustomerContractTerminatedDomainEvent(
-    int CustomerContractId,
+    Guid CustomerContractId,
     Guid TenantId,
     string ContractNumber,
     string TerminationReason,

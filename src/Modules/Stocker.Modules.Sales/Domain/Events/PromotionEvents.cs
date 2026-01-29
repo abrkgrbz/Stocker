@@ -8,7 +8,7 @@ namespace Stocker.Modules.Sales.Domain.Events;
 /// Promosyon oluşturulduğunda tetiklenen event
 /// </summary>
 public sealed record PromotionCreatedDomainEvent(
-    int PromotionId,
+    Guid PromotionId,
     Guid TenantId,
     string PromotionCode,
     string PromotionName,
@@ -21,7 +21,7 @@ public sealed record PromotionCreatedDomainEvent(
 /// Promosyon aktifleştirildiğinde tetiklenen event
 /// </summary>
 public sealed record PromotionActivatedDomainEvent(
-    int PromotionId,
+    Guid PromotionId,
     Guid TenantId,
     string PromotionCode,
     string PromotionName,
@@ -31,10 +31,10 @@ public sealed record PromotionActivatedDomainEvent(
 /// Promosyon uygulandığında tetiklenen event
 /// </summary>
 public sealed record PromotionAppliedDomainEvent(
-    int PromotionId,
+    Guid PromotionId,
     Guid TenantId,
     string PromotionCode,
-    int SalesOrderId,
+    Guid SalesOrderId,
     string OrderNumber,
     decimal DiscountAmount) : DomainEvent;
 
@@ -42,7 +42,7 @@ public sealed record PromotionAppliedDomainEvent(
 /// Promosyon kullanım limiti dolduğunda tetiklenen event
 /// </summary>
 public sealed record PromotionUsageLimitReachedDomainEvent(
-    int PromotionId,
+    Guid PromotionId,
     Guid TenantId,
     string PromotionCode,
     int UsageCount,
@@ -52,7 +52,7 @@ public sealed record PromotionUsageLimitReachedDomainEvent(
 /// Promosyon süresi dolduğunda tetiklenen event
 /// </summary>
 public sealed record PromotionExpiredDomainEvent(
-    int PromotionId,
+    Guid PromotionId,
     Guid TenantId,
     string PromotionCode,
     DateTime ExpiredAt) : DomainEvent;

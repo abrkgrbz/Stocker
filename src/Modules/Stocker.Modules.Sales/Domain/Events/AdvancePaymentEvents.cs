@@ -8,23 +8,23 @@ namespace Stocker.Modules.Sales.Domain.Events;
 /// Avans ödemesi alındığında tetiklenen event
 /// </summary>
 public sealed record AdvancePaymentReceivedDomainEvent(
-    int AdvancePaymentId,
+    Guid AdvancePaymentId,
     Guid TenantId,
     string PaymentNumber,
-    int CustomerId,
+    Guid? CustomerId,
     string CustomerName,
     decimal Amount,
     string Currency,
-    int? SalesOrderId) : DomainEvent;
+    Guid? SalesOrderId) : DomainEvent;
 
 /// <summary>
 /// Avans ödemesi faturaya uygulandığında tetiklenen event
 /// </summary>
 public sealed record AdvancePaymentAppliedDomainEvent(
-    int AdvancePaymentId,
+    Guid AdvancePaymentId,
     Guid TenantId,
     string PaymentNumber,
-    int InvoiceId,
+    Guid InvoiceId,
     string InvoiceNumber,
     decimal AppliedAmount,
     decimal RemainingBalance) : DomainEvent;
@@ -33,10 +33,10 @@ public sealed record AdvancePaymentAppliedDomainEvent(
 /// Avans bakiyesi iade edildiğinde tetiklenen event
 /// </summary>
 public sealed record AdvancePaymentRefundedDomainEvent(
-    int AdvancePaymentId,
+    Guid AdvancePaymentId,
     Guid TenantId,
     string PaymentNumber,
-    int CustomerId,
+    Guid? CustomerId,
     decimal RefundAmount,
     string RefundReason,
     DateTime RefundedAt) : DomainEvent;

@@ -8,10 +8,10 @@ namespace Stocker.Modules.Sales.Domain.Events;
 /// Satış siparişi oluşturulduğunda tetiklenen event
 /// </summary>
 public sealed record SalesOrderCreatedDomainEvent(
-    int SalesOrderId,
+    Guid SalesOrderId,
     Guid TenantId,
     string OrderNumber,
-    int CustomerId,
+    Guid? CustomerId,
     string CustomerName,
     decimal TotalAmount,
     string Currency,
@@ -21,20 +21,20 @@ public sealed record SalesOrderCreatedDomainEvent(
 /// Satış siparişi onaylandığında tetiklenen event
 /// </summary>
 public sealed record SalesOrderConfirmedDomainEvent(
-    int SalesOrderId,
+    Guid SalesOrderId,
     Guid TenantId,
     string OrderNumber,
-    int ConfirmedById,
+    Guid? ConfirmedById,
     DateTime ConfirmedAt) : DomainEvent;
 
 /// <summary>
 /// Satış siparişi sevk edildiğinde tetiklenen event
 /// </summary>
 public sealed record SalesOrderShippedDomainEvent(
-    int SalesOrderId,
+    Guid SalesOrderId,
     Guid TenantId,
     string OrderNumber,
-    int ShipmentId,
+    Guid ShipmentId,
     string TrackingNumber,
     DateTime ShippedAt) : DomainEvent;
 
@@ -42,7 +42,7 @@ public sealed record SalesOrderShippedDomainEvent(
 /// Satış siparişi teslim edildiğinde tetiklenen event
 /// </summary>
 public sealed record SalesOrderDeliveredDomainEvent(
-    int SalesOrderId,
+    Guid SalesOrderId,
     Guid TenantId,
     string OrderNumber,
     DateTime DeliveredAt,
@@ -52,7 +52,7 @@ public sealed record SalesOrderDeliveredDomainEvent(
 /// Satış siparişi iptal edildiğinde tetiklenen event
 /// </summary>
 public sealed record SalesOrderCancelledDomainEvent(
-    int SalesOrderId,
+    Guid SalesOrderId,
     Guid TenantId,
     string OrderNumber,
     string CancellationReason,
@@ -62,7 +62,7 @@ public sealed record SalesOrderCancelledDomainEvent(
 /// Satış siparişi kısmen sevk edildiğinde tetiklenen event
 /// </summary>
 public sealed record SalesOrderPartiallyShippedDomainEvent(
-    int SalesOrderId,
+    Guid SalesOrderId,
     Guid TenantId,
     string OrderNumber,
     int ShippedItemCount,

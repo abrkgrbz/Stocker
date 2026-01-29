@@ -8,10 +8,10 @@ namespace Stocker.Modules.Sales.Domain.Events;
 /// Satış faturası oluşturulduğunda tetiklenen event
 /// </summary>
 public sealed record SalesInvoiceCreatedDomainEvent(
-    int InvoiceId,
+    Guid InvoiceId,
     Guid TenantId,
     string InvoiceNumber,
-    int CustomerId,
+    Guid? CustomerId,
     string CustomerName,
     decimal TotalAmount,
     string Currency,
@@ -21,17 +21,17 @@ public sealed record SalesInvoiceCreatedDomainEvent(
 /// Satış faturası onaylandığında tetiklenen event
 /// </summary>
 public sealed record SalesInvoiceApprovedDomainEvent(
-    int InvoiceId,
+    Guid InvoiceId,
     Guid TenantId,
     string InvoiceNumber,
-    int ApprovedById,
+    Guid? ApprovedById,
     DateTime ApprovedAt) : DomainEvent;
 
 /// <summary>
 /// Satış faturası GİB'e gönderildiğinde tetiklenen event
 /// </summary>
 public sealed record SalesInvoiceSentToGibDomainEvent(
-    int InvoiceId,
+    Guid InvoiceId,
     Guid TenantId,
     string InvoiceNumber,
     Guid GibUuid,
@@ -41,10 +41,10 @@ public sealed record SalesInvoiceSentToGibDomainEvent(
 /// Satış faturası ödendiğinde tetiklenen event
 /// </summary>
 public sealed record SalesInvoicePaidDomainEvent(
-    int InvoiceId,
+    Guid InvoiceId,
     Guid TenantId,
     string InvoiceNumber,
-    int PaymentId,
+    Guid PaymentId,
     decimal PaidAmount,
     DateTime PaidAt) : DomainEvent;
 
@@ -52,7 +52,7 @@ public sealed record SalesInvoicePaidDomainEvent(
 /// Satış faturası iptal edildiğinde tetiklenen event
 /// </summary>
 public sealed record SalesInvoiceCancelledDomainEvent(
-    int InvoiceId,
+    Guid InvoiceId,
     Guid TenantId,
     string InvoiceNumber,
     string CancellationReason,
@@ -62,10 +62,10 @@ public sealed record SalesInvoiceCancelledDomainEvent(
 /// Satış faturası vadesi geçtiğinde tetiklenen event
 /// </summary>
 public sealed record SalesInvoiceOverdueDomainEvent(
-    int InvoiceId,
+    Guid InvoiceId,
     Guid TenantId,
     string InvoiceNumber,
-    int CustomerId,
+    Guid? CustomerId,
     decimal OutstandingAmount,
     int DaysOverdue,
     DateTime DueDate) : DomainEvent;

@@ -8,10 +8,10 @@ namespace Stocker.Modules.Sales.Domain.Events;
 /// Alacak dekontu oluşturulduğunda tetiklenen event
 /// </summary>
 public sealed record CreditNoteCreatedDomainEvent(
-    int CreditNoteId,
+    Guid CreditNoteId,
     Guid TenantId,
     string CreditNoteNumber,
-    int CustomerId,
+    Guid? CustomerId,
     string CustomerName,
     decimal Amount,
     string Currency,
@@ -21,20 +21,20 @@ public sealed record CreditNoteCreatedDomainEvent(
 /// Alacak dekontu onaylandığında tetiklenen event
 /// </summary>
 public sealed record CreditNoteApprovedDomainEvent(
-    int CreditNoteId,
+    Guid CreditNoteId,
     Guid TenantId,
     string CreditNoteNumber,
-    int ApprovedById,
+    Guid? ApprovedById,
     DateTime ApprovedAt) : DomainEvent;
 
 /// <summary>
 /// Alacak dekontu uygulandığında tetiklenen event
 /// </summary>
 public sealed record CreditNoteAppliedDomainEvent(
-    int CreditNoteId,
+    Guid CreditNoteId,
     Guid TenantId,
     string CreditNoteNumber,
-    int CustomerId,
+    Guid? CustomerId,
     decimal Amount,
     DateTime AppliedAt) : DomainEvent;
 
@@ -42,7 +42,7 @@ public sealed record CreditNoteAppliedDomainEvent(
 /// Alacak dekontu iptal edildiğinde tetiklenen event
 /// </summary>
 public sealed record CreditNoteCancelledDomainEvent(
-    int CreditNoteId,
+    Guid CreditNoteId,
     Guid TenantId,
     string CreditNoteNumber,
     string CancellationReason,

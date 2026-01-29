@@ -8,10 +8,10 @@ namespace Stocker.Modules.Sales.Domain.Events;
 /// Müşteri ödemesi alındığında tetiklenen event
 /// </summary>
 public sealed record CustomerPaymentReceivedDomainEvent(
-    int PaymentId,
+    Guid PaymentId,
     Guid TenantId,
     string PaymentNumber,
-    int CustomerId,
+    Guid? CustomerId,
     string CustomerName,
     decimal Amount,
     string Currency,
@@ -22,21 +22,21 @@ public sealed record CustomerPaymentReceivedDomainEvent(
 /// Müşteri ödemesi onaylandığında tetiklenen event
 /// </summary>
 public sealed record CustomerPaymentConfirmedDomainEvent(
-    int PaymentId,
+    Guid PaymentId,
     Guid TenantId,
     string PaymentNumber,
     decimal Amount,
-    int ConfirmedById,
+    Guid? ConfirmedById,
     DateTime ConfirmedAt) : DomainEvent;
 
 /// <summary>
 /// Müşteri ödemesi faturaya eşleştirildiğinde tetiklenen event
 /// </summary>
 public sealed record CustomerPaymentAllocatedDomainEvent(
-    int PaymentId,
+    Guid PaymentId,
     Guid TenantId,
     string PaymentNumber,
-    int InvoiceId,
+    Guid InvoiceId,
     string InvoiceNumber,
     decimal AllocatedAmount) : DomainEvent;
 
@@ -44,7 +44,7 @@ public sealed record CustomerPaymentAllocatedDomainEvent(
 /// Müşteri ödemesi iade edildiğinde tetiklenen event
 /// </summary>
 public sealed record CustomerPaymentRefundedDomainEvent(
-    int PaymentId,
+    Guid PaymentId,
     Guid TenantId,
     string PaymentNumber,
     decimal RefundAmount,
@@ -55,10 +55,10 @@ public sealed record CustomerPaymentRefundedDomainEvent(
 /// Müşteri ödemesi başarısız olduğunda tetiklenen event
 /// </summary>
 public sealed record CustomerPaymentFailedDomainEvent(
-    int PaymentId,
+    Guid PaymentId,
     Guid TenantId,
     string PaymentNumber,
-    int CustomerId,
+    Guid? CustomerId,
     decimal Amount,
     string FailureReason,
     DateTime FailedAt) : DomainEvent;

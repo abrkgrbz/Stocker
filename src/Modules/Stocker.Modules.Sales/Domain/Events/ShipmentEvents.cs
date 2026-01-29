@@ -8,10 +8,10 @@ namespace Stocker.Modules.Sales.Domain.Events;
 /// Sevkiyat oluşturulduğunda tetiklenen event
 /// </summary>
 public sealed record ShipmentCreatedDomainEvent(
-    int ShipmentId,
+    Guid ShipmentId,
     Guid TenantId,
     string ShipmentNumber,
-    int SalesOrderId,
+    Guid? SalesOrderId,
     string CarrierName,
     DateTime PlannedShipDate) : DomainEvent;
 
@@ -19,7 +19,7 @@ public sealed record ShipmentCreatedDomainEvent(
 /// Sevkiyat gönderildiğinde tetiklenen event
 /// </summary>
 public sealed record ShipmentDispatchedDomainEvent(
-    int ShipmentId,
+    Guid ShipmentId,
     Guid TenantId,
     string ShipmentNumber,
     string TrackingNumber,
@@ -29,7 +29,7 @@ public sealed record ShipmentDispatchedDomainEvent(
 /// Sevkiyat transit durumunda güncellendiğinde tetiklenen event
 /// </summary>
 public sealed record ShipmentInTransitUpdatedDomainEvent(
-    int ShipmentId,
+    Guid ShipmentId,
     Guid TenantId,
     string ShipmentNumber,
     string CurrentLocation,
@@ -40,7 +40,7 @@ public sealed record ShipmentInTransitUpdatedDomainEvent(
 /// Sevkiyat teslim edildiğinde tetiklenen event
 /// </summary>
 public sealed record ShipmentDeliveredDomainEvent(
-    int ShipmentId,
+    Guid ShipmentId,
     Guid TenantId,
     string ShipmentNumber,
     DateTime DeliveredAt,
@@ -51,7 +51,7 @@ public sealed record ShipmentDeliveredDomainEvent(
 /// Sevkiyat teslim edilemediğinde tetiklenen event
 /// </summary>
 public sealed record ShipmentDeliveryFailedDomainEvent(
-    int ShipmentId,
+    Guid ShipmentId,
     Guid TenantId,
     string ShipmentNumber,
     string FailureReason,

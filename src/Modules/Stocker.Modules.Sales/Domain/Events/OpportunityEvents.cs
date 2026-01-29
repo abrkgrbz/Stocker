@@ -8,20 +8,20 @@ namespace Stocker.Modules.Sales.Domain.Events;
 /// Satış fırsatı oluşturulduğunda tetiklenen event
 /// </summary>
 public sealed record OpportunityCreatedDomainEvent(
-    int OpportunityId,
+    Guid OpportunityId,
     Guid TenantId,
     string OpportunityName,
-    int CustomerId,
+    Guid? CustomerId,
     string CustomerName,
     decimal EstimatedValue,
     string Stage,
-    int SalesRepId) : DomainEvent;
+    Guid? SalesRepId) : DomainEvent;
 
 /// <summary>
 /// Satış fırsatı aşaması değiştiğinde tetiklenen event
 /// </summary>
 public sealed record OpportunityStageChangedDomainEvent(
-    int OpportunityId,
+    Guid OpportunityId,
     Guid TenantId,
     string OpportunityName,
     string OldStage,
@@ -32,22 +32,22 @@ public sealed record OpportunityStageChangedDomainEvent(
 /// Satış fırsatı kazanıldığında tetiklenen event
 /// </summary>
 public sealed record OpportunityWonDomainEvent(
-    int OpportunityId,
+    Guid OpportunityId,
     Guid TenantId,
     string OpportunityName,
-    int CustomerId,
+    Guid? CustomerId,
     decimal FinalValue,
-    int SalesOrderId,
+    Guid SalesOrderId,
     DateTime WonAt) : DomainEvent;
 
 /// <summary>
 /// Satış fırsatı kaybedildiğinde tetiklenen event
 /// </summary>
 public sealed record OpportunityLostDomainEvent(
-    int OpportunityId,
+    Guid OpportunityId,
     Guid TenantId,
     string OpportunityName,
-    int CustomerId,
+    Guid? CustomerId,
     string LostReason,
     string CompetitorName,
     DateTime LostAt) : DomainEvent;
@@ -56,7 +56,7 @@ public sealed record OpportunityLostDomainEvent(
 /// Satış fırsatı değeri güncellendiğinde tetiklenen event
 /// </summary>
 public sealed record OpportunityValueUpdatedDomainEvent(
-    int OpportunityId,
+    Guid OpportunityId,
     Guid TenantId,
     string OpportunityName,
     decimal OldValue,

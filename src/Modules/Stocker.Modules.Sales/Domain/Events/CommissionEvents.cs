@@ -8,11 +8,11 @@ namespace Stocker.Modules.Sales.Domain.Events;
 /// Komisyon hesaplandığında tetiklenen event
 /// </summary>
 public sealed record CommissionCalculatedDomainEvent(
-    int CommissionId,
+    Guid CommissionId,
     Guid TenantId,
-    int SalesRepId,
+    Guid? SalesRepId,
     string SalesRepName,
-    int SalesOrderId,
+    Guid? SalesOrderId,
     decimal SaleAmount,
     decimal CommissionRate,
     decimal CommissionAmount) : DomainEvent;
@@ -21,20 +21,20 @@ public sealed record CommissionCalculatedDomainEvent(
 /// Komisyon onaylandığında tetiklenen event
 /// </summary>
 public sealed record CommissionApprovedDomainEvent(
-    int CommissionId,
+    Guid CommissionId,
     Guid TenantId,
-    int SalesRepId,
+    Guid? SalesRepId,
     decimal CommissionAmount,
-    int ApprovedById,
+    Guid? ApprovedById,
     DateTime ApprovedAt) : DomainEvent;
 
 /// <summary>
 /// Komisyon ödendiğinde tetiklenen event
 /// </summary>
 public sealed record CommissionPaidDomainEvent(
-    int CommissionId,
+    Guid CommissionId,
     Guid TenantId,
-    int SalesRepId,
+    Guid? SalesRepId,
     string SalesRepName,
     decimal PaidAmount,
     DateTime PaidAt) : DomainEvent;
@@ -43,9 +43,9 @@ public sealed record CommissionPaidDomainEvent(
 /// Komisyon iptal edildiğinde tetiklenen event
 /// </summary>
 public sealed record CommissionCancelledDomainEvent(
-    int CommissionId,
+    Guid CommissionId,
     Guid TenantId,
-    int SalesRepId,
+    Guid? SalesRepId,
     string CancellationReason,
     DateTime CancelledAt) : DomainEvent;
 

@@ -8,11 +8,11 @@ namespace Stocker.Modules.Sales.Domain.Events;
 /// Stok rezervasyonu oluşturulduğunda tetiklenen event
 /// </summary>
 public sealed record InventoryReservationCreatedDomainEvent(
-    int ReservationId,
+    Guid ReservationId,
     Guid TenantId,
     string ReservationNumber,
-    int SalesOrderId,
-    int ProductId,
+    Guid? SalesOrderId,
+    Guid? ProductId,
     string ProductName,
     decimal ReservedQuantity,
     DateTime ExpiresAt) : DomainEvent;
@@ -21,20 +21,20 @@ public sealed record InventoryReservationCreatedDomainEvent(
 /// Stok rezervasyonu onaylandığında tetiklenen event
 /// </summary>
 public sealed record InventoryReservationConfirmedDomainEvent(
-    int ReservationId,
+    Guid ReservationId,
     Guid TenantId,
     string ReservationNumber,
-    int ProductId,
+    Guid? ProductId,
     decimal ConfirmedQuantity) : DomainEvent;
 
 /// <summary>
 /// Stok rezervasyonu serbest bırakıldığında tetiklenen event
 /// </summary>
 public sealed record InventoryReservationReleasedDomainEvent(
-    int ReservationId,
+    Guid ReservationId,
     Guid TenantId,
     string ReservationNumber,
-    int ProductId,
+    Guid? ProductId,
     decimal ReleasedQuantity,
     string ReleaseReason) : DomainEvent;
 
@@ -42,10 +42,10 @@ public sealed record InventoryReservationReleasedDomainEvent(
 /// Stok rezervasyonu süresi dolduğunda tetiklenen event
 /// </summary>
 public sealed record InventoryReservationExpiredDomainEvent(
-    int ReservationId,
+    Guid ReservationId,
     Guid TenantId,
     string ReservationNumber,
-    int ProductId,
+    Guid? ProductId,
     decimal ExpiredQuantity,
     DateTime ExpiredAt) : DomainEvent;
 

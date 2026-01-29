@@ -8,10 +8,10 @@ namespace Stocker.Modules.Sales.Domain.Events;
 /// Satış hedefi oluşturulduğunda tetiklenen event
 /// </summary>
 public sealed record SalesTargetCreatedDomainEvent(
-    int SalesTargetId,
+    Guid SalesTargetId,
     Guid TenantId,
     string TargetName,
-    int SalesRepId,
+    Guid? SalesRepId,
     string SalesRepName,
     decimal TargetAmount,
     string Period,
@@ -22,7 +22,7 @@ public sealed record SalesTargetCreatedDomainEvent(
 /// Satış hedefi ilerleme güncellendiğinde tetiklenen event
 /// </summary>
 public sealed record SalesTargetProgressUpdatedDomainEvent(
-    int SalesTargetId,
+    Guid SalesTargetId,
     Guid TenantId,
     string TargetName,
     decimal TargetAmount,
@@ -33,10 +33,10 @@ public sealed record SalesTargetProgressUpdatedDomainEvent(
 /// Satış hedefi ulaşıldığında tetiklenen event
 /// </summary>
 public sealed record SalesTargetAchievedDomainEvent(
-    int SalesTargetId,
+    Guid SalesTargetId,
     Guid TenantId,
     string TargetName,
-    int SalesRepId,
+    Guid? SalesRepId,
     string SalesRepName,
     decimal TargetAmount,
     decimal AchievedAmount,
@@ -46,10 +46,10 @@ public sealed record SalesTargetAchievedDomainEvent(
 /// Satış hedefi kaçırıldığında tetiklenen event
 /// </summary>
 public sealed record SalesTargetMissedDomainEvent(
-    int SalesTargetId,
+    Guid SalesTargetId,
     Guid TenantId,
     string TargetName,
-    int SalesRepId,
+    Guid? SalesRepId,
     decimal TargetAmount,
     decimal AchievedAmount,
     decimal ShortfallAmount,

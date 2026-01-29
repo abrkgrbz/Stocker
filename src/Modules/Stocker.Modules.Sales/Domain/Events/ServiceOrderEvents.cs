@@ -8,10 +8,10 @@ namespace Stocker.Modules.Sales.Domain.Events;
 /// Servis siparişi oluşturulduğunda tetiklenen event
 /// </summary>
 public sealed record ServiceOrderCreatedDomainEvent(
-    int ServiceOrderId,
+    Guid ServiceOrderId,
     Guid TenantId,
     string OrderNumber,
-    int CustomerId,
+    Guid? CustomerId,
     string CustomerName,
     string ServiceType,
     string Priority) : DomainEvent;
@@ -20,10 +20,10 @@ public sealed record ServiceOrderCreatedDomainEvent(
 /// Servis siparişi atandığında tetiklenen event
 /// </summary>
 public sealed record ServiceOrderAssignedDomainEvent(
-    int ServiceOrderId,
+    Guid ServiceOrderId,
     Guid TenantId,
     string OrderNumber,
-    int TechnicianId,
+    Guid? TechnicianId,
     string TechnicianName,
     DateTime ScheduledDate) : DomainEvent;
 
@@ -31,7 +31,7 @@ public sealed record ServiceOrderAssignedDomainEvent(
 /// Servis siparişi başlatıldığında tetiklenen event
 /// </summary>
 public sealed record ServiceOrderStartedDomainEvent(
-    int ServiceOrderId,
+    Guid ServiceOrderId,
     Guid TenantId,
     string OrderNumber,
     DateTime StartedAt) : DomainEvent;
@@ -40,7 +40,7 @@ public sealed record ServiceOrderStartedDomainEvent(
 /// Servis siparişi tamamlandığında tetiklenen event
 /// </summary>
 public sealed record ServiceOrderCompletedDomainEvent(
-    int ServiceOrderId,
+    Guid ServiceOrderId,
     Guid TenantId,
     string OrderNumber,
     string Resolution,
@@ -51,7 +51,7 @@ public sealed record ServiceOrderCompletedDomainEvent(
 /// Servis siparişi iptal edildiğinde tetiklenen event
 /// </summary>
 public sealed record ServiceOrderCancelledDomainEvent(
-    int ServiceOrderId,
+    Guid ServiceOrderId,
     Guid TenantId,
     string OrderNumber,
     string CancellationReason,

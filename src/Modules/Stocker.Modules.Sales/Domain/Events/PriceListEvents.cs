@@ -8,7 +8,7 @@ namespace Stocker.Modules.Sales.Domain.Events;
 /// Satış fiyat listesi oluşturulduğunda tetiklenen event
 /// </summary>
 public sealed record SalesPriceListCreatedDomainEvent(
-    int PriceListId,
+    Guid PriceListId,
     Guid TenantId,
     string PriceListName,
     string Currency,
@@ -19,7 +19,7 @@ public sealed record SalesPriceListCreatedDomainEvent(
 /// Satış fiyat listesi güncellendiğinde tetiklenen event
 /// </summary>
 public sealed record SalesPriceListUpdatedDomainEvent(
-    int PriceListId,
+    Guid PriceListId,
     Guid TenantId,
     string PriceListName,
     int UpdatedItemCount) : DomainEvent;
@@ -28,7 +28,7 @@ public sealed record SalesPriceListUpdatedDomainEvent(
 /// Satış fiyat listesi aktifleştirildiğinde tetiklenen event
 /// </summary>
 public sealed record SalesPriceListActivatedDomainEvent(
-    int PriceListId,
+    Guid PriceListId,
     Guid TenantId,
     string PriceListName,
     DateTime ActivatedAt) : DomainEvent;
@@ -37,7 +37,7 @@ public sealed record SalesPriceListActivatedDomainEvent(
 /// Satış fiyat listesi süresi dolduğunda tetiklenen event
 /// </summary>
 public sealed record SalesPriceListExpiredDomainEvent(
-    int PriceListId,
+    Guid PriceListId,
     Guid TenantId,
     string PriceListName,
     DateTime ExpiredAt) : DomainEvent;
