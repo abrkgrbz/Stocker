@@ -29,6 +29,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Stocker.Domain\Stocker.Domain.csproj" />
     <ProjectReference Include="..\Stocker.SharedKernel\Stocker.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\Shared\Stocker.Shared.Events\Stocker.Shared.Events.csproj" />
   </ItemGroup>
 
 </Project>

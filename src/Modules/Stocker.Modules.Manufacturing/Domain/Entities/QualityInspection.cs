@@ -12,8 +12,8 @@ public class QualityInspection : AggregateRoot<Guid>
     public string InspectionType { get; private set; } = string.Empty; // Girdi, Proses, Final, Rutin
 
     // İlişkili Kayıtlar
-    public Guid? ProductionOrderId { get; private set; }
-    public Guid? ProductionOperationId { get; private set; }
+    public int? ProductionOrderId { get; private set; }
+    public int? ProductionOperationId { get; private set; }
     public Guid? ProductionReceiptId { get; private set; }
     public Guid ProductId { get; private set; }
     public string? LotNumber { get; private set; }
@@ -114,7 +114,7 @@ public class QualityInspection : AggregateRoot<Guid>
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void SetProductionReference(Guid? productionOrderId, Guid? operationId = null, Guid? receiptId = null)
+    public void SetProductionReference(int? productionOrderId, int? operationId = null, Guid? receiptId = null)
     {
         ProductionOrderId = productionOrderId;
         ProductionOperationId = operationId;

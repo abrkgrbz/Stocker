@@ -29,7 +29,7 @@ public class QualityInspectionsController : ControllerBase
         [FromQuery] string? inspectionType,
         [FromQuery] string? result,
         [FromQuery] Guid? productId,
-        [FromQuery] Guid? productionOrderId,
+        [FromQuery] int? productionOrderId,
         [FromQuery] DateTime? startDate,
         [FromQuery] DateTime? endDate)
     {

@@ -9,7 +9,7 @@ public record GetQualityInspectionsQuery(
     string? Type = null,
     string? Result = null,
     Guid? ProductId = null,
-    Guid? ProductionOrderId = null,
+    int? ProductionOrderId = null,
     DateTime? StartDate = null,
     DateTime? EndDate = null,
     bool? OpenOnly = null,

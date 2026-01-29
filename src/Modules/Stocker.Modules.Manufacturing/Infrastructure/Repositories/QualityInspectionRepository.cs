@@ -28,7 +28,7 @@ public class QualityInspectionRepository : IQualityInspectionRepository
     public async Task<IReadOnlyList<QualityInspection>> GetAllAsync(Guid tenantId, CancellationToken cancellationToken = default)
         => await _context.QualityInspections.Where(x => x.TenantId == tenantId).OrderByDescending(x => x.InspectionDate).ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<QualityInspection>> GetByProductionOrderAsync(Guid productionOrderId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<QualityInspection>> GetByProductionOrderAsync(int productionOrderId, CancellationToken cancellationToken = default)
         => await _context.QualityInspections.Where(x => x.ProductionOrderId == productionOrderId).OrderByDescending(x => x.InspectionDate).ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<QualityInspection>> GetByProductAsync(Guid tenantId, Guid productId, CancellationToken cancellationToken = default)

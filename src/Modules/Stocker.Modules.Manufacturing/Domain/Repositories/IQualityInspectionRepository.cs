@@ -8,7 +8,7 @@ public interface IQualityInspectionRepository
     Task<QualityInspection?> GetByIdWithDetailsAsync(Guid id, CancellationToken cancellationToken = default);
     Task<QualityInspection?> GetByInspectionNumberAsync(Guid tenantId, string inspectionNumber, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<QualityInspection>> GetAllAsync(Guid tenantId, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<QualityInspection>> GetByProductionOrderAsync(Guid productionOrderId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<QualityInspection>> GetByProductionOrderAsync(int productionOrderId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<QualityInspection>> GetByProductAsync(Guid tenantId, Guid productId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<QualityInspection>> GetByTypeAsync(Guid tenantId, string inspectionType, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<QualityInspection>> GetByResultAsync(Guid tenantId, string result, CancellationToken cancellationToken = default);

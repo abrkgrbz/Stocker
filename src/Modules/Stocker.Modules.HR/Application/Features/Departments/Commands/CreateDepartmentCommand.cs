@@ -1,9 +1,11 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Entities;
 using Stocker.Modules.HR.Domain.Repositories;
 using Stocker.Modules.HR.Interfaces;
+using Stocker.Shared.Events.HR;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.HR.Application.Features.Departments.Commands;
@@ -48,10 +50,17 @@ public class CreateDepartmentCommandValidator : AbstractValidator<CreateDepartme
 public class CreateDepartmentCommandHandler : IRequestHandler<CreateDepartmentCommand, Result<DepartmentDto>>
 {
     private readonly IHRUnitOfWork _unitOfWork;
+    private readonly IMediator _mediator;
+    private readonly ILogger<CreateDepartmentCommandHandler> _logger;
 
-    public CreateDepartmentCommandHandler(IHRUnitOfWork unitOfWork)
+    public CreateDepartmentCommandHandler(
+        IHRUnitOfWork unitOfWork,
+        IMediator mediator,
+        ILogger<CreateDepartmentCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _mediator = mediator;
+        _logger = logger;
     }
 
     public async Task<Result<DepartmentDto>> Handle(CreateDepartmentCommand request, CancellationToken cancellationToken)
@@ -118,6 +127,31 @@ public class CreateDepartmentCommandHandler : IRequestHandler<CreateDepartmentCo
             CreatedAt = department.CreatedDate,
             EmployeeCount = 0
         };
+
+        // Publish integration event to sync with Tenant.Department
+        try
+        {
+            var integrationEvent = new HRDepartmentCreatedEvent
+            {
+                HRDepartmentId = department.Id,
+                TenantId = _unitOfWork.TenantId,
+                Code = department.Code,
+                Name = department.Name,
+                Description = department.Description
+            };
+
+            await _mediator.Publish(integrationEvent, cancellationToken);
+            _logger.LogInformation(
+                "Published HRDepartmentCreatedEvent for department {DepartmentId} - {Name}",
+                department.Id, department.Name);
+        }
+        catch (Exception ex)
+        {
+            // Log but don't fail - sync is secondary to HR department creation
+            _logger.LogWarning(ex,
+                "Failed to publish HRDepartmentCreatedEvent for department {DepartmentId}. Tenant.Department sync may be incomplete.",
+                department.Id);
+        }
 
         return Result<DepartmentDto>.Success(departmentDto);
     }
