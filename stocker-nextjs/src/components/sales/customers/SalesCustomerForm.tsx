@@ -34,7 +34,6 @@ const SalesCustomerForm = forwardRef<SalesCustomerFormRef, SalesCustomerFormProp
         city: '',
         country: '',
         currency: 'TRY',
-        isActive: true,
     });
 
     const [errors, setErrors] = useState<Partial<Record<keyof CreateSalesCustomerRequest, string>>>({});
@@ -55,7 +54,6 @@ const SalesCustomerForm = forwardRef<SalesCustomerFormRef, SalesCustomerFormProp
                 city: initialValues.city,
                 country: initialValues.country,
                 currency: initialValues.currency,
-                isActive: initialValues.isActive,
             });
         }
     }, [initialValues]);
@@ -131,7 +129,7 @@ const SalesCustomerForm = forwardRef<SalesCustomerFormRef, SalesCustomerFormProp
 
                 <FormField label="E-posta" span={6} error={errors.email}>
                     <Input
-                        value={formData.email}
+                        value={formData.email || ''}
                         onChange={(e) => handleChange('email', e.target.value)}
                         placeholder="ornek@firma.com"
                         error={!!errors.email}
@@ -141,7 +139,7 @@ const SalesCustomerForm = forwardRef<SalesCustomerFormRef, SalesCustomerFormProp
 
                 <FormField label="Telefon" span={6}>
                     <Input
-                        value={formData.phone}
+                        value={formData.phone || ''}
                         onChange={(e) => handleChange('phone', e.target.value)}
                         placeholder="+90 555 123 45 67"
                         disabled={loading}
@@ -153,7 +151,7 @@ const SalesCustomerForm = forwardRef<SalesCustomerFormRef, SalesCustomerFormProp
             <FormSection title="Fatura & Adres" description="Vergi ve iletişim detayları">
                 <FormField label="Vergi / TC Kimlik No" span={6}>
                     <Input
-                        value={formData.taxId}
+                        value={formData.taxId || ''}
                         onChange={(e) => handleChange('taxId', e.target.value.replace(/\D/g, '').slice(0, 11))}
                         placeholder="Vergi No veya TCKN"
                         maxLength={11}
@@ -163,14 +161,14 @@ const SalesCustomerForm = forwardRef<SalesCustomerFormRef, SalesCustomerFormProp
 
                 <FormField label="Vergi Dairesi" span={6}>
                     <Input
-                        value={formData.taxOffice}
+                        value={formData.taxOffice || ''}
                         onChange={(e) => handleChange('taxOffice', e.target.value)}
                         placeholder="Vergi dairesi adı"
                         disabled={loading}
                     />
                 </FormField>
 
-                <FormField label="Para Birimi" span={6} required>
+                <FormField label="Para Birimi" span={12} required>
                     <Select
                         value={formData.currency}
                         onChange={(val) => handleChange('currency', val)}
@@ -183,21 +181,9 @@ const SalesCustomerForm = forwardRef<SalesCustomerFormRef, SalesCustomerFormProp
                     />
                 </FormField>
 
-                <FormField label="Durum" span={6}>
-                    <Select
-                        value={formData.isActive ? 'true' : 'false'}
-                        onChange={(val) => handleChange('isActive', val === 'true')}
-                        options={[
-                            { value: 'true', label: 'Aktif' },
-                            { value: 'false', label: 'Pasif' }
-                        ]}
-                        disabled={loading}
-                    />
-                </FormField>
-
                 <FormField label="Adres" span={12}>
                     <Textarea
-                        value={formData.address}
+                        value={formData.address || ''}
                         onChange={(e) => handleChange('address', e.target.value)}
                         placeholder="Açık adres"
                         rows={3}
@@ -207,7 +193,7 @@ const SalesCustomerForm = forwardRef<SalesCustomerFormRef, SalesCustomerFormProp
 
                 <FormField label="Şehir" span={6}>
                     <Input
-                        value={formData.city}
+                        value={formData.city || ''}
                         onChange={(e) => handleChange('city', e.target.value)}
                         placeholder="Şehir"
                         disabled={loading}
@@ -216,7 +202,7 @@ const SalesCustomerForm = forwardRef<SalesCustomerFormRef, SalesCustomerFormProp
 
                 <FormField label="Ülke" span={6}>
                     <Input
-                        value={formData.country}
+                        value={formData.country || ''}
                         onChange={(e) => handleChange('country', e.target.value)}
                         placeholder="Ülke"
                         disabled={loading}

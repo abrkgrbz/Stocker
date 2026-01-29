@@ -32,7 +32,6 @@ const SalesProductForm = forwardRef<SalesProductFormRef, SalesProductFormProps>(
         currency: 'TRY',
         taxRate: 20,
         category: 'Ürün',
-        isActive: true,
     });
 
     const [errors, setErrors] = useState<Partial<Record<keyof CreateSalesProductRequest, string>>>({});
@@ -44,14 +43,13 @@ const SalesProductForm = forwardRef<SalesProductFormRef, SalesProductFormProps>(
         if (initialValues) {
             setFormData({
                 name: initialValues.name,
-                code: initialValues.code, // code is optional in Create request but present in Entity
+                code: initialValues.code,
                 description: initialValues.description,
                 unit: initialValues.unit,
                 unitPrice: initialValues.unitPrice,
                 currency: initialValues.currency,
                 taxRate: initialValues.taxRate,
                 category: initialValues.category,
-                isActive: initialValues.isActive,
             });
         }
     }, [initialValues]);
@@ -127,7 +125,7 @@ const SalesProductForm = forwardRef<SalesProductFormRef, SalesProductFormProps>(
 
                 <FormField label="Kategori" span={initialValues?.code ? 6 : 12}>
                     <Select
-                        value={formData.category}
+                        value={formData.category || null}
                         onChange={(val) => handleChange('category', val)}
                         options={[
                             { value: 'Ürün', label: 'Ürün' },
@@ -141,7 +139,7 @@ const SalesProductForm = forwardRef<SalesProductFormRef, SalesProductFormProps>(
 
                 <FormField label="Açıklama" span={12}>
                     <Textarea
-                        value={formData.description}
+                        value={formData.description || ''}
                         onChange={(e) => handleChange('description', e.target.value)}
                         placeholder="Ürün açıklaması..."
                         rows={3}
@@ -188,28 +186,15 @@ const SalesProductForm = forwardRef<SalesProductFormRef, SalesProductFormProps>(
                             { value: 'Metre', label: 'Metre' },
                         ]}
                         disabled={loading}
-                        showSearch
                     />
                 </FormField>
 
-                <FormField label="KDV Oranı (%)" span={6}>
+                <FormField label="KDV Oranı (%)" span={12}>
                     <NumberInput
                         value={formData.taxRate}
                         onChange={(val) => handleChange('taxRate', val ?? 0)}
                         min={0}
                         max={100}
-                        disabled={loading}
-                    />
-                </FormField>
-
-                <FormField label="Durum" span={6}>
-                    <Select
-                        value={formData.isActive ? 'true' : 'false'}
-                        onChange={(val) => handleChange('isActive', val === 'true')}
-                        options={[
-                            { value: 'true', label: 'Aktif' },
-                            { value: 'false', label: 'Pasif' }
-                        ]}
                         disabled={loading}
                     />
                 </FormField>
