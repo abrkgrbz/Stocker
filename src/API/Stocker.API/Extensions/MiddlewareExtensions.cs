@@ -27,15 +27,20 @@ public static class MiddlewareExtensions
         var environment = app.Environment;
 
         // 0. Forwarded Headers (MUST BE FIRST - for reverse proxy support)
-        // This allows the app to work correctly behind nginx/Caddy with HTTPS
-        app.UseForwardedHeaders(new Microsoft.AspNetCore.Builder.ForwardedHeadersOptions
+        // This allows the app to work correctly behind Traefik/nginx/Caddy with HTTPS
+        var forwardedHeadersOptions = new Microsoft.AspNetCore.Builder.ForwardedHeadersOptions
         {
             ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor
-                             | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto,
-            // Trust all proxies in production (adjust if needed for specific proxy IPs)
-            KnownNetworks = { },
-            KnownProxies = { }
-        });
+                             | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+                             | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedHost,
+            // Clear default restrictions to trust all proxies in Docker/Kubernetes environment
+            // This is safe because we're behind a reverse proxy (Traefik) that controls access
+            ForwardLimit = null // Remove hop limit to allow multiple proxies
+        };
+        // Clear the default known networks/proxies to trust all sources
+        forwardedHeadersOptions.KnownNetworks.Clear();
+        forwardedHeadersOptions.KnownProxies.Clear();
+        app.UseForwardedHeaders(forwardedHeadersOptions);
 
         // 1. Swagger (Development only)
         if (environment.IsDevelopment())
