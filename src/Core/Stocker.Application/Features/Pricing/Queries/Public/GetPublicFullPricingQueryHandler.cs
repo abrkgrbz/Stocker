@@ -45,7 +45,7 @@ public class GetPublicFullPricingQueryHandler : IRequestHandler<GetPublicFullPri
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving full public pricing");
-            return Result<GetPublicFullPricingResponse>.Failure("Failed to retrieve pricing information");
+            return Result<GetPublicFullPricingResponse>.Failure(Error.Failure("Pricing.RetrievalFailed", "Fiyat bilgileri alınamadı."));
         }
     }
 }

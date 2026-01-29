@@ -166,7 +166,7 @@ public class CalculatePublicPriceQueryHandler : IRequestHandler<CalculatePublicP
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error calculating public price");
-            return Result<CalculatePublicPriceResponse>.Failure("Failed to calculate price");
+            return Result<CalculatePublicPriceResponse>.Failure(Error.Failure("Pricing.CalculationFailed", "Fiyat hesaplanamadı."));
         }
     }
 }

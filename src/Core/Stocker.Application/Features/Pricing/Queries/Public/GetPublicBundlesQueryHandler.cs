@@ -38,7 +38,7 @@ public class GetPublicBundlesQueryHandler : IRequestHandler<GetPublicBundlesQuer
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving public bundle pricings");
-            return Result<GetPublicBundlesResponse>.Failure("Failed to retrieve bundle pricings");
+            return Result<GetPublicBundlesResponse>.Failure(Error.Failure("Pricing.BundleRetrievalFailed", "Paket fiyatları alınamadı."));
         }
     }
 }

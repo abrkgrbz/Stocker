@@ -38,7 +38,7 @@ public class GetPublicAddOnsQueryHandler : IRequestHandler<GetPublicAddOnsQuery,
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving public add-on pricings");
-            return Result<GetPublicAddOnsResponse>.Failure("Failed to retrieve add-on pricings");
+            return Result<GetPublicAddOnsResponse>.Failure(Error.Failure("Pricing.AddOnRetrievalFailed", "Ek özellik fiyatları alınamadı."));
         }
     }
 }
