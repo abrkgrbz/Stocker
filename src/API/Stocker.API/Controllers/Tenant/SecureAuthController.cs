@@ -24,7 +24,7 @@ public class SecureAuthController : ControllerBase
     private readonly IConfiguration _configuration;
 
     public SecureAuthController(
-        IMediator mediator, 
+        IMediator mediator,
         ILogger<SecureAuthController> logger,
         IJwtTokenService jwtTokenService,
         IConfiguration configuration)
@@ -33,6 +33,36 @@ public class SecureAuthController : ControllerBase
         _logger = logger;
         _jwtTokenService = jwtTokenService;
         _configuration = configuration;
+    }
+
+    /// <summary>
+    /// Gets the real client IP address, checking various proxy headers
+    /// Priority: CF-Connecting-IP (Cloudflare) > X-Forwarded-For > X-Real-IP > RemoteIpAddress
+    /// </summary>
+    private string? GetClientIpAddress()
+    {
+        // Check CF-Connecting-IP header (set by Cloudflare)
+        var cfConnectingIp = Request.Headers["CF-Connecting-IP"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(cfConnectingIp))
+            return cfConnectingIp.Trim();
+
+        // Check True-Client-IP header (alternative Cloudflare header)
+        var trueClientIp = Request.Headers["True-Client-IP"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(trueClientIp))
+            return trueClientIp.Trim();
+
+        // Check X-Forwarded-For header (set by reverse proxies like nginx, traefik)
+        var forwardedFor = Request.Headers["X-Forwarded-For"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(forwardedFor))
+            return forwardedFor.Split(',').FirstOrDefault()?.Trim();
+
+        // Check X-Real-IP header (alternative header used by some proxies)
+        var realIp = Request.Headers["X-Real-IP"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(realIp))
+            return realIp;
+
+        // Fall back to connection's remote IP
+        return HttpContext.Connection.RemoteIpAddress?.ToString();
     }
 
     /// <summary>
@@ -94,7 +124,7 @@ public class SecureAuthController : ControllerBase
         // Add IP address and User-Agent for audit logging
         var enrichedCommand = command with
         {
-            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            IpAddress = GetClientIpAddress(),
             UserAgent = Request.Headers["User-Agent"].ToString()
         };
 
@@ -142,13 +172,21 @@ public class SecureAuthController : ControllerBase
     public async Task<IActionResult> RefreshToken()
     {
         var refreshToken = Request.Cookies["refresh_token"];
-        
+
         if (string.IsNullOrEmpty(refreshToken))
         {
+            _logger.LogWarning("Refresh token request failed - no refresh_token cookie found");
             return Unauthorized(new { message = "No refresh token found" });
         }
 
-        var command = new RefreshTokenCommand { RefreshToken = refreshToken };
+        _logger.LogDebug("Attempting to refresh token");
+
+        var command = new RefreshTokenCommand
+        {
+            RefreshToken = refreshToken,
+            IpAddress = GetClientIpAddress(),
+            UserAgent = Request.Headers["User-Agent"].ToString()
+        };
         var result = await _mediator.Send(command);
         
         if (result.IsSuccess)
@@ -167,8 +205,11 @@ public class SecureAuthController : ControllerBase
         // Clear invalid cookies
         Response.Cookies.Delete("access_token");
         Response.Cookies.Delete("refresh_token");
-        
-        return Unauthorized(new { message = "Invalid refresh token" });
+
+        _logger.LogWarning("Refresh token request failed - invalid or expired token. Error: {Error}",
+            result.Error?.Description ?? "Unknown error");
+
+        return Unauthorized(new { message = result.Error?.Description ?? "Invalid refresh token" });
     }
 
     /// <summary>
