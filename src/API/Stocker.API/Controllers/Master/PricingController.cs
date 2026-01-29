@@ -14,7 +14,7 @@ namespace Stocker.API.Controllers.Master;
 /// Manages module pricing, bundles, and add-ons.
 /// </summary>
 [Route("api/master/pricing")]
-[Authorize(Policy = "RequireAdminRole")]
+[Authorize(Policy = "RequireMasterAccess")]
 public class PricingController : ApiController
 {
     private readonly IMasterDbContext _masterContext;
