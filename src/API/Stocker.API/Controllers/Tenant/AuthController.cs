@@ -36,7 +36,32 @@ public class AuthController : ControllerBase
         _mediator = mediator;
         _logger = logger;
     }
-    
+
+    /// <summary>
+    /// Gets the real client IP address, checking X-Forwarded-For header for reverse proxy scenarios
+    /// </summary>
+    private string? GetClientIpAddress()
+    {
+        // Check X-Forwarded-For header (set by reverse proxies like nginx, traefik)
+        var forwardedFor = Request.Headers["X-Forwarded-For"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(forwardedFor))
+        {
+            // X-Forwarded-For can contain multiple IPs: "client, proxy1, proxy2"
+            // First one is the original client
+            return forwardedFor.Split(',').FirstOrDefault()?.Trim();
+        }
+
+        // Check X-Real-IP header (alternative header used by some proxies)
+        var realIp = Request.Headers["X-Real-IP"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(realIp))
+        {
+            return realIp;
+        }
+
+        // Fall back to connection's remote IP
+        return HttpContext.Connection.RemoteIpAddress?.ToString();
+    }
+
     /// <summary>
     /// Test Seq logging
     /// </summary>
@@ -88,7 +113,7 @@ public class AuthController : ControllerBase
         // Add IP address and User-Agent for audit logging
         var enrichedCommand = command with
         {
-            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            IpAddress = GetClientIpAddress(),
             UserAgent = Request.Headers["User-Agent"].ToString()
         };
 
@@ -125,7 +150,7 @@ public class AuthController : ControllerBase
         // Add IP address and User-Agent for refresh token tracking
         var enrichedCommand = command with
         {
-            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            IpAddress = GetClientIpAddress(),
             UserAgent = Request.Headers["User-Agent"].ToString()
         };
 
@@ -364,7 +389,7 @@ public class AuthController : ControllerBase
         // Add IP address and User-Agent for audit logging
         var enrichedCommand = command with
         {
-            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            IpAddress = GetClientIpAddress(),
             UserAgent = Request.Headers["User-Agent"].ToString()
         };
 
@@ -422,7 +447,7 @@ public class AuthController : ControllerBase
         // Add IP address and User-Agent for audit logging
         var enrichedCommand = command with
         {
-            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            IpAddress = GetClientIpAddress(),
             UserAgent = Request.Headers["User-Agent"].ToString()
         };
 
@@ -560,7 +585,7 @@ public class AuthController : ControllerBase
         // Add IP address and User-Agent for audit logging
         var enrichedCommand = command with
         {
-            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            IpAddress = GetClientIpAddress(),
             UserAgent = Request.Headers["User-Agent"].ToString()
         };
 

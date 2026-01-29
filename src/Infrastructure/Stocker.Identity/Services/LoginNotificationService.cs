@@ -91,8 +91,11 @@ public class LoginNotificationService : ILoginNotificationService
                 return null;
             }
 
+            // Normalize IPv6-mapped IPv4 addresses
+            var normalizedIp = NormalizeIpAddress(ipAddress);
+
             // Skip for local/private IPs
-            if (IsPrivateOrLocalIp(ipAddress))
+            if (IsPrivateOrLocalIp(normalizedIp))
             {
                 return "Yerel Ağ";
             }
@@ -102,7 +105,7 @@ public class LoginNotificationService : ILoginNotificationService
             client.Timeout = TimeSpan.FromSeconds(5); // Quick timeout for non-blocking operation
 
             var response = await client.GetFromJsonAsync<IpApiResponse>(
-                $"http://ip-api.com/json/{ipAddress}?fields=status,city,regionName,country");
+                $"http://ip-api.com/json/{normalizedIp}?fields=status,city,regionName,country");
 
             if (response?.Status == "success" && !string.IsNullOrEmpty(response.City))
             {
@@ -203,6 +206,9 @@ public class LoginNotificationService : ILoginNotificationService
         string? ipAddress,
         string? location)
     {
+        // Normalize IP for display (remove ::ffff: prefix)
+        var displayIp = !string.IsNullOrEmpty(ipAddress) ? NormalizeIpAddress(ipAddress) : null;
+
         var subject = "Yeni Cihaz Girişi Algılandı - Stocker";
         var body = $@"
             <h2>Yeni Bir Cihazdan Giriş Yapıldı</h2>
@@ -214,7 +220,7 @@ public class LoginNotificationService : ILoginNotificationService
                 </tr>
                 <tr>
                     <td style='padding: 8px; border: 1px solid #ddd;'><strong>IP Adresi:</strong></td>
-                    <td style='padding: 8px; border: 1px solid #ddd;'>{ipAddress ?? "Bilinmiyor"}</td>
+                    <td style='padding: 8px; border: 1px solid #ddd;'>{displayIp ?? "Bilinmiyor"}</td>
                 </tr>
                 <tr>
                     <td style='padding: 8px; border: 1px solid #ddd;'><strong>Konum:</strong></td>
@@ -240,25 +246,59 @@ public class LoginNotificationService : ILoginNotificationService
         });
     }
 
+    /// <summary>
+    /// Normalizes IP address by stripping IPv6-mapped IPv4 prefix (::ffff:)
+    /// </summary>
+    private static string NormalizeIpAddress(string ipAddress)
+    {
+        if (string.IsNullOrEmpty(ipAddress))
+            return ipAddress;
+
+        // Handle IPv6-mapped IPv4 addresses like "::ffff:10.0.1.15"
+        const string ipv6MappedPrefix = "::ffff:";
+        if (ipAddress.StartsWith(ipv6MappedPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return ipAddress.Substring(ipv6MappedPrefix.Length);
+        }
+
+        return ipAddress;
+    }
+
     private static bool IsPrivateOrLocalIp(string ipAddress)
     {
         if (string.IsNullOrEmpty(ipAddress))
             return true;
 
+        // Normalize IPv6-mapped IPv4 addresses first
+        var normalizedIp = NormalizeIpAddress(ipAddress);
+
         // Localhost
-        if (ipAddress == "127.0.0.1" || ipAddress == "::1" || ipAddress == "localhost")
+        if (normalizedIp == "127.0.0.1" || normalizedIp == "::1" || normalizedIp == "localhost")
             return true;
 
-        // Private IP ranges
-        if (ipAddress.StartsWith("10.") ||
-            ipAddress.StartsWith("192.168.") ||
-            ipAddress.StartsWith("172.16.") ||
-            ipAddress.StartsWith("172.17.") ||
-            ipAddress.StartsWith("172.18.") ||
-            ipAddress.StartsWith("172.19.") ||
-            ipAddress.StartsWith("172.2") ||
-            ipAddress.StartsWith("172.30.") ||
-            ipAddress.StartsWith("172.31."))
+        // Private IP ranges (RFC 1918)
+        if (normalizedIp.StartsWith("10.") ||
+            normalizedIp.StartsWith("192.168.") ||
+            normalizedIp.StartsWith("172.16.") ||
+            normalizedIp.StartsWith("172.17.") ||
+            normalizedIp.StartsWith("172.18.") ||
+            normalizedIp.StartsWith("172.19.") ||
+            normalizedIp.StartsWith("172.20.") ||
+            normalizedIp.StartsWith("172.21.") ||
+            normalizedIp.StartsWith("172.22.") ||
+            normalizedIp.StartsWith("172.23.") ||
+            normalizedIp.StartsWith("172.24.") ||
+            normalizedIp.StartsWith("172.25.") ||
+            normalizedIp.StartsWith("172.26.") ||
+            normalizedIp.StartsWith("172.27.") ||
+            normalizedIp.StartsWith("172.28.") ||
+            normalizedIp.StartsWith("172.29.") ||
+            normalizedIp.StartsWith("172.30.") ||
+            normalizedIp.StartsWith("172.31."))
+            return true;
+
+        // Link-local (169.254.x.x)
+        if (normalizedIp.StartsWith("169.254."))
             return true;
 
         return false;
