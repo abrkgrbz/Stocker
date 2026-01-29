@@ -1,24 +1,17 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, CreditCard, AlertCircle, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect, useCallback, ChangeEvent } from 'react';
+import { Modal } from '@/components/primitives/overlay/Modal';
+import { Button } from '@/components/primitives/buttons/Button';
+import { Alert } from '@/components/primitives/feedback/Alert';
+import { CreditCardIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import {
   billingService,
   IyzicoCheckoutRequest,
   IyzicoCheckoutResponse,
   IyzicoInstallmentOption,
 } from '@/lib/api/services/billing.service';
+import { cn } from '@/lib/cn';
 
 interface IyzicoCheckoutModalProps {
   isOpen: boolean;
@@ -119,10 +112,10 @@ export function IyzicoCheckoutModal({
         setCheckoutData(response.data);
         setStep('checkout');
       } else {
-        setError('Odeme formu olusturulamadi. Lutfen tekrar deneyin.');
+        setError('Ödeme formu oluşturulamadı. Lütfen tekrar deneyin.');
       }
     } catch {
-      setError('Bir hata olustu. Lutfen tekrar deneyin.');
+      setError('Bir hata oluştu. Lütfen tekrar deneyin.');
     } finally {
       setIsLoading(false);
     }
@@ -135,178 +128,189 @@ export function IyzicoCheckoutModal({
     });
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            {step === 'form' ? 'Odeme Bilgileri' : 'Guvenli Odeme'}
-          </DialogTitle>
-          <DialogDescription>
-            {step === 'form' ? (
-              <span className="flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-green-600" />
-                {packageName} - {formatPrice(price)}
-              </span>
-            ) : (
-              '3D Secure ile guvenli odeme'
-            )}
-          </DialogDescription>
-        </DialogHeader>
+  const renderFormContent = () => (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <label htmlFor="customerName" className="block text-sm font-medium text-slate-700">
+          Ad Soyad *
+        </label>
+        <input
+          id="customerName"
+          type="text"
+          value={formData.customerName}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, customerName: e.target.value })}
+          placeholder="Adınız Soyadınız"
+          required
+          className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+        />
+      </div>
 
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+      <div className="space-y-2">
+        <label htmlFor="customerPhone" className="block text-sm font-medium text-slate-700">
+          Telefon
+        </label>
+        <input
+          id="customerPhone"
+          type="tel"
+          value={formData.customerPhone}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, customerPhone: e.target.value })}
+          placeholder="+90 5XX XXX XX XX"
+          className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+        />
+      </div>
 
-        {step === 'form' && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="customerName">Ad Soyad *</Label>
-              <Input
-                id="customerName"
-                value={formData.customerName}
-                onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                placeholder="Adiniz Soyadiniz"
-                required
-              />
-            </div>
+      <div className="border-t pt-4">
+        <h4 className="text-sm font-medium mb-3 text-slate-900">Fatura Adresi (Opsiyonel)</h4>
 
-            <div className="space-y-2">
-              <Label htmlFor="customerPhone">Telefon</Label>
-              <Input
-                id="customerPhone"
-                value={formData.customerPhone}
-                onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
-                placeholder="+90 5XX XXX XX XX"
-              />
-            </div>
-
-            <div className="border-t pt-4">
-              <h4 className="text-sm font-medium mb-3">Fatura Adresi (Opsiyonel)</h4>
-
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label htmlFor="city">Sehir</Label>
-                  <Input
-                    id="city"
-                    value={formData.billingAddress.city}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        billingAddress: { ...formData.billingAddress, city: e.target.value },
-                      })
-                    }
-                    placeholder="Istanbul"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="address">Adres</Label>
-                  <Input
-                    id="address"
-                    value={formData.billingAddress.address}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        billingAddress: { ...formData.billingAddress, address: e.target.value },
-                      })
-                    }
-                    placeholder="Mahalle, Cadde, Bina No"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Installment Preview */}
-            <div className="border-t pt-4">
-              <Label htmlFor="cardBin">Taksit Secenekleri Icin Kart Numarasi</Label>
-              <Input
-                id="cardBin"
-                value={cardBin}
-                onChange={(e) => setCardBin(e.target.value.replace(/\D/g, '').substring(0, 6))}
-                placeholder="Ilk 6 hane"
-                maxLength={6}
-                className="mt-2"
-              />
-
-              {installments.length > 0 && (
-                <div className="mt-3 space-y-2">
-                  <Label>Taksit Secenekleri</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {installments.map((opt) => (
-                      <button
-                        key={opt.installmentNumber}
-                        type="button"
-                        onClick={() => setSelectedInstallment(opt.installmentNumber)}
-                        className={`p-3 rounded-lg border text-left transition-colors ${
-                          selectedInstallment === opt.installmentNumber
-                            ? 'border-primary bg-primary/5'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="font-medium">
-                          {opt.installmentNumber === 1 ? 'Tek Cekim' : `${opt.installmentNumber} Taksit`}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {opt.installmentNumber === 1
-                            ? formatPrice(opt.totalPrice)
-                            : `${formatPrice(opt.installmentPrice)} x ${opt.installmentNumber}`}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-3 pt-4">
-              <Button variant="outline" onClick={onClose} className="flex-1">
-                Iptal
-              </Button>
-              <Button
-                onClick={handleCreateCheckout}
-                disabled={!formData.customerName || isLoading}
-                className="flex-1"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Yukleniyor...
-                  </>
-                ) : (
-                  'Odemeye Devam Et'
-                )}
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {step === 'checkout' && checkoutData && (
-          <div className="space-y-4">
-            {/* Iyzico checkout form will be rendered here */}
-            <div
-              className="min-h-[400px]"
-              dangerouslySetInnerHTML={{ __html: checkoutData.checkoutFormContent }}
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <label htmlFor="city" className="block text-sm font-medium text-slate-700">
+              Şehir
+            </label>
+            <input
+              id="city"
+              type="text"
+              value={formData.billingAddress.city}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setFormData({
+                  ...formData,
+                  billingAddress: { ...formData.billingAddress, city: e.target.value },
+                })
+              }
+              placeholder="İstanbul"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
             />
+          </div>
 
-            <div className="text-center text-sm text-muted-foreground">
-              <ShieldCheck className="inline-block h-4 w-4 mr-1 text-green-600" />
-              Odemeniz Iyzico tarafindan guvenle islenmektedir
+          <div className="space-y-2">
+            <label htmlFor="address" className="block text-sm font-medium text-slate-700">
+              Adres
+            </label>
+            <input
+              id="address"
+              type="text"
+              value={formData.billingAddress.address}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setFormData({
+                  ...formData,
+                  billingAddress: { ...formData.billingAddress, address: e.target.value },
+                })
+              }
+              placeholder="Mahalle, Cadde, Bina No"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Installment Preview */}
+      <div className="border-t pt-4">
+        <label htmlFor="cardBin" className="block text-sm font-medium text-slate-700">
+          Taksit Seçenekleri İçin Kart Numarası
+        </label>
+        <input
+          id="cardBin"
+          type="text"
+          value={cardBin}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setCardBin(e.target.value.replace(/\D/g, '').substring(0, 6))}
+          placeholder="İlk 6 hane"
+          maxLength={6}
+          className="w-full px-3 py-2 mt-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+        />
+
+        {installments.length > 0 && (
+          <div className="mt-3 space-y-2">
+            <span className="block text-sm font-medium text-slate-700">Taksit Seçenekleri</span>
+            <div className="grid grid-cols-2 gap-2">
+              {installments.map((opt) => (
+                <button
+                  key={opt.installmentNumber}
+                  type="button"
+                  onClick={() => setSelectedInstallment(opt.installmentNumber)}
+                  className={cn(
+                    'p-3 rounded-lg border text-left transition-colors',
+                    selectedInstallment === opt.installmentNumber
+                      ? 'border-slate-900 bg-slate-50'
+                      : 'border-slate-200 hover:border-slate-300'
+                  )}
+                >
+                  <div className="font-medium text-slate-900">
+                    {opt.installmentNumber === 1 ? 'Tek Çekim' : `${opt.installmentNumber} Taksit`}
+                  </div>
+                  <div className="text-sm text-slate-500">
+                    {opt.installmentNumber === 1
+                      ? formatPrice(opt.totalPrice)
+                      : `${formatPrice(opt.installmentPrice)} x ${opt.installmentNumber}`}
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         )}
+      </div>
 
-        {step === 'loading' && (
-          <div className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="mt-4 text-sm text-muted-foreground">Odeme isleniyor...</p>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+      <div className="flex gap-3 pt-4">
+        <Button variant="secondary" onClick={onClose} fullWidth>
+          İptal
+        </Button>
+        <Button
+          onClick={handleCreateCheckout}
+          disabled={!formData.customerName || isLoading}
+          loading={isLoading}
+          fullWidth
+        >
+          Ödemeye Devam Et
+        </Button>
+      </div>
+    </div>
+  );
+
+  const renderCheckoutContent = () => (
+    <div className="space-y-4">
+      {/* Iyzico checkout form will be rendered here */}
+      <div
+        className="min-h-[400px]"
+        dangerouslySetInnerHTML={{ __html: checkoutData?.checkoutFormContent || '' }}
+      />
+
+      <div className="text-center text-sm text-slate-500">
+        <ShieldCheckIcon className="inline-block h-4 w-4 mr-1 text-emerald-600" />
+        Ödemeniz Iyzico tarafından güvenle işlenmektedir
+      </div>
+    </div>
+  );
+
+  const renderLoadingContent = () => (
+    <div className="flex flex-col items-center justify-center py-12">
+      <svg className="animate-spin h-8 w-8 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+      </svg>
+      <p className="mt-4 text-sm text-slate-500">Ödeme işleniyor...</p>
+    </div>
+  );
+
+  return (
+    <Modal
+      open={isOpen}
+      onClose={onClose}
+      title={
+        step === 'form' ? 'Ödeme Bilgileri' : 'Güvenli Ödeme'
+      }
+      description={
+        step === 'form'
+          ? `${packageName} - ${formatPrice(price)}`
+          : '3D Secure ile güvenli ödeme'
+      }
+      size="lg"
+    >
+      {error && (
+        <Alert variant="error" title="Hata" message={error} className="mb-4" />
+      )}
+
+      {step === 'form' && renderFormContent()}
+      {step === 'checkout' && checkoutData && renderCheckoutContent()}
+      {step === 'loading' && renderLoadingContent()}
+    </Modal>
   );
 }

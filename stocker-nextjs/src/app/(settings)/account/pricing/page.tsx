@@ -24,7 +24,7 @@ import {
   type AddOnItem,
   type PriceLineItem,
 } from '@/lib/api/services/billing.service';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/cn';
 
 type BillingCycle = 'monthly' | 'yearly';
 
