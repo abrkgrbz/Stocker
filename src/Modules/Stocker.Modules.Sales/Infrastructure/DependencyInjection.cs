@@ -104,6 +104,10 @@ public static class DependencyInjection
         services.AddScoped<IResourceAuthorizationService, ResourceAuthorizationService>();
         services.AddScoped<ISalesAuditService, SalesAuditService>();
 
+        // Module-based data resolver for Customer/Product resolution
+        // Determines whether to use CRM/Inventory or Sales module data based on active modules
+        services.AddScoped<Domain.Services.ISalesDataResolver, SalesDataResolver>();
+
         // Resilience: Wrap IInventoryService with resilient decorator for cross-module calls
         // This provides retry, circuit breaker, and timeout protection for Inventory service calls
         // Uses manual decorator pattern since Scrutor is not available

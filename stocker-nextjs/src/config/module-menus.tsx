@@ -300,6 +300,16 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
     items: [
       { key: '/sales', icon: <ChartBarSquareIcon className="w-4 h-4" />, label: 'Dashboard', permission: 'Sales:View' },
       {
+        key: 'sales-management',
+        icon: <Squares2X2Icon className="w-4 h-4" />,
+        label: 'Yönetim',
+        permission: 'Sales.Management:View',
+        children: [
+          { key: '/sales/sales-customers', icon: <UserGroupIcon className="w-4 h-4" />, label: 'Müşteriler', permission: 'Sales.Customers:View' },
+          { key: '/sales/sales-products', icon: <CubeIcon className="w-4 h-4" />, label: 'Ürünler & Hizmetler', permission: 'Sales.Products:View' },
+        ],
+      },
+      {
         key: 'sales-quotations',
         icon: <DocumentCheckIcon className="w-4 h-4" />,
         label: 'Teklifler',

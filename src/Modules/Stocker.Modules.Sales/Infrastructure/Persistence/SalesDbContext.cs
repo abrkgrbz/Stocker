@@ -91,6 +91,10 @@ public class SalesDbContext : DbContext
     // Customer Segments
     public DbSet<CustomerSegment> CustomerSegments { get; set; } = null!;
 
+    // Sales Module Customers & Products (for standalone Sales module usage)
+    public DbSet<SalesCustomer> SalesCustomers { get; set; } = null!;
+    public DbSet<SalesProduct> SalesProducts { get; set; } = null!;
+
     // Idempotency
     public DbSet<ProcessedRequest> ProcessedRequests { get; set; } = null!;
 
@@ -188,6 +192,12 @@ public class SalesDbContext : DbContext
 
             // Customer Segments - with soft delete filter
             modelBuilder.Entity<CustomerSegment>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
+
+            // Sales Customers - with soft delete filter
+            modelBuilder.Entity<SalesCustomer>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
+
+            // Sales Products - with soft delete filter
+            modelBuilder.Entity<SalesProduct>().HasQueryFilter(e => e.TenantId == tenantId.Value && !e.IsDeleted);
 
             // Audit Logs - tenant filter only (audit logs should not be soft deleted)
             modelBuilder.Entity<AuditLog>().HasQueryFilter(e => e.TenantId == tenantId.Value);
