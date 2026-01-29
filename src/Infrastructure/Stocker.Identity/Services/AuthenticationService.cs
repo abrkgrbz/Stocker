@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Application.Common.Interfaces;
+using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Master.Enums;
 using Stocker.Domain.Tenant.Enums;
 using Stocker.Identity.Models;
@@ -288,32 +289,46 @@ public class AuthenticationService : IAuthenticationService
     {
         try
         {
-            // Validate the expired token
-            var principal = _jwtTokenService.ValidateToken(request.AccessToken);
-            if (principal == null)
+            _logger.LogDebug("RefreshTokenAsync called. RefreshToken length: {RefreshTokenLength}, AccessToken length: {AccessTokenLength}",
+                request.RefreshToken?.Length ?? 0, request.AccessToken?.Length ?? 0);
+
+            Guid? userId = null;
+            Guid? tenantId = null;
+
+            // Try to get user ID from AccessToken if available
+            if (!string.IsNullOrEmpty(request.AccessToken))
             {
-                return new AuthenticationResult
+                var principal = _jwtTokenService.ValidateToken(request.AccessToken);
+                if (principal != null)
                 {
-                    Success = false,
-                    Errors = new List<string> { "Geçersiz erişim token'ı" }
-                };
+                    var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier);
+                    if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var uid))
+                    {
+                        userId = uid;
+                    }
+
+                    // Extract tenant context from claims
+                    var tenantIdClaim = principal.FindFirst("TenantId");
+                    if (tenantIdClaim != null && Guid.TryParse(tenantIdClaim.Value, out var tid))
+                    {
+                        tenantId = tid;
+                    }
+                }
             }
 
-            // Extract user ID
-            var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+            // If we couldn't get userId from AccessToken, find user by RefreshToken
+            MasterUser? masterUser = null;
+            if (userId.HasValue)
             {
-                return new AuthenticationResult
-                {
-                    Success = false,
-                    Errors = new List<string> { "Geçersiz token bilgileri" }
-                };
+                masterUser = await _masterContext.MasterUsers.FirstOrDefaultAsync(u => u.Id == userId.Value);
             }
-
-            // Find master user
-            var masterUser = await _masterContext.MasterUsers
-                // UserTenants moved to Tenant domain
-                .FirstOrDefaultAsync(u => u.Id == userId);
+            else
+            {
+                // Fallback: Find user by refresh token directly
+                _logger.LogDebug("AccessToken not available or invalid, looking up user by RefreshToken");
+                masterUser = await _masterContext.MasterUsers
+                    .FirstOrDefaultAsync(u => u.RefreshToken == request.RefreshToken);
+            }
 
             if (masterUser == null)
             {
@@ -332,7 +347,7 @@ public class AuthenticationService : IAuthenticationService
                 // Revoke all tokens for this user as a precaution
                 if (masterUser.RefreshToken != request.RefreshToken && !string.IsNullOrEmpty(request.RefreshToken))
                 {
-                    _logger.LogWarning("Potential token reuse attack detected for user {UserId}. Revoking all tokens.", userId);
+                    _logger.LogWarning("Potential token reuse attack detected for user {UserId}. Revoking all tokens.", masterUser.Id);
                     masterUser.RevokeAllRefreshTokens();
                     await _masterContext.SaveChangesAsync();
                 }
@@ -344,13 +359,8 @@ public class AuthenticationService : IAuthenticationService
                 };
             }
 
-            // Extract tenant context from claims
-            var tenantIdClaim = principal.FindFirst("TenantId");
-            Guid? tenantId = null;
-            if (tenantIdClaim != null && Guid.TryParse(tenantIdClaim.Value, out var tid))
-            {
-                tenantId = tid;
-            }
+            // Note: tenantId may be null for MasterUsers without tenant context
+            // This is acceptable as they can still operate at the master level
 
             // TOKEN ROTATION: Revoke old token before generating new one
             masterUser.RevokeRefreshToken();
@@ -361,7 +371,7 @@ public class AuthenticationService : IAuthenticationService
             // Save the rotation
             await _masterContext.SaveChangesAsync();
 
-            _logger.LogInformation("Token refreshed with rotation for user {UserId}", userId);
+            _logger.LogInformation("Token refreshed with rotation for user {UserId}", masterUser.Id);
             return result;
         }
         catch (Exception ex)
