@@ -102,6 +102,9 @@ export interface FullPricingResponse {
     addOns: AddOnPricing[];
 }
 
+// Helper type for backend responses (backend returns data directly, not wrapped in ApiResponse)
+type BackendResponse<T> = T;
+
 class MarketplaceService {
     // Using PUBLIC endpoints - No authentication required
     private baseUrl = '/api/public/pricing';
@@ -113,7 +116,7 @@ class MarketplaceService {
     async getModules(): Promise<ModulePricing[]> {
         const response = await apiClient.get<{ success: boolean; modules: ModulePricing[] }>(
             `${this.baseUrl}/modules`
-        );
+        ) as unknown as BackendResponse<{ success: boolean; modules: ModulePricing[] }>;
         return response.modules ?? [];
     }
 
@@ -124,7 +127,7 @@ class MarketplaceService {
     async getBundles(): Promise<BundlePricing[]> {
         const response = await apiClient.get<{ success: boolean; bundles: BundlePricing[] }>(
             `${this.baseUrl}/bundles`
-        );
+        ) as unknown as BackendResponse<{ success: boolean; bundles: BundlePricing[] }>;
         return response.bundles ?? [];
     }
 
@@ -138,7 +141,7 @@ class MarketplaceService {
         const response = await apiClient.get<{ success: boolean; addOns: AddOnPricing[] }>(
             `${this.baseUrl}/addons`,
             params
-        );
+        ) as unknown as BackendResponse<{ success: boolean; addOns: AddOnPricing[] }>;
         return response.addOns ?? [];
     }
 
@@ -147,7 +150,7 @@ class MarketplaceService {
      * No authentication required
      */
     async getFullPricing(): Promise<FullPricingResponse> {
-        const response = await apiClient.get<FullPricingResponse>(this.baseUrl);
+        const response = await apiClient.get<FullPricingResponse>(this.baseUrl) as unknown as BackendResponse<FullPricingResponse>;
         return response;
     }
 
@@ -159,7 +162,7 @@ class MarketplaceService {
         const response = await apiClient.post<CalculatePriceResponse>(
             `${this.baseUrl}/calculate`,
             request
-        );
+        ) as unknown as BackendResponse<CalculatePriceResponse>;
         return response;
     }
 

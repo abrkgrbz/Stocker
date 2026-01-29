@@ -109,6 +109,9 @@ export interface CalculatePriceResponse {
 
 const BASE_PATH = '/api/public/pricing';
 
+// Helper type for backend responses (backend returns data directly, not wrapped in ApiResponse)
+type BackendResponse<T> = T;
+
 export const PublicPricingService = {
   /**
    * Get all active module pricings
@@ -117,7 +120,7 @@ export const PublicPricingService = {
   async getModules(): Promise<PublicModulePricing[]> {
     const response = await apiClient.get<{ success: boolean; modules: PublicModulePricing[] }>(
       `${BASE_PATH}/modules`
-    );
+    ) as unknown as BackendResponse<{ success: boolean; modules: PublicModulePricing[] }>;
     return response.modules ?? [];
   },
 
@@ -128,7 +131,7 @@ export const PublicPricingService = {
   async getBundles(): Promise<PublicBundlePricing[]> {
     const response = await apiClient.get<{ success: boolean; bundles: PublicBundlePricing[] }>(
       `${BASE_PATH}/bundles`
-    );
+    ) as unknown as BackendResponse<{ success: boolean; bundles: PublicBundlePricing[] }>;
     return response.bundles ?? [];
   },
 
@@ -142,7 +145,7 @@ export const PublicPricingService = {
     const response = await apiClient.get<{ success: boolean; addOns: PublicAddOnPricing[] }>(
       `${BASE_PATH}/addons`,
       params
-    );
+    ) as unknown as BackendResponse<{ success: boolean; addOns: PublicAddOnPricing[] }>;
     return response.addOns ?? [];
   },
 
@@ -151,7 +154,7 @@ export const PublicPricingService = {
    * No authentication required
    */
   async getFullPricing(): Promise<FullPricingResponse> {
-    const response = await apiClient.get<FullPricingResponse>(BASE_PATH);
+    const response = await apiClient.get<FullPricingResponse>(BASE_PATH) as unknown as BackendResponse<FullPricingResponse>;
     return response;
   },
 
@@ -163,7 +166,7 @@ export const PublicPricingService = {
     const response = await apiClient.post<CalculatePriceResponse>(
       `${BASE_PATH}/calculate`,
       request
-    );
+    ) as unknown as BackendResponse<CalculatePriceResponse>;
     return response;
   },
 
