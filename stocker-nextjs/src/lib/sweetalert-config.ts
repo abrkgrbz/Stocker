@@ -31,6 +31,7 @@ export const showAlert = {
         title: 'text-xl font-bold text-gray-900',
         htmlContainer: 'text-sm text-gray-600',
         confirmButton: 'rounded-lg px-6 py-3 font-semibold shadow-md hover:shadow-lg transition-all',
+        icon: 'mx-auto',
       },
       buttonsStyling: false,
     });
@@ -67,6 +68,7 @@ export const showAlert = {
         title: 'text-xl font-bold text-gray-900',
         htmlContainer: 'text-sm',
         confirmButton: 'rounded-lg px-6 py-3 font-semibold shadow-md hover:shadow-lg transition-all',
+        icon: 'mx-auto',
       },
       buttonsStyling: false,
     });
@@ -87,6 +89,7 @@ export const showAlert = {
         title: 'text-xl font-bold text-gray-900',
         htmlContainer: 'text-sm text-gray-600',
         confirmButton: 'rounded-lg px-6 py-3 font-semibold shadow-md hover:shadow-lg transition-all',
+        icon: 'mx-auto',
       },
       buttonsStyling: false,
     });
@@ -107,6 +110,7 @@ export const showAlert = {
         title: 'text-xl font-bold text-gray-900',
         htmlContainer: 'text-sm text-gray-600',
         confirmButton: 'rounded-lg px-6 py-3 font-semibold shadow-md hover:shadow-lg transition-all',
+        icon: 'mx-auto',
       },
       buttonsStyling: false,
     });
@@ -132,6 +136,7 @@ export const showAlert = {
         htmlContainer: 'text-sm text-gray-600',
         confirmButton: 'rounded-lg px-6 py-3 font-semibold shadow-md hover:shadow-lg transition-all',
         cancelButton: 'rounded-lg px-6 py-3 font-medium shadow-sm hover:shadow-md transition-all text-gray-700 bg-white border-2 border-gray-300',
+        icon: 'mx-auto',
       },
       buttonsStyling: false,
     });
