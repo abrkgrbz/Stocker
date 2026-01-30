@@ -62,6 +62,7 @@ export interface Notification {
   tags?: string[];
   link?: string;
   metadata?: Record<string, any>;
+  data?: Record<string, any>;
 }
 
 export interface NotificationFilter {

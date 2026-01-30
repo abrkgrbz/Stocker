@@ -27,8 +27,8 @@ function mapBackendNotificationType(type: number | string): NotificationType {
 }
 
 // Determine category based on alertType or data
-function determineCategory(data?: Record<string, object>): NotificationCategory {
-  const alertType = data?.alertType as string;
+function determineCategory(data?: Record<string, unknown>): NotificationCategory {
+  const alertType = data?.alertType as string | undefined;
   if (!alertType) return 'system';
 
   // Inventory alerts
@@ -81,8 +81,8 @@ function determineCategory(data?: Record<string, object>): NotificationCategory 
 
 // Transform SignalR notification to frontend Notification format
 function mapSignalRNotification(rawNotification: Record<string, unknown>): Notification {
-  const data = (rawNotification.data || rawNotification.Data) as Record<string, object> | undefined;
-  const metadata = (rawNotification.metadata || rawNotification.Metadata) as Record<string, object> | undefined;
+  const data = (rawNotification.data || rawNotification.Data) as Record<string, unknown> | undefined;
+  const metadata = (rawNotification.metadata || rawNotification.Metadata) as Record<string, unknown> | undefined;
   const combinedData = { ...metadata, ...data };
 
   return {
@@ -98,7 +98,7 @@ function mapSignalRNotification(rawNotification: Record<string, unknown>): Notif
     iconName: String(rawNotification.icon || rawNotification.Icon || ''),
     metadata: combinedData,
     data: combinedData,
-  } as Notification & { data?: Record<string, object> };
+  };
 }
 
 export function useNotificationHub() {
