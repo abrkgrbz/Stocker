@@ -102,7 +102,7 @@ function mapSignalRNotification(rawNotification: Record<string, unknown>): Notif
 }
 
 export function useNotificationHub() {
-  const { addNotification, fetchUnreadCount } = useNotifications();
+  const { addNotification, fetchUnreadCount, fetchNotifications } = useNotifications();
 
   const { isConnected } = useSignalRHub({
     hub: 'notification',
@@ -1443,12 +1443,15 @@ export function useNotificationHub() {
     },
   });
 
-  // Fetch unread count when connected
+  // Fetch notifications and unread count when connected
   useEffect(() => {
     if (isConnected) {
+      // Fetch existing notifications from API
+      fetchNotifications();
+      // Also fetch unread count for badge
       fetchUnreadCount();
     }
-  }, [isConnected, fetchUnreadCount]);
+  }, [isConnected, fetchNotifications, fetchUnreadCount]);
 
   return { isConnected };
 }
