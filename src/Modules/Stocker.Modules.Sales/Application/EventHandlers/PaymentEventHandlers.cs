@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Stocker.Modules.Sales.Application.Contracts;
 using Stocker.Modules.Sales.Domain.Events;
 
 namespace Stocker.Modules.Sales.Application.EventHandlers;
@@ -12,13 +13,17 @@ namespace Stocker.Modules.Sales.Application.EventHandlers;
 public class CustomerPaymentReceivedEventHandler : INotificationHandler<CustomerPaymentReceivedDomainEvent>
 {
     private readonly ILogger<CustomerPaymentReceivedEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public CustomerPaymentReceivedEventHandler(ILogger<CustomerPaymentReceivedEventHandler> logger)
+    public CustomerPaymentReceivedEventHandler(
+        ILogger<CustomerPaymentReceivedEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(CustomerPaymentReceivedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(CustomerPaymentReceivedDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Müşteri ödemesi alındı: {PaymentNumber}, Müşteri: {CustomerName}, Tutar: {Amount} {Currency}, Yöntem: {PaymentMethod}, Tenant: {TenantId}",
@@ -29,7 +34,15 @@ public class CustomerPaymentReceivedEventHandler : INotificationHandler<Customer
             notification.PaymentMethod,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifyPaymentReceivedAsync(
+            notification.TenantId,
+            notification.CustomerPaymentId,
+            notification.PaymentNumber,
+            notification.CustomerName,
+            notification.Amount,
+            notification.Currency,
+            notification.PaymentMethod,
+            cancellationToken);
     }
 }
 
@@ -39,13 +52,17 @@ public class CustomerPaymentReceivedEventHandler : INotificationHandler<Customer
 public class CustomerPaymentConfirmedEventHandler : INotificationHandler<CustomerPaymentConfirmedDomainEvent>
 {
     private readonly ILogger<CustomerPaymentConfirmedEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public CustomerPaymentConfirmedEventHandler(ILogger<CustomerPaymentConfirmedEventHandler> logger)
+    public CustomerPaymentConfirmedEventHandler(
+        ILogger<CustomerPaymentConfirmedEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(CustomerPaymentConfirmedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(CustomerPaymentConfirmedDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Müşteri ödemesi onaylandı: {PaymentNumber}, Tutar: {Amount}, Onaylayan: {ConfirmedById}, Tenant: {TenantId}",
@@ -54,7 +71,13 @@ public class CustomerPaymentConfirmedEventHandler : INotificationHandler<Custome
             notification.ConfirmedById,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifyPaymentConfirmedAsync(
+            notification.TenantId,
+            notification.CustomerPaymentId,
+            notification.PaymentNumber,
+            notification.Amount,
+            notification.ConfirmedById?.ToString() ?? "Sistem",
+            cancellationToken);
     }
 }
 
@@ -64,13 +87,17 @@ public class CustomerPaymentConfirmedEventHandler : INotificationHandler<Custome
 public class CustomerPaymentAllocatedEventHandler : INotificationHandler<CustomerPaymentAllocatedDomainEvent>
 {
     private readonly ILogger<CustomerPaymentAllocatedEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public CustomerPaymentAllocatedEventHandler(ILogger<CustomerPaymentAllocatedEventHandler> logger)
+    public CustomerPaymentAllocatedEventHandler(
+        ILogger<CustomerPaymentAllocatedEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(CustomerPaymentAllocatedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(CustomerPaymentAllocatedDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Müşteri ödemesi eşleştirildi: {PaymentNumber} -> {InvoiceNumber}, Tutar: {AllocatedAmount}, Tenant: {TenantId}",
@@ -79,7 +106,13 @@ public class CustomerPaymentAllocatedEventHandler : INotificationHandler<Custome
             notification.AllocatedAmount,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifyPaymentAllocatedAsync(
+            notification.TenantId,
+            notification.CustomerPaymentId,
+            notification.PaymentNumber,
+            notification.InvoiceNumber,
+            notification.AllocatedAmount,
+            cancellationToken);
     }
 }
 
@@ -89,13 +122,17 @@ public class CustomerPaymentAllocatedEventHandler : INotificationHandler<Custome
 public class CustomerPaymentRefundedEventHandler : INotificationHandler<CustomerPaymentRefundedDomainEvent>
 {
     private readonly ILogger<CustomerPaymentRefundedEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public CustomerPaymentRefundedEventHandler(ILogger<CustomerPaymentRefundedEventHandler> logger)
+    public CustomerPaymentRefundedEventHandler(
+        ILogger<CustomerPaymentRefundedEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(CustomerPaymentRefundedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(CustomerPaymentRefundedDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Müşteri ödemesi iade edildi: {PaymentNumber}, Tutar: {RefundAmount}, Sebep: {RefundReason}, Tenant: {TenantId}",
@@ -104,7 +141,13 @@ public class CustomerPaymentRefundedEventHandler : INotificationHandler<Customer
             notification.RefundReason,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifyPaymentRefundedAsync(
+            notification.TenantId,
+            notification.CustomerPaymentId,
+            notification.PaymentNumber,
+            notification.RefundAmount,
+            notification.RefundReason,
+            cancellationToken);
     }
 }
 
@@ -114,13 +157,17 @@ public class CustomerPaymentRefundedEventHandler : INotificationHandler<Customer
 public class CustomerPaymentFailedEventHandler : INotificationHandler<CustomerPaymentFailedDomainEvent>
 {
     private readonly ILogger<CustomerPaymentFailedEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public CustomerPaymentFailedEventHandler(ILogger<CustomerPaymentFailedEventHandler> logger)
+    public CustomerPaymentFailedEventHandler(
+        ILogger<CustomerPaymentFailedEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(CustomerPaymentFailedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(CustomerPaymentFailedDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogWarning(
             "Müşteri ödemesi başarısız: {PaymentNumber}, Tutar: {Amount}, Sebep: {FailureReason}, Tenant: {TenantId}",
@@ -129,7 +176,13 @@ public class CustomerPaymentFailedEventHandler : INotificationHandler<CustomerPa
             notification.FailureReason,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifyPaymentFailedAsync(
+            notification.TenantId,
+            notification.CustomerPaymentId,
+            notification.PaymentNumber,
+            notification.Amount,
+            notification.FailureReason,
+            cancellationToken);
     }
 }
 

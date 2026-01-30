@@ -168,6 +168,41 @@ public static class SignalRGroups
 
     #endregion
 
+    #region Sales Groups
+
+    private const string SalesOrderPrefix = "sales-order-";
+    private const string SalesDashboardPrefix = "sales-dashboard-";
+
+    /// <summary>
+    /// Generates a sales order-specific group name for tracking order updates
+    /// </summary>
+    /// <param name="salesOrderId">The sales order identifier</param>
+    /// <returns>Group name in format: sales-order-{salesOrderId}</returns>
+    public static string ForSalesOrder(string salesOrderId) => $"{SalesOrderPrefix}{salesOrderId}";
+
+    /// <summary>
+    /// Generates a sales order-specific group name for tracking order updates
+    /// </summary>
+    /// <param name="salesOrderId">The sales order identifier</param>
+    /// <returns>Group name in format: sales-order-{salesOrderId}</returns>
+    public static string ForSalesOrder(Guid salesOrderId) => ForSalesOrder(salesOrderId.ToString());
+
+    /// <summary>
+    /// Generates a sales dashboard group name for tenant-specific sales notifications
+    /// </summary>
+    /// <param name="tenantId">The tenant identifier</param>
+    /// <returns>Group name in format: sales-dashboard-{tenantId}</returns>
+    public static string ForSalesDashboard(string tenantId) => $"{SalesDashboardPrefix}{tenantId}";
+
+    /// <summary>
+    /// Generates a sales dashboard group name for tenant-specific sales notifications
+    /// </summary>
+    /// <param name="tenantId">The tenant identifier</param>
+    /// <returns>Group name in format: sales-dashboard-{tenantId}</returns>
+    public static string ForSalesDashboard(Guid tenantId) => ForSalesDashboard(tenantId.ToString());
+
+    #endregion
+
     #region Chat Room Groups
 
     private const string ChatRoomPrefix = "chat-room-";

@@ -63,5 +63,10 @@ public enum NotificationType
     /// <summary>
     /// HR-related notification (employees, leaves, attendance, payroll)
     /// </summary>
-    HR
+    HR,
+
+    /// <summary>
+    /// Sales-related notification (orders, quotations, invoices, shipments, payments)
+    /// </summary>
+    Sales
 }

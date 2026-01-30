@@ -219,6 +219,125 @@ public static class SignalREvents
 
     #endregion
 
+    #region Sales Events
+
+    /// <summary>
+    /// Sales order created notification
+    /// </summary>
+    public const string SalesOrderCreated = "SalesOrderCreated";
+
+    /// <summary>
+    /// Sales order confirmed notification
+    /// </summary>
+    public const string SalesOrderConfirmed = "SalesOrderConfirmed";
+
+    /// <summary>
+    /// Sales order shipped notification
+    /// </summary>
+    public const string SalesOrderShipped = "SalesOrderShipped";
+
+    /// <summary>
+    /// Sales order delivered notification
+    /// </summary>
+    public const string SalesOrderDelivered = "SalesOrderDelivered";
+
+    /// <summary>
+    /// Sales order cancelled notification
+    /// </summary>
+    public const string SalesOrderCancelled = "SalesOrderCancelled";
+
+    /// <summary>
+    /// Quotation created notification
+    /// </summary>
+    public const string QuotationCreated = "QuotationCreated";
+
+    /// <summary>
+    /// Quotation accepted notification
+    /// </summary>
+    public const string QuotationAccepted = "QuotationAccepted";
+
+    /// <summary>
+    /// Quotation rejected notification
+    /// </summary>
+    public const string QuotationRejected = "QuotationRejected";
+
+    /// <summary>
+    /// Quotation expiring notification
+    /// </summary>
+    public const string QuotationExpiring = "QuotationExpiring";
+
+    /// <summary>
+    /// Invoice created notification
+    /// </summary>
+    public const string InvoiceCreated = "InvoiceCreated";
+
+    /// <summary>
+    /// Invoice paid notification
+    /// </summary>
+    public const string InvoicePaid = "InvoicePaid";
+
+    /// <summary>
+    /// Invoice overdue notification
+    /// </summary>
+    public const string InvoiceOverdue = "InvoiceOverdue";
+
+    /// <summary>
+    /// Payment received notification
+    /// </summary>
+    public const string PaymentReceived = "PaymentReceived";
+
+    /// <summary>
+    /// Payment failed notification
+    /// </summary>
+    public const string PaymentFailed = "PaymentFailed";
+
+    /// <summary>
+    /// Shipment dispatched notification
+    /// </summary>
+    public const string ShipmentDispatched = "ShipmentDispatched";
+
+    /// <summary>
+    /// Shipment delivered notification
+    /// </summary>
+    public const string ShipmentDelivered = "ShipmentDelivered";
+
+    /// <summary>
+    /// Shipment delivery failed notification
+    /// </summary>
+    public const string ShipmentDeliveryFailed = "ShipmentDeliveryFailed";
+
+    /// <summary>
+    /// Sales return created notification
+    /// </summary>
+    public const string SalesReturnCreated = "SalesReturnCreated";
+
+    /// <summary>
+    /// Sales return approved notification
+    /// </summary>
+    public const string SalesReturnApproved = "SalesReturnApproved";
+
+    /// <summary>
+    /// Credit note created notification
+    /// </summary>
+    public const string CreditNoteCreated = "CreditNoteCreated";
+
+    /// <summary>
+    /// Warranty claim created notification
+    /// </summary>
+    public const string WarrantyClaimCreated = "WarrantyClaimCreated";
+
+    /// <summary>
+    /// Warranty expiring notification
+    /// </summary>
+    public const string WarrantyExpiring = "WarrantyExpiring";
+
+    /// <summary>
+    /// Contract expiring notification
+    /// </summary>
+    public const string ContractExpiring = "ContractExpiring";
+
+    #endregion
+
     #region Validation Events
 
     /// <summary>

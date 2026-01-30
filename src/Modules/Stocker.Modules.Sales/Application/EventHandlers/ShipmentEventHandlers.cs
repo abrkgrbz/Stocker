@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Stocker.Modules.Sales.Application.Contracts;
 using Stocker.Modules.Sales.Domain.Events;
 
 namespace Stocker.Modules.Sales.Application.EventHandlers;
@@ -12,13 +13,17 @@ namespace Stocker.Modules.Sales.Application.EventHandlers;
 public class ShipmentCreatedEventHandler : INotificationHandler<ShipmentCreatedDomainEvent>
 {
     private readonly ILogger<ShipmentCreatedEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public ShipmentCreatedEventHandler(ILogger<ShipmentCreatedEventHandler> logger)
+    public ShipmentCreatedEventHandler(
+        ILogger<ShipmentCreatedEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(ShipmentCreatedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(ShipmentCreatedDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Sevkiyat oluşturuldu: {ShipmentNumber}, Taşıyıcı: {CarrierName}, Planlanan: {PlannedShipDate}, Tenant: {TenantId}",
@@ -27,7 +32,13 @@ public class ShipmentCreatedEventHandler : INotificationHandler<ShipmentCreatedD
             notification.PlannedShipDate,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifyShipmentCreatedAsync(
+            notification.TenantId,
+            notification.ShipmentId,
+            notification.ShipmentNumber,
+            notification.CarrierName,
+            notification.PlannedShipDate,
+            cancellationToken);
     }
 }
 
@@ -37,13 +48,17 @@ public class ShipmentCreatedEventHandler : INotificationHandler<ShipmentCreatedD
 public class ShipmentDispatchedEventHandler : INotificationHandler<ShipmentDispatchedDomainEvent>
 {
     private readonly ILogger<ShipmentDispatchedEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public ShipmentDispatchedEventHandler(ILogger<ShipmentDispatchedEventHandler> logger)
+    public ShipmentDispatchedEventHandler(
+        ILogger<ShipmentDispatchedEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(ShipmentDispatchedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(ShipmentDispatchedDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Sevkiyat gönderildi: {ShipmentNumber}, Takip No: {TrackingNumber}, Tenant: {TenantId}",
@@ -51,7 +66,13 @@ public class ShipmentDispatchedEventHandler : INotificationHandler<ShipmentDispa
             notification.TrackingNumber,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifyShipmentDispatchedAsync(
+            notification.TenantId,
+            notification.ShipmentId,
+            notification.ShipmentNumber,
+            notification.TrackingNumber,
+            notification.CarrierName,
+            cancellationToken);
     }
 }
 
@@ -61,13 +82,17 @@ public class ShipmentDispatchedEventHandler : INotificationHandler<ShipmentDispa
 public class ShipmentInTransitUpdatedEventHandler : INotificationHandler<ShipmentInTransitUpdatedDomainEvent>
 {
     private readonly ILogger<ShipmentInTransitUpdatedEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public ShipmentInTransitUpdatedEventHandler(ILogger<ShipmentInTransitUpdatedEventHandler> logger)
+    public ShipmentInTransitUpdatedEventHandler(
+        ILogger<ShipmentInTransitUpdatedEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(ShipmentInTransitUpdatedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(ShipmentInTransitUpdatedDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Sevkiyat durumu güncellendi: {ShipmentNumber}, Konum: {CurrentLocation}, Durum: {Status}, Tenant: {TenantId}",
@@ -76,7 +101,13 @@ public class ShipmentInTransitUpdatedEventHandler : INotificationHandler<Shipmen
             notification.Status,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifyShipmentStatusUpdatedAsync(
+            notification.TenantId,
+            notification.ShipmentId,
+            notification.ShipmentNumber,
+            notification.Status,
+            notification.CurrentLocation,
+            cancellationToken);
     }
 }
 
@@ -86,13 +117,17 @@ public class ShipmentInTransitUpdatedEventHandler : INotificationHandler<Shipmen
 public class ShipmentDeliveredEventHandler : INotificationHandler<ShipmentDeliveredDomainEvent>
 {
     private readonly ILogger<ShipmentDeliveredEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public ShipmentDeliveredEventHandler(ILogger<ShipmentDeliveredEventHandler> logger)
+    public ShipmentDeliveredEventHandler(
+        ILogger<ShipmentDeliveredEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(ShipmentDeliveredDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(ShipmentDeliveredDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Sevkiyat teslim edildi: {ShipmentNumber}, Teslim Alan: {ReceivedBy}, Tenant: {TenantId}",
@@ -100,7 +135,12 @@ public class ShipmentDeliveredEventHandler : INotificationHandler<ShipmentDelive
             notification.ReceivedBy,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifyShipmentDeliveredAsync(
+            notification.TenantId,
+            notification.ShipmentId,
+            notification.ShipmentNumber,
+            notification.ReceivedBy,
+            cancellationToken);
     }
 }
 
@@ -110,13 +150,17 @@ public class ShipmentDeliveredEventHandler : INotificationHandler<ShipmentDelive
 public class ShipmentDeliveryFailedEventHandler : INotificationHandler<ShipmentDeliveryFailedDomainEvent>
 {
     private readonly ILogger<ShipmentDeliveryFailedEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public ShipmentDeliveryFailedEventHandler(ILogger<ShipmentDeliveryFailedEventHandler> logger)
+    public ShipmentDeliveryFailedEventHandler(
+        ILogger<ShipmentDeliveryFailedEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(ShipmentDeliveryFailedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(ShipmentDeliveryFailedDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogWarning(
             "Sevkiyat teslim edilemedi: {ShipmentNumber}, Sebep: {FailureReason}, Tenant: {TenantId}",
@@ -124,7 +168,12 @@ public class ShipmentDeliveryFailedEventHandler : INotificationHandler<ShipmentD
             notification.FailureReason,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifyShipmentDeliveryFailedAsync(
+            notification.TenantId,
+            notification.ShipmentId,
+            notification.ShipmentNumber,
+            notification.FailureReason,
+            cancellationToken);
     }
 }
 

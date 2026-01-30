@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Stocker.Modules.Sales.Application.Contracts;
 using Stocker.Modules.Sales.Domain.Events;
 
 namespace Stocker.Modules.Sales.Application.EventHandlers;
@@ -12,13 +13,17 @@ namespace Stocker.Modules.Sales.Application.EventHandlers;
 public class SalesInvoiceCreatedEventHandler : INotificationHandler<SalesInvoiceCreatedDomainEvent>
 {
     private readonly ILogger<SalesInvoiceCreatedEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public SalesInvoiceCreatedEventHandler(ILogger<SalesInvoiceCreatedEventHandler> logger)
+    public SalesInvoiceCreatedEventHandler(
+        ILogger<SalesInvoiceCreatedEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(SalesInvoiceCreatedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(SalesInvoiceCreatedDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Satış faturası oluşturuldu: {InvoiceNumber}, Müşteri: {CustomerName}, Tutar: {TotalAmount} {Currency}, Tenant: {TenantId}",
@@ -28,7 +33,14 @@ public class SalesInvoiceCreatedEventHandler : INotificationHandler<SalesInvoice
             notification.Currency,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifyInvoiceCreatedAsync(
+            notification.TenantId,
+            notification.SalesInvoiceId,
+            notification.InvoiceNumber,
+            notification.CustomerName,
+            notification.TotalAmount,
+            notification.Currency,
+            cancellationToken);
     }
 }
 
@@ -38,13 +50,17 @@ public class SalesInvoiceCreatedEventHandler : INotificationHandler<SalesInvoice
 public class SalesInvoiceApprovedEventHandler : INotificationHandler<SalesInvoiceApprovedDomainEvent>
 {
     private readonly ILogger<SalesInvoiceApprovedEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public SalesInvoiceApprovedEventHandler(ILogger<SalesInvoiceApprovedEventHandler> logger)
+    public SalesInvoiceApprovedEventHandler(
+        ILogger<SalesInvoiceApprovedEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(SalesInvoiceApprovedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(SalesInvoiceApprovedDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Satış faturası onaylandı: {InvoiceNumber}, Onaylayan: {ApprovedById}, Tenant: {TenantId}",
@@ -52,7 +68,12 @@ public class SalesInvoiceApprovedEventHandler : INotificationHandler<SalesInvoic
             notification.ApprovedById,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifyInvoiceApprovedAsync(
+            notification.TenantId,
+            notification.SalesInvoiceId,
+            notification.InvoiceNumber,
+            notification.ApprovedById?.ToString() ?? "Sistem",
+            cancellationToken);
     }
 }
 
@@ -62,13 +83,17 @@ public class SalesInvoiceApprovedEventHandler : INotificationHandler<SalesInvoic
 public class SalesInvoiceSentToGibEventHandler : INotificationHandler<SalesInvoiceSentToGibDomainEvent>
 {
     private readonly ILogger<SalesInvoiceSentToGibEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public SalesInvoiceSentToGibEventHandler(ILogger<SalesInvoiceSentToGibEventHandler> logger)
+    public SalesInvoiceSentToGibEventHandler(
+        ILogger<SalesInvoiceSentToGibEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(SalesInvoiceSentToGibDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(SalesInvoiceSentToGibDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Satış faturası GİB'e gönderildi: {InvoiceNumber}, UUID: {GibUuid}, Tenant: {TenantId}",
@@ -76,7 +101,12 @@ public class SalesInvoiceSentToGibEventHandler : INotificationHandler<SalesInvoi
             notification.GibUuid,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifyInvoiceSentToGibAsync(
+            notification.TenantId,
+            notification.SalesInvoiceId,
+            notification.InvoiceNumber,
+            notification.GibUuid,
+            cancellationToken);
     }
 }
 
@@ -86,13 +116,17 @@ public class SalesInvoiceSentToGibEventHandler : INotificationHandler<SalesInvoi
 public class SalesInvoicePaidEventHandler : INotificationHandler<SalesInvoicePaidDomainEvent>
 {
     private readonly ILogger<SalesInvoicePaidEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public SalesInvoicePaidEventHandler(ILogger<SalesInvoicePaidEventHandler> logger)
+    public SalesInvoicePaidEventHandler(
+        ILogger<SalesInvoicePaidEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(SalesInvoicePaidDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(SalesInvoicePaidDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Satış faturası ödendi: {InvoiceNumber}, Ödeme: {PaymentId}, Tutar: {PaidAmount}, Tenant: {TenantId}",
@@ -101,7 +135,12 @@ public class SalesInvoicePaidEventHandler : INotificationHandler<SalesInvoicePai
             notification.PaidAmount,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifyInvoicePaidAsync(
+            notification.TenantId,
+            notification.SalesInvoiceId,
+            notification.InvoiceNumber,
+            notification.PaidAmount,
+            cancellationToken);
     }
 }
 
@@ -111,13 +150,17 @@ public class SalesInvoicePaidEventHandler : INotificationHandler<SalesInvoicePai
 public class SalesInvoiceCancelledEventHandler : INotificationHandler<SalesInvoiceCancelledDomainEvent>
 {
     private readonly ILogger<SalesInvoiceCancelledEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public SalesInvoiceCancelledEventHandler(ILogger<SalesInvoiceCancelledEventHandler> logger)
+    public SalesInvoiceCancelledEventHandler(
+        ILogger<SalesInvoiceCancelledEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(SalesInvoiceCancelledDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(SalesInvoiceCancelledDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogWarning(
             "Satış faturası iptal edildi: {InvoiceNumber}, Sebep: {CancellationReason}, Tenant: {TenantId}",
@@ -125,7 +168,12 @@ public class SalesInvoiceCancelledEventHandler : INotificationHandler<SalesInvoi
             notification.CancellationReason,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifyInvoiceCancelledAsync(
+            notification.TenantId,
+            notification.SalesInvoiceId,
+            notification.InvoiceNumber,
+            notification.CancellationReason,
+            cancellationToken);
     }
 }
 
@@ -135,13 +183,17 @@ public class SalesInvoiceCancelledEventHandler : INotificationHandler<SalesInvoi
 public class SalesInvoiceOverdueEventHandler : INotificationHandler<SalesInvoiceOverdueDomainEvent>
 {
     private readonly ILogger<SalesInvoiceOverdueEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public SalesInvoiceOverdueEventHandler(ILogger<SalesInvoiceOverdueEventHandler> logger)
+    public SalesInvoiceOverdueEventHandler(
+        ILogger<SalesInvoiceOverdueEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(SalesInvoiceOverdueDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(SalesInvoiceOverdueDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogWarning(
             "Satış faturası vadesi geçti: {InvoiceNumber}, Kalan: {OutstandingAmount}, Gecikme: {DaysOverdue} gün, Tenant: {TenantId}",
@@ -150,7 +202,13 @@ public class SalesInvoiceOverdueEventHandler : INotificationHandler<SalesInvoice
             notification.DaysOverdue,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifyInvoiceOverdueAsync(
+            notification.TenantId,
+            notification.SalesInvoiceId,
+            notification.InvoiceNumber,
+            notification.OutstandingAmount,
+            notification.DaysOverdue,
+            cancellationToken);
     }
 }
 

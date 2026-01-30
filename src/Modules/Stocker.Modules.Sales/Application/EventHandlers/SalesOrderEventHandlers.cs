@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Stocker.Modules.Sales.Application.Contracts;
 using Stocker.Modules.Sales.Domain.Events;
 
 namespace Stocker.Modules.Sales.Application.EventHandlers;
@@ -12,13 +13,17 @@ namespace Stocker.Modules.Sales.Application.EventHandlers;
 public class SalesOrderCreatedEventHandler : INotificationHandler<SalesOrderCreatedDomainEvent>
 {
     private readonly ILogger<SalesOrderCreatedEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public SalesOrderCreatedEventHandler(ILogger<SalesOrderCreatedEventHandler> logger)
+    public SalesOrderCreatedEventHandler(
+        ILogger<SalesOrderCreatedEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(SalesOrderCreatedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(SalesOrderCreatedDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Satış siparişi oluşturuldu: {OrderNumber}, Müşteri: {CustomerName}, Tutar: {TotalAmount} {Currency}, Tenant: {TenantId}",
@@ -28,7 +33,14 @@ public class SalesOrderCreatedEventHandler : INotificationHandler<SalesOrderCrea
             notification.Currency,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifySalesOrderCreatedAsync(
+            notification.TenantId,
+            notification.SalesOrderId,
+            notification.OrderNumber,
+            notification.CustomerName,
+            notification.TotalAmount,
+            notification.Currency,
+            cancellationToken);
     }
 }
 
@@ -38,13 +50,17 @@ public class SalesOrderCreatedEventHandler : INotificationHandler<SalesOrderCrea
 public class SalesOrderConfirmedEventHandler : INotificationHandler<SalesOrderConfirmedDomainEvent>
 {
     private readonly ILogger<SalesOrderConfirmedEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public SalesOrderConfirmedEventHandler(ILogger<SalesOrderConfirmedEventHandler> logger)
+    public SalesOrderConfirmedEventHandler(
+        ILogger<SalesOrderConfirmedEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(SalesOrderConfirmedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(SalesOrderConfirmedDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Satış siparişi onaylandı: {OrderNumber}, Onaylayan: {ConfirmedById}, Tenant: {TenantId}",
@@ -52,7 +68,12 @@ public class SalesOrderConfirmedEventHandler : INotificationHandler<SalesOrderCo
             notification.ConfirmedById,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifySalesOrderConfirmedAsync(
+            notification.TenantId,
+            notification.SalesOrderId,
+            notification.OrderNumber,
+            notification.ConfirmedById?.ToString() ?? "Sistem",
+            cancellationToken);
     }
 }
 
@@ -62,13 +83,17 @@ public class SalesOrderConfirmedEventHandler : INotificationHandler<SalesOrderCo
 public class SalesOrderShippedEventHandler : INotificationHandler<SalesOrderShippedDomainEvent>
 {
     private readonly ILogger<SalesOrderShippedEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public SalesOrderShippedEventHandler(ILogger<SalesOrderShippedEventHandler> logger)
+    public SalesOrderShippedEventHandler(
+        ILogger<SalesOrderShippedEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(SalesOrderShippedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(SalesOrderShippedDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Satış siparişi sevk edildi: {OrderNumber}, Takip No: {TrackingNumber}, Tenant: {TenantId}",
@@ -76,7 +101,13 @@ public class SalesOrderShippedEventHandler : INotificationHandler<SalesOrderShip
             notification.TrackingNumber,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifySalesOrderShippedAsync(
+            notification.TenantId,
+            notification.SalesOrderId,
+            notification.OrderNumber,
+            notification.TrackingNumber,
+            string.Empty, // Carrier name not available in event
+            cancellationToken);
     }
 }
 
@@ -86,13 +117,17 @@ public class SalesOrderShippedEventHandler : INotificationHandler<SalesOrderShip
 public class SalesOrderDeliveredEventHandler : INotificationHandler<SalesOrderDeliveredDomainEvent>
 {
     private readonly ILogger<SalesOrderDeliveredEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public SalesOrderDeliveredEventHandler(ILogger<SalesOrderDeliveredEventHandler> logger)
+    public SalesOrderDeliveredEventHandler(
+        ILogger<SalesOrderDeliveredEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(SalesOrderDeliveredDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(SalesOrderDeliveredDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Satış siparişi teslim edildi: {OrderNumber}, Teslim Alan: {ReceivedBy}, Tenant: {TenantId}",
@@ -100,7 +135,12 @@ public class SalesOrderDeliveredEventHandler : INotificationHandler<SalesOrderDe
             notification.ReceivedBy,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifySalesOrderDeliveredAsync(
+            notification.TenantId,
+            notification.SalesOrderId,
+            notification.OrderNumber,
+            notification.ReceivedBy,
+            cancellationToken);
     }
 }
 
@@ -110,13 +150,17 @@ public class SalesOrderDeliveredEventHandler : INotificationHandler<SalesOrderDe
 public class SalesOrderCancelledEventHandler : INotificationHandler<SalesOrderCancelledDomainEvent>
 {
     private readonly ILogger<SalesOrderCancelledEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public SalesOrderCancelledEventHandler(ILogger<SalesOrderCancelledEventHandler> logger)
+    public SalesOrderCancelledEventHandler(
+        ILogger<SalesOrderCancelledEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(SalesOrderCancelledDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(SalesOrderCancelledDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogWarning(
             "Satış siparişi iptal edildi: {OrderNumber}, Sebep: {CancellationReason}, Tenant: {TenantId}",
@@ -124,7 +168,12 @@ public class SalesOrderCancelledEventHandler : INotificationHandler<SalesOrderCa
             notification.CancellationReason,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifySalesOrderCancelledAsync(
+            notification.TenantId,
+            notification.SalesOrderId,
+            notification.OrderNumber,
+            notification.CancellationReason,
+            cancellationToken);
     }
 }
 
@@ -134,13 +183,17 @@ public class SalesOrderCancelledEventHandler : INotificationHandler<SalesOrderCa
 public class SalesOrderPartiallyShippedEventHandler : INotificationHandler<SalesOrderPartiallyShippedDomainEvent>
 {
     private readonly ILogger<SalesOrderPartiallyShippedEventHandler> _logger;
+    private readonly ISalesNotificationService _notificationService;
 
-    public SalesOrderPartiallyShippedEventHandler(ILogger<SalesOrderPartiallyShippedEventHandler> logger)
+    public SalesOrderPartiallyShippedEventHandler(
+        ILogger<SalesOrderPartiallyShippedEventHandler> logger,
+        ISalesNotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
-    public Task Handle(SalesOrderPartiallyShippedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(SalesOrderPartiallyShippedDomainEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Satış siparişi kısmen sevk edildi: {OrderNumber}, Sevk: {ShippedItemCount}/{TotalItemCount} (%{ShippedPercentage}), Tenant: {TenantId}",
@@ -150,7 +203,14 @@ public class SalesOrderPartiallyShippedEventHandler : INotificationHandler<Sales
             notification.ShippedPercentage,
             notification.TenantId);
 
-        return Task.CompletedTask;
+        await _notificationService.NotifySalesOrderPartiallyShippedAsync(
+            notification.TenantId,
+            notification.SalesOrderId,
+            notification.OrderNumber,
+            notification.ShippedItemCount,
+            notification.TotalItemCount,
+            notification.ShippedPercentage,
+            cancellationToken);
     }
 }
 

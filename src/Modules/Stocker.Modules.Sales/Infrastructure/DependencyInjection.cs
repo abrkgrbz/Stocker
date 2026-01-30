@@ -2,6 +2,7 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Stocker.Modules.Sales.Application.Contracts;
 using Stocker.Modules.Sales.Application.Services;
 using Stocker.Modules.Sales.Domain.Repositories;
 using Stocker.Modules.Sales.Infrastructure.EventConsumers;
@@ -103,6 +104,9 @@ public static class DependencyInjection
         services.AddScoped<IPromotionValidationService, PromotionValidationService>();
         services.AddScoped<IResourceAuthorizationService, ResourceAuthorizationService>();
         services.AddScoped<ISalesAuditService, SalesAuditService>();
+
+        // Notification Services (SignalR integration for real-time alerts)
+        services.AddScoped<ISalesNotificationService, SalesNotificationService>();
 
         // Module-based data resolver for Customer/Product resolution
         // Determines whether to use CRM/Inventory or Sales module data based on active modules
