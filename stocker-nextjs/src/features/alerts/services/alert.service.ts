@@ -26,7 +26,8 @@ export const alertService = {
     }
 
     const url = queryParams.toString() ? `${BASE_URL}?${queryParams}` : BASE_URL;
-    return ApiService.get<Alert[]>(url);
+    const response = await ApiService.get<{ success: boolean; data: Alert[] }>(url);
+    return response.data;
   },
 
   /**
