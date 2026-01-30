@@ -35,11 +35,12 @@ public class SalesQuotationCreatedEventHandler : INotificationHandler<SalesQuota
 
         await _notificationService.NotifyQuotationCreatedAsync(
             notification.TenantId,
-            notification.SalesQuotationId,
+            notification.QuotationId,
             notification.QuotationNumber,
             notification.CustomerName,
             notification.TotalAmount,
             notification.Currency,
+            notification.ValidUntil,
             cancellationToken);
     }
 }
@@ -70,7 +71,7 @@ public class SalesQuotationSentEventHandler : INotificationHandler<SalesQuotatio
 
         await _notificationService.NotifyQuotationSentAsync(
             notification.TenantId,
-            notification.SalesQuotationId,
+            notification.QuotationId,
             notification.QuotationNumber,
             notification.CustomerEmail,
             cancellationToken);
@@ -103,7 +104,7 @@ public class SalesQuotationAcceptedEventHandler : INotificationHandler<SalesQuot
 
         await _notificationService.NotifyQuotationAcceptedAsync(
             notification.TenantId,
-            notification.SalesQuotationId,
+            notification.QuotationId,
             notification.QuotationNumber,
             notification.SalesOrderId,
             cancellationToken);
@@ -136,7 +137,7 @@ public class SalesQuotationRejectedEventHandler : INotificationHandler<SalesQuot
 
         await _notificationService.NotifyQuotationRejectedAsync(
             notification.TenantId,
-            notification.SalesQuotationId,
+            notification.QuotationId,
             notification.QuotationNumber,
             notification.RejectionReason,
             cancellationToken);
@@ -168,7 +169,7 @@ public class SalesQuotationExpiredEventHandler : INotificationHandler<SalesQuota
 
         await _notificationService.NotifyQuotationExpiredAsync(
             notification.TenantId,
-            notification.SalesQuotationId,
+            notification.QuotationId,
             notification.QuotationNumber,
             cancellationToken);
     }

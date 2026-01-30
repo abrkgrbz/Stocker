@@ -181,8 +181,8 @@ public interface ISalesNotificationService
         Guid tenantId,
         Guid invoiceId,
         string invoiceNumber,
+        Guid paymentId,
         decimal paidAmount,
-        string currency,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -202,7 +202,7 @@ public interface ISalesNotificationService
         Guid tenantId,
         Guid invoiceId,
         string invoiceNumber,
-        string customerName,
+        Guid? customerId,
         decimal outstandingAmount,
         int daysOverdue,
         CancellationToken cancellationToken = default);
@@ -265,7 +265,7 @@ public interface ISalesNotificationService
         Guid tenantId,
         Guid paymentId,
         string paymentNumber,
-        string customerName,
+        Guid? customerId,
         decimal amount,
         string failureReason,
         CancellationToken cancellationToken = default);

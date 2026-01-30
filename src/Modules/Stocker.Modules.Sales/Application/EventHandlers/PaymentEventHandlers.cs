@@ -36,7 +36,7 @@ public class CustomerPaymentReceivedEventHandler : INotificationHandler<Customer
 
         await _notificationService.NotifyPaymentReceivedAsync(
             notification.TenantId,
-            notification.CustomerPaymentId,
+            notification.PaymentId,
             notification.PaymentNumber,
             notification.CustomerName,
             notification.Amount,
@@ -73,7 +73,7 @@ public class CustomerPaymentConfirmedEventHandler : INotificationHandler<Custome
 
         await _notificationService.NotifyPaymentConfirmedAsync(
             notification.TenantId,
-            notification.CustomerPaymentId,
+            notification.PaymentId,
             notification.PaymentNumber,
             notification.Amount,
             notification.ConfirmedById?.ToString() ?? "Sistem",
@@ -108,8 +108,9 @@ public class CustomerPaymentAllocatedEventHandler : INotificationHandler<Custome
 
         await _notificationService.NotifyPaymentAllocatedAsync(
             notification.TenantId,
-            notification.CustomerPaymentId,
+            notification.PaymentId,
             notification.PaymentNumber,
+            notification.InvoiceId,
             notification.InvoiceNumber,
             notification.AllocatedAmount,
             cancellationToken);
@@ -143,7 +144,7 @@ public class CustomerPaymentRefundedEventHandler : INotificationHandler<Customer
 
         await _notificationService.NotifyPaymentRefundedAsync(
             notification.TenantId,
-            notification.CustomerPaymentId,
+            notification.PaymentId,
             notification.PaymentNumber,
             notification.RefundAmount,
             notification.RefundReason,
@@ -178,8 +179,9 @@ public class CustomerPaymentFailedEventHandler : INotificationHandler<CustomerPa
 
         await _notificationService.NotifyPaymentFailedAsync(
             notification.TenantId,
-            notification.CustomerPaymentId,
+            notification.PaymentId,
             notification.PaymentNumber,
+            notification.CustomerId,
             notification.Amount,
             notification.FailureReason,
             cancellationToken);

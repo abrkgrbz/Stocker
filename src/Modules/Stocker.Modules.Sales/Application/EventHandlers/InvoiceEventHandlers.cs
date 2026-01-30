@@ -35,7 +35,7 @@ public class SalesInvoiceCreatedEventHandler : INotificationHandler<SalesInvoice
 
         await _notificationService.NotifyInvoiceCreatedAsync(
             notification.TenantId,
-            notification.SalesInvoiceId,
+            notification.InvoiceId,
             notification.InvoiceNumber,
             notification.CustomerName,
             notification.TotalAmount,
@@ -70,7 +70,7 @@ public class SalesInvoiceApprovedEventHandler : INotificationHandler<SalesInvoic
 
         await _notificationService.NotifyInvoiceApprovedAsync(
             notification.TenantId,
-            notification.SalesInvoiceId,
+            notification.InvoiceId,
             notification.InvoiceNumber,
             notification.ApprovedById?.ToString() ?? "Sistem",
             cancellationToken);
@@ -103,7 +103,7 @@ public class SalesInvoiceSentToGibEventHandler : INotificationHandler<SalesInvoi
 
         await _notificationService.NotifyInvoiceSentToGibAsync(
             notification.TenantId,
-            notification.SalesInvoiceId,
+            notification.InvoiceId,
             notification.InvoiceNumber,
             notification.GibUuid,
             cancellationToken);
@@ -137,8 +137,9 @@ public class SalesInvoicePaidEventHandler : INotificationHandler<SalesInvoicePai
 
         await _notificationService.NotifyInvoicePaidAsync(
             notification.TenantId,
-            notification.SalesInvoiceId,
+            notification.InvoiceId,
             notification.InvoiceNumber,
+            notification.PaymentId,
             notification.PaidAmount,
             cancellationToken);
     }
@@ -170,7 +171,7 @@ public class SalesInvoiceCancelledEventHandler : INotificationHandler<SalesInvoi
 
         await _notificationService.NotifyInvoiceCancelledAsync(
             notification.TenantId,
-            notification.SalesInvoiceId,
+            notification.InvoiceId,
             notification.InvoiceNumber,
             notification.CancellationReason,
             cancellationToken);
@@ -204,8 +205,9 @@ public class SalesInvoiceOverdueEventHandler : INotificationHandler<SalesInvoice
 
         await _notificationService.NotifyInvoiceOverdueAsync(
             notification.TenantId,
-            notification.SalesInvoiceId,
+            notification.InvoiceId,
             notification.InvoiceNumber,
+            notification.CustomerId,
             notification.OutstandingAmount,
             notification.DaysOverdue,
             cancellationToken);

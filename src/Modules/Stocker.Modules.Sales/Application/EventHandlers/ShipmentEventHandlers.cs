@@ -36,6 +36,7 @@ public class ShipmentCreatedEventHandler : INotificationHandler<ShipmentCreatedD
             notification.TenantId,
             notification.ShipmentId,
             notification.ShipmentNumber,
+            notification.SalesOrderId,
             notification.CarrierName,
             notification.PlannedShipDate,
             cancellationToken);
@@ -71,7 +72,6 @@ public class ShipmentDispatchedEventHandler : INotificationHandler<ShipmentDispa
             notification.ShipmentId,
             notification.ShipmentNumber,
             notification.TrackingNumber,
-            notification.CarrierName,
             cancellationToken);
     }
 }
@@ -105,8 +105,8 @@ public class ShipmentInTransitUpdatedEventHandler : INotificationHandler<Shipmen
             notification.TenantId,
             notification.ShipmentId,
             notification.ShipmentNumber,
-            notification.Status,
             notification.CurrentLocation,
+            notification.Status,
             cancellationToken);
     }
 }

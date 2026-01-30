@@ -578,8 +578,8 @@ public class SalesNotificationService : ISalesNotificationService
         Guid tenantId,
         Guid invoiceId,
         string invoiceNumber,
+        Guid paymentId,
         decimal paidAmount,
-        string currency,
         CancellationToken cancellationToken = default)
     {
         try
@@ -587,7 +587,7 @@ public class SalesNotificationService : ISalesNotificationService
             var notification = new NotificationMessage
             {
                 Title = "Fatura Ödendi",
-                Message = $"{invoiceNumber} numaralı fatura ödendi. Ödenen tutar: {paidAmount:N2} {currency}",
+                Message = $"{invoiceNumber} numaralı fatura ödendi. Ödenen tutar: {paidAmount:N2}",
                 Type = NotificationType.Payment,
                 Priority = NotificationPriority.Normal,
                 ActionUrl = $"/sales/invoices/{invoiceId}",
@@ -597,8 +597,8 @@ public class SalesNotificationService : ISalesNotificationService
                     ["alertType"] = "invoice_paid",
                     ["invoiceId"] = invoiceId,
                     ["invoiceNumber"] = invoiceNumber,
-                    ["paidAmount"] = paidAmount,
-                    ["currency"] = currency
+                    ["paymentId"] = paymentId,
+                    ["paidAmount"] = paidAmount
                 }
             };
 
@@ -650,7 +650,7 @@ public class SalesNotificationService : ISalesNotificationService
         Guid tenantId,
         Guid invoiceId,
         string invoiceNumber,
-        string customerName,
+        Guid? customerId,
         decimal outstandingAmount,
         int daysOverdue,
         CancellationToken cancellationToken = default)
@@ -660,7 +660,7 @@ public class SalesNotificationService : ISalesNotificationService
             var notification = new NotificationMessage
             {
                 Title = "Vadesi Geçmiş Fatura",
-                Message = $"{invoiceNumber} numaralı faturanın vadesi {daysOverdue} gün geçti. Müşteri: {customerName}, Kalan: {outstandingAmount:N2}",
+                Message = $"{invoiceNumber} numaralı faturanın vadesi {daysOverdue} gün geçti. Kalan: {outstandingAmount:N2}",
                 Type = NotificationType.Payment,
                 Priority = daysOverdue > 30 ? NotificationPriority.Urgent : NotificationPriority.High,
                 ActionUrl = $"/sales/invoices/{invoiceId}",
@@ -670,7 +670,7 @@ public class SalesNotificationService : ISalesNotificationService
                     ["alertType"] = "invoice_overdue",
                     ["invoiceId"] = invoiceId,
                     ["invoiceNumber"] = invoiceNumber,
-                    ["customerName"] = customerName,
+                    ["customerId"] = customerId?.ToString() ?? string.Empty,
                     ["outstandingAmount"] = outstandingAmount,
                     ["daysOverdue"] = daysOverdue
                 }
@@ -847,7 +847,7 @@ public class SalesNotificationService : ISalesNotificationService
         Guid tenantId,
         Guid paymentId,
         string paymentNumber,
-        string customerName,
+        Guid? customerId,
         decimal amount,
         string failureReason,
         CancellationToken cancellationToken = default)
@@ -857,7 +857,7 @@ public class SalesNotificationService : ISalesNotificationService
             var notification = new NotificationMessage
             {
                 Title = "Ödeme Başarısız",
-                Message = $"{customerName}'den {amount:N2} tutar ödeme başarısız oldu. Sebep: {failureReason}",
+                Message = $"{amount:N2} tutar ödeme başarısız oldu. Sebep: {failureReason}",
                 Type = NotificationType.Payment,
                 Priority = NotificationPriority.High,
                 ActionUrl = $"/sales/payments/{paymentId}",
@@ -867,7 +867,7 @@ public class SalesNotificationService : ISalesNotificationService
                     ["alertType"] = "payment_failed",
                     ["paymentId"] = paymentId,
                     ["paymentNumber"] = paymentNumber,
-                    ["customerName"] = customerName,
+                    ["customerId"] = customerId?.ToString() ?? string.Empty,
                     ["amount"] = amount,
                     ["failureReason"] = failureReason
                 }
