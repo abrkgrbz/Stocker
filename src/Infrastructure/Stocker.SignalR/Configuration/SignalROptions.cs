@@ -13,14 +13,18 @@ public class SignalROptions
     public bool Enabled { get; set; } = true;
 
     /// <summary>
-    /// Keep-alive interval in seconds
+    /// Keep-alive interval in seconds.
+    /// Server sends keepalive pings at this interval.
+    /// Client should send pings MORE FREQUENTLY than ClientTimeoutInterval.
     /// </summary>
-    public int KeepAliveIntervalSeconds { get; set; } = 15;
+    public int KeepAliveIntervalSeconds { get; set; } = 30;
 
     /// <summary>
-    /// Client timeout multiplier (multiplied by KeepAliveInterval)
+    /// Client timeout multiplier (multiplied by KeepAliveInterval).
+    /// If no message/ping received from client within this timeout, connection is closed.
+    /// Recommended: At least 4x KeepAliveInterval for network resilience.
     /// </summary>
-    public double ClientTimeoutMultiplier { get; set; } = 2.0;
+    public double ClientTimeoutMultiplier { get; set; } = 4.0;
 
     /// <summary>
     /// Handshake timeout in seconds

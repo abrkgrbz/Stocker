@@ -110,8 +110,8 @@ export function usePricingSignalR(): UsePricingSignalRReturn {
             return 10000;
           }
         })
-        .withServerTimeout(60000)
-        .withKeepAliveInterval(15000)
+        .withServerTimeout(120000) // 2 minutes - must be > server's ClientTimeoutInterval
+        .withKeepAliveInterval(30000) // 30 seconds - should match server's KeepAliveInterval
         .configureLogging(signalR.LogLevel.Information)
         .build();
 
