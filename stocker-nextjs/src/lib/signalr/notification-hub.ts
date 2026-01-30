@@ -3,10 +3,104 @@
 import { useEffect } from 'react';
 import { useSignalRHub } from './use-signalr';
 import { useNotifications } from '@/features/notifications/hooks/useNotifications';
-import { Notification } from '@/features/notifications/types/notification.types';
+import { Notification, NotificationCategory, NotificationType } from '@/features/notifications/types/notification.types';
 import { toast } from 'sonner';
 
 import logger from '../utils/logger';
+
+// Map backend notification type (number enum) to frontend type (string)
+function mapBackendNotificationType(type: number | string): NotificationType {
+  if (typeof type === 'string') return type as NotificationType;
+
+  const typeMap: Record<number, NotificationType> = {
+    0: 'info',      // Information
+    1: 'success',   // Success
+    2: 'warning',   // Warning
+    3: 'error',     // Error
+    4: 'info',      // Order
+    5: 'info',      // Inventory
+    6: 'info',      // System
+    7: 'info',      // User
+    8: 'warning',   // Alert
+  };
+  return typeMap[type] || 'info';
+}
+
+// Determine category based on alertType or data
+function determineCategory(data?: Record<string, object>): NotificationCategory {
+  const alertType = data?.alertType as string;
+  if (!alertType) return 'system';
+
+  // Inventory alerts
+  if (alertType.includes('stock') || alertType.includes('inventory') ||
+      alertType.includes('lot_batch') || alertType.includes('serial_number') ||
+      alertType.includes('price_list') || alertType.includes('cycle_count')) {
+    return 'inventory';
+  }
+
+  // Sales alerts
+  if (alertType.includes('sales_order') || alertType.includes('quotation') ||
+      alertType.includes('invoice') || alertType.includes('payment') ||
+      alertType.includes('shipment') || alertType.includes('sales_return') ||
+      alertType.includes('credit_note') || alertType.includes('warranty')) {
+    return 'sales';
+  }
+
+  // CRM alerts
+  if (alertType.includes('lead') || alertType.includes('deal') ||
+      alertType.includes('opportunity') || alertType.includes('campaign') ||
+      alertType.includes('meeting') || alertType.includes('task') ||
+      alertType.includes('activity') || alertType.includes('ticket') ||
+      alertType.includes('contract') || alertType.includes('account') ||
+      alertType.includes('territory') || alertType.includes('referral')) {
+    return 'crm';
+  }
+
+  // HR alerts
+  if (alertType.includes('probation') || alertType.includes('leave') ||
+      alertType.includes('attendance') || alertType.includes('expense') ||
+      alertType.includes('performance') || alertType.includes('training') ||
+      alertType.includes('salary') || alertType.includes('bonus') ||
+      alertType.includes('birthday') || alertType.includes('anniversary')) {
+    return 'hr';
+  }
+
+  // Backup alerts
+  if (alertType.includes('backup')) {
+    return 'backup';
+  }
+
+  // Finance alerts
+  if (alertType.includes('finance') || alertType.includes('budget') ||
+      alertType.includes('accounting')) {
+    return 'finance';
+  }
+
+  return 'system';
+}
+
+// Transform SignalR notification to frontend Notification format
+function mapSignalRNotification(rawNotification: Record<string, unknown>): Notification {
+  const data = (rawNotification.data || rawNotification.Data) as Record<string, object> | undefined;
+  const metadata = (rawNotification.metadata || rawNotification.Metadata) as Record<string, object> | undefined;
+  const combinedData = { ...metadata, ...data };
+
+  return {
+    id: String(rawNotification.id || rawNotification.Id || crypto.randomUUID()),
+    title: String(rawNotification.title || rawNotification.Title || ''),
+    message: String(rawNotification.message || rawNotification.Message || ''),
+    type: mapBackendNotificationType(rawNotification.type as number | string || rawNotification.Type as number | string || 0),
+    category: determineCategory(combinedData),
+    priority: (rawNotification.priority || rawNotification.Priority || 'Normal') as Notification['priority'],
+    isRead: false, // SignalR notifications are always unread initially
+    createdAt: String(rawNotification.createdAt || rawNotification.CreatedAt || new Date().toISOString()),
+    actionUrl: String(rawNotification.actionUrl || rawNotification.ActionUrl || combinedData?.actionUrl || ''),
+    iconName: String(rawNotification.icon || rawNotification.Icon || ''),
+    metadata: combinedData,
+    data: combinedData,
+  } as Notification & { data?: Record<string, object> };
+}
+
 export function useNotificationHub() {
   const { addNotification, fetchUnreadCount } = useNotifications();
 
@@ -14,8 +108,14 @@ export function useNotificationHub() {
     hub: 'notification',
     events: {
       // Receive new notification
-      ReceiveNotification: (notification: Notification & { metadata?: Record<string, any>; data?: Record<string, any>; actionUrl?: string; priority?: string }) => {
-        logger.info('Received notification:', notification);
+      ReceiveNotification: (rawNotification: Record<string, unknown>) => {
+        logger.info('Received raw notification:', rawNotification);
+
+        // Map to frontend format
+        const notification = mapSignalRNotification(rawNotification);
+        logger.info('Mapped notification:', notification);
+
+        // Add to store
         addNotification(notification);
 
         // Show toast for important notifications
