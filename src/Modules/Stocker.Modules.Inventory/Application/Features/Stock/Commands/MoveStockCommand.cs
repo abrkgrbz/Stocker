@@ -1,6 +1,5 @@
 using FluentValidation;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Enums;
@@ -67,40 +66,10 @@ public class MoveStockCommandHandler : IRequestHandler<MoveStockCommand, Result<
 
     public async Task<Result<StockMovementDto>> Handle(MoveStockCommand request, CancellationToken cancellationToken)
     {
-        const int maxRetries = 3;
-
-        for (int attempt = 0; attempt < maxRetries; attempt++)
-        {
-            try
-            {
-                await _unitOfWork.BeginTransactionAsync(cancellationToken);
-
-                var result = await ExecuteCore(request, cancellationToken);
-
-                if (result.IsFailure)
-                {
-                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-                    return result;
-                }
-
-                await _unitOfWork.CommitTransactionAsync(cancellationToken);
-                return result;
-            }
-            catch (DbUpdateConcurrencyException) when (attempt < maxRetries - 1)
-            {
-                await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-                continue;
-            }
-            catch (Exception)
-            {
-                if (_unitOfWork.HasActiveTransaction)
-                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-                throw;
-            }
-        }
-
-        return Result<StockMovementDto>.Failure(
-            Error.Validation("Concurrency.MaxRetries", "İşlem eşzamanlılık çakışması nedeniyle tamamlanamadı. Lütfen tekrar deneyin."));
+        // Note: NpgsqlRetryingExecutionStrategy handles transient failures automatically.
+        // Manual transaction management conflicts with EF Core's retry strategy.
+        // All operations within SaveChangesAsync are wrapped in an implicit transaction.
+        return await ExecuteCore(request, cancellationToken);
     }
 
     private async Task<Result<StockMovementDto>> ExecuteCore(MoveStockCommand request, CancellationToken cancellationToken)

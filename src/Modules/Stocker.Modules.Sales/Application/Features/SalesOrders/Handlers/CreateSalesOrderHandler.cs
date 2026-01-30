@@ -1,6 +1,5 @@
 using MassTransit;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.Modules.Sales.Application.Features.SalesOrders.Commands;
@@ -57,7 +56,6 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
     public async Task<Result<SalesOrderDto>> Handle(CreateSalesOrderCommand request, CancellationToken cancellationToken)
     {
         var tenantId = _unitOfWork.TenantId;
-        const int maxRetries = 3;
 
         _logger.LogInformation("Creating sales order for tenant {TenantId}, customer {CustomerId}",
             tenantId, request.CustomerId);
@@ -216,22 +214,20 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // ATOMIC TRANSACTION: All Sales DB operations in a single transaction
+        // ATOMIC TRANSACTION: All Sales DB operations in a single implicit transaction
+        // Note: NpgsqlRetryingExecutionStrategy handles transient failures automatically.
+        // Manual transaction management conflicts with EF Core's retry strategy.
         // ═══════════════════════════════════════════════════════════════════════════
         var stockWasReserved = false;
         SalesOrder? order = null;
         string? orderNumber = null;
 
-        for (int attempt = 0; attempt < maxRetries; attempt++)
+        try
         {
-            try
-            {
-                await _unitOfWork.BeginTransactionAsync(cancellationToken);
-
-                // ═══════════════════════════════════════════════════════════════════
-                // STEP 5: Create Sales Order
-                // ═══════════════════════════════════════════════════════════════════
-                orderNumber = await _unitOfWork.SalesOrders.GenerateOrderNumberAsync(cancellationToken);
+            // ═══════════════════════════════════════════════════════════════════
+            // STEP 5: Create Sales Order
+            // ═══════════════════════════════════════════════════════════════════
+            orderNumber = await _unitOfWork.SalesOrders.GenerateOrderNumberAsync(cancellationToken);
 
                 var orderResult = SalesOrder.Create(
                     tenantId,
@@ -244,7 +240,6 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
 
                 if (!orderResult.IsSuccess)
                 {
-                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
                     return Result<SalesOrderDto>.Failure(orderResult.Error!);
                 }
 
@@ -349,7 +344,6 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
 
                     if (!itemResult.IsSuccess)
                     {
-                        await _unitOfWork.RollbackTransactionAsync(cancellationToken);
                         return Result<SalesOrderDto>.Failure(itemResult.Error!);
                     }
 
@@ -369,7 +363,6 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
 
                         if (!itemDiscountResult.IsSuccess)
                         {
-                            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
                             _logger.LogWarning(
                                 "Item discount validation failed for coupon {CouponCode}: {Error}",
                                 itemCmd.CouponCode, itemDiscountResult.Error?.Description);
@@ -423,7 +416,6 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
 
                         if (!multiResult.IsSuccess)
                         {
-                            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
                             return Result<SalesOrderDto>.Failure(multiResult.Error!);
                         }
 
@@ -442,7 +434,6 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
 
                         if (!singleResult.IsSuccess)
                         {
-                            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
                             return Result<SalesOrderDto>.Failure(singleResult.Error!);
                         }
 
@@ -560,59 +551,34 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
 
                 // ═══════════════════════════════════════════════════════════════════
                 // SINGLE COMMIT: All Sales DB changes in one atomic operation
+                // NpgsqlRetryingExecutionStrategy wraps SaveChangesAsync in implicit transaction
                 // ═══════════════════════════════════════════════════════════════════
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
-                await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
-                _logger.LogInformation("Sales order {OrderNumber} committed for tenant {TenantId}",
+                _logger.LogInformation("Sales order {OrderNumber} saved for tenant {TenantId}",
                     orderNumber, tenantId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create sales order for tenant {TenantId}", tenantId);
 
-                break; // Success, exit retry loop
-            }
-            catch (DbUpdateConcurrencyException ex) when (attempt < maxRetries - 1)
+            // Compensate inventory reservation if it was already committed
+            if (stockWasReserved && order != null)
             {
-                _logger.LogWarning(ex,
-                    "Concurrency conflict on attempt {Attempt} for order creation. Retrying...",
-                    attempt + 1);
-
-                if (_unitOfWork.HasActiveTransaction)
-                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-
-                // Compensate inventory reservation if it was already committed
-                if (stockWasReserved && order != null)
+                try
                 {
                     await _inventoryService.ReleaseReservedStockAsync(order.Id, tenantId, cancellationToken);
-                    stockWasReserved = false;
+                    _logger.LogInformation("Compensated stock reservation for failed order {OrderId}", order.Id);
                 }
-
-                order = null;
-                orderNumber = null;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to create sales order for tenant {TenantId}", tenantId);
-
-                if (_unitOfWork.HasActiveTransaction)
-                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-
-                // Compensate inventory reservation if it was already committed
-                if (stockWasReserved && order != null)
+                catch (Exception compensationEx)
                 {
-                    try
-                    {
-                        await _inventoryService.ReleaseReservedStockAsync(order.Id, tenantId, cancellationToken);
-                        _logger.LogInformation("Compensated stock reservation for failed order {OrderId}", order.Id);
-                    }
-                    catch (Exception compensationEx)
-                    {
-                        _logger.LogCritical(compensationEx,
-                            "CRITICAL: Failed to compensate stock reservation for order {OrderId}. Manual intervention required.",
-                            order.Id);
-                    }
+                    _logger.LogCritical(compensationEx,
+                        "CRITICAL: Failed to compensate stock reservation for order {OrderId}. Manual intervention required.",
+                        order.Id);
                 }
-
-                throw;
             }
+
+            throw;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
