@@ -161,7 +161,7 @@ export default function TenantCreationProgress() {
         router.push('/login?message=tenant-created');
       });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   // Call verify-email API after SignalR is connected
@@ -303,7 +303,7 @@ export default function TenantCreationProgress() {
         });
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Check if we have required params
@@ -313,11 +313,11 @@ export default function TenantCreationProgress() {
   // Error states with new theme
   if (!hasRequiredParams) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-black p-4">
+      <div className="w-full flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full text-center border border-slate-200"
+          className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full text-center"
         >
           <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
             <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -339,11 +339,11 @@ export default function TenantCreationProgress() {
 
   if (connectionError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-black p-4">
+      <div className="w-full flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full text-center border border-slate-200"
+          className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full text-center"
         >
           <div className="w-20 h-20 mx-auto mb-6 bg-amber-100 rounded-full flex items-center justify-center">
             <svg className="w-10 h-10 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -365,11 +365,11 @@ export default function TenantCreationProgress() {
 
   if (progress.hasError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-black p-4">
+      <div className="w-full flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full text-center border border-slate-200"
+          className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full text-center"
         >
           <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
             <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -405,19 +405,12 @@ export default function TenantCreationProgress() {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-black p-4 relative overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-slate-800/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-slate-700/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-slate-800/10 rounded-full blur-3xl" />
-      </div>
-
+    <div className="w-full">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative bg-white p-8 rounded-2xl shadow-2xl max-w-xl w-full border border-slate-200"
+        className="relative bg-white p-8 rounded-2xl border border-slate-200 shadow-sm"
       >
         {/* Header */}
         <div className="text-center mb-8">
@@ -521,22 +514,20 @@ export default function TenantCreationProgress() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: stepIndex * 0.05 }}
-                className={`flex items-center gap-2 p-3 rounded-xl transition-all duration-300 ${
-                  isCurrent
-                    ? 'bg-slate-900 text-white shadow-lg'
-                    : isCompleted
+                className={`flex items-center gap-2 p-3 rounded-xl transition-all duration-300 ${isCurrent
+                  ? 'bg-slate-900 text-white shadow-lg'
+                  : isCompleted
                     ? 'bg-emerald-50 border border-emerald-200'
                     : 'bg-slate-50 border border-slate-100'
-                }`}
+                  }`}
               >
                 <div
-                  className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm ${
-                    isCompleted
-                      ? 'bg-emerald-500 text-white'
-                      : isCurrent
+                  className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm ${isCompleted
+                    ? 'bg-emerald-500 text-white'
+                    : isCurrent
                       ? 'bg-white/20 text-white'
                       : 'bg-slate-200 text-slate-400'
-                  }`}
+                    }`}
                 >
                   {isCompleted ? (
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -547,13 +538,12 @@ export default function TenantCreationProgress() {
                   )}
                 </div>
                 <span
-                  className={`text-xs font-medium leading-tight ${
-                    isCompleted
-                      ? 'text-emerald-700'
-                      : isCurrent
+                  className={`text-xs font-medium leading-tight ${isCompleted
+                    ? 'text-emerald-700'
+                    : isCurrent
                       ? 'text-white'
                       : 'text-slate-500'
-                  }`}
+                    }`}
                 >
                   {config.message}
                 </span>

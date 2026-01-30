@@ -8,6 +8,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Dropdown } from 'antd';
 import {
   ArrowPathIcon,
   CheckCircleIcon,
@@ -102,7 +103,6 @@ export default function InvoicesPage() {
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [bulkLoading, setBulkLoading] = useState(false);
-  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
 
@@ -129,7 +129,6 @@ export default function InvoicesPage() {
     try {
       await issueInvoice.mutateAsync(id);
       showSuccess('Başarılı', 'Fatura kesildi');
-      setOpenDropdownId(null);
     } catch {
       showError('Fatura kesme başarısız');
     }
@@ -139,7 +138,6 @@ export default function InvoicesPage() {
     try {
       await sendInvoice.mutateAsync(id);
       showSuccess('Başarılı', 'Fatura gönderildi');
-      setOpenDropdownId(null);
     } catch {
       showError('Gönderim başarısız');
     }
@@ -155,7 +153,6 @@ export default function InvoicesPage() {
       try {
         await cancelInvoice.mutateAsync(invoice.id);
         showSuccess('Başarılı', 'Fatura iptal edildi');
-        setOpenDropdownId(null);
       } catch {
         showError('İptal işlemi başarısız');
       }
@@ -168,7 +165,6 @@ export default function InvoicesPage() {
       try {
         await deleteInvoice.mutateAsync(invoice.id);
         showSuccess('Başarılı', 'Fatura silindi');
-        setOpenDropdownId(null);
       } catch {
         showError('Silme işlemi başarısız');
       }
@@ -654,90 +650,74 @@ export default function InvoicesPage() {
                         </span>
                       </td>
                       <td className="px-4 py-4 relative">
-                        <button
-                          onClick={() => setOpenDropdownId(openDropdownId === invoice.id ? null : invoice.id)}
-                          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+                        <Dropdown
+                          menu={{
+                            items: [
+                              {
+                                key: 'view',
+                                label: 'Görüntüle',
+                                icon: <EyeIcon className="w-4 h-4" />,
+                                onClick: () => router.push(`/sales/invoices/${invoice.id}`),
+                              },
+                              ...(invoice.status === 'Draft' ? [
+                                {
+                                  key: 'edit',
+                                  label: 'Düzenle',
+                                  icon: <PencilIcon className="w-4 h-4" />,
+                                  onClick: () => router.push(`/sales/invoices/${invoice.id}/edit`),
+                                },
+                                {
+                                  key: 'issue',
+                                  label: 'Kes',
+                                  icon: <CheckCircleIcon className="w-4 h-4" />,
+                                  onClick: () => handleIssue(invoice.id),
+                                },
+                                {
+                                  type: 'divider' as const,
+                                },
+                                {
+                                  key: 'delete',
+                                  label: 'Sil',
+                                  icon: <TrashIcon className="w-4 h-4" />,
+                                  danger: true,
+                                  onClick: () => handleDelete(invoice),
+                                },
+                              ] : []),
+                              ...(invoice.status === 'Issued' ? [
+                                {
+                                  key: 'send',
+                                  label: 'Gönder',
+                                  icon: <EnvelopeIcon className="w-4 h-4" />,
+                                  onClick: () => handleSend(invoice.id),
+                                },
+                              ] : []),
+                              ...(invoice.status !== 'Cancelled' && invoice.status !== 'Paid' && invoice.status !== 'Draft' ? [
+                                {
+                                  key: 'cancel',
+                                  label: 'İptal Et',
+                                  icon: <XCircleIcon className="w-4 h-4" />,
+                                  danger: true,
+                                  onClick: () => handleCancel(invoice),
+                                },
+                              ] : []),
+                              ...(invoice.status === 'Cancelled' ? [
+                                {
+                                  key: 'delete',
+                                  label: 'Sil',
+                                  icon: <TrashIcon className="w-4 h-4" />,
+                                  danger: true,
+                                  onClick: () => handleDelete(invoice),
+                                },
+                              ] : []),
+                            ]
+                          }}
+                          trigger={['click']}
+                          placement="bottomRight"
                         >
-                          <EllipsisHorizontalIcon className="w-4 h-4" />
-                        </button>
-                        {openDropdownId === invoice.id && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-10"
-                              onClick={() => setOpenDropdownId(null)}
-                            />
-                            <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-20">
-                              <div className="py-1">
-                                <button
-                                  onClick={() => {
-                                    router.push(`/sales/invoices/${invoice.id}`);
-                                    setOpenDropdownId(null);
-                                  }}
-                                  className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                                >
-                                  <EyeIcon className="w-4 h-4" />
-                                  Görüntüle
-                                </button>
-                                {invoice.status === 'Draft' && (
-                                  <>
-                                    <button
-                                      onClick={() => {
-                                        router.push(`/sales/invoices/${invoice.id}/edit`);
-                                        setOpenDropdownId(null);
-                                      }}
-                                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                                    >
-                                      <PencilIcon className="w-4 h-4" />
-                                      Düzenle
-                                    </button>
-                                    <button
-                                      onClick={() => handleIssue(invoice.id)}
-                                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                                    >
-                                      <CheckCircleIcon className="w-4 h-4" />
-                                      Kes
-                                    </button>
-                                    <div className="border-t border-slate-100 my-1" />
-                                    <button
-                                      onClick={() => handleDelete(invoice)}
-                                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                                    >
-                                      <TrashIcon className="w-4 h-4" />
-                                      Sil
-                                    </button>
-                                  </>
-                                )}
-                                {invoice.status === 'Issued' && (
-                                  <button
-                                    onClick={() => handleSend(invoice.id)}
-                                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                                  >
-                                    <EnvelopeIcon className="w-4 h-4" />
-                                    Gönder
-                                  </button>
-                                )}
-                                {invoice.status !== 'Cancelled' && invoice.status !== 'Paid' && invoice.status !== 'Draft' && (
-                                  <button
-                                    onClick={() => handleCancel(invoice)}
-                                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                                  >
-                                    <XCircleIcon className="w-4 h-4" />
-                                    İptal Et
-                                  </button>
-                                )}
-                                {invoice.status === 'Cancelled' && (
-                                  <button
-                                    onClick={() => handleDelete(invoice)}
-                                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                                  >
-                                    <TrashIcon className="w-4 h-4" />
-                                    Sil
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          </>
-                        )}
+                          <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+                            <EllipsisHorizontalIcon className="w-4 h-4" />
+                          </button>
+                        </Dropdown>
                       </td>
                     </tr>
                   ))}
