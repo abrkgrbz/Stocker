@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Stocker.Domain.Master.Entities;
+using Stocker.Domain.Master.Entities.CMS;
 using Stocker.Domain.Entities.Settings;
 
 namespace Stocker.Application.Common.Interfaces;
@@ -77,6 +78,13 @@ public interface IMasterDbContext
     // Subscription & Tenant Management
     DbSet<SubscriptionUsage> SubscriptionUsages { get; }
     DbSet<TenantLimits> TenantLimits { get; }
+
+    // CMS entities
+    DbSet<CmsPage> CmsPages { get; }
+    DbSet<BlogPost> BlogPosts { get; }
+    DbSet<BlogCategory> BlogCategories { get; }
+    DbSet<DocItem> DocItems { get; }
+    DbSet<CmsMedia> CmsMedia { get; }
 
     // All entities requiring tenant isolation have been moved to Tenant DB
     // Data Migration entities moved to Tenant DB for proper tenant isolation

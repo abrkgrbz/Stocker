@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Stocker.Domain.Common.Entities;
 using Stocker.Domain.Master.Entities;
+using Stocker.Domain.Master.Entities.CMS;
 using Stocker.Domain.Master.Entities.GeoLocation;
 using Stocker.Domain.Entities.Settings;
 using Stocker.Domain.Entities.Migration;
@@ -126,6 +127,13 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
     // Outbox Pattern (for reliable domain event delivery)
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
+    // CMS entities
+    public DbSet<CmsPage> CmsPages => Set<CmsPage>();
+    public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
+    public DbSet<BlogCategory> BlogCategories => Set<BlogCategory>();
+    public DbSet<DocItem> DocItems => Set<DocItem>();
+    public DbSet<CmsMedia> CmsMedia => Set<CmsMedia>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -133,13 +141,14 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
         // Set schema for master database
         modelBuilder.HasDefaultSchema("master");
         
-        // Apply only Master configurations
+        // Apply only Master configurations (including CMS sub-namespace)
         var masterConfigNamespace = "Stocker.Persistence.Configurations.Master";
         var configurations = GetType().Assembly.GetTypes()
-            .Where(t => t.Namespace == masterConfigNamespace && 
-                       !t.IsAbstract && 
+            .Where(t => t.Namespace != null &&
+                       (t.Namespace == masterConfigNamespace || t.Namespace.StartsWith(masterConfigNamespace + ".")) &&
+                       !t.IsAbstract &&
                        !t.IsGenericTypeDefinition &&
-                       t.GetInterfaces().Any(i => i.IsGenericType && 
+                       t.GetInterfaces().Any(i => i.IsGenericType &&
                                                   i.GetGenericTypeDefinition() == typeof(Microsoft.EntityFrameworkCore.IEntityTypeConfiguration<>)))
             .ToList();
 

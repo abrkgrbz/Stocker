@@ -255,6 +255,9 @@ public static class ServiceCollectionExtensions
         // Register Profile Image Storage Service
         services.AddScoped<IProfileImageStorageService, MinioProfileImageStorageService>();
 
+        // Register CMS File Storage Service
+        services.AddScoped<IFileStorageService, MinioCmsStorageService>();
+
         return services;
     }
 
