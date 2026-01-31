@@ -98,7 +98,7 @@ public class CMSPagesController : ControllerBase
         // Validate preview secret
         var previewSecret = Environment.GetEnvironmentVariable("CMS_PREVIEW_SECRET");
         if (string.IsNullOrEmpty(previewSecret) || secret != previewSecret)
-            return Unauthorized(ApiResponse<PageDto>.FailureResponse("Invalid preview secret"));
+            return StatusCode(401, ApiResponse<PageDto>.FailureResponse("Invalid preview secret"));
 
         var page = await _repository.GetBySlugAsync(slug, cancellationToken);
         if (page == null)
