@@ -990,6 +990,26 @@ public partial class MigrationService
                 _logger.LogWarning("DEBUG ApplyMigration: CRM pending migrations count: {Count}, Migrations: {Migrations}",
                     crmPendingMigrations.Count, string.Join(", ", crmPendingMigrations));
 
+                // Fix for deleted duplicate migration: Mark as applied if Reminders table already exists
+                // This migration was accidentally duplicated and has been removed from codebase
+                var deletedMigrationId = "20260130190000_AddRemindersTable";
+                if (crmPendingMigrations.Contains(deletedMigrationId))
+                {
+                    _logger.LogWarning("Found deleted migration {MigrationId} in pending list. Checking if Reminders table exists...", deletedMigrationId);
+
+                    var tableExistsQuery = @"SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'crm' AND table_name = 'Reminders')";
+                    var tableExists = await crmDbContext.Database.ExecuteSqlRawAsync(
+                        $"INSERT INTO crm.\"__EFMigrationsHistory\" (\"MigrationId\", \"ProductVersion\") SELECT '{deletedMigrationId}', '9.0.0' WHERE ({tableExistsQuery}) AND NOT EXISTS (SELECT 1 FROM crm.\"__EFMigrationsHistory\" WHERE \"MigrationId\" = '{deletedMigrationId}')",
+                        cancellationToken);
+
+                    _logger.LogInformation("Marked deleted migration {MigrationId} as applied (affected rows: {Rows})", deletedMigrationId, tableExists);
+
+                    // Refresh pending migrations list
+                    crmPending = await crmDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+                    crmPendingMigrations = crmPending.ToList();
+                    _logger.LogInformation("Refreshed CRM pending migrations: {Count}", crmPendingMigrations.Count);
+                }
+
                 if (crmPendingMigrations.Any())
                 {
                     _logger.LogInformation("Applying {Count} CRM migrations to tenant {TenantId}", crmPendingMigrations.Count, tenant.Id);
