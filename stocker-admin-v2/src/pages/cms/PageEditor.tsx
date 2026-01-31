@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     ArrowLeft,
     Save,
@@ -8,31 +10,90 @@ import {
     Settings,
     Eye,
     Calendar,
-    Image as ImageIcon
+    Image as ImageIcon,
+    Loader2
 } from 'lucide-react';
 import { toast } from '../../components/ui/Toast';
+import { cmsService, type Page } from '../../services/cms.service';
 
 export default function PageEditor() {
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const { id } = useParams();
     const isNew = !id;
 
-    const [title, setTitle] = useState(isNew ? '' : 'Örnek Sayfa Başlığı');
-    const [slug, setSlug] = useState(isNew ? '' : 'ornek-sayfa-basligi');
-    const [content, setContent] = useState(isNew ? '' : '<h1>Merhaba Dünya</h1><p>Bu bir örnek sayfa içeriğidir.</p>');
+    // Form States
+    const [title, setTitle] = useState('');
+    const [slug, setSlug] = useState('');
+    const [content, setContent] = useState('');
+    const [status, setStatus] = useState<'published' | 'draft' | 'archived'>('draft');
+    const [metaTitle, setMetaTitle] = useState('');
+    const [metaDescription, setMetaDescription] = useState('');
 
-    const handleSave = () => {
-        // Mock API call simulation
-        toast.info('Kaydediliyor...');
+    // Fetch Page Details
+    const { data: page, isLoading } = useQuery({
+        queryKey: ['page', id],
+        queryFn: () => cmsService.getPage(id!),
+        enabled: !isNew
+    });
 
-        setTimeout(() => {
+    // Populate Form
+    useEffect(() => {
+        if (page) {
+            setTitle(page.title);
+            setSlug(page.slug);
+            setContent(page.content);
+            setStatus(page.status);
+            setMetaTitle(Boolean(page.metaTitle) ? page.metaTitle! : '');
+            setMetaDescription(Boolean(page.metaDescription) ? page.metaDescription! : '');
+        }
+    }, [page]);
+
+    // Create/Update Mutation
+    const saveMutation = useMutation({
+        mutationFn: (data: Partial<Page>) => {
+            return isNew
+                ? cmsService.createPage(data)
+                : cmsService.updatePage(id!, data);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['pages'] });
+            if (!isNew) queryClient.invalidateQueries({ queryKey: ['page', id] });
+
             toast.success(isNew ? 'Sayfa başarıyla oluşturuldu!' : 'Değişiklikler kaydedildi.');
 
             if (isNew) {
                 navigate('/cms/pages');
             }
-        }, 1000);
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Bir hata oluştu.');
+        }
+    });
+
+    const handleSave = () => {
+        if (!title || !slug) {
+            toast.warning('Lütfen başlık ve URL (slug) alanlarını doldurun.');
+            return;
+        }
+
+        saveMutation.mutate({
+            title,
+            slug,
+            content,
+            status,
+            metaTitle,
+            metaDescription
+        });
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 h-[calc(100vh-8rem)] flex flex-col">
@@ -50,7 +111,7 @@ export default function PageEditor() {
                             {isNew ? 'Yeni Sayfa Oluştur' : 'Sayfayı Düzenle'}
                         </h1>
                         <p className="text-xs text-text-muted">
-                            {isNew ? 'Sıfırdan bir sayfa yaratın.' : `Son düzenleme: 2 saat önce`}
+                            {isNew ? 'Sıfırdan bir sayfa yaratın.' : `Son düzenleme: ${page?.updatedAt ? new Date(page.updatedAt).toLocaleString('tr-TR') : '-'} `}
                         </p>
                     </div>
                 </div>
@@ -61,9 +122,10 @@ export default function PageEditor() {
                     </button>
                     <button
                         onClick={handleSave}
-                        className="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-semibold shadow-lg shadow-indigo-500/20 flex items-center gap-2 transition-colors"
+                        disabled={saveMutation.isPending}
+                        className="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold shadow-lg shadow-indigo-500/20 flex items-center gap-2 transition-colors"
                     >
-                        <Save className="w-4 h-4" />
+                        {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         Kaydet
                     </button>
                 </div>
@@ -137,7 +199,11 @@ export default function PageEditor() {
                         <div className="space-y-3">
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-text-muted">Durum</span>
-                                <select className="bg-brand-900 border border-border-subtle rounded-lg px-2 py-1 text-text-main text-xs focus:outline-none focus:border-indigo-500">
+                                <select
+                                    value={status}
+                                    onChange={(e) => setStatus(e.target.value as any)}
+                                    className="bg-brand-900 border border-border-subtle rounded-lg px-2 py-1 text-text-main text-xs focus:outline-none focus:border-indigo-500"
+                                >
                                     <option value="draft">Taslak</option>
                                     <option value="published">Yayında</option>
                                     <option value="archived">Arşiv</option>
@@ -150,7 +216,7 @@ export default function PageEditor() {
                             <div className="pt-3 border-t border-border-subtle">
                                 <div className="text-xs text-text-muted flex items-center gap-2">
                                     <Calendar className="w-3 h-3" />
-                                    Yayınlanma: 26 Oca 2026
+                                    Yayınlanma: {page ? new Date(page.createdAt).toLocaleDateString('tr-TR') : '-'}
                                 </div>
                             </div>
                         </div>
@@ -168,6 +234,8 @@ export default function PageEditor() {
                                 <label className="text-xs text-text-muted">Meta Başlık</label>
                                 <input
                                     type="text"
+                                    value={metaTitle}
+                                    onChange={(e) => setMetaTitle(e.target.value)}
                                     className="w-full bg-brand-900 border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-main focus:outline-none focus:border-indigo-500"
                                     placeholder="Google'da görünecek başlık"
                                 />
@@ -176,6 +244,8 @@ export default function PageEditor() {
                                 <label className="text-xs text-text-muted">Meta Açıklama</label>
                                 <textarea
                                     rows={3}
+                                    value={metaDescription}
+                                    onChange={(e) => setMetaDescription(e.target.value)}
                                     className="w-full bg-brand-900 border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-main focus:outline-none focus:border-indigo-500"
                                     placeholder="Sayfa hakkında kısa açıklama..."
                                 />

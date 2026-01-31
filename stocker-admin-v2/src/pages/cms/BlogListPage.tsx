@@ -1,54 +1,61 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     Search,
     Plus,
-    Filter,
     PenTool,
     Edit3,
     Trash2,
     Eye,
     Calendar,
     User,
-    Tag
+    Tag,
+    Loader2
 } from 'lucide-react';
 import { toast } from '../../components/ui/Toast';
-
-interface BlogPost {
-    id: string;
-    title: string;
-    category: string;
-    status: 'published' | 'draft' | 'scheduled';
-    author: string;
-    publishDate: string;
-    views: number;
-}
-
-// Mock Data
-const initialPosts: BlogPost[] = [
-    { id: '1', title: 'Stok Yönetiminde Yapay Zeka Devrimi', category: 'Teknoloji', status: 'published', author: 'Ahmet Y.', publishDate: '26 Ocak 2026', views: 1250 },
-    { id: '2', title: 'E-Ticaret İçin Depo Optimizasyonu', category: 'E-Ticaret', status: 'published', author: 'Selin K.', publishDate: '24 Ocak 2026', views: 890 },
-    { id: '3', title: '2026 Gümrük Mevzuatı Değişiklikleri', category: 'Mevzuat', status: 'draft', author: 'Mehmet D.', publishDate: '-', views: 0 },
-    { id: '4', title: 'Tedarik Zinciri Kırılmaları Nasıl Önlenir?', category: 'Operasyon', status: 'scheduled', author: 'Ahmet Y.', publishDate: '1 Şubat 2026', views: 0 },
-];
+import { cmsService, type BlogPost } from '../../services/cms.service';
 
 export default function BlogListPage() {
     const navigate = useNavigate();
-    const [posts, setPosts] = useState<BlogPost[]>(initialPosts);
+    const queryClient = useQueryClient();
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('all');
+
+    // Fetch Posts
+    const { data: posts = [], isLoading } = useQuery({
+        queryKey: ['posts'],
+        queryFn: async () => {
+            const response = await cmsService.getPosts();
+            return Array.isArray(response) ? response : (response as any).data || [];
+        }
+    });
+
+    // Delete Mutation
+    const deleteMutation = useMutation({
+        mutationFn: cmsService.deletePost,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['posts'] });
+            toast.success('Yazı başarıyla silindi.');
+        },
+        onError: () => {
+            toast.error('Yazı silinirken bir hata oluştu.');
+        }
+    });
 
     const handleDelete = (id: string) => {
         if (window.confirm('Bu yazıyı silmek istediğinize emin misiniz?')) {
-            setPosts(prev => prev.filter(p => p.id !== id));
-            toast.success('Yazı başarıyla silindi.');
+            deleteMutation.mutate(id);
         }
     };
 
-    const filteredPosts = posts.filter(post =>
-        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.category.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredPosts = posts.filter((post: BlogPost) => {
+        const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            post.category.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory = selectedCategory === 'all' || post.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+    });
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -67,6 +74,14 @@ export default function BlogListPage() {
             default: return status;
         }
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -101,17 +116,22 @@ export default function BlogListPage() {
                     />
                 </div>
                 <div className="flex gap-2">
-                    <select className="bg-brand-900/50 border border-border-subtle rounded-lg py-2 px-3 text-sm text-text-main focus:outline-none focus:border-purple-500/50">
+                    <select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        className="bg-brand-900/50 border border-border-subtle rounded-lg py-2 px-3 text-sm text-text-main focus:outline-none focus:border-purple-500/50"
+                    >
                         <option value="all">Tüm Kategoriler</option>
                         <option value="tech">Teknoloji</option>
                         <option value="ecommerce">E-Ticaret</option>
+                        <option value="news">Haberler</option>
                     </select>
                 </div>
             </div>
 
             {/* Grid Layout for Blog Posts */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredPosts.map((post) => (
+                {filteredPosts.map((post: BlogPost) => (
                     <motion.div
                         key={post.id}
                         initial={{ opacity: 0, y: 20 }}
@@ -120,9 +140,13 @@ export default function BlogListPage() {
                     >
                         {/* Fake Cover Image */}
                         <div className="h-48 bg-brand-900/50 relative">
-                            <div className="absolute inset-0 flex items-center justify-center text-brand-800">
-                                <PenTool className="w-12 h-12 opacity-20" />
-                            </div>
+                            {post.featuredImage ? (
+                                <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="absolute inset-0 flex items-center justify-center text-brand-800">
+                                    <PenTool className="w-12 h-12 opacity-20" />
+                                </div>
+                            )}
                             <div className="absolute top-4 right-4">
                                 <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(post.status)}`}>
                                     {getStatusLabel(post.status)}
@@ -144,18 +168,18 @@ export default function BlogListPage() {
                             <div className="flex items-center justify-between text-xs text-text-muted">
                                 <div className="flex items-center gap-2">
                                     <User className="w-3 h-3" />
-                                    {post.author}
+                                    {post.author?.name || '-'}
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Calendar className="w-3 h-3" />
-                                    {post.publishDate}
+                                    {new Date(post.publishDate || post.createdAt).toLocaleDateString('tr-TR')}
                                 </div>
                             </div>
 
                             <div className="pt-4 border-t border-border-subtle flex items-center justify-between">
                                 <div className="flex items-center gap-1 text-text-muted text-xs">
                                     <Eye className="w-3 h-3" />
-                                    {post.views} okunma
+                                    {post.views || 0} okunma
                                 </div>
                                 <div className="flex gap-2">
                                     <button
@@ -176,6 +200,11 @@ export default function BlogListPage() {
                     </motion.div>
                 ))}
             </div>
+            {filteredPosts.length === 0 && (
+                <div className="p-8 text-center text-text-muted col-span-full">
+                    Aradığınız kriterlere uygun yazı bulunamadı.
+                </div>
+            )}
         </div>
     );
 }

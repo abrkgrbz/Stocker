@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     ArrowLeft,
     Save,
@@ -7,27 +8,119 @@ import {
     FileText,
     Folder,
     Book,
-    Hash
+    Hash,
+    Loader2
 } from 'lucide-react';
 import { toast } from '../../components/ui/Toast';
+import { cmsService, type DocItem } from '../../services/cms.service';
 
 export default function DocsEditor() {
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const { id } = useParams();
+    const [searchParams] = useSearchParams();
+    const parentIdParam = searchParams.get('parent');
     const isNew = !id;
 
-    const [title, setTitle] = useState(isNew ? '' : 'Kurulum Kılavuzu');
-    const [slug, setSlug] = useState(isNew ? '' : 'kurulum-kilavuzu');
-    const [content, setContent] = useState(isNew ? '' : '# Kurulum\n\nBu doküman projenin nasıl kurulacağını anlatır...');
-    const [parentFolder, setParentFolder] = useState(isNew ? 'getting-started' : 'getting-started');
+    const [title, setTitle] = useState('');
+    const [slug, setSlug] = useState('');
+    const [content, setContent] = useState('');
+    const [parentId, setParentId] = useState<string>(parentIdParam || 'root');
+    const [type, setType] = useState<'file' | 'folder'>('file');
+
+    // Fetch Doc Details if editing
+    const { data: doc, isLoading } = useQuery({
+        queryKey: ['doc', id],
+        queryFn: () => cmsService.getDoc(id!),
+        enabled: !isNew
+    });
+
+    // Fetch all docs to populate parent folder selection (flattening simplistic approach for this example)
+    const { data: allDocs = [] } = useQuery({
+        queryKey: ['docs'],
+        queryFn: async () => {
+            const response = await cmsService.getDocs();
+            return Array.isArray(response) ? response : (response as any).data || [];
+        }
+    });
+
+    // Populate Form
+    useEffect(() => {
+        if (doc) {
+            setTitle(doc.title);
+            setSlug(doc.slug);
+            setContent(doc.content || '');
+            setParentId(doc.parentId || 'root');
+            setType(doc.type);
+        }
+    }, [doc]);
+
+    // Create/Update Mutation
+    const saveMutation = useMutation({
+        mutationFn: (data: Partial<DocItem>) => {
+            return isNew
+                ? cmsService.createDoc(data)
+                : cmsService.updateDoc(id!, data);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['docs'] });
+            if (!isNew) queryClient.invalidateQueries({ queryKey: ['doc', id] });
+
+            toast.success(isNew ? 'Doküman başarıyla oluşturuldu!' : 'Değişiklikler kaydedildi.');
+
+            if (isNew) {
+                navigate('/cms/docs');
+            }
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Bir hata oluştu.');
+        }
+    });
 
     const handleSave = () => {
-        toast.info('Kaydediliyor...');
-        setTimeout(() => {
-            toast.success(isNew ? 'Doküman başarıyla oluşturuldu!' : 'Değişiklikler kaydedildi.');
-            if (isNew) navigate('/cms/docs');
-        }, 1000);
+        if (!title || !slug) {
+            toast.warning('Lütfen başlık ve URL (slug) alanlarını doldurun.');
+            return;
+        }
+
+        const data: Partial<DocItem> = {
+            title,
+            slug,
+            type,
+            parentId: parentId === 'root' ? null : parentId,
+            order: 0, // Default order
+        };
+
+        if (type === 'file') {
+            data.content = content;
+        }
+
+        saveMutation.mutate(data);
     };
+
+    // Helper to flatten docs for select dropdown (only folders)
+    const getFolders = (items: DocItem[], level = 0): { id: string, title: string, level: number }[] => {
+        let folders: { id: string, title: string, level: number }[] = [];
+        items.forEach(item => {
+            if (item.type === 'folder' && item.id !== id) { // Prevent selecting itself as parent
+                folders.push({ id: item.id, title: item.title, level });
+                if (item.children) {
+                    folders = [...folders, ...getFolders(item.children, level + 1)];
+                }
+            }
+        });
+        return folders;
+    };
+
+    const folders = getFolders(allDocs);
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 h-[calc(100vh-8rem)] flex flex-col">
@@ -45,7 +138,7 @@ export default function DocsEditor() {
                             {isNew ? 'Yeni Doküman' : 'Dokümanı Düzenle'}
                         </h1>
                         <p className="text-xs text-text-muted">
-                            {isNew ? 'Bilgi bankasına yeni içerik ekleyin.' : `Yol: /docs/getting-started/kurulum`}
+                            {isNew ? 'Bilgi bankasına yeni içerik ekleyin.' : `Son düzenleme: ${doc?.updatedAt ? new Date(doc.updatedAt).toLocaleString('tr-TR') : '-'}`}
                         </p>
                     </div>
                 </div>
@@ -56,9 +149,10 @@ export default function DocsEditor() {
                     </button>
                     <button
                         onClick={handleSave}
-                        className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-lg shadow-emerald-500/20 flex items-center gap-2 transition-colors"
+                        disabled={saveMutation.isPending}
+                        className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold shadow-lg shadow-emerald-500/20 flex items-center gap-2 transition-colors"
                     >
-                        <Save className="w-4 h-4" />
+                        {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         Kaydet
                     </button>
                 </div>
@@ -69,18 +163,28 @@ export default function DocsEditor() {
                 <div className="flex-1 flex flex-col gap-4 min-h-0 overflow-y-auto pr-2 custom-scrollbar">
                     {/* Title & Slug */}
                     <div className="glass-card p-6 rounded-2xl border border-border-subtle space-y-4 shrink-0">
-                        <div>
-                            <input
-                                type="text"
-                                placeholder="Doküman Başlığı"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                className="w-full bg-transparent text-3xl font-bold text-white placeholder:text-slate-600 focus:outline-none"
-                            />
+                        <div className="flex gap-4">
+                            <div className="flex-1">
+                                <input
+                                    type="text"
+                                    placeholder="Doküman Başlığı"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    className="w-full bg-transparent text-3xl font-bold text-white placeholder:text-slate-600 focus:outline-none"
+                                />
+                            </div>
+                            <select
+                                value={type}
+                                onChange={(e) => setType(e.target.value as 'file' | 'folder')}
+                                className="bg-brand-900 border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-main focus:outline-none focus:border-emerald-500 h-fit"
+                            >
+                                <option value="file">Dosya</option>
+                                <option value="folder">Klasör</option>
+                            </select>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-text-muted">
                             <Book className="w-4 h-4" />
-                            <span className="opacity-50">/docs/{parentFolder}/</span>
+                            <span className="opacity-50">/docs/{parentId === 'root' ? '' : '.../'}</span>
                             <input
                                 type="text"
                                 placeholder="slug"
@@ -91,33 +195,35 @@ export default function DocsEditor() {
                         </div>
                     </div>
 
-                    {/* Markdown Editor Placeholder */}
-                    <div className="glass-card p-1 rounded-2xl border border-border-subtle flex-1 flex flex-col min-h-[500px]">
-                        {/* Editor Toolbar */}
-                        <div className="p-3 border-b border-border-subtle flex items-center gap-2 overflow-x-auto text-text-muted">
-                            <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white font-bold">B</button>
-                            <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white italic">I</button>
-                            <div className="w-px h-4 bg-border-subtle mx-1" />
-                            <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white flex items-center gap-1">
-                                <Hash className="w-3 h-3" /> H1
-                            </button>
-                            <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white flex items-center gap-1">
-                                <Hash className="w-3 h-3" /> H2
-                            </button>
-                            <div className="w-px h-4 bg-border-subtle mx-1" />
-                            <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white text-xs font-mono">
-                                {"</> Code"}
-                            </button>
-                        </div>
+                    {/* Markdown Editor Placeholder (Only for files) */}
+                    {type === 'file' && (
+                        <div className="glass-card p-1 rounded-2xl border border-border-subtle flex-1 flex flex-col min-h-[500px]">
+                            {/* Editor Toolbar */}
+                            <div className="p-3 border-b border-border-subtle flex items-center gap-2 overflow-x-auto text-text-muted">
+                                <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white font-bold">B</button>
+                                <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white italic">I</button>
+                                <div className="w-px h-4 bg-border-subtle mx-1" />
+                                <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white flex items-center gap-1">
+                                    <Hash className="w-3 h-3" /> H1
+                                </button>
+                                <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white flex items-center gap-1">
+                                    <Hash className="w-3 h-3" /> H2
+                                </button>
+                                <div className="w-px h-4 bg-border-subtle mx-1" />
+                                <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white text-xs font-mono">
+                                    {"</> Code"}
+                                </button>
+                            </div>
 
-                        {/* Editor Content Area */}
-                        <textarea
-                            className="flex-1 w-full bg-transparent p-6 text-text-main focus:outline-none resize-none font-mono text-sm leading-relaxed"
-                            placeholder="# İçeriğinizi Markdown formatında yazın..."
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                        />
-                    </div>
+                            {/* Editor Content Area */}
+                            <textarea
+                                className="flex-1 w-full bg-transparent p-6 text-text-main focus:outline-none resize-none font-mono text-sm leading-relaxed"
+                                placeholder="# İçeriğinizi Markdown formatında yazın..."
+                                value={content}
+                                onChange={(e) => setContent(e.target.value)}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 {/* Sidebar Settings */}
@@ -133,14 +239,16 @@ export default function DocsEditor() {
                             <div className="space-y-1">
                                 <label className="text-xs text-text-muted">Üst Klasör</label>
                                 <select
-                                    value={parentFolder}
-                                    onChange={(e) => setParentFolder(e.target.value)}
+                                    value={parentId}
+                                    onChange={(e) => setParentId(e.target.value)}
                                     className="w-full bg-brand-900 border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-main focus:outline-none focus:border-emerald-500"
                                 >
                                     <option value="root">/ (Kök Dizin)</option>
-                                    <option value="getting-started">Başlarken</option>
-                                    <option value="api-reference">API Referansı</option>
-                                    <option value="guides">Rehberler</option>
+                                    {folders.map(folder => (
+                                        <option key={folder.id} value={folder.id}>
+                                            {'-'.repeat(folder.level)} {folder.title}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
@@ -155,12 +263,10 @@ export default function DocsEditor() {
 
                         <div className="space-y-3">
                             <div className="flex items-center justify-between text-sm">
-                                <span className="text-text-muted">Versiyon</span>
-                                <span className="text-white font-mono text-xs bg-white/5 px-2 py-1 rounded">v2.1.0</span>
-                            </div>
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-text-muted">Okuma Süresi</span>
-                                <span className="text-white text-xs">5 dk</span>
+                                <span className="text-text-muted">Oluşturulma</span>
+                                <span className="text-white font-mono text-xs bg-white/5 px-2 py-1 rounded">
+                                    {doc ? new Date(doc.createdAt).toLocaleDateString('tr-TR') : '-'}
+                                </span>
                             </div>
                         </div>
                     </div>

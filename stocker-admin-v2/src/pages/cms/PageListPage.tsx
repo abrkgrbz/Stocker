@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     Search,
     Plus,
@@ -9,46 +10,55 @@ import {
     Edit3,
     Trash2,
     CheckCircle,
-    Globe
+    Globe,
+    Loader2
 } from 'lucide-react';
 import { toast } from '../../components/ui/Toast';
-
-interface Page {
-    id: string;
-    title: string;
-    slug: string;
-    status: 'published' | 'draft';
-    lastModified: string;
-    author: string;
-    views: number;
-}
-
-// Mock Data
-const initialPages: Page[] = [
-    { id: '1', title: 'Ana Sayfa', slug: '/', status: 'published', lastModified: '2 saat önce', author: 'Ahmet Y.', views: 12500 },
-    { id: '2', title: 'Hakkımızda', slug: '/about', status: 'published', lastModified: '1 gün önce', author: 'Selin K.', views: 3400 },
-    { id: '3', title: 'İletişim', slug: '/contact', status: 'published', lastModified: '3 gün önce', author: 'Mehmet D.', views: 2100 },
-    { id: '4', title: 'Gizlilik Politikası', slug: '/privacy', status: 'published', lastModified: '1 hafta önce', author: 'Ahmet Y.', views: 890 },
-    { id: '5', title: 'Kullanım Şartları', slug: '/terms', status: 'published', lastModified: '1 hafta önce', author: 'Ahmet Y.', views: 750 },
-    { id: '6', title: 'Kariyer', slug: '/careers', status: 'draft', lastModified: '2 gün önce', author: 'Selin K.', views: 0 },
-];
+import { cmsService, type Page } from '../../services/cms.service';
 
 export default function PageListPage() {
     const navigate = useNavigate();
-    const [pages, setPages] = useState<Page[]>(initialPages);
+    const queryClient = useQueryClient();
     const [searchQuery, setSearchQuery] = useState('');
+
+    const { data: pages = [], isLoading } = useQuery({
+        queryKey: ['pages'],
+        queryFn: async () => {
+            const response = await cmsService.getPages();
+            // Handle potential array wrapping or different response structure
+            return Array.isArray(response) ? response : (response as any).data || [];
+        }
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: cmsService.deletePage,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['pages'] });
+            toast.success('Sayfa başarıyla silindi.');
+        },
+        onError: () => {
+            toast.error('Sayfa silinirken bir hata oluştu.');
+        }
+    });
 
     const handleDelete = (id: string) => {
         if (window.confirm('Bu sayfayı silmek istediğinize emin misiniz?')) {
-            setPages(prev => prev.filter(p => p.id !== id));
-            toast.success('Sayfa başarıyla silindi.');
+            deleteMutation.mutate(id);
         }
     };
 
-    const filteredPages = pages.filter(page =>
+    const filteredPages = pages.filter((page: Page) =>
         page.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         page.slug.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -106,7 +116,7 @@ export default function PageListPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border-subtle">
-                            {filteredPages.map((page) => (
+                            {filteredPages.map((page: Page) => (
                                 <motion.tr
                                     key={page.id}
                                     initial={{ opacity: 0 }}
@@ -135,8 +145,8 @@ export default function PageListPage() {
                                             {page.status === 'published' ? 'Yayında' : 'Taslak'}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-text-muted">{page.author}</td>
-                                    <td className="px-6 py-4 text-text-muted">{page.lastModified}</td>
+                                    <td className="px-6 py-4 text-text-muted">{page.author?.name || '-'}</td>
+                                    <td className="px-6 py-4 text-text-muted">{new Date(page.updatedAt).toLocaleDateString('tr-TR')}</td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button

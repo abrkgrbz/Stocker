@@ -280,6 +280,10 @@ public class CRMDbContext : DbContext
             modelBuilder.Entity<LoyaltyMembership>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             modelBuilder.Entity<LoyaltyTransaction>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             modelBuilder.Entity<SocialMediaProfile>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Communication Hub
+            modelBuilder.Entity<Notification>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<Reminder>().HasQueryFilter(e => e.TenantId == tenantId.Value);
         }
     }
 
