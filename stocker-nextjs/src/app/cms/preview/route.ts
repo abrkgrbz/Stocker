@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // Force dynamic rendering - ensures env vars are read at runtime
 export const dynamic = 'force-dynamic';
+export const revalidate = 0; // Disable caching completely
+export const fetchCache = 'force-no-store';
 
 /**
  * Enable preview/draft mode for CMS content

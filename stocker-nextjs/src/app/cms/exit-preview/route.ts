@@ -2,6 +2,11 @@ import { draftMode } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { NextRequest, NextResponse } from 'next/server';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 /**
  * Exit preview/draft mode
  * Usage: /cms/exit-preview or /cms/exit-preview?redirect=/some-page
