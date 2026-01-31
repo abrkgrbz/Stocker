@@ -12,6 +12,11 @@ export async function middleware(request: NextRequest) {
   // CMS Preview routes (/preview, /exit-preview) are handled by route handlers
   // in src/app/(preview)/ - they use draftMode() API directly
 
+  // Check if draft mode cookies are present
+  // This forces dynamic rendering for preview requests
+  const hasPreviewCookies = request.cookies.has('__prerender_bypass') &&
+                            request.cookies.has('__next_preview_data')
+
   // Extract just the domain without protocol and port
   const authHostname = authDomain.replace(/^https?:\/\//, '').split(':')[0]
 
@@ -112,7 +117,17 @@ export async function middleware(request: NextRequest) {
 
   // Handle CORS for all routes (not just API)
   const origin = request.headers.get('origin')
-  const response = NextResponse.next()
+
+  // If preview cookies exist, add a header to help with cache bypass
+  // and ensure cookies are forwarded to the page
+  const response = hasPreviewCookies
+    ? NextResponse.next({
+        headers: {
+          'x-middleware-cache': 'no-cache',
+          'Cache-Control': 'no-store, must-revalidate',
+        },
+      })
+    : NextResponse.next()
 
   if (origin) {
     // In development, allow localhost

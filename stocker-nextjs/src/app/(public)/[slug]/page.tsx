@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { draftMode } from 'next/headers';
+import { draftMode, cookies } from 'next/headers';
 import { getPageBySlug, getPagePreview, getPublishedPages } from '@/lib/api/services/cms-server';
 import LegalPageClient from '@/components/legal/LegalPageClient';
 import { Suspense } from 'react';
@@ -35,7 +35,12 @@ const RESERVED_SLUGS = [
   'updates',
 ];
 
+// Revalidation time for ISR - but draft mode makes it dynamic
 export const revalidate = 3600; // 1 hour
+
+// This enables dynamic rendering when draft mode is active
+// Without this, the page would be served from static cache even with draft cookies
+export const dynamicParams = true;
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -87,13 +92,21 @@ export default async function DynamicCMSPage({ params }: PageProps) {
     notFound();
   }
 
+  // Access cookies to force dynamic rendering when preview cookies exist
+  // This ensures the page is not served from static cache during preview
+  const cookieStore = await cookies();
+  const hasPreviewCookies = cookieStore.has('__prerender_bypass');
+
   // Check if we're in draft mode
   const draft = await draftMode();
   const isPreview = draft.isEnabled;
 
+  console.log(`[CMS Page] Processing slug: ${slug}, isPreview: ${isPreview}, hasPreviewCookies: ${hasPreviewCookies}`);
+
   let page;
 
   if (isPreview) {
+    console.log(`[CMS Page] Fetching preview for: ${slug}`);
     // In preview mode, use shared secret to fetch any status page
     page = await getPagePreview(slug);
 

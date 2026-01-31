@@ -50,8 +50,17 @@ export const revalidate = 600;
 export default async function DocArticlePage({ params }: DocArticlePageProps) {
   const { slug } = await params;
 
+  // Access cookies to force dynamic rendering when preview cookies exist
+  const { cookies, draftMode } = await import('next/headers');
+  const cookieStore = await cookies();
+  const hasPreviewCookies = cookieStore.has('__prerender_bypass');
+
   // Draft Mode Check
-  const { isEnabled } = await import('next/headers').then(m => m.draftMode());
+  const draft = await draftMode();
+  const isEnabled = draft.isEnabled;
+
+  console.log(`[Doc Article] Processing slug: ${slug}, isEnabled: ${isEnabled}, hasPreviewCookies: ${hasPreviewCookies}`);
+
   let article;
 
   if (isEnabled) {

@@ -32,8 +32,17 @@ export const revalidate = 300;
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
 
+  // Access cookies to force dynamic rendering when preview cookies exist
+  const { cookies, draftMode } = await import('next/headers');
+  const cookieStore = await cookies();
+  const hasPreviewCookies = cookieStore.has('__prerender_bypass');
+
   // Draft Mode Check
-  const { isEnabled } = await import('next/headers').then(m => m.draftMode());
+  const draft = await draftMode();
+  const isEnabled = draft.isEnabled;
+
+  console.log(`[Blog Post] Processing slug: ${slug}, isEnabled: ${isEnabled}, hasPreviewCookies: ${hasPreviewCookies}`);
+
   let post;
 
   if (isEnabled) {
