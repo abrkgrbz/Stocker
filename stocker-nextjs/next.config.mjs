@@ -56,11 +56,11 @@ const nextConfig = {
       beforeFiles: [],
 
       // afterFiles runs after Next.js checks for file/route matches
-      // Proxy /api/* requests to backend
-      // Note: CMS preview routes are at /cms/preview (outside /api/) to avoid this proxy
+      // Proxy /api/* requests to backend (except Next.js internal API routes)
+      // Note: CMS preview routes are at /_cms/* to avoid this proxy
       afterFiles: [
         {
-          source: '/api/:path*',
+          source: '/api/:path((?!health|test-sentry-error|auth|onboarding|master|monitoring|debug).*)*',
           destination: `${cleanApiUrl}/api/:path*`,
         },
       ],

@@ -271,6 +271,64 @@ export async function getPagePreview(slug: string): Promise<CmsPage | null> {
   }
 }
 
+/**
+ * Get Blog Post by slug for preview
+ */
+export async function getPostPreview(slug: string): Promise<BlogPost | null> {
+  const previewSecret = process.env.CMS_PREVIEW_SECRET;
+  if (!previewSecret) return null;
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/cms/blog/posts/preview-public/${encodeURIComponent(slug)}?secret=${encodeURIComponent(previewSecret)}`,
+      {
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+
+    if (!response.ok) return null;
+
+    const json = await response.json();
+    if (json && typeof json === 'object' && 'data' in json) {
+      return (json as CmsApiResponse<BlogPost>).data ?? null;
+    }
+    return json as BlogPost;
+  } catch (error) {
+    console.error(`[CMS Preview] Blog fetch failed: ${slug}`, error);
+    return null;
+  }
+}
+
+/**
+ * Get Doc Article by slug for preview
+ */
+export async function getDocArticlePreview(slug: string): Promise<DocArticle | null> {
+  const previewSecret = process.env.CMS_PREVIEW_SECRET;
+  if (!previewSecret) return null;
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/cms/docs/articles/preview-public/${encodeURIComponent(slug)}?secret=${encodeURIComponent(previewSecret)}`,
+      {
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+
+    if (!response.ok) return null;
+
+    const json = await response.json();
+    if (json && typeof json === 'object' && 'data' in json) {
+      return (json as CmsApiResponse<DocArticle>).data ?? null;
+    }
+    return json as DocArticle;
+  } catch (error) {
+    console.error(`[CMS Preview] Doc fetch failed: ${slug}`, error);
+    return null;
+  }
+}
+
 // =====================================
 // FAQ SERVER FUNCTIONS
 // =====================================

@@ -31,11 +31,32 @@ export const revalidate = 300;
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
+
+  // Draft Mode Check
+  const { isEnabled } = await import('next/headers').then(m => m.draftMode());
+  let post;
+
+  if (isEnabled) {
+    post = await import('@/lib/api/services/cms-server').then(m => m.getPostPreview(slug));
+  }
+
+  if (!post) {
+    post = await getPostBySlug(slug);
+  }
 
   if (!post) {
     notFound();
   }
 
-  return <BlogPostContent post={post} />;
+  return (
+    <>
+      {isEnabled && (
+        <div className="bg-amber-500 text-amber-950 px-4 py-2 text-center text-sm font-medium sticky top-0 z-50">
+          <span>Önizleme Modu - Blog</span>
+          <a href="/exit-preview" className="ml-4 underline hover:no-underline font-bold">Çıkış</a>
+        </div>
+      )}
+      <BlogPostContent post={post} />
+    </>
+  );
 }

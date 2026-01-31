@@ -149,7 +149,7 @@ export default function DocsEditor() {
         }
         // CMS Preview Secret
         const secret = 'R5VlT2OZ0wVQokJwruUN5e2AuDuf8FJW';
-        const url = `https://stoocker.app/cms/preview?slug=${slug.trim()}&secret=${secret}&type=doc`;
+        const url = `https://stoocker.app/preview?slug=${slug.trim()}&secret=${secret}&type=docs`;
         window.open(url, '_blank');
     };
 

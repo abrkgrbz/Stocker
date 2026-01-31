@@ -49,7 +49,18 @@ export const revalidate = 600;
 
 export default async function DocArticlePage({ params }: DocArticlePageProps) {
   const { slug } = await params;
-  const article = await getDocArticleBySlug(slug);
+
+  // Draft Mode Check
+  const { isEnabled } = await import('next/headers').then(m => m.draftMode());
+  let article;
+
+  if (isEnabled) {
+    article = await import('@/lib/api/services/cms-server').then(m => m.getDocArticlePreview(slug));
+  }
+
+  if (!article) {
+    article = await getDocArticleBySlug(slug);
+  }
 
   if (!article) {
     notFound();
