@@ -18,15 +18,24 @@ export async function GET(request: NextRequest) {
   const previewSecret = process.env.CMS_PREVIEW_SECRET;
 
   if (!previewSecret) {
-    return new Response('Preview secret not configured', { status: 500 });
+    return Response.json(
+      { error: 'Preview secret not configured', hint: 'Set CMS_PREVIEW_SECRET environment variable' },
+      { status: 500 }
+    );
   }
 
   if (secret !== previewSecret) {
-    return new Response('Invalid preview secret', { status: 401 });
+    return Response.json(
+      { error: 'Invalid preview secret' },
+      { status: 401 }
+    );
   }
 
   if (!slug) {
-    return new Response('Missing slug parameter', { status: 400 });
+    return Response.json(
+      { error: 'Missing slug parameter' },
+      { status: 400 }
+    );
   }
 
   // Enable Draft Mode
