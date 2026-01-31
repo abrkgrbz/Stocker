@@ -9,9 +9,8 @@ export function middleware(request: NextRequest) {
   const isDev = process.env.NODE_ENV === 'development'
   const pathname = request.nextUrl.pathname
 
-  // Skip middleware for Next.js internal API routes (CMS preview, etc.)
-  // These should be handled by Next.js, not rewritten to backend
-  if (pathname.startsWith('/api/cms/preview') || pathname.startsWith('/api/cms/exit-preview')) {
+  // Skip middleware for CMS preview routes (placed at /_cms/ to avoid /api/ rewrite conflicts)
+  if (pathname.startsWith('/_cms/')) {
     return NextResponse.next()
   }
 

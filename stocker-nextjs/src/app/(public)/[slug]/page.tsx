@@ -119,7 +119,7 @@ export default async function DynamicCMSPage({ params }: PageProps) {
           <span>Status: {page.status}</span>
           <span className="mx-2">•</span>
           <a
-            href="/api/cms/exit-preview"
+            href="/_cms/exit-preview"
             className="underline hover:no-underline"
           >
             Önizlemeden Çık
