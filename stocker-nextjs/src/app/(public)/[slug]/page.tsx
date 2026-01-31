@@ -13,6 +13,7 @@ const RESERVED_SLUGS = [
   'blog',
   'careers',
   'changelog',
+  'cms', // CMS preview routes
   'contact',
   'cookies',
   'demo',
