@@ -17,7 +17,6 @@ using Stocker.Modules.Finance;
 using Stocker.Modules.Inventory;
 using Stocker.Modules.HR;
 using Stocker.Modules.Purchase;
-using Stocker.Modules.CMS;
 using Stocker.Modules.Manufacturing;
 using Stocker.SharedKernel.Settings;
 using Stocker.SignalR.Extensions;
@@ -231,11 +230,6 @@ builder.Services.AddAutoMapper(cfg =>
         cfg.AddProfile<Stocker.Modules.Purchase.Application.Mappings.PurchaseProfile>();
         Log.Information("AutoMapper: PurchaseProfile registered");
     }
-    if (enabledModules.GetValue<bool>("CMS", true))
-    {
-        cfg.AddProfile<Stocker.Modules.CMS.Application.Mappings.CMSMappingProfile>();
-        Log.Information("AutoMapper: CMSMappingProfile registered");
-    }
 });
 Log.Information("AutoMapper centralized registration completed");
 
@@ -284,13 +278,6 @@ if (enabledModules.GetValue<bool>("Purchase"))
 {
     Log.Information("Loading Purchase Module...");
     builder.Services.AddPurchaseModule(builder.Configuration);
-}
-
-// CMS Module (always enabled for landing page management)
-if (enabledModules.GetValue<bool>("CMS", true))
-{
-    Log.Information("Loading CMS Module...");
-    builder.Services.AddCMSModule(builder.Configuration);
 }
 
 // Manufacturing Module

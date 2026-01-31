@@ -1,9 +1,0 @@
-namespace Stocker.Modules.CMS.Domain.Enums;
-
-public enum BlogPostStatus
-{
-    Draft = 0,
-    Published = 1,
-    Scheduled = 2,
-    Archived = 3
-}

@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Exceptions;
 using Stocker.Application.Common.Exceptions;
-using Stocker.Modules.CMS.Infrastructure.Persistence;
 
 namespace Stocker.API.Extensions;
 
@@ -29,31 +28,18 @@ public static class DatabaseExtensions
             var migrationService = scope.ServiceProvider.GetRequiredService<IMigrationService>();
 
             // Create Hangfire database first
-            app.Logger.LogInformation("Step 1/4: Creating Hangfire database...");
+            app.Logger.LogInformation("Step 1/3: Creating Hangfire database...");
             await migrationService.CreateHangfireDatabaseAsync();
-            app.Logger.LogInformation("Step 1/4: Hangfire database ready");
+            app.Logger.LogInformation("Step 1/3: Hangfire database ready");
 
             // Then migrate master database
-            app.Logger.LogInformation("Step 2/4: Migrating Master database...");
+            app.Logger.LogInformation("Step 2/3: Migrating Master database...");
             await migrationService.MigrateMasterDatabaseAsync();
-            app.Logger.LogInformation("Step 2/4: Master database migrated");
+            app.Logger.LogInformation("Step 2/3: Master database migrated");
 
-            app.Logger.LogInformation("Step 3/4: Seeding Master data...");
+            app.Logger.LogInformation("Step 3/3: Seeding Master data...");
             await migrationService.SeedMasterDataAsync();
-            app.Logger.LogInformation("Step 3/4: Master data seeded");
-
-            // Migrate CMS database (uses Master connection with separate schema)
-            app.Logger.LogInformation("Step 4/4: Migrating CMS database...");
-            var cmsDbContext = scope.ServiceProvider.GetService<CMSDbContext>();
-            if (cmsDbContext != null)
-            {
-                await cmsDbContext.Database.MigrateAsync();
-                app.Logger.LogInformation("Step 4/4: CMS database migrated");
-            }
-            else
-            {
-                app.Logger.LogWarning("Step 4/4: CMS module not registered, skipping CMS migration");
-            }
+            app.Logger.LogInformation("Step 3/3: Master data seeded");
 
             app.Logger.LogInformation("=== Database migration completed successfully ===");
             app.Logger.LogInformation("Stocker API started successfully");

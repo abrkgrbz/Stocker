@@ -33,7 +33,6 @@ public static class ControllersExtensions
         .AddApplicationPart(typeof(Stocker.Modules.Purchase.PurchaseModule).Assembly)
         .AddApplicationPart(typeof(Stocker.Modules.Finance.FinanceModule).Assembly)
         .AddApplicationPart(typeof(Stocker.Modules.HR.HRModule).Assembly)
-        .AddApplicationPart(typeof(Stocker.Modules.CMS.CMSModule).Assembly)
         .AddJsonOptions(options =>
         {
             // Add enum converter
