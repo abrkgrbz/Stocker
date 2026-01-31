@@ -56,9 +56,17 @@ const nextConfig = {
       beforeFiles: [],
 
       // afterFiles runs after Next.js checks for file/route matches
-      // Proxy all /api/* requests to backend
-      // Note: CMS preview routes are handled by middleware rewrite to prevent this
+      // Proxy all /api/* requests to backend EXCEPT /api/cms/preview and /api/cms/exit-preview
+      // These are handled by Next.js API routes for draft mode
       afterFiles: [
+        {
+          source: '/api/cms/preview',
+          destination: '/api/cms/preview',
+        },
+        {
+          source: '/api/cms/exit-preview',
+          destination: '/api/cms/exit-preview',
+        },
         {
           source: '/api/:path*',
           destination: `${cleanApiUrl}/api/:path*`,
