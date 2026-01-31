@@ -235,6 +235,70 @@ public class SecretsController : ControllerBase
     }
 
     /// <summary>
+    /// Delete multiple secrets at once
+    /// </summary>
+    [HttpPost("delete-multiple")]
+    [ProducesResponseType(typeof(BulkDeleteResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> DeleteMultipleSecrets([FromBody] DeleteMultipleSecretsRequest request)
+    {
+        if (!_secretStore.IsAvailable)
+        {
+            return StatusCode(503, ApiResponse<BulkDeleteResponse>.FailureResponse("Secret store is not available"));
+        }
+
+        if (request.SecretNames == null || request.SecretNames.Count == 0)
+        {
+            return BadRequest(ApiResponse<BulkDeleteResponse>.FailureResponse("No secrets specified for deletion"));
+        }
+
+        try
+        {
+            var deletedSecrets = new List<string>();
+            var failedSecrets = new List<string>();
+
+            foreach (var secretName in request.SecretNames)
+            {
+                try
+                {
+                    var exists = await _secretStore.SecretExistsAsync(secretName);
+                    if (exists)
+                    {
+                        await _secretStore.DeleteSecretAsync(secretName);
+                        deletedSecrets.Add(secretName);
+                        _logger.LogInformation("Deleted secret '{SecretName}'", secretName);
+                    }
+                    else
+                    {
+                        failedSecrets.Add(secretName);
+                        _logger.LogWarning("Secret '{SecretName}' not found", secretName);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to delete secret '{SecretName}'", secretName);
+                    failedSecrets.Add(secretName);
+                }
+            }
+
+            var response = new BulkDeleteResponse
+            {
+                TenantShortId = "multiple",
+                DeletedCount = deletedSecrets.Count,
+                FailedCount = failedSecrets.Count,
+                DeletedSecrets = deletedSecrets,
+                FailedSecrets = failedSecrets
+            };
+
+            return Ok(ApiResponse<BulkDeleteResponse>.SuccessResponse(response));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete multiple secrets");
+            return StatusCode(500, ApiResponse<BulkDeleteResponse>.FailureResponse(ex.Message, "Failed to delete secrets"));
+        }
+    }
+
+    /// <summary>
     /// Get secret store status
     /// </summary>
     [HttpGet("status")]
@@ -309,6 +373,11 @@ public class DeleteSecretResponse
 {
     public string Message { get; set; } = string.Empty;
     public string Provider { get; set; } = string.Empty;
+}
+
+public class DeleteMultipleSecretsRequest
+{
+    public List<string> SecretNames { get; set; } = new();
 }
 
 #endregion
