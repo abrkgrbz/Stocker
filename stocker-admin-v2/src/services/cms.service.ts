@@ -118,7 +118,11 @@ const request = <T>(promise: Promise<any>): Promise<T> => promise as Promise<T>;
 export const cmsService = {
     // Pages
     getPages: (params?: any) => request<PaginatedResult<Page>>(apiClient.get('/api/v1/cms/pages', { params })),
-    getPage: (id: string) => request<Page>(apiClient.get(`/api/v1/cms/pages/${id}`)),
+    getPage: async (id: string) => {
+        const response = await request<Page>(apiClient.get(`/api/v1/cms/pages/${id}`));
+        console.log('[CMS Service] GetPage Response:', response);
+        return response;
+    },
     createPage: (data: Partial<Page>) => request<Page>(apiClient.post('/api/v1/cms/pages', data)),
     updatePage: (id: string, data: Partial<Page>) => request<Page>(apiClient.put(`/api/v1/cms/pages/${id}`, data)),
     deletePage: (id: string) => request<void>(apiClient.delete(`/api/v1/cms/pages/${id}`)),
@@ -126,7 +130,11 @@ export const cmsService = {
 
     // Blog
     getPosts: (params?: any) => request<BlogPost[]>(apiClient.get('/api/v1/cms/posts', { params })),
-    getPost: (id: string) => request<BlogPost>(apiClient.get(`/api/v1/cms/posts/${id}`)),
+    getPost: async (id: string) => {
+        const response = await request<BlogPost>(apiClient.get(`/api/v1/cms/posts/${id}`));
+        console.log('[CMS Service] GetPost Response:', response);
+        return response;
+    },
     createPost: (data: Partial<BlogPost>) => request<BlogPost>(apiClient.post('/api/v1/cms/posts', data)),
     updatePost: (id: string, data: Partial<BlogPost>) => request<BlogPost>(apiClient.put(`/api/v1/cms/posts/${id}`, data)),
     deletePost: (id: string) => request<void>(apiClient.delete(`/api/v1/cms/posts/${id}`)),
