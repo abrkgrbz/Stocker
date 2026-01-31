@@ -160,6 +160,11 @@ services:
       - TenantRateLimiting__ReplenishmentPeriodSeconds=1
             
       # ==================================
+      # CMS CONFIGURATION
+      # ==================================
+      - CMS_PREVIEW_SECRET=${CMS_PREVIEW_SECRET}
+
+      # ==================================
       # AZURE KEY VAULT INTEGRATION
       # ==================================
       - AZURE_KEY_VAULT_URI=${AZURE_KEY_VAULT_URI}
