@@ -4,7 +4,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 /**
  * Exit preview/draft mode
- * Usage: /api/cms/exit-preview or /api/cms/exit-preview?redirect=/some-page
+ * Usage: /cms/exit-preview or /cms/exit-preview?redirect=/some-page
+ *
+ * Note: This route is outside /api/ to avoid being proxied to backend
+ * by next.config.mjs rewrites
  */
 export async function GET(request: NextRequest) {
   const draft = await draftMode();

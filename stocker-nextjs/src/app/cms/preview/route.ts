@@ -7,7 +7,10 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Enable preview/draft mode for CMS content
- * Usage: /api/cms/preview?slug=test-page&secret=YOUR_SECRET
+ * Usage: /cms/preview?slug=test-page&secret=YOUR_SECRET
+ *
+ * Note: This route is outside /api/ to avoid being proxied to backend
+ * by next.config.mjs rewrites
  */
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;

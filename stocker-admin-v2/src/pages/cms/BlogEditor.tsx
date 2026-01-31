@@ -138,7 +138,7 @@ export default function BlogEditor() {
         }
         // CMS Preview Secret
         const secret = 'R5VlT2OZ0wVQokJwruUN5e2AuDuf8FJW';
-        const url = `https://stoocker.app/api/cms/preview?slug=${slug.trim()}&secret=${secret}&type=post`;
+        const url = `https://stoocker.app/cms/preview?slug=${slug.trim()}&secret=${secret}&type=blog`;
         window.open(url, '_blank');
     };
 
