@@ -56,11 +56,12 @@ const nextConfig = {
       beforeFiles: [],
 
       // afterFiles runs after Next.js checks for file/route matches
-      // Proxy /api/* requests to backend, but use regex to EXCLUDE /api/cms/preview and /api/cms/exit-preview
+      // Proxy /api/* requests to backend
+      // Note: CMS preview routes are at /cms/preview (outside /api/) to avoid this proxy
       afterFiles: [
         {
-          source: '/api/((?!cms/preview|cms/exit-preview).*)',
-          destination: `${cleanApiUrl}/api/:1`,
+          source: '/api/:path*',
+          destination: `${cleanApiUrl}/api/:path*`,
         },
       ],
 
