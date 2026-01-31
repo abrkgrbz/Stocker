@@ -9,9 +9,11 @@ export function middleware(request: NextRequest) {
   const isDev = process.env.NODE_ENV === 'development'
   const pathname = request.nextUrl.pathname
 
-  // Skip middleware for CMS preview routes (placed at /_cms/ to avoid /api/ rewrite conflicts)
-  if (pathname.startsWith('/_cms/')) {
-    return NextResponse.next()
+  // CMS Preview routes - these are Next.js API routes that should NOT be proxied to backend
+  // Return early with rewrite to same URL to prevent next.config.mjs rewrite from applying
+  if (pathname === '/api/cms/preview' || pathname === '/api/cms/exit-preview') {
+    // Rewrite to the same URL - this "claims" the route and prevents afterFiles rewrite
+    return NextResponse.rewrite(request.nextUrl)
   }
 
   // Extract just the domain without protocol and port

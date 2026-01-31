@@ -7,9 +7,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Enable preview/draft mode for CMS content
- * Usage: /_cms/preview?slug=test-page&secret=YOUR_SECRET
- *
- * This route is placed outside /api/ to avoid conflicts with API rewrites
+ * Usage: /api/cms/preview?slug=test-page&secret=YOUR_SECRET
  */
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -20,7 +18,7 @@ export async function GET(request: NextRequest) {
   // Check the secret - read at runtime
   const previewSecret = process.env.CMS_PREVIEW_SECRET;
 
-  // Debug: Log env status
+  // Debug log
   console.log('[CMS Preview] Request received, secret configured:', !!previewSecret);
 
   if (!previewSecret) {
