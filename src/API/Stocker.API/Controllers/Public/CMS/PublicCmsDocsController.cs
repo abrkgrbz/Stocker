@@ -33,7 +33,6 @@ public class PublicCmsDocsController : ControllerBase
     /// </summary>
     [HttpGet("categories/active")]
     [ProducesResponseType(200)]
-    [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
     public async Task<IActionResult> GetActiveCategories()
     {
         _logger.LogInformation("Getting active doc categories");
@@ -62,7 +61,6 @@ public class PublicCmsDocsController : ControllerBase
     [HttpGet("categories/slug/{slug}")]
     [ProducesResponseType(200)]
     [ProducesResponseType(404)]
-    [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
     public async Task<IActionResult> GetCategoryBySlug(string slug)
     {
         _logger.LogInformation("Getting doc category by slug: {Slug}", slug);
@@ -95,7 +93,6 @@ public class PublicCmsDocsController : ControllerBase
     /// </summary>
     [HttpGet("articles/active")]
     [ProducesResponseType(200)]
-    [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
     public async Task<IActionResult> GetActiveArticles()
     {
         _logger.LogInformation("Getting active doc articles");
@@ -131,7 +128,6 @@ public class PublicCmsDocsController : ControllerBase
     /// </summary>
     [HttpGet("articles/popular")]
     [ProducesResponseType(200)]
-    [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
     public async Task<IActionResult> GetPopularArticles([FromQuery] int limit = 5)
     {
         _logger.LogInformation("Getting popular doc articles, limit: {Limit}", limit);
@@ -167,7 +163,6 @@ public class PublicCmsDocsController : ControllerBase
     /// </summary>
     [HttpGet("articles/category/{categoryId}")]
     [ProducesResponseType(200)]
-    [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
     public async Task<IActionResult> GetArticlesByCategory(Guid categoryId)
     {
         _logger.LogInformation("Getting doc articles for category: {CategoryId}", categoryId);
@@ -197,7 +192,6 @@ public class PublicCmsDocsController : ControllerBase
     [HttpGet("articles/slug/{slug}")]
     [ProducesResponseType(200)]
     [ProducesResponseType(404)]
-    [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
     public async Task<IActionResult> GetArticleBySlug(string slug)
     {
         _logger.LogInformation("Getting doc article by slug: {Slug}", slug);
@@ -244,7 +238,6 @@ public class PublicCmsDocsController : ControllerBase
     /// </summary>
     [HttpGet("articles/search")]
     [ProducesResponseType(200)]
-    [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "q" })]
     public async Task<IActionResult> SearchArticles([FromQuery] string q)
     {
         _logger.LogInformation("Searching doc articles: {Query}", q);

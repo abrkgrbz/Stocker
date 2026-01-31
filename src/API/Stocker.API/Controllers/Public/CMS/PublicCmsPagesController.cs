@@ -33,7 +33,6 @@ public class PublicCmsPagesController : ControllerBase
     /// </summary>
     [HttpGet("published")]
     [ProducesResponseType(200)]
-    [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
     public async Task<IActionResult> GetPublishedPages()
     {
         _logger.LogInformation("Getting published CMS pages");
@@ -63,7 +62,6 @@ public class PublicCmsPagesController : ControllerBase
     [HttpGet("slug/{slug}")]
     [ProducesResponseType(200)]
     [ProducesResponseType(404)]
-    [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "slug" })]
     public async Task<IActionResult> GetPageBySlug(string slug)
     {
         _logger.LogInformation("Getting CMS page by slug: {Slug}", slug);

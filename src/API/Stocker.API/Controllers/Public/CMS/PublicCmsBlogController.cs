@@ -33,7 +33,6 @@ public class PublicCmsBlogController : ControllerBase
     /// </summary>
     [HttpGet("categories")]
     [ProducesResponseType(200)]
-    [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
     public async Task<IActionResult> GetCategories()
     {
         _logger.LogInformation("Getting blog categories");
@@ -61,7 +60,6 @@ public class PublicCmsBlogController : ControllerBase
     /// </summary>
     [HttpGet("posts/published")]
     [ProducesResponseType(200)]
-    [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
     public async Task<IActionResult> GetPublishedPosts([FromQuery] int page = 1, [FromQuery] int limit = 10)
     {
         _logger.LogInformation("Getting published blog posts, page: {Page}, limit: {Limit}", page, limit);
@@ -123,7 +121,6 @@ public class PublicCmsBlogController : ControllerBase
     [HttpGet("posts/slug/{slug}")]
     [ProducesResponseType(200)]
     [ProducesResponseType(404)]
-    [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "slug" })]
     public async Task<IActionResult> GetPostBySlug(string slug)
     {
         _logger.LogInformation("Getting blog post by slug: {Slug}", slug);
@@ -178,7 +175,6 @@ public class PublicCmsBlogController : ControllerBase
     /// </summary>
     [HttpGet("categories/{categoryId}/posts")]
     [ProducesResponseType(200)]
-    [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
     public async Task<IActionResult> GetPostsByCategory(Guid categoryId, [FromQuery] int page = 1, [FromQuery] int limit = 10)
     {
         _logger.LogInformation("Getting blog posts for category: {CategoryId}", categoryId);
