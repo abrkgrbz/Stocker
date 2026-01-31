@@ -147,7 +147,10 @@ export default function DocsEditor() {
             toast.warning('Önizleme için önce bir URL (slug) belirlemelisiniz.');
             return;
         }
-        window.open(`https://stoocker.app/docs/${slug.trim()}`, '_blank');
+        // CMS Preview Secret
+        const secret = 'R5VlT2OZ0wVQokJwruUN5e2AuDuf8FJW';
+        const url = `https://stoocker.app/api/cms/preview?slug=${slug.trim()}&secret=${secret}&type=doc`;
+        window.open(url, '_blank');
     };
 
     if (isLoading) {

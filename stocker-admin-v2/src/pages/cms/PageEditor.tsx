@@ -26,7 +26,7 @@ export default function PageEditor() {
     const [formTitle, setFormTitle] = useState('');
     const [slug, setSlug] = useState('');
     const [content, setContent] = useState('');
-    const [status, setStatus] = useState<'published' | 'draft' | 'archived'>('draft');
+    const [status, setStatus] = useState<'Published' | 'Draft' | 'Archived'>('Draft');
     const [metaTitle, setMetaTitle] = useState('');
     const [metaDescription, setMetaDescription] = useState('');
 
@@ -46,7 +46,7 @@ export default function PageEditor() {
             setFormTitle(page.title);
             setSlug(page.slug);
             setContent(page.content);
-            setStatus(page.status);
+            setStatus(page.status as any); // Cast to any to avoid temporary type mismatch during refactor if needed, or just let it match if types are synced.
             setMetaTitle(Boolean(page.metaTitle) ? page.metaTitle! : '');
             setMetaDescription(Boolean(page.metaDescription) ? page.metaDescription! : '');
         }
@@ -128,7 +128,7 @@ export default function PageEditor() {
         }
         // CMS Preview Secret
         const secret = 'R5VlT2OZ0wVQokJwruUN5e2AuDuf8FJW';
-        const url = `https://stoocker.app/cms/preview?slug=${slug.trim()}&secret=${secret}&type=page`;
+        const url = `https://stoocker.app/api/cms/preview?slug=${slug.trim()}&secret=${secret}&type=page`;
         window.open(url, '_blank');
     };
 
@@ -245,9 +245,9 @@ export default function PageEditor() {
                                     onChange={(e) => setStatus(e.target.value as any)}
                                     className="bg-brand-900 border border-border-subtle rounded-lg px-2 py-1 text-text-main text-xs focus:outline-none focus:border-indigo-500"
                                 >
-                                    <option value="draft">Taslak</option>
-                                    <option value="published">Yayında</option>
-                                    <option value="archived">Arşiv</option>
+                                    <option value="Draft">Taslak</option>
+                                    <option value="Published">Yayında</option>
+                                    <option value="Archived">Arşiv</option>
                                 </select>
                             </div>
                             <div className="flex items-center justify-between text-sm">
