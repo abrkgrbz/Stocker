@@ -2,6 +2,9 @@ import { draftMode } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { NextRequest, NextResponse } from 'next/server';
 
+// Force dynamic rendering - ensures env vars are read at runtime
+export const dynamic = 'force-dynamic';
+
 /**
  * Enable preview/draft mode for CMS content
  * Usage: /api/cms/preview?slug=test-page&secret=YOUR_SECRET
@@ -12,11 +15,18 @@ export async function GET(request: NextRequest) {
   const slug = searchParams.get('slug');
   const type = searchParams.get('type') || 'page'; // page, blog, docs
 
-  // Check the secret
+  // Check the secret - read at runtime
   const previewSecret = process.env.CMS_PREVIEW_SECRET;
+
+  // Debug: Log env status (remove in production after testing)
+  console.log('[CMS Preview] Secret configured:', !!previewSecret);
+
   if (!previewSecret) {
     return NextResponse.json(
-      { error: 'Preview secret not configured' },
+      {
+        error: 'Preview secret not configured',
+        hint: 'Set CMS_PREVIEW_SECRET environment variable'
+      },
       { status: 500 }
     );
   }
