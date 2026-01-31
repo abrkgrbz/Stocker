@@ -223,13 +223,45 @@ export async function getPublishedPages(): Promise<CmsPage[]> {
 }
 
 /**
- * Get CMS page by slug
+ * Get CMS page by slug (published only)
  */
 export async function getPageBySlug(slug: string): Promise<CmsPage | null> {
   return serverFetch<CmsPage>(
     `/api/cms/pages/slug/${encodeURIComponent(slug)}`,
     { revalidate: REVALIDATION.STATIC_PAGE, tags: ['cms-page', `page-${slug}`] }
   );
+}
+
+/**
+ * Get CMS page by slug for preview (any status, requires auth)
+ * Used in draft mode to preview unpublished content
+ */
+export async function getPagePreview(slug: string, authToken?: string): Promise<CmsPage | null> {
+  if (!authToken) return null;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/cms/pages/preview/${encodeURIComponent(slug)}`, {
+      cache: 'no-store', // Never cache preview content
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      console.error(`[CMS Preview] Fetch error: ${slug} - ${response.status}`);
+      return null;
+    }
+
+    const json = await response.json();
+    if (json && typeof json === 'object' && 'data' in json) {
+      return (json as CmsApiResponse<CmsPage>).data ?? null;
+    }
+    return json as CmsPage;
+  } catch (error) {
+    console.error(`[CMS Preview] Fetch failed: ${slug}`, error);
+    return null;
+  }
 }
 
 // =====================================

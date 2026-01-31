@@ -58,7 +58,7 @@ public class CMSPagesController : ControllerBase
     }
 
     /// <summary>
-    /// Get page by slug (public)
+    /// Get page by slug (public - only published)
     /// </summary>
     [HttpGet("slug/{slug}")]
     [AllowAnonymous]
@@ -66,6 +66,20 @@ public class CMSPagesController : ControllerBase
     {
         var page = await _repository.GetBySlugAsync(slug, cancellationToken);
         if (page == null || page.Status != PageStatus.Published)
+            return NotFound(ApiResponse<PageDto>.FailureResponse("Page not found"));
+
+        return Ok(ApiResponse<PageDto>.SuccessResponse(_mapper.Map<PageDto>(page)));
+    }
+
+    /// <summary>
+    /// Preview page by slug (admin only - any status)
+    /// </summary>
+    [HttpGet("preview/{slug}")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public async Task<ActionResult<ApiResponse<PageDto>>> PreviewBySlug(string slug, CancellationToken cancellationToken)
+    {
+        var page = await _repository.GetBySlugAsync(slug, cancellationToken);
+        if (page == null)
             return NotFound(ApiResponse<PageDto>.FailureResponse("Page not found"));
 
         return Ok(ApiResponse<PageDto>.SuccessResponse(_mapper.Map<PageDto>(page)));
