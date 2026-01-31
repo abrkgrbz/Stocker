@@ -49,6 +49,9 @@ services:
       - HMAC_SECRET=${HMAC_SECRET:-ChangeThisToASecure32CharacterOrLongerSecretKeyForProductionUse123!}
       - COOKIE_BASE_DOMAIN=stoocker.app
 
+      # CMS Preview Mode
+      - CMS_PREVIEW_SECRET=${CMS_PREVIEW_SECRET}
+
       # Node environment
       - NODE_ENV=production
     healthcheck:
