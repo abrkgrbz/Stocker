@@ -9,6 +9,12 @@ export function middleware(request: NextRequest) {
   const isDev = process.env.NODE_ENV === 'development'
   const pathname = request.nextUrl.pathname
 
+  // Skip middleware for Next.js internal API routes (CMS preview, etc.)
+  // These should be handled by Next.js, not rewritten to backend
+  if (pathname.startsWith('/api/cms/preview') || pathname.startsWith('/api/cms/exit-preview')) {
+    return NextResponse.next()
+  }
+
   // Extract just the domain without protocol and port
   const authHostname = authDomain.replace(/^https?:\/\//, '').split(':')[0]
 

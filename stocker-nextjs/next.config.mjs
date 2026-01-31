@@ -53,11 +53,11 @@ const nextConfig = {
 
     return {
       // beforeFiles runs before Next.js checks for file/route matches
-      // This ensures Next.js API routes are handled first
       beforeFiles: [],
 
       // afterFiles runs after Next.js checks for file/route matches
-      // Only unmatched /api/* requests go to backend
+      // Only proxy requests that don't match a Next.js API route
+      // Note: afterFiles only applies to requests that don't have a matching file/route
       afterFiles: [
         {
           source: '/api/:path*',
