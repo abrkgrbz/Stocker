@@ -6,7 +6,7 @@ export interface Page {
     title: string;
     slug: string;
     content: string;
-    status: 'published' | 'draft' | 'archived';
+    status: 'Published' | 'Draft' | 'Archived';
     metaTitle?: string;
     metaDescription?: string;
     featuredImage?: string;
