@@ -46,6 +46,14 @@ public static class SwaggerExtensions
                 Description = "CRM module for customer relationship management"
             });
 
+            // CMS Module API
+            c.SwaggerDoc("cms", new OpenApiInfo
+            {
+                Title = "Stocker CMS Module",
+                Version = "v1",
+                Description = "CMS module for content management (pages, blog posts, documentation, media)"
+            });
+
             // Public API - No authentication required
             c.SwaggerDoc("public", new OpenApiInfo
             {
@@ -219,6 +227,7 @@ public static class SwaggerExtensions
                     "master" => path.Contains("api/master/"),
                     "tenant" => path.Contains("api/tenant/") || path.Contains("api/auth"),
                     "crm" => path.Contains("api/crm/"),
+                    "cms" => path.Contains("api/v1/cms/"),
                     "public" => path.Contains("api/public/"),
                     "admin" => path.Contains("api/admin/"),
                     _ => false

@@ -52,6 +52,7 @@ public static class MiddlewareExtensions
                 c.SwaggerEndpoint("/swagger/master/swagger.json", "Master API");
                 c.SwaggerEndpoint("/swagger/tenant/swagger.json", "Tenant API");
                 c.SwaggerEndpoint("/swagger/crm/swagger.json", "CRM Module");
+                c.SwaggerEndpoint("/swagger/cms/swagger.json", "CMS Module");
                 c.SwaggerEndpoint("/swagger/public/swagger.json", "Public API");
                 c.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
 
