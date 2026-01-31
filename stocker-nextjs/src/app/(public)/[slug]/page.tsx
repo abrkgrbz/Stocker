@@ -1,7 +1,6 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { draftMode } from 'next/headers';
-import { cookies } from 'next/headers';
 import { getPageBySlug, getPagePreview, getPublishedPages } from '@/lib/api/services/cms-server';
 import LegalPageClient from '@/components/legal/LegalPageClient';
 import { Suspense } from 'react';
@@ -94,10 +93,8 @@ export default async function DynamicCMSPage({ params }: PageProps) {
   let page;
 
   if (isPreview) {
-    // In preview mode, try to get the page with auth token
-    const cookieStore = await cookies();
-    const authToken = cookieStore.get('auth-token')?.value;
-    page = await getPagePreview(slug, authToken);
+    // In preview mode, use shared secret to fetch any status page
+    page = await getPagePreview(slug);
 
     // If preview fails, fall back to published version
     if (!page) {

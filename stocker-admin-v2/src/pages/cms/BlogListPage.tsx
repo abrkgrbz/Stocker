@@ -50,10 +50,17 @@ export default function BlogListPage() {
         }
     };
 
+    // Fetch Categories
+    const { data: categories = [] } = useQuery({
+        queryKey: ['categories'],
+        queryFn: cmsService.getCategories
+    });
+
     const filteredPosts = posts.filter((post: BlogPost) => {
         const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             post.category.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCategory = selectedCategory === 'all' || post.category === selectedCategory;
+        const matchesCategory = selectedCategory === 'all' || post.category === selectedCategory ||
+            (categories.find((c: any) => c.slug === selectedCategory)?.name === post.category);
         return matchesSearch && matchesCategory;
     });
 
@@ -122,9 +129,9 @@ export default function BlogListPage() {
                         className="bg-brand-900/50 border border-border-subtle rounded-lg py-2 px-3 text-sm text-text-main focus:outline-none focus:border-purple-500/50"
                     >
                         <option value="all">Tüm Kategoriler</option>
-                        <option value="tech">Teknoloji</option>
-                        <option value="ecommerce">E-Ticaret</option>
-                        <option value="news">Haberler</option>
+                        {categories.map((cat: any) => (
+                            <option key={cat.id} value={cat.slug}>{cat.name}</option>
+                        ))}
                     </select>
                 </div>
             </div>

@@ -20,7 +20,7 @@ import { type SecretDto } from '@/services/secretsService';
 import { useSecrets } from '@/hooks/useSecrets';
 
 const SecretsPage: React.FC = () => {
-    const { secrets, isLoading } = useSecrets();
+    const { secrets, isLoading, deleteMultipleSecrets } = useSecrets();
     const [currentPage, setCurrentPage] = React.useState(1);
     const pageSize = 10;
     const [searchTerm, setSearchTerm] = useState('');
@@ -106,21 +106,10 @@ const SecretsPage: React.FC = () => {
         if (!confirm(`${selectedSecretIds.length} adet hassas veri silinecek. Bu işlem geri alınamaz! Emin misiniz?`)) return;
 
         try {
-            // @ts-ignore
-            const response = await import('@/services/secretsService').then(m => m.secretsService.deleteMultipleSecrets(selectedSecretIds.map(id => id.toString())));
-            if (response.success) {
-                // @ts-ignore
-                import('@/components/ui/Toast').then(m => m.toast.success(`${response.successCount} hassas veri silindi.`));
-                setSelectedSecretIds([]);
-                // Reload page or re-fetch (simplest is force reload logic or just refetch if we exposed it)
-                window.location.reload();
-            } else {
-                // @ts-ignore
-                import('@/components/ui/Toast').then(m => m.toast.error(response.message || 'Bazı veriler silinemedi.'));
-            }
+            await deleteMultipleSecrets(selectedSecretIds.map(id => id.toString()));
+            setSelectedSecretIds([]);
         } catch (error) {
-            // @ts-ignore
-            import('@/components/ui/Toast').then(m => m.toast.error('Silme işlemi başarısız.'));
+            // Error is handled in useSecrets hook toast
         }
     };
 

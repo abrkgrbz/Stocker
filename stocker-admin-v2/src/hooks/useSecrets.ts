@@ -27,6 +27,27 @@ export const useSecrets = () => {
         }
     });
 
+    const deleteMultipleMutation = useMutation({
+        mutationFn: (names: string[]) => secretsService.deleteMultipleSecrets(names),
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['secrets'] });
+
+            const successCount = data.deletedSecrets?.length || 0;
+            const failCount = data.failedSecrets?.length || 0;
+
+            if (successCount > 0 && failCount === 0) {
+                toast.show(`${successCount} hassas veri başarıyla silindi.`, 'success');
+            } else if (successCount > 0 && failCount > 0) {
+                toast.show(`${successCount} silindi, ${failCount} başarısız.`, 'warning');
+            } else if (failCount > 0) {
+                toast.show('Hiçbir veri silinemedi.', 'error');
+            }
+        },
+        onError: (error: any) => {
+            toast.show(error.message || 'Silme işlemi başarısız.', 'error');
+        }
+    });
+
     return {
         secrets: secretsQuery.data?.secrets || [],
         totalCount: secretsQuery.data?.totalCount || 0,
@@ -35,6 +56,8 @@ export const useSecrets = () => {
         storeStatus: statusQuery.data,
         isLoadingStatus: statusQuery.isLoading,
         deleteSecret: deleteMutation.mutate,
-        isDeleting: deleteMutation.isPending
+        isDeleting: deleteMutation.isPending,
+        deleteMultipleSecrets: deleteMultipleMutation.mutateAsync,
+        isDeletingMultiple: deleteMultipleMutation.isPending
     };
 };

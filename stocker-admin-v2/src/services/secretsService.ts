@@ -22,6 +22,11 @@ export interface SecretStoreStatus {
     isAvailable: boolean;
 }
 
+export interface BulkDeleteResponse {
+    deletedSecrets: string[];
+    failedSecrets: { name: string; reason: string }[];
+}
+
 class SecretsService {
     private readonly baseUrl = '/api/admin/secrets';
 
@@ -43,7 +48,7 @@ class SecretsService {
         return response;
     }
 
-    async deleteMultipleSecrets(secretNames: string[]): Promise<{ success: boolean; message: string; successCount: number; }> {
+    async deleteMultipleSecrets(secretNames: string[]): Promise<BulkDeleteResponse> {
         // @ts-ignore
         return apiClient.post(`${this.baseUrl}/delete-multiple`, { secretNames });
     }

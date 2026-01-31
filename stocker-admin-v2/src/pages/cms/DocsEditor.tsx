@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { toast } from '../../components/ui/Toast';
 import { cmsService, type DocItem } from '../../services/cms.service';
+import { useMarkdownEditor } from '../../hooks/useMarkdownEditor';
 
 export default function DocsEditor() {
     const navigate = useNavigate();
@@ -27,6 +28,9 @@ export default function DocsEditor() {
     const [content, setContent] = useState('');
     const [parentId, setParentId] = useState<string>(parentIdParam || 'root');
     const [type, setType] = useState<'file' | 'folder'>('file');
+
+    // Markdown Editor Hook
+    const { textareaRef, insertFormat } = useMarkdownEditor(content, setContent);
 
     // Fetch Doc Details if editing
     const { data: doc, isLoading } = useQuery({
@@ -77,15 +81,39 @@ export default function DocsEditor() {
         }
     });
 
+    // Slugify helper
+    const slugify = (text: string) => {
+        return text
+            .toLowerCase()
+            .replace(/ğ/g, 'g')
+            .replace(/ü/g, 'u')
+            .replace(/ş/g, 's')
+            .replace(/ı/g, 'i')
+            .replace(/ö/g, 'o')
+            .replace(/ç/g, 'c')
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-');
+    };
+
+    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setTitle(val);
+        // Only auto-generate slug if creating new doc
+        if (isNew) {
+            setSlug(slugify(val));
+        }
+    };
+
     const handleSave = () => {
-        if (!title || !slug) {
+        if (!title.trim() || !slug.trim()) {
             toast.warning('Lütfen başlık ve URL (slug) alanlarını doldurun.');
             return;
         }
 
         const data: Partial<DocItem> = {
-            title,
-            slug,
+            title: title.trim(),
+            slug: slug.trim(),
             type,
             parentId: parentId === 'root' ? null : parentId,
             order: 0, // Default order
@@ -113,6 +141,14 @@ export default function DocsEditor() {
     };
 
     const folders = getFolders(allDocs);
+
+    const handlePreview = () => {
+        if (!slug.trim()) {
+            toast.warning('Önizleme için önce bir URL (slug) belirlemelisiniz.');
+            return;
+        }
+        window.open(`https://stoocker.app/docs/${slug.trim()}`, '_blank');
+    };
 
     if (isLoading) {
         return (
@@ -143,7 +179,10 @@ export default function DocsEditor() {
                     </div>
                 </div>
                 <div className="flex gap-3">
-                    <button className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-text-muted hover:text-white font-semibold transition-colors flex items-center gap-2">
+                    <button
+                        onClick={handlePreview}
+                        className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-text-muted hover:text-white font-semibold transition-colors flex items-center gap-2"
+                    >
                         <Eye className="w-4 h-4" />
                         Önizle
                     </button>
@@ -169,7 +208,7 @@ export default function DocsEditor() {
                                     type="text"
                                     placeholder="Doküman Başlığı"
                                     value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
+                                    onChange={handleTitleChange}
                                     className="w-full bg-transparent text-3xl font-bold text-white placeholder:text-slate-600 focus:outline-none"
                                 />
                             </div>
@@ -200,23 +239,24 @@ export default function DocsEditor() {
                         <div className="glass-card p-1 rounded-2xl border border-border-subtle flex-1 flex flex-col min-h-[500px]">
                             {/* Editor Toolbar */}
                             <div className="p-3 border-b border-border-subtle flex items-center gap-2 overflow-x-auto text-text-muted">
-                                <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white font-bold">B</button>
-                                <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white italic">I</button>
+                                <button onClick={() => insertFormat('bold')} className="p-2 hover:bg-white/5 rounded-lg hover:text-white font-bold">B</button>
+                                <button onClick={() => insertFormat('italic')} className="p-2 hover:bg-white/5 rounded-lg hover:text-white italic">I</button>
                                 <div className="w-px h-4 bg-border-subtle mx-1" />
-                                <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white flex items-center gap-1">
+                                <button onClick={() => insertFormat('h1')} className="p-2 hover:bg-white/5 rounded-lg hover:text-white flex items-center gap-1">
                                     <Hash className="w-3 h-3" /> H1
                                 </button>
-                                <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white flex items-center gap-1">
+                                <button onClick={() => insertFormat('h2')} className="p-2 hover:bg-white/5 rounded-lg hover:text-white flex items-center gap-1">
                                     <Hash className="w-3 h-3" /> H2
                                 </button>
                                 <div className="w-px h-4 bg-border-subtle mx-1" />
-                                <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white text-xs font-mono">
+                                <button onClick={() => insertFormat('code')} className="p-2 hover:bg-white/5 rounded-lg hover:text-white text-xs font-mono">
                                     {"</> Code"}
                                 </button>
                             </div>
 
                             {/* Editor Content Area */}
                             <textarea
+                                ref={textareaRef}
                                 className="flex-1 w-full bg-transparent p-6 text-text-main focus:outline-none resize-none font-mono text-sm leading-relaxed"
                                 placeholder="# İçeriğinizi Markdown formatında yazın..."
                                 value={content}

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { toast } from '../../components/ui/Toast';
 import { cmsService, type BlogPost } from '../../services/cms.service';
+import { useMarkdownEditor } from '../../hooks/useMarkdownEditor';
 
 export default function BlogEditor() {
     const navigate = useNavigate();
@@ -32,6 +33,9 @@ export default function BlogEditor() {
     const [tags, setTags] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState('');
     const [status, setStatus] = useState<'published' | 'draft' | 'scheduled'>('draft');
+
+    // Markdown Editor Hook
+    const { textareaRef, insertFormat } = useMarkdownEditor(content, setContent);
 
     // Fetch Post Details
     const { data: post, isLoading } = useQuery({
@@ -74,15 +78,39 @@ export default function BlogEditor() {
         }
     });
 
+    // Slugify helper
+    const slugify = (text: string) => {
+        return text
+            .toLowerCase()
+            .replace(/ğ/g, 'g')
+            .replace(/ü/g, 'u')
+            .replace(/ş/g, 's')
+            .replace(/ı/g, 'i')
+            .replace(/ö/g, 'o')
+            .replace(/ç/g, 'c')
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-');
+    };
+
+    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setTitle(val);
+        // Only auto-generate slug if creating new post
+        if (isNew) {
+            setSlug(slugify(val));
+        }
+    };
+
     const handleSave = () => {
-        if (!title || !slug) {
+        if (!title.trim() || !slug.trim()) {
             toast.warning('Lütfen başlık ve URL (slug) alanlarını doldurun.');
             return;
         }
 
         saveMutation.mutate({
-            title,
-            slug,
+            title: title.trim(),
+            slug: slug.trim(),
             content,
             category,
             status,
@@ -101,6 +129,17 @@ export default function BlogEditor() {
 
     const removeTag = (tagToRemove: string) => {
         setTags(tags.filter(tag => tag !== tagToRemove));
+    };
+
+    const handlePreview = () => {
+        if (!slug.trim()) {
+            toast.warning('Önizleme için önce bir URL (slug) belirlemelisiniz.');
+            return;
+        }
+        // CMS Preview Secret
+        const secret = 'R5VlT2OZ0wVQokJwruUN5e2AuDuf8FJW';
+        const url = `https://stoocker.app/api/cms/preview?slug=${slug.trim()}&secret=${secret}&type=post`;
+        window.open(url, '_blank');
     };
 
     if (isLoading) {
@@ -133,7 +172,10 @@ export default function BlogEditor() {
                     </div>
                 </div>
                 <div className="flex gap-3">
-                    <button className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-text-muted hover:text-white font-semibold transition-colors flex items-center gap-2">
+                    <button
+                        onClick={handlePreview}
+                        className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-text-muted hover:text-white font-semibold transition-colors flex items-center gap-2"
+                    >
                         <Eye className="w-4 h-4" />
                         Önizle
                     </button>
@@ -158,7 +200,7 @@ export default function BlogEditor() {
                                 type="text"
                                 placeholder="Yazı Başlığı"
                                 value={title}
-                                onChange={(e) => setTitle(e.target.value)}
+                                onChange={handleTitleChange}
                                 className="w-full bg-transparent text-3xl font-bold text-white placeholder:text-slate-600 focus:outline-none"
                             />
                         </div>
@@ -179,15 +221,15 @@ export default function BlogEditor() {
                     <div className="glass-card p-1 rounded-2xl border border-border-subtle flex-1 flex flex-col min-h-[500px]">
                         {/* Editor Toolbar */}
                         <div className="p-3 border-b border-border-subtle flex items-center gap-2 overflow-x-auto text-text-muted">
-                            <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white font-bold">B</button>
-                            <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white italic">I</button>
-                            <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white underline">U</button>
+                            <button onClick={() => insertFormat('bold')} className="p-2 hover:bg-white/5 rounded-lg hover:text-white font-bold">B</button>
+                            <button onClick={() => insertFormat('italic')} className="p-2 hover:bg-white/5 rounded-lg hover:text-white italic">I</button>
+                            <button onClick={() => insertFormat('underline')} className="p-2 hover:bg-white/5 rounded-lg hover:text-white underline">U</button>
                             <div className="w-px h-4 bg-border-subtle mx-1" />
-                            <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white">H1</button>
-                            <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white">H2</button>
-                            <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white">H3</button>
+                            <button onClick={() => insertFormat('h1')} className="p-2 hover:bg-white/5 rounded-lg hover:text-white">H1</button>
+                            <button onClick={() => insertFormat('h2')} className="p-2 hover:bg-white/5 rounded-lg hover:text-white">H2</button>
+                            <button onClick={() => insertFormat('h3')} className="p-2 hover:bg-white/5 rounded-lg hover:text-white">H3</button>
                             <div className="w-px h-4 bg-border-subtle mx-1" />
-                            <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white">
+                            <button onClick={() => insertFormat('image')} className="p-2 hover:bg-white/5 rounded-lg hover:text-white">
                                 <ImageIcon className="w-4 h-4" />
                             </button>
                             <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white">
@@ -197,6 +239,7 @@ export default function BlogEditor() {
 
                         {/* Editor Content Area */}
                         <textarea
+                            ref={textareaRef}
                             className="flex-1 w-full bg-transparent p-6 text-text-main focus:outline-none resize-none font-mono text-sm leading-relaxed"
                             placeholder="Hikayenizi yazmaya başlayın..."
                             value={content}

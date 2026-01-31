@@ -25,8 +25,12 @@ export default function PageListPage() {
         queryKey: ['pages'],
         queryFn: async () => {
             const response = await cmsService.getPages();
-            // Handle potential array wrapping or different response structure
-            return Array.isArray(response) ? response : (response as any).data || [];
+            // Handle paginated response
+            if (response && 'items' in response) {
+                return response.items;
+            }
+            // Fallback for array or other structures
+            return Array.isArray(response) ? response : [];
         }
     });
 
@@ -146,10 +150,13 @@ export default function PageListPage() {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-text-muted">{page.author?.name || '-'}</td>
-                                    <td className="px-6 py-4 text-text-muted">{new Date(page.updatedAt).toLocaleDateString('tr-TR')}</td>
+                                    <td className="px-6 py-4 text-text-muted">
+                                        {page.updatedAt ? new Date(page.updatedAt).toLocaleDateString('tr-TR') : '-'}
+                                    </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
+                                                onClick={() => window.open(`https://stoocker.app/${page.slug}`, '_blank')}
                                                 className="p-2 rounded-lg hover:bg-white/10 text-text-muted hover:text-indigo-400 transition-colors"
                                                 title="Görüntüle"
                                             >

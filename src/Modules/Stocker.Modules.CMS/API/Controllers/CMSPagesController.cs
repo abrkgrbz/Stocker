@@ -86,6 +86,28 @@ public class CMSPagesController : ControllerBase
     }
 
     /// <summary>
+    /// Preview page by slug with shared secret (public endpoint for Next.js preview mode)
+    /// </summary>
+    [HttpGet("preview-public/{slug}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<PageDto>>> PreviewBySlugPublic(
+        string slug,
+        [FromQuery] string secret,
+        CancellationToken cancellationToken)
+    {
+        // Validate preview secret
+        var previewSecret = Environment.GetEnvironmentVariable("CMS_PREVIEW_SECRET");
+        if (string.IsNullOrEmpty(previewSecret) || secret != previewSecret)
+            return Unauthorized(ApiResponse<PageDto>.FailureResponse("Invalid preview secret"));
+
+        var page = await _repository.GetBySlugAsync(slug, cancellationToken);
+        if (page == null)
+            return NotFound(ApiResponse<PageDto>.FailureResponse("Page not found"));
+
+        return Ok(ApiResponse<PageDto>.SuccessResponse(_mapper.Map<PageDto>(page)));
+    }
+
+    /// <summary>
     /// Create a new page
     /// </summary>
     [HttpPost]

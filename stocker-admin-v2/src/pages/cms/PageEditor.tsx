@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -15,6 +14,7 @@ import {
 } from 'lucide-react';
 import { toast } from '../../components/ui/Toast';
 import { cmsService, type Page } from '../../services/cms.service';
+import { useMarkdownEditor } from '../../hooks/useMarkdownEditor';
 
 export default function PageEditor() {
     const navigate = useNavigate();
@@ -23,12 +23,15 @@ export default function PageEditor() {
     const isNew = !id;
 
     // Form States
-    const [title, setTitle] = useState('');
+    const [formTitle, setFormTitle] = useState('');
     const [slug, setSlug] = useState('');
     const [content, setContent] = useState('');
     const [status, setStatus] = useState<'published' | 'draft' | 'archived'>('draft');
     const [metaTitle, setMetaTitle] = useState('');
     const [metaDescription, setMetaDescription] = useState('');
+
+    // Markdown Editor Hook
+    const { textareaRef, insertFormat } = useMarkdownEditor(content, setContent);
 
     // Fetch Page Details
     const { data: page, isLoading } = useQuery({
@@ -40,7 +43,7 @@ export default function PageEditor() {
     // Populate Form
     useEffect(() => {
         if (page) {
-            setTitle(page.title);
+            setFormTitle(page.title);
             setSlug(page.slug);
             setContent(page.content);
             setStatus(page.status);
@@ -71,15 +74,46 @@ export default function PageEditor() {
         }
     });
 
+    // Slugify helper
+    const slugify = (text: string) => {
+        return text
+            .toLowerCase()
+            .replace(/ğ/g, 'g')
+            .replace(/ü/g, 'u')
+            .replace(/ş/g, 's')
+            .replace(/ı/g, 'i')
+            .replace(/ö/g, 'o')
+            .replace(/ç/g, 'c')
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-');
+    };
+
+    // Auto-generate slug from title
+    useEffect(() => {
+        if (isNew && formTitle) {
+            setSlug(slugify(formTitle));
+        }
+    }, [formTitle, isNew]);
+
+    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormTitle(e.target.value);
+    };
+
     const handleSave = () => {
-        if (!title || !slug) {
-            toast.warning('Lütfen başlık ve URL (slug) alanlarını doldurun.');
+        if (!formTitle?.trim()) {
+            toast.warning('Lütfen sayfa başlığını giriniz.');
+            return;
+        }
+
+        if (!slug?.trim()) {
+            toast.warning('Lütfen URL (slug) alanını giriniz.');
             return;
         }
 
         saveMutation.mutate({
-            title,
-            slug,
+            title: formTitle.trim(),
+            slug: slug.trim(),
             content,
             status,
             metaTitle,
@@ -87,13 +121,16 @@ export default function PageEditor() {
         });
     };
 
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-full">
-                <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
-            </div>
-        );
-    }
+    const handlePreview = () => {
+        if (!slug.trim()) {
+            toast.warning('Önizleme için önce bir URL (slug) belirlemelisiniz.');
+            return;
+        }
+        // CMS Preview Secret
+        const secret = 'R5VlT2OZ0wVQokJwruUN5e2AuDuf8FJW';
+        const url = `https://stoocker.app/api/cms/preview?slug=${slug.trim()}&secret=${secret}&type=page`;
+        window.open(url, '_blank');
+    };
 
     return (
         <div className="space-y-6 h-[calc(100vh-8rem)] flex flex-col">
@@ -116,7 +153,10 @@ export default function PageEditor() {
                     </div>
                 </div>
                 <div className="flex gap-3">
-                    <button className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-text-muted hover:text-white font-semibold transition-colors flex items-center gap-2">
+                    <button
+                        onClick={handlePreview}
+                        className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-text-muted hover:text-white font-semibold transition-colors flex items-center gap-2"
+                    >
                         <Eye className="w-4 h-4" />
                         Önizle
                     </button>
@@ -140,8 +180,8 @@ export default function PageEditor() {
                             <input
                                 type="text"
                                 placeholder="Sayfa Başlığı"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
+                                value={formTitle}
+                                onChange={handleTitleChange}
                                 className="w-full bg-transparent text-3xl font-bold text-white placeholder:text-slate-600 focus:outline-none"
                             />
                         </div>
@@ -162,14 +202,14 @@ export default function PageEditor() {
                     <div className="glass-card p-1 rounded-2xl border border-border-subtle flex-1 flex flex-col min-h-[500px]">
                         {/* Editor Toolbar */}
                         <div className="p-3 border-b border-border-subtle flex items-center gap-2 overflow-x-auto text-text-muted">
-                            <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white font-bold">B</button>
-                            <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white italic">I</button>
-                            <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white underline">U</button>
+                            <button onClick={() => insertFormat('bold')} className="p-2 hover:bg-white/5 rounded-lg hover:text-white font-bold">B</button>
+                            <button onClick={() => insertFormat('italic')} className="p-2 hover:bg-white/5 rounded-lg hover:text-white italic">I</button>
+                            <button onClick={() => insertFormat('underline')} className="p-2 hover:bg-white/5 rounded-lg hover:text-white underline">U</button>
                             <div className="w-px h-4 bg-border-subtle mx-1" />
-                            <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white">H1</button>
-                            <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white">H2</button>
+                            <button onClick={() => insertFormat('h1')} className="p-2 hover:bg-white/5 rounded-lg hover:text-white">H1</button>
+                            <button onClick={() => insertFormat('h2')} className="p-2 hover:bg-white/5 rounded-lg hover:text-white">H2</button>
                             <div className="w-px h-4 bg-border-subtle mx-1" />
-                            <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white">
+                            <button onClick={() => insertFormat('image')} className="p-2 hover:bg-white/5 rounded-lg hover:text-white">
                                 <ImageIcon className="w-4 h-4" />
                             </button>
                             <button className="p-2 hover:bg-white/5 rounded-lg hover:text-white">
@@ -179,6 +219,7 @@ export default function PageEditor() {
 
                         {/* Editor Content Area */}
                         <textarea
+                            ref={textareaRef}
                             className="flex-1 w-full bg-transparent p-6 text-text-main focus:outline-none resize-none font-mono text-sm leading-relaxed"
                             placeholder="İçeriğinizi buraya yazın..."
                             value={content}

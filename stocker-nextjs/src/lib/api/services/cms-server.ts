@@ -233,20 +233,27 @@ export async function getPageBySlug(slug: string): Promise<CmsPage | null> {
 }
 
 /**
- * Get CMS page by slug for preview (any status, requires auth)
+ * Get CMS page by slug for preview (any status)
  * Used in draft mode to preview unpublished content
+ * Uses shared secret instead of user auth token
  */
-export async function getPagePreview(slug: string, authToken?: string): Promise<CmsPage | null> {
-  if (!authToken) return null;
+export async function getPagePreview(slug: string): Promise<CmsPage | null> {
+  const previewSecret = process.env.CMS_PREVIEW_SECRET;
+  if (!previewSecret) {
+    console.error('[CMS Preview] CMS_PREVIEW_SECRET not configured');
+    return null;
+  }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/cms/pages/preview/${encodeURIComponent(slug)}`, {
-      cache: 'no-store', // Never cache preview content
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authToken}`,
-      },
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/api/cms/pages/preview-public/${encodeURIComponent(slug)}?secret=${encodeURIComponent(previewSecret)}`,
+      {
+        cache: 'no-store', // Never cache preview content
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
     if (!response.ok) {
       console.error(`[CMS Preview] Fetch error: ${slug} - ${response.status}`);
