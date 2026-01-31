@@ -51,12 +51,23 @@ const nextConfig = {
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.stoocker.app';
     const cleanApiUrl = apiBaseUrl.replace(/\/api$/, '');
 
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${cleanApiUrl}/api/:path*`,
-      },
-    ];
+    return {
+      // beforeFiles runs before Next.js checks for file/route matches
+      // This ensures Next.js API routes are handled first
+      beforeFiles: [],
+
+      // afterFiles runs after Next.js checks for file/route matches
+      // Only unmatched /api/* requests go to backend
+      afterFiles: [
+        {
+          source: '/api/:path*',
+          destination: `${cleanApiUrl}/api/:path*`,
+        },
+      ],
+
+      // fallback runs after both pages and afterFiles
+      fallback: [],
+    };
   },
 
   // Security headers
