@@ -4,6 +4,11 @@ import React, { useState } from 'react';
 import { motion, Variants } from 'framer-motion';
 import Link from 'next/link';
 import { useTranslations } from '@/lib/i18n';
+import type { PricingPlan } from '@/lib/api/services/cms.types';
+
+interface PricingSectionProps {
+  plans?: PricingPlan[];
+}
 
 // Animation variants for staggered entrance
 const containerVariants: Variants = {
@@ -29,57 +34,89 @@ const cardVariants: Variants = {
   },
 };
 
-export default function PricingSection() {
+// Internal display type for normalized plans
+interface DisplayPlan {
+  key: string;
+  name?: string;
+  description?: string;
+  monthlyPrice: number | null;
+  yearlyPrice: number | null;
+  currency?: string;
+  highlighted: boolean;
+  features: string[];
+  ctaText?: string;
+  ctaLink?: string;
+}
+
+// Default fallback plans
+const defaultPlans: DisplayPlan[] = [
+  {
+    key: 'starter',
+    monthlyPrice: 0,
+    yearlyPrice: 0,
+    highlighted: false,
+    features: [
+      '100 urun limiti',
+      '1 kullanici',
+      'Temel raporlama',
+      'E-posta destegi',
+      '1 depo',
+    ],
+  },
+  {
+    key: 'pro',
+    monthlyPrice: 299,
+    yearlyPrice: 249,
+    highlighted: true,
+    features: [
+      'Sinirsiz urun',
+      '10 kullanici',
+      'Gelismis raporlama',
+      'Oncelikli destek',
+      'Sinirsiz depo',
+      'E-fatura entegrasyonu',
+      'API erisimi',
+      'CRM modulu',
+    ],
+  },
+  {
+    key: 'enterprise',
+    monthlyPrice: null,
+    yearlyPrice: null,
+    highlighted: false,
+    features: [
+      'Sinirsiz her sey',
+      'Sinirsiz kullanici',
+      'Ozel raporlama',
+      '7/24 destek',
+      'Coklu sirket',
+      'Ozel entegrasyonlar',
+      'SLA garantisi',
+      'Dedicated manager',
+    ],
+  },
+];
+
+export default function PricingSection({ plans }: PricingSectionProps) {
   const [isYearly, setIsYearly] = useState(false);
   const { t } = useTranslations();
 
-  const plans = [
-    {
-      key: 'starter',
-      monthlyPrice: 0,
-      yearlyPrice: 0,
-      highlighted: false,
-      features: [
-        '100 ürün limiti',
-        '1 kullanıcı',
-        'Temel raporlama',
-        'E-posta desteği',
-        '1 depo',
-      ],
-    },
-    {
-      key: 'pro',
-      monthlyPrice: 299,
-      yearlyPrice: 249,
-      highlighted: true,
-      features: [
-        'Sınırsız ürün',
-        '10 kullanıcı',
-        'Gelişmiş raporlama',
-        'Öncelikli destek',
-        'Sınırsız depo',
-        'E-fatura entegrasyonu',
-        'API erişimi',
-        'CRM modülü',
-      ],
-    },
-    {
-      key: 'enterprise',
-      monthlyPrice: null,
-      yearlyPrice: null,
-      highlighted: false,
-      features: [
-        'Sınırsız her şey',
-        'Sınırsız kullanıcı',
-        'Özel raporlama',
-        '7/24 destek',
-        'Çoklu şirket',
-        'Özel entegrasyonlar',
-        'SLA garantisi',
-        'Dedicated manager',
-      ],
-    },
-  ];
+  // Use CMS plans or fallback to defaults
+  const displayPlans: DisplayPlan[] =
+    plans && plans.length > 0
+      ? plans.map((plan) => ({
+          key: plan.slug,
+          name: plan.name,
+          description: plan.description,
+          monthlyPrice: plan.monthlyPrice,
+          yearlyPrice: plan.yearlyPrice,
+          currency: plan.currency,
+          highlighted: plan.isPopular || plan.isFeatured,
+          features: plan.features?.map((f) => f.name) || [],
+          ctaText: plan.ctaText,
+          ctaLink: plan.ctaLink,
+        }))
+      : defaultPlans;
 
   return (
     <section id="pricing" className="py-24 bg-slate-50/50 border-t border-slate-100">
@@ -99,7 +136,7 @@ export default function PricingSection() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="inline-block text-[12px] font-medium text-slate-500 uppercase tracking-wider mb-4"
           >
-            Fiyatlandırma
+            Fiyatlandirma
           </motion.span>
           <motion.h2
             initial={{ opacity: 0, y: 15 }}
@@ -162,23 +199,28 @@ export default function PricingSection() {
           viewport={{ once: true, margin: '-50px' }}
           className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start"
         >
-          {plans.map((plan, index) => {
+          {displayPlans.map((plan) => {
             const isHighlighted = plan.highlighted;
 
             return (
               <motion.div
                 key={plan.key}
                 variants={cardVariants}
-                whileHover={!isHighlighted ? {
-                  y: -6,
-                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
-                  transition: { duration: 0.3 }
-                } : undefined}
+                whileHover={
+                  !isHighlighted
+                    ? {
+                        y: -6,
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
+                        transition: { duration: 0.3 },
+                      }
+                    : undefined
+                }
                 className={`
                   relative rounded-2xl p-6 transition-colors duration-300
-                  ${isHighlighted
-                    ? 'bg-white border-2 border-slate-900 shadow-xl shadow-slate-900/10 lg:scale-105 lg:-my-4 lg:py-10 z-10'
-                    : 'bg-white border border-slate-200 hover:border-slate-300'
+                  ${
+                    isHighlighted
+                      ? 'bg-white border-2 border-slate-900 shadow-xl shadow-slate-900/10 lg:scale-105 lg:-my-4 lg:py-10 z-10'
+                      : 'bg-white border border-slate-200 hover:border-slate-300'
                   }
                 `}
               >
@@ -196,11 +238,13 @@ export default function PricingSection() {
 
                 {/* Plan Info */}
                 <div className="mb-6">
-                  <h3 className={`text-[18px] font-semibold mb-1 ${isHighlighted ? 'text-slate-900' : 'text-slate-700'}`}>
-                    {t(`landing.pricing.${plan.key}.name`)}
+                  <h3
+                    className={`text-[18px] font-semibold mb-1 ${isHighlighted ? 'text-slate-900' : 'text-slate-700'}`}
+                  >
+                    {plan.name || t(`landing.pricing.${plan.key}.name`)}
                   </h3>
                   <p className="text-[13px] text-slate-500">
-                    {t(`landing.pricing.${plan.key}.description`)}
+                    {plan.description || t(`landing.pricing.${plan.key}.description`)}
                   </p>
                 </div>
 
@@ -208,35 +252,47 @@ export default function PricingSection() {
                 <div className="mb-6">
                   {plan.monthlyPrice !== null ? (
                     <div className="flex items-baseline gap-1">
-                      <span className={`text-[42px] font-bold tracking-tight ${isHighlighted ? 'text-slate-900' : 'text-slate-700'}`}>
-                        ₺{isYearly ? plan.yearlyPrice : plan.monthlyPrice}
+                      <span
+                        className={`text-[42px] font-bold tracking-tight ${isHighlighted ? 'text-slate-900' : 'text-slate-700'}`}
+                      >
+                        {plan.currency || '₺'}
+                        {isYearly ? plan.yearlyPrice : plan.monthlyPrice}
                       </span>
-                      <span className="text-[14px] text-slate-500">{t('landing.pricing.perMonth')}</span>
+                      <span className="text-[14px] text-slate-500">
+                        {t('landing.pricing.perMonth')}
+                      </span>
                     </div>
                   ) : (
-                    <div className={`text-[42px] font-bold tracking-tight ${isHighlighted ? 'text-slate-900' : 'text-slate-700'}`}>
+                    <div
+                      className={`text-[42px] font-bold tracking-tight ${isHighlighted ? 'text-slate-900' : 'text-slate-700'}`}
+                    >
                       {t('landing.pricing.custom')}
                     </div>
                   )}
-                  {isYearly && plan.monthlyPrice !== null && plan.monthlyPrice > 0 && (
-                    <div className="text-[12px] text-slate-400 mt-1">
-                      Yıllık ödemeyle ₺{((plan.monthlyPrice - (plan.yearlyPrice || 0)) * 12).toLocaleString()} tasarruf
-                    </div>
-                  )}
+                  {isYearly &&
+                    plan.monthlyPrice !== null &&
+                    plan.monthlyPrice > 0 &&
+                    plan.yearlyPrice !== null && (
+                      <div className="text-[12px] text-slate-400 mt-1">
+                        Yillik odemeyle {plan.currency || '₺'}
+                        {((plan.monthlyPrice - plan.yearlyPrice) * 12).toLocaleString()} tasarruf
+                      </div>
+                    )}
                 </div>
 
                 {/* CTA */}
                 <Link
-                  href={plan.monthlyPrice === null ? '/contact' : '/register'}
+                  href={plan.ctaLink || (plan.monthlyPrice === null ? '/contact' : '/register')}
                   className={`
                     block w-full py-3 px-4 rounded-xl text-center text-[14px] font-semibold transition-all
-                    ${isHighlighted
-                      ? 'bg-slate-900 text-white hover:bg-slate-800 hover:shadow-lg hover:shadow-slate-900/20'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    ${
+                      isHighlighted
+                        ? 'bg-slate-900 text-white hover:bg-slate-800 hover:shadow-lg hover:shadow-slate-900/20'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                     }
                   `}
                 >
-                  {t(`landing.pricing.${plan.key}.cta`)}
+                  {plan.ctaText || t(`landing.pricing.${plan.key}.cta`)}
                 </Link>
 
                 {/* Divider */}
@@ -276,14 +332,12 @@ export default function PricingSection() {
           transition={{ duration: 0.5, delay: 0.3 }}
           className="text-center mt-12"
         >
-          <p className="text-[13px] text-slate-400">
-            {t('landing.pricing.trialNote')}
-          </p>
+          <p className="text-[13px] text-slate-400">{t('landing.pricing.trialNote')}</p>
           <div className="flex items-center justify-center gap-6 mt-6">
             {[
-              { icon: '🔒', text: 'Güvenli ödeme' },
-              { icon: '↩️', text: 'İstediğin zaman iptal' },
-              { icon: '💳', text: 'Kredi kartı gerekmez' },
+              { icon: '🔒', text: 'Guvenli odeme' },
+              { icon: '↩️', text: 'Istedigin zaman iptal' },
+              { icon: '💳', text: 'Kredi karti gerekmez' },
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-2 text-[12px] text-slate-500">
                 <span>{item.icon}</span>

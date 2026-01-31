@@ -1,174 +1,132 @@
-'use client'
+import { Metadata } from 'next';
+import { getPageBySlug } from '@/lib/api/services/cms-server';
+import LegalPageClient from '@/components/legal/LegalPageClient';
+import LegalPageSkeleton from '@/components/legal/LegalPageSkeleton';
+import { Suspense } from 'react';
 
-import Link from 'next/link'
-import Image from 'next/image'
-import { motion } from 'framer-motion'
+export const revalidate = 3600; // 1 hour
 
-const sections = [
-  {
-    title: 'Veri Sorumlusu',
-    content: `Stocker Yazılım A.Ş. olarak, 6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") kapsamında veri sorumlusu sıfatıyla kişisel verilerinizi işlemekteyiz.
+export async function generateMetadata(): Promise<Metadata> {
+  const page = await getPageBySlug('kvkk');
 
-Veri Sorumlusu: Stocker Yazılım A.Ş.
-Adres: Maslak Mah. Ahi Evran Cad. No:6 Sarıyer/İstanbul
-E-posta: kvkk@stocker.com
-Telefon: +90 (850) 123 45 67`,
-  },
-  {
-    title: 'İşlenen Kişisel Veriler',
-    content: `Aşağıdaki kategorilerde kişisel verileriniz işlenmektedir:
-
-• Kimlik Bilgileri: Ad, soyad, T.C. kimlik numarası, doğum tarihi
-• İletişim Bilgileri: E-posta adresi, telefon numarası, adres
-• Finansal Bilgiler: Fatura bilgileri, ödeme kayıtları, banka hesap bilgileri
-• Kullanım Verileri: IP adresi, tarayıcı bilgileri, kullanım istatistikleri
-• Çalışan Verileri: Kullanıcı hesap bilgileri, yetki seviyeleri`,
-  },
-  {
-    title: 'Veri İşleme Amaçları',
-    content: `Kişisel verileriniz aşağıdaki amaçlarla işlenmektedir:
-
-• Hizmet sunumu ve sözleşme yükümlülüklerinin yerine getirilmesi
-• Müşteri desteği ve iletişim faaliyetlerinin yürütülmesi
-• Faturalandırma ve ödeme işlemlerinin gerçekleştirilmesi
-• Yasal yükümlülüklerin yerine getirilmesi
-• Hizmet kalitesinin artırılması ve analiz çalışmaları
-• Güvenlik önlemlerinin alınması ve dolandırıcılığın önlenmesi`,
-  },
-  {
-    title: 'Hukuki Sebepler',
-    content: `KVKK'nın 5. ve 6. maddeleri uyarınca kişisel verileriniz aşağıdaki hukuki sebeplere dayanılarak işlenmektedir:
-
-• Sözleşmenin kurulması veya ifası için gerekli olması
-• Veri sorumlusunun hukuki yükümlülüğü
-• Veri sorumlusunun meşru menfaati
-• Açık rızanızın bulunması (gerekli hallerde)`,
-  },
-  {
-    title: 'Veri Aktarımı',
-    content: `Kişisel verileriniz, yukarıda belirtilen amaçlarla sınırlı olarak aşağıdaki taraflara aktarılabilir:
-
-• Hizmet sağlayıcılar ve iş ortakları
-• Yasal zorunluluk halinde yetkili kamu kurum ve kuruluşları
-• Ödeme hizmeti sağlayıcıları
-• Bulut hizmet sağlayıcıları (AWS, veri merkezleri yurt dışında olabilir)
-
-Yurt dışına veri aktarımı halinde KVKK'nın 9. maddesi kapsamında gerekli güvenceler sağlanmaktadır.`,
-  },
-  {
-    title: 'Veri Saklama Süresi',
-    content: `Kişisel verileriniz, işlenme amaçlarının gerektirdiği süre boyunca saklanmaktadır:
-
-• Hesap bilgileri: Hesap aktif olduğu sürece ve sonrasında 10 yıl
-• İşlem kayıtları: 10 yıl (yasal zorunluluk)
-• Kullanım verileri: 2 yıl
-• Pazarlama verileri: Onay geri çekilene kadar
-
-Yasal saklama süreleri sona erdikten sonra verileriniz silinir, yok edilir veya anonim hale getirilir.`,
-  },
-  {
-    title: 'Haklarınız',
-    content: `KVKK'nın 11. maddesi uyarınca aşağıdaki haklara sahipsiniz:
-
-• Kişisel verilerinizin işlenip işlenmediğini öğrenme
-• İşlenmişse buna ilişkin bilgi talep etme
-• İşlenme amacını ve bunların amacına uygun kullanılıp kullanılmadığını öğrenme
-• Yurt içinde veya yurt dışında aktarıldığı üçüncü kişileri bilme
-• Eksik veya yanlış işlenmiş olması hâlinde düzeltilmesini isteme
-• KVKK'nın 7. maddesindeki şartlar çerçevesinde silinmesini veya yok edilmesini isteme
-• Düzeltme, silme veya yok edilme işlemlerinin aktarıldığı üçüncü kişilere bildirilmesini isteme
-• İşlenen verilerin münhasıran otomatik sistemler vasıtasıyla analiz edilmesi suretiyle aleyhinize bir sonucun ortaya çıkmasına itiraz etme
-• Kanuna aykırı olarak işlenmesi sebebiyle zarara uğramanız hâlinde zararın giderilmesini talep etme`,
-  },
-  {
-    title: 'Başvuru Yöntemi',
-    content: `Yukarıda belirtilen haklarınızı kullanmak için:
-
-E-posta: kvkk@stocker.com
-Posta: Stocker Yazılım A.Ş. - KVKK Başvuruları, Maslak Mah. Ahi Evran Cad. No:6 Sarıyer/İstanbul
-
-Başvurunuzda kimliğinizi tespit edici bilgiler ve talebiniz açıkça belirtilmelidir. Başvurular en geç 30 gün içinde ücretsiz olarak sonuçlandırılır.`,
-  },
-];
-
-export default function KVKKPage() {
-  return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b border-slate-200 bg-white sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/"><Image src="/stoocker_black.png" alt="Stoocker Logo" width={120} height={40} className="object-contain" priority /></Link>
-          <nav className="flex items-center space-x-6 text-sm">
-            <Link href="/privacy" className="text-slate-500 hover:text-slate-900 transition-colors">Gizlilik</Link>
-            <Link href="/terms" className="text-slate-500 hover:text-slate-900 transition-colors">Şartlar</Link>
-            <Link href="/login" className="text-slate-900 hover:text-slate-700 font-medium transition-colors">Giriş Yap</Link>
-          </nav>
-        </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto px-6 py-12">
-        {/* Hero */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
-          <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <svg className="w-8 h-8 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-          </div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">KVKK Aydınlatma Metni</h1>
-          <p className="text-slate-500">Kişisel Verilerin Korunması Kanunu Kapsamında Aydınlatma</p>
-          <p className="text-slate-400 text-sm mt-2">Son güncelleme: 11 Aralık 2024</p>
-        </motion.div>
-
-        {/* Sections */}
-        <div className="space-y-6">
-          {sections.map((section, index) => (
-            <motion.section key={index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + index * 0.05 }} className="p-6 bg-slate-50 rounded-2xl border border-slate-200">
-              <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center">
-                <span className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center mr-3 text-slate-700 text-sm font-bold">{index + 1}</span>
-                {section.title}
-              </h2>
-              <div className="text-slate-600 leading-relaxed whitespace-pre-line">{section.content}</div>
-            </motion.section>
-          ))}
-        </div>
-
-        {/* Download */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="mt-12 p-6 bg-slate-50 rounded-2xl border border-slate-200 text-center">
-          <h3 className="font-bold text-slate-900 mb-4">Aydınlatma Metnini İndirin</h3>
-          <div className="flex justify-center gap-4">
-            <button className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-colors flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              PDF İndir
-            </button>
-          </div>
-        </motion.div>
-
-        {/* Back Link */}
-        <div className="text-center mt-12">
-          <Link href="/" className="inline-flex items-center gap-2 text-slate-900 hover:text-slate-700 transition-colors group">
-            <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            <span>Ana Sayfaya Dön</span>
-          </Link>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-slate-200 mt-12">
-        <div className="max-w-4xl mx-auto px-6 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between text-sm text-slate-500">
-            <div>&copy; 2024 Stocker. Tüm hakları saklıdır.</div>
-            <div className="flex items-center space-x-6 mt-4 md:mt-0">
-              <Link href="/privacy" className="hover:text-slate-900 transition-colors">Gizlilik</Link>
-              <Link href="/terms" className="hover:text-slate-900 transition-colors">Şartlar</Link>
-              <Link href="/kvkk" className="text-slate-900">KVKK</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
-  )
+  return {
+    title: page?.metaTitle || 'KVKK Aydinlatma Metni | Stoocker',
+    description:
+      page?.metaDescription ||
+      'Stoocker KVKK aydinlatma metni. Kisisel verilerin korunmasi kanunu kapsaminda haklarinizi ogrenim.',
+    openGraph: {
+      title: page?.metaTitle || 'KVKK Aydinlatma Metni | Stoocker',
+      description:
+        page?.metaDescription ||
+        'Stoocker KVKK aydinlatma metni.',
+      type: 'website',
+    },
+  };
 }
+
+export default async function KVKKPage() {
+  const page = await getPageBySlug('kvkk');
+
+  return (
+    <Suspense fallback={<LegalPageSkeleton />}>
+      <LegalPageClient
+        page={page}
+        fallbackTitle="KVKK Aydinlatma Metni"
+        fallbackSlug="kvkk"
+        fallbackContent={defaultKVKKContent}
+      />
+    </Suspense>
+  );
+}
+
+const defaultKVKKContent = `
+# KVKK Aydinlatma Metni
+
+**Kisisel Verilerin Korunmasi Kanunu Kapsaminda Aydinlatma**
+
+**Son guncelleme: 25 Ocak 2026**
+
+## 1. Veri Sorumlusu
+
+Stoocker Teknoloji A.S. olarak, 6698 sayili Kisisel Verilerin Korunmasi Kanunu ("KVKK") kapsaminda veri sorumlusu sifatiyla kisisel verilerinizi islemekteyiz.
+
+- **Veri Sorumlusu:** Stoocker Teknoloji A.S.
+- **Adres:** Maslak Mah. Ahi Evran Cad. No:6 Sariyer/Istanbul
+- **E-posta:** kvkk@stoocker.app
+- **Telefon:** +90 (850) 123 45 67
+
+## 2. Islenen Kisisel Veriler
+
+Asagidaki kategorilerde kisisel verileriniz islenmektedir:
+
+- **Kimlik Bilgileri:** Ad, soyad, T.C. kimlik numarasi, dogum tarihi
+- **Iletisim Bilgileri:** E-posta adresi, telefon numarasi, adres
+- **Finansal Bilgiler:** Fatura bilgileri, odeme kayitlari, banka hesap bilgileri
+- **Kullanim Verileri:** IP adresi, tarayici bilgileri, kullanim istatistikleri
+- **Calisan Verileri:** Kullanici hesap bilgileri, yetki seviyeleri
+
+## 3. Veri Isleme Amaclari
+
+Kisisel verileriniz asagidaki amaclarla islenmektedir:
+
+- Hizmet sunumu ve sozlesme yukumluluklerinin yerine getirilmesi
+- Musteri destegi ve iletisim faaliyetlerinin yurutulmesi
+- Faturalandirma ve odeme islemlerinin gerceklestirilmesi
+- Yasal yukumluluklerin yerine getirilmesi
+- Hizmet kalitesinin artirilmasi ve analiz calismalari
+- Guvenlik onlemlerinin alinmasi ve dolandiriciligin onlenmesi
+
+## 4. Hukuki Sebepler
+
+KVKK'nin 5. ve 6. maddeleri uyarinca kisisel verileriniz asagidaki hukuki sebeplere dayanilarak islenmektedir:
+
+- Sozlesmenin kurulmasi veya ifasi icin gerekli olmasi
+- Veri sorumlusunun hukuki yukumlulugu
+- Veri sorumlusunun mesru menfaati
+- Acik rizanizin bulunmasi (gerekli hallerde)
+
+## 5. Veri Aktarimi
+
+Kisisel verileriniz, yukarida belirtilen amaclarla sinirli olarak asagidaki taraflara aktarilabilir:
+
+- Hizmet saglayicilar ve is ortaklari
+- Yasal zorunluluk halinde yetkili kamu kurum ve kuruluslari
+- Odeme hizmeti saglayicilari
+- Bulut hizmet saglayicilari (AWS, veri merkezleri yurt disinda olabilir)
+
+Yurt disina veri aktarimi halinde KVKK'nin 9. maddesi kapsaminda gerekli guvenceler saglanmaktadir.
+
+## 6. Veri Saklama Suresi
+
+Kisisel verileriniz, islenme amaclarinin gerektirdigi sure boyunca saklanmaktadir:
+
+- Hesap bilgileri: Hesap aktif oldugu surece ve sonrasinda 10 yil
+- Islem kayitlari: 10 yil (yasal zorunluluk)
+- Kullanim verileri: 2 yil
+- Pazarlama verileri: Onay geri cekilene kadar
+
+Yasal saklama sureleri sona erdikten sonra verileriniz silinir, yok edilir veya anonim hale getirilir.
+
+## 7. Haklariniz
+
+KVKK'nin 11. maddesi uyarinca asagidaki haklara sahipsiniz:
+
+- Kisisel verilerinizin islenip islenmedigini ogrenme
+- Islenmisse buna iliskin bilgi talep etme
+- Islenme amacini ve bunlarin amacina uygun kullanilip kullanilmadigini ogrenme
+- Yurt icinde veya yurt disinda aktarildigi ucuncu kisileri bilme
+- Eksik veya yanlis islenmis olmasi halinde duzeltilmesini isteme
+- KVKK'nin 7. maddesindeki sartlar cercevesinde silinmesini veya yok edilmesini isteme
+- Duzeltme, silme veya yok edilme islemlerinin aktarildigi ucuncu kisilere bildirilmesini isteme
+- Islenen verilerin munhasiran otomatik sistemler vasitasiyla analiz edilmesi suretiyle aleyhinize bir sonucun ortaya cikmasina itiraz etme
+- Kanuna aykiri olarak islenmesi sebebiyle zarara ugramaniz halinde zararin giderilmesini talep etme
+
+## 8. Basvuru Yontemi
+
+Yukarida belirtilen haklarinizi kullanmak icin:
+
+- **E-posta:** kvkk@stoocker.app
+- **Posta:** Stoocker Teknoloji A.S. - KVKK Basvurulari, Maslak Mah. Ahi Evran Cad. No:6 Sariyer/Istanbul
+
+Basvurunuzda kimliginizi tespit edici bilgiler ve talebiniz acikca belirtilmelidir. Basvurular en gec 30 gun icinde ucretsiz olarak sonuclandirilir.
+`;

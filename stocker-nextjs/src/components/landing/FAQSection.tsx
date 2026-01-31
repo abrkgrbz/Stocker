@@ -3,12 +3,21 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from '@/lib/i18n';
+import type { FaqItem, FaqCategory } from '@/lib/api/services/cms.types';
 
 const faqKeys = ['howWorks', 'devices', 'security', 'trial', 'integrations', 'support'] as const;
 
-export default function FAQSection() {
+interface FAQSectionProps {
+  items?: FaqItem[];
+  categories?: FaqCategory[];
+}
+
+export default function FAQSection({ items, categories }: FAQSectionProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const { t } = useTranslations();
+
+  // Use CMS items if available
+  const hasCmsItems = items && items.length > 0;
 
   return (
     <section id="faq" className="py-24 bg-slate-50 border-t border-slate-100">
@@ -29,54 +38,106 @@ export default function FAQSection() {
           </p>
         </motion.div>
 
-        {/* Questions */}
+        {/* Questions - CMS or Fallback */}
         <div className="space-y-2">
-          {faqKeys.map((key, index) => (
-            <motion.div
-              key={key}
-              initial={{ opacity: 0, y: 8 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.05 }}
-            >
-              <button
-                onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="w-full text-left bg-white border border-slate-200 rounded-lg px-5 py-4 hover:border-slate-300 transition-colors"
+          {hasCmsItems ? (
+            // Render CMS FAQ items
+            items.map((item, index) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 8 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
               >
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-[14px] font-medium text-slate-900">
-                    {t(`landing.faq.questions.${key}.question`)}
-                  </span>
-                  <svg
-                    className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
-                      openIndex === index ? 'rotate-180' : ''
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-
-                <AnimatePresence>
-                  {openIndex === index && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="overflow-hidden"
+                <button
+                  onClick={() => setOpenIndex(openIndex === index ? null : index)}
+                  className="w-full text-left bg-white border border-slate-200 rounded-lg px-5 py-4 hover:border-slate-300 transition-colors"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-[14px] font-medium text-slate-900">
+                      {item.question}
+                    </span>
+                    <svg
+                      className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
+                        openIndex === index ? 'rotate-180' : ''
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      <p className="pt-3 text-[13px] text-slate-500 leading-relaxed">
-                        {t(`landing.faq.questions.${key}.answer`)}
-                      </p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </button>
-            </motion.div>
-          ))}
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+
+                  <AnimatePresence>
+                    {openIndex === index && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div
+                          className="pt-3 text-[13px] text-slate-500 leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: item.answer }}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </button>
+              </motion.div>
+            ))
+          ) : (
+            // Fallback to translation keys
+            faqKeys.map((key, index) => (
+              <motion.div
+                key={key}
+                initial={{ opacity: 0, y: 8 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+              >
+                <button
+                  onClick={() => setOpenIndex(openIndex === index ? null : index)}
+                  className="w-full text-left bg-white border border-slate-200 rounded-lg px-5 py-4 hover:border-slate-300 transition-colors"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-[14px] font-medium text-slate-900">
+                      {t(`landing.faq.questions.${key}.question`)}
+                    </span>
+                    <svg
+                      className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
+                        openIndex === index ? 'rotate-180' : ''
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+
+                  <AnimatePresence>
+                    {openIndex === index && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <p className="pt-3 text-[13px] text-slate-500 leading-relaxed">
+                          {t(`landing.faq.questions.${key}.answer`)}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </button>
+              </motion.div>
+            ))
+          )}
         </div>
 
         {/* Contact Link */}

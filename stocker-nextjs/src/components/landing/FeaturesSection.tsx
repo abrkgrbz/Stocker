@@ -3,6 +3,11 @@
 import React, { useRef } from 'react';
 import { motion, useInView, Variants } from 'framer-motion';
 import { useTranslations } from '@/lib/i18n';
+import type { Feature } from '@/lib/api/services/cms.types';
+
+interface FeaturesSectionProps {
+  features?: Feature[];
+}
 
 // Animation variants for staggered entrance
 const containerVariants: Variants = {
@@ -308,10 +313,13 @@ const bentoConfig = [
   { key: 'security', size: 'standard' as const },
 ] as const;
 
-export default function FeaturesSection() {
+export default function FeaturesSection({ features }: FeaturesSectionProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
   const { t } = useTranslations();
+
+  // Use CMS features if available, otherwise fall back to default bentoConfig
+  const hasCmsFeatures = features && features.length > 0;
 
   return (
     <section id="features" className="py-24 bg-slate-50/50 border-t border-slate-100">

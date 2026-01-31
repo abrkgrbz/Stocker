@@ -134,3 +134,35 @@ export type {
   StoragePricing,
   AddOnPricing,
 } from './module-pricing.service';
+
+// CMS Service (Public, No Auth Required)
+export { cmsService } from './cms.service';
+export type {
+  ContentStatus,
+  CmsAuthor,
+  BlogCategory,
+  BlogPostListItem,
+  BlogPost,
+  DocCategory,
+  DocArticleListItem,
+  DocArticle,
+  CmsPage,
+  FaqCategory,
+  FaqItem,
+  Testimonial,
+  PricingFeature,
+  PricingPlan,
+  Feature,
+  Industry,
+  IntegrationItem,
+  Integration,
+  Stat,
+  Partner,
+  Achievement,
+  TeamMember,
+  CompanyValue,
+  ContactInfo,
+  SocialLink,
+  CmsMedia,
+  CmsApiResponse,
+} from './cms.types';
