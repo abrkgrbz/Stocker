@@ -26,7 +26,7 @@ interface NavItem {
 }
 
 const mainNav: NavItem[] = [
-    { label: 'Kontrol Paneli', icon: LayoutDashboard, path: '/' },
+    { label: 'Kontrol Paneli', icon: LayoutDashboard, path: '/dashboard' },
     {
         label: 'Tenant Yönetimi',
         icon: Shield,
@@ -87,7 +87,7 @@ export const Sidebar: React.FC = () => {
     };
 
     const isActive = (path: string) => {
-        if (path === '/') return location.pathname === '/';
+        if (path === '/dashboard') return location.pathname === '/dashboard';
         return location.pathname.startsWith(path);
     };
 
@@ -95,7 +95,7 @@ export const Sidebar: React.FC = () => {
         <aside className="fixed left-6 top-6 bottom-6 w-72 z-50">
             <div className="h-full glass-card flex flex-col p-6 border-border-subtle shadow-2xl transition-all duration-300 overflow-hidden">
                 {/* Brand */}
-                <div className="flex items-center gap-4 px-2 mb-10 cursor-pointer" onClick={() => navigate('/')}>
+                <div className="flex items-center gap-4 px-2 mb-10 cursor-pointer" onClick={() => navigate('/dashboard')}>
                     <div className="w-10 h-10 rounded-full bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
                         <Zap className="w-6 h-6 text-text-main" />
                     </div>
