@@ -113,13 +113,10 @@ export default async function DynamicCMSPage({ params }: PageProps) {
   const draft = await draftMode();
   const isPreview = draft.isEnabled;
 
-  console.log(`[CMS Page] Processing slug: ${slug}, isPreview: ${isPreview}, hasPreviewCookies: ${hasPreviewCookies}`);
-
   let page;
 
   try {
     if (isPreview) {
-      console.log(`[CMS Page] Fetching preview for: ${slug}`);
       // In preview mode, use shared secret to fetch any status page
       page = await getPagePreview(slug);
 
@@ -132,7 +129,6 @@ export default async function DynamicCMSPage({ params }: PageProps) {
       page = await getPageBySlug(slug);
     }
   } catch (error) {
-    console.error(`[CMS Page] Fetch error for slug: ${slug}`, error);
     notFound();
   }
 

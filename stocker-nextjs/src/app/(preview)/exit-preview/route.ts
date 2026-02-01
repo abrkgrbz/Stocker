@@ -15,14 +15,6 @@ export async function GET(request: NextRequest) {
 
   console.log('[CMS Preview] Draft mode disabled');
 
-  const redirectUrl = request.nextUrl.searchParams.get('redirect');
-
-  if (redirectUrl) {
-    redirect(redirectUrl);
-  }
-
-  return NextResponse.json({
-    success: true,
-    message: 'Draft mode disabled'
-  });
+  // Redirect to homepage by default if no redirect param provided
+  redirect(redirectUrl || '/');
 }
