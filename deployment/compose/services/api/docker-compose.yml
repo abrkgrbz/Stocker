@@ -210,9 +210,8 @@ services:
       - "traefik.http.services.api.loadbalancer.sticky.cookie.httponly=true"
       - "traefik.http.services.api.loadbalancer.sticky.cookie.secure=true"
 
-      # Timeouts for long-polling fallback
-      - "traefik.http.services.api.loadbalancer.responseforwardingtimeouts.readtimeout=3600s"
-      - "traefik.http.services.api.loadbalancer.responseforwardingtimeouts.idletimeout=3600s"
+      # Timeouts for long-polling fallback (removed - Traefik v3 doesn't support responseforwardingtimeouts)
+      # Use transport settings instead if needed
 
       # API routing - HTTP (redirect to HTTPS)
       - "traefik.http.routers.api.rule=Host(`api.stoocker.app`)"
