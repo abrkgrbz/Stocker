@@ -47,13 +47,18 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const pages = await getPublishedPages();
+  try {
+    const pages = await getPublishedPages();
 
-  return pages
-    .filter((page) => !RESERVED_SLUGS.includes(page.slug))
-    .map((page) => ({
-      slug: page.slug,
-    }));
+    return pages
+      .filter((page) => !RESERVED_SLUGS.includes(page.slug))
+      .map((page) => ({
+        slug: page.slug,
+      }));
+  } catch (error) {
+    console.error('[CMS] Failed to generate static params:', error);
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -64,24 +69,31 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {};
   }
 
-  const page = await getPageBySlug(slug);
+  try {
+    const page = await getPageBySlug(slug);
 
-  if (!page) {
+    if (!page) {
+      return {
+        title: 'Sayfa Bulunamadı | Stoocker',
+      };
+    }
+
+    return {
+      title: page.metaTitle || `${page.title} | Stoocker`,
+      description: page.metaDescription || page.content?.substring(0, 160),
+      openGraph: {
+        title: page.metaTitle || page.title,
+        description: page.metaDescription || page.content?.substring(0, 160),
+        type: 'website',
+        images: page.featuredImage ? [page.featuredImage] : undefined,
+      },
+    };
+  } catch (error) {
+    console.error(`[CMS] Metadata fetch error for slug: ${slug}`, error);
     return {
       title: 'Sayfa Bulunamadı | Stoocker',
     };
   }
-
-  return {
-    title: page.metaTitle || `${page.title} | Stoocker`,
-    description: page.metaDescription || page.content?.substring(0, 160),
-    openGraph: {
-      title: page.metaTitle || page.title,
-      description: page.metaDescription || page.content?.substring(0, 160),
-      type: 'website',
-      images: page.featuredImage ? [page.featuredImage] : undefined,
-    },
-  };
 }
 
 export default async function DynamicCMSPage({ params }: PageProps) {
@@ -105,18 +117,23 @@ export default async function DynamicCMSPage({ params }: PageProps) {
 
   let page;
 
-  if (isPreview) {
-    console.log(`[CMS Page] Fetching preview for: ${slug}`);
-    // In preview mode, use shared secret to fetch any status page
-    page = await getPagePreview(slug);
+  try {
+    if (isPreview) {
+      console.log(`[CMS Page] Fetching preview for: ${slug}`);
+      // In preview mode, use shared secret to fetch any status page
+      page = await getPagePreview(slug);
 
-    // If preview fails, fall back to published version
-    if (!page) {
+      // If preview fails, fall back to published version
+      if (!page) {
+        page = await getPageBySlug(slug);
+      }
+    } else {
+      // Normal mode - only published pages
       page = await getPageBySlug(slug);
     }
-  } else {
-    // Normal mode - only published pages
-    page = await getPageBySlug(slug);
+  } catch (error) {
+    console.error(`[CMS Page] Fetch error for slug: ${slug}`, error);
+    notFound();
   }
 
   if (!page) {
