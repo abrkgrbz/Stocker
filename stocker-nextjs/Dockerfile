@@ -1,9 +1,10 @@
 # Multi-stage build for Next.js app - optimized for production
-FROM node:20-alpine AS base
+FROM node:20-slim AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+# Slim is debian based, so we don't need apk/libc6-compat
 WORKDIR /app
 
 # Copy package files
