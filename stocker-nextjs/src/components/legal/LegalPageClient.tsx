@@ -46,10 +46,10 @@ export default function LegalPageClient({
   const slug = page?.slug || fallbackSlug;
   const updatedAt = page?.updatedAt
     ? new Date(page.updatedAt).toLocaleDateString('tr-TR', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      })
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
     : null;
 
   const Icon = getIcon(slug);
@@ -113,8 +113,12 @@ export default function LegalPageClient({
             transition={{ duration: 0.5, delay: 0.1 }}
             className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm"
           >
-            <div className="prose prose-slate max-w-none prose-headings:font-bold prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4 prose-p:text-slate-600 prose-p:leading-relaxed prose-li:text-slate-600 prose-strong:text-slate-900 prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline">
-              <ReactMarkdown>{content}</ReactMarkdown>
+            <div className={`prose prose-slate max-w-none prose-headings:font-bold prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4 prose-p:text-slate-600 prose-p:leading-relaxed prose-li:text-slate-600 prose-strong:text-slate-900 prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline ${content?.trim().startsWith('<') ? '' : ''}`}>
+              {content?.trim().startsWith('<') ? (
+                <div dangerouslySetInnerHTML={{ __html: content }} />
+              ) : (
+                <ReactMarkdown>{content}</ReactMarkdown>
+              )}
             </div>
           </motion.div>
 
@@ -154,11 +158,10 @@ export default function LegalPageClient({
               <Link
                 key={link.slug}
                 href={`/${link.slug}`}
-                className={`${
-                  link.slug === slug
+                className={`${link.slug === slug
                     ? 'text-slate-900 font-medium'
                     : 'text-slate-500 hover:text-slate-900'
-                }`}
+                  }`}
               >
                 {link.label}
               </Link>
